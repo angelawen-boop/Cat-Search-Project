@@ -841,6 +841,10 @@ function runtime() {
        && has('Mauritshuis', 'https://shop.mauritshuis.nl/product-categorie/boeken-catalogi/catalogi')
        && has('Museo Nacional Thyssen-Bornemisza', 'https://tienda.museothyssen.org/en/collections/publicaciones-museo'),
       'AL-009c3:  each card shows the section the finder took: Courtauld\'s catalogues (not the reseller\'s shelf), Cleveland\'s 4th result "Exhibition Catalogues", Mauritshuis\'s "Catalogi", Thyssen\'s menu "Museum publications"');
+    const said = name => shopCard(name).textContent.includes('Shop found, but not its catalogues section https://');
+    ok(said('Museo Nacional Thyssen-Bornemisza') && !said('Courtauld') && !said('Cleveland Museum of Art')
+       && !/its publications|its books:|exhibition catalogues section/.test(shops().textContent),
+      'AL-009c5:  a section that is not a catalogues section carries her one line, "Shop found, but not its catalogues section", and nothing about what it is; a catalogues section carries none', shopCard('Museo Nacional Thyssen-Bornemisza').textContent);
   }
   await click([...shops().querySelectorAll('button')].find(b => b.textContent === 'Back'));
   await raPress(/Add new entry$/);
@@ -1332,7 +1336,7 @@ function runtime() {
     const shown = win.document.body.textContent;
     ok(shown.includes('Pontormo\u2019s paintings and drawings.') && !/First major monographic/.test(shown),
       'AL-062a:  the answer that passes is the card\'s description', shown.slice(Math.max(0, shown.indexOf('Pontormo') - 40), shown.indexOf('Pontormo') + 200));
-    ok(asks('Never Passes').length === 3 && win.document.body.textContent.includes(S2 + ' \u2014 Claude\u2019s description kept failing its check'),
+    ok(asks('Never Passes').length === 3 && win.document.body.textContent.includes(S2 + ' \u2014 Claude\u2019s description failed check and re-attempt multiple times'),
       'AL-062b:  one that never passes, asked twice more, leaves the link unread with the reason (her decision)', asks('Never Passes').length);
     const cancel = buttons(/^Cancel import$/)[0];
     if (cancel) await click(cancel);

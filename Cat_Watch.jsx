@@ -2363,7 +2363,7 @@ function firstPageOf(u){
 // scraper/shop_check.js — a miss shows the step where it went wrong). The app passes none.
 // HER DESIGN: there is one right section, the shop's exhibition catalogues. A search result is taken only
 // if it is that section; otherwise the shop is walked for it. Only when the shop has none does the finder
-// settle for the best it saw — the museum's publications, then books — and the shop screen says which.
+// take the best it saw, and the shop screen says "Shop found, but not its catalogues section" (her wording).
 // `foreign`: the venue's country does not speak English — its shop's English version is looked for first.
 async function discoverShop(pageShop,museumHost,venueName,turnedDown,venueId,trace,foreign){
   const sf=shopFinderStart(pageShop,museumHost,venueName,turnedDown,venueId,trace);
@@ -6645,7 +6645,7 @@ export default function App(){
           ask=await readResults(askAgainPrompt(prompt,faults));
           faults=ask.ok?answerFaults(ask.data,page):[];
         }
-        if(faults.length){ fails.push({url,why:"Claude\u2019s description kept failing its check ("+faults.join("; ")+")."}); continue; }
+        if(faults.length){ fails.push({url,why:"Claude\u2019s description failed check and re-attempt multiple times ("+faults.join("; ")+")"}); continue; }
         let a=linkAnswer(ask.ok?ask.data:null);
         if(askVenue&&ownSite&&maybeElsewhere(a,host)){ const more=await readResults(elsewherePrompt(page,url,a)); if(more.ok)a={...a,...elsewhereAnswer(more.data)}; }
         const away=askVenue&&ownSite?heldElsewhere(a,host):null;
@@ -7423,7 +7423,7 @@ export default function App(){
         {/* A part of the store that could not be read (the quarantine has its own banner). */}
         {storeUnread.filter(w=>w!==UNREAD_QUAR).length>0&&<div style={{marginTop:8,padding:"9px 12px",background:C.warnBg,border:"2px solid "+C.warnEdge,borderRadius:5,fontSize:12.5,fontWeight:700,color:C.warnInk,lineHeight:1.4,display:"flex",alignItems:"flex-start",gap:9}}>
           <span style={{fontSize:17,lineHeight:1.1}}>{"\u26A0"}</span>
-          <span>{"STORE NOT READ \u2014 "+storeUnread.filter(w=>w!==UNREAD_QUAR).join(", ")+" couldn\u2019t be read from this page\u2019s store, so what is shown for them is not the stored copy, and nothing is saved over them until the page is opened again."}</span>
+          <span>{"STORE NOT READ \u2014 "+storeUnread.filter(w=>w!==UNREAD_QUAR).join(", ")+" couldn\u2019t be read from store, refresh to re-check. Current incorrect information will not overwrite the store until the read corrects."}</span>
         </div>}
         {quarWhy&&<div style={{marginTop:8,padding:"9px 12px",background:C.warnBg,border:"2px solid "+C.warnEdge,borderRadius:5,fontSize:12.5,fontWeight:700,color:C.warnInk,lineHeight:1.4,display:"flex",alignItems:"flex-start",gap:9}}>
           <span style={{fontSize:17,lineHeight:1.1}}>{"\u26A0"}</span>
@@ -7969,8 +7969,8 @@ export default function App(){
                 const home=v.shop==="noshelf"||v.shop==="failed"?v.shopHome:null;
                 const said=v.shop==="found"?null:v.shop==="noshelf"?"Shop found, but not its books section: "
                   :v.shop==="failed"?"Search failed.":"No museum shop found.";
-                // Settled for less (her design): the shop has no exhibition catalogues section, and the line says which it is.
-                const lesser=link&&(v.shelfKind==="publications"||v.shelfKind==="books")?"Shop found, but not its exhibition catalogues section \u2014 its "+v.shelfKind+": ":null;
+                // The finder found no catalogues section: one line, her wording, whatever it took instead.
+                const lesser=link&&v.shelfKind&&v.shelfKind!=="catalogues"?"Shop found, but not its catalogues section ":null;
                 const en=v.shop==="found"?v.shopEnglishUnread:null;
                 const yes=v.confirmed&&v.shop==="found"&&!v.englishPicked, yesEn=v.confirmed&&!!en&&!!v.englishPicked, none=v.confirmed&&v.shop==="none";
                 return <div key={id} style={{paddingTop:12,marginTop:10,borderTop:"1px solid "+C.rule,fontSize:12.5,color:C.ink,lineHeight:1.45}}>

@@ -100,6 +100,8 @@ function brokenReads(store, paths) {
     const named = ['the link venues', 'the links waiting in the Links box', 'the pages waiting in the Pages list', 'the sweep log'];
     ok(await until(() => /STORE NOT READ/.test(text()) && named.every(n => text().includes(n))),
       'SU-001: every part that could not be read is named on the page ("STORE NOT READ"), not shown as empty', text().slice(0, 300));
+    ok(text().includes(' couldn’t be read from store, refresh to re-check. Current incorrect information will not overwrite the store until the read corrects.'),
+      'SU-001a: the banner reads in her wording', text().slice(0, 400));
     ok(/QUARANTINE — Couldn’t read the quarantine list/.test(text()), 'SU-002: the quarantine\'s failed read keeps its own banner');
     await settle(300);
     ok(['venues/occasional', 'links/pending', 'sweeps/venues', 'quarantine/rows'].every(k => base.docs.get(k) === before.get(k)),

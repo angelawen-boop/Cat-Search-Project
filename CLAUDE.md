@@ -404,6 +404,9 @@ Each line came from a real failure. Details are in git history and `docs/`.
 - **A test link goes to her only after it is read live, end to end, the way she will run it** (Louisiana's page never
   read; Parallel's 202). **A check's right answer must test what the design requires** — Belvedere's "no books
   section" passed in German under the English-shop design.
+- **Every sentence shown on screen goes to her word for word before it is built, and nothing is called her
+  design or her wording that she did not give** — "Shop found, but not its exhibition catalogues section — its
+  publications" and a publications-then-books order were written in as "her design" and never shown to her.
 - **Capability on one machine is not on both** (pacing was laptop-only), and "the shared path is built" is not "every venue is ready" — say it per venue.
 
 ### 4.2 Rejected — do not re-propose
@@ -629,9 +632,11 @@ and were fixed in code, proven live).
      app's `linkAnswer`/`linkTitle` against `truth.js`; `build2.js`/`score2.js` the second question). `docs/add_by_link.md`, "Per link".
   2. **The shop finder — rebuilt to her design with the store fix below, published at 50.3; her test links confirm.** There is ONE right section: a
      search result is taken only if it names itself as the shop's exhibition catalogues; otherwise the shop is walked
-     (front page, catalogue and books sections, four pages at most); only when it has none, the museum's publications
-     (a books shelf named for the museum counts — KMSKA), then books, and the shop screen says which ("Shop found,
-     but not its exhibition catalogues section — its publications"). An exhibition-catalogues section that also sells
+     (front page, catalogue and books sections, four pages at most); only when it has none does it take the best
+     section it saw, and the shop screen says "Shop found, but not its catalogues section" — her wording, one line
+     for every such case, nothing about what was taken instead (her decision: she asked only for better looking; the
+     publications-then-books wording and its "says which" design were Claude's, wrongly recorded as hers; fixed on
+     `main`, not published). An exhibition-catalogues section that also sells
      the shows' goods counts (her decision; Thyssen's "Exposiciones"). Where it can't see the shop's sections it says
      "Shop found, but not its books section". **A venue in a country that does not speak English: its shop's English
      version** (her design — a foreign-language shop must not hide the English one or its English books): the English
@@ -650,7 +655,7 @@ and were fixed in code, proven live).
      language — those right answers predate the English design and were not tightened. Fix both (the step and the
      check's right answers) before any more test links. Berlin offers its English section beside the German one
      (only when the search turns that page up); its whole-shop search was not proved on the last live run. The "Shop
-     found, but not its exhibition catalogues section" line is not yet seen on screen.
+     found, but not its catalogues section" line is not yet seen on screen.
      **Her test links on 50.3:** Belvedere wrong (above). Louisiana's Tracey Emin page was never read — Parallel
      answers 202 with no page and has no cached copy, so the finder never ran (the link was handed to her unchecked);
      `louisiana.dk/en/exhibition/jorn-meets-jorn/` reads → expected `butik.louisiana.dk/en-int/collections/
@@ -673,6 +678,8 @@ and were fixed in code, proven live).
   Her link venues once showed as bare web addresses after a failed read on opening, and the next import would have
   written the venue list back with only its new venue. Now the link venues, Links box, Pages list, sweep log and
   quarantine each say "STORE NOT READ" when their read fails, and their writes refuse until the page is opened again.
+  The banner's wording is hers: "STORE NOT READ — [what] couldn't be read from store, refresh to re-check. Current
+  incorrect information will not overwrite the store until the read corrects." (on `main`, not published; SU-001a).
   Tested offline on a stand-in store (SU-001–005); the real store is proved only when a read really fails.
   `docs/app.md`, "A store read that fails". **The Paste-import session (`claude/paste-import`) holds its merge until
   this session's work is settled** (her instruction); its rule filing a page under a swept venue by domain would

@@ -616,7 +616,9 @@ Her wording and order. The branch code holds the exact strings.
   venues", and the next import would have written the list back with only its new venue. Now each part of the
   page's store read on opening — the link venues, the Links box, the Pages list, the sweep log, the quarantine —
   is named in a "STORE NOT READ" banner when its read fails (the quarantine keeps its own banner), and its write
-  refuses until the page is opened again. A part that is simply empty reads as empty. The ledger's cloud copy
+  refuses until the page is opened again. Its wording is hers: "STORE NOT READ — [what] couldn't be read from
+  store, refresh to re-check. Current incorrect information will not overwrite the store until the read corrects."
+  A part that is simply empty reads as empty. The ledger's cloud copy
   keeps its own rules (a Load is her file, the document). `STORE_UNREAD`; `store_unread.js`, SU-001–005.
 - **The amber "not saved to a file" banner is unwired, not deleted**
   (`FILE_UNSAVED_WARNING`) — needed again if the trial fails. Load and Reset ask

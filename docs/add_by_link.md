@@ -81,7 +81,8 @@ meets it.
 5. **Claude's answer checked as the compressor's** (`answerFaults`, the shared `scraper/answer_check.js`):
    shape, and every claim word and number on the page. A refused answer is asked again with its reason, twice
    at most (`LINK_ASK_AGAIN`); one that never passes leaves the link unread, the reason on its line (her
-   decision). AL-062.
+   decision): "Claude's description failed check and re-attempt multiple times (…)", the faults in the
+   brackets (her wording). AL-062.
 6. No note — a link is not a sweep; `swept_at` blank, sweep log untouched.
 
 ## A venue the app has not seen
@@ -105,8 +106,9 @@ doesn't exist). How a person does it, and so how the finder does it:
    text with its links as `[label](address)`; code reads the labels and opens the one named for catalogues. Start
    at the shop found (its front page, a Shopify shop's section list, its menu), go into a broader section ("Books")
    when the catalogues may sit inside it. At most **four page opens** after the search. Only when the shop truly
-   has no exhibition-catalogues section: the museum's own publications (a books section named for the museum
-   itself counts — KMSKA's "KMSKA" shelf), then books, then the shop — and the shop screen says which.
+   has no catalogues section does it take the best section it saw, and the shop screen says **"Shop found, but
+   not its catalogues section"** — her wording, one line for every such case, nothing about what was taken
+   instead (her decision: she asked only for better looking, never for lines describing kinds of result).
 3. **Where it cannot work it says so** ("Shop found, but not its books section"): a menu drawn by script that
    Parallel gets nearly empty (Hamburg's Friends' shop), a page Parallel cannot fetch (bot check, 202, a "301
    Moved" notice).
