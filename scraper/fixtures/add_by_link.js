@@ -1151,6 +1151,10 @@ function runtime() {
       && kindOf('https://the-museum-shop-at-wam.myshopify.com/collections/catalogs').target === false
       && kindOf('https://tienda.museothyssen.org/en/collections/catalogos-en-oferta').target === false,
       'AL-071: the exhibition-catalogues section is the one taken at once (Beyeler); a plain "Catalogs" or a sale shelf is not; a books shelf named for the museum ("KMSKA") is its publications', JSON.stringify(rk2.map(r => [r.url, r.kind, r.target])));
+    const front = '### Katalog-Neuerscheinungen\n\n* [Porträts!](https://www.smb-webshop.de/buecher-und-medien/ausstellungskataloge/6530/portraets "Porträts!")\n\n  39,00 €\\*\n* [Rubens, Jordaens, van Dyck](https://www.smb-webshop.de/buecher-und-medien/ausstellungskataloge/6531/rubens-jordaens-van-dyck "Rubens")\n\n  17,00 €\\*\n* [Depot Heydeck](https://www.smb-webshop.de/buecher-und-medien/akademische-publikationen/6472/depot-heydeck "Depot Heydeck")\n\n  49,00 €\\*\n';
+    const bu = fn('booksUnder');
+    ok(bu({ seenText: front }, 'https://www.smb-webshop.de/buecher-und-medien/ausstellungskataloge/') === 2 && bu({ seenText: front }, 'https://www.smb-webshop.de/buecher-und-medien/akademische-publikationen/') === 1 && bu({ seenText: front }, 'https://www.smb-webshop.de/') === 0,
+      'AL-072: a section whose own page comes back without its books is proved by two priced books the shop lists under its address elsewhere (Berlin, Parallel gave the section its footer alone)');
     // ── AL-064: a show page with no dates anywhere comes in undated, as the sweep keeps it ─
     const rdd = fn('readShowPage');
     const bourgeois = rdd({ title: 'LOUISE BOURGEOIS. L’INCONSCIO DELLA MEMORIA - Galleria Borghese',

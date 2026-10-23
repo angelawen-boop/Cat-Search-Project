@@ -2363,6 +2363,14 @@ function shopFinderStart(pageShop,museumHost,venueName,turnedDown,venueId,trace)
 // Candidates in rank order, each proved books-only: on its excerpt, else opened (its page, a Shopify
 // section's products, its first product). Nothing books-only: the first mixed section is opened and
 // the sections inside it tried. One level down, once.
+// Books the shop shows elsewhere, priced, under a section's own address: proof of that section when its own page
+// comes back without them (Berlin: Parallel gave "Ausstellungskataloge" as its footer alone, while the front page
+// lists "Porträts!" at ".../ausstellungskataloge/6530/portraets", 39,00 €).
+function booksUnder(sf,url){
+  let p=""; try{ p=new URL(url).pathname.replace(/\/?$/,"/"); }catch{ return 0; }
+  if(p==="/")return 0;
+  return booksSeenOn(sf.seenText,hostOf(url),true).filter(b=>b.path.startsWith(p)&&b.path.length>p.length).length;
+}
 // Only a section ranked above the best already kept is checked: a lesser one cannot change the answer.
 // A section that failed its check is not checked twice; a page already read is not fetched again.
 async function tryShelves(sf,cands,how,inside){
@@ -2373,6 +2381,7 @@ async function tryShelves(sf,cands,how,inside){
     if(c.score<=above)break;
     if(sf.no.has(k)||sf.failed.has(k))continue;
     if(c.proof&&looksLikeBookShelf(c.proof))return{...c,how};
+    if(booksUnder(sf,c.url)>=2)return{...c,how};
     let t=sf.texts.get(k);
     if(t==null){
       if(sf.opens>=SHELF_OPENS)return null;
