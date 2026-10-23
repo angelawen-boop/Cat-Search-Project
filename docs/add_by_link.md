@@ -489,6 +489,11 @@ stored as she types (`links/pastes`), so leaving the page to copy loses nothing.
 - **Test page:** https://claude.ai/artifact/Q55UksBeW7CwQm5YzWXTLe (title "Cat Watch Paste Test"; built from this branch,
   the title set after `build_app.js`). Published with `sample`, `db`, `downloads` only — the `mcp` grant (Parallel)
   was refused at publish, so Links and catalogue lookups do not work there; Paste needs none of it.
+- **Next iteration (her ask):** a faint "Link" inside each link box (her exception to no words in a box).
+- **Her first try:** Caro, Stubbs and a Turner read right; Stubbs came with no description, as expected. Faults to
+  discuss: a library record writes titles in sentence case ("Turner and the masters", "a celebration"), so a
+  show already in the ledger gets a title Change card; and its link Change card offers the library record in
+  place of the museum's own exhibition page.
 - **Unproven:** what her own Claude says for Stubbs, whose record holds no description (the passage is empty —
   most likely no description); whether her Claude names Tate Britain for a library record.
 
