@@ -154,6 +154,8 @@ const EN_SHELF = '# Catalogues & Publications\n[Catalogue | Picasso - Bacon](' +
 SEARCHES.unshift(
   [/^Testmuseum Wien English language shop/, { results: [{ url: AT + 'de/produkte/publikationen/', title: 'Kataloge online bestellen', excerpts: [DE_SHELF] }] }],
   [/^Testhaus Berlin English language shop/, { results: [{ url: 'https://www.testhaus.de/en/visit', title: 'Visit' }] }],
+  [/^Testhaus Koeln English language shop/, { results: [{ url: 'https://shop.testhaus-koeln.de/en/books/exhibition-catalogues/', title: 'Exhibition Catalogues' },
+    { url: 'https://shop.testhaus-koeln.de/buecher/ausstellungskataloge/', title: 'Ausstellungskataloge', excerpts: ['# Ausstellungskataloge\nKatalog Porträts! 39,00 € Katalog Brancusi 45,00 € Katalog In Lustrous Black 40,00 € In den Warenkorb'] }] }],
   [/^Testhaus Berlin shop/, { results: [{ url: 'https://shop.testhaus.de/ausstellungskataloge/', title: 'Ausstellungskataloge', excerpts: ['# Ausstellungskataloge\nKatalog Porträts! 39,00 € Katalog Brancusi 45,00 € Katalog In Lustrous Black 40,00 € In den Warenkorb, Versand und Kosten, mit Lieferung'] }] }]);
 Object.assign(SHOPS, {
   [AT + 'en/']: '[Logo Albertina](' + AT + 'en/)\nLanguage\n* [Englisch](' + AT + 'en/)\n* [Deutsch](' + AT + 'de/)\n* [Current Exhibitions](' + AT + 'en/current-exhibitions/)\n* [Tickets & Membership](' + AT + 'en/tickets/)\n* [Catalogues & Products](' + AT + 'en/products/)\n    + [Catalogues & Publications](' + AT + 'en/products/publications/)\n    + [Poster](' + AT + 'en/products/poster/)\n## Top-Seller\nPoster - Venice EUR 19,90 In Stock, usually ships in 1 to 3 days\nYour statutory warranty rights. We ship with our partner Österreichische Post! Opening hours: daily from 10 a.m. to 6 p.m. Information about the museum and the shop, delivery and payment, and our privacy policy.',
@@ -715,6 +717,15 @@ function runtime() {
     const asked2 = calls.slice(before).filter(c => c.kind === 'mcp' && c.tool === 'web_search').map(c => c.args.search_queries[0]);
     ok(asked2.length === 2 && /English language/.test(asked2[0]) && asked2[1] === 'Testhaus Berlin shop exhibition catalogues' && b.shop === 'found' && b.shopCatalogues === 'https://shop.testhaus.de/ausstellungskataloge/',
       'AL-073d:  the English search finds no shop: the plain search finds its German one; with no English version, the German section stands (Berlin)', JSON.stringify([asked2, b]));
+    const k = await discoverShop('', 'www.testhaus-koeln.de', 'Testhaus Koeln', [], 'occ-testhaus-koeln-de', null, true);
+    ok(k.shop === 'found' && k.shopCatalogues === 'https://shop.testhaus-koeln.de/buecher/ausstellungskataloge/' && k.shopEnglishUnread === 'https://shop.testhaus-koeln.de/en/books/exhibition-catalogues/',
+      'AL-073g:  its English exhibition-catalogues section came back without books: the German one is taken, the English one offered beside it for her to confirm (Berlin)', JSON.stringify(k));
+    const occ = fn('occVenue'), G = 'https://shop.testhaus-koeln.de/buecher/ausstellungskataloge/', E = 'https://shop.testhaus-koeln.de/en/books/exhibition-catalogues/';
+    const asG = occ('occ-testhaus-koeln-de', { shop: 'found', shopCatalogues: G, shopEnglishUnread: E, confirmed: true });
+    const asE = occ('occ-testhaus-koeln-de', { shop: 'found', shopCatalogues: G, shopEnglishUnread: E, confirmed: true, englishPicked: true });
+    ok(asG.shopCatalogues === G && !asG.shopUnseen && asE.shopCatalogues === E && asE.shopUnseen === 'unconfirmed'
+      && fn('shopUnreadHead')('unconfirmed') === 'The museum shop contents cannot be seen \u2014 unconfirmed page problem',
+      'AL-073h:  her English pick is the section looked up, its contents unseen: "The museum shop contents cannot be seen — unconfirmed page problem" (her wording)', JSON.stringify([asG, asE]));
     before = calls.length;
     await discoverShop('', 'www.testhaus.de', 'Testhaus Berlin', [], 'occ-testhaus-de');
     const asked3 = calls.slice(before).filter(c => c.kind === 'mcp' && c.tool === 'web_search').map(c => c.args.search_queries[0]);

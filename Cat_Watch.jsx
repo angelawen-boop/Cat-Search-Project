@@ -1827,9 +1827,11 @@ function occVenue(id,v,fallback){
   const own=linkEntry(id)||{}, s=v||{};
   const live=s.shop==="found"||(s.shop==="noshelf"&&!!s.shopSearch);
   const name=own.name||s.name||fallback;
-  return{id,short:own.short||s.short||name,chip:own.chip,card:own.card,lookupName:own.lookupName||own.name||s.short||name,name,occasional:true,shopUnseen:own.shopUnseen,english:s.english===false?false:undefined,
+  // Her pick on the shop screen: the English section the finder could not read (`shopEnglishUnread`), contents unseen.
+  const en=!!(s.englishPicked&&s.shopEnglishUnread);
+  return{id,short:own.short||s.short||name,chip:own.chip,card:own.card,lookupName:own.lookupName||own.name||s.short||name,name,occasional:true,shopUnseen:own.shopUnseen||(en?"unconfirmed":undefined),english:s.english===false?false:undefined,
     exBase:null,listUrl:null,
-    shopHome:live?s.shopHome||null:null,shopCatalogues:live?s.shopCatalogues||null:null,shopSearch:live?s.shopSearch||null:null,
+    shopHome:live?s.shopHome||null:null,shopCatalogues:live?(en?s.shopEnglishUnread:s.shopCatalogues||null):null,shopSearch:live?s.shopSearch||null:null,
     shopUnknown:!live&&!(s.shop==="none"&&s.confirmed)};
 }
 // A venue the store holds named only by its address, as every new venue was before Claude named them.
@@ -2385,7 +2387,7 @@ function shopFinderStart(pageShop,museumHost,venueName,turnedDown,venueId,trace)
   const sf={pageShop,museumHost,venueName,venueId,trace,no:new Set((turnedDown||[]).map(normalizeUrlKey)),own:linkEntry(venueId)||{},
     pageShopHost:baseDomain(hostOf(pageShop))===baseDomain(museumHost)?"":hostOf(pageShop),
     opens:0,seenText:"",died:null,opened:new Set(),mine:[],root:"",front:"",pick:null,best:null,
-    texts:new Map(),failed:new Set(),walked:new Set(),walkOpens:0,translated:[]};
+    texts:new Map(),failed:new Set(),walked:new Set(),walkOpens:0,translated:[],unread:[]};
   sf.place=u=>isShopPlace(u,museumHost,sf.pageShopHost);
   sf.named=r=>!sf.place(r.url)&&namesVenue(r.url,sf.own.shopNamed);
   // A shop page on the museum's own site is the shop's front, never the museum's home page
@@ -2448,6 +2450,8 @@ async function tryShelves(sf,cands,how,inside){
     }
     if(await firstProductIsBook(fetchPage,t,hostOf(c.url)))return{...c,how};
     sf.failed.add(k);
+    // An exhibition-catalogues section whose page came back with no price at all: unread, not proved empty.
+    if(c.target&&!String(t).split("\n").some(realPrice))sf.unread.push(c.url);
   }
   if(inside||!ranked.mixed.length)return null;
   const m=ranked.mixed[0];
@@ -2631,7 +2635,7 @@ async function englishVersion(sf){
   }):null;
   sf.note("english",{at,said,tried:tries,found:hit?hit.u:null});
   if(!hit)return;
-  const kept={pick:sf.pick,best:sf.best,root:sf.root,front:sf.front,pageShopHost:sf.pageShopHost,died:sf.died,walked:sf.walked,walkOpens:sf.walkOpens};
+  const kept={pick:sf.pick,best:sf.best,root:sf.root,front:sf.front,pageShopHost:sf.pageShopHost,died:sf.died,walked:sf.walked,walkOpens:sf.walkOpens,seenText:sf.seenText};
   const text=pageTextOf([hit.r]);
   Object.assign(sf,{pick:null,best:null,root:shopRootOf(hit.u),front:hit.u,walked:new Set(),walkOpens:0});
   if(!sf.ownPage(hit.u))sf.pageShopHost=hostOf(hit.u);
@@ -2659,8 +2663,12 @@ async function shopResult(sf){
       const f=await openShopPage(fetchPage,pick.url,"The books in this section of the shop, with their prices.",null,{full:true});
       if(f.ok)seen+="\n"+pageTextOf(f.results);
     }
+    // A section in another language taken, its English one found but unread (Berlin): both go to her shop screen.
+    const pickText=sf.texts.get(normalizeUrlKey(pick.url))||pick.proof||"";
+    const enUnread=sf.foreign&&pageLanguage(pick.url,pickText)!=="en"?sf.unread.find(isEnglishUrl)||null:null;
     const out={shop:"found",shopHome:front||originOf(home),shopCatalogues:pick.url,shelfKind:pick.kind,
-      shopSearch:search||(await proveShopSearch(seen,home))||null,foundBy:pick.how,finder:3,searchRule:SEARCH_RULE};
+      shopSearch:search||(await proveShopSearch(seen,home))||null,foundBy:pick.how,finder:3,searchRule:SEARCH_RULE,
+      ...(enUnread?{shopEnglishUnread:firstPageOf(enUnread)}:{})};
     sf.note("result",{shop:out.shop,shopCatalogues:out.shopCatalogues,shopSearch:out.shopSearch,foundBy:out.foundBy});
     return out;
   }
@@ -3867,10 +3875,11 @@ function publisherNote(result,hasUrl){
 // none it runs the shop step alone ("Now"). No history kept; a failed check changes
 // nothing. Pre-order counts as in the shop; sold out in any language counts as gone.
 //
-// shopState: "shop" | "gone" | "web" | "none" | "blocked" | "script" | "parallel" | null; "gone" keeps shopUrl.
+// shopState: "shop" | "gone" | "web" | "none" | "blocked" | "script" | "parallel" | "unconfirmed" | null; "gone" keeps shopUrl.
 // "blocked": the shop refused every page opened (KHM). "script": its pages opened with no
 // books on them, drawn by script (MoMA). "parallel": a venue whose books Parallel drops
-// (`shopUnseen`, the Städel), its pages showing no priced line. Each way whether the book is there is
+// (`shopUnseen`, the Städel), its pages showing no priced line. "unconfirmed": a section she confirmed though the
+// finder could not read it (`shopUnseen` "unconfirmed"; Berlin's English one), cause unchecked. Each way whether the book is there is
 // UNKNOWN — never "not in the shop". shopChange: "now" | "back" | null on a "shop" row.
 // A legacy "gone" on a "web" row reads as plain "web".
 
@@ -3892,11 +3901,12 @@ function shopHeadline(shopState,shopChange){
 const SHOP_BLOCKED_HEAD="The museum shop is blocked";
 const SHOP_SCRIPT_HEAD="The museum shop contents cannot be seen — JS-rendering";
 const SHOP_PARALLEL_HEAD="The museum shop contents cannot be seen — Parallel fault";
+const SHOP_UNCONFIRMED_HEAD="The museum shop contents cannot be seen — unconfirmed page problem";
 // A shop the lookup could not read: refused, drawn by script, or dropped by Parallel (her wording for each).
-const shopUnread=s=>s==="blocked"||s==="script"||s==="parallel";
-const shopUnreadHead=s=>s==="script"?SHOP_SCRIPT_HEAD:s==="parallel"?SHOP_PARALLEL_HEAD:SHOP_BLOCKED_HEAD;
+const shopUnread=s=>s==="blocked"||s==="script"||s==="parallel"||s==="unconfirmed";
+const shopUnreadHead=s=>s==="script"?SHOP_SCRIPT_HEAD:s==="parallel"?SHOP_PARALLEL_HEAD:s==="unconfirmed"?SHOP_UNCONFIRMED_HEAD:SHOP_BLOCKED_HEAD;
 // Re-check's line for each: "Re-check didn’t work — museum shop " + this.
-const shopUnreadSaid=s=>s==="script"?"contents cannot be seen — JS-rendering":s==="parallel"?"contents cannot be seen — Parallel fault":"is blocked";
+const shopUnreadSaid=s=>s==="script"?"contents cannot be seen — JS-rendering":s==="parallel"?"contents cannot be seen — Parallel fault":s==="unconfirmed"?"contents cannot be seen — unconfirmed page problem":"is blocked";
 const SHOP_BLOCKED_FOUND_REST=" — search it manually. The catalogue is stocked elsewhere.";
 const SHOP_BLOCKED_NONE_REST=". The catalogue also does not appear to exist elsewhere. Search manually to confirm.";
 
@@ -4512,13 +4522,14 @@ async function shopStep(row,io){
   if(!s1.results.length&&(s1.errors||[]).length)
     return{ran:true,ok:true,blocked:"blocked",detail:s1.detail+"\nThe museum shop refused every page, so it could not be searched.",data:null};
   if(!s1.results.length)return{ran:true,ok:true,detail:s1.detail,data:null};
-  // A venue whose books Parallel drops (the Städel): no priced line, even read whole, is "parallel".
+  // A venue whose books Parallel drops (the Städel), or a section she confirmed unread (Berlin's English one): no
+  // priced line, even read whole, is "parallel" or "unconfirmed".
   const priced=r=>pageTextOf(r.results).split("\n").some(realPrice);
-  if(mu&&mu.shopUnseen==="parallel"&&!priced(s1)){
+  if(mu&&(mu.shopUnseen==="parallel"||mu.shopUnseen==="unconfirmed")&&!priced(s1)){
     const whole=await io.fetch(shopPages,"The books in this section of the shop, with their prices.",null,{full:true});
     if(!whole.ok)return{ran:true,ok:false,detail:s1.detail+"\n"+whole.detail,data:null};
     if(!priced(whole))
-      return{ran:true,ok:true,blocked:"parallel",detail:s1.detail+"\n"+whole.detail+"\nParallel brought back this shop’s pages without their books, so it could not be searched.",data:null};
+      return{ran:true,ok:true,blocked:mu.shopUnseen,detail:s1.detail+"\n"+whole.detail+(mu.shopUnseen==="parallel"?"\nParallel brought back this shop’s pages without their books, so it could not be searched.":"\nThe shop’s pages came back without their books, so it could not be searched."),data:null};
   }
   // Every page empty: drawn by script (her decision, MoMA Brancusi), "script". But short excerpts are not an empty page (her Watteau): the pages are
   // opened again whole, and the shop is unread only if they are still empty or show
@@ -6654,7 +6665,7 @@ export default function App(){
             const pageShop=away?"":shopLinkOnPage(oneText(res),host);
             const shop=await discoverShop(pageShop,host,name,had?had.turnedDown:[],vc,null,(had&&had.english===false)||(ask.ok&&a.englishSpeaking===false));
             venues={...venues,[vc]:{...(had||{}),id:vc,name:had?had.name:named?named.name:page.site,host,english:had?had.english:undefined,
-              shopHome:null,shopCatalogues:null,shelfKind:null,shopSearch:null,why:null,
+              shopHome:null,shopCatalogues:null,shelfKind:null,shopSearch:null,why:null,shopEnglishUnread:null,englishPicked:false,
               ...shop,confirmed:false,turnedDown:had?had.turnedDown||[]:[],pageShop,addedAt:had?had.addedAt:new Date().toISOString()}};
             venuesChanged=true;
           }
@@ -6736,9 +6747,9 @@ export default function App(){
     for(const id of Object.keys(MU)) if(isOcc(id)&&!saved[id]){ delete MU[id]; KNOWN_VENUES.delete(id); }
     registerOccasional(saved); registerUnseenOccasional(rows); setOccVenues(saved);
   }
-  function confirmShop(id){ const v=occVenues[id]; if(v)holdVenues({...occVenues,[id]:{...v,confirmed:true}}); }
+  function confirmShop(id,english){ const v=occVenues[id]; if(v)holdVenues({...occVenues,[id]:{...v,confirmed:true,englishPicked:!!english}}); }
   // "No shop": the lookup goes straight to the web, as at Capodimonte.
-  function noShopFor(id){ const v=occVenues[id]; if(v)holdVenues({...occVenues,[id]:{...v,shop:"none",confirmed:true,shopHome:null,shopCatalogues:null,shelfKind:null,shopSearch:null,why:null}}); }
+  function noShopFor(id){ const v=occVenues[id]; if(v)holdVenues({...occVenues,[id]:{...v,shop:"none",confirmed:true,shopHome:null,shopCatalogues:null,shelfKind:null,shopSearch:null,why:null,shopEnglishUnread:null,englishPicked:false}}); }
   // "Look again": a new search NOW, skipping only the pages she turned down, never the
   // whole site.
   async function lookAgain(id){
@@ -6750,7 +6761,7 @@ export default function App(){
     catch(e){ shop={shop:"failed",why:"Couldn\u2019t look ("+String((e&&e.message)||e)+")."}; }
     setShopLooking(null);
     setOccVenues(prev=>{
-      const next={...prev,[id]:{...prev[id],shopHome:null,shopCatalogues:null,shelfKind:null,shopSearch:null,why:null,...shop,confirmed:false,turnedDown}};
+      const next={...prev,[id]:{...prev[id],shopHome:null,shopCatalogues:null,shelfKind:null,shopSearch:null,why:null,shopEnglishUnread:null,englishPicked:false,...shop,confirmed:false,turnedDown}};
       registerOccasional(next); return next; });
   }
   // The shop screen asks about a venue outside her list whose shop is unconfirmed (venuesGoingIn).
@@ -7960,7 +7971,8 @@ export default function App(){
                   :v.shop==="failed"?"Search failed.":"No museum shop found.";
                 // Settled for less (her design): the shop has no exhibition catalogues section, and the line says which it is.
                 const lesser=link&&(v.shelfKind==="publications"||v.shelfKind==="books")?"Shop found, but not its exhibition catalogues section \u2014 its "+v.shelfKind+": ":null;
-                const yes=v.confirmed&&v.shop==="found", none=v.confirmed&&v.shop==="none";
+                const en=v.shop==="found"?v.shopEnglishUnread:null;
+                const yes=v.confirmed&&v.shop==="found"&&!v.englishPicked, yesEn=v.confirmed&&!!en&&!!v.englishPicked, none=v.confirmed&&v.shop==="none";
                 return <div key={id} style={{paddingTop:12,marginTop:10,borderTop:"1px solid "+C.rule,fontSize:12.5,color:C.ink,lineHeight:1.45}}>
                   <div style={{fontWeight:600}}>{(MU[id]&&(MU[id].card||MU[id].short))||v.short||v.name||id}</div>
                   {link?<div>{lesser&&<span style={{color:C.soft}}>{lesser}</span>}<a href={link} target="_blank" rel="noopener noreferrer" style={{color:C.action,overflowWrap:"anywhere"}}>{link}</a></div>
@@ -7972,6 +7984,9 @@ export default function App(){
                       <button onClick={()=>noShopFor(id)} disabled={!!shopLooking} style={decBtn(none,C.rejectInk)}>{none?"\u2713 ":""}No shop</button>
                     </>}
                   </div>
+                  {/* Its English section, which the finder could not read: hers to confirm instead. */}
+                  {en&&<><div style={{marginTop:6}}><a href={en} target="_blank" rel="noopener noreferrer" style={{color:C.action,overflowWrap:"anywhere"}}>{en}</a></div>
+                    <div style={{display:"flex",gap:6,marginTop:6}}>{!looking&&<button onClick={()=>confirmShop(id,true)} disabled={!!shopLooking} style={decBtn(yesEn,C.okEdge)}>{yesEn?"\u2713 ":""}Confirm</button>}</div></>}
                 </div>;})}
             </div>
             <div style={{padding:"12px 18px",borderTop:"1px solid "+C.rule,display:"flex",gap:10,alignItems:"center"}}>

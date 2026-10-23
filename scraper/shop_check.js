@@ -85,6 +85,7 @@ const stepLine = s => '    ' + s.step.padEnd(16) + JSON.stringify(Object.fromEnt
     catch (e) { got = { shop: 'failed', why: String((e && e.message) || e) }; }
     const wrong = judge(v, got);
     console.log((wrong ? 'MISS  ' : 'ok    ') + v.key.padEnd(14) + (wrong || (got.shopCatalogues || got.shop)) + `  [${calls - before} calls]`);
+    if (got.shopEnglishUnread) console.log('      English section offered beside it, unread: ' + got.shopEnglishUnread);
     console.log('      guards: ' + v.case);
     if (wrong) {
       misses++;
