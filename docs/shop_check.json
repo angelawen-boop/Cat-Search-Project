@@ -664,7 +664,38 @@
    "shop": "https://freunde-der-kunsthalle.de/shop/kategorie/20",
    "case": "the museum's shop page sends visitors to the Friends' shop; its sections drawn by script",
    "truth": "session, checked on the live shop: the Friends' shop (freunde-der-kunsthalle.de), section KATALOGE; Parallel gets that shop's page nearly empty (drawn by script), so \"Shop found, but not its books section\" with the Friends' shop is the best the finder can say",
-   "noshelfHome": "https://freunde-der-kunsthalle.de/shop/"
+   "noshelfHome": "https://freunde-der-kunsthalle.de/shop/",
+   "lastGood": [
+    {
+     "step": "search",
+     "results": 10,
+     "shopLike": [
+      "https://www.hamburger-kunsthalle.de/en/museum-shop"
+     ],
+     "again": false,
+     "root": "https://www.hamburger-kunsthalle.de/en/museum-shop",
+     "died": null
+    },
+    {
+     "step": "search-pick",
+     "pick": null
+    },
+    {
+     "step": "shop-elsewhere",
+     "front": "https://freunde-der-kunsthalle.de/shop/",
+     "root": "https://freunde-der-kunsthalle.de/"
+    },
+    {
+     "step": "menu",
+     "page": "https://freunde-der-kunsthalle.de/shop/",
+     "pick": null
+    },
+    {
+     "step": "result",
+     "shop": "noshelf",
+     "shopHome": "https://freunde-der-kunsthalle.de/shop/"
+    }
+   ]
   }
  ]
 }
