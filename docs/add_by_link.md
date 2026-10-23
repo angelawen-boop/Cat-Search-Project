@@ -489,16 +489,15 @@ stored as she types (`links/pastes`), so leaving the page to copy loses nothing.
 - **Test page:** https://claude.ai/artifact/Q55UksBeW7CwQm5YzWXTLe (title "Cat Watch Paste Test"; built from this branch,
   the title set after `build_app.js`). Published with `sample`, `db`, `downloads` only — the `mcp` grant (Parallel)
   was refused at publish, so Links and catalogue lookups do not work there; Paste needs none of it.
-- **Next iteration (her ask):** a faint "Link" inside each link box (her exception to no words in a box).
 - **Her first try:** Caro, Stubbs and a Turner read right; Stubbs came with no description, as expected. Her
   decisions on it: titles stay as the record writes them, as the sweep keeps a venue's (sentence case included);
-  a link Change card she rejects herself, a new show takes the pasted link; "Link" for the same field on every
-  card (Change cards say "Exhibition link" today) — to build, with the faint "Link" in each link box.
+  a link Change card she rejects herself, a new show takes the pasted link.
 - **Her second try:** a Borghese archive page (refuses Parallel, 202), footers pasted too: clean, filed under the
-  Borghese. Ghent (MSK, new venue): the title read "closed" — the first-line rule took the page's opening-status
-  word; the line above the first date line (past an "Exhibition" label) is the title, to build. Credit labels left
-  with no names ("In collaboration with") reach the passage. Her ask: a Clear in each box and a Clear all, styled
-  and placed as the other import channels' Clear.
+  Borghese. Ghent (MSK): the title read "closed" (its first line) and empty credit labels reached the passage —
+  left as they are (her decision: Paste is a last resort for pages that are plain text already, a page like
+  Ghent's goes by Pages; no rules invented for pasted text).
+- **Built after:** "Clear" in each box and "Clear all" above them, styled as the Links box's Clear; a faint
+  "Link" in each link box; "Link" for the same field on every card (PS-013, PS-022–023).
 - **Before merging:** `ownMuseumNamed` runs on every link read, not only pastes — the live proof pages must show
   no page worse, or it is limited to pastes; an ordinary exhibition page pasted (no "Title:" line) is untried.
 - **Unproven:** what her own Claude says for Stubbs, whose record holds no description (the passage is empty —

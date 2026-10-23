@@ -128,7 +128,8 @@ const runtime = () => ({
   ok(links().length === 2 && texts().length === 2, 'PS-011: two boxes to start, each a link box and a separate text box (her design)', links().length + '/' + texts().length);
   await click(buttons(/^\+$/)[0]);
   ok(links().length === 3 && texts().length === 3, 'PS-012: + adds a box', links().length);
-  ok(!win.document.querySelector('input[placeholder], textarea[placeholder]'), 'PS-013: no words inside the boxes (her decision)');
+  ok(links().every(l => l.getAttribute('placeholder') === 'Link') && !win.document.querySelector('textarea[placeholder]'),
+    'PS-013: a faint "Link" in each link box, nothing in the text boxes (her ask)');
   for (const [i, p] of PASTES.entries()) { await type(links()[i], p.url); await type(texts()[i], p.text); }
   await act(async () => { await new Promise(r => setTimeout(r, 900)); });
   ok(stored().length === 3 && stored()[2].url === STUBBS.url, 'PS-014: the boxes are kept in the page\'s store as she types', stored().length);
@@ -158,11 +159,21 @@ const runtime = () => ({
   if (!links().length) { await click(buttons(/^Import$/)[0]); await click(buttons(/^Paste$/)[0]); }
   ok(links().length === 3 && links().map(l => l.value).join() === [CARO.url, TURNER.url, STUBBS.url].join(), 'PS-020: Cancel import puts every box read back, stored', stored().length);
 
+  // Clear in one box empties that box only; Clear all empties every box, two left.
+  await click(buttons(/^Clear$/)[1]);
+  ok(links()[1].value === '' && texts()[1].value === '' && links()[0].value === CARO.url && links()[2].value === STUBBS.url, 'PS-022: Clear in a box empties that box only', links().map(l => l.value.slice(-8)).join());
+  await act(async () => { await new Promise(r => setTimeout(r, 900)); });
+  ok(stored().length === 2, 'PS-022a:  and the store', stored().length);
+  await type(links()[1], TURNER.url); await type(texts()[1], TURNER.text);
   // A box with text and no link stays, with why; the others are read and leave.
   await type(links()[2], '');
   await click(buttons(/^Read$/).pop());
   ok(/The link box holds no web address\./.test(win.document.body.textContent), 'PS-021: a box with no link is a line saying why, never read');
-  await click(buttons(/^Go ahead and update the ledger$/)[0] || buttons(/^Cancel import$/)[0]);
+  await click(buttons(/^Cancel import$/)[0]);
+  if (!links().length) { await click(buttons(/^Import$/)[0]); await click(buttons(/^Paste$/)[0]); }
+  await click(buttons(/^Clear all$/).pop());
+  ok(links().length === 2 && links().every(l => !l.value) && texts().every(t => !t.value) && stored().length === 0 && ![...win.document.querySelectorAll('[role=dialog] button')].some(b => /^Clear( all)?$/.test(b.textContent.trim())),
+    'PS-023: Clear all empties every box and the store, two boxes left; no Clear shows on empty boxes', links().length + '/' + stored().length);
 
   if (shouted.some(s => /Warning: Each child|Cannot update|Maximum update/.test(s))) { ok(false, 'React complained', shouted.find(s => /Warning/.test(s))); }
   console.log(failures ? '\n' + failures + ' FAILED' : '\nadd_by_paste: all passed');

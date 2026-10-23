@@ -6324,7 +6324,7 @@ export default function App(){
       let sd=get(r,"start_date"), ed=get(r,"end_date"), url=get(r,"url");
       if(sd&&!isValidYMD(sd)){notes.push("Start date \u201c"+sd+"\u201d couldn't be read (needs YYYY-MM-DD) \u2014 left blank.");sd="";}
       if(ed&&!isValidYMD(ed)){notes.push("End date \u201c"+ed+"\u201d couldn't be read (needs YYYY-MM-DD) \u2014 left blank.");ed="";}
-      if(url&&!urlLooksValid(url)){notes.push("Exhibition link \u201c"+url+"\u201d looks garbled \u2014 left blank.");url="";}
+      if(url&&!urlLooksValid(url)){notes.push("Link \u201c"+url+"\u201d looks garbled \u2014 left blank.");url="";}
       // Quarantined: dropped before anything else sees it. Counted, never silent.
       if(ignoredKeys&&ignoredKeys.has(ignoreKeyFor(vc,url,title))){ blocked++; continue; }
       parsed.push({venueCode:vc,title,startDate:sd,endDate:ed,summary:get(r,"summary"),url,topic:topicOf(rowNote),
@@ -6378,7 +6378,7 @@ export default function App(){
       consider("startDate","Start date",match.startDate,sd);
       consider("endDate","End date",match.endDate,ed);
       consider("summary","Description",match.summary,summary);
-      consider("exUrl","Exhibition link",match.exUrl,url);
+      consider("exUrl","Link",match.exUrl,url);
       if(!upd.length&&!choices){ silent++; continue; }  // identical — nothing to propose
       const hasChange=upd.some(u=>u.kind==="change");
       props.push({type:hasChange?"change":"fill",venueId:vc,venueShort:MU[vc].short,title,cand,matchId:match.id,upd,notes,line:p.line,choices,merged:!!p.mergedFrom});
@@ -7533,12 +7533,20 @@ export default function App(){
               <button onClick={()=>{ if(importMode!=="paste"){ setLinkFails([]); setLinkNote(null); } setImportMode("paste"); }} disabled={busy} style={importMode==="paste"?{...pBtn,opacity:1}:sBtn}>Paste</button>
             </div>}
             {importMode==="paste"&&<div style={{marginTop:14}}>
-              {/* Paste: one box per page, the link and the page's text in separate boxes (her design). */}
+              {/* Paste: one box per page, the link and the page's text in separate boxes, a faint "Link" in
+                  the link box (her design). "Clear" as the Links box has it: in the box, top right; "Clear all"
+                  the same, above the boxes. */}
+              {pastes.some(x=>x.url.trim()||x.text.trim())&&<div style={{textAlign:"right",marginBottom:4}}>
+                <button onClick={()=>{ const l=pasteBoxes([]); setPastes(l); setLinkFails([]); setLinkNote(null); writePendingPastes(l); }} disabled={busy}
+                  style={{background:"none",border:"none",color:C.soft,fontSize:11,textDecoration:"underline",cursor:"pointer",padding:0}}>Clear all</button>
+              </div>}
               {pastes.map((x,i)=>{
                 const set=(k,v)=>setPastes(l=>l.map((y,j)=>j===i?{...y,[k]:v}:y));
                 const field={width:"100%",boxSizing:"border-box",fontSize:12.5,fontFamily:"inherit",padding:"6px 10px",border:"1px solid "+C.rule,borderRadius:4,background:C.card,color:C.ink,display:"block"};
-                return <div key={i} style={{marginBottom:10}}>
-                  <input value={x.url} onChange={e=>set("url",e.target.value)} disabled={busy} aria-label="Link" inputMode="url" autoCapitalize="off" autoCorrect="off" spellCheck={false} style={field}/>
+                return <div key={i} style={{marginBottom:10,position:"relative"}}>
+                  <input value={x.url} onChange={e=>set("url",e.target.value)} disabled={busy} placeholder="Link" aria-label="Link" inputMode="url" autoCapitalize="off" autoCorrect="off" spellCheck={false} style={{...field,paddingRight:52}}/>
+                  {(x.url.trim()||x.text.trim())&&<button onClick={()=>{ const l=pastes.map((y,j)=>j===i?{url:"",text:""}:y); setPastes(l); writePendingPastes(l); }} disabled={busy}
+                    style={{position:"absolute",top:7,right:8,background:"none",border:"none",color:C.soft,fontSize:11,textDecoration:"underline",cursor:"pointer",padding:0}}>Clear</button>}
                   <textarea value={x.text} onChange={e=>set("text",e.target.value)} disabled={busy} aria-label="Text" rows={5} style={{...field,marginTop:4,resize:"vertical"}}/>
                 </div>;
               })}
