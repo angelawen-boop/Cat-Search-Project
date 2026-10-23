@@ -1137,6 +1137,20 @@ function runtime() {
       { url: 'https://shop.example.org/products/the-catalogue-of-a-show', words: 'The catalogue of a show' }]).map(r => r.url);
     ok(rk[0].endsWith('/exhibitions') && rk[1].endsWith('/udstillingskataloger') && rk.includes('https://shop.albertina.at/en/products/publications/') && !rk.some(u => /the-catalogue-of-a-show/.test(u)) && rk[rk.length - 1].endsWith('/books-in-english'),
       'AL-070: an exhibitions\' catalogues section ranks first (Thyssen "Exposiciones"); Danish "udstillingskataloger" is catalogues; a section under "/products/" is one (Albertina), a product never', JSON.stringify(rk));
+    // ── AL-071: her shop-finder design — only the exhibition-catalogues section is taken at once ─
+    const rk2 = fn('rankShelves')([
+      { url: 'https://www.kmskashop.be/en/books/', label: 'Books', words: 'Books en books' },
+      { url: 'https://www.kmskashop.be/en/books/kmska/', label: 'KMSKA', words: 'KMSKA en books kmska' },
+      { url: 'https://shop.fondationbeyeler.ch/en/kategorie/exhibition-catalogues', words: 'Exhibition catalogues' },
+      { url: 'https://the-museum-shop-at-wam.myshopify.com/collections/catalogs', words: 'Catalogs' },
+      { url: 'https://tienda.museothyssen.org/en/collections/catalogos-en-oferta', words: 'Sale Catalogs: exhibition catalogues at final prices' }],
+      l => /^kmska$/i.test(String(l || '').trim()));
+    const kindOf = u => (rk2.find(r => r.url === u) || {});
+    ok(kindOf('https://www.kmskashop.be/en/books/kmska/').kind === 'publications' && kindOf('https://www.kmskashop.be/en/books/').kind === 'books'
+      && kindOf('https://shop.fondationbeyeler.ch/en/kategorie/exhibition-catalogues').target === true
+      && kindOf('https://the-museum-shop-at-wam.myshopify.com/collections/catalogs').target === false
+      && kindOf('https://tienda.museothyssen.org/en/collections/catalogos-en-oferta').target === false,
+      'AL-071: the exhibition-catalogues section is the one taken at once (Beyeler); a plain "Catalogs" or a sale shelf is not; a books shelf named for the museum ("KMSKA") is its publications', JSON.stringify(rk2.map(r => [r.url, r.kind, r.target])));
     // ── AL-064: a show page with no dates anywhere comes in undated, as the sweep keeps it ─
     const rdd = fn('readShowPage');
     const bourgeois = rdd({ title: 'LOUISE BOURGEOIS. L’INCONSCIO DELLA MEMORIA - Galleria Borghese',

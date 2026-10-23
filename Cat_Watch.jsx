@@ -2072,16 +2072,21 @@ function isFrontPage(u){ try{ return /^\/(?:[a-z]{2}(?:-[a-z]{2})?\/?)?$/i.test(
 // publications, then books; a sale section after all of them. Ties keep the
 // order they came in (the search's own). A books section mixed with other
 // goods comes back apart, as `mixed` — never a pick, only a place to look in.
-function rankShelves(cands){
+// `target`: the shop's exhibition-catalogues section, named so by itself (or the venue's own section on a
+// shop company's site, CEDON) — the one right answer, taken at once (her design). A books section whose
+// label is the museum's own name is its publications (KMSKA's "KMSKA" shelf under Books); `ownName` tests it.
+function rankShelves(cands,ownName){
   const out=[], mixed=[];
   cands.forEach((c,n)=>{
     if(!c||!c.url||(NOT_A_SHELF.test(c.url)&&!sectionUnderProducts(c.url))||isFrontPage(c.url))return;
     const t=foldText(c.words).replace(/\bgift ?shop\b|\bmuseum stores?\b/g," ");
     if(SHELF_NOT.test(t))return;
-    const kind=SHELF_CATALOGUES.test(t)?"catalogues":SHELF_PUBS.test(t)?"publications":SHELF_BOOKS.test(t)?"books":null;
+    let kind=SHELF_CATALOGUES.test(t)?"catalogues":SHELF_PUBS.test(t)?"publications":SHELF_BOOKS.test(t)?"books":null;
     if(!kind)return;
     if(kind==="books"&&SHELF_GOODS.test(t)){ mixed.push(c); return; }
-    out.push({...c,kind,score:({catalogues:3,publications:2,books:1})[kind]+(kind==="catalogues"&&SHELF_EXHIBITIONS.test(t)?0.5:0)-(SHELF_SALE.test(t)?2.5:0),n});
+    if(kind==="books"&&ownName&&ownName(c.label))kind="publications";
+    const sale=SHELF_SALE.test(t), target=kind==="catalogues"&&!sale&&(SHELF_EXHIBITIONS.test(t)||!!c.named);
+    out.push({...c,kind,target,score:({catalogues:3,publications:2,books:1})[kind]+(target?0.5:0)-(sale?2.5:0),n});
   });
   out.sort((a,b)=>b.score-a.score||a.n-b.n);
   out.mixed=mixed;
@@ -2133,7 +2138,8 @@ function menuLinks(text,host){
   const out=[],seen=new Set();
   for(const l of mdLinks(text)){
     if(hostOf(l.url)!==host)continue;
-    let c={url:l.url,words:l.label.split(/\s+/).slice(0,6).join(" ")+" "+pathWords(l.url)};
+    const label=l.label.split(/\s+/).slice(0,6).join(" ");
+    let c={url:l.url,label,words:label+" "+pathWords(l.url)};
     try{
       const x=new URL(l.url), m=x.pathname.match(/^(\/.+\/)\d{3,}\/[^/]+\/?$/);
       if(m){ const u=x.origin+m[1]; c={url:u,words:pathWords(u)}; }
@@ -2290,6 +2296,7 @@ async function shopElsewhere(urls,museumHost){
   return{died};
 }
 const SHELF_OPENS=2;   // at most two candidates opened to check, then the next step
+const WALK_OPENS=4;    // at most four of the shop's pages opened to walk it, after the search (her design)
 // pageShop: the show page's own shop link (shopLinkOnPage), kept on the venue
 // so "Look again" has it without reading the show page twice.
 // A list's later page stands for its first: the section is kept by its first page (KMSKA: the search
@@ -2308,6 +2315,9 @@ function firstPageOf(u){
 // The shop finder in named steps, as the show page reader is: each step reads and writes `sf`, the
 // search for one venue's shop; `trace`, when given, collects what each step did (the standing check,
 // scraper/shop_check.js — a miss shows the step where it went wrong). The app passes none.
+// HER DESIGN: there is one right section, the shop's exhibition catalogues. A search result is taken only
+// if it is that section; otherwise the shop is walked for it. Only when the shop has none does the finder
+// settle for the best it saw — the museum's publications, then books — and the shop screen says which.
 async function discoverShop(pageShop,museumHost,venueName,turnedDown,venueId,trace){
   const sf=shopFinderStart(pageShop,museumHost,venueName,turnedDown,venueId,trace);
   const ruled=shopFromRule(sf);
@@ -2316,7 +2326,8 @@ async function discoverShop(pageShop,museumHost,venueName,turnedDown,venueId,tra
   await pickFromSearch(sf);
   await followShopElsewhere(sf);
   await shopifySectionList(sf);
-  await shopMenu(sf);
+  await walkShop(sf);
+  if(!sf.pick&&sf.best){ sf.pick=sf.best; sf.note("settled",{pick:sf.best.url,kind:sf.best.kind}); }
   return await shopResult(sf);
 }
 
@@ -2326,7 +2337,8 @@ async function discoverShop(pageShop,museumHost,venueName,turnedDown,venueId,tra
 function shopFinderStart(pageShop,museumHost,venueName,turnedDown,venueId,trace){
   const sf={pageShop,museumHost,venueName,venueId,trace,no:new Set((turnedDown||[]).map(normalizeUrlKey)),own:linkEntry(venueId)||{},
     pageShopHost:baseDomain(hostOf(pageShop))===baseDomain(museumHost)?"":hostOf(pageShop),
-    opens:0,seenText:"",died:null,opened:new Set(),mine:[],root:"",front:"",pick:null};
+    opens:0,seenText:"",died:null,opened:new Set(),mine:[],root:"",front:"",pick:null,best:null,
+    texts:new Map(),failed:new Set(),walked:new Set(),walkOpens:0};
   sf.place=u=>isShopPlace(u,museumHost,sf.pageShopHost);
   sf.named=r=>!sf.place(r.url)&&namesVenue(r.url,sf.own.shopNamed);
   // A shop page on the museum's own site is the shop's front, never the museum's home page
@@ -2335,22 +2347,37 @@ function shopFinderStart(pageShop,museumHost,venueName,turnedDown,venueId,trace)
   sf.rootFor=u=>sf.ownPage(u)?u:shopRootOf(u);
   sf.homeOf=u=>sf.ownPage(u)?u:originOf(u);
   sf.note=(step,what)=>{ if(trace)trace.push({step,...what}); };
+  // The museum's own name as a section's label: its address's name ("kmska"), or the names it goes by.
+  const plain=x=>foldText(x||"").replace(/[^a-z0-9]+/g," ").trim();
+  const names=new Set([baseDomain(museumHost).split(".")[0],sf.own.short,sf.own.notCard,sf.own.name,venueName].map(plain).filter(x=>x.length>=3));
+  sf.ownName=label=>names.has(plain(label));
+  // A proven section kept: the exhibition-catalogues section ends the search; anything less is kept
+  // as the best so far, in case the shop has none.
+  sf.consider=r=>{ if(!r)return; if(r.target)sf.pick=r; if(!sf.best||r.score>sf.best.score)sf.best=r; };
   return sf;
 }
 
 // Candidates in rank order, each proved books-only: on its excerpt, else opened (its page, a Shopify
 // section's products, its first product). Nothing books-only: the first mixed section is opened and
 // the sections inside it tried. One level down, once.
+// Only a section ranked above the best already kept is checked: a lesser one cannot change the answer.
+// A section that failed its check is not checked twice; a page already read is not fetched again.
 async function tryShelves(sf,cands,how,inside){
-  const ranked=rankShelves(cands.map(c=>({...c,url:firstPageOf(c.url)})).filter((c,i,a)=>a.findIndex(x=>x.url===c.url)===i));
+  const above=sf.best?sf.best.score:-Infinity;
+  const ranked=rankShelves(cands.map(c=>({...c,url:firstPageOf(c.url)})).filter((c,i,a)=>a.findIndex(x=>x.url===c.url)===i),sf.ownName);
   for(const c of ranked){
-    if(sf.no.has(normalizeUrlKey(c.url)))continue;
+    const k=normalizeUrlKey(c.url);
+    if(c.score<=above)break;
+    if(sf.no.has(k)||sf.failed.has(k))continue;
     if(c.proof&&looksLikeBookShelf(c.proof))return{...c,how};
-    if(sf.opens>=SHELF_OPENS)return null;
-    sf.opens++; sf.opened.add(c.url);
-    const f=await openShopPage(fetchPage,c.url,"The books in this section of the shop, with their prices.",null,{full:true});
-    if(!f.ok){ sf.died=f.detail; continue; }
-    const t=pageTextOf(f.results); sf.seenText+="\n"+t;
+    let t=sf.texts.get(k);
+    if(t==null){
+      if(sf.opens>=SHELF_OPENS)return null;
+      sf.opens++; sf.opened.add(c.url);
+      const f=await openShopPage(fetchPage,c.url,"The books in this section of the shop, with their prices.",null,{full:true});
+      if(!f.ok){ sf.died=f.detail; sf.failed.add(k); continue; }
+      t=pageTextOf(f.results); sf.texts.set(k,t); sf.seenText+="\n"+t;
+    }
     if(looksLikeBookShelf(t))return{...c,how};
     const pj=shopifyProductsUrl(c.url);
     if(pj){
@@ -2358,6 +2385,7 @@ async function tryShelves(sf,cands,how,inside){
       if(j.ok&&shopifyShelfIsBooks(pageTextOf(j.results)))return{...c,how};
     }
     if(await firstProductIsBook(fetchPage,t,hostOf(c.url)))return{...c,how};
+    sf.failed.add(k);
   }
   if(inside||!ranked.mixed.length)return null;
   const m=ranked.mixed[0];
@@ -2400,13 +2428,20 @@ async function searchForShop(sf){
   sf.note("search",{results:(s.results||[]).length,shopLike:sf.mine.map(r=>r.url),again,root:sf.root,died:sf.died||null});
 }
 
-// Step 3. A books section among the search's shop-like results.
+// Step 3. The search's shop-like results: the exhibition-catalogues section is taken; a lesser books
+// section is kept as the best so far, and its shop is the one walked — in English when the search shows
+// the shop's English pages (KMSKA: "/nl/boeken" came first, "/en" among the rest).
 async function pickFromSearch(sf){
   sf.opens=0;
-  sf.pick=await tryShelves(sf,sf.mine.map(r=>({url:r.url,words:(r.title||"")+" "+pathWords(r.url),proof:(r.excerpts||[]).join("\n"),named:sf.named(r)})),"a search");
+  const r=await tryShelves(sf,sf.mine.map(r=>({url:r.url,words:(r.title||"")+" "+pathWords(r.url),proof:(r.excerpts||[]).join("\n"),named:sf.named(r)})),"a search");
+  sf.consider(r);
   // A named section is on the shop company's site: that site is its shop, whatever the page linked.
-  if(sf.pick&&sf.pick.named)sf.root=shopRootOf(sf.pick.url);
-  sf.note("search-pick",{pick:sf.pick?sf.pick.url:null});
+  if(r&&r.named)sf.root=shopRootOf(r.url);
+  else if(r&&!sf.ownPage(r.url)){
+    const h=hostOf(r.url), en=sf.mine.map(m=>m.url).find(u=>hostOf(u)===h&&/^\/en(?:-[a-z]{2})?(?:\/|$)/i.test((()=>{ try{ return new URL(u).pathname; }catch{ return ""; } })()));
+    sf.root=shopRootOf(en||r.url);
+  }
+  sf.note("search-pick",{pick:sf.pick?sf.pick.url:null,best:sf.best?sf.best.url:null,root:sf.root||null});
 }
 
 // Step 4. The museum's own Shop page sending visitors to a shop on another site ("Shop now" →
@@ -2414,7 +2449,7 @@ async function pickFromSearch(sf){
 // the exact page linked, never the site's root: Yale's shop is one of many on its payment site
 // (secure.touchnet.net; AL-042).
 async function followShopElsewhere(sf){
-  if(sf.pick)return;
+  if(sf.pick||sf.best)return;
   const away=await shopElsewhere([sf.pageShop,...sf.mine.map(r=>r.url)],sf.museumHost);
   if(away.died)sf.died=away.died;
   if(away.url){ sf.root=sf.rootFor(away.url); sf.front=away.url; if(!sf.ownPage(away.url))sf.pageShopHost=hostOf(away.url); sf.seenText+="\n"+away.text; }
@@ -2425,7 +2460,7 @@ async function followShopElsewhere(sf){
 // its "Udstillingskataloger" past the first 250), at most SHOPIFY_LIST_PAGES pages.
 const SHOPIFY_LIST_PAGES=4;
 async function shopifySectionList(sf){
-  if(sf.pick||!sf.root||!/\/(?:collections|products)\/|\.myshopify\.com/i.test(sf.seenText+"\n"+sf.root))return;
+  if(sf.pick||!sf.root||!/\/(?:collections|products)\/|\.myshopify\.com/i.test(sf.seenText+"\n"+sf.root+"\n"+sf.mine.map(r=>r.url).join("\n")))return;
   const all=[];
   for(let page=1;page<=SHOPIFY_LIST_PAGES;page++){
     const f=await fetchPage(originOf(sf.root)+"collections.json?limit=250"+(page>1?"&page="+page:""),"The shop's sections: titles and handles.",null,{full:true});
@@ -2434,25 +2469,44 @@ async function shopifySectionList(sf){
     all.push(...shopifySections(t,sf.root));
     if((t.match(/"handle"\s*:/g)||[]).length<250)break;
   }
-  if(all.length){ sf.opens=0; sf.pick=await tryShelves(sf,all,"the shop's list of sections"); }
-  sf.note("shopify-sections",{pick:sf.pick?sf.pick.url:null});
+  if(all.length){ sf.opens=0; sf.consider(await tryShelves(sf,all,"the shop's list of sections")); }
+  sf.note("shopify-sections",{pick:sf.pick?sf.pick.url:null,best:sf.best?sf.best.url:null});
 }
 
-// Step 6. The front page's menu. A page linked as the shop that comes back empty (Berlin's
+// Step 6. The walk (her design): the shop's front page, then the section links on what was opened, best
+// first — catalogues, the museum's publications, books, then a section mixing books with other goods —
+// each opened page's links checked for the exhibition-catalogues section, until it is found or
+// WALK_OPENS pages are spent. A page linked as the shop that comes back empty (Berlin's
 // smb-webshop.de/museen-und-sammlungen/, "301 Moved Permanently") gives way to the shop's own front page.
-async function shopMenu(sf){
+async function openToWalk(sf,url){
+  const k=normalizeUrlKey(url);
+  sf.walked.add(k);
+  if(sf.texts.has(k))return sf.texts.get(k);
+  if(sf.walkOpens>=WALK_OPENS)return null;
+  sf.walkOpens++;
+  const f=await openShopPage(fetchPage,url,"The shop's menu: its exhibition catalogues and books sections.",null,{full:true});
+  if(!f.ok){ sf.died=f.detail; return null; }
+  const t=pageTextOf(f.results); sf.texts.set(k,t); sf.seenText+="\n"+t;
+  return t;
+}
+async function walkShop(sf){
   if(sf.pick||!sf.root)return;
-  let page=sf.front||sf.root;
-  let f=await openShopPage(fetchPage,page,"The shop's menu: its exhibition catalogues and books sections.",null,{full:true});
-  if(f.ok&&sf.front&&pageTextOf(f.results).trim().length<SHELL_CHARS&&originOf(sf.root)!==sf.front){
-    page=originOf(sf.root);
-    f=await openShopPage(fetchPage,page,"The shop's menu: its exhibition catalogues and books sections.",null,{full:true});
+  const host=hostOf(sf.root), links=[], pages=[];
+  let page=sf.front||sf.root, t=await openToWalk(sf,page);
+  if(t!=null&&sf.front&&t.trim().length<SHELL_CHARS&&originOf(sf.root)!==sf.front){ page=originOf(sf.root); t=await openToWalk(sf,page); }
+  while(t!=null){
+    pages.push(page);
+    const here=menuLinks(t,host);
+    links.push(...here);
+    sf.opens=0; sf.consider(await tryShelves(sf,here,"the shop's menu",true));
+    if(sf.pick||sf.walkOpens>=WALK_OPENS)break;
+    // Next: the best section link seen and not yet walked into.
+    const ranked=rankShelves(links.map(c=>({...c,url:firstPageOf(c.url)})),sf.ownName);
+    const next=[...ranked,...ranked.mixed].find(c=>!sf.walked.has(normalizeUrlKey(c.url))&&!sf.no.has(normalizeUrlKey(c.url)));
+    if(!next)break;
+    page=next.url; t=await openToWalk(sf,page);
   }
-  if(f.ok){
-    const t=pageTextOf(f.results); sf.seenText+="\n"+t;
-    sf.opens=0; sf.pick=await tryShelves(sf,menuLinks(t,hostOf(sf.root)),"the shop's menu");
-  }else sf.died=f.detail;
-  sf.note("menu",{page,pick:sf.pick?sf.pick.url:null});
+  sf.note("walk",{pages,pick:sf.pick?sf.pick.url:null,best:sf.best?sf.best.url:null});
 }
 
 // Step 7. The answer: a books section and the shop's search; a step that died (said as such, not as
@@ -7757,10 +7811,12 @@ export default function App(){
                 const home=v.shop==="noshelf"||v.shop==="failed"?v.shopHome:null;
                 const said=v.shop==="found"?null:v.shop==="noshelf"?"Shop found, but not its books section: "
                   :v.shop==="failed"?"Search failed.":"No museum shop found.";
+                // Settled for less (her design): the shop has no exhibition catalogues section, and the line says which it is.
+                const lesser=link&&(v.shelfKind==="publications"||v.shelfKind==="books")?"Shop found, but not its exhibition catalogues section \u2014 its "+v.shelfKind+": ":null;
                 const yes=v.confirmed&&v.shop==="found", none=v.confirmed&&v.shop==="none";
                 return <div key={id} style={{paddingTop:12,marginTop:10,borderTop:"1px solid "+C.rule,fontSize:12.5,color:C.ink,lineHeight:1.45}}>
                   <div style={{fontWeight:600}}>{(MU[id]&&(MU[id].card||MU[id].short))||v.short||v.name||id}</div>
-                  {link?<a href={link} target="_blank" rel="noopener noreferrer" style={{color:C.action,overflowWrap:"anywhere"}}>{link}</a>
+                  {link?<div>{lesser&&<span style={{color:C.soft}}>{lesser}</span>}<a href={link} target="_blank" rel="noopener noreferrer" style={{color:C.action,overflowWrap:"anywhere"}}>{link}</a></div>
                     :<div style={{color:C.soft}}>{said}{home&&v.shop==="noshelf"&&<a href={home} target="_blank" rel="noopener noreferrer" style={{color:C.action,overflowWrap:"anywhere"}}>{home}</a>}</div>}
                   <div style={{display:"flex",gap:6,marginTop:6,alignItems:"center",flexWrap:"wrap"}}>
                     {looking?<span style={{fontSize:11.5,color:C.soft}}>Looking{"\u2026"}</span>:<>
