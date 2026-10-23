@@ -472,7 +472,7 @@ dropped) and reads it with `readShowPage`, then the same intake as a link. No Pa
 - **Proof:** her saved pages, kept in `docs/link_pages/saved/` cut to the page itself (her decision: the
   site refuses Parallel, so live proof is impossible). Tests AP-001–010 (`add_by_page.js`).
 
-## Pasted pages — the Paste button (a trial, `claude/paste-import`, unpublished)
+## Pasted pages — the Paste button (a trial, `claude/paste-import`)
 
 For sites that refuse Parallel, where saving each page is slow (her idea; the Tate library's catalogue). Import
 offers CSV · Links · Pages · Paste. One box per page, the link and the page's text in separate boxes (her design:
@@ -486,6 +486,9 @@ stored as she types (`links/pastes`), so leaving the page to copy loses nothing.
   museum Claude names when it is one of hers on that site (`ownMuseumNamed`) — else a new venue for the library.
 - **Proof:** her three pastes, `docs/link_pages/pasted_tate_library.json` (Caro, Turner, Stubbs; the third box
   opens with Turner's leftover summary, her test of a lazy paste). Tests PS-001–021 (`add_by_paste.js`).
+- **Test page:** https://claude.ai/artifact/Q55UksBeW7CwQm5YzWXTLe (title "Cat Watch Paste Test"; built from this branch,
+  the title set after `build_app.js`). Published with `sample`, `db`, `downloads` only — the `mcp` grant (Parallel)
+  was refused at publish, so Links and catalogue lookups do not work there; Paste needs none of it.
 - **Unproven:** what her own Claude says for Stubbs, whose record holds no description (the passage is empty —
   most likely no description); whether her Claude names Tate Britain for a library record.
 
