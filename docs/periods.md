@@ -11,6 +11,12 @@ branch's `scraper/fixtures/branch_tests.txt`.
 - **Her review of v1.2 is pending.** She re-Loads her file (no labels) and presses Label, then checks
   the groups v1.2 changed: Surveys, General 19th Century, Late Venetian, Belle Époque and Aestheticism,
   Decorative Arts, Architecture. v1.1 was ~90–95% right by her eye; v1.2 was "most of the way there".
+- **Her reorder is on the branch, not yet on the test page** (publish on her go-ahead).
+- **Two labels she questioned, her call pending:** the Met's *Hidden Faces* (Italian and Northern
+  portraits together) went to Northern Renaissance, and no rule says where a show pairing Italy and the
+  North of the same years goes; Cincinnati's *Impressions of Venice* (Whistler to Duveneck) went to Belle
+  Époque through Whistler, though its heart is Cincinnati's American painters. Both from Claude seeing
+  only the title and six-word teaser.
 - **How theme groups are handled will change** (her new idea, for a new session): groups that are a
   kind of thing rather than a time — today Decorative Arts and Architecture, possibly Surveys and the
   rest after Contemporary. Ask her for the idea before touching them.
@@ -29,8 +35,11 @@ branch's `scraper/fixtures/branch_tests.txt`.
 - **The list's order is her centre-of-gravity rule:** Italy first only where two periods compete
   (Northern Renaissance after Early, before High Renaissance), then the North (Flemish, then Dutch),
   France from Louis XIV to the 1940s, America after the war. A region's periods sit after the
-  dominant region's of the same time (Late Venetian after Rococo; Georgian, Victorian Britain,
-  19th-century America). Names and dates are the model's knowledge, not hers; she judges by eye.
+  dominant region's of the same time (Late Venetian after Rococo). Her reorder on review of v1.2: Georgian
+  Britain between Late Venetian and Neoclassicism; Victorian Britain and 19th-century America after
+  Realism, before Impressionism; Belle Époque and Aestheticism before Symbolism and Art Nouveau; Postwar
+  Europe after Abstract Expressionism, before Pop. Names and dates are the model's knowledge, not hers;
+  she judges by eye.
 - **Groups after Contemporary, in her order:** Surveys, Decorative Arts, Architecture, Miscellaneous
   Historic, Miscellaneous Modern, Non-Western Art. Miscellaneous stays as small as possible (her
   decision) — General 19th Century keeps 19th-century shows outside any movement in their place in time.

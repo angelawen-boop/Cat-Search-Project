@@ -1832,7 +1832,8 @@ function topicPresets(props){
 // the list's order, then the year, then her venue order. The list's order is her
 // centre-of-gravity rule: Italy, then the North, then France, then America, a region's
 // periods placed after the dominant region's periods of the same time (Italy first only
-// where two compete). The groups after Contemporary (her decision) take what fits no
+// where two compete); Britain and 19th-century America sit beside the French periods of
+// their time, Postwar Europe after Abstract Expressionism (her reorder). The groups after Contemporary (her decision) take what fits no
 // period: surveys, decorative arts and architecture from 1800, stragglers, non-Western art.
 const PERIODS=[
   {key:"antiquity",name:"Antiquity",span:"before c. 400; ancient art from anywhere"},
@@ -1851,23 +1852,23 @@ const PERIODS=[
   {key:"classicism",name:"French Classicism",span:"c. 1620–1715 (Poussin, Claude, the age of Louis XIV)"},
   {key:"rococo",name:"Rococo",span:"c. 1715–1775 (Watteau, Boucher, Fragonard, Tiepolo)"},
   {key:"latevenetian",name:"Late Venetian",span:"c. 1700–1790: Venetian views and the Grand Tour (Canaletto, Bellotto, Guardi)"},
-  {key:"neoclassicism",name:"Neoclassicism",span:"c. 1760–1820"},
   {key:"georgian",name:"Georgian Britain",span:"c. 1720–1830 (Hogarth, Gainsborough, Reynolds, Stubbs)"},
+  {key:"neoclassicism",name:"Neoclassicism",span:"c. 1760–1820"},
   {key:"romanticism",name:"Romanticism",span:"c. 1800–1850 (Turner, Constable and Goya included)"},
   {key:"realism",name:"Realism",span:"c. 1840–1880, the Barbizon school and the Salon included"},
-  {key:"impressionism",name:"Impressionism",span:"c. 1865–1890, Manet and Degas included"},
-  {key:"postimp",name:"Post-Impressionism",span:"c. 1885–1905"},
-  {key:"symbolism",name:"Symbolism and Art Nouveau",span:"c. 1880–1910, the Vienna Secession included"},
-  {key:"belleepoque",name:"Belle Époque and Aestheticism",span:"c. 1870–1914 (Sargent, Whistler, Tissot, Boldini)"},
   {key:"victorian",name:"Victorian Britain",span:"c. 1837–1901, the Pre-Raphaelites included"},
   {key:"american19",name:"19th-century America",span:"c. 1820–1910"},
+  {key:"impressionism",name:"Impressionism",span:"c. 1865–1890, Manet and Degas included"},
+  {key:"postimp",name:"Post-Impressionism",span:"c. 1885–1905"},
+  {key:"belleepoque",name:"Belle Époque and Aestheticism",span:"c. 1870–1914 (Sargent, Whistler, Tissot, Boldini)"},
+  {key:"symbolism",name:"Symbolism and Art Nouveau",span:"c. 1880–1910, the Vienna Secession included"},
   {key:"general19",name:"General 19th Century",span:"c. 1800–1900: 19th-century art that is not about one of the movements above"},
   {key:"earlymodern",name:"Early Modernism",span:"c. 1900–1918 (Fauvism, Cubism, Expressionism, Futurism)"},
   {key:"interwar",name:"Interwar Modernism",span:"c. 1918–1945 (Surrealism, Dada, Bauhaus, Art Deco)"},
   {key:"americanmod",name:"American Modernism",span:"c. 1910–1945 (O’Keeffe, Hopper, the Harlem Renaissance)"},
   {key:"abex",name:"Abstract Expressionism",span:"c. 1943–1965"},
-  {key:"pop",name:"Pop Art and Minimalism",span:"c. 1955–1980"},
   {key:"postwareu",name:"Postwar Europe",span:"c. 1945–1980"},
+  {key:"pop",name:"Pop Art and Minimalism",span:"c. 1955–1980"},
   {key:"contemporary",name:"Contemporary",span:"c. 1980 to now"},
   {key:"surveys",name:"Surveys",span:"a show whose works spread across the centuries with no one period at its heart"},
   {key:"decorative",name:"Decorative Arts",span:"set by code from kind, never picked"},
