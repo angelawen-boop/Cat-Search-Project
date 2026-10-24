@@ -1926,6 +1926,7 @@ function periodPrompt(shows){
     "- Pick by the date and place of the art itself, not the exhibition's theme words.",
     "- Names in a period's description stand for shows about those artists, not for every show that mentions them.",
     "- Italian art of c. 1400–1600 goes in the Italian periods; Netherlandish, German and French art of that time in Northern Renaissance.",
+    "- A show of Italian and Northern art of the same years: the Italian period.",
     "- A recent artist responding to older art, or a show pairing artists of different periods: the period of the OLDER art, with its year, and response true.",
     "- A movement's period only for a show about that movement or its artists. Other 19th-century art: general19.",
     "- A show spanning a long stretch: the period most of its works come from (its heart), with that period's year. Only when the works spread across the centuries with no one period at its heart: surveys, with the midpoint year.",
