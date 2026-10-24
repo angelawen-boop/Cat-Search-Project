@@ -3,8 +3,8 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 // The footer prints APP_VERSION and its date, so she can tell one build from the next.
 // Numbering, her decision: a whole number for a substantial change, a decimal for a
 // small one, one number per publish. Bump it with the change it describes.
-const APP_VERSION = "1.2";   // the Period test page's own numbering (her name for it), not her app's
-const APP_VERSION_DATE = "20 Oct 2026";
+const APP_VERSION = "1.3";   // the Period test page's own numbering (her name for it), not her app's
+const APP_VERSION_DATE = "24 Oct 2026";
 
 // The venue order is VENUE_ORDER, below the list, which sorts MUSEUMS; drawer, chips,
 // Sort by Venue and refresh headings all follow it.
@@ -1926,7 +1926,6 @@ function periodPrompt(shows){
     "- Pick by the date and place of the art itself, not the exhibition's theme words.",
     "- Names in a period's description stand for shows about those artists, not for every show that mentions them.",
     "- Italian art of c. 1400–1600 goes in the Italian periods; Netherlandish, German and French art of that time in Northern Renaissance.",
-    "- A show of Italian and Northern art of the same years: the Italian period.",
     "- A recent artist responding to older art, or a show pairing artists of different periods: the period of the OLDER art, with its year, and response true.",
     "- A movement's period only for a show about that movement or its artists. Other 19th-century art: general19.",
     "- A show spanning a long stretch: the period most of its works come from (its heart), with that period's year. Only when the works spread across the centuries with no one period at its heart: surveys, with the midpoint year.",

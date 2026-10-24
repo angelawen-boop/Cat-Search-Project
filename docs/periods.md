@@ -2,7 +2,7 @@
 
 Her trial: code on `claude/period-sort`, published only to its own test page, never her app until she
 says. **Test page:** https://claude.ai/artifact/JeoJyWxJbU9RApY9q4sVni ("Cat Watch Period Test",
-footer "version 1.2"; its own store, separate from her app — `node build/build_app.js` on the branch
+footer "version 1.3"; its own store, separate from her app — `node build/build_app.js` on the branch
 builds it and prints the steps). Tests: `period_sort.js` (PS-), `period_render.js` (PR-), listed in the
 branch's `scraper/fixtures/branch_tests.txt`.
 
@@ -11,15 +11,17 @@ branch's `scraper/fixtures/branch_tests.txt`.
 - **Her review of v1.2 is pending.** She re-Loads her file (no labels) and presses Label, then checks
   the groups v1.2 changed: Surveys, General 19th Century, Late Venetian, Belle Époque and Aestheticism,
   Decorative Arts, Architecture. v1.1 was ~90–95% right by her eye; v1.2 was "most of the way there".
-- **Her reorder is on the branch, not yet on the test page** (publish on her go-ahead).
-- **Two labels she questioned — her answers:** the Met's *Hidden Faces* (Italian and Northern portraits
-  together) belongs in Early Renaissance; Cincinnati's *Impressions of Venice* (Whistler to Duveneck) in
-  19th-century America. Labelled from the card alone, Venice went to Belle Époque because Whistler is named
-  in that group's description (removing the names flipped it; full page text did not help). Her rule,
-  added: names in a period's description stand for shows about those artists. Tested on her cards: Venice
-  mostly to 19th-century America; Sargent, Whistler, Canaletto and Bellini shows unchanged; *Emily
-  Sargent* moved mostly to General 19th Century (her call). *Hidden Faces* still Northern — no rule yet
-  for Italian and Northern art of the same years.
+- **v1.3 published: her reorder and the Venice fix.** Her rule "names in a period's description stand
+  for shows about those artists" and Emily Sargent named in Belle Époque: on her cards *Impressions of
+  Venice* goes to 19th-century America, the Sargent, Emily Sargent and Whistler shows stay in Belle Époque.
+- **OPEN — *Hidden Faces* (Met) should be Early Renaissance; no fix yet** that does not move other shows.
+  Tried: "Italian and Northern art of the same years: the Italian period" (→ High Renaissance, by date);
+  "…of the 15th and 16th centuries: Early Renaissance" (right, but tested beside other changes);
+  "a Renaissance show spanning Early and High with no one heart: Early" (mostly Northern). Three shows she
+  says were right before now drift under the current rules: *Zaragoza's Retablo* (International Gothic →
+  Miscellaneous Historic, Claude dating it c. 1470), *Spranger* (Mannerism → Northern), *Jousting Armor*
+  (Northern, once Miscellaneous); her rule "anything that fits a non-miscellaneous group goes there" fixed
+  only the armor.
 - **Flagging unsure labels for her review** (her plan): before Claude opens pages, unsure answers are
   flagged for her; many flags → refine rules, few → let Claude open the show's page. Not built.
 - **How theme groups are handled will change** (her new idea, for a new session): groups that are a
