@@ -1858,7 +1858,7 @@ const PERIODS=[
   {key:"realism",name:"Realism",span:"c. 1840–1880, the Barbizon school and the Salon included"},
   {key:"impressionism",name:"Impressionism",span:"c. 1865–1890, Manet and Degas included"},
   {key:"postimp",name:"Post-Impressionism",span:"c. 1885–1905"},
-  {key:"belleepoque",name:"Belle Époque and Aestheticism",span:"c. 1870–1914 (Sargent, Whistler, Tissot, Boldini)"},
+  {key:"belleepoque",name:"Belle Époque and Aestheticism",span:"c. 1870–1914 (Sargent, Emily Sargent, Whistler, Tissot, Boldini)"},
   {key:"symbolism",name:"Symbolism and Art Nouveau",span:"c. 1880–1910, the Vienna Secession included"},
   {key:"victorian",name:"Victorian Britain",span:"c. 1837–1901, the Pre-Raphaelites included"},
   {key:"american19",name:"19th-century America",span:"c. 1820–1910"},
