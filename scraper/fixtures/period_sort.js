@@ -7,9 +7,10 @@ const rank=k=>H.PERIOD_RANK[k];
 
 // Her centre-of-gravity rule: Italy, then the North, then France, then America.
 check('PS-001 Italy first only where two compete: Early Renaissance, then Northern, then High Renaissance', rank('earlyren')<rank('northern')&&rank('northern')<rank('highren')&&rank('highren')<rank('mannerism'));
-check('PS-001 Late Venetian after Rococo; Belle \u00c9poque before Symbolism; General 19th Century last of the 1800s', rank('rococo')+1===rank('latevenetian')&&rank('belleepoque')+1===rank('symbolism')&&rank('symbolism')+1===rank('general19')&&rank('general19')+1===rank('earlymodern'));
+check('PS-001 Late Venetian after Rococo; Belle \u00c9poque before Symbolism; General 19th Century last of the 1800s', rank('rococo')+1===rank('latevenetian')&&rank('belleepoque')+1===rank('symbolism')&&rank('american19')+1===rank('general19')&&rank('general19')+1===rank('earlymodern'));
 check('PS-001 Italian before Flemish before Dutch', rank('baroque')<rank('flemish')&&rank('flemish')<rank('dutch'));
-check('PS-001 her reorder: Georgian between Rococo and Neoclassicism; Victorian Britain and 19th-century America after Realism, before Impressionism', rank('latevenetian')+1===rank('georgian')&&rank('georgian')+1===rank('neoclassicism')&&rank('realism')+1===rank('victorian')&&rank('victorian')+1===rank('american19')&&rank('american19')+1===rank('impressionism'));
+check('PS-001 her reorder: Georgian between Late Venetian and Neoclassicism; Victorian Britain and 19th-century America stay after Symbolism', rank('latevenetian')+1===rank('georgian')&&rank('georgian')+1===rank('neoclassicism')&&rank('symbolism')+1===rank('victorian')&&rank('victorian')+1===rank('american19')&&rank('american19')+1===rank('general19'));
+check('PS-001 French periods before Britain and 19th-century America', ['classicism','rococo','neoclassicism','impressionism','postimp'].every(k=>rank(k)<rank('victorian')&&rank(k)<rank('american19')));
 check('PS-001 her reorder: Postwar Europe after Abstract Expressionism, before Pop; Contemporary last of the periods', rank('abex')+1===rank('postwareu')&&rank('postwareu')+1===rank('pop')&&rank('contemporary')===rank('surveys')-1);
 check('PS-001 Antiquity first', rank('antiquity')===0);
 

@@ -1832,8 +1832,8 @@ function topicPresets(props){
 // the list's order, then the year, then her venue order. The list's order is her
 // centre-of-gravity rule: Italy, then the North, then France, then America, a region's
 // periods placed after the dominant region's periods of the same time (Italy first only
-// where two compete); Britain and 19th-century America sit beside the French periods of
-// their time, Postwar Europe after Abstract Expressionism (her reorder). The groups after Contemporary (her decision) take what fits no
+// where two compete); Georgian before Neoclassicism, Belle Époque before Symbolism, Postwar
+// Europe after Abstract Expressionism (her reorder). The groups after Contemporary (her decision) take what fits no
 // period: surveys, decorative arts and architecture from 1800, stragglers, non-Western art.
 const PERIODS=[
   {key:"antiquity",name:"Antiquity",span:"before c. 400; ancient art from anywhere"},
@@ -1856,12 +1856,12 @@ const PERIODS=[
   {key:"neoclassicism",name:"Neoclassicism",span:"c. 1760–1820"},
   {key:"romanticism",name:"Romanticism",span:"c. 1800–1850 (Turner, Constable and Goya included)"},
   {key:"realism",name:"Realism",span:"c. 1840–1880, the Barbizon school and the Salon included"},
-  {key:"victorian",name:"Victorian Britain",span:"c. 1837–1901, the Pre-Raphaelites included"},
-  {key:"american19",name:"19th-century America",span:"c. 1820–1910"},
   {key:"impressionism",name:"Impressionism",span:"c. 1865–1890, Manet and Degas included"},
   {key:"postimp",name:"Post-Impressionism",span:"c. 1885–1905"},
   {key:"belleepoque",name:"Belle Époque and Aestheticism",span:"c. 1870–1914 (Sargent, Whistler, Tissot, Boldini)"},
   {key:"symbolism",name:"Symbolism and Art Nouveau",span:"c. 1880–1910, the Vienna Secession included"},
+  {key:"victorian",name:"Victorian Britain",span:"c. 1837–1901, the Pre-Raphaelites included"},
+  {key:"american19",name:"19th-century America",span:"c. 1820–1910"},
   {key:"general19",name:"General 19th Century",span:"c. 1800–1900: 19th-century art that is not about one of the movements above"},
   {key:"earlymodern",name:"Early Modernism",span:"c. 1900–1918 (Fauvism, Cubism, Expressionism, Futurism)"},
   {key:"interwar",name:"Interwar Modernism",span:"c. 1918–1945 (Surrealism, Dada, Bauhaus, Art Deco)"},
@@ -1924,6 +1924,7 @@ function periodPrompt(shows){
     "",
     "Rules:",
     "- Pick by the date and place of the art itself, not the exhibition's theme words.",
+    "- Names in a period's description stand for shows about those artists, not for every show that mentions them.",
     "- Italian art of c. 1400–1600 goes in the Italian periods; Netherlandish, German and French art of that time in Northern Renaissance.",
     "- A recent artist responding to older art, or a show pairing artists of different periods: the period of the OLDER art, with its year, and response true.",
     "- A movement's period only for a show about that movement or its artists. Other 19th-century art: general19.",

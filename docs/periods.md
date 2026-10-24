@@ -12,11 +12,16 @@ branch's `scraper/fixtures/branch_tests.txt`.
   the groups v1.2 changed: Surveys, General 19th Century, Late Venetian, Belle Époque and Aestheticism,
   Decorative Arts, Architecture. v1.1 was ~90–95% right by her eye; v1.2 was "most of the way there".
 - **Her reorder is on the branch, not yet on the test page** (publish on her go-ahead).
-- **Two labels she questioned, her call pending:** the Met's *Hidden Faces* (Italian and Northern
-  portraits together) went to Northern Renaissance, and no rule says where a show pairing Italy and the
-  North of the same years goes; Cincinnati's *Impressions of Venice* (Whistler to Duveneck) went to Belle
-  Époque through Whistler, though its heart is Cincinnati's American painters. Both from Claude seeing
-  only the title and six-word teaser.
+- **Two labels she questioned — her answers:** the Met's *Hidden Faces* (Italian and Northern portraits
+  together) belongs in Early Renaissance; Cincinnati's *Impressions of Venice* (Whistler to Duveneck) in
+  19th-century America. Labelled from the card alone, Venice went to Belle Époque because Whistler is named
+  in that group's description (removing the names flipped it; full page text did not help). Her rule,
+  added: names in a period's description stand for shows about those artists. Tested on her cards: Venice
+  mostly to 19th-century America; Sargent, Whistler, Canaletto and Bellini shows unchanged; *Emily
+  Sargent* moved mostly to General 19th Century (her call). *Hidden Faces* still Northern — no rule yet
+  for Italian and Northern art of the same years.
+- **Flagging unsure labels for her review** (her plan): before Claude opens pages, unsure answers are
+  flagged for her; many flags → refine rules, few → let Claude open the show's page. Not built.
 - **How theme groups are handled will change** (her new idea, for a new session): groups that are a
   kind of thing rather than a time — today Decorative Arts and Architecture, possibly Surveys and the
   rest after Contemporary. Ask her for the idea before touching them.
@@ -36,9 +41,9 @@ branch's `scraper/fixtures/branch_tests.txt`.
   (Northern Renaissance after Early, before High Renaissance), then the North (Flemish, then Dutch),
   France from Louis XIV to the 1940s, America after the war. A region's periods sit after the
   dominant region's of the same time (Late Venetian after Rococo). Her reorder on review of v1.2: Georgian
-  Britain between Late Venetian and Neoclassicism; Victorian Britain and 19th-century America after
-  Realism, before Impressionism; Belle Époque and Aestheticism before Symbolism and Art Nouveau; Postwar
-  Europe after Abstract Expressionism, before Pop. Names and dates are the model's knowledge, not hers;
+  Britain between Late Venetian and Neoclassicism; Belle Époque and Aestheticism before Symbolism and Art
+  Nouveau; Postwar Europe after Abstract Expressionism, before Pop. Victorian Britain and 19th-century
+  America stay after Symbolism (her decision: she declined moving them beside Romanticism and Realism). Names and dates are the model's knowledge, not hers;
   she judges by eye.
 - **Groups after Contemporary, in her order:** Surveys, Decorative Arts, Architecture, Miscellaneous
   Historic, Miscellaneous Modern, Non-Western Art. Miscellaneous stays as small as possible (her
