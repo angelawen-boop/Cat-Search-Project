@@ -27,9 +27,21 @@ branch's `scraper/fixtures/branch_tests.txt`.
 - **How theme groups are handled will change** (her new idea, for a new session): groups that are a
   kind of thing rather than a time — today Decorative Arts and Architecture, possibly Surveys and the
   rest after Contemporary. Ask her for the idea before touching them.
-- **Next, after her review:** widen from the seven trial venues to her whole ledger (a one-line change,
-  `PERIOD_VENUES`), then test the import labelling with a fake sweep CSV and her own links and pages.
-  Merging into her app is her call, after that.
+- **The plan to widen (her decision), in this order:** (1) the theme-group idea first — those groups are
+  about to change, so reviewing them now is wasted; (2) widen in steps (`PERIOD_VENUES`), adding venues
+  chosen for being *different* from the seven (e.g. Rijksmuseum, Italian venues, Menil, Wallace, Louvre),
+  not the whole ledger at once, and fix the rules on what each step shows; (3) when a step brings few new
+  kinds of mistake, add the rest of the ledger as the last check (about 700 shows she reviews — dismissed
+  shows are labelled, she does not review them). **Each review round shows only what changed since the
+  last labelling** (her decision; not built), never the whole list. Then test the import labelling with a
+  fake sweep CSV and her own links and pages. Merging into her app is her call, after that.
+- **OPEN — Label often stops part-way** (about half her runs). The lookup log shows the page's Claude
+  refusing in spells ("request failed", "the connection was lost"; code `upstream_error`) and answering
+  again minutes later; a failed batch is asked again at once, so the retry lands in the same spell (1.3:
+  five batches right, then every call refused within 0.1s). The cause behind the refusals is unproven — a
+  short-window limit or a busy service. Proposed, not agreed: wait before asking again, and a second pass
+  over failed batches after a pause. Its message says "Couldn't read the search results" because Label
+  shares the catalogue lookup's call (`readResults`) and its wording — Label needs its own.
 
 ## Her design
 
