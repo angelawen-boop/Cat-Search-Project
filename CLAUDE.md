@@ -264,16 +264,13 @@ Art books by theme, an extension of Cat Watch on its own page while a prototype;
 `claude/theme-shelf`. Where it stands, her design and what is unproven: `docs/themes.md`.
 Read it before any Themes work.
 
-#### 2.2.9 Period sort — v1.8 on its test page, her review pending
+#### 2.2.9 Period sort — merged into her app at 51; her load of the test page's ledger confirms
 
-Exhibitions in art-period order, with period dividers, for seven trial venues; code on
-`claude/period-sort`, its own test page. **OPEN:** her review of v1.8 — Surrealism / Dada now its own
-period (shows labelled Interwar before it are asked again by Label), and the period scrubber: a hold on
-the right edge opens every period in the view on a pale panel, the picked one bulging in a green pill,
-lifting jumps there (her design). Her later consideration: bigger scrubber text and line spacing if the
-full ledger adds few headings. Then her plan to widen — venues added in steps, then the whole ledger,
-each round showing her only what changed. Her design, decisions and where it stands: the branch's
-`docs/periods.md`. Read it before any Period work.
+Every exhibition in art-period order, with period dividers, the scrubber and theme chips; Label, Relabel and
+Recently labelled (sort and filter). Built in three stages on its own test page, signed off by her at stage 3
+(the whole ledger). She loads her latest test-page export into 51 (the two ledgers checked by script beforehand:
+the same shows, her marks reconciled). Her view, kept for later: both Misc bins should ultimately go. Her design,
+decisions and every period and theme rule: `docs/periods.md`. Read it before any Period work.
 
 #### 2.2.6 Tests that failed — recorded, not investigated
 
@@ -337,7 +334,7 @@ a session needs lives only behind such a link. Read the one for the work in hand
 |---|---|---|
 | `docs/library.md` | Purchase tracking and a Library tab — **future consideration, never propose** | She raises it |
 | `docs/themes.md` | Themes — art books by theme: her brief and decisions, and the Theme Shelf prototype as built | Any Themes work |
-| `docs/periods.md` | The Period sort trial: her design, the period list's order, the test page | Any Period work |
+| `docs/periods.md` | The Period sort: her design, the period list and its order, the theme labels, every rule Claude follows | Any Period work |
 
 **Procedures** — how to do the recurring jobs
 
@@ -471,7 +468,7 @@ price, her decision).
 > restating `capabilities` must restate all four; omitting it carries them
 > forward. **Renaming the connector means restating them.**
 
-**Live: 50.3 in her app**, with the cloud ledger (merged at 46). What each recent version changed is in
+**Live: 51 in her app**, with the cloud ledger (merged at 46). What each recent version changed is in
 `docs/publishing.md`, "What is live now".
 
 #### The mental model, load-bearing
@@ -501,7 +498,8 @@ reopening, now live — `docs/cloud_storage.md`). Reasoning and the two rejected
 ```
 id, museumId, title, startDate, endDate, summary, exUrl, interested, watching,
 acquiring, buyNext, buyRank, looked, hasCatalogue, catalogueTitle, isbn13, publisher,
-publisherUrl, publisherResult, shopUrl, shopState, shopChange, englishCheck, originalEdition, otherVenueBook, alsoVersion, addedAt, editedAt
+publisherUrl, publisherResult, shopUrl, shopState, shopChange, englishCheck, originalEdition, otherVenueBook, alsoVersion, addedAt, editedAt,
+period, periodYear, periodResponse, periodArtist, themes, labelledAt, relabelledAt
 ```
 
 Ledger backup is JSON; the sweep pro forma is CSV.
@@ -639,8 +637,8 @@ and were fixed in code, proven live).
      (front page, catalogue and books sections, four pages at most); only when it has none does it take the best
      section it saw, and the shop screen says "Shop found, but not its catalogues section" — her wording, one line
      for every such case, nothing about what was taken instead (her decision: she asked only for better looking; the
-     publications-then-books wording and its "says which" design were Claude's, wrongly recorded as hers; fixed on
-     `main`, not published). An exhibition-catalogues section that also sells
+     publications-then-books wording and its "says which" design were Claude's, wrongly recorded as hers; fixed,
+     published at 51). An exhibition-catalogues section that also sells
      the shows' goods counts (her decision; Thyssen's "Exposiciones"). Where it can't see the shop's sections it says
      "Shop found, but not its books section". **A venue in a country that does not speak English: its shop's English
      version** (her design — a foreign-language shop must not hide the English one or its English books): the English
@@ -683,7 +681,7 @@ and were fixed in code, proven live).
   written the venue list back with only its new venue. Now the link venues, Links box, Pages list, sweep log and
   quarantine each say "STORE NOT READ" when their read fails, and their writes refuse until the page is opened again.
   The banner's wording is hers: "STORE NOT READ — [what] couldn't be read from store, refresh to re-check. Current
-  incorrect information will not overwrite the store until the read corrects." (on `main`, not published; SU-001a).
+  incorrect information will not overwrite the store until the read corrects." (published at 51; SU-001a).
   Tested offline on a stand-in store (SU-001–005); the real store is proved only when a read really fails.
   `docs/app.md`, "A store read that fails". **The Paste-import session (`claude/paste-import`) holds its merge until
   this session's work is settled** (her instruction); its rule filing a page under a swept venue by domain would
