@@ -1719,8 +1719,7 @@ function answerFaults(raw,page){
   { const e=ANSWER_CHECK.validateEnglish(linkAnswer(o).english); if(!e.ok)faults.push(e.reason); }
   return faults;
 }
-// Claude is shown the answer it gave: told only the reason, it started afresh and sent the same
-// 13-word summary three times (her Memling link, 25 Oct; AL-062c).
+// Claude is shown the answer refused, to fix it rather than start afresh (her Memling link; AL-062c).
 function askAgainPrompt(prompt,faults,answer){
   return prompt+"\n\nYOUR LAST ANSWER WAS REFUSED: "+faults.join("; ")+".\nTHE ANSWER REFUSED: "+JSON.stringify(answer)
     +"\nAnswer again, every key, with that fixed — never the same answer again. Leave out anything the text does not state.";
@@ -4356,10 +4355,9 @@ function shopLinkLabel(shopState){ return shopState==="gone"?"Museum shop (last 
 
 // Reset cards (her design): every lookup field blank, her marks kept, so the next
 // "Find catalogue" runs the whole route.
-// A LOOKUP LANDS ON THE CARD AS IT IS NOW. A search, Re-check or Relabel runs for a while,
-// and she goes on using the app; when it finishes, only the fields it changed are written,
-// onto the ledger as it stands then — her star, her Yes and every other card's marks made
-// meanwhile are kept. LC-001 to LC-004.
+// A LOOKUP LANDS ON THE CARD AS IT IS NOW: when a search, Re-check or Relabel finishes, only
+// the fields it changed are written, onto the ledger as it stands then, so marks made while it
+// ran are kept (docs/app.md, "The route"; LC-001 to LC-005).
 function landOnCard(now,id,before,after){
   return now.map(r=>{
     if(r.id!==id)return r;

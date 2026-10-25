@@ -79,6 +79,10 @@ Top level, so `catalogue_route.js` runs it whole with the connector and Claude
 faked. Steps gather facts; code decides each fact in a set order of trust;
 `composeRow` writes the row once. No step writes card text.
 
+**The answer lands on the card as it is then** (`landOnCard`): a finished search, Re-check or Relabel
+writes only the fields it changed, so a star, a Yes or any card marked while it ran is kept — it once
+wrote back the whole ledger as it stood at the start (LC-001–005).
+
 1. **Find the book.** The venue's shop first — its catalogues shelf and its
    search box for the exhibition's title, in one call; the book's own product
    page, never a list. A book the shop step found is in the shop; its link is
