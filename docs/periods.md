@@ -65,8 +65,9 @@ branch's `scraper/fixtures/branch_tests.txt`.
   Claude gives it any number of themes (`THEMES`, each with its rule in the prompt): Fashion, Jewellery,
   Architecture, Sculpture, Animals (mythical creatures included), Nature (trees, plants, botanical
   drawings, gardens, clouds — not landscape, still life or animals), Photography, Decorative Arts – Hard
-  (furniture, ceramics, glass, silver), Decorative Arts – Soft (wallpaper, carpet, textiles, chintz, soft
-  furnishings, interior design; the catch-all when a show says only "decorative arts"), Books (rare books,
+  (furniture, ceramics, glass, silver; not books or manuscripts), Decorative Arts – Soft (wallpaper, carpet,
+  textiles, chintz, soft furnishings, interior design; the catch-all when a show says only "decorative arts";
+  not dress silks or other cloth for clothes), Books (rare books,
   collections, illuminated manuscripts). Cloth made for clothes is Fashion (her decision). A
   decorative-arts show naming its kinds gets each kind's theme. A theme row of chips under Venue, her
   names and order: Fashion & Jewellery (two labels, one chip, so she can regroup later) · Architecture ·
@@ -75,7 +76,9 @@ branch's `scraper/fixtures/branch_tests.txt`.
   work as the Venue row does (any within the row; rows combine). A show never asked about themes is
   under no chip, Ex-themes included. Interior was dropped (her decision). Themed shows take the period
   whose years and place hold the work, even when not about that movement's artists (a prompt line, to
-  keep them out of Miscellaneous). PS-012–014, PR-017–021.
+  keep them out of Miscellaneous). Every theme has a chip, so the chips and Ex-themes together hold the whole
+  Period view once a show is labelled with themes (her 1.4 run: every show in one or the other; PR-022).
+  PS-012–014, PR-017–022. The two "not" clauses are on `claude/period-sort`, not yet published.
 - **Code decides, not Claude:** Miscellaneous splits at 1900; one artist, one group — a show about one artist takes the group most of
   that artist's shows were given, a tie to the earlier group (worked out at sort time, never written
   in; her decision: no hard-coded artist).
