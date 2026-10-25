@@ -264,13 +264,16 @@ Art books by theme, an extension of Cat Watch on its own page while a prototype;
 `claude/theme-shelf`. Where it stands, her design and what is unproven: `docs/themes.md`.
 Read it before any Themes work.
 
-#### 2.2.9 Period sort — v1.5 on its test page, her review pending
+#### 2.2.9 Period sort — v1.8 on its test page, her review pending
 
 Exhibitions in art-period order, with period dividers, for seven trial venues; code on
-`claude/period-sort`, its own test page. **OPEN:** her review of v1.5 — themes are labels with a filter
-row, not groups (her design), and Label waits before asking again; then her plan to widen — venues added
-in steps, then the whole ledger, each round showing her only what changed. Her design, decisions
-and where it stands: the branch's `docs/periods.md`. Read it before any Period work.
+`claude/period-sort`, its own test page. **OPEN:** her review of v1.8 — Surrealism / Dada now its own
+period (shows labelled Interwar before it are asked again by Label), and the period scrubber: a hold on
+the right edge opens every period in the view on a pale panel, the picked one bulging in a green pill,
+lifting jumps there (her design). Her later consideration: bigger scrubber text and line spacing if the
+full ledger adds few headings. Then her plan to widen — venues added in steps, then the whole ledger,
+each round showing her only what changed. Her design, decisions and where it stands: the branch's
+`docs/periods.md`. Read it before any Period work.
 
 #### 2.2.6 Tests that failed — recorded, not investigated
 
