@@ -151,6 +151,11 @@ const until = async (fn, ms = 8000) => { const t = Date.now(); while (Date.now()
     click(chipBtn('Sculpture')); await settle(150);
     ok(cards().length === allShown, 'PR-021: two theme chips show either, as the Venue row does', String(cards().length));
     click(chipBtn('Sculpture')); click(chipBtn('Ex-themes')); await settle(150);
+    // Every theme chip plus Ex-themes, all picked: exactly the Period view, nothing lost or doubled.
+    const themeNames = [...[...doc.querySelectorAll('span')].find(x => x.textContent === 'Theme').parentNode.querySelectorAll('button')].map(b => b.textContent);
+    themeNames.forEach(t => click(chipBtn(t))); await settle(150);
+    ok(cards().length === allShown, 'PR-022: the theme chips and Ex-themes together hold every show in the Period view, once', cards().length + ' of ' + allShown);
+    themeNames.forEach(t => click(chipBtn(t))); await settle(150);
 
     const csv = 'venue_code,title,start_date,end_date,summary,url,notes,swept_at\n'
       + 'met,A Show Nobody Has Seen,2026-11-01,2027-02-01,Paintings of the 1600s.,https://www.metmuseum.org/exhibitions/nobody-has-seen,,2026-10-15\n'
