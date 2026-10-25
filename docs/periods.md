@@ -2,12 +2,19 @@
 
 Her trial: code on `claude/period-sort`, published only to its own test page, never her app until she
 says. **Test page:** https://claude.ai/artifact/JeoJyWxJbU9RApY9q4sVni ("Cat Watch Period Test",
-footer "version 3"; its own store, separate from her app — `node build/build_app.js` on the branch
+footer "version 3.1"; its own store, separate from her app — `node build/build_app.js` on the branch
 builds it and prints the steps). Tests: `period_sort.js` (PS-), `period_render.js` (PR-), listed in the
 branch's `scraper/fixtures/branch_tests.txt`.
 
 ## Open
 
+- **v3.1 published:** Postwar America (America only, c. 1945–1980, outside Abstract Expressionism and Pop —
+  Wyeth, Arbus, Neel, Sleigh, Marcus, McNeely), after Postwar Europe, before Pop (her order); her staging line
+  for themes ("Do not label shows by their staging – eg. a sculpture show in a garden is not Nature, a show of
+  paintings among drapery is not Decorative Arts" — Bonnard by India Mahdavi). Kept as labelled (her
+  decisions): Diaghilev's Fashion (stage costume counts), the Little Dancer's Sculpture, *Jazz* as Books.
+  **A card whose one line gives no date or place drifts** (*To the Holy Sepulcher*, Frick: Misc Historic, then
+  Surveys) — she leaves such cards to Relabel and the bins; reading the show's page when labelling is parked.
 - **v3 published: stage 3, the whole ledger** (her decision, after signing off stage 2). Every venue, link
   venues included, is labelled and shown by Period; no venue list is left (`PERIOD_VENUES` removed). Label
   asks only shows not yet labelled; she reviews with the Recently labelled filter. Before stage 3 her main

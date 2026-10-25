@@ -11,7 +11,7 @@ check('PS-001 Late Venetian after Rococo; Belle \u00c9poque before Symbolism; Ge
 check('PS-001 Italian before Flemish before Dutch', rank('baroque')<rank('flemish')&&rank('flemish')<rank('dutch'));
 check('PS-001 her reorder: Georgian between Late Venetian and Neoclassicism; Victorian Britain and 19th-century America stay after Symbolism', rank('latevenetian')+1===rank('georgian')&&rank('georgian')+1===rank('neoclassicism')&&rank('symbolism')+1===rank('victorian')&&rank('victorian')+1===rank('american19')&&rank('american19')+1===rank('general19'));
 check('PS-001 French periods before Britain and 19th-century America', ['classicism','rococo','neoclassicism','impressionism','postimp'].every(k=>rank(k)<rank('victorian')&&rank(k)<rank('american19')));
-check('PS-001 her reorder: Postwar Europe after Abstract Expressionism, before Pop; Contemporary last of the periods', rank('abex')+1===rank('postwareu')&&rank('postwareu')+1===rank('pop')&&rank('contemporary')===rank('surveys')-1);
+check('PS-001 her reorder: Postwar Europe after Abstract Expressionism, then Postwar America, then Pop; Contemporary last of the periods', rank('abex')+1===rank('postwareu')&&rank('postwareu')+1===rank('postwaram')&&rank('postwaram')+1===rank('pop')&&rank('contemporary')===rank('surveys')-1);
 check('PS-001 Antiquity first', rank('antiquity')===0);
 
 // Period, then year, then her venue order (two Monet shows of the same year).
@@ -59,6 +59,7 @@ check('PS-020 Georgian Britain starts at 1714, where Tudor / Stuart ends', /^c\.
 const vd=[{period:'flemish',periodYear:1630,periodArtist:'Anthony van Dyck'},{period:'flemish',periodYear:1625,periodArtist:'Anthony van Dyck'},{period:'tudor',periodYear:1637,periodArtist:'Anthony van Dyck'}];
 const vdBy=H.artistPeriods(vd);
 check('PS-020 Van Dyck in England keeps Tudor / Stuart; his retrospectives stay Flemish Baroque', H.periodOf(vd[2],vdBy)==='tudor'&&H.periodOf(vd[0],vdBy)==='flemish');
+check('PS-022 the staging line, her wording', H.periodPrompt([]).includes('Do not label shows by their staging – eg. a sculpture show in a garden is not Nature, a show of paintings among drapery is not Decorative Arts.'));
 check('PS-020 the prompt sends English-years shows to tudor and keeps Nature out of garden settings', H.periodPrompt([]).includes('Van Dyck in England): tudor')&&H.periodPrompt([]).includes('displayed outdoors or in a garden'));
 check('PS-009 response and artist are kept', b.get(2).periodResponse===true&&b.get(3).periodResponse===false&&b.get(3).periodArtist==='John Singer Sargent');
 const sg=[

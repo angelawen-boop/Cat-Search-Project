@@ -3,7 +3,7 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 // The footer prints APP_VERSION and its date, so she can tell one build from the next.
 // Numbering, her decision: a whole number for a substantial change, a decimal for a
 // small one, one number per publish. Bump it with the change it describes.
-const APP_VERSION = "3";   // the Period test page's own numbering (her name for it), not her app's
+const APP_VERSION = "3.1";   // the Period test page's own numbering (her name for it), not her app's
 const APP_VERSION_DATE = "25 Oct 2026";
 
 // The venue order is VENUE_ORDER, below the list, which sorts MUSEUMS; drawer, chips,
@@ -1870,6 +1870,7 @@ const PERIODS=[
   {key:"americanmod",name:"American Modernism",span:"c. 1910–1945 (O’Keeffe, Hopper, the Harlem Renaissance)"},
   {key:"abex",name:"Abstract Expressionism",span:"c. 1943–1965"},
   {key:"postwareu",name:"Postwar Europe",span:"Europe only, c. 1945–1980"},
+  {key:"postwaram",name:"Postwar America",span:"America only, c. 1945–1980, outside Abstract Expressionism and Pop: realism, photography, figuration (Wyeth, Arbus, Neel, Sleigh)"},
   {key:"pop",name:"Pop Art and Minimalism",span:"c. 1955–1980"},
   {key:"general20",name:"General 20th Century",span:"c. 1900–1980: 20th-century art that is not about one of the movements above, self-taught and folk art included"},
   {key:"contemporary",name:"Contemporary",span:"c. 1980 to now"},
@@ -1978,6 +1979,7 @@ function periodPrompt(shows){
     ...THEMES.map(t=>"  "+t.key+" — "+t.rule),
     "- capriccio or veduta (one or both): give it AND architecture (Hubert Robert: capriccio, architecture).",
     "- A decorative-arts show whose description names its kinds gets the theme of each kind named (ceramics and furniture: dechard; furnishings: decsoft).",
+    "- Do not label shows by their staging – eg. a sculpture show in a garden is not Nature, a show of paintings among drapery is not Decorative Arts.",
     "- A show of paintings or drawings in general gets no theme unless its subject is one of the above (a show of horse paintings: animals).",
     "",
     "year: one whole number, the year of the art shown (negative for BC). One artist: the middle of the works shown. A show spanning a long stretch: the midpoint of the stretch.",
