@@ -42,7 +42,9 @@ const [met1, met2, met3] = pick('met', true, 3);
 const [metGone] = pick('met', false, 1);
 const label = { [ng1.id]: ['highren', 1510], [met1.id]: ['highren', 1510], [ng2.id]: ['antiquity', -300],
   [met2.id]: ['impressionism', 1875], [metGone.id]: ['highren', 1500] };
-const rows = hers.rows.map(r => label[r.id] ? { ...r, period: label[r.id][0], periodYear: label[r.id][1], themes: [] } : r);
+// Two of them on Buy next, her dragged order the opposite of period order (BP-).
+const buy = { [met1.id]: { acquiring: 'yes', buyNext: true, buyRank: 2 }, [ng2.id]: { acquiring: 'yes', buyNext: true, buyRank: 1 } };
+const rows = hers.rows.map(r => label[r.id] ? { ...r, period: label[r.id][0], periodYear: label[r.id][1], themes: [], ...(buy[r.id] || {}) } : r);
 const FILE = JSON.stringify({ ...hers, rows });
 
 const settle = async (ms = 50) => { await new Promise(r => setTimeout(r, ms)); };
@@ -217,6 +219,24 @@ const until = async (fn, ms = 8000) => { const t = Date.now(); while (Date.now()
       && !!doc.querySelector('[data-period="baroque"]'),
       'PR-034: with Period, it shows only the last Label run under its period dividers; a stage 1 show relabelled stays out', run.length + ' of ' + (shownAfter - 4));
     click([...showing.parentNode.querySelectorAll('button')].find(b => b.textContent === 'Recently labelled')); await settle(150);
+
+    // BP-001..BP-004: Buy next by period (her design): Period switches between her dragged order and period order.
+    const buyNext = () => [...doc.querySelectorAll('button')].find(b => b.textContent === 'Buy next');
+    const grab = () => cards().some(a => { let e = a; for (let i = 0; i < 3 && e; i++, e = e.parentElement) if (e.style && e.style.cursor === 'grab') return true; return false; });
+    click(buyNext()); await settle(150);
+    let bn = cards();
+    ok(bn.length === 2 && has(bn[0], met1) && has(bn[1], ng2) && !doc.querySelector('[data-period]') && grab(),
+      'BP-001: Buy next shows her dragged order, no dividers, and she can drag', bn.map(x => x.querySelector('h3').textContent).join(' | '));
+    click(chipBtnSort('Period')); await settle(150);
+    bn = cards();
+    ok(bn.length === 2 && has(bn[0], ng2) && has(bn[1], met1) && !!doc.querySelector('[data-period="antiquity"]') && !!doc.querySelector('[data-period="highren"]'),
+      'BP-002: Period in Buy next puts the same cards in period order under their dividers', bn.map(x => x.querySelector('h3').textContent).join(' | '));
+    ok(!grab(), 'BP-003:   with no dragging in period order');
+    click(chipBtnSort('Period')); await settle(150);
+    bn = cards();
+    ok(bn.length === 2 && has(bn[0], met1) && has(bn[1], ng2) && !doc.querySelector('[data-period]'), 'BP-004: tapping Period again goes back to her order',
+      bn.map(x => x.querySelector('h3').textContent).join(' | '));
+    click(buyNext()); await settle(150);
 
     const csv = 'venue_code,title,start_date,end_date,summary,url,notes,swept_at\n'
       + 'met,A Show Nobody Has Seen,2026-11-01,2027-02-01,Paintings of the 1600s.,https://www.metmuseum.org/exhibitions/nobody-has-seen,,2026-10-15\n'

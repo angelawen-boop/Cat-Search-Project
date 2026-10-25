@@ -3,7 +3,7 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 // The footer prints APP_VERSION and its date, so she can tell one build from the next.
 // Numbering, her decision: a whole number for a substantial change, a decimal for a
 // small one, one number per publish. Bump it with the change it describes.
-const APP_VERSION = "51.1";
+const APP_VERSION = "51.2";
 const APP_VERSION_DATE = "25 Oct 2026";
 
 // The venue order is VENUE_ORDER, below the list, which sorts MUSEUMS; drawer, chips,
@@ -6385,7 +6385,8 @@ export default function App(){
   const[acqNoCat,setAcqNoCat]=useState(false);
   const[acqBuyNext,setAcqBuyNext]=useState(false);
   const[drag,setDrag]=useState(null); // the card being dragged in the Buy next view
-  const dragOn=acqBuyNext&&!readOnly;
+  const[bnPeriod,setBnPeriod]=useState(false);
+  const dragOn=acqBuyNext&&!bnPeriod&&!readOnly;
   const[showAll,setShowAll]=useState(false);
   const[dismissedOnly,setDismissedOnly]=useState(false);
   const[labelledF,setLabelledF]=useState(false);
@@ -6413,6 +6414,9 @@ export default function App(){
   const[refreshDone,setRefreshDone]=useState(null); // {added,filled,changed} after applying
   const[refreshTouched,setRefreshTouched]=useState([]); // ids added/changed in the last refresh
   const[pinTouched,setPinTouched]=useState(false); // pin those ids to the top this session
+  // Buy next by period (her design): Period in the Buy next view switches between her dragged
+  // order and the period order with its dividers; she drags only in her own order.
+  const periodView=acqBuyNext?bnPeriod:(sortBy==="period"&&!pinTouched);
   const[showTop,setShowTop]=useState(false); // show the return-to-top button once scrolled down
   // Light or dark: remembered in browser storage (a per-device convenience, wrapped —
   // storage can throw). First visit follows the machine; her pick then wins there.
@@ -6681,7 +6685,7 @@ export default function App(){
   }
 
   const toggleSet=(setter,val)=>setter(prev=>{const n=new Set(prev);if(n.has(val))n.delete(val);else n.add(val);return n;});
-  const clearFilters=()=>{setVenueF(new Set());setThemeF(new Set());setTimeF(new Set());setAcqWanted(false);setAcqOwned(false);setAcq3mo(false);setAcq6mo(false);setAcqHasCat(false);setAcqNoCat(false);setAcqBuyNext(false);setShowAll(false);setDismissedOnly(false);setWatchedF(false);setLabelledF(false);setSearch("");setShowSearch(false);};
+  const clearFilters=()=>{setVenueF(new Set());setThemeF(new Set());setTimeF(new Set());setAcqWanted(false);setAcqOwned(false);setAcq3mo(false);setAcq6mo(false);setAcqHasCat(false);setAcqNoCat(false);setAcqBuyNext(false);setBnPeriod(false);setShowAll(false);setDismissedOnly(false);setWatchedF(false);setLabelledF(false);setSearch("");setShowSearch(false);};
 
   // WHAT A QUARANTINE REMEMBERS. The URL where there is one; venue + title where there
   // is not (a reused title could block the wrong row — bounded, and visible on screen).
@@ -7259,7 +7263,7 @@ export default function App(){
     setProposals(null); setDecisions({}); setSeenInFile(null); setRefreshDone({added,filled,changed,never:newlyIgnored.length,left:partial?leftUndecided:0});
     setRefreshTouched(touched); setPinTouched(touched.length>0); // float just-changed entries to the top, this session
     setVenueF(new Set()); setThemeF(new Set()); setTimeF(new Set()); setWatchedF(false); setLabelledF(false);
-    setAcqWanted(false); setAcqOwned(false); setAcq3mo(false); setAcq6mo(false); setAcqHasCat(false); setAcqNoCat(false); setAcqBuyNext(false);
+    setAcqWanted(false); setAcqOwned(false); setAcq3mo(false); setAcq6mo(false); setAcqHasCat(false); setAcqNoCat(false); setAcqBuyNext(false); setBnPeriod(false);
     setDismissedOnly(false); setShowAll(false); setSearch("");
   }
   // Cancel import after a Read puts every link (or page) it read back in the box (or list), stored (her decision).
@@ -7273,7 +7277,7 @@ export default function App(){
     }
     dropHeldVenues(); setShopScreen(null); setReadVenues([]); setProposals(null); setDecisions({}); setCoverage([]); setTally(null); setSeenInFile(null); }
   // A second tap on Date reverses it; a third goes back to the usual order.
-  const pickSort=k=>{setDateReversed((k==="date"||k==="period")&&sortBy===k&&!pinTouched&&!dateReversed);setSortBy(k);setPinTouched(false);}; // manual sort releases the pinned refresh group
+  const pickSort=k=>{if(acqBuyNext){if(k==="period")setBnPeriod(v=>!v);return;}setDateReversed((k==="date"||k==="period")&&sortBy===k&&!pinTouched&&!dateReversed);setSortBy(k);setPinTouched(false);}; // manual sort releases the pinned refresh group
 
 
 
@@ -7571,7 +7575,7 @@ export default function App(){
       // Recently labelled: the shows of the newest Label run or import; a Relabel keeps its show in its run.
       if(labelledF&&(!newestRun||r.labelledAt!==newestRun))return false;
       // Period shows only labelled shows.
-      if(sortBy==="period"&&!pinTouched&&!periodLabelled(r))return false;
+      if(periodView&&!periodLabelled(r))return false;
       // Acquiring filters stack as AND across the three axes, OR within an axis.
       if(acqWanted||acqOwned){if(!((acqWanted&&r.acquiring==="yes")||(acqOwned&&r.acquiring==="acquired")))return false;}
       if(acq3mo||acq6mo){if(!((acq3mo&&t==="closing")||(acq6mo&&(t==="urgent"||t==="lapsed"))))return false;}
@@ -7581,6 +7585,7 @@ export default function App(){
     });
     out.sort((a,b)=>{
       // Buy next is in her own dragged order; the sort chips and the pinned group step aside.
+      if(acqBuyNext&&bnPeriod)return periodCompare(a,b,byArtist);
       if(acqBuyNext){const ka=Number.isFinite(a.buyRank)?a.buyRank:-Infinity,kb=Number.isFinite(b.buyRank)?b.buyRank:-Infinity;if(ka!==kb)return kb>ka?1:-1;}
       if(pinTouched&&!acqBuyNext){const aT=refreshTouched.includes(a.id)?0:1,bT=refreshTouched.includes(b.id)?0:1;if(aT!==bT)return aT-bT;}
       if(sortBy==="added"){const d=String(b.addedAt||"").localeCompare(String(a.addedAt||""));if(d!==0)return d;}
@@ -7599,12 +7604,12 @@ export default function App(){
       return flip*db.localeCompare(da);
     });
     return out;
-  },[rows,byArtist,sortBy,venueF,themeF,timeF,acqWanted,acqOwned,acq3mo,acq6mo,acqHasCat,acqNoCat,acqBuyNext,showAll,dismissedOnly,watchedF,labelledF,search,pinTouched,refreshTouched,dateReversed]);
+  },[rows,byArtist,sortBy,venueF,themeF,timeF,acqWanted,acqOwned,acq3mo,acq6mo,acqHasCat,acqNoCat,acqBuyNext,bnPeriod,periodView,showAll,dismissedOnly,watchedF,labelledF,search,pinTouched,refreshTouched,dateReversed]);
 
   // DRAWN AS SHE SCROLLS: the first DRAW_STEP cards, then DRAW_STEP more each time the end
   // of the drawn list nears the screen. A new filter, sort or search starts again from the
   // top (viewToken). Jump to bottom draws the rest first. No IntersectionObserver → all.
-  const viewToken=useMemo(()=>({}),[sortBy,venueF,themeF,timeF,acqWanted,acqOwned,acq3mo,acq6mo,acqHasCat,acqNoCat,acqBuyNext,showAll,dismissedOnly,watchedF,labelledF,search,pinTouched,dateReversed]);
+  const viewToken=useMemo(()=>({}),[sortBy,venueF,themeF,timeF,acqWanted,acqOwned,acq3mo,acq6mo,acqHasCat,acqNoCat,acqBuyNext,bnPeriod,showAll,dismissedOnly,watchedF,labelledF,search,pinTouched,dateReversed]);
   const[drawn,setDrawn]=useState({token:null,n:DRAW_STEP});
   const drawLimit=typeof IntersectionObserver==="undefined"?Infinity:drawn.token===viewToken?drawn.n:DRAW_STEP;
   const moreRef=useRef(null);
@@ -7619,11 +7624,11 @@ export default function App(){
   useEffect(()=>{ if(wantBottom.current){ wantBottom.current=false; window.scrollTo({top:document.documentElement.scrollHeight,behavior:"smooth"}); } });
   // The scrubber's periods: the view's groups in order, each with its first card's place.
   const scrubGroups=useMemo(()=>{
-    if(sortBy!=="period"||pinTouched||acqBuyNext)return [];
+    if(!periodView)return [];
     const out=[];
     view.forEach((r,i)=>{const k=periodOf(r,byArtist); if(!out.length||out[out.length-1].key!==k)out.push({key:k,name:PERIOD_NAME[k],at:i});});
     return out;
-  },[view,sortBy,pinTouched,acqBuyNext,byArtist]);
+  },[view,periodView,byArtist]);
   const wantPeriod=useRef(null);
   const scrollToPeriod=k=>{
     const el=document.querySelector("[data-period=\""+k+"\"]");
@@ -7922,7 +7927,7 @@ export default function App(){
       <div style={{maxWidth:760,margin:"0 auto 12px",display:"flex",flexDirection:"column",gap:5}}>
         <div style={{display:"flex",gap:4,flexWrap:"wrap",alignItems:"center"}}>
           <span style={{fontSize:9,letterSpacing:"0.12em",textTransform:"uppercase",color:C.soft,marginRight:2}}>Sort</span>
-          {[["date","Date"],["venue","Venue"],["period","Period"],["added","Recently added"],["edited","Recently edited"],["labelled","Recently labelled"]].map(([k,l])=><button key={k} onClick={()=>pickSort(k)} style={chip(sortBy===k&&!pinTouched&&!acqBuyNext)}>{l}{(k==="date"||k==="period")&&sortBy===k&&!pinTouched&&!acqBuyNext?(dateReversed?" \u2191":" \u2193"):""}</button>)}
+          {[["date","Date"],["venue","Venue"],["period","Period"],["added","Recently added"],["edited","Recently edited"],["labelled","Recently labelled"]].map(([k,l])=><button key={k} onClick={()=>pickSort(k)} style={chip(acqBuyNext?(k==="period"&&bnPeriod):(sortBy===k&&!pinTouched))}>{l}{(k==="date"||k==="period")&&sortBy===k&&!pinTouched&&!acqBuyNext?(dateReversed?" \u2191":" \u2193"):""}</button>)}
           {pinTouched&&<span style={{fontSize:10.5,color:C.action,fontWeight:600}}>{"\u2191 just-refreshed entries shown first"}</span>}
         </div>
         <div style={{display:"flex",gap:4,flexWrap:"wrap",alignItems:"center"}}>
@@ -7946,7 +7951,7 @@ export default function App(){
           <button onClick={()=>setAcq6mo(v=>!v)} style={chip(acq6mo)}>6+ mos closing window</button>
           <button onClick={()=>setAcqHasCat(v=>!v)} style={chip(acqHasCat)}>Has catalogue</button>
           <button onClick={()=>setAcqNoCat(v=>!v)} style={chip(acqNoCat)}>No catalogue</button>
-          <button onClick={()=>setAcqBuyNext(v=>!v)} style={chip(acqBuyNext)}>Buy next</button>
+          <button onClick={()=>{setAcqBuyNext(v=>!v);setBnPeriod(false);}} style={chip(acqBuyNext)}>Buy next</button>
         </div>
         <div style={{display:"flex",gap:4,flexWrap:"wrap",alignItems:"center"}}>
           <span style={{fontSize:9,letterSpacing:"0.12em",textTransform:"uppercase",color:C.soft,marginRight:2}}>Showing</span>
@@ -7979,7 +7984,7 @@ export default function App(){
           return view.slice(0,drawLimit).map((r,i)=>{
           const brk=(pinTouched&&pinnedCount>0&&pinnedCount<view.length&&i===pinnedCount)?bandDivider("Rest of the list"):null;
           let header=null;
-          if(sortBy==="period"&&!pinTouched&&!acqBuyNext&&(i===0||periodOf(view[i-1],byArtist)!==periodOf(r,byArtist)))header=bandDivider(PERIOD_NAME[periodOf(r,byArtist)],periodOf(r,byArtist));
+          if(periodView&&(i===0||periodOf(view[i-1],byArtist)!==periodOf(r,byArtist)))header=bandDivider(PERIOD_NAME[periodOf(r,byArtist)],periodOf(r,byArtist));
           if(bandMode){const b=bandOf(r);const pb=i>0?bandOf(view[i-1]):null;if(b!==pb)header=bandDivider(BAND_LABEL[b]||"");}
           const lead=brk||header;
           const isBusy=busyId===r.id;
