@@ -3,7 +3,7 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 // The footer prints APP_VERSION and its date, so she can tell one build from the next.
 // Numbering, her decision: a whole number for a substantial change, a decimal for a
 // small one, one number per publish. Bump it with the change it describes.
-const APP_VERSION = "1.7";   // the Period test page's own numbering (her name for it), not her app's
+const APP_VERSION = "1.8";   // the Period test page's own numbering (her name for it), not her app's
 const APP_VERSION_DATE = "25 Oct 2026";
 
 // The venue order is VENUE_ORDER, below the list, which sorts MUSEUMS; drawer, chips,
@@ -5022,7 +5022,7 @@ const PALETTES={
          scrim:"rgba(0,0,0,0.6)"},
 };
 // The period scrubber (her design): hidden until she holds a finger on the middle of the right
-// edge; then a ruler of every period in the view, the one she is in picked. Sliding moves the
+// edge; then a ruler of every period in the view on a pale panel, the one she is in picked. Sliding moves the
 // pick; lifting jumps to that period's divider. A swipe that moves before the hold is an
 // ordinary scroll. Rows never spread out: fewer periods, a shorter ruler.
 const SCRUB_ROW=15.5, SCRUB_ZONE=155, SCRUB_HOLD=300, SCRUB_SLOP=6;
@@ -5071,16 +5071,16 @@ function PeriodScrubber({groups,C,onJump}){
       window.removeEventListener("mousemove",mm); window.removeEventListener("mouseup",mu); };
   },[]);
   if(!n)return null;
-  const halo="0 0 3px "+C.bg+",0 0 3px "+C.bg+",0 0 3px "+C.bg;
   return(<>
     <div ref={zone} data-scrubber="zone" style={{position:"fixed",right:0,top:"50%",transform:"translateY(-50%)",width:16,height:SCRUB_ZONE,zIndex:997,
       touchAction:"pan-y",userSelect:"none",WebkitUserSelect:"none",WebkitTouchCallout:"none"}}/>
-    {sel!==null&&<div data-scrubber="ruler" style={{position:"fixed",right:6,top:"50%",transform:"translateY(-50%)",height:H,overflow:"hidden",zIndex:997,pointerEvents:"none"}}>
-      <div style={{position:"absolute",right:0,top:0,bottom:0,width:1,background:C.rule}}/>
-      <div>
+    {sel!==null&&<div data-scrubber="panel" style={{position:"fixed",right:4,top:"50%",transform:"translateY(-50%)",zIndex:997,pointerEvents:"none",
+      background:C.card+"DB",backdropFilter:"blur(3px)",WebkitBackdropFilter:"blur(3px)",border:"1px solid "+C.rule,borderRadius:10,padding:"8px 6px 8px 8px"}}>
+      <div data-scrubber="ruler" style={{position:"relative",height:H}}>
+        <div style={{position:"absolute",right:0,top:0,bottom:0,width:1,background:C.rule}}/>
         {groups.map((x,i)=>{const on=i===sel;return(
           <div key={x.key} data-scrub-row={x.key} style={{height:SCRUB_ROW,display:"flex",alignItems:"center",justifyContent:"flex-end",gap:6,whiteSpace:"nowrap"}}>
-            <span style={{fontSize:on?11.5:10,fontWeight:on?700:400,color:on?C.ink:C.soft,opacity:on?1:0.8,textShadow:halo}}>{x.name}</span>
+            <span style={{fontSize:on?11.5:10,fontWeight:on?700:400,color:on?C.onAction:C.soft,background:on?C.action:"none",borderRadius:9,padding:"0 6px",lineHeight:"14px"}}>{x.name}</span>
             <span style={{width:on?10:6,height:on?2:1,background:on?C.ink:C.soft}}/>
           </div>);})}
       </div>

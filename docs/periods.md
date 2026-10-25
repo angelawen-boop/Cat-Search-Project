@@ -2,14 +2,17 @@
 
 Her trial: code on `claude/period-sort`, published only to its own test page, never her app until she
 says. **Test page:** https://claude.ai/artifact/JeoJyWxJbU9RApY9q4sVni ("Cat Watch Period Test",
-footer "version 1.7"; its own store, separate from her app — `node build/build_app.js` on the branch
+footer "version 1.7"; 1.8 built, unpublished; its own store, separate from her app — `node build/build_app.js` on the branch
 builds it and prints the steps). Tests: `period_sort.js` (PS-), `period_render.js` (PR-), listed in the
 branch's `scraper/fixtures/branch_tests.txt`.
 
 ## Open
 
-- **v1.7 published: the period scrubber and Surrealism / Dada, her check pending.** Not yet tried
-  on her phone (Pixel 7 Pro: all 39 periods, about 605px, fit its screen by its published size). Her shows labelled Interwar before the split show there
+- **v1.8 built, NOT published — her mock-up review pending.** On her Pixel 7 Pro the whole timeline fits
+  (1.7, live); the see-through look was hard to read, so 1.8 puts it on a pale panel with the picked period
+  in a dark pill (her mock-up B's look). Publish on her say-so.
+- **Her later consideration — bigger scrubber text and wider line spacing**, if widening this test page
+  to the full ledger does not add many more period headings (the list holds 39 at most). Her shows labelled Interwar before the split show there
   until she taps Label, which asks only those again.
 - **v1.4–1.5 published: themes as labels, her review pending.** Her 1.4 Label labelled every show in one
   run, themes included. She checks the theme
@@ -65,7 +68,8 @@ branch's `scraper/fixtures/branch_tests.txt`.
 - **The period scrubber (her design):** hidden; a hold (a third of a second) on a narrow band in the
   middle of the right edge opens a ruler of every period in the view at once — her mock-up A, rows 15.5px
   apart, nothing scrolling inside (ten at a time she found stressful); fewer periods make a shorter ruler,
-  never wider spacing. Names as written, 10px; the picked one 11.5px and bold. Sliding picks;
+  never wider spacing. Names as written, 10px; the picked one 11.5px, bold, in a dark pill; the ruler on a pale
+  panel (PR-030). Sliding picks;
   lifting jumps to its divider. A swipe that moves first is an ordinary scroll. ↑ ↓ unchanged.
   PR-023–029.
 - **Rules Claude follows** (`periodPrompt`): a movement's group only for a show about that movement or

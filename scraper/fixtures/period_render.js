@@ -1,7 +1,7 @@
 /**
  * THE PERIOD SORT ON THE REAL PAGE (her trial; docs/periods.md). Renders the page in jsdom
  * on her 24 Sep ledger with periods written onto a few rows, taps Period, and reads the
- * cards and dividers. Cases PR-001 to PR-029.
+ * cards and dividers. Cases PR-001 to PR-030.
  *
  *   node scraper/fixtures/period_render.js
  */
@@ -128,6 +128,9 @@ const until = async (fn, ms = 8000) => { const t = Date.now(); while (Date.now()
     ok(ruler().querySelector('[data-scrub-row]').style.height === '15.5px' && ruler().style.height === '46.5px'
       && spans.every(x => x.style.fontSize === (x.style.fontWeight === '700' ? '11.5px' : '10px')),
       'PR-027: every period shown at once, rows 15.5px apart; names 10px, the picked one 11.5px (her ask)', ruler().style.height + ' ' + spans.map(x => x.style.fontSize).join());
+    const panel = doc.querySelector('[data-scrubber="panel"]'), picked = spans.find(x => x.style.fontWeight === '700');
+    ok(!!panel && /^(#|rgb)/.test(panel.style.background) && !!picked && picked.style.background !== 'none' && picked.style.background !== '',
+      'PR-030: the ruler sits on a pale panel and the picked period has a colour behind it (her ask)', panel && panel.style.background);
     scrolls.length = 0; touch('touchend'); await settle(60);
     ok(!ruler() && scrolls.length === 1 && scrolls[0].behavior === 'auto', 'PR-028: lifting jumps to that period and the ruler goes', JSON.stringify(scrolls));
     ok(doc.querySelectorAll('[data-period]').length === 3 && !!doc.querySelector('[data-period="highren"]'), 'PR-029: each divider carries its period, to jump to');
