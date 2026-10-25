@@ -2,18 +2,17 @@
 
 Her trial: code on `claude/period-sort`, published only to its own test page, never her app until she
 says. **Test page:** https://claude.ai/artifact/JeoJyWxJbU9RApY9q4sVni ("Cat Watch Period Test",
-footer "version 1.3"; its own store, separate from her app — `node build/build_app.js` on the branch
+footer "version 1.4"; its own store, separate from her app — `node build/build_app.js` on the branch
 builds it and prints the steps). Tests: `period_sort.js` (PS-), `period_render.js` (PR-), listed in the
 branch's `scraper/fixtures/branch_tests.txt`.
 
 ## Open
 
-- **Her review of v1.2 is pending.** She re-Loads her file (no labels) and presses Label, then checks
-  the groups v1.2 changed: Surveys, General 19th Century, Late Venetian, Belle Époque and Aestheticism,
-  Decorative Arts, Architecture. v1.1 was ~90–95% right by her eye; v1.2 was "most of the way there".
-- **v1.3 published: her reorder and the Venice fix.** Her rule "names in a period's description stand
-  for shows about those artists" and Emily Sargent named in Belle Époque: on her cards *Impressions of
-  Venice* goes to 19th-century America, the Sargent, Emily Sargent and Whistler shows stay in Belle Époque.
+- **v1.4 published: themes as labels, her review pending.** Her next Label relabels every show (none has
+  themes yet; the old Decorative Arts and Architecture shows have no period now). She checks the theme
+  chips and where the former theme-group shows landed — the likeliest mess is a 20th-century design or
+  fashion show with no period of its time, falling into Miscellaneous Modern (a guess; her run shows it).
+  Each run still needs her check on the waits: the lookup log shows whether the retries landed.
 - **OPEN — *Hidden Faces* (Met) should be Early Renaissance; no fix yet** that does not move other shows.
   Tried: "Italian and Northern art of the same years: the Italian period" (→ High Renaissance, by date);
   "…of the 15th and 16th centuries: Early Renaissance" (right, but tested beside other changes);
@@ -24,28 +23,23 @@ branch's `scraper/fixtures/branch_tests.txt`.
   only the armor.
 - **Flagging unsure labels for her review** (her plan): before Claude opens pages, unsure answers are
   flagged for her; many flags → refine rules, few → let Claude open the show's page. Not built.
-- **How theme groups are handled will change** (her new idea, for a new session): groups that are a
-  kind of thing rather than a time — today Decorative Arts and Architecture, possibly Surveys and the
-  rest after Contemporary. Ask her for the idea before touching them.
-- **The plan to widen (her decision), in this order:** (1) the theme-group idea first — those groups are
-  about to change, so reviewing them now is wasted; (2) widen in steps (`PERIOD_VENUES`), adding venues
+- **The plan to widen (her decision), in this order:** (1) themes as labels (built, 1.4); (2) widen in steps (`PERIOD_VENUES`), adding venues
   chosen for being *different* from the seven (e.g. Rijksmuseum, Italian venues, Menil, Wallace, Louvre),
   not the whole ledger at once, and fix the rules on what each step shows; (3) when a step brings few new
   kinds of mistake, add the rest of the ledger as the last check (about 700 shows she reviews — dismissed
   shows are labelled, she does not review them). **Each review round shows only what changed since the
   last labelling** (her decision; not built), never the whole list. Then test the import labelling with a
   fake sweep CSV and her own links and pages. Merging into her app is her call, after that.
-- **OPEN — Label often stops part-way** (about half her runs). The lookup log shows the page's Claude
-  refusing in spells ("request failed", "the connection was lost"; code `upstream_error`) and answering
-  again minutes later; a failed batch is asked again at once, so the retry lands in the same spell (1.3:
-  five batches right, then every call refused within 0.1s). The cause behind the refusals is unproven — a
-  short-window limit or a busy service. Proposed, not agreed: wait before asking again, and a second pass
-  over failed batches after a pause. Its message says "Couldn't read the search results" because Label
-  shares the catalogue lookup's call (`readResults`) and its wording — Label needs its own.
+- **Label stopping part-way — built at 1.4, her runs confirm.** The page's Claude refuses in spells
+  (`upstream_error`, "request failed" / "the connection was lost") and answers again minutes later; the
+  old retry asked at once, inside the spell. Now a failed batch waits 15 seconds, then a minute (her
+  decision), and every batch still unlabelled gets one last go after a minute (`LABEL_WAITS`). Label has
+  its own lines (`labelWhy`): "Claude didn't answer (code).", "Claude's answer came back unreadable.",
+  "You declined to let this page use Claude." — never the lookup's "search results". PS-015–016, PR-013.
 
 ## Her design
 
-- **A sort called Period**, after Recently edited: shows with a period at the trial venues, not
+- **A sort called Period**, the third sort chip, after Venue (her decision): shows with a period at the trial venues, not
   dismissed, with a divider naming each group. A second tap reverses, as Date does.
 - **Trial venues (her choice):** the Met, NG UK, Orsay, Accademia (Venice), V&A, Tate Modern,
   Cincinnati — `PERIOD_VENUES`.
@@ -59,28 +53,41 @@ branch's `scraper/fixtures/branch_tests.txt`.
   Nouveau; Postwar Europe after Abstract Expressionism, before Pop. Victorian Britain and 19th-century
   America stay after Symbolism (her decision: she declined moving them beside Romanticism and Realism). Names and dates are the model's knowledge, not hers;
   she judges by eye.
-- **Groups after Contemporary, in her order:** Surveys, Decorative Arts, Architecture, Miscellaneous
-  Historic, Miscellaneous Modern, Non-Western Art. Miscellaneous stays as small as possible (her
+- **Groups after Contemporary, in her order:** Surveys, Miscellaneous Historic, Miscellaneous Modern,
+  Non-Western Art — shows that cannot file in the chronology, so groups, never themes. Miscellaneous stays as small as possible (her
   decision) — General 19th Century keeps 19th-century shows outside any movement in their place in time.
 - **Rules Claude follows** (`periodPrompt`): a movement's group only for a show about that movement or
   its artists; a modern artist responding to older art, or a pairing across periods, goes under the
   older art (response, placed last); a long-span show goes to its heart, the period most of its works
   come from — Surveys only when the works spread with no heart (five centuries of cats); ancient art
   from anywhere is Antiquity; non-Western art that is not ancient is Non-Western Art.
-- **Code decides, not Claude:** Miscellaneous splits at 1900; decorative arts and architecture leave
-  their period from 1800 (Claude says the kind, code applies the cut-off; older pots and tapestries
-  stay with their period); one artist, one group — a show about one artist takes the group most of
+- **Themes (her design):** a kind of thing is a label, never a group — every show sits in its period, and
+  Claude gives it any number of themes (`THEMES`, each with its rule in the prompt): Fashion, Jewellery,
+  Architecture, Sculpture, Animals (mythical creatures included), Nature (trees, plants, botanical
+  drawings, gardens, clouds — not landscape, still life or animals), Photography, Decorative Arts – Hard
+  (furniture, ceramics, glass, silver), Decorative Arts – Soft (wallpaper, carpet, textiles, chintz, soft
+  furnishings, interior design; the catch-all when a show says only "decorative arts"), Books (rare books,
+  collections, illuminated manuscripts). Cloth made for clothes is Fashion (her decision). A
+  decorative-arts show naming its kinds gets each kind's theme. A theme row of chips under Venue, her
+  names and order: Fashion & Jewellery (two labels, one chip, so she can regroup later) · Architecture ·
+  Sculpture · Animals · Nature · Photography · Decorative Arts – Hard · Decorative Arts – Soft · Books ·
+  Ex-themes. Ex-themes is every labelled show with no theme, Surveys and Non-Western Art included. Chips
+  work as the Venue row does (any within the row; rows combine). A show never asked about themes is
+  under no chip, Ex-themes included. Interior was dropped (her decision). Themed shows take the period
+  whose years and place hold the work, even when not about that movement's artists (a prompt line, to
+  keep them out of Miscellaneous). PS-012–014, PR-017–021.
+- **Code decides, not Claude:** Miscellaneous splits at 1900; one artist, one group — a show about one artist takes the group most of
   that artist's shows were given, a tie to the earlier group (worked out at sort time, never written
   in; her decision: no hard-coded artist).
-- **Ledger fields:** `period`, `periodYear`, `periodResponse`, `periodArtist`. Not her edits: `editedAt`
+- **Ledger fields:** `period`, `periodYear`, `periodResponse`, `periodArtist`, `themes` (a list). Not her edits: `editedAt`
   is untouched. Nothing new in the CSV — the app is the one labeller, for sweeps, links and pages alike.
 - **When labels are written:** Label (footer, beside Reset search) fills every show at the trial venues
-  with no period, dismissed included, 40 a question, and never relabels. An import labels each new show
+  with no period or no themes, dismissed included, 40 a question, and never relabels. An import labels each new show
   on its approval card ("Period: …"). Relabel, on its own line at the foot of a card's drawer, asks
-  again about one show and says the result there.
+  again about one show and says the result there, its themes after the year.
 - **No hand corrections (her decision):** a wrong label is reported and fixed in the rules, so the app
   learns.
-- **Every run is checked:** a failed batch is asked once more; her line after Label says all labelled,
+- **Every run is checked:** a failed batch is asked again after a wait (above); her line after Label says all labelled,
   or how many were not and why; each Label, import labelling and Relabel is one record in the lookup
   log (read it with ArtifactData on the test page, then `node build/lookup_log.js`). v1's three silent
   failed batches (120 shows, the Met's *Siena* among them) are why.
