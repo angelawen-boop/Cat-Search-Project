@@ -2,12 +2,21 @@
 
 Her trial: code on `claude/period-sort`, published only to its own test page, never her app until she
 says. **Test page:** https://claude.ai/artifact/JeoJyWxJbU9RApY9q4sVni ("Cat Watch Period Test",
-footer "version 1.8"; its own store, separate from her app — `node build/build_app.js` on the branch
+footer "version 2"; its own store, separate from her app — `node build/build_app.js` on the branch
 builds it and prints the steps). Tests: `period_sort.js` (PS-), `period_render.js` (PR-), listed in the
 branch's `scraper/fixtures/branch_tests.txt`.
 
 ## Open
 
+- **v2 published: stage 2, her review pending.** Eleven venues added, picked for kinds of show the first
+  seven lacked: MAD, Morgan, British Museum, Menil, Rijksmuseum, Uffizi, Capodimonte, Borghese, Louvre,
+  Tate Britain, Wallace. She taps Label (it asks only the new venues' shows) and reviews them under
+  **Recently labelled** (her ask; the fourth "recently" sort, copied from Recently added): bands "This
+  labelling", "Earlier labellings", "Stage 1" (labelled before the sort existed), "Not labelled". The band
+  names are Claude's, copied from the import's pattern. Each Label run, import and Relabel stamps
+  `labelledAt`. A faulty card is fixed by Relabel on that card (her choice); if she ever relabels
+  everything, a session saves the labels first and gives her the changes in the session, not in the app.
+  Stage 3 is the rest of the ledger. PS-004, PR-032–033.
 - **v1.8 published: the scrubber on a pale panel with a bulging pill, her check pending.** On her Pixel 7
   Pro the whole timeline fits (1.7); the see-through look was hard to read and her thumb hid the names, so
   the picked one bulges (her design; a big name off to the side she found intrusive).
@@ -47,8 +56,8 @@ branch's `scraper/fixtures/branch_tests.txt`.
 
 - **A sort called Period**, the third sort chip, after Venue (her decision): shows with a period at the trial venues, not
   dismissed, with a divider naming each group. A second tap reverses, as Date does.
-- **Trial venues (her choice):** the Met, NG UK, Orsay, Accademia (Venice), V&A, Tate Modern,
-  Cincinnati — `PERIOD_VENUES`.
+- **Trial venues (her choice):** stage 1 the Met, NG UK, Orsay, Accademia (Venice), V&A, Tate Modern,
+  Cincinnati; stage 2 the eleven above — `PERIOD_VENUES`.
 - **Order:** the group's place in `PERIODS`; within a group, response shows last, then the year of the
   art (never the exhibition's dates), then her venue order for a tie (two Monet shows).
 - **The list's order is her centre-of-gravity rule:** Italy first only where two periods compete
@@ -99,7 +108,7 @@ branch's `scraper/fixtures/branch_tests.txt`.
 - **Code decides, not Claude:** Miscellaneous splits at 1900; one artist, one group — a show about one artist takes the group most of
   that artist's shows were given, a tie to the earlier group (worked out at sort time, never written
   in; her decision: no hard-coded artist).
-- **Ledger fields:** `period`, `periodYear`, `periodResponse`, `periodArtist`, `themes` (a list). Not her edits: `editedAt`
+- **Ledger fields:** `period`, `periodYear`, `periodResponse`, `periodArtist`, `themes` (a list), `labelledAt`. Not her edits: `editedAt`
   is untouched. Nothing new in the CSV — the app is the one labeller, for sweeps, links and pages alike.
 - **When labels are written:** Label (footer, beside Reset search) fills every show at the trial venues
   with no period or no themes, dismissed included, 40 a question, and never relabels. An import labels each new show

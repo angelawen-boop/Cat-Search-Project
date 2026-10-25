@@ -1,7 +1,7 @@
 /**
  * THE PERIOD SORT ON THE REAL PAGE (her trial; docs/periods.md). Renders the page in jsdom
  * on her 24 Sep ledger with periods written onto a few rows, taps Period, and reads the
- * cards and dividers. Cases PR-001 to PR-031.
+ * cards and dividers. Cases PR-001 to PR-033.
  *
  *   node scraper/fixtures/period_render.js
  */
@@ -40,7 +40,9 @@ const pick = (venue, interested, n) => hers.rows.filter(r => r.museumId === venu
 const [ng1, ng2] = pick('ng', true, 2);
 const [met1, met2, met3] = pick('met', true, 3);
 const [metGone] = pick('met', false, 1);
-const outside = hers.rows.find(r => r.interested && !['met','ng','orsay','dellav','va','tate-modern','cincinnati'].includes(r.museumId));
+// The trial venues as the page lists them; the Art Institute stays outside them.
+const trial = JSON.parse('[' + fs.readFileSync(path.join(ROOT, 'Cat_Watch.jsx'), 'utf8').match(/const PERIOD_VENUES=new Set\(\[([^\]]*)\]/)[1] + ']');
+const outside = hers.rows.find(r => r.interested && r.museumId === 'artic');
 const label = { [ng1.id]: ['highren', 1510], [met1.id]: ['highren', 1510], [ng2.id]: ['antiquity', -300],
   [met2.id]: ['impressionism', 1875], [metGone.id]: ['highren', 1500], [outside.id]: ['highren', 1505] };
 const rows = hers.rows.map(r => label[r.id] ? { ...r, period: label[r.id][0], periodYear: label[r.id][1], themes: [] } : r);
@@ -84,6 +86,7 @@ const until = async (fn, ms = 8000) => { const t = Date.now(); while (Date.now()
   const cards = () => [...doc.querySelectorAll('article')];
   const click = el => el.dispatchEvent(new win.MouseEvent('click', { bubbles: true }));
   const has = (el, r) => el.textContent.includes(r.title);
+  const chipBtnSort = t => [...doc.querySelectorAll('button')].find(b => b.textContent.replace(/[\u2191\u2193 ]+$/, '') === t);
   try {
     const input = doc.querySelector('input[type=file][accept=".json"]');
     Object.defineProperty(input, 'files', { value: [new win.File([FILE], 'ledger.json', { type: 'application/json' })], configurable: true });
@@ -138,7 +141,6 @@ const until = async (fn, ms = 8000) => { const t = Date.now(); while (Date.now()
     scrolls.length = 0; touch('touchend'); await settle(60);
     ok(!ruler() && scrolls.length === 1 && scrolls[0].behavior === 'auto', 'PR-028: lifting jumps to that period and the ruler goes', JSON.stringify(scrolls));
     ok(doc.querySelectorAll('[data-period]').length === 3 && !!doc.querySelector('[data-period="highren"]'), 'PR-029: each divider carries its period, to jump to');
-    const trial = ['met','ng','orsay','dellav','va','tate-modern','cincinnati'];
     const unlabelled = rows.filter(x => trial.includes(x.museumId) && !x.period).length;
     const shownAfter = rows.filter(x => trial.includes(x.museumId) && x.interested).length;
     failNext = 1e6;   // Claude refuses every question: nothing labelled, and her line says so
@@ -155,6 +157,15 @@ const until = async (fn, ms = 8000) => { const t = Date.now(); while (Date.now()
       `PR-007: Label asks about every unlabelled show at the trial venues, dismissed included (${unlabelled}), 40 at a time; a failed batch is asked again`, asked.join(','));
     ok(doc.body.textContent.includes(`Label: all ${unlabelled} exhibitions labelled.`), 'PR-012: after a full run her line says every show was labelled');
     ok(cards().length === shownAfter, `PR-008: after Label, Period shows every not-dismissed show at the trial venues (${shownAfter})`, String(cards().length));
+    // Recently labelled (her ask): this run's shows first, then the shows labelled before the sort existed.
+    click(chipBtnSort('Recently labelled')); await settle(150);
+    const before_ = (el, other) => !!(el.compareDocumentPosition(other) & win.Node.DOCUMENT_POSITION_FOLLOWING);
+    const band = t => [...doc.querySelectorAll('span')].find(x => x.textContent === t);
+    const thisBand = band('This labelling'), s1Band = band('Stage 1');
+    const inThis = cards().filter(a => thisBand && s1Band && before_(thisBand, a) && before_(a, s1Band));
+    ok(!!thisBand && !!s1Band && inThis.length === shownAfter - 4 && !inThis.some(a => [ng1, ng2, met1, met2].some(x => has(a, x))),
+      'PR-032: Recently labelled puts this Label run\'s shows under "This labelling", the earlier ones under "Stage 1"', inThis.length + ' of ' + (shownAfter - 4));
+    click(chipBtnSort('Period')); await settle(150); click(chipBtnSort('Period')); await settle(150);   // back to Period, reversed as before
     const fin = cards();
     ok(has(fin[fin.length - 1], ng2) && has(fin[0], met2), 'PR-009: a show already labelled keeps its label', fin[0].textContent.slice(0, 40));
     // Relabel, at the foot of a card's drawer, replaces that one show's label.
@@ -185,6 +196,11 @@ const until = async (fn, ms = 8000) => { const t = Date.now(); while (Date.now()
     themeNames.forEach(t => click(chipBtn(t))); await settle(150);
     ok(cards().length === allShown, 'PR-022: the theme chips and Ex-themes together hold every show in the Period view, once', cards().length + ' of ' + allShown);
     themeNames.forEach(t => click(chipBtn(t))); await settle(150);
+    click(chipBtnSort('Recently labelled')); await settle(150);
+    const lone = cards().filter(a => before_(band('This labelling'), a) && before_(a, band('Earlier labellings')));
+    ok(lone.length === 1 && lone[0].querySelector('h3').textContent === firstTitle,
+      'PR-033: a Relabel puts that one show under "This labelling", the run before it under "Earlier labellings"', lone.length + '');
+    click(chipBtnSort('Period')); await settle(150);
 
     const csv = 'venue_code,title,start_date,end_date,summary,url,notes,swept_at\n'
       + 'met,A Show Nobody Has Seen,2026-11-01,2027-02-01,Paintings of the 1600s.,https://www.metmuseum.org/exhibitions/nobody-has-seen,,2026-10-15\n'

@@ -23,7 +23,7 @@ check('PS-003 the period outranks the year', H.periodCompare({museumId:'met',per
 check('PS-003 the year orders within a period', H.periodCompare({museumId:'met',period:'highren',periodYear:1500},{museumId:'met',period:'highren',periodYear:1520})<0);
 
 // Her seven trial venues.
-check('PS-004 the trial venues are her seven', [...H.PERIOD_VENUES].sort().join()===['cincinnati','dellav','met','ng','orsay','tate-modern','va'].sort().join());
+check('PS-004 the trial venues are her stage 1 seven and stage 2 eleven', [...H.PERIOD_VENUES].sort().join()===['cincinnati','dellav','met','ng','orsay','tate-modern','va','mad','morgan','brit','menil','rijks','uffizi','capo','borghese','louvre','tate-britain','wallace'].sort().join());
 check('PS-004 every trial venue exists', [...H.PERIOD_VENUES].every(id=>H.MU[id]));
 
 // Only a listed period and a whole year in range are kept.

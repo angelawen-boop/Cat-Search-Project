@@ -3,7 +3,7 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 // The footer prints APP_VERSION and its date, so she can tell one build from the next.
 // Numbering, her decision: a whole number for a substantial change, a decimal for a
 // small one, one number per publish. Bump it with the change it describes.
-const APP_VERSION = "1.8";   // the Period test page's own numbering (her name for it), not her app's
+const APP_VERSION = "2";   // the Period test page's own numbering (her name for it), not her app's
 const APP_VERSION_DATE = "25 Oct 2026";
 
 // The venue order is VENUE_ORDER, below the list, which sorts MUSEUMS; drawer, chips,
@@ -1882,8 +1882,10 @@ const PERIOD_RETIRED={interwar:"interwarmod"};
 const PERIOD_RANK=Object.fromEntries([...PERIODS.map((p,i)=>[p.key,i]),...Object.entries(PERIOD_RETIRED).map(([k,to])=>[k,PERIODS.findIndex(p=>p.key===to)])]);
 const PERIOD_NAME=Object.fromEntries([...PERIODS.map(p=>[p.key,p.name]),...Object.entries(PERIOD_RETIRED).map(([k,to])=>[k,PERIODS.find(p=>p.key===to).name])]);
 const periodKey=k=>PERIOD_RETIRED[k]||k;
-// The trial's seven venues (her choice): only their shows are labelled and shown by Period.
-const PERIOD_VENUES=new Set(["met","ng","orsay","dellav","va","tate-modern","cincinnati"]);
+// The trial's venues (her choice): only their shows are labelled and shown by Period.
+// Stage 1 the first seven; stage 2 the next eleven (docs/periods.md).
+const PERIOD_VENUES=new Set(["met","ng","orsay","dellav","va","tate-modern","cincinnati",
+  "mad","morgan","brit","menil","rijks","uffizi","capo","borghese","louvre","tate-britain","wallace"]);
 const PERIOD_BATCH=40;
 
 // THEMES (her design): a show of a kind of thing still sits in its period; its themes are
@@ -5968,7 +5970,8 @@ export default function App(){
     const {labels,batches}=await labelPeriods(shows);
     const said=labelSummary(shows.length,batches);
     saveLookupTape(tape,{ok:said.ok,said:said.text,detail:JSON.stringify(batches)});
-    if(labels.size)setProposals(cur=>cur!==props?cur:props.map((p,i)=>labels.has(i)?{...p,cand:{...p.cand,...labels.get(i)}}:p));
+    const at=new Date().toISOString();
+    if(labels.size)setProposals(cur=>cur!==props?cur:props.map((p,i)=>labels.has(i)?{...p,cand:{...p.cand,...labels.get(i),labelledAt:at}}:p));
   }
   // Label: every show at a trial venue with no period or no themes yet, dismissed ones
   // included. Fills only; a labelled show is never relabelled. Not an edit of hers: editedAt stays.
@@ -5983,7 +5986,8 @@ export default function App(){
     try{
       const res=await labelPeriods(todo.map((r,i)=>periodShow(i,r)),(done,total)=>setProg({done,total,label:"Labelling periods\u2026"}));
       batches=res.batches;
-      const byId=new Map(); res.labels.forEach((v,i)=>byId.set(todo[i].id,v));
+      const at=new Date().toISOString();
+      const byId=new Map(); res.labels.forEach((v,i)=>byId.set(todo[i].id,{...v,labelledAt:at}));
       if(byId.size){ setRows(prev=>prev.map(r=>byId.has(r.id)&&!labelDone(r)?{...r,...byId.get(r.id)}:r)); setDirty(true); setSaveNote(null); }
       said=labelSummary(todo.length,batches);
     }catch(e){ said={ok:false,text:"Label: didn\u2019t finish \u2014 "+String((e&&e.message)||e)+"."}; }
@@ -6005,7 +6009,7 @@ export default function App(){
     let said;
     try{
       const {labels,batches}=await labelPeriods([periodShow(0,r)]);
-      const v=labels.get(0);
+      const v=labels.get(0)&&{...labels.get(0),labelledAt:new Date().toISOString()};
       if(v){
         const next=rows.map(x=>x.id===id?{...x,...v}:x);
         setRows(next); setDirty(true); setSaveNote(null);
@@ -6194,7 +6198,7 @@ export default function App(){
   function makeLedgerRow(c,now){
     const base=c.museumId+"-"+normalizeTitle(c.title).replace(/[^a-z0-9]+/g,"").slice(0,50);
     return {id:base,museumId:c.museumId,title:c.title,startDate:c.startDate||null,endDate:c.endDate||null,summary:c.summary||"",exUrl:c.exUrl||(MU[c.museumId]?.listUrl||""),interested:true,watching:false,acquiring:null,looked:false,hasCatalogue:"unknown",catalogueTitle:null,isbn13:null,publisher:null,publisherUrl:null,publisherResult:null,shopUrl:null,shopState:null,shopChange:null,addedAt:now,editedAt:null,
-      ...(labelDone(c)?{period:c.period,periodYear:c.periodYear,periodResponse:!!c.periodResponse,periodArtist:c.periodArtist||"",themes:c.themes}:{})};
+      ...(labelDone(c)?{period:c.period,periodYear:c.periodYear,periodResponse:!!c.periodResponse,periodArtist:c.periodArtist||"",themes:c.themes,labelledAt:c.labelledAt||now}:{})};
   }
 
   // Apply whatever she picked where the stitched file disagreed with itself.
@@ -6510,6 +6514,7 @@ export default function App(){
     out.sort((a,b)=>{
       if(pinTouched){const aT=refreshTouched.includes(a.id)?0:1,bT=refreshTouched.includes(b.id)?0:1;if(aT!==bT)return aT-bT;}
       if(sortBy==="added"){const d=String(b.addedAt||"").localeCompare(String(a.addedAt||""));if(d!==0)return d;}
+      if(sortBy==="labelled"){const d=String(b.labelledAt||"").localeCompare(String(a.labelledAt||""));if(d!==0)return d;const aL=periodLabelled(a)?1:0,bL=periodLabelled(b)?1:0;if(aL!==bL)return bL-aL;}
       if(sortBy==="edited"){const d=String(b.editedAt||"").localeCompare(String(a.editedAt||""));if(d!==0)return d;if(!a.editedAt&&!b.editedAt){const aH=a.addedAt?1:0,bH=b.addedAt?1:0;if(aH!==bH)return bH-aH;}}
       if(sortBy==="venue"){const d=venueRank(a.museumId)-venueRank(b.museumId);if(d!==0)return d;}
       // A second tap on Date or Period turns this whole order upside down, Wanted view included.
@@ -6842,7 +6847,7 @@ export default function App(){
       <div style={{maxWidth:760,margin:"0 auto 12px",display:"flex",flexDirection:"column",gap:5}}>
         <div style={{display:"flex",gap:4,flexWrap:"wrap",alignItems:"center"}}>
           <span style={{fontSize:9,letterSpacing:"0.12em",textTransform:"uppercase",color:C.soft,marginRight:2}}>Sort</span>
-          {[["date","Date"],["venue","Venue"],["period","Period"],["added","Recently added"],["edited","Recently edited"]].map(([k,l])=><button key={k} onClick={()=>pickSort(k)} style={chip(sortBy===k&&!pinTouched)}>{l}{(k==="date"||k==="period")&&sortBy===k&&!pinTouched?(dateReversed?" \u2191":" \u2193"):""}</button>)}
+          {[["date","Date"],["venue","Venue"],["period","Period"],["added","Recently added"],["edited","Recently edited"],["labelled","Recently labelled"]].map(([k,l])=><button key={k} onClick={()=>pickSort(k)} style={chip(sortBy===k&&!pinTouched)}>{l}{(k==="date"||k==="period")&&sortBy===k&&!pinTouched?(dateReversed?" \u2191":" \u2193"):""}</button>)}
           {pinTouched&&<span style={{fontSize:10.5,color:C.action,fontWeight:600}}>{"\u2191 just-refreshed entries shown first"}</span>}
         </div>
         <div style={{display:"flex",gap:4,flexWrap:"wrap",alignItems:"center"}}>
@@ -6881,16 +6886,19 @@ export default function App(){
         {view.length===0&&<div style={{background:C.card,border:"1px solid "+C.rule,borderRadius:5,padding:18,fontSize:12.5,color:C.soft}}>Nothing matches those filters.</div>}
         {(()=>{
           const pinnedCount=pinTouched?view.filter(x=>refreshTouched.includes(x.id)).length:0;
-          // Band headers for the two "recently" sorts (only when not in the post-import pinned snapshot).
-          const bandMode=(!pinTouched&&(sortBy==="added"||sortBy==="edited"))?sortBy:null;
+          // Band headers for the "recently" sorts (only when not in the post-import pinned snapshot).
+          const bandMode=(!pinTouched&&(sortBy==="added"||sortBy==="edited"||sortBy==="labelled"))?sortBy:null;
           const newestAdd=bandMode==="added"?(view.find(x=>x.addedAt)?.addedAt||null):null;
           const newestEdit=bandMode==="edited"?(view.find(x=>x.editedAt)?.editedAt||null):null;
+          const newestLabel=bandMode==="labelled"?(view.find(x=>x.labelledAt)?.labelledAt||null):null;
           const bandOf=(x)=>{
             if(bandMode==="added")return !x.addedAt?"seed":(x.addedAt===newestAdd?"add_this":"add_earlier");
             if(bandMode==="edited")return x.editedAt?(x.editedAt===newestEdit?"ed_this":"ed_earlier"):(x.addedAt?"ed_never":"seed");
+            // A show labelled before this sort existed has no labelledAt: stage 1.
+            if(bandMode==="labelled")return x.labelledAt?(x.labelledAt===newestLabel?"lab_this":"lab_earlier"):(periodLabelled(x)?"lab_stage1":"lab_never");
             return null;
           };
-          const BAND_LABEL={add_this:"This import",add_earlier:"Earlier imports",seed:"Original set",ed_this:"This import's edits",ed_earlier:"Earlier edits",ed_never:"Never edited"};
+          const BAND_LABEL={add_this:"This import",add_earlier:"Earlier imports",seed:"Original set",ed_this:"This import's edits",ed_earlier:"Earlier edits",ed_never:"Never edited",lab_this:"This labelling",lab_earlier:"Earlier labellings",lab_stage1:"Stage 1",lab_never:"Not labelled"};
           const bandDivider=(txt,pk)=><div data-period={pk} style={{display:"flex",alignItems:"center",gap:8,margin:"2px 2px",color:C.soft}}><div style={{flex:1,height:1,background:C.rule}}/><span style={{fontSize:9.5,letterSpacing:"0.1em",textTransform:"uppercase"}}>{txt}</span><div style={{flex:1,height:1,background:C.rule}}/></div>;
           return view.slice(0,drawLimit).map((r,i)=>{
           const brk=(pinTouched&&pinnedCount>0&&pinnedCount<view.length&&i===pinnedCount)?bandDivider("Rest of the list"):null;
