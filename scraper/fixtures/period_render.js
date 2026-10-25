@@ -1,7 +1,7 @@
 /**
  * THE PERIOD SORT ON THE REAL PAGE (her trial; docs/periods.md). Renders the page in jsdom
  * on her 24 Sep ledger with periods written onto a few rows, taps Period, and reads the
- * cards and dividers. Cases PR-001 to PR-033.
+ * cards and dividers. Cases PR-001 to PR-034.
  *
  *   node scraper/fixtures/period_render.js
  */
@@ -201,6 +201,16 @@ const until = async (fn, ms = 8000) => { const t = Date.now(); while (Date.now()
     ok(lone.length === 1 && lone[0].querySelector('h3').textContent === firstTitle,
       'PR-033: a Relabel puts that one show under "This labelling", the run before it under "Earlier labellings"', lone.length + '');
     click(chipBtnSort('Period')); await settle(150);
+    // The Recently labelled filter, on the Showing line after Dismissed: the newest Label run, in period order.
+    const showing = [...doc.querySelectorAll('span')].find(x => x.textContent === 'Showing');
+    const showRow = showing ? [...showing.parentNode.querySelectorAll('button')].map(b => b.textContent) : [];
+    ok(showRow.indexOf('Recently labelled') === showRow.indexOf('Dismissed') + 1, 'PR-034: the Recently labelled filter sits after Dismissed on the Showing line', showRow.join());
+    click([...showing.parentNode.querySelectorAll('button')].find(b => b.textContent === 'Recently labelled')); await settle(150);
+    const run = cards();
+    ok(run.length === shownAfter - 4 && !run.some(a => [ng1, ng2, met1, met2].some(x => has(a, x)))
+      && !!doc.querySelector('[data-period="baroque"]'),
+      'PR-034: with Period, it shows only the last Label run under its period dividers; a stage 1 show relabelled stays out', run.length + ' of ' + (shownAfter - 4));
+    click([...showing.parentNode.querySelectorAll('button')].find(b => b.textContent === 'Recently labelled')); await settle(150);
 
     const csv = 'venue_code,title,start_date,end_date,summary,url,notes,swept_at\n'
       + 'met,A Show Nobody Has Seen,2026-11-01,2027-02-01,Paintings of the 1600s.,https://www.metmuseum.org/exhibitions/nobody-has-seen,,2026-10-15\n'

@@ -3,7 +3,7 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 // The footer prints APP_VERSION and its date, so she can tell one build from the next.
 // Numbering, her decision: a whole number for a substantial change, a decimal for a
 // small one, one number per publish. Bump it with the change it describes.
-const APP_VERSION = "2";   // the Period test page's own numbering (her name for it), not her app's
+const APP_VERSION = "2.1";   // the Period test page's own numbering (her name for it), not her app's
 const APP_VERSION_DATE = "25 Oct 2026";
 
 // The venue order is VENUE_ORDER, below the list, which sorts MUSEUMS; drawer, chips,
@@ -1919,6 +1919,8 @@ function themeMatch(r,picked){
 
 const periodLabelled=r=>!!(r&&PERIOD_RANK[r.period]!==undefined&&Number.isInteger(r.periodYear));
 // Label fills a show missing its period or its themes (a show labelled before themes is asked again).
+// When a show was last labelled: a Relabel, else its Label run or import (the Recently labelled sort).
+const lastLabel=r=>(r&&(r.relabelledAt||r.labelledAt))||"";
 const labelDone=r=>periodLabelled(r)&&Array.isArray(r.themes)&&!PERIOD_RETIRED[r.period];
 const periodYearText=y=>"c. "+(y<0?(-y)+" BC":y);
 const periodText=r=>periodLabelled(r)?[PERIOD_NAME[r.period],periodYearText(r.periodYear),...(r.themes||[]).map(k=>THEME_NAME[k])].join(" · "):"";
@@ -5433,6 +5435,7 @@ export default function App(){
   const[acqBuyNext,setAcqBuyNext]=useState(false);
   const[showAll,setShowAll]=useState(false);
   const[dismissedOnly,setDismissedOnly]=useState(false);
+  const[labelledF,setLabelledF]=useState(false);
   const[watchedF,setWatchedF]=useState(false);
   const[showSearch,setShowSearch]=useState(false);
   const[search,setSearch]=useState("");
@@ -5725,7 +5728,7 @@ export default function App(){
   }
 
   const toggleSet=(setter,val)=>setter(prev=>{const n=new Set(prev);if(n.has(val))n.delete(val);else n.add(val);return n;});
-  const clearFilters=()=>{setVenueF(new Set());setThemeF(new Set());setTimeF(new Set());setAcqWanted(false);setAcqOwned(false);setAcq3mo(false);setAcq6mo(false);setAcqHasCat(false);setAcqNoCat(false);setAcqBuyNext(false);setShowAll(false);setDismissedOnly(false);setWatchedF(false);setSearch("");setShowSearch(false);};
+  const clearFilters=()=>{setVenueF(new Set());setThemeF(new Set());setTimeF(new Set());setAcqWanted(false);setAcqOwned(false);setAcq3mo(false);setAcq6mo(false);setAcqHasCat(false);setAcqNoCat(false);setAcqBuyNext(false);setShowAll(false);setDismissedOnly(false);setWatchedF(false);setLabelledF(false);setSearch("");setShowSearch(false);};
 
   // WHAT A QUARANTINE REMEMBERS. The URL where there is one; venue + title where there
   // is not (a reused title could block the wrong row — bounded, and visible on screen).
@@ -6009,7 +6012,7 @@ export default function App(){
     let said;
     try{
       const {labels,batches}=await labelPeriods([periodShow(0,r)]);
-      const v=labels.get(0)&&{...labels.get(0),labelledAt:new Date().toISOString()};
+      const v=labels.get(0)&&{...labels.get(0),relabelledAt:new Date().toISOString()};
       if(v){
         const next=rows.map(x=>x.id===id?{...x,...v}:x);
         setRows(next); setDirty(true); setSaveNote(null);
@@ -6278,7 +6281,7 @@ export default function App(){
     setShopScreen(null); setReadVenues([]);
     setProposals(null); setDecisions({}); setSeenInFile(null); setRefreshDone({added,filled,changed,never:newlyIgnored.length,left:partial?leftUndecided:0});
     setRefreshTouched(touched); setPinTouched(touched.length>0); // float just-changed entries to the top, this session
-    setVenueF(new Set()); setThemeF(new Set()); setTimeF(new Set()); setWatchedF(false);
+    setVenueF(new Set()); setThemeF(new Set()); setTimeF(new Set()); setWatchedF(false); setLabelledF(false);
     setAcqWanted(false); setAcqOwned(false); setAcq3mo(false); setAcq6mo(false); setAcqHasCat(false); setAcqNoCat(false); setAcqBuyNext(false);
     setDismissedOnly(false); setShowAll(false); setSearch("");
   }
@@ -6490,6 +6493,7 @@ export default function App(){
     // Each row's tier, worked out once: the sort below asks for it thousands of times.
     const tiers=new Map();
     const tierOf=r=>{let t=tiers.get(r);if(t===undefined){t=tierFor(r);tiers.set(r,t);}return t;};
+    const newestRun=labelledF?rows.reduce((m,r)=>r.labelledAt&&r.labelledAt>m?r.labelledAt:m,""):"";
     let out=rows.filter(r=>{
       // The search narrows; it does not end the check, so every other filter applies.
       if(sq&&!(r.title.toLowerCase().includes(sq)||r.summary.toLowerCase().includes(sq)||(MU[r.museumId]?.name||"").toLowerCase().includes(sq)))return false;
@@ -6502,6 +6506,8 @@ export default function App(){
       const t=tierOf(r),ts=TIERS[t]?.time||"current";
       if(timeF.size>0){let match=timeF.has(ts);if(timeF.has("recent")&&t==="recent")match=true;if(timeF.has("current")&&t==="recent")match=true;if(!match)return false;}
       if(watchedF&&!r.watching)return false;
+      // Recently labelled: the shows of the newest Label run or import; a Relabel keeps its show in its run.
+      if(labelledF&&(!newestRun||r.labelledAt!==newestRun))return false;
       // Period shows only labelled shows at the trial venues (her decision).
       if(sortBy==="period"&&!pinTouched&&!(PERIOD_VENUES.has(r.museumId)&&periodLabelled(r)))return false;
       // Acquiring filters stack as AND across the three axes, OR within an axis.
@@ -6514,7 +6520,7 @@ export default function App(){
     out.sort((a,b)=>{
       if(pinTouched){const aT=refreshTouched.includes(a.id)?0:1,bT=refreshTouched.includes(b.id)?0:1;if(aT!==bT)return aT-bT;}
       if(sortBy==="added"){const d=String(b.addedAt||"").localeCompare(String(a.addedAt||""));if(d!==0)return d;}
-      if(sortBy==="labelled"){const d=String(b.labelledAt||"").localeCompare(String(a.labelledAt||""));if(d!==0)return d;const aL=periodLabelled(a)?1:0,bL=periodLabelled(b)?1:0;if(aL!==bL)return bL-aL;}
+      if(sortBy==="labelled"){const d=String(lastLabel(b)).localeCompare(String(lastLabel(a)));if(d!==0)return d;const aL=periodLabelled(a)?1:0,bL=periodLabelled(b)?1:0;if(aL!==bL)return bL-aL;}
       if(sortBy==="edited"){const d=String(b.editedAt||"").localeCompare(String(a.editedAt||""));if(d!==0)return d;if(!a.editedAt&&!b.editedAt){const aH=a.addedAt?1:0,bH=b.addedAt?1:0;if(aH!==bH)return bH-aH;}}
       if(sortBy==="venue"){const d=venueRank(a.museumId)-venueRank(b.museumId);if(d!==0)return d;}
       // A second tap on Date or Period turns this whole order upside down, Wanted view included.
@@ -6529,12 +6535,12 @@ export default function App(){
       return flip*db.localeCompare(da);
     });
     return out;
-  },[rows,byArtist,sortBy,venueF,themeF,timeF,acqWanted,acqOwned,acq3mo,acq6mo,acqHasCat,acqNoCat,acqBuyNext,showAll,dismissedOnly,watchedF,search,pinTouched,refreshTouched,dateReversed]);
+  },[rows,byArtist,sortBy,venueF,themeF,timeF,acqWanted,acqOwned,acq3mo,acq6mo,acqHasCat,acqNoCat,acqBuyNext,showAll,dismissedOnly,watchedF,labelledF,search,pinTouched,refreshTouched,dateReversed]);
 
   // DRAWN AS SHE SCROLLS: the first DRAW_STEP cards, then DRAW_STEP more each time the end
   // of the drawn list nears the screen. A new filter, sort or search starts again from the
   // top (viewToken). Jump to bottom draws the rest first. No IntersectionObserver → all.
-  const viewToken=useMemo(()=>({}),[sortBy,venueF,themeF,timeF,acqWanted,acqOwned,acq3mo,acq6mo,acqHasCat,acqNoCat,acqBuyNext,showAll,dismissedOnly,watchedF,search,pinTouched,dateReversed]);
+  const viewToken=useMemo(()=>({}),[sortBy,venueF,themeF,timeF,acqWanted,acqOwned,acq3mo,acq6mo,acqHasCat,acqNoCat,acqBuyNext,showAll,dismissedOnly,watchedF,labelledF,search,pinTouched,dateReversed]);
   const[drawn,setDrawn]=useState({token:null,n:DRAW_STEP});
   const drawLimit=typeof IntersectionObserver==="undefined"?Infinity:drawn.token===viewToken?drawn.n:DRAW_STEP;
   const moreRef=useRef(null);
@@ -6877,6 +6883,7 @@ export default function App(){
           <span style={{fontSize:9,letterSpacing:"0.12em",textTransform:"uppercase",color:C.soft,marginRight:2}}>Showing</span>
           <button onClick={()=>setWatchedF(v=>!v)} style={chip(watchedF)}>Watched</button>
           <button onClick={()=>{setDismissedOnly(v=>!v);setShowAll(false);}} style={chip(dismissedOnly)}>Dismissed</button>
+          <button onClick={()=>setLabelledF(v=>!v)} style={chip(labelledF)}>Recently labelled</button>
           <button onClick={()=>{setShowAll(v=>!v);setDismissedOnly(false);}} style={chip(showAll)}>Show all</button>
           <button onClick={clearFilters} style={{...chip(false),color:C.muted,borderColor:C.muted}}>Clear all</button>
         </div>
@@ -6890,12 +6897,12 @@ export default function App(){
           const bandMode=(!pinTouched&&(sortBy==="added"||sortBy==="edited"||sortBy==="labelled"))?sortBy:null;
           const newestAdd=bandMode==="added"?(view.find(x=>x.addedAt)?.addedAt||null):null;
           const newestEdit=bandMode==="edited"?(view.find(x=>x.editedAt)?.editedAt||null):null;
-          const newestLabel=bandMode==="labelled"?(view.find(x=>x.labelledAt)?.labelledAt||null):null;
+          const newestLabel=bandMode==="labelled"?(lastLabel(view.find(x=>lastLabel(x)))||null):null;
           const bandOf=(x)=>{
             if(bandMode==="added")return !x.addedAt?"seed":(x.addedAt===newestAdd?"add_this":"add_earlier");
             if(bandMode==="edited")return x.editedAt?(x.editedAt===newestEdit?"ed_this":"ed_earlier"):(x.addedAt?"ed_never":"seed");
             // A show labelled before this sort existed has no labelledAt: stage 1.
-            if(bandMode==="labelled")return x.labelledAt?(x.labelledAt===newestLabel?"lab_this":"lab_earlier"):(periodLabelled(x)?"lab_stage1":"lab_never");
+            if(bandMode==="labelled")return lastLabel(x)?(lastLabel(x)===newestLabel?"lab_this":"lab_earlier"):(periodLabelled(x)?"lab_stage1":"lab_never");
             return null;
           };
           const BAND_LABEL={add_this:"This import",add_earlier:"Earlier imports",seed:"Original set",ed_this:"This import's edits",ed_earlier:"Earlier edits",ed_never:"Never edited",lab_this:"This labelling",lab_earlier:"Earlier labellings",lab_stage1:"Stage 1",lab_never:"Not labelled"};
