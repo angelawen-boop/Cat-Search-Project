@@ -567,7 +567,9 @@ function runtime() {
 
   const showFetches = calls.filter(c => c.kind === 'mcp' && c.tool === 'web_fetch' && (P[c.args.urls[0]] || c.args.urls[0] === REFUSED || c.args.urls[0] === EMPTY));
   ok(showFetches.length === 12, 'AL-003: twelve different links, the repeated RA one read once — twelve page reads', showFetches.length);
-  ok(calls.filter(c => c.kind === 'sample').length === 10, 'AL-003a:  and one Claude call per page that read, ten', calls.filter(c => c.kind === 'sample').length);
+  // The Period trial's labelling question about the new cards is not a page read.
+  const reads = calls.filter(c => c.kind === 'sample' && !/name the art period/.test(c.prompt || ''));
+  ok(reads.length === 10, 'AL-003a:  and one Claude call per page that read, ten', reads.length);
 
   // ── AL-004: each card's title and dates — read by code ────────────────────
   const adds = buttons(/Add new entry$/);
@@ -1099,7 +1101,7 @@ function runtime() {
     calls.length = 0;
     await click([...dialog().querySelectorAll('button')].find(b => b.textContent === 'Read'));
     await settle(30);
-    const asked = calls.find(c => c.kind === 'sample'), samples = calls.filter(c => c.kind === 'sample');
+    const asked = calls.find(c => c.kind === 'sample'), samples = calls.filter(c => c.kind === 'sample' && !/name the art period/.test(c.prompt || ''));
     ok(asked && /venueOwnPage/.test(asked.prompt) && /Buckingham Palace, London, 19 May/.test(asked.prompt),
       'AL-052c: a site never seen: Claude is asked which venue held the show, given the date line read');
     ok(samples.length === 2 && /published by someone other than the museum/.test(samples[1].prompt), 'AL-052c2: told it is someone else\'s page, Claude is asked once more (site and title)', samples.length);
@@ -1128,7 +1130,7 @@ function runtime() {
     calls.length = 0;
     await click([...dialog().querySelectorAll('button')].find(b => b.textContent === 'Read'));
     await settle(30);
-    const asked = calls.filter(c => c.kind === 'sample').map(c => /"venueShort"/.test(c.prompt));
+    const asked = calls.filter(c => c.kind === 'sample' && !/name the art period/.test(c.prompt || '')).map(c => /"venueShort"/.test(c.prompt));
     ok(asked.length === 2 && asked[0] && !asked[1], 'AL-053:  a museum never met: Claude is asked its name on the first link only; its own page asks nothing more', JSON.stringify(asked));
     const first = calls.find(c => c.kind === 'sample');
     ok(first && /"Boston MFA"/.test(first.prompt) && /"Frankfurt St\u00e4del"/.test(first.prompt), 'AL-053a:  her names for venues are the style for the short name');

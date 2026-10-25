@@ -45,6 +45,8 @@ const SUITES = [
   [EVERY_APP, 'node scraper/fixtures/page_renders.js'],
   [[APP, SCREEN], 'node scraper/fixtures/app_decisions.js'],
   [[APP, SCREEN], 'node scraper/fixtures/list_drawing.js'],
+  [[APP, SCREEN], 'node scraper/fixtures/period_sort.js'],
+  [[APP, SCREEN], 'node scraper/fixtures/period_render.js'],
   [[APP, LOOKUP], 'node scraper/fixtures/catalogue_lookup.js'],
   [[APP, LOOKUP], 'node scraper/fixtures/catalogue_route.js'],
   [[APP, LOOKUP], 'node scraper/fixtures/recheck_shop.js'],

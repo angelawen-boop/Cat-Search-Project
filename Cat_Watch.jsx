@@ -3,8 +3,8 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 // The footer prints APP_VERSION and its date, so she can tell one build from the next.
 // Numbering, her decision: a whole number for a substantial change, a decimal for a
 // small one, one number per publish. Bump it with the change it describes.
-const APP_VERSION = "50.3";
-const APP_VERSION_DATE = "23 Oct 2026";
+const APP_VERSION = "51";
+const APP_VERSION_DATE = "25 Oct 2026";
 
 // The venue order is VENUE_ORDER, below the list, which sorts MUSEUMS; drawer, chips,
 // Sort by Venue and refresh headings all follow it.
@@ -2746,6 +2746,235 @@ function topicPresets(props){
   return d;
 }
 
+// ===== PERIOD — the art-period sort (her trial; docs/periods.md) =====
+// Claude labels each show with one period from this list and one year; code sorts by
+// the list's order, then the year, then her venue order. The list's order is her
+// centre-of-gravity rule: Italy, then the North, then France, then America, a region's
+// periods placed after the dominant region's periods of the same time (Italy first only
+// where two compete); Georgian before Neoclassicism, Belle Époque before Symbolism, Postwar
+// Europe after Abstract Expressionism (her reorder). The groups after Contemporary (her decision) take what cannot
+// file in the chronology: surveys, stragglers, non-Western art. Themes are labels, never groups.
+const PERIODS=[
+  {key:"antiquity",name:"Antiquity",span:"before c. 400; ancient art from anywhere"},
+  {key:"medieval",name:"Byzantine and Early Medieval",span:"c. 400–1150, Romanesque included"},
+  {key:"gothic",name:"Gothic",span:"c. 1150–1375"},
+  {key:"intlgothic",name:"International Gothic",span:"c. 1375–1425"},
+  {key:"earlyren",name:"Early Renaissance",span:"Italy, c. 1400–1490"},
+  {key:"northern",name:"Northern Renaissance",span:"Netherlands, Germany, France, c. 1420–1580 (Van Eyck, Dürer, Bruegel, Holbein)"},
+  {key:"tudor",name:"Tudor / Stuart Britain",span:"c. 1485–1714: art made in Britain or at the English court (Holbein and Van Dyck in England, Hilliard, Lely, Kneller)"},
+  {key:"highren",name:"High Renaissance",span:"Italy, c. 1490–1530"},
+  {key:"venetian",name:"Venetian Renaissance",span:"Venice, c. 1470–1600 (Bellini, Giorgione, Titian, Tintoretto, Veronese)"},
+  {key:"mannerism",name:"Mannerism",span:"Italy, c. 1520–1600"},
+  {key:"baroque",name:"Italian Baroque",span:"c. 1590–1700"},
+  {key:"flemish",name:"Flemish Baroque",span:"c. 1600–1680 (Rubens, Van Dyck, Jordaens)"},
+  {key:"dutch",name:"Dutch Golden Age",span:"c. 1600–1700"},
+  {key:"spanish",name:"Spanish Golden Age",span:"c. 1580–1700"},
+  {key:"classicism",name:"French Classicism",span:"c. 1620–1715 (Poussin, Claude, the age of Louis XIV)"},
+  {key:"rococo",name:"Rococo",span:"c. 1715–1775 (Watteau, Boucher, Fragonard, Tiepolo)"},
+  {key:"latevenetian",name:"Late Venetian",span:"c. 1700–1790: Venetian views and the Grand Tour (Canaletto, Bellotto, Guardi)"},
+  {key:"georgian",name:"Georgian Britain",span:"c. 1714–1830 (Hogarth, Gainsborough, Reynolds, Stubbs)"},
+  {key:"neoclassicism",name:"Neoclassicism",span:"c. 1760–1820"},
+  {key:"romanticism",name:"Romanticism",span:"c. 1800–1850 (Turner, Constable and Goya included)"},
+  {key:"realism",name:"Realism",span:"c. 1840–1880, the Barbizon school and the Salon included"},
+  {key:"impressionism",name:"Impressionism",span:"c. 1865–1890, Manet and Degas included"},
+  {key:"postimp",name:"Post-Impressionism",span:"c. 1885–1905"},
+  {key:"belleepoque",name:"Belle Époque and Aestheticism",span:"c. 1870–1914 (Sargent, Emily Sargent, Whistler, Tissot, Boldini)"},
+  {key:"symbolism",name:"Symbolism and Art Nouveau",span:"c. 1880–1910, the Vienna Secession included"},
+  {key:"victorian",name:"Victorian Britain",span:"c. 1837–1901, the Pre-Raphaelites included"},
+  {key:"american19",name:"19th-century America",span:"c. 1820–1910"},
+  {key:"general19",name:"General 19th Century",span:"c. 1800–1900: 19th-century art that is not about one of the movements above"},
+  {key:"earlymodern",name:"Early Modernism",span:"c. 1900–1918 (Fauvism, Cubism, Expressionism, Futurism)"},
+  {key:"surrealism",name:"Surrealism / Dada",span:"c. 1915–1950 (Duchamp, Ernst, Dalí, Magritte, Miró)"},
+  {key:"interwarmod",name:"Interwar Modernism",span:"c. 1918–1945: every style of those years but Surrealism and Dada (Bauhaus, Art Deco, Constructivism, New Objectivity)"},
+  {key:"americanmod",name:"American Modernism",span:"c. 1910–1945 (O’Keeffe, Hopper, the Harlem Renaissance)"},
+  {key:"abex",name:"Abstract Expressionism",span:"c. 1943–1965"},
+  {key:"postwareu",name:"Postwar Europe",span:"Europe only, c. 1945–1980"},
+  {key:"postwaram",name:"Postwar America",span:"America only, c. 1945–1980, outside Abstract Expressionism and Pop: realism, photography, figuration (Wyeth, Arbus, Neel, Sleigh)"},
+  {key:"pop",name:"Pop Art and Minimalism",span:"c. 1955–1980"},
+  {key:"general20",name:"General 20th Century",span:"c. 1900–1980: 20th-century art that is not about one of the movements above, self-taught and folk art included"},
+  {key:"contemporary",name:"Contemporary",span:"c. 1980 to now"},
+  {key:"surveys",name:"Surveys",span:"a show whose works spread across the centuries with no one period at its heart"},
+  {key:"mischistoric",name:"Miscellaneous Historic",span:"Western art before 1900 that fits none of the periods above"},
+  {key:"miscmodern",name:"Miscellaneous Modern",span:"Western art from 1900 on that fits none of the periods above"},
+  {key:"nonwestern",name:"Non-Western Art",span:"art from outside the Western tradition that is not ancient"},
+];
+// A split period's old key (Surrealism / Dada out of Interwar, her decision): a show still under it
+// sorts with the period named here and is asked again by Label.
+const PERIOD_RETIRED={interwar:"interwarmod"};
+const PERIOD_RANK=Object.fromEntries([...PERIODS.map((p,i)=>[p.key,i]),...Object.entries(PERIOD_RETIRED).map(([k,to])=>[k,PERIODS.findIndex(p=>p.key===to)])]);
+const PERIOD_NAME=Object.fromEntries([...PERIODS.map(p=>[p.key,p.name]),...Object.entries(PERIOD_RETIRED).map(([k,to])=>[k,PERIODS.find(p=>p.key===to).name])]);
+const periodKey=k=>PERIOD_RETIRED[k]||k;
+const PERIOD_BATCH=40;
+
+// THEMES (her design): a show of a kind of thing still sits in its period; its themes are
+// labels, any number per show, for the filter row. A chip may hold several labels
+// (Fashion & Jewellery), so she can regroup chips without relabelling.
+const THEMES=[
+  {key:"fashion",name:"Fashion",chip:"fashion",rule:"clothes, dress, costume, and cloth made for clothes"},
+  {key:"jewellery",name:"Jewellery",chip:"fashion",rule:"jewellery"},
+  {key:"architecture",name:"Architecture",chip:"architecture",rule:"buildings and architects"},
+  {key:"capriccio",name:"Capriccio",chip:"architecture",rule:"capriccio: an architectural fantasy combining real or invented ruins in an imaginary arrangement (Hubert Robert, Panini); ruin painting"},
+  {key:"veduta",name:"Veduta",chip:"architecture",rule:"veduta: an accurate topographical view of a city or place (Canaletto; Piranesi's Vedute di Roma)"},
+  {key:"sculpture",name:"Sculpture",chip:"sculpture",rule:"sculpture"},
+  {key:"animals",name:"Animals",chip:"animals",rule:"animals: dogs, cats, horses, birds, mythical creatures"},
+  {key:"nature",name:"Nature",chip:"nature",rule:"trees, plants, flowers, botanical drawings of them, gardens, clouds; NOT landscape painting in general, NOT still life, NOT animals (those are animals); do not label Nature just because the show is displayed outdoors or in a garden"},
+  {key:"photography",name:"Photography",chip:"photography",rule:"photography"},
+  {key:"dechard",name:"Decorative Arts – Hard",chip:"dechard",rule:"hard decorative objects: furniture, ceramics, porcelain, glass, silver, metalwork; NOT books or manuscripts (those are books)"},
+  {key:"decsoft",name:"Decorative Arts – Soft",chip:"decsoft",rule:"soft decorative arts: wallpaper, carpets, drapery, fabric (chintz), soft furnishings, textiles, interior design; also a show described only as \"decorative arts\", naming no kinds; NOT cloth for clothes, such as dress silks (that is fashion)"},
+  {key:"books",name:"Books",chip:"books",rule:"rare books, book collections, illuminated manuscripts, and albums: a collector's book of drawings or prints, bound together (Vasari's Book of Drawings)"},
+];
+const THEME_KEYS=new Set(THEMES.map(t=>t.key));
+const THEME_NAME=Object.fromEntries(THEMES.map(t=>[t.key,t.name]));
+// Her chips, in her order; Ex-themes is every labelled show with no theme, Surveys and
+// Non-Western Art included (they are groups, not themes).
+const THEME_CHIPS=[["fashion","Fashion & Jewellery"],["architecture","Architecture"],["sculpture","Sculpture"],["animals","Animals"],["nature","Nature"],["photography","Photography"],["dechard","Decorative Arts – Hard"],["decsoft","Decorative Arts – Soft"],["books","Books"],["exthemes","Ex-themes"]];
+const THEME_CHIP_OF=Object.fromEntries(THEMES.map(t=>[t.key,t.chip]));
+// A theme chip set and a labelled show: in when any of its themes is under a picked chip,
+// or Ex-themes is picked and it has none. A show never asked about themes is in none.
+function themeMatch(r,picked){
+  if(!Array.isArray(r.themes))return false;
+  if(picked.has("exthemes")&&!r.themes.length)return true;
+  return r.themes.some(k=>picked.has(THEME_CHIP_OF[k]));
+}
+
+const periodLabelled=r=>!!(r&&PERIOD_RANK[r.period]!==undefined&&Number.isInteger(r.periodYear));
+// Label fills a show missing its period or its themes (a show labelled before themes is asked again).
+// When a show was last labelled: a Relabel, else its Label run or import (the Recently labelled sort).
+const lastLabel=r=>(r&&(r.relabelledAt||r.labelledAt))||"";
+const labelDone=r=>periodLabelled(r)&&Array.isArray(r.themes)&&!PERIOD_RETIRED[r.period];
+const periodYearText=y=>"c. "+(y<0?(-y)+" BC":y);
+const periodText=r=>periodLabelled(r)?[PERIOD_NAME[r.period],periodYearText(r.periodYear),...(r.themes||[]).map(k=>THEME_NAME[k])].join(" · "):"";
+// The two stragglers' groups split at 1900 (her cut-off) — decided here, not by Claude.
+// Claude's Misc answers stand: the bins show what no rule yet files (her decision).
+const miscFor=y=>y<1900?"mischistoric":"miscmodern";
+
+// One artist, one group (her decision): shows about one artist take the group most of
+// them were given; a tie goes to the earlier group. A response show keeps its own.
+const artistKey=a=>String(a||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/[^a-z]+/g," ").trim();
+function artistPeriods(rows){
+  const tally=new Map();
+  for(const r of rows){
+    if(!periodLabelled(r)||r.periodResponse||periodKey(r.period)==="tudor")continue;
+    const k=artistKey(r.periodArtist); if(!k)continue;
+    const t=tally.get(k)||{}, p=periodKey(r.period); t[p]=(t[p]||0)+1; tally.set(k,t);
+  }
+  const out=new Map();
+  for(const [k,t] of tally)out.set(k,Object.keys(t).sort((a,b)=>(t[b]-t[a])||(PERIOD_RANK[a]-PERIOD_RANK[b]))[0]);
+  return out;
+}
+// An English-years show keeps Tudor / Stuart, whatever the artist's other shows (her decision).
+const periodOf=(r,byArtist)=>(!r.periodResponse&&periodKey(r.period)!=="tudor"&&byArtist&&byArtist.get(artistKey(r.periodArtist)))||periodKey(r.period);
+// Period order; within a period, response shows last (her decision), then the year, then
+// her venue order (her tie rule).
+function periodCompare(a,b,byArtist){
+  return (PERIOD_RANK[periodOf(a,byArtist)]-PERIOD_RANK[periodOf(b,byArtist)])||((a.periodResponse?1:0)-(b.periodResponse?1:0))
+    ||(a.periodYear-b.periodYear)||(venueRank(a.museumId)-venueRank(b.museumId));
+}
+
+// One question for up to PERIOD_BATCH shows; each line carries its index i.
+function periodPrompt(shows){
+  return [
+    "You are an art historian. For each exhibition below, name the art period of the art it shows, and one year.",
+    "",
+    "period: the key of ONE period from this list. The list is in its sorting order, not strict date order:",
+    ...PERIODS.map(p=>"  "+p.key+" — "+p.name+" ("+p.span+")"),
+    "",
+    "Rules:",
+    "- Pick by the date and place of the art itself, not the exhibition's theme words.",
+    "- Names in a period's description stand for shows about those artists, not for every show that mentions them.",
+    "- Italian art of c. 1400–1600 goes in the Italian periods; Netherlandish, German and French art of that time in Northern Renaissance.",
+    "- A recent artist responding to older art, or a show pairing artists of different periods: the period of the OLDER art, with its year, and response true.",
+    "- A movement's period only for a show about that movement or its artists. Other 19th-century art: general19.",
+    "- A show spanning a long stretch: the period most of its works come from (its heart), with that period's year. Only when the works spread across the centuries with no one period at its heart: surveys, with the midpoint year.",
+    "- A show split evenly between two or three neighbouring periods, with no one heart: the EARLIEST of them, with its year (Ingres and Delacroix: neoclassicism) — never a general or miscellaneous group.",
+    "- Ancient art from anywhere (Egypt, Greece, Rome, Mesopotamia): antiquity.",
+    "- Art from outside the Western tradition that is not ancient (Asian, Islamic, African, Oceanic, Indigenous): nonwestern.",
+    "- Fashion, jewellery, decorative arts, design, architecture, photography and books take a period like any other show: the period whose years and place hold the work, even when the show is not about that movement's artists.",
+    "- Other 20th-century art, self-taught and folk art included: general20 (to 1980), then contemporary.",
+    "- Western work that fits none of the periods, not even general19 or general20: mischistoric before 1900, miscmodern from 1900.",
+    "- A show about an artist's years in Britain or at the English court (Holbein at the Tudor court, Van Dyck in England): tudor. A general retrospective of such an artist stays in the artist's home period (Holbein: northern; Van Dyck: flemish).",
+    "",
+    "themes: a list of the keys below for what KIND of thing the show is about — none, one or several. A theme never changes the period.",
+    ...THEMES.map(t=>"  "+t.key+" — "+t.rule),
+    "- capriccio or veduta (one or both): give it AND architecture (Hubert Robert: capriccio, architecture).",
+    "- A decorative-arts show whose description names its kinds gets the theme of each kind named (ceramics and furniture: dechard; furnishings: decsoft).",
+    "- Do not label shows by their staging – eg. a sculpture show in a garden is not Nature, a show of paintings among drapery is not Decorative Arts.",
+    "- A show of paintings or drawings in general gets no theme unless its subject is one of the above (a show of horse paintings: animals).",
+    "",
+    "year: one whole number, the year of the art shown (negative for BC). One artist: the middle of the works shown. A show spanning a long stretch: the midpoint of the stretch.",
+    "response: true or false, as above.",
+    "artist: for a show about ONE artist, their full name as usually written (\"John Singer Sargent\"); otherwise \"\".",
+    "",
+    "Answer with JSON only, one entry per exhibition: {\"labels\":[{\"i\":0,\"period\":\"highren\",\"year\":1510,\"response\":false,\"artist\":\"Raphael\",\"themes\":[]}]}",
+    "",
+    "Exhibitions:",
+    ...shows.map(s=>JSON.stringify({i:s.i,venue:s.venue,title:s.title,dates:s.dates,text:String(s.summary||"").replace(/\s+/g," ").slice(0,600)})),
+  ].join("\n");
+}
+// Claude's answer, checked: only a listed period and a sensible whole year are kept.
+// A label with no themes list is not a label: it is asked again, never taken as "no theme".
+// Returns a Map from i to {period, periodYear, periodResponse, periodArtist, themes}.
+function periodAnswers(data){
+  const out=new Map();
+  for(const x of (data&&Array.isArray(data.labels))?data.labels:[]){
+    const i=Number(x&&x.i), y=Number(x&&x.year);
+    let k=String((x&&x.period)||"").trim().toLowerCase();
+    if(!Number.isInteger(i)||PERIOD_RANK[k]===undefined||PERIOD_RETIRED[k]||!Number.isInteger(y)||y<-5000||y>2100||!Array.isArray(x.themes))continue;
+    if(k==="mischistoric"||k==="miscmodern")k=miscFor(y);
+    const themes=[...new Set(x.themes.map(t=>String(t||"").trim().toLowerCase()).filter(t=>THEME_KEYS.has(t)))];
+    // Capriccio and veduta always come with architecture (her decision).
+    if((themes.includes("capriccio")||themes.includes("veduta"))&&!themes.includes("architecture"))themes.push("architecture");
+    const artist=typeof x.artist==="string"?x.artist.trim().slice(0,120):"";
+    out.set(i,{period:k,periodYear:y,periodResponse:x.response===true,periodArtist:artist,themes});
+  }
+  return out;
+}
+// The page's Claude refuses in spells, so a batch that fails, or comes back with no label,
+// is asked again after a wait (her decision: 15 seconds, then a minute), and every batch
+// still unlabelled gets one last go after a pause at the end.
+const LABEL_WAITS={retry:[15000,60000],lastGo:60000};
+const pause=ms=>new Promise(res=>setTimeout(res,ms));
+// Label's own words for a failed ask: the lookup's wording speaks of search results.
+function labelWhy(ask){
+  const code=ask.code||"";
+  if(code==="not_granted")return "You declined to let this page use Claude.";
+  if(code==="invalid_json")return "Claude\u2019s answer came back unreadable.";
+  if(code==="rate_limited")return "Claude is rate-limited.";
+  if(code==="unavailable")return ask.detail;
+  return "Claude didn\u2019t answer ("+(code||"unknown")+").";
+}
+// Labels shows ({i, venue, title, dates, summary}) in batches. onBatch(done,total) reports
+// progress. Returns {labels: Map i → label, batches: [{shows, labelled, tries, why}]}.
+async function labelPeriods(shows,onBatch,waits=LABEL_WAITS){
+  const labels=new Map(), batches=[];
+  const ask=async b=>{
+    b.tries++;
+    const res=await readResults(periodPrompt(b.batch));
+    if(!res.ok){ b.why=labelWhy(res); b.stop=res.code==="not_granted"||res.code==="unavailable"; return; }
+    const want=new Set(b.batch.map(s=>s.i));
+    for(const [i,v] of periodAnswers(res.data))if(want.has(i)&&!labels.has(i)){ labels.set(i,v); b.labelled++; }
+    b.why=b.labelled<b.batch.length?(b.batch.length-b.labelled)+" left out of Claude\u2019s answer":null;
+  };
+  for(let n=0;n<shows.length;n+=PERIOD_BATCH){
+    const b={batch:shows.slice(n,n+PERIOD_BATCH),labelled:0,tries:0,why:null,stop:false};
+    await ask(b);
+    for(const ms of waits.retry){ if(b.labelled||b.stop)break; await pause(ms); await ask(b); }
+    batches.push(b);
+    if(onBatch)onBatch(Math.min(n+PERIOD_BATCH,shows.length),shows.length);
+  }
+  const left=batches.filter(b=>!b.labelled&&!b.stop);
+  if(left.length){ await pause(waits.lastGo); for(const b of left)await ask(b); }
+  return {labels,batches:batches.map(b=>({shows:b.batch.length,labelled:b.labelled,tries:b.tries,why:b.why}))};
+}
+// Her line after a Label: all done, or how many were not and why.
+function labelSummary(total,batches){
+  const done=batches.reduce((a,b)=>a+b.labelled,0);
+  if(done===total)return {ok:true,text:"Label: all "+total+" exhibitions labelled."};
+  const whys=[...new Set(batches.filter(b=>b.why).map(b=>b.why.replace(/\.$/,"")))];
+  return {ok:false,text:"Label: "+done+" of "+total+" exhibitions labelled; "+(total-done)+" not — "+whys.join("; ")+"."};
+}
+const periodShow=(i,r)=>({i,venue:(MU[r.museumId]||{}).name||r.museumId,title:r.title,dates:dateRange(r),summary:r.summary});
+
 // Every decided card lands in one count — to apply, quarantined or rejected — so the
 // footer adds up (her ask). The counts and the link box both use cardOutcome.
 function cardOutcome(p,dec){
@@ -3226,7 +3455,7 @@ async function readResults(prompt){
 }
 async function readResultsCall(prompt){
   const sample=await useCap("sample");
-  if(!sample)return{ok:false,data:null,detail:"Claude isn\u2019t available to this page in this viewer."};
+  if(!sample)return{ok:false,data:null,code:"unavailable",detail:"Claude isn\u2019t available to this page in this viewer."};
   try{
     const data=await sample.json(prompt,{modelTier:"default"});
     return{ok:true,data,detail:"read the results"};
@@ -3242,7 +3471,7 @@ async function readResultsCall(prompt){
     if(code==="not_granted")       why="You declined to let this page use Claude. Reload and allow it to search.";
     else if(code==="rate_limited") why="Claude is rate-limited.";
     else if(code==="invalid_json") why="Claude\u2019s answer came back unreadable. Try again.";
-    return{ok:false,data:null,partial:(e&&e.text)||null,detail:why+"  ["+String((e&&e.message)||e)+"]"};
+    return{ok:false,data:null,code,partial:(e&&e.text)||null,detail:why+"  ["+String((e&&e.message)||e)+"]"};
   }
 }
 
@@ -5732,6 +5961,80 @@ const PALETTES={
          rejectInk:"#D6B87A",neverInk:"#E0A3A3",star:"#E0B45C",buyNext:"#F0705F",onAction:"#12100E",
          scrim:"rgba(0,0,0,0.6)"},
 };
+// The period scrubber (her design): hidden until she holds a finger on the middle of the right
+// edge; then a ruler of every period in the view on a pale panel, the one she is in picked. Sliding moves the
+// pick, read from the rows as laid out before the bulge so it never pushes the pick on; lifting
+// jumps to that period's divider. A swipe that moves before the hold is an
+// ordinary scroll. Rows never spread out: fewer periods, a shorter ruler.
+const SCRUB_ROW=15.5, SCRUB_BULGE=28, SCRUB_ZONE=155, SCRUB_HOLD=300, SCRUB_SLOP=6;
+// The picked name bulges in place (her design): bigger, its row opened up; the others at 10px.
+const scrubName=on=>on?{fontSize:18,fontWeight:700,lineHeight:"24px",borderRadius:13,padding:"0 9px"}:{fontSize:10,fontWeight:400,lineHeight:"14px",borderRadius:9,padding:"0 6px"};
+function PeriodScrubber({groups,C,onJump}){
+  const zone=useRef(null);
+  const[sel,setSel]=useState(null); // the picked row while open
+  const live=useRef({timer:null,open:false,y0:0,y:0,sel:0});
+  const g=useRef(groups); g.current=groups;
+  const jump=useRef(onJump); jump.current=onJump;
+  const n=groups.length;
+  useEffect(()=>{
+    const el=zone.current; if(!el)return;
+    const L=live.current;
+    const pick=()=>{
+      const k=g.current.length, top=window.innerHeight/2-k*SCRUB_ROW/2;
+      L.sel=Math.max(0,Math.min(k-1,Math.floor((L.y-top)/SCRUB_ROW))); setSel(L.sel);
+    };
+    const open=()=>{
+      L.timer=null; const k=g.current.length; if(!k)return;
+      // The period she is in: the last divider above the upper third of the screen.
+      let cur=0; const marks=[...document.querySelectorAll("[data-period]")];
+      for(const m of marks){ if(m.getBoundingClientRect().top<=window.innerHeight/3){const i=g.current.findIndex(x=>x.key===m.getAttribute("data-period"));if(i>=0)cur=i;} }
+      L.open=true; L.sel=cur; setSel(cur);
+    };
+    const down=y=>{ L.y0=L.y=y; clearTimeout(L.timer); L.timer=setTimeout(open,SCRUB_HOLD); };
+    const move=(y,ev)=>{
+      L.y=y;
+      if(L.open){ if(ev&&ev.cancelable)ev.preventDefault(); pick(); }
+      else if(L.timer&&Math.abs(y-L.y0)>SCRUB_SLOP){ clearTimeout(L.timer); L.timer=null; }
+    };
+    const up=()=>{
+      clearTimeout(L.timer); L.timer=null;
+      if(L.open){ L.open=false; setSel(null); const x=g.current[L.sel]; if(x)jump.current(x.key); }
+    };
+    const ts=e=>{ if(e.touches.length===1)down(e.touches[0].clientY); };
+    const tm=e=>move(e.touches[0].clientY,e);
+    const mm=e=>move(e.clientY,e);
+    const mu=()=>{ window.removeEventListener("mousemove",mm); window.removeEventListener("mouseup",mu); up(); };
+    const md=e=>{ if(e.button!==0)return; e.preventDefault(); down(e.clientY); window.addEventListener("mousemove",mm); window.addEventListener("mouseup",mu); };
+    el.addEventListener("touchstart",ts,{passive:true});
+    el.addEventListener("touchmove",tm,{passive:false});
+    el.addEventListener("touchend",up); el.addEventListener("touchcancel",up);
+    el.addEventListener("mousedown",md);
+    return()=>{ up(); el.removeEventListener("touchstart",ts); el.removeEventListener("touchmove",tm);
+      el.removeEventListener("touchend",up); el.removeEventListener("touchcancel",up); el.removeEventListener("mousedown",md);
+      window.removeEventListener("mousemove",mm); window.removeEventListener("mouseup",mu); };
+  },[]);
+  if(!n)return null;
+  return(<>
+    <div ref={zone} data-scrubber="zone" style={{position:"fixed",right:0,top:"50%",transform:"translateY(-50%)",width:16,height:SCRUB_ZONE,zIndex:997,
+      touchAction:"pan-y",userSelect:"none",WebkitUserSelect:"none",WebkitTouchCallout:"none"}}/>
+    {sel!==null&&<div data-scrubber="panel" style={{position:"fixed",right:4,top:"50%",transform:"translateY(-50%)",zIndex:997,pointerEvents:"none",
+      background:C.card+"DB",backdropFilter:"blur(3px)",WebkitBackdropFilter:"blur(3px)",border:"1px solid "+C.rule,borderRadius:10,padding:"8px 6px 8px 8px"}}>
+      <div data-scrubber="ruler" style={{position:"relative"}}>
+        <div style={{position:"absolute",right:0,top:0,bottom:0,width:1,background:C.rule}}/>
+        {groups.map((x,i)=>{const on=i===sel;return(
+          <div key={x.key} data-scrub-row={x.key} style={{height:on?SCRUB_BULGE:SCRUB_ROW,display:"flex",alignItems:"center",justifyContent:"flex-end",gap:6,whiteSpace:"nowrap",transition:"height 0.12s"}}>
+            <span style={{...scrubName(on),color:on?C.onAction:C.soft,background:on?C.action:"none",transition:"font-size 0.12s"}}>{x.name}</span>
+            <span style={{width:on?10:6,height:on?2:1,background:on?C.ink:C.soft}}/>
+          </div>);})}
+        {/* The panel is always as wide as its widest name bulged (her decision): a hidden copy of each sets it. */}
+        <div aria-hidden="true" data-scrubber="sizer" style={{height:0,overflow:"hidden",visibility:"hidden",paddingRight:16}}>
+          {groups.map(x=><div key={x.key} style={{whiteSpace:"nowrap"}}><span style={scrubName(true)}>{x.name}</span></div>)}
+        </div>
+      </div>
+    </div>}
+  </>);
+}
+
 // How many ledger cards are drawn at first, and how many more as she scrolls.
 const DRAW_STEP=200;
 // The card's link buttons (Museum shop, Publisher, the bookstores), in a palette's colours.
@@ -5740,7 +6043,7 @@ const linkButton=C=>({fontSize:11,fontWeight:500,color:C.ink,background:C.card,b
 // ONE LEDGER CARD. Memoised: a mark redraws only the card it changed, so every prop
 // must keep its identity between renders (act, chip, pBtn, lnk, TH are held stable in App;
 // a venue's MU entry is replaced, never edited, so `mu` changes when its shop does).
-const LedgerCard=React.memo(function LedgerCard({r,mu,isOpen,isBusy,busy,rechecking,lookLabel,said,C,TH,chip,pBtn,lnk,act}){
+const LedgerCard=React.memo(function LedgerCard({r,mu,isOpen,isBusy,busy,rechecking,lookLabel,said,relabelling,C,TH,chip,pBtn,lnk,act}){
   const t=tierFor(r),tier=TH[t],mo=moSince(r.endDate),noCat=r.looked&&r.hasCatalogue==="no",isAcq=r.acquiring==="acquired",dismissed=!r.interested;
   const searchingLabel=lookLabel||"Searching\u2026";
   // Two buttons share one busy row; only the one pressed shows progress.
@@ -5833,6 +6136,10 @@ const LedgerCard=React.memo(function LedgerCard({r,mu,isOpen,isBusy,busy,recheck
               {said&&<div style={{marginTop:6,fontSize:11,color:said.failed?TH.urgent.ink:C.soft,fontWeight:said.failed?700:400}}>{said.text}</div>}
               </>}/>
           )}
+          {/* Relabel, on its own line at the foot of the drawer (her design; the Period trial). */}
+          <div style={{marginTop:10}}>
+            <button onClick={()=>act("relabel",r.id)} disabled={busy||relabelling} style={{background:"none",border:"none",color:C.soft,fontSize:10.5,textDecoration:"underline",cursor:"pointer",padding:0}}>{relabelling?"Relabelling\u2026":"Relabel"}</button>
+          </div>
         </div>
       )}
     </article>
@@ -5951,6 +6258,8 @@ export default function App(){
   const[busyId,setBusyId]=useState(null);
   const[lookLabel,setLookLabel]=useState(null); // the progress line while a lookup or Re-check runs (lookupLabel)
   const[prog,setProg]=useState({done:0,total:0,label:""});
+  const[labelSaid,setLabelSaid]=useState(null);   // the last Label run's line
+  const[relabelId,setRelabelId]=useState(null);   // the card a Relabel is asking about
   // Add by link: one pop-up for CSV and Links, nothing added to the page (her design).
   // importMode: null · "choose" · "links" (the box open below them) · "needLedger" (empty page).
   const[importMode,setImportMode]=useState(null);
@@ -6053,6 +6362,7 @@ export default function App(){
   const[sortBy,setSortBy]=useState("date");
   const[dateReversed,setDateReversed]=useState(false);
   const[venueF,setVenueF]=useState(new Set());
+  const[themeF,setThemeF]=useState(new Set());
   const[timeF,setTimeF]=useState(new Set());
   const[acqWanted,setAcqWanted]=useState(false);
   const[acqOwned,setAcqOwned]=useState(false);
@@ -6065,6 +6375,7 @@ export default function App(){
   const dragOn=acqBuyNext&&!readOnly;
   const[showAll,setShowAll]=useState(false);
   const[dismissedOnly,setDismissedOnly]=useState(false);
+  const[labelledF,setLabelledF]=useState(false);
   const[watchedF,setWatchedF]=useState(false);
   const[showSearch,setShowSearch]=useState(false);
   const[search,setSearch]=useState("");
@@ -6357,7 +6668,7 @@ export default function App(){
   }
 
   const toggleSet=(setter,val)=>setter(prev=>{const n=new Set(prev);if(n.has(val))n.delete(val);else n.add(val);return n;});
-  const clearFilters=()=>{setVenueF(new Set());setTimeF(new Set());setAcqWanted(false);setAcqOwned(false);setAcq3mo(false);setAcq6mo(false);setAcqHasCat(false);setAcqNoCat(false);setAcqBuyNext(false);setShowAll(false);setDismissedOnly(false);setWatchedF(false);setSearch("");setShowSearch(false);};
+  const clearFilters=()=>{setVenueF(new Set());setThemeF(new Set());setTimeF(new Set());setAcqWanted(false);setAcqOwned(false);setAcq3mo(false);setAcq6mo(false);setAcqHasCat(false);setAcqNoCat(false);setAcqBuyNext(false);setShowAll(false);setDismissedOnly(false);setWatchedF(false);setLabelledF(false);setSearch("");setShowSearch(false);};
 
   // WHAT A QUARANTINE REMEMBERS. The URL where there is one; venue + title where there
   // is not (a reused title could block the wrong row — bounded, and visible on screen).
@@ -6585,10 +6896,72 @@ export default function App(){
         return;
       }
       setError(null); setProposals(res.props); setCoverage(res.coverage||[]); setTally(res.tally||null); setSeenInFile(res.seen||null); setDecisions(topicPresets(res.props));
+      labelCards(res.props);
     };
     reader.readAsText(file); e.target.value="";
   }
 
+
+  // Every new show gets its period while she reviews the cards: one ask for
+  // the import, written onto the card (docs/periods.md). A miss leaves the card without
+  // one, for Label to fill later.
+  async function labelCards(props){
+    const shows=[];
+    props.forEach((p,i)=>{ if(p.type==="add")shows.push(periodShow(i,p.cand)); });
+    if(!shows.length)return;
+    const tape=tapeStart("Label import cards",{title:shows.length+" new shows"});
+    const {labels,batches}=await labelPeriods(shows);
+    const said=labelSummary(shows.length,batches);
+    saveLookupTape(tape,{ok:said.ok,said:said.text,detail:JSON.stringify(batches)});
+    const at=new Date().toISOString();
+    if(labels.size)setProposals(cur=>cur!==props?cur:props.map((p,i)=>labels.has(i)?{...p,cand:{...p.cand,...labels.get(i),labelledAt:at}}:p));
+  }
+  // Label: every show (stage 3: the whole ledger, her decision) with no period or no themes yet, dismissed ones
+  // included. Fills only; a labelled show is never relabelled. Not an edit of hers: editedAt stays.
+  async function labelLedger(){
+    if(busy||roStop())return;
+    const todo=rows.filter(r=>!labelDone(r));
+    if(!todo.length){ setLabelSaid({ok:true,text:"Label: every exhibition already has a period."}); return; }
+    setBusy(true); setLabelSaid(null); setProg({done:0,total:todo.length,label:"Labelling periods\u2026"});
+    // Each run is one record in the lookup log: every question, Claude's answer, each batch's outcome.
+    const tape=tapeStart("Label periods",{title:todo.length+" exhibitions"});
+    let said={ok:false,text:"Label: didn\u2019t finish."}, batches=[];
+    try{
+      const res=await labelPeriods(todo.map((r,i)=>periodShow(i,r)),(done,total)=>setProg({done,total,label:"Labelling periods\u2026"}));
+      batches=res.batches;
+      const at=new Date().toISOString();
+      const byId=new Map(); res.labels.forEach((v,i)=>byId.set(todo[i].id,{...v,labelledAt:at}));
+      if(byId.size){ setRows(prev=>prev.map(r=>byId.has(r.id)&&!labelDone(r)?{...r,...byId.get(r.id)}:r)); setDirty(true); setSaveNote(null); }
+      said=labelSummary(todo.length,batches);
+    }catch(e){ said={ok:false,text:"Label: didn\u2019t finish \u2014 "+String((e&&e.message)||e)+"."}; }
+    finally{
+      setLabelSaid(said);
+      setDebug(said.text+"\n"+batches.map((b,j)=>"Batch "+(j+1)+": "+b.labelled+" of "+b.shows+" labelled, "+b.tries+" "+(b.tries===1?"try":"tries")+(b.why?" \u2014 "+b.why:"")).join("\n"));
+      saveLookupTape(tape,{ok:said.ok,said:said.text,detail:JSON.stringify(batches)});
+      setBusy(false); setProg({done:0,total:0,label:""});
+    }
+  }
+
+  // Relabel (her design): one show asked afresh under the current rules, its label
+  // replaced; what it says shows in that card's drawer. Not an edit of hers: editedAt stays.
+  async function relabel(id){
+    const r=rows.find(x=>x.id===id);
+    if(!r||busy||relabelId||roStop())return;
+    setRelabelId(id); setRecheckSaid(null);
+    const tape=tapeStart("Relabel",r);
+    let said;
+    try{
+      const {labels,batches}=await labelPeriods([periodShow(0,r)]);
+      const v=labels.get(0)&&{...labels.get(0),relabelledAt:new Date().toISOString()};
+      if(v){
+        const next=rows.map(x=>x.id===id?{...x,...v}:x);
+        setRows(next); setDirty(true); setSaveNote(null);
+        const nr={...r,...v}, shown=periodOf(nr,artistPeriods(next));
+        said={id,failed:false,text:"Relabelled: "+periodText(nr)+(shown!==nr.period?" \u2014 shown with "+nr.periodArtist+"\u2019s other shows, under "+PERIOD_NAME[shown]:"")+"."};
+      }else said={id,failed:true,text:"Relabel didn\u2019t finish \u2014 "+(batches[0]&&batches[0].why||"no answer")+"."};
+    }catch(e){ said={id,failed:true,text:"Relabel didn\u2019t finish \u2014 "+String((e&&e.message)||e)+"."}; }
+    finally{ setRecheckSaid(said); saveLookupTape(tape,{ok:!said.failed,said:said.text}); setRelabelId(null); }
+  }
 
   // ── ADD BY LINK — the button's work ────────────────────────────────────────
   // One page read per link, then one model call for the prose; a new venue's
@@ -6715,6 +7088,7 @@ export default function App(){
       return;
     }
     setProposals(res.props); setCoverage([]); setTally(res.tally||null); setSeenInFile(null); setDecisions(topicPresets(res.props));
+    labelCards(res.props);
     linksAtRead.current=fromPages?{pages:items}:urls;
     // Done with the pop-up — unless a link could not be read: then it stays
     // under the review, its lines waiting for her when the review closes.
@@ -6790,7 +7164,8 @@ export default function App(){
 
   function makeLedgerRow(c,now){
     const base=c.museumId+"-"+normalizeTitle(c.title).replace(/[^a-z0-9]+/g,"").slice(0,50);
-    return {id:base,museumId:c.museumId,title:c.title,startDate:c.startDate||null,endDate:c.endDate||null,summary:c.summary||"",exUrl:c.exUrl||(MU[c.museumId]?.listUrl||""),interested:true,watching:false,acquiring:null,looked:false,hasCatalogue:"unknown",catalogueTitle:null,isbn13:null,publisher:null,publisherUrl:null,publisherResult:null,shopUrl:null,shopState:null,shopChange:null,addedAt:now,editedAt:null};
+    return {id:base,museumId:c.museumId,title:c.title,startDate:c.startDate||null,endDate:c.endDate||null,summary:c.summary||"",exUrl:c.exUrl||(MU[c.museumId]?.listUrl||""),interested:true,watching:false,acquiring:null,looked:false,hasCatalogue:"unknown",catalogueTitle:null,isbn13:null,publisher:null,publisherUrl:null,publisherResult:null,shopUrl:null,shopState:null,shopChange:null,addedAt:now,editedAt:null,
+      ...(labelDone(c)?{period:c.period,periodYear:c.periodYear,periodResponse:!!c.periodResponse,periodArtist:c.periodArtist||"",themes:c.themes,labelledAt:c.labelledAt||now}:{})};
   }
 
   // Apply whatever she picked where the stitched file disagreed with itself.
@@ -6870,7 +7245,7 @@ export default function App(){
     setShopScreen(null); setReadVenues([]);
     setProposals(null); setDecisions({}); setSeenInFile(null); setRefreshDone({added,filled,changed,never:newlyIgnored.length,left:partial?leftUndecided:0});
     setRefreshTouched(touched); setPinTouched(touched.length>0); // float just-changed entries to the top, this session
-    setVenueF(new Set()); setTimeF(new Set()); setWatchedF(false);
+    setVenueF(new Set()); setThemeF(new Set()); setTimeF(new Set()); setWatchedF(false); setLabelledF(false);
     setAcqWanted(false); setAcqOwned(false); setAcq3mo(false); setAcq6mo(false); setAcqHasCat(false); setAcqNoCat(false); setAcqBuyNext(false);
     setDismissedOnly(false); setShowAll(false); setSearch("");
   }
@@ -6885,7 +7260,7 @@ export default function App(){
     }
     dropHeldVenues(); setShopScreen(null); setReadVenues([]); setProposals(null); setDecisions({}); setCoverage([]); setTally(null); setSeenInFile(null); }
   // A second tap on Date reverses it; a third goes back to the usual order.
-  const pickSort=k=>{setDateReversed(k==="date"&&sortBy==="date"&&!pinTouched&&!dateReversed);setSortBy(k);setPinTouched(false);}; // manual sort releases the pinned refresh group
+  const pickSort=k=>{setDateReversed((k==="date"||k==="period")&&sortBy===k&&!pinTouched&&!dateReversed);setSortBy(k);setPinTouched(false);}; // manual sort releases the pinned refresh group
 
 
 
@@ -7055,7 +7430,7 @@ export default function App(){
   // A card's buttons, by name. One function for the life of the page (so LedgerCard can skip
   // redrawing) that calls this render's handler, which sees the current ledger.
   const cardActs=useRef(null);
-  cardActs.current={restore,toggleWatch,dismiss,setAcq,toggleBuyNext,setPick,findOneCat,recheckShop,
+  cardActs.current={restore,toggleWatch,dismiss,setAcq,toggleBuyNext,setPick,findOneCat,recheckShop,relabel,
     toggleOpen:id=>setOpenCards(o=>({...o,[id]:!o[id]}))};
   const cardAct=useCallback((name,...a)=>cardActs.current[name](...a),[]);
 
@@ -7160,11 +7535,14 @@ export default function App(){
     }finally{ setSaveBusy(false); }
   }
 
+  // One artist, one group: worked out from every labelled show, dismissed ones included.
+  const byArtist=useMemo(()=>artistPeriods(rows),[rows]);
   const view=useMemo(()=>{
     const sq=search.toLowerCase().trim();
     // Each row's tier, worked out once: the sort below asks for it thousands of times.
     const tiers=new Map();
     const tierOf=r=>{let t=tiers.get(r);if(t===undefined){t=tierFor(r);tiers.set(r,t);}return t;};
+    const newestRun=labelledF?rows.reduce((m,r)=>r.labelledAt&&r.labelledAt>m?r.labelledAt:m,""):"";
     let out=rows.filter(r=>{
       // The search narrows; it does not end the check, so every other filter applies.
       if(sq&&!(r.title.toLowerCase().includes(sq)||r.summary.toLowerCase().includes(sq)||(MU[r.museumId]?.name||"").toLowerCase().includes(sq)))return false;
@@ -7172,10 +7550,15 @@ export default function App(){
       // is on.
       if(dismissedOnly){ if(r.interested)return false; }
       else if(!r.interested&&!showAll&&!sq)return false;
+      if(themeF.size>0&&!themeMatch(r,themeF))return false;
       if(venueF.size>0&&!venueF.has(chipKey(r.museumId))&&!(venueF.has(OCC_CHIP)&&((isOcc(r.museumId)&&!ownChip(r.museumId))||(MU[r.museumId]||{}).underOcc)))return false;
       const t=tierOf(r),ts=TIERS[t]?.time||"current";
       if(timeF.size>0){let match=timeF.has(ts);if(timeF.has("recent")&&t==="recent")match=true;if(timeF.has("current")&&t==="recent")match=true;if(!match)return false;}
       if(watchedF&&!r.watching)return false;
+      // Recently labelled: the shows of the newest Label run or import; a Relabel keeps its show in its run.
+      if(labelledF&&(!newestRun||r.labelledAt!==newestRun))return false;
+      // Period shows only labelled shows.
+      if(sortBy==="period"&&!pinTouched&&!periodLabelled(r))return false;
       // Acquiring filters stack as AND across the three axes, OR within an axis.
       if(acqWanted||acqOwned){if(!((acqWanted&&r.acquiring==="yes")||(acqOwned&&r.acquiring==="acquired")))return false;}
       if(acq3mo||acq6mo){if(!((acq3mo&&t==="closing")||(acq6mo&&(t==="urgent"||t==="lapsed"))))return false;}
@@ -7188,10 +7571,12 @@ export default function App(){
       if(acqBuyNext){const ka=Number.isFinite(a.buyRank)?a.buyRank:-Infinity,kb=Number.isFinite(b.buyRank)?b.buyRank:-Infinity;if(ka!==kb)return kb>ka?1:-1;}
       if(pinTouched&&!acqBuyNext){const aT=refreshTouched.includes(a.id)?0:1,bT=refreshTouched.includes(b.id)?0:1;if(aT!==bT)return aT-bT;}
       if(sortBy==="added"){const d=String(b.addedAt||"").localeCompare(String(a.addedAt||""));if(d!==0)return d;}
+      if(sortBy==="labelled"){const d=String(lastLabel(b)).localeCompare(String(lastLabel(a)));if(d!==0)return d;const aL=periodLabelled(a)?1:0,bL=periodLabelled(b)?1:0;if(aL!==bL)return bL-aL;}
       if(sortBy==="edited"){const d=String(b.editedAt||"").localeCompare(String(a.editedAt||""));if(d!==0)return d;if(!a.editedAt&&!b.editedAt){const aH=a.addedAt?1:0,bH=b.addedAt?1:0;if(aH!==bH)return bH-aH;}}
       if(sortBy==="venue"){const d=venueRank(a.museumId)-venueRank(b.museumId);if(d!==0)return d;}
-      // Date's second tap turns this whole order upside down, Wanted view included.
-      const flip=sortBy==="date"&&dateReversed?-1:1;
+      // A second tap on Date or Period turns this whole order upside down, Wanted view included.
+      const flip=(sortBy==="date"||sortBy==="period")&&dateReversed?-1:1;
+      if(sortBy==="period")return flip*periodCompare(a,b,byArtist);
       const ta=tierOf(a),tb=tierOf(b);
       if(acqWanted&&(ta==="upcoming")!==(tb==="upcoming"))return flip*(ta==="upcoming"?1:-1); // Wanted view: Announced drops to the bottom (nothing to buy yet)
       const oa=TIERS[ta]?.ord??9,ob=TIERS[tb]?.ord??9;
@@ -7201,12 +7586,12 @@ export default function App(){
       return flip*db.localeCompare(da);
     });
     return out;
-  },[rows,sortBy,venueF,timeF,acqWanted,acqOwned,acq3mo,acq6mo,acqHasCat,acqNoCat,acqBuyNext,showAll,dismissedOnly,watchedF,search,pinTouched,refreshTouched,dateReversed]);
+  },[rows,byArtist,sortBy,venueF,themeF,timeF,acqWanted,acqOwned,acq3mo,acq6mo,acqHasCat,acqNoCat,acqBuyNext,showAll,dismissedOnly,watchedF,labelledF,search,pinTouched,refreshTouched,dateReversed]);
 
   // DRAWN AS SHE SCROLLS: the first DRAW_STEP cards, then DRAW_STEP more each time the end
   // of the drawn list nears the screen. A new filter, sort or search starts again from the
   // top (viewToken). Jump to bottom draws the rest first. No IntersectionObserver → all.
-  const viewToken=useMemo(()=>({}),[sortBy,venueF,timeF,acqWanted,acqOwned,acq3mo,acq6mo,acqHasCat,acqNoCat,acqBuyNext,showAll,dismissedOnly,watchedF,search,pinTouched,dateReversed]);
+  const viewToken=useMemo(()=>({}),[sortBy,venueF,themeF,timeF,acqWanted,acqOwned,acq3mo,acq6mo,acqHasCat,acqNoCat,acqBuyNext,showAll,dismissedOnly,watchedF,labelledF,search,pinTouched,dateReversed]);
   const[drawn,setDrawn]=useState({token:null,n:DRAW_STEP});
   const drawLimit=typeof IntersectionObserver==="undefined"?Infinity:drawn.token===viewToken?drawn.n:DRAW_STEP;
   const moreRef=useRef(null);
@@ -7219,6 +7604,24 @@ export default function App(){
     return()=>io.disconnect();
   },[viewToken,drawLimit,view.length]);
   useEffect(()=>{ if(wantBottom.current){ wantBottom.current=false; window.scrollTo({top:document.documentElement.scrollHeight,behavior:"smooth"}); } });
+  // The scrubber's periods: the view's groups in order, each with its first card's place.
+  const scrubGroups=useMemo(()=>{
+    if(sortBy!=="period"||pinTouched||acqBuyNext)return [];
+    const out=[];
+    view.forEach((r,i)=>{const k=periodOf(r,byArtist); if(!out.length||out[out.length-1].key!==k)out.push({key:k,name:PERIOD_NAME[k],at:i});});
+    return out;
+  },[view,sortBy,pinTouched,acqBuyNext,byArtist]);
+  const wantPeriod=useRef(null);
+  const scrollToPeriod=k=>{
+    const el=document.querySelector("[data-period=\""+k+"\"]");
+    if(el)window.scrollTo({top:el.getBoundingClientRect().top+window.scrollY-8,behavior:"auto"});
+  };
+  useEffect(()=>{ if(wantPeriod.current){ const k=wantPeriod.current; wantPeriod.current=null; scrollToPeriod(k); } });
+  const jumpToPeriod=useCallback(k=>{
+    const x=scrubGroups.find(g=>g.key===k); if(!x)return;
+    if(x.at>=drawLimit){ wantPeriod.current=k; setDrawn({token:viewToken,n:x.at+DRAW_STEP}); }
+    else scrollToPeriod(k);
+  },[scrubGroups,drawLimit,viewToken]);
   const jumpToBottom=()=>{
     if(view.length>drawLimit){ wantBottom.current=true; setDrawn({token:viewToken,n:Infinity}); }
     else window.scrollTo({top:document.documentElement.scrollHeight,behavior:"smooth"});
@@ -7249,6 +7652,7 @@ export default function App(){
         {p.type==="add"&&<div style={{fontSize:11.5,color:C.ink,lineHeight:1.5}}>
           <div style={{fontWeight:700,marginBottom:3}}>{"New show \u2014 not in your ledger yet."}</div>
           {infoRow("Dates",dateRange(p.cand))}
+          {infoRow("Period",periodText(p.cand))}
           {infoRow("Description",p.cand.summary)}
           {infoRow("Link",p.cand.exUrl&&<a href={p.cand.exUrl} target="_blank" rel="noopener noreferrer" style={{color:C.ink}}>{p.cand.exUrl}</a>)}
         </div>}
@@ -7430,6 +7834,7 @@ export default function App(){
           <span>{"QUARANTINE \u2014 "+quarWhy}</span>
         </div>}
         {busy&&prog.total>0&&!importMode&&<div style={{marginTop:8}}><div style={{height:3,background:C.rule,borderRadius:2,overflow:"hidden"}}><div style={{height:"100%",width:(prog.done/prog.total*100)+"%",background:C.action,transition:"width .3s ease"}}/></div><div style={{fontSize:10,color:C.soft,marginTop:3}}>{prog.done}/{prog.total} · {prog.label}</div></div>}
+        {labelSaid&&<div style={labelSaid.ok?{marginTop:8,fontSize:11.5,color:C.soft}:{marginTop:8,padding:"7px 11px",background:TH.urgent.wash,border:"1px solid "+TH.urgent.ink,borderRadius:4,fontSize:11.5,color:TH.urgent.ink}}>{labelSaid.text}</div>}
         {readOnly&&<div style={{marginTop:8,padding:"7px 11px",background:TH.urgent.wash,border:"1px solid "+TH.urgent.ink,borderRadius:4,fontSize:11.5,color:TH.urgent.ink,fontWeight:700}}>{RO_LINE}</div>}
         {error&&error!==RO_LINE&&<div style={{marginTop:8,padding:"7px 11px",background:TH.urgent.wash,border:"1px solid "+TH.urgent.ink,borderRadius:4,fontSize:11.5,color:TH.urgent.ink}}>{error}</div>}
         {debug&&<div style={{marginTop:4}}><button onClick={()=>setShowDebug(v=>!v)} style={{background:"none",border:"none",color:C.soft,fontSize:10,textDecoration:"underline",cursor:"pointer",padding:0}}>{showDebug?"Hide diagnostic":"Show diagnostic"}</button>
@@ -7504,7 +7909,7 @@ export default function App(){
       <div style={{maxWidth:760,margin:"0 auto 12px",display:"flex",flexDirection:"column",gap:5}}>
         <div style={{display:"flex",gap:4,flexWrap:"wrap",alignItems:"center"}}>
           <span style={{fontSize:9,letterSpacing:"0.12em",textTransform:"uppercase",color:C.soft,marginRight:2}}>Sort</span>
-          {[["date","Date"],["venue","Venue"],["added","Recently added"],["edited","Recently edited"]].map(([k,l])=><button key={k} onClick={()=>pickSort(k)} style={chip(sortBy===k&&!pinTouched&&!acqBuyNext)}>{l}{k==="date"&&sortBy==="date"&&!pinTouched&&!acqBuyNext?(dateReversed?" \u2191":" \u2193"):""}</button>)}
+          {[["date","Date"],["venue","Venue"],["period","Period"],["added","Recently added"],["edited","Recently edited"],["labelled","Recently labelled"]].map(([k,l])=><button key={k} onClick={()=>pickSort(k)} style={chip(sortBy===k&&!pinTouched&&!acqBuyNext)}>{l}{(k==="date"||k==="period")&&sortBy===k&&!pinTouched&&!acqBuyNext?(dateReversed?" \u2191":" \u2193"):""}</button>)}
           {pinTouched&&<span style={{fontSize:10.5,color:C.action,fontWeight:600}}>{"\u2191 just-refreshed entries shown first"}</span>}
         </div>
         <div style={{display:"flex",gap:4,flexWrap:"wrap",alignItems:"center"}}>
@@ -7515,6 +7920,10 @@ export default function App(){
           <span style={{fontSize:9,letterSpacing:"0.12em",textTransform:"uppercase",color:C.soft,marginRight:2}}>Venue</span>
           {MUSEUMS.filter(m=>!m.underOcc).map(m=>m.id).concat(Object.keys(LINK_VENUES).filter(ownChip)).sort((a,b)=>orderOf(a)-orderOf(b)).filter((id,i,all)=>all.findIndex(x=>chipKey(x)===chipKey(id))===i).map(id=><button key={chipKey(id)} onClick={()=>toggleSet(setVenueF,chipKey(id))} style={chip(venueF.has(chipKey(id)))}>{(x=>x.chip||x.short)(MU[id]||LINK_VENUES[id])}</button>)}
           <button onClick={()=>toggleSet(setVenueF,OCC_CHIP)} style={chip(venueF.has(OCC_CHIP))}>Occasional</button>
+        </div>
+        <div style={{display:"flex",gap:4,flexWrap:"wrap",alignItems:"center"}}>
+          <span style={{fontSize:9,letterSpacing:"0.12em",textTransform:"uppercase",color:C.soft,marginRight:2}}>Theme</span>
+          {THEME_CHIPS.map(([k,l])=><button key={k} onClick={()=>toggleSet(setThemeF,k)} style={chip(themeF.has(k))}>{l}</button>)}
         </div>
         <div style={{display:"flex",gap:4,flexWrap:"wrap",alignItems:"center"}}>
           <span style={{fontSize:9,letterSpacing:"0.12em",textTransform:"uppercase",color:C.soft,marginRight:2}}>Acquiring?</span>
@@ -7530,6 +7939,7 @@ export default function App(){
           <span style={{fontSize:9,letterSpacing:"0.12em",textTransform:"uppercase",color:C.soft,marginRight:2}}>Showing</span>
           <button onClick={()=>setWatchedF(v=>!v)} style={chip(watchedF)}>Watched</button>
           <button onClick={()=>{setDismissedOnly(v=>!v);setShowAll(false);}} style={chip(dismissedOnly)}>Dismissed</button>
+          <button onClick={()=>setLabelledF(v=>!v)} style={chip(labelledF)}>Recently labelled</button>
           <button onClick={()=>{setShowAll(v=>!v);setDismissedOnly(false);}} style={chip(showAll)}>Show all</button>
           <button onClick={clearFilters} style={{...chip(false),color:C.muted,borderColor:C.muted}}>Clear all</button>
         </div>
@@ -7539,25 +7949,29 @@ export default function App(){
         {view.length===0&&<div style={{background:C.card,border:"1px solid "+C.rule,borderRadius:5,padding:18,fontSize:12.5,color:C.soft}}>Nothing matches those filters.</div>}
         {(()=>{
           const pinnedCount=pinTouched&&!acqBuyNext?view.filter(x=>refreshTouched.includes(x.id)).length:0;
-          // Band headers for the two "recently" sorts (only when not in the post-import pinned snapshot).
-          const bandMode=(!pinTouched&&!acqBuyNext&&(sortBy==="added"||sortBy==="edited"))?sortBy:null;
+          // Band headers for the "recently" sorts (only when not in the post-import pinned snapshot).
+          const bandMode=(!pinTouched&&!acqBuyNext&&(sortBy==="added"||sortBy==="edited"||sortBy==="labelled"))?sortBy:null;
           const newestAdd=bandMode==="added"?(view.find(x=>x.addedAt)?.addedAt||null):null;
           const newestEdit=bandMode==="edited"?(view.find(x=>x.editedAt)?.editedAt||null):null;
+          const newestLabel=bandMode==="labelled"?(lastLabel(view.find(x=>lastLabel(x)))||null):null;
           const bandOf=(x)=>{
             if(bandMode==="added")return !x.addedAt?"seed":(x.addedAt===newestAdd?"add_this":"add_earlier");
             if(bandMode==="edited")return x.editedAt?(x.editedAt===newestEdit?"ed_this":"ed_earlier"):(x.addedAt?"ed_never":"seed");
+            // A show labelled before this sort existed has no labelledAt: stage 1.
+            if(bandMode==="labelled")return lastLabel(x)?(lastLabel(x)===newestLabel?"lab_this":"lab_earlier"):(periodLabelled(x)?"lab_stage1":"lab_never");
             return null;
           };
-          const BAND_LABEL={add_this:"This import",add_earlier:"Earlier imports",seed:"Original set",ed_this:"This import's edits",ed_earlier:"Earlier edits",ed_never:"Never edited"};
-          const bandDivider=(txt)=><div style={{display:"flex",alignItems:"center",gap:8,margin:"2px 2px",color:C.soft}}><div style={{flex:1,height:1,background:C.rule}}/><span style={{fontSize:9.5,letterSpacing:"0.1em",textTransform:"uppercase"}}>{txt}</span><div style={{flex:1,height:1,background:C.rule}}/></div>;
+          const BAND_LABEL={add_this:"This import",add_earlier:"Earlier imports",seed:"Original set",ed_this:"This import's edits",ed_earlier:"Earlier edits",ed_never:"Never edited",lab_this:"This labelling",lab_earlier:"Earlier labellings",lab_stage1:"Stage 1",lab_never:"Not labelled"};
+          const bandDivider=(txt,pk)=><div data-period={pk} style={{display:"flex",alignItems:"center",gap:8,margin:"2px 2px",color:C.soft}}><div style={{flex:1,height:1,background:C.rule}}/><span style={{fontSize:9.5,letterSpacing:"0.1em",textTransform:"uppercase"}}>{txt}</span><div style={{flex:1,height:1,background:C.rule}}/></div>;
           return view.slice(0,drawLimit).map((r,i)=>{
           const brk=(pinTouched&&pinnedCount>0&&pinnedCount<view.length&&i===pinnedCount)?bandDivider("Rest of the list"):null;
           let header=null;
+          if(sortBy==="period"&&!pinTouched&&!acqBuyNext&&(i===0||periodOf(view[i-1],byArtist)!==periodOf(r,byArtist)))header=bandDivider(PERIOD_NAME[periodOf(r,byArtist)],periodOf(r,byArtist));
           if(bandMode){const b=bandOf(r);const pb=i>0?bandOf(view[i-1]):null;if(b!==pb)header=bandDivider(BAND_LABEL[b]||"");}
           const lead=brk||header;
           const isBusy=busyId===r.id;
           const card=<LedgerCard r={r} mu={MU[r.museumId]} isOpen={!!openCards[r.id]} isBusy={isBusy} busy={busy} rechecking={isBusy&&rechecking} lookLabel={isBusy?lookLabel:null}
-              said={recheckSaid&&recheckSaid.id===r.id?recheckSaid:null} C={C} TH={TH} chip={chip} pBtn={pBtn} lnk={lnk} act={cardAct}/>;
+              said={recheckSaid&&recheckSaid.id===r.id?recheckSaid:null} relabelling={relabelId===r.id} C={C} TH={TH} chip={chip} pBtn={pBtn} lnk={lnk} act={cardAct}/>;
           if(!dragOn)return <React.Fragment key={r.id}>{lead}{card}</React.Fragment>;
           // The lifted card follows the finger; the cards it passes slide aside by its height.
           let ds={userSelect:"none",WebkitUserSelect:"none",WebkitTouchCallout:"none",cursor:"grab"};
@@ -7567,6 +7981,7 @@ export default function App(){
         });})()}
         {view.length>drawLimit&&<div ref={moreRef} style={{height:1}}/>}
       </div>
+      {scrubGroups.length>0&&<PeriodScrubber groups={scrubGroups} C={C} onJump={jumpToPeriod}/>}
       {/* Top on the left, bottom on the right (her layout), shown once she has scrolled down. */}
       {showTop&&(<>
         <button onClick={()=>window.scrollTo({top:0,behavior:"smooth"})} aria-label="Return to top"
@@ -7588,6 +8003,7 @@ export default function App(){
         <span style={{display:"flex",gap:14}}>
           <button onClick={requestReset} style={{background:"none",border:"none",color:C.soft,fontSize:10,textDecoration:"underline",cursor:"pointer",padding:0}}>Reset to Seed</button>
           <button onClick={()=>{if(showResetCards)setResetQuery("");setShowResetCards(v=>!v);}} style={{background:"none",border:"none",color:C.soft,fontSize:10,textDecoration:"underline",cursor:"pointer",padding:0}}>Reset search</button>
+          <button onClick={labelLedger} style={{background:"none",border:"none",color:C.soft,fontSize:10,textDecoration:"underline",cursor:"pointer",padding:0}}>Label</button>
         </span>
         <span style={{marginLeft:"auto",display:"flex",gap:14}}>
           {/* Cloud Saves sit beside Quarantine, in the same type, always drawn — a control
