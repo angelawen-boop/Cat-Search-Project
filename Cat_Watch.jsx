@@ -3,7 +3,7 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 // The footer prints APP_VERSION and its date, so she can tell one build from the next.
 // Numbering, her decision: a whole number for a substantial change, a decimal for a
 // small one, one number per publish. Bump it with the change it describes.
-const APP_VERSION = "51";
+const APP_VERSION = "51.1";
 const APP_VERSION_DATE = "25 Oct 2026";
 
 // The venue order is VENUE_ORDER, below the list, which sorts MUSEUMS; drawer, chips,
@@ -1719,8 +1719,11 @@ function answerFaults(raw,page){
   { const e=ANSWER_CHECK.validateEnglish(linkAnswer(o).english); if(!e.ok)faults.push(e.reason); }
   return faults;
 }
-function askAgainPrompt(prompt,faults){
-  return prompt+"\n\nYOUR LAST ANSWER WAS REFUSED: "+faults.join("; ")+". Answer again, every key, with that fixed. Leave out anything the text does not state.";
+// Claude is shown the answer it gave: told only the reason, it started afresh and sent the same
+// 13-word summary three times (her Memling link, 25 Oct; AL-062c).
+function askAgainPrompt(prompt,faults,answer){
+  return prompt+"\n\nYOUR LAST ANSWER WAS REFUSED: "+faults.join("; ")+".\nTHE ANSWER REFUSED: "+JSON.stringify(answer)
+    +"\nAnswer again, every key, with that fixed — never the same answer again. Leave out anything the text does not state.";
 }
 
 // Someone else's page about a show held elsewhere (a blog, a magazine; her decision, a last
@@ -4353,6 +4356,18 @@ function shopLinkLabel(shopState){ return shopState==="gone"?"Museum shop (last 
 
 // Reset cards (her design): every lookup field blank, her marks kept, so the next
 // "Find catalogue" runs the whole route.
+// A LOOKUP LANDS ON THE CARD AS IT IS NOW. A search, Re-check or Relabel runs for a while,
+// and she goes on using the app; when it finishes, only the fields it changed are written,
+// onto the ledger as it stands then — her star, her Yes and every other card's marks made
+// meanwhile are kept. LC-001 to LC-004.
+function landOnCard(now,id,before,after){
+  return now.map(r=>{
+    if(r.id!==id)return r;
+    const out={...r};
+    for(const k of Object.keys(after))if(after[k]!==before[k])out[k]=after[k];
+    return out;
+  });
+}
 function resetCard(r){
   return{...r,looked:false,hasCatalogue:"unknown",catalogueTitle:null,isbn13:null,publisher:null,
     publisherUrl:null,publisherResult:null,shopUrl:null,shopState:null,shopChange:null,englishCheck:null,originalEdition:null,otherVenueBook:null,alsoVersion:null,
@@ -6954,7 +6969,7 @@ export default function App(){
       const {labels,batches}=await labelPeriods([periodShow(0,r)]);
       const v=labels.get(0)&&{...labels.get(0),relabelledAt:new Date().toISOString()};
       if(v){
-        const next=rows.map(x=>x.id===id?{...x,...v}:x);
+        const next=landOnCard(cloudLatest.current.rows,id,r,{...r,...v});
         setRows(next); setDirty(true); setSaveNote(null);
         const nr={...r,...v}, shown=periodOf(nr,artistPeriods(next));
         said={id,failed:false,text:"Relabelled: "+periodText(nr)+(shown!==nr.period?" \u2014 shown with "+nr.periodArtist+"\u2019s other shows, under "+PERIOD_NAME[shown]:"")+"."};
@@ -7015,7 +7030,7 @@ export default function App(){
         let faults=ask.ok?answerFaults(ask.data,page):[];
         for(let again=0;faults.length&&again<LINK_ASK_AGAIN;again++){
           seen.refused=[...(seen.refused||[]),{answer:ask.data,faults}];
-          ask=await readResults(askAgainPrompt(prompt,faults));
+          ask=await readResults(askAgainPrompt(prompt,faults,ask.data));
           faults=ask.ok?answerFaults(ask.data,page):[];
         }
         if(faults.length){ fails.push({url,why:"Claude\u2019s description failed check and re-attempt multiple times ("+faults.join("; ")+")"}); continue; }
@@ -7302,7 +7317,7 @@ export default function App(){
     if(row.looked&&out.ok&&out.trouble){
       setRecheckSaid({id,failed:true,text:"Search again didn\u2019t finish \u2014 "+out.trouble.split("[")[0].trim()});
     } else if(out.ok){
-      await commit(rows.map(r=>r.id===id?out.row:r));
+      await commit(landOnCard(cloudLatest.current.rows,id,row,out.row));
       if(out.trouble&&out.troubleLang)setError("Found the catalogue for \u201c"+row.title+"\u201d, but the language check "
         +"stopped part-way, so the title may be the shop\u2019s translation and an English edition may be missed. "
         +out.trouble.split("[")[0].trim());
@@ -7328,7 +7343,7 @@ export default function App(){
     const out=await recheckShopRow(found,lookHooks);
     saveLookupTape(tape,out);
     setDebug(out.detail||null);
-    if(out.ok&&out.row&&out.row!==found)await commit(rows.map(r=>r.id===id?out.row:r));
+    if(out.ok&&out.row&&out.row!==found)await commit(landOnCard(cloudLatest.current.rows,id,found,out.row));
     setRecheckSaid({id,text:out.said,failed:!out.ok});
     setBusy(false);setBusyId(null);setRechecking(false);setLookLabel(null);
   }

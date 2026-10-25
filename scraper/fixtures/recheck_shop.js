@@ -151,7 +151,9 @@ const louPubKnown = fresh('louvre-testpubknown', 'louvre', 'Test Louvre Publishe
 const louEnClaim = fresh('louvre-testenclaim', 'louvre', 'Test Louvre English Claim Show');
 const louStale = { ...fresh('louvre-teststale', 'louvre', 'Test Louvre Stale Check Show'), looked: true, hasCatalogue: 'yes',
   catalogueTitle: 'Test Stale Catalogue', isbn13: '9782359064612', shopState: 'shop', englishCheck: 'stopped' };
-const ledger = { rows: [miller, hidden, webRow, noCatRow, khmBad, khmA, khmB, khmC, ngA, ngB, lgdRow, ngPub, khmList, khmOld, madShelf, madListed, madTwo, orsayA, orsayB, momaRow, bloomRow, bloomOpen, metaRow, milletRow, milletHad, distRow, vanH, vanHNone, vanHPub, webLine, noShop, louNature, louEnglish, louUnprinted, louSaysEn, ngLang, louKnown, louPub, louStop, louStale, louLookalike, louIsbnPub, louPubKnown, louEnClaim, jqWatteau, morganAssoc], ignored: [], lastRun: null };
+// Her 25 Oct finding: a card never searched, marked while its search runs (LC-004).
+const landRow = fresh('ng-testlanding', 'ng', 'Test NG Landing Show');
+const ledger = { rows: [landRow, miller, hidden, webRow, noCatRow, khmBad, khmA, khmB, khmC, ngA, ngB, lgdRow, ngPub, khmList, khmOld, madShelf, madListed, madTwo, orsayA, orsayB, momaRow, bloomRow, bloomOpen, metaRow, milletRow, milletHad, distRow, vanH, vanHNone, vanHPub, webLine, noShop, louNature, louEnglish, louUnprinted, louSaysEn, ngLang, louKnown, louPub, louStop, louStale, louLookalike, louIsbnPub, louPubKnown, louEnClaim, jqWatteau, morganAssoc], ignored: [], lastRun: null };
 
 // ── the runtime: a store, a download, and a scripted connector and Claude ──
 const script = { mcp: null, sample: null };
@@ -1149,6 +1151,53 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
     ok(!dotOf(webRow.title), 'BN-006: a card not on Yes has no dot');
     await click([...card(webRow.title).querySelectorAll('button')].find(b => b.textContent === 'Yes'));
     ok(dotOf(webRow.title) && dotOf(webRow.title).title === 'Buy next', 'BN-007:   and back on Yes its dot starts unmarked — leaving Yes cleared it');
+  }
+  // ── LC-001..LC-003: A LOOKUP LANDS ON THE CARD AS IT IS NOW — her finding, 25 Oct: she
+  // starred a card and pressed Yes while its search ran, and both were gone when it finished.
+  // The answer is held back while she marks this card and another; then it lands.
+  {
+    const doc = win.document;
+    const btns = () => [...doc.querySelectorAll('button')];
+    await click(btns().find(b => b.textContent === 'Clear all'));
+    const starOf = t => { const c = card(t); return c && [...c.querySelectorAll('button')].find(b => /^(Watch|Unwatch)$/.test(b.title)); };
+    const chipOn = (t, name) => { const c = card(t); const b = c && [...c.querySelectorAll('button')].find(x => x.textContent === name); return b && b.style.background; };
+    const pressHeld = async (title, re, answer) => {
+      let release; const held = new Promise(r => { release = r; });
+      script.mcp = async (tool, args) => { await held; return answer(tool, args); };
+      const b = button(card(title), re);
+      if (!b) return null;
+      await act(async () => { b.dispatchEvent(new win.MouseEvent('click', { bubbles: true })); });
+      return release;
+    };
+    // Re-check: a 404 turns the card red.
+    const yesBefore = chipOn(noCatRow.title, 'Yes');
+    const release = await pressHeld(miller.title, /^Re-check museum shop$/, (tool, args) => ({ payload: { results: [], errors: [
+      { url: args.urls[0], error_type: 'http_error', http_status_code: 404, content: null }] } }));
+    ok(!!release, 'LC-000: Re-check museum shop was pressed');
+    const wasWatched = starOf(miller.title).title;
+    await click(starOf(miller.title));
+    await click([...card(noCatRow.title).querySelectorAll('button')].find(b => b.textContent === 'No'));
+    if (release) release();
+    await settle(); await settle();
+    const t = card(miller.title).textContent;
+    ok(/No longer in the museum shop\./.test(t), 'LC-001: the Re-check’s answer lands on the card', t.slice(0, 160));
+    ok(starOf(miller.title).title !== wasWatched, 'LC-002:   and the star she changed while it ran is kept', wasWatched + ' → ' + starOf(miller.title).title);
+    ok(chipOn(noCatRow.title, 'No') === yesBefore && chipOn(noCatRow.title, 'Yes') !== yesBefore,
+      'LC-003:   and another card she marked meanwhile keeps its mark');
+    // Find catalogue on a card never searched: nothing found, while she stars it and presses No.
+    const tray = button(card(landRow.title), /Catalogue/); if (tray) await click(tray);
+    const r2 = await pressHeld(landRow.title, /^Find catalogue$/, () => ({ payload: { results: [], errors: [] } }));
+    script.sample = () => ({});
+    ok(!!r2, 'LC-004a: Find catalogue was pressed');
+    const was2 = starOf(landRow.title).title;
+    await click(starOf(landRow.title));
+    await click([...card(landRow.title).querySelectorAll('button')].find(b => b.textContent === 'No'));
+    if (r2) r2();
+    for (let i = 0; i < 5; i++) await settle();
+    const t2 = card(landRow.title).textContent;
+    ok(/No catalogue|not found|No exhibition catalogue|Search again/i.test(t2), 'LC-004: the search’s answer lands on the card', t2.slice(0, 220));
+    ok(starOf(landRow.title).title !== was2 && chipOn(landRow.title, 'No') === yesBefore,
+      'LC-004b:   and her star and No made while it ran are kept', was2 + ' → ' + starOf(landRow.title).title);
   }
   try { await act(async () => root.unmount()); } catch {}
   console.error = realError;

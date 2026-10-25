@@ -1335,6 +1335,8 @@ function runtime() {
     const p = asks('Pontormo');
     ok(p.length === 2 && /YOUR LAST ANSWER WAS REFUSED: in the summary, "first" is not in the text/.test(p[1].prompt),
       'AL-062: a description making a claim its page does not hold ("first", Pontormo) is asked for again, with the reason', JSON.stringify(p.map(c => c.prompt.slice(-160))));
+    ok(p.length === 2 && p[1].prompt.includes('THE ANSWER REFUSED: ' + JSON.stringify({ summary: 'First major monographic exhibition on Pontormo.', english: '', englishSpeaking: false })),
+      'AL-062c:  and Claude is shown the answer it gave, to fix rather than start afresh (her Memling link)', p[1] && p[1].prompt.slice(-300));
     const shown = win.document.body.textContent;
     ok(shown.includes('Pontormo\u2019s paintings and drawings.') && !/First major monographic/.test(shown),
       'AL-062a:  the answer that passes is the card\'s description', shown.slice(Math.max(0, shown.indexOf('Pontormo') - 40), shown.indexOf('Pontormo') + 200));

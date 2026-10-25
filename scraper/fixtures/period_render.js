@@ -55,13 +55,13 @@ const until = async (fn, ms = 8000) => { const t = Date.now(); while (Date.now()
   const scrolls = []; win.scrollTo = o => { scrolls.push(o); };
   // Claude stands in: every show it is asked about is Baroque, 1650.
   // failNext: how many questions fail before answering (the retry and her line).
-  const asked = []; let failNext = 0, relabelNext = false;
+  const asked = []; let failNext = 0, relabelNext = false, relabelHold = null;
   win.claude = { use: async name => name !== 'sample' ? null : { json: async prompt => {
     const shows = prompt.split('Exhibitions:\n')[1].split('\n').filter(Boolean).map(l => JSON.parse(l));
     asked.push(shows.length);
     if (failNext > 0) { failNext--; throw { code: 'rate_limited', message: 'slow down' }; }
     // A question about one show is a Relabel: it comes back High Renaissance.
-    if (shows.length === 1 && relabelNext) { relabelNext = false; return { labels: [{ i: shows[0].i, period: 'highren', year: 1505, themes: ['sculpture'] }] }; }
+    if (shows.length === 1 && relabelNext) { relabelNext = false; if (relabelHold) await relabelHold; return { labels: [{ i: shows[0].i, period: 'highren', year: 1505, themes: ['sculpture'] }] }; }
     return { labels: shows.map(x => ({ i: x.i, period: 'baroque', year: 1650, themes: [] })) };
   } } };
   const globals = ['window', 'document', 'navigator', 'localStorage', 'requestAnimationFrame',
@@ -174,8 +174,15 @@ const until = async (fn, ms = 8000) => { const t = Date.now(); while (Date.now()
     const rb = [...cards()[0].querySelectorAll('button')].find(b => b.textContent === 'Relabel');
     ok(!!rb, 'PR-014: the drawer of a card has Relabel');
     relabelNext = true; const nAsked = asked.length;
-    click(rb);
+    // LC-005: her star, changed while the Relabel runs, is kept when its answer lands (her 25 Oct finding).
+    let letGo; relabelHold = new Promise(r => { letGo = r; });
+    const starNow = () => [...doc.querySelectorAll('article')].find(a => a.querySelector('h3').textContent === firstTitle).querySelector('button[title="Watch"],button[title="Unwatch"]');
+    const starWas = starNow().title;
+    click(rb); await settle(60);
+    click(starNow()); await settle(60);
+    letGo(); relabelHold = null;
     await until(() => /Relabelled: High Renaissance/.test(doc.body.textContent));
+    ok(starNow().title !== starWas, 'LC-005: a star changed while Relabel ran is kept when its answer lands', starWas + ' → ' + starNow().title);
     ok(asked.length === nAsked + 1 && asked[nAsked] === 1, 'PR-015: Relabel asks Claude about that one show only', asked.slice(nAsked).join(','));
     ok(doc.body.textContent.includes('Relabelled: High Renaissance \u00b7 c. 1505 \u00b7 Sculpture.'), 'PR-015: the drawer says the new label, its themes included');
     const hr = [...doc.querySelectorAll('span')].some(x => x.textContent === 'High Renaissance');
