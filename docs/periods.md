@@ -2,12 +2,15 @@
 
 Her trial: code on `claude/period-sort`, published only to its own test page, never her app until she
 says. **Test page:** https://claude.ai/artifact/JeoJyWxJbU9RApY9q4sVni ("Cat Watch Period Test",
-footer "version 1.5"; its own store, separate from her app — `node build/build_app.js` on the branch
+footer "version 1.6"; its own store, separate from her app — `node build/build_app.js` on the branch
 builds it and prints the steps). Tests: `period_sort.js` (PS-), `period_render.js` (PR-), listed in the
 branch's `scraper/fixtures/branch_tests.txt`.
 
 ## Open
 
+- **v1.6 published: the period scrubber and Surrealism/Dada, her check pending.** Built from
+  her mock-up review; not yet tried on a phone. Her shows labelled Interwar before the split show there
+  until she taps Label, which asks only those again.
 - **v1.4–1.5 published: themes as labels, her review pending.** Her 1.4 Label labelled every show in one
   run, themes included. She checks the theme
   chips and where the former theme-group shows landed — the likeliest mess is a 20th-century design or
@@ -56,6 +59,15 @@ branch's `scraper/fixtures/branch_tests.txt`.
 - **Groups after Contemporary, in her order:** Surveys, Miscellaneous Historic, Miscellaneous Modern,
   Non-Western Art — shows that cannot file in the chronology, so groups, never themes. Miscellaneous stays as small as possible (her
   decision) — General 19th Century keeps 19th-century shows outside any movement in their place in time.
+- **Surrealism/Dada** (her name), between Early Modernism and Interwar Modernism; Interwar Modernism keeps
+  every other style of those years. A show labelled under the old Interwar key sorts under Interwar
+  Modernism until Label asks it again (`PERIOD_RETIRED`; PS-017–018).
+- **The period scrubber (her design):** hidden; a hold (a third of a second) on a narrow band in the
+  middle of the right edge opens a ruler of the view's periods — her mock-up A, rows 15.5px apart, ten at
+  a time, the list scrolling inside at its ends; fewer periods make a shorter ruler, never wider spacing.
+  Names as written, no bigger than the divider text; the picked one bigger and bold. Sliding picks;
+  lifting jumps to its divider. A swipe that moves first is an ordinary scroll. ↑ ↓ unchanged.
+  PR-023–029.
 - **Rules Claude follows** (`periodPrompt`): a movement's group only for a show about that movement or
   its artists; a modern artist responding to older art, or a pairing across periods, goes under the
   older art (response, placed last); a long-span show goes to its heart, the period most of its works

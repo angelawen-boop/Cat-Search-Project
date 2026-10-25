@@ -1,7 +1,7 @@
 /**
  * THE PERIOD SORT ON THE REAL PAGE (her trial; docs/periods.md). Renders the page in jsdom
  * on her 24 Sep ledger with periods written onto a few rows, taps Period, and reads the
- * cards and dividers. Cases PR-001 to PR-005.
+ * cards and dividers. Cases PR-001 to PR-029.
  *
  *   node scraper/fixtures/period_render.js
  */
@@ -53,7 +53,7 @@ const until = async (fn, ms = 8000) => { const t = Date.now(); while (Date.now()
   const dom = new JSDOM('<!doctype html><html><body><div id="root"></div></body></html>',
     { pretendToBeVisual: true, url: 'https://claude.ai/' });
   const win = dom.window, doc = win.document;
-  win.scrollTo = () => {};
+  const scrolls = []; win.scrollTo = o => { scrolls.push(o); };
   // Claude stands in: every show it is asked about is Baroque, 1650.
   // failNext: how many questions fail before answering (the retry and her line).
   const asked = []; let failNext = 0, relabelNext = false;
@@ -109,6 +109,25 @@ const until = async (fn, ms = 8000) => { const t = Date.now(); while (Date.now()
     const r = cards();
     ok(r.length === 4 && has(r[0], met2) && has(r[3], ng2), 'PR-005: a second tap on Period reverses the order',
       r.map(x => x.textContent.slice(0, 40)).join(' | '));
+    // The scrubber (her design): hidden until a hold on the right edge; a ruler of the view's periods.
+    const zone = doc.querySelector('[data-scrubber="zone"]');
+    const ruler = () => doc.querySelector('[data-scrubber="ruler"]');
+    const touch = (type, y) => { const e = new win.Event(type, { bubbles: true, cancelable: true }); e.touches = y == null ? [] : [{ clientY: y }]; zone.dispatchEvent(e); return e; };
+    ok(!!zone && !ruler(), 'PR-023: in the Period view the scrubber is hidden until she holds the right edge');
+    touch('touchstart', 300); await settle(60); touch('touchmove', 330); await settle(400);
+    ok(!ruler(), 'PR-024: a swipe that moves before the hold is an ordinary scroll, no ruler');
+    touch('touchend');
+    touch('touchstart', 300); await settle(400);
+    const rows_ = ruler() ? [...ruler().querySelectorAll('[data-scrub-row]')] : [];
+    ok(rows_.map(x => x.textContent).join() === 'Impressionism,High Renaissance,Antiquity', 'PR-025: a hold shows the view\'s periods, in the view\'s order, as written', rows_.map(x => x.textContent).join());
+    const top = win.innerHeight / 2 - 3 * 15.5 / 2;
+    const sel = () => [...ruler().querySelectorAll('[data-scrub-row] span')].filter(x => x.style.fontWeight === '700').map(x => x.textContent);
+    const mv = touch('touchmove', top + 15.5 * 1.5); await settle(30);
+    ok(sel().join() === 'High Renaissance' && mv.defaultPrevented, 'PR-026: sliding picks the row under her finger, bold and bigger, and the page does not scroll', sel().join());
+    ok(ruler().querySelector('[data-scrub-row]').style.height === '15.5px', 'PR-027: rows 15.5px apart, 20% closer than the mock-up (her ask)');
+    scrolls.length = 0; touch('touchend'); await settle(60);
+    ok(!ruler() && scrolls.length === 1 && scrolls[0].behavior === 'auto', 'PR-028: lifting jumps to that period and the ruler goes', JSON.stringify(scrolls));
+    ok(doc.querySelectorAll('[data-period]').length === 3 && !!doc.querySelector('[data-period="highren"]'), 'PR-029: each divider carries its period, to jump to');
     const trial = ['met','ng','orsay','dellav','va','tate-modern','cincinnati'];
     const unlabelled = rows.filter(x => trial.includes(x.museumId) && !x.period).length;
     const shownAfter = rows.filter(x => trial.includes(x.museumId) && x.interested).length;

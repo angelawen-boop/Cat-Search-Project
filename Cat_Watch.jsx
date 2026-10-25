@@ -3,7 +3,7 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 // The footer prints APP_VERSION and its date, so she can tell one build from the next.
 // Numbering, her decision: a whole number for a substantial change, a decimal for a
 // small one, one number per publish. Bump it with the change it describes.
-const APP_VERSION = "1.5";   // the Period test page's own numbering (her name for it), not her app's
+const APP_VERSION = "1.6";   // the Period test page's own numbering (her name for it), not her app's
 const APP_VERSION_DATE = "25 Oct 2026";
 
 // The venue order is VENUE_ORDER, below the list, which sorts MUSEUMS; drawer, chips,
@@ -1864,7 +1864,8 @@ const PERIODS=[
   {key:"american19",name:"19th-century America",span:"c. 1820–1910"},
   {key:"general19",name:"General 19th Century",span:"c. 1800–1900: 19th-century art that is not about one of the movements above"},
   {key:"earlymodern",name:"Early Modernism",span:"c. 1900–1918 (Fauvism, Cubism, Expressionism, Futurism)"},
-  {key:"interwar",name:"Interwar Modernism",span:"c. 1918–1945 (Surrealism, Dada, Bauhaus, Art Deco)"},
+  {key:"surrealism",name:"Surrealism/Dada",span:"c. 1915–1950 (Duchamp, Ernst, Dalí, Magritte, Miró)"},
+  {key:"interwarmod",name:"Interwar Modernism",span:"c. 1918–1945: every style of those years but Surrealism and Dada (Bauhaus, Art Deco, Constructivism, New Objectivity)"},
   {key:"americanmod",name:"American Modernism",span:"c. 1910–1945 (O’Keeffe, Hopper, the Harlem Renaissance)"},
   {key:"abex",name:"Abstract Expressionism",span:"c. 1943–1965"},
   {key:"postwareu",name:"Postwar Europe",span:"c. 1945–1980"},
@@ -1875,8 +1876,12 @@ const PERIODS=[
   {key:"miscmodern",name:"Miscellaneous Modern",span:"Western art from 1900 on that fits none of the periods above"},
   {key:"nonwestern",name:"Non-Western Art",span:"art from outside the Western tradition that is not ancient"},
 ];
-const PERIOD_RANK=Object.fromEntries(PERIODS.map((p,i)=>[p.key,i]));
-const PERIOD_NAME=Object.fromEntries(PERIODS.map(p=>[p.key,p.name]));
+// A split period's old key (Surrealism/Dada out of Interwar, her decision): a show still under it
+// sorts with the period named here and is asked again by Label.
+const PERIOD_RETIRED={interwar:"interwarmod"};
+const PERIOD_RANK=Object.fromEntries([...PERIODS.map((p,i)=>[p.key,i]),...Object.entries(PERIOD_RETIRED).map(([k,to])=>[k,PERIODS.findIndex(p=>p.key===to)])]);
+const PERIOD_NAME=Object.fromEntries([...PERIODS.map(p=>[p.key,p.name]),...Object.entries(PERIOD_RETIRED).map(([k,to])=>[k,PERIODS.find(p=>p.key===to).name])]);
+const periodKey=k=>PERIOD_RETIRED[k]||k;
 // The trial's seven venues (her choice): only their shows are labelled and shown by Period.
 const PERIOD_VENUES=new Set(["met","ng","orsay","dellav","va","tate-modern","cincinnati"]);
 const PERIOD_BATCH=40;
@@ -1912,7 +1917,7 @@ function themeMatch(r,picked){
 
 const periodLabelled=r=>!!(r&&PERIOD_RANK[r.period]!==undefined&&Number.isInteger(r.periodYear));
 // Label fills a show missing its period or its themes (a show labelled before themes is asked again).
-const labelDone=r=>periodLabelled(r)&&Array.isArray(r.themes);
+const labelDone=r=>periodLabelled(r)&&Array.isArray(r.themes)&&!PERIOD_RETIRED[r.period];
 const periodYearText=y=>"c. "+(y<0?(-y)+" BC":y);
 const periodText=r=>periodLabelled(r)?[PERIOD_NAME[r.period],periodYearText(r.periodYear),...(r.themes||[]).map(k=>THEME_NAME[k])].join(" · "):"";
 // The two stragglers' groups split at 1900 (her cut-off) — decided here, not by Claude.
@@ -1926,13 +1931,13 @@ function artistPeriods(rows){
   for(const r of rows){
     if(!periodLabelled(r)||r.periodResponse)continue;
     const k=artistKey(r.periodArtist); if(!k)continue;
-    const t=tally.get(k)||{}; t[r.period]=(t[r.period]||0)+1; tally.set(k,t);
+    const t=tally.get(k)||{}, p=periodKey(r.period); t[p]=(t[p]||0)+1; tally.set(k,t);
   }
   const out=new Map();
   for(const [k,t] of tally)out.set(k,Object.keys(t).sort((a,b)=>(t[b]-t[a])||(PERIOD_RANK[a]-PERIOD_RANK[b]))[0]);
   return out;
 }
-const periodOf=(r,byArtist)=>(!r.periodResponse&&byArtist&&byArtist.get(artistKey(r.periodArtist)))||r.period;
+const periodOf=(r,byArtist)=>(!r.periodResponse&&byArtist&&byArtist.get(artistKey(r.periodArtist)))||periodKey(r.period);
 // Period order; within a period, response shows last (her decision), then the year, then
 // her venue order (her tie rule).
 function periodCompare(a,b,byArtist){
@@ -1983,7 +1988,7 @@ function periodAnswers(data){
   for(const x of (data&&Array.isArray(data.labels))?data.labels:[]){
     const i=Number(x&&x.i), y=Number(x&&x.year);
     let k=String((x&&x.period)||"").trim().toLowerCase();
-    if(!Number.isInteger(i)||PERIOD_RANK[k]===undefined||!Number.isInteger(y)||y<-5000||y>2100||!Array.isArray(x.themes))continue;
+    if(!Number.isInteger(i)||PERIOD_RANK[k]===undefined||PERIOD_RETIRED[k]||!Number.isInteger(y)||y<-5000||y>2100||!Array.isArray(x.themes))continue;
     if(k==="mischistoric"||k==="miscmodern")k=miscFor(y);
     const themes=[...new Set(x.themes.map(t=>String(t||"").trim().toLowerCase()).filter(t=>THEME_KEYS.has(t)))];
     const artist=typeof x.artist==="string"?x.artist.trim().slice(0,120):"";
@@ -5016,6 +5021,82 @@ const PALETTES={
          rejectInk:"#D6B87A",neverInk:"#E0A3A3",star:"#E0B45C",buyNext:"#F0705F",onAction:"#12100E",
          scrim:"rgba(0,0,0,0.6)"},
 };
+// The period scrubber (her design): hidden until she holds a finger on the middle of the right
+// edge; then a ruler of the view's periods, ten rows at a time, the one she is in picked. Sliding
+// moves the pick (the list scrolls at its ends); lifting jumps to that period's divider. A swipe
+// that moves before the hold is an ordinary scroll. Rows never spread out: fewer periods, a
+// shorter ruler.
+const SCRUB_ROW=15.5, SCRUB_ROWS=10, SCRUB_HOLD=300, SCRUB_SLOP=6;
+function PeriodScrubber({groups,C,onJump}){
+  const zone=useRef(null);
+  const[st,setSt]=useState(null); // {start, sel} while open
+  const live=useRef({timer:null,open:false,y0:0,y:0,start:0,sel:0,edge:null});
+  const g=useRef(groups); g.current=groups;
+  const jump=useRef(onJump); jump.current=onJump;
+  const n=groups.length, shown=Math.min(n,SCRUB_ROWS), H=shown*SCRUB_ROW;
+  useEffect(()=>{
+    const el=zone.current; if(!el)return;
+    const L=live.current;
+    const top=()=>window.innerHeight/2-Math.min(g.current.length,SCRUB_ROWS)*SCRUB_ROW/2;
+    const pick=()=>{
+      const k=g.current.length, w=Math.min(k,SCRUB_ROWS), row=Math.max(0,Math.min(w-1,Math.floor((L.y-top())/SCRUB_ROW)));
+      L.sel=Math.min(k-1,L.start+row); setSt({start:L.start,sel:L.sel});
+    };
+    const edge=()=>{ // past the ruler's ends the list scrolls a row at a time
+      const k=g.current.length, w=Math.min(k,SCRUB_ROWS), t=top(), dir=L.y<t+SCRUB_ROW*0.5?-1:L.y>t+w*SCRUB_ROW-SCRUB_ROW*0.5?1:0;
+      const next=Math.max(0,Math.min(k-w,L.start+dir));
+      if(next!==L.start){L.start=next;pick();}
+    };
+    const open=()=>{
+      L.timer=null; const k=g.current.length; if(!k)return;
+      // The period she is in: the last divider above the upper third of the screen.
+      let cur=0; const marks=[...document.querySelectorAll("[data-period]")];
+      for(const m of marks){ if(m.getBoundingClientRect().top<=window.innerHeight/3){const i=g.current.findIndex(x=>x.key===m.getAttribute("data-period"));if(i>=0)cur=i;} }
+      L.open=true; L.start=Math.max(0,Math.min(k-Math.min(k,SCRUB_ROWS),cur-Math.floor(SCRUB_ROWS/2)+1)); L.sel=cur;
+      setSt({start:L.start,sel:L.sel});
+      L.edge=setInterval(edge,110);
+    };
+    const down=y=>{ L.y0=L.y=y; clearTimeout(L.timer); L.timer=setTimeout(open,SCRUB_HOLD); };
+    const move=(y,ev)=>{
+      L.y=y;
+      if(L.open){ if(ev&&ev.cancelable)ev.preventDefault(); pick(); }
+      else if(L.timer&&Math.abs(y-L.y0)>SCRUB_SLOP){ clearTimeout(L.timer); L.timer=null; }
+    };
+    const up=()=>{
+      clearTimeout(L.timer); L.timer=null; clearInterval(L.edge); L.edge=null;
+      if(L.open){ L.open=false; setSt(null); const x=g.current[L.sel]; if(x)jump.current(x.key); }
+    };
+    const ts=e=>{ if(e.touches.length===1)down(e.touches[0].clientY); };
+    const tm=e=>move(e.touches[0].clientY,e);
+    const mm=e=>move(e.clientY,e);
+    const mu=()=>{ window.removeEventListener("mousemove",mm); window.removeEventListener("mouseup",mu); up(); };
+    const md=e=>{ if(e.button!==0)return; e.preventDefault(); down(e.clientY); window.addEventListener("mousemove",mm); window.addEventListener("mouseup",mu); };
+    el.addEventListener("touchstart",ts,{passive:true});
+    el.addEventListener("touchmove",tm,{passive:false});
+    el.addEventListener("touchend",up); el.addEventListener("touchcancel",up);
+    el.addEventListener("mousedown",md);
+    return()=>{ up(); el.removeEventListener("touchstart",ts); el.removeEventListener("touchmove",tm);
+      el.removeEventListener("touchend",up); el.removeEventListener("touchcancel",up); el.removeEventListener("mousedown",md);
+      window.removeEventListener("mousemove",mm); window.removeEventListener("mouseup",mu); };
+  },[]);
+  if(!n)return null;
+  const halo="0 0 3px "+C.bg+",0 0 3px "+C.bg+",0 0 3px "+C.bg;
+  return(<>
+    <div ref={zone} data-scrubber="zone" style={{position:"fixed",right:0,top:"50%",transform:"translateY(-50%)",width:16,height:SCRUB_ROWS*SCRUB_ROW,zIndex:997,
+      touchAction:"pan-y",userSelect:"none",WebkitUserSelect:"none",WebkitTouchCallout:"none"}}/>
+    {st&&<div data-scrubber="ruler" style={{position:"fixed",right:6,top:"50%",transform:"translateY(-50%)",height:H,overflow:"hidden",zIndex:997,pointerEvents:"none"}}>
+      <div style={{position:"absolute",right:0,top:0,bottom:0,width:1,background:C.rule}}/>
+      <div style={{transform:"translateY("+(-st.start*SCRUB_ROW)+"px)"}}>
+        {groups.map((x,i)=>{const on=i===st.sel;return(
+          <div key={x.key} data-scrub-row={x.key} style={{height:SCRUB_ROW,display:"flex",alignItems:"center",justifyContent:"flex-end",gap:6,whiteSpace:"nowrap"}}>
+            <span style={{fontSize:on?11:9.5,fontWeight:on?700:400,color:on?C.ink:C.soft,opacity:on?1:0.8,textShadow:halo}}>{x.name}</span>
+            <span style={{width:on?10:6,height:on?2:1,background:on?C.ink:C.soft}}/>
+          </div>);})}
+      </div>
+    </div>}
+  </>);
+}
+
 // How many ledger cards are drawn at first, and how many more as she scrolls.
 const DRAW_STEP=200;
 // The card's link buttons (Museum shop, Publisher, the bookstores), in a palette's colours.
@@ -6463,6 +6544,24 @@ export default function App(){
     return()=>io.disconnect();
   },[viewToken,drawLimit,view.length]);
   useEffect(()=>{ if(wantBottom.current){ wantBottom.current=false; window.scrollTo({top:document.documentElement.scrollHeight,behavior:"smooth"}); } });
+  // The scrubber's periods: the view's groups in order, each with its first card's place.
+  const scrubGroups=useMemo(()=>{
+    if(sortBy!=="period"||pinTouched)return [];
+    const out=[];
+    view.forEach((r,i)=>{const k=periodOf(r,byArtist); if(!out.length||out[out.length-1].key!==k)out.push({key:k,name:PERIOD_NAME[k],at:i});});
+    return out;
+  },[view,sortBy,pinTouched,byArtist]);
+  const wantPeriod=useRef(null);
+  const scrollToPeriod=k=>{
+    const el=document.querySelector("[data-period=\""+k+"\"]");
+    if(el)window.scrollTo({top:el.getBoundingClientRect().top+window.scrollY-8,behavior:"auto"});
+  };
+  useEffect(()=>{ if(wantPeriod.current){ const k=wantPeriod.current; wantPeriod.current=null; scrollToPeriod(k); } });
+  const jumpToPeriod=useCallback(k=>{
+    const x=scrubGroups.find(g=>g.key===k); if(!x)return;
+    if(x.at>=drawLimit){ wantPeriod.current=k; setDrawn({token:viewToken,n:x.at+DRAW_STEP}); }
+    else scrollToPeriod(k);
+  },[scrubGroups,drawLimit,viewToken]);
   const jumpToBottom=()=>{
     if(view.length>drawLimit){ wantBottom.current=true; setDrawn({token:viewToken,n:Infinity}); }
     else window.scrollTo({top:document.documentElement.scrollHeight,behavior:"smooth"});
@@ -6794,11 +6893,11 @@ export default function App(){
             return null;
           };
           const BAND_LABEL={add_this:"This import",add_earlier:"Earlier imports",seed:"Original set",ed_this:"This import's edits",ed_earlier:"Earlier edits",ed_never:"Never edited"};
-          const bandDivider=(txt)=><div style={{display:"flex",alignItems:"center",gap:8,margin:"2px 2px",color:C.soft}}><div style={{flex:1,height:1,background:C.rule}}/><span style={{fontSize:9.5,letterSpacing:"0.1em",textTransform:"uppercase"}}>{txt}</span><div style={{flex:1,height:1,background:C.rule}}/></div>;
+          const bandDivider=(txt,pk)=><div data-period={pk} style={{display:"flex",alignItems:"center",gap:8,margin:"2px 2px",color:C.soft}}><div style={{flex:1,height:1,background:C.rule}}/><span style={{fontSize:9.5,letterSpacing:"0.1em",textTransform:"uppercase"}}>{txt}</span><div style={{flex:1,height:1,background:C.rule}}/></div>;
           return view.slice(0,drawLimit).map((r,i)=>{
           const brk=(pinTouched&&pinnedCount>0&&pinnedCount<view.length&&i===pinnedCount)?bandDivider("Rest of the list"):null;
           let header=null;
-          if(sortBy==="period"&&!pinTouched&&(i===0||periodOf(view[i-1],byArtist)!==periodOf(r,byArtist)))header=bandDivider(PERIOD_NAME[periodOf(r,byArtist)]);
+          if(sortBy==="period"&&!pinTouched&&(i===0||periodOf(view[i-1],byArtist)!==periodOf(r,byArtist)))header=bandDivider(PERIOD_NAME[periodOf(r,byArtist)],periodOf(r,byArtist));
           if(bandMode){const b=bandOf(r);const pb=i>0?bandOf(view[i-1]):null;if(b!==pb)header=bandDivider(BAND_LABEL[b]||"");}
           const lead=brk||header;
           const isBusy=busyId===r.id;
@@ -6811,6 +6910,7 @@ export default function App(){
         });})()}
         {view.length>drawLimit&&<div ref={moreRef} style={{height:1}}/>}
       </div>
+      {scrubGroups.length>0&&<PeriodScrubber groups={scrubGroups} C={C} onJump={jumpToPeriod}/>}
       {/* Top on the left, bottom on the right (her layout), shown once she has scrolled down. */}
       {showTop&&(<>
         <button onClick={()=>window.scrollTo({top:0,behavior:"smooth"})} aria-label="Return to top"

@@ -1,5 +1,5 @@
 // The Period sort (her trial; docs/periods.md): the period list's order, the tie rule,
-// the trial venues, the check on Claude's answer, themes and Label's retries. Cases PS-001 to PS-016.
+// the trial venues, the check on Claude's answer, themes and Label's retries. Cases PS-001 to PS-018.
 const H=require('./harness.js');
 let fails=0;
 const check=(name,cond,extra)=>{ console.log((cond?'PASS  ':'FAIL  ')+name); if(!cond){fails++; if(extra)console.log('        '+JSON.stringify(extra));} };
@@ -96,6 +96,16 @@ check('PS-015 her waits: 15 seconds, then a minute; a minute before the last go'
 check('PS-016 Label\'s own words: Claude didn\u2019t answer, with the code', H.labelWhy({code:'upstream_error'})==='Claude didn\u2019t answer (upstream_error).');
 check('PS-016 unreadable and declined, without telling her what to do', H.labelWhy({code:'invalid_json'})==='Claude\u2019s answer came back unreadable.'&&H.labelWhy({code:'not_granted'})==='You declined to let this page use Claude.');
 check('PS-016 never the lookup\'s "search results"', !/search results/.test(['upstream_error','invalid_json','not_granted','rate_limited',''].map(c=>H.labelWhy({code:c})).join()));
+
+// Surrealism/Dada has its own group (her decision); Interwar Modernism keeps every other style of those years.
+const P=k=>H.PERIODS.find(p=>p.key===k);
+check('PS-017 Surrealism/Dada, her name, right after Early Modernism and before Interwar Modernism', P('surrealism')&&P('surrealism').name==='Surrealism/Dada'&&rank('earlymodern')+1===rank('surrealism')&&rank('surrealism')+1===rank('interwarmod'));
+check('PS-017 Interwar Modernism no longer names Surrealism or Dada as its own', !/Surrealism,|Dada,|\(Surrealism/.test(P('interwarmod').span)&&/but Surrealism and Dada/.test(P('interwarmod').span));
+const old={museumId:'met',period:'interwar',periodYear:1925,themes:[]};
+check('PS-018 a show labelled Interwar before the split stays under Interwar Modernism until asked again', H.periodLabelled(old)&&H.periodOf(old)==='interwarmod'&&H.periodText(old).startsWith('Interwar Modernism'));
+check('PS-018 Label asks it again', !H.labelDone(old)&&H.labelDone({...old,period:'interwarmod'})&&H.labelDone({...old,period:'surrealism'}));
+check('PS-018 the old key is never taken from Claude (it would be asked forever)', !H.periodAnswers({labels:[{i:0,period:'interwar',year:1925,themes:[]}]}).has(0));
+check('PS-018 the old key sorts with Interwar Modernism', H.periodCompare(old,{museumId:'met',period:'interwarmod',periodYear:1930})<0&&H.periodCompare(old,{museumId:'met',period:'surrealism',periodYear:1930})>0);
 
 console.log(fails?'\n'+fails+' FAILED':'\nall period checks passed');
 process.exit(fails?1:0);
