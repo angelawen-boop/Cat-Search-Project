@@ -2,14 +2,14 @@
 
 Her trial: code on `claude/period-sort`, published only to its own test page, never her app until she
 says. **Test page:** https://claude.ai/artifact/JeoJyWxJbU9RApY9q4sVni ("Cat Watch Period Test",
-footer "version 1.4"; its own store, separate from her app — `node build/build_app.js` on the branch
+footer "version 1.5"; its own store, separate from her app — `node build/build_app.js` on the branch
 builds it and prints the steps). Tests: `period_sort.js` (PS-), `period_render.js` (PR-), listed in the
 branch's `scraper/fixtures/branch_tests.txt`.
 
 ## Open
 
-- **v1.4 published: themes as labels, her review pending.** Her next Label relabels every show (none has
-  themes yet; the old Decorative Arts and Architecture shows have no period now). She checks the theme
+- **v1.4–1.5 published: themes as labels, her review pending.** Her 1.4 Label labelled every show in one
+  run, themes included. She checks the theme
   chips and where the former theme-group shows landed — the likeliest mess is a 20th-century design or
   fashion show with no period of its time, falling into Miscellaneous Modern (a guess; her run shows it).
   Each run still needs her check on the waits: the lookup log shows whether the retries landed.
@@ -78,7 +78,7 @@ branch's `scraper/fixtures/branch_tests.txt`.
   whose years and place hold the work, even when not about that movement's artists (a prompt line, to
   keep them out of Miscellaneous). Every theme has a chip, so the chips and Ex-themes together hold the whole
   Period view once a show is labelled with themes (her 1.4 run: every show in one or the other; PR-022).
-  PS-012–014, PR-017–022. The two "not" clauses are on `claude/period-sort`, not yet published.
+  PS-012–014, PR-017–022. The two "not" clauses published at 1.5; shows labelled at 1.4 keep their themes until Relabel.
 - **Code decides, not Claude:** Miscellaneous splits at 1900; one artist, one group — a show about one artist takes the group most of
   that artist's shows were given, a tie to the earlier group (worked out at sort time, never written
   in; her decision: no hard-coded artist).
