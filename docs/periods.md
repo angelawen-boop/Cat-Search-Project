@@ -8,6 +8,11 @@ branch's `scraper/fixtures/branch_tests.txt`.
 
 ## Open
 
+- **Built after 2.1, not published (her decision: no publishing until the period groupings are done):**
+  Tudor / Stuart Britain, General 20th Century, Capriccio and Veduta, and Nature's garden line ("do not
+  label Nature just because the show is displayed outdoors or in a garden" — Noguchi; Constable's *views of
+  nature* is right, and *The Book of Marvels* under Animals stays, her decisions). They reach a labelled
+  show only when it is relabelled.
 - **v2.1 published: stage 2, her review pending.** Eleven venues added, picked for kinds of show the first
   seven lacked: MAD, Morgan, British Museum, Menil, Rijksmuseum, Uffizi, Capodimonte, Borghese, Louvre,
   Tate Britain, Wallace. She taps Label (it asks only the new venues' shows) and reviews them under
@@ -72,7 +77,18 @@ branch's `scraper/fixtures/branch_tests.txt`.
   she judges by eye.
 - **Groups after Contemporary, in her order:** Surveys, Miscellaneous Historic, Miscellaneous Modern,
   Non-Western Art — shows that cannot file in the chronology, so groups, never themes. Miscellaneous stays as small as possible (her
-  decision) — General 19th Century keeps 19th-century shows outside any movement in their place in time.
+  decision) — General 19th Century keeps 19th-century shows outside any movement in their place in time,
+  General 20th Century (after Pop, before Contemporary; c. 1900–1980, self-taught and folk art included)
+  the 20th century's. From 1900 code sends no show to Miscellaneous Modern: General 20th Century, from 1980
+  Contemporary (PS-009, PS-020). **Both Miscellaneous groups should ultimately be deleted (her view)**; kept
+  for now as bins, to see what loose shows land there while the filing is refined.
+- **Tudor / Stuart Britain** (her period), straight after Northern Renaissance, by its 1485 start (her
+  decision: the list sorts by start date; long periods overlap later ones, as Dutch Golden Age does Italian
+  Baroque). c. 1485–1714; Georgian Britain starts at 1714 (George I), so they meet. A show about an
+  artist's English years (Holbein at the Tudor court, Van Dyck in England) goes there; a general
+  retrospective stays in the artist's home period (Northern Renaissance, Flemish Baroque) — and an
+  English-years show keeps Tudor / Stuart against the one-artist rule (code, PS-020).
+- **Flemish Baroque** exists; no stage 1 or 2 show has landed there — she checks it in stage 3.
 - **Surrealism / Dada** (her name), between Early Modernism and Interwar Modernism; Interwar Modernism keeps
   every other style of those years. A show labelled under the old Interwar key sorts under Interwar
   Modernism until Label asks it again (`PERIOD_RETIRED`; PS-017–018).
@@ -110,7 +126,7 @@ branch's `scraper/fixtures/branch_tests.txt`.
   keep them out of Miscellaneous). Every theme has a chip, so the chips and Ex-themes together hold the whole
   Period view once a show is labelled with themes (her 1.4 run: every show in one or the other; PR-022).
   PS-012–014, PR-017–022. The two "not" clauses published at 1.5; shows labelled at 1.4 keep their themes until Relabel.
-- **Code decides, not Claude:** Miscellaneous splits at 1900; one artist, one group — a show about one artist takes the group most of
+- **Code decides, not Claude:** a straggler's group by its year (above); one artist, one group — a show about one artist takes the group most of
   that artist's shows were given, a tie to the earlier group (worked out at sort time, never written
   in; her decision: no hard-coded artist).
 - **Ledger fields:** `period`, `periodYear`, `periodResponse`, `periodArtist`, `themes` (a list), `labelledAt`, `relabelledAt`. Not her edits: `editedAt`

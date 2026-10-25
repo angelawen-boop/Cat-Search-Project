@@ -1842,6 +1842,7 @@ const PERIODS=[
   {key:"intlgothic",name:"International Gothic",span:"c. 1375–1425"},
   {key:"earlyren",name:"Early Renaissance",span:"Italy, c. 1400–1490"},
   {key:"northern",name:"Northern Renaissance",span:"Netherlands, Germany, France, c. 1420–1580 (Van Eyck, Dürer, Bruegel, Holbein)"},
+  {key:"tudor",name:"Tudor / Stuart Britain",span:"c. 1485–1714: art made in Britain or at the English court (Holbein and Van Dyck in England, Hilliard, Lely, Kneller)"},
   {key:"highren",name:"High Renaissance",span:"Italy, c. 1490–1530"},
   {key:"venetian",name:"Venetian Renaissance",span:"Venice, c. 1470–1600 (Bellini, Giorgione, Titian, Tintoretto, Veronese)"},
   {key:"mannerism",name:"Mannerism",span:"Italy, c. 1520–1600"},
@@ -1852,7 +1853,7 @@ const PERIODS=[
   {key:"classicism",name:"French Classicism",span:"c. 1620–1715 (Poussin, Claude, the age of Louis XIV)"},
   {key:"rococo",name:"Rococo",span:"c. 1715–1775 (Watteau, Boucher, Fragonard, Tiepolo)"},
   {key:"latevenetian",name:"Late Venetian",span:"c. 1700–1790: Venetian views and the Grand Tour (Canaletto, Bellotto, Guardi)"},
-  {key:"georgian",name:"Georgian Britain",span:"c. 1720–1830 (Hogarth, Gainsborough, Reynolds, Stubbs)"},
+  {key:"georgian",name:"Georgian Britain",span:"c. 1714–1830 (Hogarth, Gainsborough, Reynolds, Stubbs)"},
   {key:"neoclassicism",name:"Neoclassicism",span:"c. 1760–1820"},
   {key:"romanticism",name:"Romanticism",span:"c. 1800–1850 (Turner, Constable and Goya included)"},
   {key:"realism",name:"Realism",span:"c. 1840–1880, the Barbizon school and the Salon included"},
@@ -1870,6 +1871,7 @@ const PERIODS=[
   {key:"abex",name:"Abstract Expressionism",span:"c. 1943–1965"},
   {key:"postwareu",name:"Postwar Europe",span:"c. 1945–1980"},
   {key:"pop",name:"Pop Art and Minimalism",span:"c. 1955–1980"},
+  {key:"general20",name:"General 20th Century",span:"c. 1900–1980: 20th-century art that is not about one of the movements above, self-taught and folk art included"},
   {key:"contemporary",name:"Contemporary",span:"c. 1980 to now"},
   {key:"surveys",name:"Surveys",span:"a show whose works spread across the centuries with no one period at its heart"},
   {key:"mischistoric",name:"Miscellaneous Historic",span:"Western art before 1900 that fits none of the periods above"},
@@ -1899,7 +1901,7 @@ const THEMES=[
   {key:"veduta",name:"Veduta",chip:"architecture",rule:"veduta: an accurate topographical view of a city or place (Canaletto; Piranesi's Vedute di Roma)"},
   {key:"sculpture",name:"Sculpture",chip:"sculpture",rule:"sculpture"},
   {key:"animals",name:"Animals",chip:"animals",rule:"animals: dogs, cats, horses, birds, mythical creatures"},
-  {key:"nature",name:"Nature",chip:"nature",rule:"trees, plants, flowers, botanical drawings of them, gardens, clouds; NOT landscape painting in general, NOT still life, NOT animals (those are animals)"},
+  {key:"nature",name:"Nature",chip:"nature",rule:"trees, plants, flowers, botanical drawings of them, gardens, clouds; NOT landscape painting in general, NOT still life, NOT animals (those are animals); do not label Nature just because the show is displayed outdoors or in a garden"},
   {key:"photography",name:"Photography",chip:"photography",rule:"photography"},
   {key:"dechard",name:"Decorative Arts – Hard",chip:"dechard",rule:"hard decorative objects: furniture, ceramics, porcelain, glass, silver, metalwork; NOT books or manuscripts (those are books)"},
   {key:"decsoft",name:"Decorative Arts – Soft",chip:"decsoft",rule:"soft decorative arts: wallpaper, carpets, drapery, fabric (chintz), soft furnishings, textiles, interior design; also a show described only as \"decorative arts\", naming no kinds; NOT cloth for clothes, such as dress silks (that is fashion)"},
@@ -1926,8 +1928,9 @@ const lastLabel=r=>(r&&(r.relabelledAt||r.labelledAt))||"";
 const labelDone=r=>periodLabelled(r)&&Array.isArray(r.themes)&&!PERIOD_RETIRED[r.period];
 const periodYearText=y=>"c. "+(y<0?(-y)+" BC":y);
 const periodText=r=>periodLabelled(r)?[PERIOD_NAME[r.period],periodYearText(r.periodYear),...(r.themes||[]).map(k=>THEME_NAME[k])].join(" · "):"";
-// The two stragglers' groups split at 1900 (her cut-off) — decided here, not by Claude.
-const miscFor=y=>y<1900?"mischistoric":"miscmodern";
+// A straggler's group is decided here, not by Claude: before 1900 Miscellaneous Historic.
+// From 1900 nothing goes to Miscellaneous Modern (her decision): General 20th Century, then Contemporary.
+const miscFor=y=>y<1900?"mischistoric":y<1980?"general20":"contemporary";
 
 // One artist, one group (her decision): shows about one artist take the group most of
 // them were given; a tie goes to the earlier group. A response show keeps its own.
@@ -1935,7 +1938,7 @@ const artistKey=a=>String(a||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"")
 function artistPeriods(rows){
   const tally=new Map();
   for(const r of rows){
-    if(!periodLabelled(r)||r.periodResponse)continue;
+    if(!periodLabelled(r)||r.periodResponse||periodKey(r.period)==="tudor")continue;
     const k=artistKey(r.periodArtist); if(!k)continue;
     const t=tally.get(k)||{}, p=periodKey(r.period); t[p]=(t[p]||0)+1; tally.set(k,t);
   }
@@ -1943,7 +1946,8 @@ function artistPeriods(rows){
   for(const [k,t] of tally)out.set(k,Object.keys(t).sort((a,b)=>(t[b]-t[a])||(PERIOD_RANK[a]-PERIOD_RANK[b]))[0]);
   return out;
 }
-const periodOf=(r,byArtist)=>(!r.periodResponse&&byArtist&&byArtist.get(artistKey(r.periodArtist)))||periodKey(r.period);
+// An English-years show keeps Tudor / Stuart, whatever the artist's other shows (her decision).
+const periodOf=(r,byArtist)=>(!r.periodResponse&&periodKey(r.period)!=="tudor"&&byArtist&&byArtist.get(artistKey(r.periodArtist)))||periodKey(r.period);
 // Period order; within a period, response shows last (her decision), then the year, then
 // her venue order (her tie rule).
 function periodCompare(a,b,byArtist){
@@ -1969,7 +1973,9 @@ function periodPrompt(shows){
     "- Ancient art from anywhere (Egypt, Greece, Rome, Mesopotamia): antiquity.",
     "- Art from outside the Western tradition that is not ancient (Asian, Islamic, African, Oceanic, Indigenous): nonwestern.",
     "- Fashion, jewellery, decorative arts, design, architecture, photography and books take a period like any other show: the period whose years and place hold the work, even when the show is not about that movement's artists.",
-    "- Western work that fits none of the periods (folk art, say): mischistoric before 1900, miscmodern from 1900. Use these only when no period's years and place hold the work.",
+    "- Other 20th-century art, self-taught and folk art included: general20 (to 1980), then contemporary.",
+    "- Western work before 1900 that fits none of the periods: mischistoric. Use it only when no period's years and place hold the work.",
+    "- A show about an artist's years in Britain or at the English court (Holbein at the Tudor court, Van Dyck in England): tudor. A general retrospective of such an artist stays in the artist's home period (Holbein: northern; Van Dyck: flemish).",
     "",
     "themes: a list of the keys below for what KIND of thing the show is about — none, one or several. A theme never changes the period.",
     ...THEMES.map(t=>"  "+t.key+" — "+t.rule),

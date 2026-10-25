@@ -53,7 +53,15 @@ check('PS-008 a response show sorts after the rest of its period, whatever its y
 check('PS-008 a response show still sorts before the next period',
   H.periodCompare({museumId:'ng',period:'highren',periodYear:1520,periodResponse:true},{museumId:'met',period:'venetian',periodYear:1480})<0);
 const b=H.periodAnswers({labels:[{i:0,period:'mischistoric',year:1950,themes:[]},{i:1,period:'miscmodern',year:1850,themes:[]},{i:2,period:'highren',year:1500,response:true,artist:'David Hockney',themes:[]},{i:3,period:'impressionism',year:1890,artist:' John Singer Sargent ',themes:[]}]});
-check('PS-009 code sets the stragglers\' group by the 1900 cut-off', b.get(0).period==='miscmodern'&&b.get(1).period==='mischistoric');
+check('PS-009 a straggler from 1900 goes to General 20th Century, never Miscellaneous Modern; before 1900 Miscellaneous Historic', b.get(0).period==='general20'&&b.get(1).period==='mischistoric');
+const g=H.periodAnswers({labels:[{i:0,period:'miscmodern',year:1995,themes:[]},{i:1,period:'miscmodern',year:1960,themes:[]}]});
+check('PS-020 Miscellaneous Modern is never given: 1960 General 20th Century, 1995 Contemporary', g.get(0).period==='contemporary'&&g.get(1).period==='general20');
+check('PS-020 Tudor / Stuart Britain straight after Northern Renaissance; General 20th Century after Pop, before Contemporary', rank('northern')+1===rank('tudor')&&rank('pop')+1===rank('general20')&&rank('general20')+1===rank('contemporary'));
+check('PS-020 Georgian Britain starts at 1714, where Tudor / Stuart ends', /^c\. 1714/.test(H.PERIODS.find(p=>p.key==='georgian').span)&&/1714/.test(H.PERIODS.find(p=>p.key==='tudor').span));
+const vd=[{period:'flemish',periodYear:1630,periodArtist:'Anthony van Dyck'},{period:'flemish',periodYear:1625,periodArtist:'Anthony van Dyck'},{period:'tudor',periodYear:1637,periodArtist:'Anthony van Dyck'}];
+const vdBy=H.artistPeriods(vd);
+check('PS-020 Van Dyck in England keeps Tudor / Stuart; his retrospectives stay Flemish Baroque', H.periodOf(vd[2],vdBy)==='tudor'&&H.periodOf(vd[0],vdBy)==='flemish');
+check('PS-020 the prompt sends English-years shows to tudor and keeps Nature out of garden settings', H.periodPrompt([]).includes('Van Dyck in England): tudor')&&H.periodPrompt([]).includes('displayed outdoors or in a garden'));
 check('PS-009 response and artist are kept', b.get(2).periodResponse===true&&b.get(3).periodResponse===false&&b.get(3).periodArtist==='John Singer Sargent');
 const sg=[
   {id:'a',museumId:'met',period:'impressionism',periodYear:1890,periodArtist:'John Singer Sargent'},
