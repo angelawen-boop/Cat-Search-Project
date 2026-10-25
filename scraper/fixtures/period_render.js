@@ -16,7 +16,9 @@ const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'cw-period-'));
 const prepared = 'const { useState, useEffect, useMemo, useCallback, useRef } = React;\n'
   + fs.readFileSync(path.join(ROOT, 'Cat_Watch.jsx'), 'utf8')
       .replace(/^import React.*$/m, '')
-      .replace(/^export default function App\(\)\{/m, 'function App(){');
+      .replace(/^export default function App\(\)\{/m, 'function App(){')
+      // The waits between tries shrink to milliseconds here; PS-015 holds her real ones.
+      .replace('const LABEL_WAITS={retry:[15000,60000],lastGo:60000};', 'const LABEL_WAITS={retry:[5,5],lastGo:5};');
 fs.writeFileSync(path.join(tmp, 'app.tsx'), prepared);
 try {
   execFileSync('npx', ['tsc', path.join(tmp, 'app.tsx'), '--jsx', 'react', '--target', 'esnext',
@@ -41,7 +43,7 @@ const [metGone] = pick('met', false, 1);
 const outside = hers.rows.find(r => r.interested && !['met','ng','orsay','dellav','va','tate-modern','cincinnati'].includes(r.museumId));
 const label = { [ng1.id]: ['highren', 1510], [met1.id]: ['highren', 1510], [ng2.id]: ['antiquity', -300],
   [met2.id]: ['impressionism', 1875], [metGone.id]: ['highren', 1500], [outside.id]: ['highren', 1505] };
-const rows = hers.rows.map(r => label[r.id] ? { ...r, period: label[r.id][0], periodYear: label[r.id][1] } : r);
+const rows = hers.rows.map(r => label[r.id] ? { ...r, period: label[r.id][0], periodYear: label[r.id][1], themes: [] } : r);
 const FILE = JSON.stringify({ ...hers, rows });
 
 const settle = async (ms = 50) => { await new Promise(r => setTimeout(r, ms)); };
@@ -60,8 +62,8 @@ const until = async (fn, ms = 8000) => { const t = Date.now(); while (Date.now()
     asked.push(shows.length);
     if (failNext > 0) { failNext--; throw { code: 'rate_limited', message: 'slow down' }; }
     // A question about one show is a Relabel: it comes back High Renaissance.
-    if (shows.length === 1 && relabelNext) { relabelNext = false; return { labels: [{ i: shows[0].i, period: 'highren', year: 1505 }] }; }
-    return { labels: shows.map(x => ({ i: x.i, period: 'baroque', year: 1650 })) };
+    if (shows.length === 1 && relabelNext) { relabelNext = false; return { labels: [{ i: shows[0].i, period: 'highren', year: 1505, themes: ['sculpture'] }] }; }
+    return { labels: shows.map(x => ({ i: x.i, period: 'baroque', year: 1650, themes: [] })) };
   } } };
   const globals = ['window', 'document', 'navigator', 'localStorage', 'requestAnimationFrame',
     'cancelAnimationFrame', 'MutationObserver', 'Node', 'Element', 'HTMLElement', 'Event',
@@ -89,6 +91,12 @@ const until = async (fn, ms = 8000) => { const t = Date.now(); while (Date.now()
     await until(() => cards().length > 0);
     const period = [...doc.querySelectorAll('button')].find(b => /^Period/.test(b.textContent));
     ok(!!period, 'PR-001: the sort row has Period');
+    const sortRow = [...period.parentNode.querySelectorAll('button')].map(b => b.textContent.replace(/[\u2191\u2193 ]+$/, ''));
+    ok(sortRow.slice(0, 3).join() === 'Date,Venue,Period', 'PR-017: Period is the third sort chip (her decision)', sortRow.join());
+    const themeRow = [...doc.querySelectorAll('span')].find(x => x.textContent === 'Theme');
+    ok(themeRow && [...themeRow.parentNode.querySelectorAll('button')].map(b => b.textContent).join('|')
+      === 'Fashion & Jewellery|Architecture|Sculpture|Animals|Nature|Photography|Decorative Arts \u2013 Hard|Decorative Arts \u2013 Soft|Books|Ex-themes',
+      'PR-018: a Theme row of her chips, in her order', themeRow && themeRow.parentNode.textContent);
     click(period); await settle(150);
     const c = cards();
     ok(c.length === 4, 'PR-002: only labelled, not-dismissed shows at the trial venues (4)', String(c.length));
@@ -109,7 +117,7 @@ const until = async (fn, ms = 8000) => { const t = Date.now(); while (Date.now()
     await until(() => /Label: 0 of/.test(doc.body.textContent));
     ok(doc.body.textContent.includes(`Label: 0 of ${unlabelled} exhibitions labelled; ${unlabelled} not \u2014 Claude is rate-limited.`),
       'PR-013: a run that fails says how many were not labelled, and why', (doc.body.textContent.match(/Label:[^.]*\./) || [''])[0]);
-    ok(asked.length === 2 * Math.ceil(unlabelled / 40), 'PR-013: each failed batch was asked twice, no more', String(asked.length));
+    ok(asked.length === 4 * Math.ceil(unlabelled / 40), 'PR-013: each failed batch was asked three times, then once more at the end, no more', String(asked.length));
     asked.length = 0;
     failNext = 1;   // the first question fails once, then the retry answers
     click([...doc.querySelectorAll('button')].find(b => b.textContent === 'Label'));
@@ -130,9 +138,19 @@ const until = async (fn, ms = 8000) => { const t = Date.now(); while (Date.now()
     click(rb);
     await until(() => /Relabelled: High Renaissance/.test(doc.body.textContent));
     ok(asked.length === nAsked + 1 && asked[nAsked] === 1, 'PR-015: Relabel asks Claude about that one show only', asked.slice(nAsked).join(','));
-    ok(doc.body.textContent.includes('Relabelled: High Renaissance \u00b7 c. 1505.'), 'PR-015: the drawer says the new label');
+    ok(doc.body.textContent.includes('Relabelled: High Renaissance \u00b7 c. 1505 \u00b7 Sculpture.'), 'PR-015: the drawer says the new label, its themes included');
     const hr = [...doc.querySelectorAll('span')].some(x => x.textContent === 'High Renaissance');
     ok(hr && [...doc.querySelectorAll('article h3')].some(h => h.textContent === firstTitle), 'PR-016: the show moves under its new divider', firstTitle);
+    // The Theme row filters; Ex-themes is every labelled show with no theme.
+    const chipBtn = t => [...doc.querySelectorAll('button')].find(b => b.textContent === t);
+    const allShown = cards().length;
+    click(chipBtn('Sculpture')); await settle(150);
+    ok(cards().length === 1 && cards()[0].querySelector('h3').textContent === firstTitle, 'PR-019: Sculpture shows only the show labelled Sculpture', String(cards().length));
+    click(chipBtn('Sculpture')); click(chipBtn('Ex-themes')); await settle(150);
+    ok(cards().length === allShown - 1 && !cards().some(c => c.querySelector('h3').textContent === firstTitle), 'PR-020: Ex-themes shows every show but the themed one', String(cards().length));
+    click(chipBtn('Sculpture')); await settle(150);
+    ok(cards().length === allShown, 'PR-021: two theme chips show either, as the Venue row does', String(cards().length));
+    click(chipBtn('Sculpture')); click(chipBtn('Ex-themes')); await settle(150);
 
     const csv = 'venue_code,title,start_date,end_date,summary,url,notes,swept_at\n'
       + 'met,A Show Nobody Has Seen,2026-11-01,2027-02-01,Paintings of the 1600s.,https://www.metmuseum.org/exhibitions/nobody-has-seen,,2026-10-15\n'

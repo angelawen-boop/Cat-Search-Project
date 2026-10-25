@@ -3,7 +3,7 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 // The footer prints APP_VERSION and its date, so she can tell one build from the next.
 // Numbering, her decision: a whole number for a substantial change, a decimal for a
 // small one, one number per publish. Bump it with the change it describes.
-const APP_VERSION = "1.3";   // the Period test page's own numbering (her name for it), not her app's
+const APP_VERSION = "1.4";   // the Period test page's own numbering (her name for it), not her app's
 const APP_VERSION_DATE = "24 Oct 2026";
 
 // The venue order is VENUE_ORDER, below the list, which sorts MUSEUMS; drawer, chips,
@@ -1833,8 +1833,8 @@ function topicPresets(props){
 // centre-of-gravity rule: Italy, then the North, then France, then America, a region's
 // periods placed after the dominant region's periods of the same time (Italy first only
 // where two compete); Georgian before Neoclassicism, Belle Époque before Symbolism, Postwar
-// Europe after Abstract Expressionism (her reorder). The groups after Contemporary (her decision) take what fits no
-// period: surveys, decorative arts and architecture from 1800, stragglers, non-Western art.
+// Europe after Abstract Expressionism (her reorder). The groups after Contemporary (her decision) take what cannot
+// file in the chronology: surveys, stragglers, non-Western art. Themes are labels, never groups.
 const PERIODS=[
   {key:"antiquity",name:"Antiquity",span:"before c. 400; ancient art from anywhere"},
   {key:"medieval",name:"Byzantine and Early Medieval",span:"c. 400–1150, Romanesque included"},
@@ -1871,8 +1871,6 @@ const PERIODS=[
   {key:"pop",name:"Pop Art and Minimalism",span:"c. 1955–1980"},
   {key:"contemporary",name:"Contemporary",span:"c. 1980 to now"},
   {key:"surveys",name:"Surveys",span:"a show whose works spread across the centuries with no one period at its heart"},
-  {key:"decorative",name:"Decorative Arts",span:"set by code from kind, never picked"},
-  {key:"architecture",name:"Architecture",span:"set by code from kind, never picked"},
   {key:"mischistoric",name:"Miscellaneous Historic",span:"Western art before 1900 that fits none of the periods above"},
   {key:"miscmodern",name:"Miscellaneous Modern",span:"Western art from 1900 on that fits none of the periods above"},
   {key:"nonwestern",name:"Non-Western Art",span:"art from outside the Western tradition that is not ancient"},
@@ -1883,14 +1881,42 @@ const PERIOD_NAME=Object.fromEntries(PERIODS.map(p=>[p.key,p.name]));
 const PERIOD_VENUES=new Set(["met","ng","orsay","dellav","va","tate-modern","cincinnati"]);
 const PERIOD_BATCH=40;
 
+// THEMES (her design): a show of a kind of thing still sits in its period; its themes are
+// labels, any number per show, for the filter row. A chip may hold several labels
+// (Fashion & Jewellery), so she can regroup chips without relabelling.
+const THEMES=[
+  {key:"fashion",name:"Fashion",chip:"fashion",rule:"clothes, dress, costume, and cloth made for clothes"},
+  {key:"jewellery",name:"Jewellery",chip:"fashion",rule:"jewellery"},
+  {key:"architecture",name:"Architecture",chip:"architecture",rule:"buildings and architects"},
+  {key:"sculpture",name:"Sculpture",chip:"sculpture",rule:"sculpture"},
+  {key:"animals",name:"Animals",chip:"animals",rule:"animals: dogs, cats, horses, birds, mythical creatures"},
+  {key:"nature",name:"Nature",chip:"nature",rule:"trees, plants, flowers, botanical drawings of them, gardens, clouds; NOT landscape painting in general, NOT still life, NOT animals (those are animals)"},
+  {key:"photography",name:"Photography",chip:"photography",rule:"photography"},
+  {key:"dechard",name:"Decorative Arts – Hard",chip:"dechard",rule:"hard decorative objects: furniture, ceramics, porcelain, glass, silver, metalwork"},
+  {key:"decsoft",name:"Decorative Arts – Soft",chip:"decsoft",rule:"soft decorative arts: wallpaper, carpets, drapery, fabric (chintz), soft furnishings, textiles, interior design; also a show described only as \"decorative arts\", naming no kinds"},
+  {key:"books",name:"Books",chip:"books",rule:"rare books, book collections, illuminated manuscripts"},
+];
+const THEME_KEYS=new Set(THEMES.map(t=>t.key));
+const THEME_NAME=Object.fromEntries(THEMES.map(t=>[t.key,t.name]));
+// Her chips, in her order; Ex-themes is every labelled show with no theme, Surveys and
+// Non-Western Art included (they are groups, not themes).
+const THEME_CHIPS=[["fashion","Fashion & Jewellery"],["architecture","Architecture"],["sculpture","Sculpture"],["animals","Animals"],["nature","Nature"],["photography","Photography"],["dechard","Decorative Arts – Hard"],["decsoft","Decorative Arts – Soft"],["books","Books"],["exthemes","Ex-themes"]];
+const THEME_CHIP_OF=Object.fromEntries(THEMES.map(t=>[t.key,t.chip]));
+// A theme chip set and a labelled show: in when any of its themes is under a picked chip,
+// or Ex-themes is picked and it has none. A show never asked about themes is in none.
+function themeMatch(r,picked){
+  if(!Array.isArray(r.themes))return false;
+  if(picked.has("exthemes")&&!r.themes.length)return true;
+  return r.themes.some(k=>picked.has(THEME_CHIP_OF[k]));
+}
+
 const periodLabelled=r=>!!(r&&PERIOD_RANK[r.period]!==undefined&&Number.isInteger(r.periodYear));
+// Label fills a show missing its period or its themes (a show labelled before themes is asked again).
+const labelDone=r=>periodLabelled(r)&&Array.isArray(r.themes);
 const periodYearText=y=>"c. "+(y<0?(-y)+" BC":y);
-const periodText=r=>periodLabelled(r)?PERIOD_NAME[r.period]+" · "+periodYearText(r.periodYear):"";
-// The two stragglers' groups split at 1900, and decorative arts and architecture leave
-// their period from 1800 (her cut-offs) — decided here, not by Claude.
+const periodText=r=>periodLabelled(r)?[PERIOD_NAME[r.period],periodYearText(r.periodYear),...(r.themes||[]).map(k=>THEME_NAME[k])].join(" · "):"";
+// The two stragglers' groups split at 1900 (her cut-off) — decided here, not by Claude.
 const miscFor=y=>y<1900?"mischistoric":"miscmodern";
-const KINDS=new Set(["decorative","architecture"]);
-const PICKABLE=PERIODS.filter(p=>!KINDS.has(p.key));
 
 // One artist, one group (her decision): shows about one artist take the group most of
 // them were given; a tie goes to the earlier group. A response show keeps its own.
@@ -1920,7 +1946,7 @@ function periodPrompt(shows){
     "You are an art historian. For each exhibition below, name the art period of the art it shows, and one year.",
     "",
     "period: the key of ONE period from this list. The list is in its sorting order, not strict date order:",
-    ...PICKABLE.map(p=>"  "+p.key+" — "+p.name+" ("+p.span+")"),
+    ...PERIODS.map(p=>"  "+p.key+" — "+p.name+" ("+p.span+")"),
     "",
     "Rules:",
     "- Pick by the date and place of the art itself, not the exhibition's theme words.",
@@ -1931,54 +1957,76 @@ function periodPrompt(shows){
     "- A show spanning a long stretch: the period most of its works come from (its heart), with that period's year. Only when the works spread across the centuries with no one period at its heart: surveys, with the midpoint year.",
     "- Ancient art from anywhere (Egypt, Greece, Rome, Mesopotamia): antiquity.",
     "- Art from outside the Western tradition that is not ancient (Asian, Islamic, African, Oceanic, Indigenous): nonwestern.",
-    "- Western work that fits none of the periods (photography, folk art, design outside any movement): mischistoric before 1900, miscmodern from 1900. Use these only when no period fits.",
-    "- kind: \"decorative\" for a show of decorative arts, crafts, design or fashion (ceramics, silver, textiles, wallpaper, furniture, jewellery); \"architecture\" for a show about buildings or their decoration; otherwise \"\". Still give the period as usual.",
+    "- Fashion, jewellery, decorative arts, design, architecture, photography and books take a period like any other show: the period whose years and place hold the work, even when the show is not about that movement's artists.",
+    "- Western work that fits none of the periods (folk art, say): mischistoric before 1900, miscmodern from 1900. Use these only when no period's years and place hold the work.",
+    "",
+    "themes: a list of the keys below for what KIND of thing the show is about — none, one or several. A theme never changes the period.",
+    ...THEMES.map(t=>"  "+t.key+" — "+t.rule),
+    "- A decorative-arts show whose description names its kinds gets the theme of each kind named (ceramics and furniture: dechard; furnishings: decsoft).",
+    "- A show of paintings or drawings in general gets no theme unless its subject is one of the above (a show of horse paintings: animals).",
     "",
     "year: one whole number, the year of the art shown (negative for BC). One artist: the middle of the works shown. A show spanning a long stretch: the midpoint of the stretch.",
     "response: true or false, as above.",
     "artist: for a show about ONE artist, their full name as usually written (\"John Singer Sargent\"); otherwise \"\".",
     "",
-    "Answer with JSON only, one entry per exhibition: {\"labels\":[{\"i\":0,\"period\":\"highren\",\"year\":1510,\"response\":false,\"artist\":\"Raphael\",\"kind\":\"\"}]}",
+    "Answer with JSON only, one entry per exhibition: {\"labels\":[{\"i\":0,\"period\":\"highren\",\"year\":1510,\"response\":false,\"artist\":\"Raphael\",\"themes\":[]}]}",
     "",
     "Exhibitions:",
     ...shows.map(s=>JSON.stringify({i:s.i,venue:s.venue,title:s.title,dates:s.dates,text:String(s.summary||"").replace(/\s+/g," ").slice(0,600)})),
   ].join("\n");
 }
 // Claude's answer, checked: only a listed period and a sensible whole year are kept.
-// Returns a Map from i to {period, periodYear, periodResponse, periodArtist}.
+// A label with no themes list is not a label: it is asked again, never taken as "no theme".
+// Returns a Map from i to {period, periodYear, periodResponse, periodArtist, themes}.
 function periodAnswers(data){
   const out=new Map();
   for(const x of (data&&Array.isArray(data.labels))?data.labels:[]){
     const i=Number(x&&x.i), y=Number(x&&x.year);
     let k=String((x&&x.period)||"").trim().toLowerCase();
-    if(!Number.isInteger(i)||PERIOD_RANK[k]===undefined||KINDS.has(k)||!Number.isInteger(y)||y<-5000||y>2100)continue;
+    if(!Number.isInteger(i)||PERIOD_RANK[k]===undefined||!Number.isInteger(y)||y<-5000||y>2100||!Array.isArray(x.themes))continue;
     if(k==="mischistoric"||k==="miscmodern")k=miscFor(y);
-    const kind=String((x&&x.kind)||"").trim().toLowerCase();
-    if(KINDS.has(kind)&&y>=1800&&k!=="nonwestern")k=kind;
+    const themes=[...new Set(x.themes.map(t=>String(t||"").trim().toLowerCase()).filter(t=>THEME_KEYS.has(t)))];
     const artist=typeof x.artist==="string"?x.artist.trim().slice(0,120):"";
-    out.set(i,{period:k,periodYear:y,periodResponse:x.response===true,periodArtist:artist});
+    out.set(i,{period:k,periodYear:y,periodResponse:x.response===true,periodArtist:artist,themes});
   }
   return out;
 }
-// Labels shows ({i, venue, title, dates, summary}) in batches; a batch that fails, or
-// comes back with no label, is asked once more. onBatch(done,total) reports progress.
-// Returns {labels: Map i → label, batches: [{shows, labelled, tries, why}]}.
-async function labelPeriods(shows,onBatch){
+// The page's Claude refuses in spells, so a batch that fails, or comes back with no label,
+// is asked again after a wait (her decision: 15 seconds, then a minute), and every batch
+// still unlabelled gets one last go after a pause at the end.
+const LABEL_WAITS={retry:[15000,60000],lastGo:60000};
+const pause=ms=>new Promise(res=>setTimeout(res,ms));
+// Label's own words for a failed ask: the lookup's wording speaks of search results.
+function labelWhy(ask){
+  const code=ask.code||"";
+  if(code==="not_granted")return "You declined to let this page use Claude.";
+  if(code==="invalid_json")return "Claude\u2019s answer came back unreadable.";
+  if(code==="rate_limited")return "Claude is rate-limited.";
+  if(code==="unavailable")return ask.detail;
+  return "Claude didn\u2019t answer ("+(code||"unknown")+").";
+}
+// Labels shows ({i, venue, title, dates, summary}) in batches. onBatch(done,total) reports
+// progress. Returns {labels: Map i → label, batches: [{shows, labelled, tries, why}]}.
+async function labelPeriods(shows,onBatch,waits=LABEL_WAITS){
   const labels=new Map(), batches=[];
+  const ask=async b=>{
+    b.tries++;
+    const res=await readResults(periodPrompt(b.batch));
+    if(!res.ok){ b.why=labelWhy(res); b.stop=res.code==="not_granted"||res.code==="unavailable"; return; }
+    const want=new Set(b.batch.map(s=>s.i));
+    for(const [i,v] of periodAnswers(res.data))if(want.has(i)&&!labels.has(i)){ labels.set(i,v); b.labelled++; }
+    b.why=b.labelled<b.batch.length?(b.batch.length-b.labelled)+" left out of Claude\u2019s answer":null;
+  };
   for(let n=0;n<shows.length;n+=PERIOD_BATCH){
-    const batch=shows.slice(n,n+PERIOD_BATCH), want=new Set(batch.map(s=>s.i));
-    const b={shows:batch.length,labelled:0,tries:0,why:null};
-    while(b.tries<2&&b.labelled===0){
-      b.tries++;
-      const ask=await readResults(periodPrompt(batch));
-      if(!ask.ok){ b.why=ask.detail.replace(/\s+\[.*$/,""); continue; }
-      for(const [i,v] of periodAnswers(ask.data))if(want.has(i)&&!labels.has(i)){ labels.set(i,v); b.labelled++; }
-      b.why=b.labelled<batch.length?(batch.length-b.labelled)+" left out of Claude’s answer":null;
-    }
+    const b={batch:shows.slice(n,n+PERIOD_BATCH),labelled:0,tries:0,why:null,stop:false};
+    await ask(b);
+    for(const ms of waits.retry){ if(b.labelled||b.stop)break; await pause(ms); await ask(b); }
     batches.push(b);
     if(onBatch)onBatch(Math.min(n+PERIOD_BATCH,shows.length),shows.length);
   }
-  return {labels,batches};
+  const left=batches.filter(b=>!b.labelled&&!b.stop);
+  if(left.length){ await pause(waits.lastGo); for(const b of left)await ask(b); }
+  return {labels,batches:batches.map(b=>({shows:b.batch.length,labelled:b.labelled,tries:b.tries,why:b.why}))};
 }
 // Her line after a Label: all done, or how many were not and why.
 function labelSummary(total,batches){
@@ -2469,7 +2517,7 @@ async function readResults(prompt){
 }
 async function readResultsCall(prompt){
   const sample=await useCap("sample");
-  if(!sample)return{ok:false,data:null,detail:"Claude isn\u2019t available to this page in this viewer."};
+  if(!sample)return{ok:false,data:null,code:"unavailable",detail:"Claude isn\u2019t available to this page in this viewer."};
   try{
     const data=await sample.json(prompt,{modelTier:"default"});
     return{ok:true,data,detail:"read the results"};
@@ -2485,7 +2533,7 @@ async function readResultsCall(prompt){
     if(code==="not_granted")       why="You declined to let this page use Claude. Reload and allow it to search.";
     else if(code==="rate_limited") why="Claude is rate-limited.";
     else if(code==="invalid_json") why="Claude\u2019s answer came back unreadable. Try again.";
-    return{ok:false,data:null,partial:(e&&e.text)||null,detail:why+"  ["+String((e&&e.message)||e)+"]"};
+    return{ok:false,data:null,code,partial:(e&&e.text)||null,detail:why+"  ["+String((e&&e.message)||e)+"]"};
   }
 }
 
@@ -5293,6 +5341,7 @@ export default function App(){
   const[sortBy,setSortBy]=useState("date");
   const[dateReversed,setDateReversed]=useState(false);
   const[venueF,setVenueF]=useState(new Set());
+  const[themeF,setThemeF]=useState(new Set());
   const[timeF,setTimeF]=useState(new Set());
   const[acqWanted,setAcqWanted]=useState(false);
   const[acqOwned,setAcqOwned]=useState(false);
@@ -5595,7 +5644,7 @@ export default function App(){
   }
 
   const toggleSet=(setter,val)=>setter(prev=>{const n=new Set(prev);if(n.has(val))n.delete(val);else n.add(val);return n;});
-  const clearFilters=()=>{setVenueF(new Set());setTimeF(new Set());setAcqWanted(false);setAcqOwned(false);setAcq3mo(false);setAcq6mo(false);setAcqHasCat(false);setAcqNoCat(false);setAcqBuyNext(false);setShowAll(false);setDismissedOnly(false);setWatchedF(false);setSearch("");setShowSearch(false);};
+  const clearFilters=()=>{setVenueF(new Set());setThemeF(new Set());setTimeF(new Set());setAcqWanted(false);setAcqOwned(false);setAcq3mo(false);setAcq6mo(false);setAcqHasCat(false);setAcqNoCat(false);setAcqBuyNext(false);setShowAll(false);setDismissedOnly(false);setWatchedF(false);setSearch("");setShowSearch(false);};
 
   // WHAT A QUARANTINE REMEMBERS. The URL where there is one; venue + title where there
   // is not (a reused title could block the wrong row — bounded, and visible on screen).
@@ -5842,11 +5891,11 @@ export default function App(){
     saveLookupTape(tape,{ok:said.ok,said:said.text,detail:JSON.stringify(batches)});
     if(labels.size)setProposals(cur=>cur!==props?cur:props.map((p,i)=>labels.has(i)?{...p,cand:{...p.cand,...labels.get(i)}}:p));
   }
-  // Label: every show at a trial venue with no period yet, dismissed ones included.
-  // Fills only; a labelled show is never relabelled. Not an edit of hers: editedAt stays.
+  // Label: every show at a trial venue with no period or no themes yet, dismissed ones
+  // included. Fills only; a labelled show is never relabelled. Not an edit of hers: editedAt stays.
   async function labelLedger(){
     if(busy||roStop())return;
-    const todo=rows.filter(r=>PERIOD_VENUES.has(r.museumId)&&!periodLabelled(r));
+    const todo=rows.filter(r=>PERIOD_VENUES.has(r.museumId)&&!labelDone(r));
     if(!todo.length){ setLabelSaid({ok:true,text:"Label: every exhibition at the trial venues already has a period."}); return; }
     setBusy(true); setLabelSaid(null); setProg({done:0,total:todo.length,label:"Labelling periods\u2026"});
     // Each run is one record in the lookup log: every question, Claude's answer, each batch's outcome.
@@ -5856,7 +5905,7 @@ export default function App(){
       const res=await labelPeriods(todo.map((r,i)=>periodShow(i,r)),(done,total)=>setProg({done,total,label:"Labelling periods\u2026"}));
       batches=res.batches;
       const byId=new Map(); res.labels.forEach((v,i)=>byId.set(todo[i].id,v));
-      if(byId.size){ setRows(prev=>prev.map(r=>byId.has(r.id)&&!periodLabelled(r)?{...r,...byId.get(r.id)}:r)); setDirty(true); setSaveNote(null); }
+      if(byId.size){ setRows(prev=>prev.map(r=>byId.has(r.id)&&!labelDone(r)?{...r,...byId.get(r.id)}:r)); setDirty(true); setSaveNote(null); }
       said=labelSummary(todo.length,batches);
     }catch(e){ said={ok:false,text:"Label: didn\u2019t finish \u2014 "+String((e&&e.message)||e)+"."}; }
     finally{
@@ -6066,7 +6115,7 @@ export default function App(){
   function makeLedgerRow(c,now){
     const base=c.museumId+"-"+normalizeTitle(c.title).replace(/[^a-z0-9]+/g,"").slice(0,50);
     return {id:base,museumId:c.museumId,title:c.title,startDate:c.startDate||null,endDate:c.endDate||null,summary:c.summary||"",exUrl:c.exUrl||(MU[c.museumId]?.listUrl||""),interested:true,watching:false,acquiring:null,looked:false,hasCatalogue:"unknown",catalogueTitle:null,isbn13:null,publisher:null,publisherUrl:null,publisherResult:null,shopUrl:null,shopState:null,shopChange:null,addedAt:now,editedAt:null,
-      ...(periodLabelled(c)?{period:c.period,periodYear:c.periodYear,periodResponse:!!c.periodResponse,periodArtist:c.periodArtist||""}:{})};
+      ...(labelDone(c)?{period:c.period,periodYear:c.periodYear,periodResponse:!!c.periodResponse,periodArtist:c.periodArtist||"",themes:c.themes}:{})};
   }
 
   // Apply whatever she picked where the stitched file disagreed with itself.
@@ -6146,7 +6195,7 @@ export default function App(){
     setShopScreen(null); setReadVenues([]);
     setProposals(null); setDecisions({}); setSeenInFile(null); setRefreshDone({added,filled,changed,never:newlyIgnored.length,left:partial?leftUndecided:0});
     setRefreshTouched(touched); setPinTouched(touched.length>0); // float just-changed entries to the top, this session
-    setVenueF(new Set()); setTimeF(new Set()); setWatchedF(false);
+    setVenueF(new Set()); setThemeF(new Set()); setTimeF(new Set()); setWatchedF(false);
     setAcqWanted(false); setAcqOwned(false); setAcq3mo(false); setAcq6mo(false); setAcqHasCat(false); setAcqNoCat(false); setAcqBuyNext(false);
     setDismissedOnly(false); setShowAll(false); setSearch("");
   }
@@ -6365,6 +6414,7 @@ export default function App(){
       // is on.
       if(dismissedOnly){ if(r.interested)return false; }
       else if(!r.interested&&!showAll&&!sq)return false;
+      if(themeF.size>0&&!themeMatch(r,themeF))return false;
       if(venueF.size>0&&!venueF.has(chipKey(r.museumId))&&!(venueF.has(OCC_CHIP)&&((isOcc(r.museumId)&&!ownChip(r.museumId))||(MU[r.museumId]||{}).underOcc)))return false;
       const t=tierOf(r),ts=TIERS[t]?.time||"current";
       if(timeF.size>0){let match=timeF.has(ts);if(timeF.has("recent")&&t==="recent")match=true;if(timeF.has("current")&&t==="recent")match=true;if(!match)return false;}
@@ -6395,12 +6445,12 @@ export default function App(){
       return flip*db.localeCompare(da);
     });
     return out;
-  },[rows,byArtist,sortBy,venueF,timeF,acqWanted,acqOwned,acq3mo,acq6mo,acqHasCat,acqNoCat,acqBuyNext,showAll,dismissedOnly,watchedF,search,pinTouched,refreshTouched,dateReversed]);
+  },[rows,byArtist,sortBy,venueF,themeF,timeF,acqWanted,acqOwned,acq3mo,acq6mo,acqHasCat,acqNoCat,acqBuyNext,showAll,dismissedOnly,watchedF,search,pinTouched,refreshTouched,dateReversed]);
 
   // DRAWN AS SHE SCROLLS: the first DRAW_STEP cards, then DRAW_STEP more each time the end
   // of the drawn list nears the screen. A new filter, sort or search starts again from the
   // top (viewToken). Jump to bottom draws the rest first. No IntersectionObserver → all.
-  const viewToken=useMemo(()=>({}),[sortBy,venueF,timeF,acqWanted,acqOwned,acq3mo,acq6mo,acqHasCat,acqNoCat,acqBuyNext,showAll,dismissedOnly,watchedF,search,pinTouched,dateReversed]);
+  const viewToken=useMemo(()=>({}),[sortBy,venueF,themeF,timeF,acqWanted,acqOwned,acq3mo,acq6mo,acqHasCat,acqNoCat,acqBuyNext,showAll,dismissedOnly,watchedF,search,pinTouched,dateReversed]);
   const[drawn,setDrawn]=useState({token:null,n:DRAW_STEP});
   const drawLimit=typeof IntersectionObserver==="undefined"?Infinity:drawn.token===viewToken?drawn.n:DRAW_STEP;
   const moreRef=useRef(null);
@@ -6695,7 +6745,7 @@ export default function App(){
       <div style={{maxWidth:760,margin:"0 auto 12px",display:"flex",flexDirection:"column",gap:5}}>
         <div style={{display:"flex",gap:4,flexWrap:"wrap",alignItems:"center"}}>
           <span style={{fontSize:9,letterSpacing:"0.12em",textTransform:"uppercase",color:C.soft,marginRight:2}}>Sort</span>
-          {[["date","Date"],["venue","Venue"],["added","Recently added"],["edited","Recently edited"],["period","Period"]].map(([k,l])=><button key={k} onClick={()=>pickSort(k)} style={chip(sortBy===k&&!pinTouched)}>{l}{(k==="date"||k==="period")&&sortBy===k&&!pinTouched?(dateReversed?" \u2191":" \u2193"):""}</button>)}
+          {[["date","Date"],["venue","Venue"],["period","Period"],["added","Recently added"],["edited","Recently edited"]].map(([k,l])=><button key={k} onClick={()=>pickSort(k)} style={chip(sortBy===k&&!pinTouched)}>{l}{(k==="date"||k==="period")&&sortBy===k&&!pinTouched?(dateReversed?" \u2191":" \u2193"):""}</button>)}
           {pinTouched&&<span style={{fontSize:10.5,color:C.action,fontWeight:600}}>{"\u2191 just-refreshed entries shown first"}</span>}
         </div>
         <div style={{display:"flex",gap:4,flexWrap:"wrap",alignItems:"center"}}>
@@ -6706,6 +6756,10 @@ export default function App(){
           <span style={{fontSize:9,letterSpacing:"0.12em",textTransform:"uppercase",color:C.soft,marginRight:2}}>Venue</span>
           {MUSEUMS.filter(m=>!m.underOcc).map(m=>m.id).concat(Object.keys(OWN_CHIP)).sort((a,b)=>orderOf(a)-orderOf(b)).filter((id,i,all)=>all.findIndex(x=>chipKey(x)===chipKey(id))===i).map(id=><button key={chipKey(id)} onClick={()=>toggleSet(setVenueF,chipKey(id))} style={chip(venueF.has(chipKey(id)))}>{(x=>x.chip||x.short)(MU[id]||OWN_CHIP[id])}</button>)}
           <button onClick={()=>toggleSet(setVenueF,OCC_CHIP)} style={chip(venueF.has(OCC_CHIP))}>Occasional</button>
+        </div>
+        <div style={{display:"flex",gap:4,flexWrap:"wrap",alignItems:"center"}}>
+          <span style={{fontSize:9,letterSpacing:"0.12em",textTransform:"uppercase",color:C.soft,marginRight:2}}>Theme</span>
+          {THEME_CHIPS.map(([k,l])=><button key={k} onClick={()=>toggleSet(setThemeF,k)} style={chip(themeF.has(k))}>{l}</button>)}
         </div>
         <div style={{display:"flex",gap:4,flexWrap:"wrap",alignItems:"center"}}>
           <span style={{fontSize:9,letterSpacing:"0.12em",textTransform:"uppercase",color:C.soft,marginRight:2}}>Acquiring?</span>

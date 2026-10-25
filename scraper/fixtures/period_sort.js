@@ -1,5 +1,5 @@
 // The Period sort (her trial; docs/periods.md): the period list's order, the tie rule,
-// the trial venues, and the check on Claude's answer. Cases PS-001 to PS-006.
+// the trial venues, the check on Claude's answer, themes and Label's retries. Cases PS-001 to PS-016.
 const H=require('./harness.js');
 let fails=0;
 const check=(name,cond,extra)=>{ console.log((cond?'PASS  ':'FAIL  ')+name); if(!cond){fails++; if(extra)console.log('        '+JSON.stringify(extra));} };
@@ -28,12 +28,12 @@ check('PS-004 every trial venue exists', [...H.PERIOD_VENUES].every(id=>H.MU[id]
 
 // Only a listed period and a whole year in range are kept.
 const a=H.periodAnswers({labels:[
-  {i:0,period:'highren',year:1510},
-  {i:1,period:'Impressionism',year:1875},
-  {i:2,period:'quattrocento',year:1450},
-  {i:3,period:'baroque',year:1650.5},
-  {i:4,period:'antiquity',year:-450},
-  {i:5,period:'contemporary',year:3000},
+  {i:0,period:'highren',year:1510,themes:[]},
+  {i:1,period:'Impressionism',year:1875,themes:[]},
+  {i:2,period:'quattrocento',year:1450,themes:[]},
+  {i:3,period:'baroque',year:1650.5,themes:[]},
+  {i:4,period:'antiquity',year:-450,themes:[]},
+  {i:5,period:'contemporary',year:3000,themes:[]},
 ]});
 check('PS-005 a listed period and whole year are kept', a.get(0)&&a.get(0).period==='highren'&&a.get(0).periodYear===1510);
 check('PS-005 the key is read case-blind', a.get(1)&&a.get(1).period==='impressionism');
@@ -44,15 +44,15 @@ check('PS-005 a reply with no labels gives nothing', H.periodAnswers(null).size=
 check('PS-006 the label reads name and year', H.periodText({period:'highren',periodYear:1510})==='High Renaissance · c. 1510');
 check('PS-006 BC reads as BC', H.periodText({period:'antiquity',periodYear:-450})==='Antiquity · c. 450 BC');
 check('PS-006 no label, no text', H.periodText({})===''&&!H.periodLabelled({period:'highren'}));
-check('PS-006 the prompt lists every period Claude may pick, and not the two set by code', H.PERIODS.every(p=>H.periodPrompt([]).includes('  '+p.key+' — ')===!['decorative','architecture'].includes(p.key)));
+check('PS-006 the prompt lists every period and every theme', H.PERIODS.every(p=>H.periodPrompt([]).includes('  '+p.key+' — '))&&H.THEMES.every(t=>H.periodPrompt([]).includes('  '+t.key+' — '+t.rule)));
 
 // v1.1 (her decisions): the four new groups, response shows last, one artist one group.
-check('PS-007 the groups after Contemporary, in her order', ['contemporary','surveys','decorative','architecture','mischistoric','miscmodern','nonwestern'].every((k,j,all)=>j===0||rank(all[j-1])+1===rank(k))&&rank('nonwestern')===H.PERIODS.length-1);
+check('PS-007 the groups after Contemporary, in her order; no theme is a group', ['contemporary','surveys','mischistoric','miscmodern','nonwestern'].every((k,j,all)=>j===0||rank(all[j-1])+1===rank(k))&&rank('nonwestern')===H.PERIODS.length-1);
 check('PS-008 a response show sorts after the rest of its period, whatever its year',
   H.periodCompare({museumId:'ng',period:'highren',periodYear:1450,periodResponse:true},{museumId:'met',period:'highren',periodYear:1520})>0);
 check('PS-008 a response show still sorts before the next period',
   H.periodCompare({museumId:'ng',period:'highren',periodYear:1520,periodResponse:true},{museumId:'met',period:'venetian',periodYear:1480})<0);
-const b=H.periodAnswers({labels:[{i:0,period:'mischistoric',year:1950},{i:1,period:'miscmodern',year:1850},{i:2,period:'highren',year:1500,response:true,artist:'David Hockney'},{i:3,period:'impressionism',year:1890,artist:' John Singer Sargent '}]});
+const b=H.periodAnswers({labels:[{i:0,period:'mischistoric',year:1950,themes:[]},{i:1,period:'miscmodern',year:1850,themes:[]},{i:2,period:'highren',year:1500,response:true,artist:'David Hockney',themes:[]},{i:3,period:'impressionism',year:1890,artist:' John Singer Sargent ',themes:[]}]});
 check('PS-009 code sets the stragglers\' group by the 1900 cut-off', b.get(0).period==='miscmodern'&&b.get(1).period==='mischistoric');
 check('PS-009 response and artist are kept', b.get(2).periodResponse===true&&b.get(3).periodResponse===false&&b.get(3).periodArtist==='John Singer Sargent');
 const sg=[
@@ -72,18 +72,30 @@ check('PS-011 her line says when every show was labelled', H.labelSummary(80,[{s
 const ls=H.labelSummary(80,[{shows:40,labelled:40},{shows:40,labelled:0,why:'Claude is rate-limited.'}]);
 check('PS-011 her line says how many were not, and why', !ls.ok&&ls.text==='Label: 40 of 80 exhibitions labelled; 40 not — Claude is rate-limited..'.replace('..','.'), ls.text);
 
-// v1.2: decorative arts and architecture leave their period from 1800 (her cut-off), set by code.
+// Themes (her design): labels, any number per show, never a group; the period stays.
 const k=H.periodAnswers({labels:[
-  {i:0,period:'general19',year:1850,kind:'decorative'},
-  {i:1,period:'rococo',year:1750,kind:'decorative'},
-  {i:2,period:'general19',year:1870,kind:'architecture'},
-  {i:3,period:'antiquity',year:-500,kind:'decorative'},
-  {i:4,period:'decorative',year:1900},
-  {i:5,period:'nonwestern',year:1850,kind:'decorative'},
+  {i:0,period:'general19',year:1850,themes:['dechard','DecSoft']},
+  {i:1,period:'rococo',year:1750,themes:['fashion','fashion','jewellery']},
+  {i:2,period:'general19',year:1870,themes:['interior','architecture']},
+  {i:3,period:'decorative',year:1900,themes:[]},
+  {i:4,period:'antiquity',year:-500},
+  {i:5,period:'nonwestern',year:1850,themes:['sculpture']},
 ]});
-check('PS-012 decorative arts from 1800 go to Decorative Arts; architecture to Architecture', k.get(0).period==='decorative'&&k.get(2).period==='architecture');
-check('PS-012 before 1800 they stay with their period (Rococo silver, Greek pots)', k.get(1).period==='rococo'&&k.get(3).period==='antiquity');
-check('PS-012 Claude cannot pick the two groups itself; non-Western stays non-Western', !k.has(4)&&k.get(5).period==='nonwestern');
+check('PS-012 a themed show keeps its period; its themes are kept, read case-blind, once each', k.get(0).period==='general19'&&k.get(0).themes.join()==='dechard,decsoft'&&k.get(1).themes.join()==='fashion,jewellery');
+check('PS-012 an unlisted theme is dropped (Interior is gone); the old groups cannot be picked', k.get(2).themes.join()==='architecture'&&!k.has(3));
+check('PS-012 an answer with no themes list is not a label', !k.has(4)&&k.get(5).period==='nonwestern');
+const pk=(...c)=>new Set(c);
+check('PS-013 Fashion and Jewellery are two labels under one chip', H.themeMatch({themes:['jewellery']},pk('fashion'))&&H.themeMatch({themes:['fashion']},pk('fashion')));
+check('PS-013 a show with two themes is under both chips', H.themeMatch({themes:['dechard','decsoft']},pk('dechard'))&&H.themeMatch({themes:['dechard','decsoft']},pk('decsoft')));
+check('PS-013 Ex-themes: every show with no theme, Surveys and Non-Western Art included', H.themeMatch({period:'surveys',themes:[]},pk('exthemes'))&&H.themeMatch({period:'nonwestern',themes:[]},pk('exthemes'))&&!H.themeMatch({themes:['books']},pk('exthemes')));
+check('PS-013 a show never asked about themes is under no chip, Ex-themes included', !H.themeMatch({period:'gothic'},pk('exthemes'))&&!H.themeMatch({},pk('books')));
+check('PS-013 every theme has a chip', H.THEMES.every(t=>H.THEME_CHIPS.some(([c])=>c===t.chip)));
+check('PS-014 the label reads its themes after the year', H.periodText({period:'rococo',periodYear:1750,themes:['dechard','books']})==='Rococo · c. 1750 · Decorative Arts – Hard · Books');
+check('PS-014 a show labelled before themes is asked again', !H.labelDone({period:'rococo',periodYear:1750})&&H.labelDone({period:'rococo',periodYear:1750,themes:[]}));
+check('PS-015 her waits: 15 seconds, then a minute; a minute before the last go', H.LABEL_WAITS.retry.join()==='15000,60000'&&H.LABEL_WAITS.lastGo===60000);
+check('PS-016 Label\'s own words: Claude didn\u2019t answer, with the code', H.labelWhy({code:'upstream_error'})==='Claude didn\u2019t answer (upstream_error).');
+check('PS-016 unreadable and declined, without telling her what to do', H.labelWhy({code:'invalid_json'})==='Claude\u2019s answer came back unreadable.'&&H.labelWhy({code:'not_granted'})==='You declined to let this page use Claude.');
+check('PS-016 never the lookup\'s "search results"', !/search results/.test(['upstream_error','invalid_json','not_granted','rate_limited',''].map(c=>H.labelWhy({code:c})).join()));
 
 console.log(fails?'\n'+fails+' FAILED':'\nall period checks passed');
 process.exit(fails?1:0);
