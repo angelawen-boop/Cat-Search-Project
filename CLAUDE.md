@@ -272,16 +272,14 @@ Recently labelled (sort and filter). Built in three stages on its own test page,
 the same shows, her marks reconciled). Her view, kept for later: both Misc bins should ultimately go. Her design,
 decisions and every period and theme rule: `docs/periods.md`. Read it before any Period work.
 
-#### 2.2.10 51.1 — her next links and lookups confirm
+#### 2.2.10 51.1–51.2 — her next links, lookups and Buy next confirm
 
 - **OPEN — the re-ask sees the refused answer.** Her Memling link (Philadelphia) failed the 10-word cap
   on every ask: told only the reason, Claude re-sent the same summary. Sonnet, on the live page, passed
   both the first ask and the new re-ask, so the stand-in did not reproduce her Claude's failure — her
   re-read of the link confirms.
-- **OPEN — Period with Buy next** (her ask: Period stacks with every Acquiring filter). Proved on the
-  page: it already does, except Buy next, where her dragged order replaces the period order and the
-  dividers step aside (her Buy next design). Whether Buy next should keep her order or sort by period
-  is hers to decide; nothing built.
+- **Period with every Acquiring filter — published at 51.2; her use confirms.** Buy next keeps her dragged
+  order; Period there switches to period order with dividers, no dragging, and back again (her choice; BP-).
 
 #### 2.2.6 Tests that failed — recorded, not investigated
 
@@ -479,7 +477,7 @@ price, her decision).
 > restating `capabilities` must restate all four; omitting it carries them
 > forward. **Renaming the connector means restating them.**
 
-**Live: 51.1 in her app**, with the cloud ledger (merged at 46). What each recent version changed is in
+**Live: 51.2 in her app**, with the cloud ledger (merged at 46). What each recent version changed is in
 `docs/publishing.md`, "What is live now".
 
 #### The mental model, load-bearing
