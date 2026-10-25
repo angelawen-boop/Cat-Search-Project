@@ -3,7 +3,7 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 // The footer prints APP_VERSION and its date, so she can tell one build from the next.
 // Numbering, her decision: a whole number for a substantial change, a decimal for a
 // small one, one number per publish. Bump it with the change it describes.
-const APP_VERSION = "1.6";   // the Period test page's own numbering (her name for it), not her app's
+const APP_VERSION = "1.7";   // the Period test page's own numbering (her name for it), not her app's
 const APP_VERSION_DATE = "25 Oct 2026";
 
 // The venue order is VENUE_ORDER, below the list, which sorts MUSEUMS; drawer, chips,
@@ -1864,7 +1864,7 @@ const PERIODS=[
   {key:"american19",name:"19th-century America",span:"c. 1820–1910"},
   {key:"general19",name:"General 19th Century",span:"c. 1800–1900: 19th-century art that is not about one of the movements above"},
   {key:"earlymodern",name:"Early Modernism",span:"c. 1900–1918 (Fauvism, Cubism, Expressionism, Futurism)"},
-  {key:"surrealism",name:"Surrealism/Dada",span:"c. 1915–1950 (Duchamp, Ernst, Dalí, Magritte, Miró)"},
+  {key:"surrealism",name:"Surrealism / Dada",span:"c. 1915–1950 (Duchamp, Ernst, Dalí, Magritte, Miró)"},
   {key:"interwarmod",name:"Interwar Modernism",span:"c. 1918–1945: every style of those years but Surrealism and Dada (Bauhaus, Art Deco, Constructivism, New Objectivity)"},
   {key:"americanmod",name:"American Modernism",span:"c. 1910–1945 (O’Keeffe, Hopper, the Harlem Renaissance)"},
   {key:"abex",name:"Abstract Expressionism",span:"c. 1943–1965"},
@@ -1876,7 +1876,7 @@ const PERIODS=[
   {key:"miscmodern",name:"Miscellaneous Modern",span:"Western art from 1900 on that fits none of the periods above"},
   {key:"nonwestern",name:"Non-Western Art",span:"art from outside the Western tradition that is not ancient"},
 ];
-// A split period's old key (Surrealism/Dada out of Interwar, her decision): a show still under it
+// A split period's old key (Surrealism / Dada out of Interwar, her decision): a show still under it
 // sorts with the period named here and is asked again by Label.
 const PERIOD_RETIRED={interwar:"interwarmod"};
 const PERIOD_RANK=Object.fromEntries([...PERIODS.map((p,i)=>[p.key,i]),...Object.entries(PERIOD_RETIRED).map(([k,to])=>[k,PERIODS.findIndex(p=>p.key===to)])]);
@@ -5022,39 +5022,30 @@ const PALETTES={
          scrim:"rgba(0,0,0,0.6)"},
 };
 // The period scrubber (her design): hidden until she holds a finger on the middle of the right
-// edge; then a ruler of the view's periods, ten rows at a time, the one she is in picked. Sliding
-// moves the pick (the list scrolls at its ends); lifting jumps to that period's divider. A swipe
-// that moves before the hold is an ordinary scroll. Rows never spread out: fewer periods, a
-// shorter ruler.
-const SCRUB_ROW=15.5, SCRUB_ROWS=10, SCRUB_HOLD=300, SCRUB_SLOP=6;
+// edge; then a ruler of every period in the view, the one she is in picked. Sliding moves the
+// pick; lifting jumps to that period's divider. A swipe that moves before the hold is an
+// ordinary scroll. Rows never spread out: fewer periods, a shorter ruler.
+const SCRUB_ROW=15.5, SCRUB_ZONE=155, SCRUB_HOLD=300, SCRUB_SLOP=6;
 function PeriodScrubber({groups,C,onJump}){
   const zone=useRef(null);
-  const[st,setSt]=useState(null); // {start, sel} while open
-  const live=useRef({timer:null,open:false,y0:0,y:0,start:0,sel:0,edge:null});
+  const[sel,setSel]=useState(null); // the picked row while open
+  const live=useRef({timer:null,open:false,y0:0,y:0,sel:0});
   const g=useRef(groups); g.current=groups;
   const jump=useRef(onJump); jump.current=onJump;
-  const n=groups.length, shown=Math.min(n,SCRUB_ROWS), H=shown*SCRUB_ROW;
+  const n=groups.length, H=n*SCRUB_ROW;
   useEffect(()=>{
     const el=zone.current; if(!el)return;
     const L=live.current;
-    const top=()=>window.innerHeight/2-Math.min(g.current.length,SCRUB_ROWS)*SCRUB_ROW/2;
     const pick=()=>{
-      const k=g.current.length, w=Math.min(k,SCRUB_ROWS), row=Math.max(0,Math.min(w-1,Math.floor((L.y-top())/SCRUB_ROW)));
-      L.sel=Math.min(k-1,L.start+row); setSt({start:L.start,sel:L.sel});
-    };
-    const edge=()=>{ // past the ruler's ends the list scrolls a row at a time
-      const k=g.current.length, w=Math.min(k,SCRUB_ROWS), t=top(), dir=L.y<t+SCRUB_ROW*0.5?-1:L.y>t+w*SCRUB_ROW-SCRUB_ROW*0.5?1:0;
-      const next=Math.max(0,Math.min(k-w,L.start+dir));
-      if(next!==L.start){L.start=next;pick();}
+      const k=g.current.length, top=window.innerHeight/2-k*SCRUB_ROW/2;
+      L.sel=Math.max(0,Math.min(k-1,Math.floor((L.y-top)/SCRUB_ROW))); setSel(L.sel);
     };
     const open=()=>{
       L.timer=null; const k=g.current.length; if(!k)return;
       // The period she is in: the last divider above the upper third of the screen.
       let cur=0; const marks=[...document.querySelectorAll("[data-period]")];
       for(const m of marks){ if(m.getBoundingClientRect().top<=window.innerHeight/3){const i=g.current.findIndex(x=>x.key===m.getAttribute("data-period"));if(i>=0)cur=i;} }
-      L.open=true; L.start=Math.max(0,Math.min(k-Math.min(k,SCRUB_ROWS),cur-Math.floor(SCRUB_ROWS/2)+1)); L.sel=cur;
-      setSt({start:L.start,sel:L.sel});
-      L.edge=setInterval(edge,110);
+      L.open=true; L.sel=cur; setSel(cur);
     };
     const down=y=>{ L.y0=L.y=y; clearTimeout(L.timer); L.timer=setTimeout(open,SCRUB_HOLD); };
     const move=(y,ev)=>{
@@ -5063,8 +5054,8 @@ function PeriodScrubber({groups,C,onJump}){
       else if(L.timer&&Math.abs(y-L.y0)>SCRUB_SLOP){ clearTimeout(L.timer); L.timer=null; }
     };
     const up=()=>{
-      clearTimeout(L.timer); L.timer=null; clearInterval(L.edge); L.edge=null;
-      if(L.open){ L.open=false; setSt(null); const x=g.current[L.sel]; if(x)jump.current(x.key); }
+      clearTimeout(L.timer); L.timer=null;
+      if(L.open){ L.open=false; setSel(null); const x=g.current[L.sel]; if(x)jump.current(x.key); }
     };
     const ts=e=>{ if(e.touches.length===1)down(e.touches[0].clientY); };
     const tm=e=>move(e.touches[0].clientY,e);
@@ -5082,14 +5073,14 @@ function PeriodScrubber({groups,C,onJump}){
   if(!n)return null;
   const halo="0 0 3px "+C.bg+",0 0 3px "+C.bg+",0 0 3px "+C.bg;
   return(<>
-    <div ref={zone} data-scrubber="zone" style={{position:"fixed",right:0,top:"50%",transform:"translateY(-50%)",width:16,height:SCRUB_ROWS*SCRUB_ROW,zIndex:997,
+    <div ref={zone} data-scrubber="zone" style={{position:"fixed",right:0,top:"50%",transform:"translateY(-50%)",width:16,height:SCRUB_ZONE,zIndex:997,
       touchAction:"pan-y",userSelect:"none",WebkitUserSelect:"none",WebkitTouchCallout:"none"}}/>
-    {st&&<div data-scrubber="ruler" style={{position:"fixed",right:6,top:"50%",transform:"translateY(-50%)",height:H,overflow:"hidden",zIndex:997,pointerEvents:"none"}}>
+    {sel!==null&&<div data-scrubber="ruler" style={{position:"fixed",right:6,top:"50%",transform:"translateY(-50%)",height:H,overflow:"hidden",zIndex:997,pointerEvents:"none"}}>
       <div style={{position:"absolute",right:0,top:0,bottom:0,width:1,background:C.rule}}/>
-      <div style={{transform:"translateY("+(-st.start*SCRUB_ROW)+"px)"}}>
-        {groups.map((x,i)=>{const on=i===st.sel;return(
+      <div>
+        {groups.map((x,i)=>{const on=i===sel;return(
           <div key={x.key} data-scrub-row={x.key} style={{height:SCRUB_ROW,display:"flex",alignItems:"center",justifyContent:"flex-end",gap:6,whiteSpace:"nowrap"}}>
-            <span style={{fontSize:on?11:9.5,fontWeight:on?700:400,color:on?C.ink:C.soft,opacity:on?1:0.8,textShadow:halo}}>{x.name}</span>
+            <span style={{fontSize:on?11.5:10,fontWeight:on?700:400,color:on?C.ink:C.soft,opacity:on?1:0.8,textShadow:halo}}>{x.name}</span>
             <span style={{width:on?10:6,height:on?2:1,background:on?C.ink:C.soft}}/>
           </div>);})}
       </div>

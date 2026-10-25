@@ -97,9 +97,9 @@ check('PS-016 Label\'s own words: Claude didn\u2019t answer, with the code', H.l
 check('PS-016 unreadable and declined, without telling her what to do', H.labelWhy({code:'invalid_json'})==='Claude\u2019s answer came back unreadable.'&&H.labelWhy({code:'not_granted'})==='You declined to let this page use Claude.');
 check('PS-016 never the lookup\'s "search results"', !/search results/.test(['upstream_error','invalid_json','not_granted','rate_limited',''].map(c=>H.labelWhy({code:c})).join()));
 
-// Surrealism/Dada has its own group (her decision); Interwar Modernism keeps every other style of those years.
+// Surrealism / Dada has its own group (her decision); Interwar Modernism keeps every other style of those years.
 const P=k=>H.PERIODS.find(p=>p.key===k);
-check('PS-017 Surrealism/Dada, her name, right after Early Modernism and before Interwar Modernism', P('surrealism')&&P('surrealism').name==='Surrealism/Dada'&&rank('earlymodern')+1===rank('surrealism')&&rank('surrealism')+1===rank('interwarmod'));
+check('PS-017 Surrealism / Dada, her name, right after Early Modernism and before Interwar Modernism', P('surrealism')&&P('surrealism').name==='Surrealism / Dada'&&rank('earlymodern')+1===rank('surrealism')&&rank('surrealism')+1===rank('interwarmod'));
 check('PS-017 Interwar Modernism no longer names Surrealism or Dada as its own', !/Surrealism,|Dada,|\(Surrealism/.test(P('interwarmod').span)&&/but Surrealism and Dada/.test(P('interwarmod').span));
 const old={museumId:'met',period:'interwar',periodYear:1925,themes:[]};
 check('PS-018 a show labelled Interwar before the split stays under Interwar Modernism until asked again', H.periodLabelled(old)&&H.periodOf(old)==='interwarmod'&&H.periodText(old).startsWith('Interwar Modernism'));

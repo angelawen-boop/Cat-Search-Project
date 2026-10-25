@@ -124,7 +124,10 @@ const until = async (fn, ms = 8000) => { const t = Date.now(); while (Date.now()
     const sel = () => [...ruler().querySelectorAll('[data-scrub-row] span')].filter(x => x.style.fontWeight === '700').map(x => x.textContent);
     const mv = touch('touchmove', top + 15.5 * 1.5); await settle(30);
     ok(sel().join() === 'High Renaissance' && mv.defaultPrevented, 'PR-026: sliding picks the row under her finger, bold and bigger, and the page does not scroll', sel().join());
-    ok(ruler().querySelector('[data-scrub-row]').style.height === '15.5px', 'PR-027: rows 15.5px apart, 20% closer than the mock-up (her ask)');
+    const spans = [...ruler().querySelectorAll('[data-scrub-row] span:first-child')];
+    ok(ruler().querySelector('[data-scrub-row]').style.height === '15.5px' && ruler().style.height === '46.5px'
+      && spans.every(x => x.style.fontSize === (x.style.fontWeight === '700' ? '11.5px' : '10px')),
+      'PR-027: every period shown at once, rows 15.5px apart; names 10px, the picked one 11.5px (her ask)', ruler().style.height + ' ' + spans.map(x => x.style.fontSize).join());
     scrolls.length = 0; touch('touchend'); await settle(60);
     ok(!ruler() && scrolls.length === 1 && scrolls[0].behavior === 'auto', 'PR-028: lifting jumps to that period and the ruler goes', JSON.stringify(scrolls));
     ok(doc.querySelectorAll('[data-period]').length === 3 && !!doc.querySelector('[data-period="highren"]'), 'PR-029: each divider carries its period, to jump to');
