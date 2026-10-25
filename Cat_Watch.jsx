@@ -3,7 +3,7 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 // The footer prints APP_VERSION and its date, so she can tell one build from the next.
 // Numbering, her decision: a whole number for a substantial change, a decimal for a
 // small one, one number per publish. Bump it with the change it describes.
-const APP_VERSION = "2.1";   // the Period test page's own numbering (her name for it), not her app's
+const APP_VERSION = "2.2";   // the Period test page's own numbering (her name for it), not her app's
 const APP_VERSION_DATE = "25 Oct 2026";
 
 // The venue order is VENUE_ORDER, below the list, which sorts MUSEUMS; drawer, chips,
@@ -1869,7 +1869,7 @@ const PERIODS=[
   {key:"interwarmod",name:"Interwar Modernism",span:"c. 1918–1945: every style of those years but Surrealism and Dada (Bauhaus, Art Deco, Constructivism, New Objectivity)"},
   {key:"americanmod",name:"American Modernism",span:"c. 1910–1945 (O’Keeffe, Hopper, the Harlem Renaissance)"},
   {key:"abex",name:"Abstract Expressionism",span:"c. 1943–1965"},
-  {key:"postwareu",name:"Postwar Europe",span:"c. 1945–1980"},
+  {key:"postwareu",name:"Postwar Europe",span:"Europe only, c. 1945–1980"},
   {key:"pop",name:"Pop Art and Minimalism",span:"c. 1955–1980"},
   {key:"general20",name:"General 20th Century",span:"c. 1900–1980: 20th-century art that is not about one of the movements above, self-taught and folk art included"},
   {key:"contemporary",name:"Contemporary",span:"c. 1980 to now"},
@@ -1928,9 +1928,9 @@ const lastLabel=r=>(r&&(r.relabelledAt||r.labelledAt))||"";
 const labelDone=r=>periodLabelled(r)&&Array.isArray(r.themes)&&!PERIOD_RETIRED[r.period];
 const periodYearText=y=>"c. "+(y<0?(-y)+" BC":y);
 const periodText=r=>periodLabelled(r)?[PERIOD_NAME[r.period],periodYearText(r.periodYear),...(r.themes||[]).map(k=>THEME_NAME[k])].join(" · "):"";
-// A straggler's group is decided here, not by Claude: before 1900 Miscellaneous Historic.
-// From 1900 nothing goes to Miscellaneous Modern (her decision): General 20th Century, then Contemporary.
-const miscFor=y=>y<1900?"mischistoric":y<1980?"general20":"contemporary";
+// The two stragglers' groups split at 1900 (her cut-off) — decided here, not by Claude.
+// Claude's Misc answers stand: the bins show what no rule yet files (her decision).
+const miscFor=y=>y<1900?"mischistoric":"miscmodern";
 
 // One artist, one group (her decision): shows about one artist take the group most of
 // them were given; a tie goes to the earlier group. A response show keeps its own.
@@ -1970,11 +1970,12 @@ function periodPrompt(shows){
     "- A recent artist responding to older art, or a show pairing artists of different periods: the period of the OLDER art, with its year, and response true.",
     "- A movement's period only for a show about that movement or its artists. Other 19th-century art: general19.",
     "- A show spanning a long stretch: the period most of its works come from (its heart), with that period's year. Only when the works spread across the centuries with no one period at its heart: surveys, with the midpoint year.",
+    "- A show split evenly between two or three neighbouring periods, with no one heart: the EARLIEST of them, with its year (Ingres and Delacroix: neoclassicism) — never a general or miscellaneous group.",
     "- Ancient art from anywhere (Egypt, Greece, Rome, Mesopotamia): antiquity.",
     "- Art from outside the Western tradition that is not ancient (Asian, Islamic, African, Oceanic, Indigenous): nonwestern.",
     "- Fashion, jewellery, decorative arts, design, architecture, photography and books take a period like any other show: the period whose years and place hold the work, even when the show is not about that movement's artists.",
     "- Other 20th-century art, self-taught and folk art included: general20 (to 1980), then contemporary.",
-    "- Western work before 1900 that fits none of the periods: mischistoric. Use it only when no period's years and place hold the work.",
+    "- Western work that fits none of the periods, not even general19 or general20: mischistoric before 1900, miscmodern from 1900.",
     "- A show about an artist's years in Britain or at the English court (Holbein at the Tudor court, Van Dyck in England): tudor. A general retrospective of such an artist stays in the artist's home period (Holbein: northern; Van Dyck: flemish).",
     "",
     "themes: a list of the keys below for what KIND of thing the show is about — none, one or several. A theme never changes the period.",

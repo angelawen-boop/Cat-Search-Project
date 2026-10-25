@@ -2,17 +2,18 @@
 
 Her trial: code on `claude/period-sort`, published only to its own test page, never her app until she
 says. **Test page:** https://claude.ai/artifact/JeoJyWxJbU9RApY9q4sVni ("Cat Watch Period Test",
-footer "version 2.1"; its own store, separate from her app — `node build/build_app.js` on the branch
+footer "version 2.2"; its own store, separate from her app — `node build/build_app.js` on the branch
 builds it and prints the steps). Tests: `period_sort.js` (PS-), `period_render.js` (PR-), listed in the
 branch's `scraper/fixtures/branch_tests.txt`.
 
 ## Open
 
-- **Built after 2.1, not published (her decision: no publishing until the period groupings are done):**
+- **v2.2 published, her review pending:**
   Tudor / Stuart Britain, General 20th Century, Capriccio and Veduta, and Nature's garden line ("do not
   label Nature just because the show is displayed outdoors or in a garden" — Noguchi; Constable's *views of
   nature* is right, and *The Book of Marvels* under Animals stays, her decisions). They reach a labelled
-  show only when it is relabelled.
+  show only when she relabels it — she relabels selectively, card by card (her way of working: a new
+  rule never moves old labels).
 - **v2.1 published: stage 2, her review pending.** Eleven venues added, picked for kinds of show the first
   seven lacked: MAD, Morgan, British Museum, Menil, Rijksmuseum, Uffizi, Capodimonte, Borghese, Louvre,
   Tate Britain, Wallace. She taps Label (it asks only the new venues' shows) and reviews them under
@@ -79,9 +80,13 @@ branch's `scraper/fixtures/branch_tests.txt`.
   Non-Western Art — shows that cannot file in the chronology, so groups, never themes. Miscellaneous stays as small as possible (her
   decision) — General 19th Century keeps 19th-century shows outside any movement in their place in time,
   General 20th Century (after Pop, before Contemporary; c. 1900–1980, self-taught and folk art included)
-  the 20th century's. From 1900 code sends no show to Miscellaneous Modern: General 20th Century, from 1980
-  Contemporary (PS-009, PS-020). **Both Miscellaneous groups should ultimately be deleted (her view)**; kept
-  for now as bins, to see what loose shows land there while the filing is refined.
+  the 20th century's. No kind of show is named as Misc; Claude's Misc answers stand (code splits them at
+  1900 only), so the bins show what no rule yet files (her decision; PS-009, PS-021). **Both Miscellaneous
+  groups should ultimately be deleted (her view)**; kept for now as bins while the filing is refined.
+- **A show split evenly between neighbouring periods, with no one heart, goes to the earliest** (her
+  decision; Ingres and Delacroix → Neoclassicism, not General 19th Century). **Postwar Europe is Europe
+  only** — Kentucky's Lexington Camera Club (Cincinnati) went there because its description gave only the
+  dates (lookup log); American work of those years outside a movement is General 20th Century.
 - **Tudor / Stuart Britain** (her period), straight after Northern Renaissance, by its 1485 start (her
   decision: the list sorts by start date; long periods overlap later ones, as Dutch Golden Age does Italian
   Baroque). c. 1485–1714; Georgian Britain starts at 1714 (George I), so they meet. A show about an
@@ -115,7 +120,7 @@ branch's `scraper/fixtures/branch_tests.txt`.
   collections, illuminated manuscripts), Capriccio (architectural fantasy of ruins — Hubert Robert, Panini)
   and Veduta (accurate topographical views — Canaletto, Piranesi's *Vedute di Roma*): labels of their own,
   under the Architecture chip, and always with Architecture too — told to Claude and added in code (her
-  decision; PS-019; built after 2.1, not yet published; shows labelled before keep their themes until Relabel). Cloth made for clothes is Fashion (her decision). A
+  decision; PS-019; built after 2.1, published at 2.2; shows labelled before keep their themes until Relabel). Cloth made for clothes is Fashion (her decision). A
   decorative-arts show naming its kinds gets each kind's theme. A theme row of chips under Venue, her
   names and order: Fashion & Jewellery (two labels, one chip, so she can regroup later) · Architecture ·
   Sculpture · Animals · Nature · Photography · Decorative Arts – Hard · Decorative Arts – Soft · Books ·
