@@ -40,11 +40,8 @@ const pick = (venue, interested, n) => hers.rows.filter(r => r.museumId === venu
 const [ng1, ng2] = pick('ng', true, 2);
 const [met1, met2, met3] = pick('met', true, 3);
 const [metGone] = pick('met', false, 1);
-// The trial venues as the page lists them; the Art Institute stays outside them.
-const trial = JSON.parse('[' + fs.readFileSync(path.join(ROOT, 'Cat_Watch.jsx'), 'utf8').match(/const PERIOD_VENUES=new Set\(\[([^\]]*)\]/)[1] + ']');
-const outside = hers.rows.find(r => r.interested && r.museumId === 'artic');
 const label = { [ng1.id]: ['highren', 1510], [met1.id]: ['highren', 1510], [ng2.id]: ['antiquity', -300],
-  [met2.id]: ['impressionism', 1875], [metGone.id]: ['highren', 1500], [outside.id]: ['highren', 1505] };
+  [met2.id]: ['impressionism', 1875], [metGone.id]: ['highren', 1500] };
 const rows = hers.rows.map(r => label[r.id] ? { ...r, period: label[r.id][0], periodYear: label[r.id][1], themes: [] } : r);
 const FILE = JSON.stringify({ ...hers, rows });
 
@@ -86,6 +83,8 @@ const until = async (fn, ms = 8000) => { const t = Date.now(); while (Date.now()
   const cards = () => [...doc.querySelectorAll('article')];
   const click = el => el.dispatchEvent(new win.MouseEvent('click', { bubbles: true }));
   const has = (el, r) => el.textContent.includes(r.title);
+  // Exact title: Zurbarán at the NG and the Art Institute's "Zurbarán: Divine Light" both contain "Zurbarán".
+  const is = (el, r) => el.querySelector('h3').textContent.trim() === r.title;
   const chipBtnSort = t => [...doc.querySelectorAll('button')].find(b => b.textContent.replace(/[\u2191\u2193 ]+$/, '') === t);
   try {
     const input = doc.querySelector('input[type=file][accept=".json"]');
@@ -102,7 +101,7 @@ const until = async (fn, ms = 8000) => { const t = Date.now(); while (Date.now()
       'PR-018: a Theme row of her chips, in her order', themeRow && themeRow.parentNode.textContent);
     click(period); await settle(150);
     const c = cards();
-    ok(c.length === 4, 'PR-002: only labelled, not-dismissed shows at the trial venues (4)', String(c.length));
+    ok(c.length === 4, 'PR-002: only labelled, not-dismissed shows (4)', String(c.length));
     ok(c.length === 4 && has(c[0], ng2) && has(c[1], met1) && has(c[2], ng1) && has(c[3], met2),
       'PR-003: Antiquity, then High Renaissance (a tie in her venue order: Met before NG), then Impressionism',
       c.map(x => x.textContent.slice(0, 40)).join(' | '));
@@ -141,8 +140,8 @@ const until = async (fn, ms = 8000) => { const t = Date.now(); while (Date.now()
     scrolls.length = 0; touch('touchend'); await settle(60);
     ok(!ruler() && scrolls.length === 1 && scrolls[0].behavior === 'auto', 'PR-028: lifting jumps to that period and the ruler goes', JSON.stringify(scrolls));
     ok(doc.querySelectorAll('[data-period]').length === 3 && !!doc.querySelector('[data-period="highren"]'), 'PR-029: each divider carries its period, to jump to');
-    const unlabelled = rows.filter(x => trial.includes(x.museumId) && !x.period).length;
-    const shownAfter = rows.filter(x => trial.includes(x.museumId) && x.interested).length;
+    const unlabelled = rows.filter(x => !x.period).length;
+    const shownAfter = rows.filter(x => x.interested).length;
     failNext = 1e6;   // Claude refuses every question: nothing labelled, and her line says so
     click([...doc.querySelectorAll('button')].find(b => b.textContent === 'Label'));
     await until(() => /Label: 0 of/.test(doc.body.textContent));
@@ -154,16 +153,16 @@ const until = async (fn, ms = 8000) => { const t = Date.now(); while (Date.now()
     click([...doc.querySelectorAll('button')].find(b => b.textContent === 'Label'));
     await until(() => cards().length === shownAfter && /Label: all/.test(doc.body.textContent));
     ok(asked.slice(1).reduce((a, b) => a + b, 0) === unlabelled && asked.every(n => n <= 40) && asked[0] === asked[1],
-      `PR-007: Label asks about every unlabelled show at the trial venues, dismissed included (${unlabelled}), 40 at a time; a failed batch is asked again`, asked.join(','));
+      `PR-007: Label asks about every unlabelled show at every venue (stage 3), dismissed included (${unlabelled}), 40 at a time; a failed batch is asked again`, asked.join(','));
     ok(doc.body.textContent.includes(`Label: all ${unlabelled} exhibitions labelled.`), 'PR-012: after a full run her line says every show was labelled');
-    ok(cards().length === shownAfter, `PR-008: after Label, Period shows every not-dismissed show at the trial venues (${shownAfter})`, String(cards().length));
+    ok(cards().length === shownAfter, `PR-008: after Label, Period shows every not-dismissed show (${shownAfter})`, String(cards().length));
     // Recently labelled (her ask): this run's shows first, then the shows labelled before the sort existed.
     click(chipBtnSort('Recently labelled')); await settle(150);
     const before_ = (el, other) => !!(el.compareDocumentPosition(other) & win.Node.DOCUMENT_POSITION_FOLLOWING);
     const band = t => [...doc.querySelectorAll('span')].find(x => x.textContent === t);
     const thisBand = band('This labelling'), s1Band = band('Stage 1');
     const inThis = cards().filter(a => thisBand && s1Band && before_(thisBand, a) && before_(a, s1Band));
-    ok(!!thisBand && !!s1Band && inThis.length === shownAfter - 4 && !inThis.some(a => [ng1, ng2, met1, met2].some(x => has(a, x))),
+    ok(!!thisBand && !!s1Band && inThis.length === shownAfter - 4 && !inThis.some(a => [ng1, ng2, met1, met2].some(x => is(a, x))),
       'PR-032: Recently labelled puts this Label run\'s shows under "This labelling", the earlier ones under "Stage 1"', inThis.length + ' of ' + (shownAfter - 4));
     click(chipBtnSort('Period')); await settle(150); click(chipBtnSort('Period')); await settle(150);   // back to Period, reversed as before
     const fin = cards();
@@ -173,7 +172,7 @@ const until = async (fn, ms = 8000) => { const t = Date.now(); while (Date.now()
     click([...first.querySelectorAll('button')].find(b => /Catalogue|Hide/.test(b.textContent)));
     await until(() => [...cards()[0].querySelectorAll('button')].some(b => b.textContent === 'Relabel'));
     const rb = [...cards()[0].querySelectorAll('button')].find(b => b.textContent === 'Relabel');
-    ok(!!rb, 'PR-014: the drawer of a trial-venue card has Relabel');
+    ok(!!rb, 'PR-014: the drawer of a card has Relabel');
     relabelNext = true; const nAsked = asked.length;
     click(rb);
     await until(() => /Relabelled: High Renaissance/.test(doc.body.textContent));
@@ -207,7 +206,7 @@ const until = async (fn, ms = 8000) => { const t = Date.now(); while (Date.now()
     ok(showRow.indexOf('Recently labelled') === showRow.indexOf('Dismissed') + 1, 'PR-034: the Recently labelled filter sits after Dismissed on the Showing line', showRow.join());
     click([...showing.parentNode.querySelectorAll('button')].find(b => b.textContent === 'Recently labelled')); await settle(150);
     const run = cards();
-    ok(run.length === shownAfter - 4 && !run.some(a => [ng1, ng2, met1, met2].some(x => has(a, x)))
+    ok(run.length === shownAfter - 4 && !run.some(a => [ng1, ng2, met1, met2].some(x => is(a, x)))
       && !!doc.querySelector('[data-period="baroque"]'),
       'PR-034: with Period, it shows only the last Label run under its period dividers; a stage 1 show relabelled stays out', run.length + ' of ' + (shownAfter - 4));
     click([...showing.parentNode.querySelectorAll('button')].find(b => b.textContent === 'Recently labelled')); await settle(150);
@@ -220,11 +219,11 @@ const until = async (fn, ms = 8000) => { const t = Date.now(); while (Date.now()
     Object.defineProperty(csvIn, 'files', { value: [new win.File([csv], 'sweep.csv', { type: 'text/csv' })], configurable: true });
     csvIn.dispatchEvent(new win.Event('change', { bubbles: true }));
     await until(() => /Baroque · c\. 1650/.test(doc.body.textContent));
-    ok(asked.length === before + 1 && asked[before] === 1, 'PR-010: an import asks once, about the new show at a trial venue only', asked.slice(before).join(','));
+    ok(asked.length === before + 1 && asked[before] === 2, 'PR-010: an import asks once, about every new show, at any venue', asked.slice(before).join(','));
     const card = [...doc.querySelectorAll('[id^="prop-"]')];
     ok(card.length === 2 && /Period:\s*Italian Baroque · c\. 1650/.test(card.find(x => x.textContent.includes('Nobody Has Seen')).textContent)
-      && !/Period:/.test(card.find(x => x.textContent.includes('Another New Show')).textContent),
-      'PR-011: the new Met show\'s card shows its period; the Art Institute\'s shows none', card.map(x => x.textContent.slice(0, 200)).join(' | '));
+      && /Period:\s*Italian Baroque · c\. 1650/.test(card.find(x => x.textContent.includes('Another New Show')).textContent),
+      'PR-011: every new show\'s card shows its period, the Art Institute\'s included (stage 3)', card.map(x => x.textContent.slice(0, 200)).join(' | '));
     ok(!shouted.some(s => /Error|Warning/.test(s)), 'PR-006: nothing written to the console as an error', shouted.slice(0, 2).join(' | '));
   } catch (e) {
     fail++; console.log('FAIL  the suite threw: ' + (e && e.stack || e));

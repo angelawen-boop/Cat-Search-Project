@@ -281,7 +281,7 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
     await click(button(card(miller.title), /^Re-check museum shop$/));
     const t = card(miller.title).textContent;
     ok(/Re-check didn’t run/.test(t), 'R-008: a refused connector says the re-check didn’t run', t.slice(0, 300));
-    ok(/Re-check didn’t run — The search service didn’t answer\. Worth one more try in a moment\.$/.test(t) && !/Nothing changed/.test(t), 'R-009:   and the line stops at the reason', t.slice(-200));
+    ok(/Re-check didn’t run — The search service didn’t answer\. Worth one more try in a moment\.(Relabel)?$/.test(t) && !/Nothing changed/.test(t), 'R-009:   and the line stops at the reason', t.slice(-200));
     ok(/Back in the museum shop\./.test(t) && !/No longer/.test(t), 'R-010: the status is exactly as before, not red');
   }
 
@@ -323,12 +323,13 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
   // ── R-011c: SEARCH AGAIN THAT DIDN'T RUN says so on the card, in
   // Re-check's words — her ask, 30 Sep. And the diagnostic's copy icon says
   // whether the copy happened, tick or cross, no words (R-011d, R-011e).
+  // A drawer's last line is Relabel (the Period trial), after the reason.
   {
     script.mcp = () => { throw refused('server_unavailable'); };
     script.sample = () => { throw new Error('Claude must not be asked when the connector refused'); };
     await click(button(card(miller.title), /^Search again$/));
     const t = card(miller.title).textContent;
-    ok(/Search again didn’t run — The search service didn’t answer\. Worth one more try in a moment\.$/.test(t),
+    ok(/Search again didn’t run — The search service didn’t answer\. Worth one more try in a moment\.(Relabel)?$/.test(t),
       'R-011c: a Search again that didn’t run says so on the card', t.slice(-200));
     ok(!/Catalogue search failed/.test(win.document.body.textContent),
       'R-011c:   and no red banner at the top of the page — her ruling, 30 Sep');

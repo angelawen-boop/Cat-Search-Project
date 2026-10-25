@@ -492,7 +492,9 @@ function runtime() {
 
   const showFetches = calls.filter(c => c.kind === 'mcp' && c.tool === 'web_fetch' && (P[c.args.urls[0]] || c.args.urls[0] === REFUSED || c.args.urls[0] === EMPTY));
   ok(showFetches.length === 12, 'AL-003: twelve different links, the repeated RA one read once — twelve page reads', showFetches.length);
-  ok(calls.filter(c => c.kind === 'sample').length === 10, 'AL-003a:  and one Claude call per page that read, ten', calls.filter(c => c.kind === 'sample').length);
+  // The Period trial's labelling question about the new cards is not a page read.
+  const reads = calls.filter(c => c.kind === 'sample' && !/name the art period/.test(c.prompt || ''));
+  ok(reads.length === 10, 'AL-003a:  and one Claude call per page that read, ten', reads.length);
 
   // ── AL-004: each card's title and dates — read by code ────────────────────
   const adds = buttons(/Add new entry$/);

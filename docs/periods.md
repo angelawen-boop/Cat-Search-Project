@@ -2,12 +2,18 @@
 
 Her trial: code on `claude/period-sort`, published only to its own test page, never her app until she
 says. **Test page:** https://claude.ai/artifact/JeoJyWxJbU9RApY9q4sVni ("Cat Watch Period Test",
-footer "version 2.2"; its own store, separate from her app — `node build/build_app.js` on the branch
+footer "version 3"; its own store, separate from her app — `node build/build_app.js` on the branch
 builds it and prints the steps). Tests: `period_sort.js` (PS-), `period_render.js` (PR-), listed in the
 branch's `scraper/fixtures/branch_tests.txt`.
 
 ## Open
 
+- **v3 published: stage 3, the whole ledger** (her decision, after signing off stage 2). Every venue, link
+  venues included, is labelled and shown by Period; no venue list is left (`PERIOD_VENUES` removed). Label
+  asks only shows not yet labelled; she reviews with the Recently labelled filter. Before stage 3 her main
+  app's ledger and the test page's were compared by script: the same 1,029 shows, three marks apart, which she
+  settled by hand. Bringing the labels into her app later is a script's job: copy them by show id onto
+  whatever her main ledger holds then.
 - **v2.2 published, her review pending:**
   Tudor / Stuart Britain, General 20th Century, Capriccio and Veduta, and Nature's garden line ("do not
   label Nature just because the show is displayed outdoors or in a garden" — Noguchi; Constable's *views of
@@ -64,8 +70,8 @@ branch's `scraper/fixtures/branch_tests.txt`.
 
 - **A sort called Period**, the third sort chip, after Venue (her decision): shows with a period at the trial venues, not
   dismissed, with a divider naming each group. A second tap reverses, as Date does.
-- **Trial venues (her choice):** stage 1 the Met, NG UK, Orsay, Accademia (Venice), V&A, Tate Modern,
-  Cincinnati; stage 2 the eleven above — `PERIOD_VENUES`.
+- **Venues, in stages (her choice):** stage 1 the Met, NG UK, Orsay, Accademia (Venice), V&A, Tate Modern,
+  Cincinnati; stage 2 the eleven above; stage 3 every venue.
 - **Order:** the group's place in `PERIODS`; within a group, response shows last, then the year of the
   art (never the exhibition's dates), then her venue order for a tie (two Monet shows).
 - **The list's order is her centre-of-gravity rule:** Italy first only where two periods compete

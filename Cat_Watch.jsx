@@ -3,7 +3,7 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 // The footer prints APP_VERSION and its date, so she can tell one build from the next.
 // Numbering, her decision: a whole number for a substantial change, a decimal for a
 // small one, one number per publish. Bump it with the change it describes.
-const APP_VERSION = "2.2";   // the Period test page's own numbering (her name for it), not her app's
+const APP_VERSION = "3";   // the Period test page's own numbering (her name for it), not her app's
 const APP_VERSION_DATE = "25 Oct 2026";
 
 // The venue order is VENUE_ORDER, below the list, which sorts MUSEUMS; drawer, chips,
@@ -1884,10 +1884,6 @@ const PERIOD_RETIRED={interwar:"interwarmod"};
 const PERIOD_RANK=Object.fromEntries([...PERIODS.map((p,i)=>[p.key,i]),...Object.entries(PERIOD_RETIRED).map(([k,to])=>[k,PERIODS.findIndex(p=>p.key===to)])]);
 const PERIOD_NAME=Object.fromEntries([...PERIODS.map(p=>[p.key,p.name]),...Object.entries(PERIOD_RETIRED).map(([k,to])=>[k,PERIODS.find(p=>p.key===to).name])]);
 const periodKey=k=>PERIOD_RETIRED[k]||k;
-// The trial's venues (her choice): only their shows are labelled and shown by Period.
-// Stage 1 the first seven; stage 2 the next eleven (docs/periods.md).
-const PERIOD_VENUES=new Set(["met","ng","orsay","dellav","va","tate-modern","cincinnati",
-  "mad","morgan","brit","menil","rijks","uffizi","capo","borghese","louvre","tate-britain","wallace"]);
 const PERIOD_BATCH=40;
 
 // THEMES (her design): a show of a kind of thing still sits in its period; its themes are
@@ -5213,9 +5209,9 @@ const LedgerCard=React.memo(function LedgerCard({r,mu,isOpen,isBusy,busy,recheck
               </>}/>
           )}
           {/* Relabel, on its own line at the foot of the drawer (her design; the Period trial). */}
-          {PERIOD_VENUES.has(r.museumId)&&<div style={{marginTop:10}}>
+          <div style={{marginTop:10}}>
             <button onClick={()=>act("relabel",r.id)} disabled={busy||relabelling} style={{background:"none",border:"none",color:C.soft,fontSize:10.5,textDecoration:"underline",cursor:"pointer",padding:0}}>{relabelling?"Relabelling\u2026":"Relabel"}</button>
-          </div>}
+          </div>
         </div>
       )}
     </article>
@@ -5974,12 +5970,12 @@ export default function App(){
   }
 
 
-  // A new show at a trial venue gets its period while she reviews the cards: one ask for
+  // Every new show gets its period while she reviews the cards: one ask for
   // the import, written onto the card (docs/periods.md). A miss leaves the card without
   // one, for Label to fill later.
   async function labelCards(props){
     const shows=[];
-    props.forEach((p,i)=>{ if(p.type==="add"&&PERIOD_VENUES.has(p.cand.museumId))shows.push(periodShow(i,p.cand)); });
+    props.forEach((p,i)=>{ if(p.type==="add")shows.push(periodShow(i,p.cand)); });
     if(!shows.length)return;
     const tape=tapeStart("Label import cards",{title:shows.length+" new shows"});
     const {labels,batches}=await labelPeriods(shows);
@@ -5988,12 +5984,12 @@ export default function App(){
     const at=new Date().toISOString();
     if(labels.size)setProposals(cur=>cur!==props?cur:props.map((p,i)=>labels.has(i)?{...p,cand:{...p.cand,...labels.get(i),labelledAt:at}}:p));
   }
-  // Label: every show at a trial venue with no period or no themes yet, dismissed ones
+  // Label: every show (stage 3: the whole ledger, her decision) with no period or no themes yet, dismissed ones
   // included. Fills only; a labelled show is never relabelled. Not an edit of hers: editedAt stays.
   async function labelLedger(){
     if(busy||roStop())return;
-    const todo=rows.filter(r=>PERIOD_VENUES.has(r.museumId)&&!labelDone(r));
-    if(!todo.length){ setLabelSaid({ok:true,text:"Label: every exhibition at the trial venues already has a period."}); return; }
+    const todo=rows.filter(r=>!labelDone(r));
+    if(!todo.length){ setLabelSaid({ok:true,text:"Label: every exhibition already has a period."}); return; }
     setBusy(true); setLabelSaid(null); setProg({done:0,total:todo.length,label:"Labelling periods\u2026"});
     // Each run is one record in the lookup log: every question, Claude's answer, each batch's outcome.
     const tape=tapeStart("Label periods",{title:todo.length+" exhibitions"});
@@ -6520,8 +6516,8 @@ export default function App(){
       if(watchedF&&!r.watching)return false;
       // Recently labelled: the shows of the newest Label run or import; a Relabel keeps its show in its run.
       if(labelledF&&(!newestRun||r.labelledAt!==newestRun))return false;
-      // Period shows only labelled shows at the trial venues (her decision).
-      if(sortBy==="period"&&!pinTouched&&!(PERIOD_VENUES.has(r.museumId)&&periodLabelled(r)))return false;
+      // Period shows only labelled shows.
+      if(sortBy==="period"&&!pinTouched&&!periodLabelled(r))return false;
       // Acquiring filters stack as AND across the three axes, OR within an axis.
       if(acqWanted||acqOwned){if(!((acqWanted&&r.acquiring==="yes")||(acqOwned&&r.acquiring==="acquired")))return false;}
       if(acq3mo||acq6mo){if(!((acq3mo&&t==="closing")||(acq6mo&&(t==="urgent"||t==="lapsed"))))return false;}
@@ -6613,7 +6609,7 @@ export default function App(){
         {p.type==="add"&&<div style={{fontSize:11.5,color:C.ink,lineHeight:1.5}}>
           <div style={{fontWeight:700,marginBottom:3}}>{"New show \u2014 not in your ledger yet."}</div>
           {infoRow("Dates",dateRange(p.cand))}
-          {PERIOD_VENUES.has(p.cand.museumId)&&infoRow("Period",periodText(p.cand))}
+          {infoRow("Period",periodText(p.cand))}
           {infoRow("Description",p.cand.summary)}
           {infoRow("Link",p.cand.exUrl&&<a href={p.cand.exUrl} target="_blank" rel="noopener noreferrer" style={{color:C.ink}}>{p.cand.exUrl}</a>)}
         </div>}
