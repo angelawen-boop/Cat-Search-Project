@@ -5023,16 +5023,19 @@ const PALETTES={
 };
 // The period scrubber (her design): hidden until she holds a finger on the middle of the right
 // edge; then a ruler of every period in the view on a pale panel, the one she is in picked. Sliding moves the
-// pick; lifting jumps to that period's divider. A swipe that moves before the hold is an
+// pick, read from the rows as laid out before the bulge so it never pushes the pick on; lifting
+// jumps to that period's divider. A swipe that moves before the hold is an
 // ordinary scroll. Rows never spread out: fewer periods, a shorter ruler.
-const SCRUB_ROW=15.5, SCRUB_ZONE=155, SCRUB_HOLD=300, SCRUB_SLOP=6;
+const SCRUB_ROW=15.5, SCRUB_BULGE=28, SCRUB_ZONE=155, SCRUB_HOLD=300, SCRUB_SLOP=6;
+// The picked name bulges in place (her design): bigger, its row opened up; the others at 10px.
+const scrubName=on=>on?{fontSize:18,fontWeight:700,lineHeight:"24px",borderRadius:13,padding:"0 9px"}:{fontSize:10,fontWeight:400,lineHeight:"14px",borderRadius:9,padding:"0 6px"};
 function PeriodScrubber({groups,C,onJump}){
   const zone=useRef(null);
   const[sel,setSel]=useState(null); // the picked row while open
   const live=useRef({timer:null,open:false,y0:0,y:0,sel:0});
   const g=useRef(groups); g.current=groups;
   const jump=useRef(onJump); jump.current=onJump;
-  const n=groups.length, H=n*SCRUB_ROW;
+  const n=groups.length;
   useEffect(()=>{
     const el=zone.current; if(!el)return;
     const L=live.current;
@@ -5076,13 +5079,17 @@ function PeriodScrubber({groups,C,onJump}){
       touchAction:"pan-y",userSelect:"none",WebkitUserSelect:"none",WebkitTouchCallout:"none"}}/>
     {sel!==null&&<div data-scrubber="panel" style={{position:"fixed",right:4,top:"50%",transform:"translateY(-50%)",zIndex:997,pointerEvents:"none",
       background:C.card+"DB",backdropFilter:"blur(3px)",WebkitBackdropFilter:"blur(3px)",border:"1px solid "+C.rule,borderRadius:10,padding:"8px 6px 8px 8px"}}>
-      <div data-scrubber="ruler" style={{position:"relative",height:H}}>
+      <div data-scrubber="ruler" style={{position:"relative"}}>
         <div style={{position:"absolute",right:0,top:0,bottom:0,width:1,background:C.rule}}/>
         {groups.map((x,i)=>{const on=i===sel;return(
-          <div key={x.key} data-scrub-row={x.key} style={{height:SCRUB_ROW,display:"flex",alignItems:"center",justifyContent:"flex-end",gap:6,whiteSpace:"nowrap"}}>
-            <span style={{fontSize:on?11.5:10,fontWeight:on?700:400,color:on?C.onAction:C.soft,background:on?C.action:"none",borderRadius:9,padding:"0 6px",lineHeight:"14px"}}>{x.name}</span>
+          <div key={x.key} data-scrub-row={x.key} style={{height:on?SCRUB_BULGE:SCRUB_ROW,display:"flex",alignItems:"center",justifyContent:"flex-end",gap:6,whiteSpace:"nowrap",transition:"height 0.12s"}}>
+            <span style={{...scrubName(on),color:on?C.onAction:C.soft,background:on?C.action:"none",transition:"font-size 0.12s"}}>{x.name}</span>
             <span style={{width:on?10:6,height:on?2:1,background:on?C.ink:C.soft}}/>
           </div>);})}
+        {/* The panel is always as wide as its widest name bulged (her decision): a hidden copy of each sets it. */}
+        <div aria-hidden="true" data-scrubber="sizer" style={{height:0,overflow:"hidden",visibility:"hidden",paddingRight:16}}>
+          {groups.map(x=><div key={x.key} style={{whiteSpace:"nowrap"}}><span style={scrubName(true)}>{x.name}</span></div>)}
+        </div>
       </div>
     </div>}
   </>);

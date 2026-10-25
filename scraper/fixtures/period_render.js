@@ -1,7 +1,7 @@
 /**
  * THE PERIOD SORT ON THE REAL PAGE (her trial; docs/periods.md). Renders the page in jsdom
  * on her 24 Sep ledger with periods written onto a few rows, taps Period, and reads the
- * cards and dividers. Cases PR-001 to PR-030.
+ * cards and dividers. Cases PR-001 to PR-031.
  *
  *   node scraper/fixtures/period_render.js
  */
@@ -125,9 +125,13 @@ const until = async (fn, ms = 8000) => { const t = Date.now(); while (Date.now()
     const mv = touch('touchmove', top + 15.5 * 1.5); await settle(30);
     ok(sel().join() === 'High Renaissance' && mv.defaultPrevented, 'PR-026: sliding picks the row under her finger, bold and bigger, and the page does not scroll', sel().join());
     const spans = [...ruler().querySelectorAll('[data-scrub-row] span:first-child')];
-    ok(ruler().querySelector('[data-scrub-row]').style.height === '15.5px' && ruler().style.height === '46.5px'
-      && spans.every(x => x.style.fontSize === (x.style.fontWeight === '700' ? '11.5px' : '10px')),
-      'PR-027: every period shown at once, rows 15.5px apart; names 10px, the picked one 11.5px (her ask)', ruler().style.height + ' ' + spans.map(x => x.style.fontSize).join());
+    const rowsNow = [...ruler().querySelectorAll('[data-scrub-row]')];
+    ok(rowsNow.length === 3 && rowsNow.every(x => x.style.height === (x.querySelector('span').style.fontWeight === '700' ? '28px' : '15.5px'))
+      && spans.every(x => x.style.fontSize === (x.style.fontWeight === '700' ? '18px' : '10px')),
+      'PR-027: every period shown at once; rows 15.5px apart, names 10px; the picked one bulges in place, 18px on a 28px row (her design)', rowsNow.map(x => x.style.height).join() + ' ' + spans.map(x => x.style.fontSize).join());
+    const sizer = doc.querySelector('[data-scrubber="sizer"]');
+    ok(!!sizer && sizer.querySelectorAll('span').length === 3 && [...sizer.querySelectorAll('span')].every(x => x.style.fontSize === '18px'),
+      'PR-031: the panel is sized by every name at its bulged size, so it never changes width as she slides');
     const panel = doc.querySelector('[data-scrubber="panel"]'), picked = spans.find(x => x.style.fontWeight === '700');
     ok(!!panel && /^(#|rgb)/.test(panel.style.background) && !!picked && picked.style.background !== 'none' && picked.style.background !== '',
       'PR-030: the ruler sits on a pale panel and the picked period has a colour behind it (her ask)', panel && panel.style.background);
