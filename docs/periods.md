@@ -96,7 +96,10 @@ branch's `scraper/fixtures/branch_tests.txt`.
   (furniture, ceramics, glass, silver; not books or manuscripts), Decorative Arts – Soft (wallpaper, carpet,
   textiles, chintz, soft furnishings, interior design; the catch-all when a show says only "decorative arts";
   not dress silks or other cloth for clothes), Books (rare books,
-  collections, illuminated manuscripts). Cloth made for clothes is Fashion (her decision). A
+  collections, illuminated manuscripts), Capriccio (architectural fantasy of ruins — Hubert Robert, Panini)
+  and Veduta (accurate topographical views — Canaletto, Piranesi's *Vedute di Roma*): labels of their own,
+  under the Architecture chip, and always with Architecture too — told to Claude and added in code (her
+  decision; PS-019; built after 2.1, not yet published; shows labelled before keep their themes until Relabel). Cloth made for clothes is Fashion (her decision). A
   decorative-arts show naming its kinds gets each kind's theme. A theme row of chips under Venue, her
   names and order: Fashion & Jewellery (two labels, one chip, so she can regroup later) · Architecture ·
   Sculpture · Animals · Nature · Photography · Decorative Arts – Hard · Decorative Arts – Soft · Books ·

@@ -90,6 +90,9 @@ check('PS-013 a show with two themes is under both chips', H.themeMatch({themes:
 check('PS-013 Ex-themes: every show with no theme, Surveys and Non-Western Art included', H.themeMatch({period:'surveys',themes:[]},pk('exthemes'))&&H.themeMatch({period:'nonwestern',themes:[]},pk('exthemes'))&&!H.themeMatch({themes:['books']},pk('exthemes')));
 check('PS-013 a show never asked about themes is under no chip, Ex-themes included', !H.themeMatch({period:'gothic'},pk('exthemes'))&&!H.themeMatch({},pk('books')));
 check('PS-013 every theme has a chip', H.THEMES.every(t=>H.THEME_CHIPS.some(([c])=>c===t.chip)));
+const cv=H.periodAnswers({labels:[{i:0,period:'rococo',year:1780,themes:['capriccio']},{i:1,period:'latevenetian',year:1740,themes:['veduta','capriccio','architecture']}]});
+check('PS-019 Hubert Robert: capriccio brings architecture with it, once (her decision)', cv.get(0).themes.join()==='capriccio,architecture'&&cv.get(1).themes.join()==='veduta,capriccio,architecture');
+check('PS-019 capriccio and veduta file under the Architecture chip', H.themeMatch({themes:['capriccio']},pk('architecture'))&&H.themeMatch({themes:['veduta']},pk('architecture'))&&H.periodPrompt([]).includes('AND architecture'));
 check('PS-014 the label reads its themes after the year', H.periodText({period:'rococo',periodYear:1750,themes:['dechard','books']})==='Rococo · c. 1750 · Decorative Arts – Hard · Books');
 check('PS-014 a show labelled before themes is asked again', !H.labelDone({period:'rococo',periodYear:1750})&&H.labelDone({period:'rococo',periodYear:1750,themes:[]}));
 check('PS-015 her waits: 15 seconds, then a minute; a minute before the last go', H.LABEL_WAITS.retry.join()==='15000,60000'&&H.LABEL_WAITS.lastGo===60000);

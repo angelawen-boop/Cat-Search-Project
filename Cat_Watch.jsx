@@ -1895,6 +1895,8 @@ const THEMES=[
   {key:"fashion",name:"Fashion",chip:"fashion",rule:"clothes, dress, costume, and cloth made for clothes"},
   {key:"jewellery",name:"Jewellery",chip:"fashion",rule:"jewellery"},
   {key:"architecture",name:"Architecture",chip:"architecture",rule:"buildings and architects"},
+  {key:"capriccio",name:"Capriccio",chip:"architecture",rule:"capriccio: an architectural fantasy combining real or invented ruins in an imaginary arrangement (Hubert Robert, Panini); ruin painting"},
+  {key:"veduta",name:"Veduta",chip:"architecture",rule:"veduta: an accurate topographical view of a city or place (Canaletto; Piranesi's Vedute di Roma)"},
   {key:"sculpture",name:"Sculpture",chip:"sculpture",rule:"sculpture"},
   {key:"animals",name:"Animals",chip:"animals",rule:"animals: dogs, cats, horses, birds, mythical creatures"},
   {key:"nature",name:"Nature",chip:"nature",rule:"trees, plants, flowers, botanical drawings of them, gardens, clouds; NOT landscape painting in general, NOT still life, NOT animals (those are animals)"},
@@ -1971,6 +1973,7 @@ function periodPrompt(shows){
     "",
     "themes: a list of the keys below for what KIND of thing the show is about — none, one or several. A theme never changes the period.",
     ...THEMES.map(t=>"  "+t.key+" — "+t.rule),
+    "- capriccio or veduta (one or both): give it AND architecture (Hubert Robert: capriccio, architecture).",
     "- A decorative-arts show whose description names its kinds gets the theme of each kind named (ceramics and furniture: dechard; furnishings: decsoft).",
     "- A show of paintings or drawings in general gets no theme unless its subject is one of the above (a show of horse paintings: animals).",
     "",
@@ -1995,6 +1998,8 @@ function periodAnswers(data){
     if(!Number.isInteger(i)||PERIOD_RANK[k]===undefined||PERIOD_RETIRED[k]||!Number.isInteger(y)||y<-5000||y>2100||!Array.isArray(x.themes))continue;
     if(k==="mischistoric"||k==="miscmodern")k=miscFor(y);
     const themes=[...new Set(x.themes.map(t=>String(t||"").trim().toLowerCase()).filter(t=>THEME_KEYS.has(t)))];
+    // Capriccio and veduta always come with architecture (her decision).
+    if((themes.includes("capriccio")||themes.includes("veduta"))&&!themes.includes("architecture"))themes.push("architecture");
     const artist=typeof x.artist==="string"?x.artist.trim().slice(0,120):"";
     out.set(i,{period:k,periodYear:y,periodResponse:x.response===true,periodArtist:artist,themes});
   }
