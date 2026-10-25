@@ -3,7 +3,7 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 // The footer prints APP_VERSION and its date, so she can tell one build from the next.
 // Numbering, her decision: a whole number for a substantial change, a decimal for a
 // small one, one number per publish. Bump it with the change it describes.
-const APP_VERSION = "3.1";   // the Period test page's own numbering (her name for it), not her app's
+const APP_VERSION = "3.2";   // the Period test page's own numbering (her name for it), not her app's
 const APP_VERSION_DATE = "25 Oct 2026";
 
 // The venue order is VENUE_ORDER, below the list, which sorts MUSEUMS; drawer, chips,
@@ -1902,7 +1902,7 @@ const THEMES=[
   {key:"photography",name:"Photography",chip:"photography",rule:"photography"},
   {key:"dechard",name:"Decorative Arts – Hard",chip:"dechard",rule:"hard decorative objects: furniture, ceramics, porcelain, glass, silver, metalwork; NOT books or manuscripts (those are books)"},
   {key:"decsoft",name:"Decorative Arts – Soft",chip:"decsoft",rule:"soft decorative arts: wallpaper, carpets, drapery, fabric (chintz), soft furnishings, textiles, interior design; also a show described only as \"decorative arts\", naming no kinds; NOT cloth for clothes, such as dress silks (that is fashion)"},
-  {key:"books",name:"Books",chip:"books",rule:"rare books, book collections, illuminated manuscripts"},
+  {key:"books",name:"Books",chip:"books",rule:"rare books, book collections, illuminated manuscripts, and albums: a collector's book of drawings or prints, bound together (Vasari's Book of Drawings)"},
 ];
 const THEME_KEYS=new Set(THEMES.map(t=>t.key));
 const THEME_NAME=Object.fromEntries(THEMES.map(t=>[t.key,t.name]));

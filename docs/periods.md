@@ -2,12 +2,14 @@
 
 Her trial: code on `claude/period-sort`, published only to its own test page, never her app until she
 says. **Test page:** https://claude.ai/artifact/JeoJyWxJbU9RApY9q4sVni ("Cat Watch Period Test",
-footer "version 3.1"; its own store, separate from her app — `node build/build_app.js` on the branch
+footer "version 3.2"; its own store, separate from her app — `node build/build_app.js` on the branch
 builds it and prints the steps). Tests: `period_sort.js` (PS-), `period_render.js` (PR-), listed in the
 branch's `scraper/fixtures/branch_tests.txt`.
 
 ## Open
 
+- **v3.2 published, the last on the test page:** Books takes albums — "a collector's book of drawings or prints,
+  bound together" (Vasari's *Book of Drawings*, which Relabel kept unthemed under the old rule; PS-023).
 - **v3.1 published:** Postwar America (America only, c. 1945–1980, outside Abstract Expressionism and Pop —
   Wyeth, Arbus, Neel, Sleigh, Marcus, McNeely), after Postwar Europe, before Pop (her order); her staging line
   for themes ("Do not label shows by their staging – eg. a sculpture show in a garden is not Nature, a show of
