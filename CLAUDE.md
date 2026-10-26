@@ -281,12 +281,13 @@ decisions and every period and theme rule: `docs/periods.md`. Read it before any
 - **Period with every Acquiring filter — published at 51.2; her use confirms.** Buy next keeps her dragged
   order; Period there switches to period order with dividers, no dragging, and back again (her choice; BP-).
 
-#### 2.2.11 Built on `main`, not yet published — her go-ahead pending
+#### 2.2.11 51.3 — published; her re-import of the 9 Berlin links confirms
 
 The Recently labelled sort unwired (code kept; the filter stays); every search ignores accents ("Bocklin" finds
 Böcklin); the When line Current, Past, Announced; "Munich Sammlung Schack" on its cards; "Berlin Alte NG" a second
 venue under the Berlin chip (`docs/add_by_link.md`, "Berlin"); Period the last line of a new show's approval card.
-Tests AL-074, AD-012, PR-035–036, S-005; PR-032–033 retired with the sort.
+Tests AL-074, AD-012, PR-035–036, S-005; PR-032–033 retired with the sort. She reverts to her 25 Oct close file,
+re-imports the 9 Berlin links (all should file under Berlin Alte NG; its shop found at the first) and re-applies two marks.
 
 #### 2.2.6 Tests that failed — recorded, not investigated
 
@@ -484,7 +485,7 @@ price, her decision).
 > restating `capabilities` must restate all four; omitting it carries them
 > forward. **Renaming the connector means restating them.**
 
-**Live: 51.2 in her app**, with the cloud ledger (merged at 46). What each recent version changed is in
+**Live: 51.3 in her app**, with the cloud ledger (merged at 46). What each recent version changed is in
 `docs/publishing.md`, "What is live now".
 
 #### The mental model, load-bearing
