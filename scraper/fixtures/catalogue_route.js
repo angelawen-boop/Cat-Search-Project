@@ -949,6 +949,25 @@ const searches = calls => calls.filter(c => c.tool === 'web_search').map(c => c.
     ok(mm.row.shopState !== 'parallel', 'FS-005: only the Städel carries the rule: the same page at another venue is never "Parallel fault"', JSON.stringify(mm.row.shopState));
   }
 
+  // ── BS-001..BS-003: Basel — a shop drawn by script, its section written in (her decision) ──
+  // Parallel's live answer for its section (a cookie notice, no books): docs/link_pages/shop_search/basel_shelf_live.json.
+  {
+    const live = JSON.parse(fs.readFileSync(path.join(__dirname, '..', '..', 'docs', 'link_pages', 'shop_search', 'basel_shelf_live.json'), 'utf8')).reply.results[0];
+    const B = 'occ-kunstmuseumbasel-ch', SHELF = 'https://shop.kunstmuseumbasel.ch/en/merchandise?category=Exhibition+Catalogues';
+    const venue = { [B]: { id: B, name: 'Kunstmuseum Basel', short: 'Basel Kunstmuseum', host: 'kunstmuseumbasel.ch', shop: 'found', confirmed: true, finder: 3,
+      shopHome: 'https://shop.kunstmuseumbasel.ch/en/', shopCatalogues: SHELF, shopSearch: null } };
+    const reply = args => ({ payload: { errors: [], results: args.urls.map(u => args.full_content
+      ? { url: u, title: live.title, excerpts: live.excerpts, full_content: live.full_content } : { url: u, title: live.title, excerpts: live.excerpts }) } });
+    const callsB = [];
+    const yb = lift({ mcp: (tool, args) => tool === 'web_search' ? { payload: { results: [] } } : reply(args), sample: () => ({ found: false }) }, callsB);
+    yb.registerOccasional(venue);
+    const b = await yb.lookupCatalogue(row(B, 'Böcklin. Beyond the Myth'), { label: () => {} });
+    eq(b.row.shopState, 'script', 'BS-001: Basel’s section as Parallel returns it (a cookie notice) reads "JS-rendering", never "not in the museum shop"', JSON.stringify([b.row.shopState, b.detail]));
+    ok(!callsB.some(c => c.kind === 'sample' && /OWN shop pages, opened directly/.test(c.prompt)), 'BS-002:   Claude is not asked to read the shop');
+    const rb = await yb.recheckShopRow({ ...b.row, shopState: 'web', shopUrl: null }, { label: () => {} });
+    eq(rb.said, 'Re-check didn’t work — museum shop contents cannot be seen — JS-rendering.', 'BS-003: Re-check says the same', JSON.stringify(rb.said));
+  }
+
   // ── SB-001..SB-008: the book found on the web, looked for again on the shop's own list
   // (her decision, Yale Constable). The shelf read says "not this show's" — as Claude did
   // live — and the web names the book; every shelf link carrying its title is opened.

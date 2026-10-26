@@ -3,7 +3,7 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 // The footer prints APP_VERSION and its date, so she can tell one build from the next.
 // Numbering, her decision: a whole number for a substantial change, a decimal for a
 // small one, one number per publish. Bump it with the change it describes.
-const APP_VERSION = "51.3";
+const APP_VERSION = "51.4";
 const APP_VERSION_DATE = "26 Oct 2026";
 
 // The venue order is VENUE_ORDER, below the list, which sorts MUSEUMS; drawer, chips,
@@ -73,7 +73,7 @@ const MUSEUMS = [
 // refresh screen. A venue not named here goes last, by name.
 const VENUE_ORDER=["met","ng","occ-nga-gov","frick","morgan","artic","menil",
   "acq","lgd","occ-new-artsmia-org","cincinnati","occ-britishart-yale-edu","brit","tate-britain","wallace","va","occ-nationalgalleries-org",
-  "louvre","orsay","jacquemart","mad","rijks","khm","occ-alte-pinakothek","occ-pinakothek-der-moderne","occ-sammlung-schack","occ-smb-museum","occ-alte-nationalgalerie","occ-gemaeldegalerie-skd-museum","occ-staedelmuseum-de","uffizi","dellav","borghese","brera","capo","moma",
+  "louvre","orsay","jacquemart","mad","rijks","khm","occ-alte-pinakothek","occ-pinakothek-der-moderne","occ-sammlung-schack","occ-smb-museum","occ-alte-nationalgalerie","occ-neue-nationalgalerie","occ-gemaeldegalerie-skd-museum","occ-staedelmuseum-de","uffizi","dellav","borghese","brera","capo","moma",
   "tate-modern","mam",
   "occ-museitoscana-cultura-gov-it","occ-palazzoducale-genova-it","occ-palazzorealemilano-it","occ-mfa-org","occ-clevelandart-org","occ-dia-org","occ-archive-worcesterart-org","occ-courtauld-ac-uk",
   "occ-royalacademy-org-uk","ashmolean","occ-museothyssen-org","occ-mauritshuis-nl","occ-ngv-vic-gov-au"];
@@ -962,12 +962,14 @@ const LINK_VENUES={
   "occ-sammlung-schack":{ownChip:true,short:"Munich Sammlung Schack",chip:"Munich",group:"munich-pinakotheken",lookupName:"Sammlung Schack",name:"Sammlung Schack",
     sites:[{host:"pinakothek.de",line:/^Sammlung Schack\b/i}],linkRead:{capsTitles:true}},
   // Staatliche Museen zu Berlin (smb.museum): chip "Berlin" after KHM, cards "Berlin Gemäldegalerie" (her decision).
-  // The Alte Nationalgalerie is a second venue under the chip, cards "Berlin Alte NG" (her decision): its
-  // pages sit under its own path, or carry its house line just under the dates (Böcklin); every other
-  // smb.museum page files under the Gemäldegalerie, as before (linkVenue).
+  // The Alte and Neue Nationalgalerie are venues under the chip too, cards "Berlin Alte NG" and "Berlin Neue NG"
+  // (her decision): their pages sit under their own paths, or carry their house line just under the dates
+  // (Böcklin, Wols); every other smb.museum page files under the Gemäldegalerie, as before (linkVenue).
   "occ-smb-museum":{ownChip:true,short:"Berlin",chip:"Berlin",group:"berlin",card:"Berlin Gem\u00e4ldegalerie",lookupName:"Gem\u00e4ldegalerie Berlin",name:"Staatliche Museen zu Berlin"},
   "occ-alte-nationalgalerie":{ownChip:true,short:"Berlin Alte NG",chip:"Berlin",group:"berlin",lookupName:"Alte Nationalgalerie Berlin",name:"Alte Nationalgalerie",
     sites:[{host:"smb.museum",path:/\/museums-institutions\/alte-nationalgalerie\//i},{host:"smb.museum",line:/^Alte Nationalgalerie$/i}]},
+  "occ-neue-nationalgalerie":{ownChip:true,short:"Berlin Neue NG",chip:"Berlin",group:"berlin",lookupName:"Neue Nationalgalerie Berlin",name:"Neue Nationalgalerie",
+    sites:[{host:"smb.museum",path:/\/museums-institutions\/neue-nationalgalerie\//i},{host:"smb.museum",line:/^Neue Nationalgalerie$/i}]},
   // Dresden's Gemäldegalerie Alte Meister: chip "Dresden", cards "Dresden Gemäldegalerie" (her
   // decision). Its pages open with a short "# " name above every SKD museum's menu; the show's
   // own heading follows "Active page:" (titleAfter). Dates day first with slashes; the site
@@ -980,6 +982,10 @@ const LINK_VENUES={
   // with no priced line reads "Parallel fault" (docs/add_by_link.md, "Frankfurt").
   "occ-staedelmuseum-de":{ownChip:true,short:"Frankfurt",card:"Frankfurt St\u00e4del",lookupName:"St\u00e4del Museum",name:"St\u00e4del Museum",
     shopHome:"https://liebieghaus.ticketfritz.de/",shopCatalogues:"https://liebieghaus.ticketfritz.de/Shop/Index/staedel-publikationen/43885",shopUnseen:"parallel"},
+  // Written in, her decision: a shop drawn by script (its page's code holds no books, only a frame and a
+  // script) gets its best section written in and `shopUnseen` "script": a lookup there reads "contents
+  // cannot be seen — JS-rendering" and goes to the web (docs/add_by_link.md, "A shop drawn by script").
+  "occ-kunstmuseumbasel-ch":{shopHome:"https://shop.kunstmuseumbasel.ch/en/",shopCatalogues:"https://shop.kunstmuseumbasel.ch/en/merchandise?category=Exhibition+Catalogues",shopUnseen:"script"},
   // Under "Occasional". Boston MFA prints the dates on the line above the show's title.
   "occ-mfa-org":{short:"Boston",card:"Boston MFA"},
   "occ-archive-worcesterart-org":{short:"Worcester"},
@@ -2998,6 +3004,19 @@ function cardOutcome(p,dec){
   if(dec.mode==="addnew")return"accepted";
   return Object.values(dec.fields||{}).some(v=>v==="accept")?"accepted":"rejected";
 }
+// What the shop finder found for a venue, before her answer on the shop screen.
+const SHOP_FIELDS=["shop","shopHome","shopCatalogues","shelfKind","shopSearch","why","shopEnglishUnread","englishPicked","confirmed"];
+const foundShop=v=>Object.fromEntries(SHOP_FIELDS.filter(k=>v[k]!==undefined).map(k=>[k,v[k]]));
+// The venues as stored when the ledger moves: her shop answer kept only for a venue with a card going in
+// (her decision: a show not imported leaves its venue's shop unanswered, asked again at its first import).
+function answeredOnly(venues,saved,going){
+  const out={};
+  for(const [id,v] of Object.entries(venues||{})){
+    const{beforeAnswer,...rest}=v||{};
+    out[id]=beforeAnswer&&!going.has(id)?(saved&&saved[id]?saved[id]:{...rest,...SHOP_FIELDS.reduce((o,k)=>(o[k]=null,o),{}),...beforeAnswer,confirmed:false}):rest;
+  }
+  return out;
+}
 // The venues outside her list with at least one card going in. A venue whose every card is
 // rejected, undecided or quarantined is not asked about its shop (her decision; AL-046).
 function venuesGoingIn(proposals,decisions){
@@ -4776,10 +4795,10 @@ async function shopStep(row,io){
   if(!s1.results.length&&(s1.errors||[]).length)
     return{ran:true,ok:true,blocked:"blocked",detail:s1.detail+"\nThe museum shop refused every page, so it could not be searched.",data:null};
   if(!s1.results.length)return{ran:true,ok:true,detail:s1.detail,data:null};
-  // A venue whose books Parallel drops (the Städel), or a section she confirmed unread (Berlin's English one): no
-  // priced line, even read whole, is "parallel" or "unconfirmed".
+  // A venue whose books Parallel drops (the Städel), a shop drawn by script (Basel), or a section she confirmed
+  // unread (Berlin's English one): no priced line, even read whole, is "parallel", "script" or "unconfirmed".
   const priced=r=>pageTextOf(r.results).split("\n").some(realPrice);
-  if(mu&&(mu.shopUnseen==="parallel"||mu.shopUnseen==="unconfirmed")&&!priced(s1)){
+  if(mu&&(mu.shopUnseen==="parallel"||mu.shopUnseen==="script"||mu.shopUnseen==="unconfirmed")&&!priced(s1)){
     const whole=await io.fetch(shopPages,"The books in this section of the shop, with their prices.",null,{full:true});
     if(!whole.ok)return{ran:true,ok:false,detail:s1.detail+"\n"+whole.detail,data:null};
     if(!priced(whole))
@@ -7150,9 +7169,11 @@ export default function App(){
     for(const id of Object.keys(MU)) if(isOcc(id)&&!saved[id]){ delete MU[id]; KNOWN_VENUES.delete(id); }
     registerOccasional(saved); registerUnseenOccasional(rows); setOccVenues(saved);
   }
-  function confirmShop(id,english){ const v=occVenues[id]; if(v)holdVenues({...occVenues,[id]:{...v,confirmed:true,englishPicked:!!english}}); }
+  // Each answer keeps what the finder found (`beforeAnswer`), so an answer for a venue with no show going in is
+  // dropped when the ledger moves (answeredOnly).
+  function confirmShop(id,english){ const v=occVenues[id]; if(v)holdVenues({...occVenues,[id]:{...v,beforeAnswer:v.beforeAnswer||foundShop(v),confirmed:true,englishPicked:!!english}}); }
   // "No shop": the lookup goes straight to the web, as at Capodimonte.
-  function noShopFor(id){ const v=occVenues[id]; if(v)holdVenues({...occVenues,[id]:{...v,shop:"none",confirmed:true,shopHome:null,shopCatalogues:null,shelfKind:null,shopSearch:null,why:null,shopEnglishUnread:null,englishPicked:false}}); }
+  function noShopFor(id){ const v=occVenues[id]; if(v)holdVenues({...occVenues,[id]:{...v,beforeAnswer:v.beforeAnswer||foundShop(v),shop:"none",confirmed:true,shopHome:null,shopCatalogues:null,shelfKind:null,shopSearch:null,why:null,shopEnglishUnread:null,englishPicked:false}}); }
   // "Look again": a new search NOW, skipping only the pages she turned down, never the
   // whole site.
   async function lookAgain(id){
@@ -7164,7 +7185,8 @@ export default function App(){
     catch(e){ shop={shop:"failed",why:"Couldn\u2019t look ("+String((e&&e.message)||e)+")."}; }
     setShopLooking(null);
     setOccVenues(prev=>{
-      const next={...prev,[id]:{...prev[id],shopHome:null,shopCatalogues:null,shelfKind:null,shopSearch:null,why:null,shopEnglishUnread:null,englishPicked:false,...shop,confirmed:false,turnedDown}};
+      const{beforeAnswer,...was}=prev[id];
+      const next={...prev,[id]:{...was,shopHome:null,shopCatalogues:null,shelfKind:null,shopSearch:null,why:null,shopEnglishUnread:null,englishPicked:false,...shop,confirmed:false,turnedDown}};
       registerOccasional(next); return next; });
   }
   // The shop screen asks about a venue outside her list whose shop is unconfirmed (venuesGoingIn).
@@ -7270,7 +7292,7 @@ export default function App(){
     // Counted from the cards with the gate's own function, never handed in.
     const leftUndecided=proposals.filter((p,i)=>isUndecidedCard(p,decisions[i])).length;
     commit(Array.from(byId.values()),new Date().toISOString());
-    if(occVenues!==occSaved.current){ writeOccasional(occVenues); occSaved.current=occVenues; }
+    if(occVenues!==occSaved.current){ const kept=answeredOnly(occVenues,occSaved.current,venuesGoingIn(proposals,decisions)); writeOccasional(kept); occSaved.current=kept; registerOccasional(kept); setOccVenues(kept); }
     setShopScreen(null); setReadVenues([]);
     setProposals(null); setDecisions({}); setSeenInFile(null); setRefreshDone({added,filled,changed,never:newlyIgnored.length,left:partial?leftUndecided:0});
     setRefreshTouched(touched); setPinTouched(touched.length>0); // float just-changed entries to the top, this session

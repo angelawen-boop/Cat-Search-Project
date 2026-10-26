@@ -281,13 +281,16 @@ decisions and every period and theme rule: `docs/periods.md`. Read it before any
 - **Period with every Acquiring filter — published at 51.2; her use confirms.** Buy next keeps her dragged
   order; Period there switches to period order with dividers, no dragging, and back again (her choice; BP-).
 
-#### 2.2.11 51.3 — published; her re-import of the 9 Berlin links confirms
+#### 2.2.11 51.3–51.4 — published; her next links confirm
 
 The Recently labelled sort unwired (code kept; the filter stays); every search ignores accents ("Bocklin" finds
 Böcklin); the When line Current, Past, Announced; "Munich Sammlung Schack" on its cards; "Berlin Alte NG" a second
 venue under the Berlin chip (`docs/add_by_link.md`, "Berlin"); Period the last line of a new show's approval card.
 Tests AL-074, AD-012, PR-035–036, S-005; PR-032–033 retired with the sort. She reverts to her 25 Oct close file,
 re-imports the 9 Berlin links (all should file under Berlin Alte NG; its shop found at the first) and re-applies two marks.
+51.4: "Berlin Neue NG" under the Berlin chip (AL-074a); a shop answer is stored only for a venue with a show going in
+(AL-009o2, AL-046f); Basel's shop, drawn by script, written in under her decision (below, §5.4; BS-001–003) and its
+stored No shop reset with her yes — her next Basel import shows it to confirm.
 
 #### 2.2.6 Tests that failed — recorded, not investigated
 
@@ -485,7 +488,7 @@ price, her decision).
 > restating `capabilities` must restate all four; omitting it carries them
 > forward. **Renaming the connector means restating them.**
 
-**Live: 51.3 in her app**, with the cloud ledger (merged at 46). What each recent version changed is in
+**Live: 51.4 in her app**, with the cloud ledger (merged at 46). What each recent version changed is in
 `docs/publishing.md`, "What is live now".
 
 #### The mental model, load-bearing
@@ -703,6 +706,9 @@ and were fixed in code, proven live).
   `docs/app.md`, "A store read that fails". **The Paste-import session (`claude/paste-import`) holds its merge until
   this session's work is settled** (her instruction); its rule filing a page under a swept venue by domain would
   break the Ashmolean's Occasional filing — keep it to pastes or skip `underOcc` venues.
+- **A shop drawn by script — her decision:** prove the cause from the page's own code, then write in the shop's
+  best section with `shopUnseen: "script"` (hard-coded; lookups say "…cannot be seen — JS-rendering" and go to the
+  web). Steps: `docs/add_by_link.md`, "A shop drawn by script". Basel is the first.
 - **Links and Pages follow the sweep's rules wherever the sweep has met the case and she has decided it** (her
   decision): the same code where it can be shared (`dates.js`), never a rule of their own. `docs/add_by_link.md`,
   "The general reader".

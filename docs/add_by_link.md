@@ -19,7 +19,9 @@ meets it.
   unconfirmed, the review's last button is **Next** → one card per such venue: **Confirm · Look again · No
   shop**, always in that order. Only a venue with at least one card going in is asked; one whose every card is
   rejected, undecided or quarantined is not (her decision; `venuesGoingIn`, AL-046). **The ledger moves only when every one is answered.** Back returns
-  to the review. Confirmed once, never asked again.
+  to the review. Confirmed once, never asked again. **An answer is stored only for a venue with a show going in**
+  (her decision): answered, then its show rejected after Back, the venue is stored as the finder left it, unanswered,
+  and asked again at its first real import (`answeredOnly`, `beforeAnswer`; AL-009o2, AL-046f).
 - **The ordinary review.** Each link becomes a pro forma row fed to the existing intake: Add / Fill / Change /
   Reject / quarantine all as now.
 - **An import she does not finish keeps NOTHING** — new venues and shops, Confirm / No shop /
@@ -407,6 +409,8 @@ just under the dates (`afterDates`; Böcklin's page sits at `/en/exhibitions/det
 page files under the Gemäldegalerie as before — a shared site whose own host has a link venue falls back to it,
 never a "doesn't say which museum" line (`linkVenue`). Proved live on her Böcklin and Cassirer pages and the four
 Gemäldegalerie proof pages (AL-074). Its shop is found by the finder at its first link.
+**Berlin Neue NG** (`occ-neue-nationalgalerie`, her decision): the same, by `/museums-institutions/neue-nationalgalerie/`
+or the house line "Neue Nationalgalerie" under the dates (her Wols page, on the proof list; AL-074a).
 
 **Munich** — three venues, each its own cards, under one chip "Munich", the Alte first,
 before Berlin (her decision; `group`, `chipKey`): **Munich Alte Pinakothek**
@@ -453,6 +457,22 @@ cannot tell a Parallel fault from JS-rendering): the section (`shopCatalogues`, 
 her to confirm; AL-049a), and `shopUnseen: "parallel"` — a shop page with no priced line, read whole, says
 "The museum shop contents cannot be seen — Parallel fault", Re-check the same (FS-001–005, on Parallel's live
 answer). Once Parallel returns the books, the shop is read as usual (FS-004); the rule stays until removed.
+
+**A shop drawn by script — her decision.** The finder meets such a shop as a front page only, or a section it
+cannot confirm holds books, because the page's contents never arrive. When she brings one to a session:
+1. **Prove the cause first:** fetch the shop page's own code directly. An empty frame and a script, no books or
+   prices, is drawn by script. Books in the code mean our reading is at fault: fix the finder or reader instead.
+2. **Write in the best section the shop has** — its catalogues section, else books, else the best it offers —
+   on the venue's `LINK_VENUES` entry (`shopHome`, `shopCatalogues`), with `shopUnseen: "script"`. A
+   hard-coded answer: say so to her.
+3. **Its lookups** read "The museum shop contents cannot be seen — JS-rendering", search the web for the book,
+   and the card links the written-in section for her own search. Re-check the same.
+4. **If she has already answered the shop screen for it** (No shop), the store's record is reset with her yes:
+   `shop: "found"`, the section, `foundBy: "the venue's rule"`, unconfirmed, so her next import shows it to confirm.
+**Basel** (`occ-kunstmuseumbasel-ch`, under Occasional) is the first: `shop.kunstmuseumbasel.ch` is an empty frame
+and one script; Parallel returns only its cookie notice. Section written in:
+`shop.kunstmuseumbasel.ch/en/merchandise?category=Exhibition+Catalogues`; its stored No shop reset with her yes
+(BS-001–003, on Parallel's live answer).
 
 A venue's page can carry its own options (`linkRead` on its `MUSEUMS` entry; her decision: Parallel-only rules
 live in the app, never the scraper). They only tidy what Claude is handed. Options: `title`, `titleDrop` (a

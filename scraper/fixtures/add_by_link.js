@@ -416,6 +416,14 @@ function runtime() {
     ok(some.length === 2 && some.includes(PS) && !some.includes('met'), 'AL-046a: two Strozzi links, one skipped, one added → Strozzi still asked; a swept venue never', JSON.stringify(some));
     const never = [...going(props, { 0: { mode: 'never' }, 1: { mode: 'reject' }, 2: {} })];
     ok(never.length === 0, 'AL-046b: quarantined, rejected and undecided cards ask about no shop', JSON.stringify(never));
+    const answeredOnly = fn('answeredOnly');
+    const found = { shop: 'found', shopCatalogues: 'https://shop/x', confirmed: false };
+    const held = { a: { id: 'a', name: 'A', shop: 'none', shopCatalogues: null, confirmed: true, beforeAnswer: found },
+      b: { id: 'b', name: 'B', ...found, confirmed: true, beforeAnswer: found }, c: { id: 'c', name: 'C', shop: 'none', confirmed: true, beforeAnswer: found } };
+    const kept = answeredOnly(held, { c: { id: 'c', name: 'C', shop: 'unknown', confirmed: false } }, new Set(['b']));
+    ok(kept.a.confirmed === false && kept.a.shop === 'found' && kept.a.shopCatalogues === 'https://shop/x' && kept.b.confirmed === true
+       && kept.c.shop === 'unknown' && !Object.values(kept).some(v => 'beforeAnswer' in v),
+      'AL-046f: an answer for a venue with no show going in is not kept: what the finder found (or what the store held) instead', JSON.stringify(kept));
     const occVenue = fn('occVenue');
     const sm = occVenue(SM, { id: SM, name: 'Direzione regionale Musei nazionali Toscana', shop: 'none', confirmed: true });
     ok(sm.name === 'Museo di San Marco' && sm.lookupName === 'Museo di San Marco' && sm.short === 'San Marco',
@@ -765,6 +773,11 @@ function runtime() {
     ok(boe.id === N && cas.id === N && gg.id === G && other.id === G && own[N].short === 'Berlin Alte NG' && own[G].card === 'Berlin Gemäldegalerie'
       && chipKey(N) === chipKey(G) && own[N].chip === 'Berlin' && order.indexOf(G) + 1 === order.indexOf(N),
       'AL-074: Berlin: the Alte Nationalgalerie files as "Berlin Alte NG" by its path or house line, the rest as before, one chip "Berlin"', JSON.stringify([boe, cas, gg, other]));
+    const NN = 'occ-neue-nationalgalerie';
+    const wols = linkVenue('https://www.smb.museum/en/exhibitions/detail/wols-prints/', { between: ['On the Centenary of the Artist\'s Birth'], afterDates: ['Neue Nationalgalerie', 'Side room in the Neue Nationalgalerie, 30.7.-8.9.2013'] });
+    const nnPath = linkVenue('https://www.smb.museum/en/museums-institutions/neue-nationalgalerie/exhibitions/detail/x/', { between: [] });
+    ok(wols.id === NN && nnPath.id === NN && own[NN].short === 'Berlin Neue NG' && chipKey(NN) === chipKey(G) && order.indexOf(N) + 1 === order.indexOf(NN),
+      'AL-074a: the Neue Nationalgalerie files as "Berlin Neue NG" by its path or house line (Wols), under "Berlin" after the Alte', JSON.stringify([wols, nnPath]));
     const D = 'occ-gemaeldegalerie-skd-museum', card = id => own[id].card;
     ok(own[D].short === 'Dresden' && card(D) === 'Dresden Gemäldegalerie' && own[D].linkRead.slashDayFirst && own[D].linkRead.titleAfter.test('Active page: Hopper')
       && own[D].linkRead.skip.test('Exhibition Site Zwinger') && !own[D].shopQueries,
@@ -896,7 +909,8 @@ function runtime() {
   ok(/^✓ No shop$/.test([...shopCard('Royal Academy of Arts').querySelectorAll('button')][2].textContent), 'AL-009j:  No shop is an answer');
   await press('Detroit', 'No shop');
   await press('Courtauld', 'Confirm'); await press('Cleveland Museum of Art', 'Confirm'); await press('Mauritshuis', 'Confirm');
-  // The RA's card rejected again: off the screen; its answer, given, is kept (Back keeps answers).
+  // The RA's card rejected again: off the screen; its answer is kept while the import is open (Back keeps
+  // answers), but never stored: the RA has no show going in (her decision; AL-009m, AL-009o).
   await click([...shops().querySelectorAll('button')].find(b => b.textContent === 'Back'));
   await raPress(/Reject$/);
   await click(buttons(/^Next$/)[0]);
@@ -907,13 +921,15 @@ function runtime() {
   ok((store.get('links/pending') || {}).text === REFUSED + '\n' + EMPTY + '\n' + urlOf('ra_guggenheim'), 'AL-007d:  the import finished, the two unread links are stored, so closing the page loses nothing', JSON.stringify(store.get('links/pending')));
   {
     const v = id => occStored()[id] || {};
-    ok(Object.keys(occStored()).length === 6 && Object.values(occStored()).every(x => x.confirmed === true),
-      'AL-009m:  only now are the six venues and her answers stored', JSON.stringify(Object.values(occStored()).map(x => [x.id, x.shop, x.confirmed])));
+    ok(Object.keys(occStored()).length === 6 && Object.values(occStored()).every(x => x.confirmed === (x.id !== 'occ-royalacademy-org-uk'))
+       && Object.values(occStored()).every(x => !('beforeAnswer' in x)),
+      'AL-009m:  only now are the six venues stored, with her answers for the five with a show going in', JSON.stringify(Object.values(occStored()).map(x => [x.id, x.shop, x.confirmed])));
     ok(v('occ-courtauld-ac-uk').shelfKind === 'catalogues' && v('occ-clevelandart-org').shopSearch === 'https://shop.clevelandart.org/search?q='
        && v('occ-museothyssen-org').shelfKind === 'publications' && v('occ-mauritshuis-nl').shopCatalogues === 'https://shop.mauritshuis.nl/product-categorie/boeken-catalogi'
        && v('occ-mauritshuis-nl').turnedDown.includes('https://shop.mauritshuis.nl/product-categorie/boeken-catalogi/catalogi'),
       'AL-009n:  stored as answered: the section, its kind, the shop\'s search, the pages turned down', JSON.stringify([v('occ-courtauld-ac-uk'), v('occ-mauritshuis-nl')]));
-    ok(v('occ-royalacademy-org-uk').shop === 'none' && v('occ-dia-org').shop === 'none', 'AL-009o:  No shop stored: their lookups go to the web');
+    ok(v('occ-dia-org').shop === 'none' && v('occ-dia-org').confirmed === true, 'AL-009o:  No shop stored: its lookups go to the web');
+    ok(v('occ-royalacademy-org-uk').confirmed === false, 'AL-009o2: the RA\'s No shop, given and then its show rejected, is not stored: asked again at its first import (her decision)', JSON.stringify(v('occ-royalacademy-org-uk')));
     ok(v('occ-museothyssen-org').english === false && v('occ-dia-org').english === true && v('occ-courtauld-ac-uk').name === 'Courtauld',
       'AL-009p:  English-speaking or not, and the name from the page title, stored with them');
   }
