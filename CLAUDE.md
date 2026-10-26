@@ -283,7 +283,7 @@ decisions and every period and theme rule: `docs/periods.md`. Read it before any
 
 #### 2.2.11 51.3–51.6 — published; her next links confirm
 
-The Recently labelled sort was unwired here and is back at 52.2; every search ignores accents ("Bocklin" finds
+The Recently labelled sort was unwired here and is back at 53; every search ignores accents ("Bocklin" finds
 Böcklin); the When line Current, Past, Announced; "Munich Sammlung Schack" on its cards; "Berlin Alte NG" a second
 venue under the Berlin chip (`docs/add_by_link.md`, "Berlin"); Period the last line of a new show's approval card.
 Tests AL-074, AD-012, PR-035–036, S-005; PR-032–033 retired with the sort. She reverts to her 25 Oct close file,
@@ -296,7 +296,7 @@ stored No shop reset with her yes — her next Basel import shows it to confirm.
 title is a title (Brancusi, Neue NG); a line that is only the venue's name is never the title unless the show's dates sit
 under it (her decision; AL-075). Her re-import of the Brancusi link confirms.
 
-#### 2.2.12 52.2 — UI adjustments, built on `main`, not yet published; her next use confirms
+#### 2.2.12 53 — UI adjustments, published; her next use confirms
 
 Recently labelled back on the Sort line; footer "Clear search"; no placeholder text in the search and Clear search
 boxes; theme chips "Decorative – Hard / Soft"; chip "Jacquemart". **Buy next:** alone it is her dragged order, and
@@ -508,7 +508,7 @@ price, her decision).
 > restating `capabilities` must restate all four; omitting it carries them
 > forward. **Renaming the connector means restating them.**
 
-**Live: 52.1 in her app**, with the cloud ledger (merged at 46). What each recent version changed is in
+**Live: 53 in her app**, with the cloud ledger (merged at 46). What each recent version changed is in
 `docs/publishing.md`, "What is live now".
 
 #### The mental model, load-bearing
