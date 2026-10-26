@@ -238,7 +238,7 @@ const script = {
     const { createRoot } = require('react-dom/client');
     const { act } = require('react');
     const dom = new JSDOM('<!doctype html><html><body><div id="root"></div></body></html>', { pretendToBeVisual: true, url: 'https://claude.ai/' });
-    const win = dom.window;
+    const win = dom.window; win.__catWatchTest = true;   // Reset to Seed is drawn only for tests: unwired from her page
     const store = fakeDb();
     const GOOD = 'https://www.nationalgallery.org.uk/exhibitions/past/venice-canaletto-and-his-rivals';
     const BAD = 'https://www.nationalgallery.org.uk/exhibitions/past/refused-show';

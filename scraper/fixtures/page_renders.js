@@ -164,11 +164,11 @@ async function renderOnce(label, withRuntime) {
     // Both are asserted here rather than in a unit case because both are about
     // what the OPENING SCREEN says with nothing loaded, which is the one thing
     // a lifted-out function cannot answer. This render carries no sweep log.
-    if (!/Last refreshed:\s*Unknown/i.test(text)) {
+    if (!/Last sweep:\s*Unknown/i.test(text)) {
       fail(label + ': with an empty sweep log the page does not say '
-           + '"Last refreshed: Unknown" \u2014 it is either asserting a date '
+           + '"Last sweep: Unknown" \u2014 it is either asserting a date '
            + 'nothing swept at, or claiming no sweep ever ran. Got: '
-           + (text.match(/Last refreshed:[^A-Z]{0,30}/i) || ['(the line is absent)'])[0]);
+           + (text.match(/Last sweep:[^A-Z]{0,30}/i) || ['(the line is absent)'])[0]);
     } else {
       pass(label + ': empty sweep log reads "Unknown" \u2014 not a made-up date, '
            + 'and not a claim that no sweep ever ran');

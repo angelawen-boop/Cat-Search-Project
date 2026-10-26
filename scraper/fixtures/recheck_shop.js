@@ -189,7 +189,7 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
 (async () => {
   const dom = new JSDOM('<!doctype html><html><body><div id="root"></div></body></html>',
     { pretendToBeVisual: true, url: 'https://claude.ai/' });
-  const win = dom.window;
+  const win = dom.window; win.__catWatchTest = true;   // Reset to Seed is drawn only for tests: unwired from her page
   win.claude = runtime();
   const globals = ['window', 'document', 'navigator', 'localStorage', 'requestAnimationFrame',
     'cancelAnimationFrame', 'MutationObserver', 'Node', 'Element', 'HTMLElement', 'Event',

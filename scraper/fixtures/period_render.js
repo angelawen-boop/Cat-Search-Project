@@ -236,13 +236,24 @@ const until = async (fn, ms = 8000) => { const t = Date.now(); while (Date.now()
     bn = cards();
     ok(bn.length === 2 && has(bn[0], met1) && has(bn[1], ng2) && !doc.querySelector('[data-period]') && grab(),
       'BP-005: a third tap goes back to her order', bn.map(x => x.querySelector('h3').textContent).join(' | '));
-    // Buy next with Owned shows both lists (her ask): her Buy next books first, in her order, then the Owned one.
+    const wantedChip = [...doc.querySelectorAll('button')].find(b => b.textContent === 'Wanted');
+    click(wantedChip); await settle(150);
+    ok(cards().length === 2 && cards().some(x => has(x, met1)) && cards().some(x => has(x, ng2)), 'BP-010: Buy next with Wanted still shows only the Buy next books, a part of Wanted', String(cards().length));
+    click(wantedChip); await settle(150);
+    ok(!/Assume out of print|Secondhand only|Buy now if you want it/.test(doc.body.textContent) && !/Reset to Seed|Last refreshed|acquisition window/i.test(doc.body.textContent.replace(/Reset to Seed/g, '')),
+      'BP-011: no tier sentence on the cards, no "acquisition window" in the heading');
+    // Buy next with Owned shows both lists (her ask), sorted like any list, nothing draggable; Wanted keeps Buy next a subset.
     const owned = () => [...doc.querySelectorAll('button')].find(b => b.textContent === 'Owned');
     click(owned()); await settle(150);
     bn = cards();
-    ok(bn.length > 3 && has(bn[0], met1) && has(bn[1], ng2) && bn.slice(2).some(x => has(x, met2)) && bn.slice(2).every(x => /Owned/.test(x.textContent)),
-      'BP-006: Buy next with Owned shows the Buy next books in her order, then every Owned book', bn.map(x => x.querySelector('h3').textContent).join(' | '));
-    ok([...doc.querySelectorAll('[data-buynext]')].length === 2, 'BP-007:   only the Buy next books can be dragged', String([...doc.querySelectorAll('[data-buynext]')].length));
+    const sortNow = () => doc.querySelector('[data-period]');
+    ok(bn.length > 2 && bn.some(x => has(x, met1)) && bn.some(x => has(x, ng2)) && bn.some(x => has(x, met2)),
+      'BP-006: Buy next with Owned shows both lists together', bn.map(x => x.querySelector('h3').textContent).join(' | '));
+    ok([...doc.querySelectorAll('[data-buynext]')].length === 0 && !grab(), 'BP-007:   and nothing can be dragged');
+    click(chipBtnSort('Date')); await settle(150);
+    ok(!sortNow() && bn.length === cards().length, 'BP-008:   Date sorts them as any list, no dividers, nobody lost');
+    click(chipBtnSort('Period')); await settle(150);
+    ok(!!sortNow(), 'BP-009:   Period sorts the combined list under its dividers');
     click(owned()); await settle(150);
     click(buyNext()); await settle(150);
 

@@ -439,9 +439,8 @@ function runtime() {
     ok(!other.start && !other.end, 'AL-038b:  two-digit years are read at NGV only', JSON.stringify([other.start, other.end]));
     const fn = name => new Function('React', 'window', 'document', 'localStorage', code + '\n;return ' + name + ';')(React, win, win.document, win.localStorage);
     const orderOf = fn('orderOf'), lv = fn('LINK_VENUES');
-    const others = ['occ-mfa-org', 'occ-museothyssen-org', 'occ-mauritshuis-nl', 'occ-kmska-be', 'ashmolean', 'occ-courtauld-ac-uk'];
-    ok(others.every(id => orderOf(id) < orderOf('occ-ngv-vic-gov-au')) && lv['occ-ngv-vic-gov-au'].card === 'National Gallery Victoria',
-      'AL-038c:  NGV goes last of the Occasional venues; its cards say "National Gallery Victoria" (her decision)', JSON.stringify([orderOf('occ-ngv-vic-gov-au'), lv['occ-ngv-vic-gov-au'].card]));
+    ok(orderOf('occ-mfa-org') < orderOf('occ-ngv-vic-gov-au') && orderOf('occ-ngv-vic-gov-au') < orderOf('occ-courtauld-ac-uk') && lv['occ-ngv-vic-gov-au'].card === 'National Gallery Victoria',
+      'AL-038c:  NGV goes last of the Occ - US group, before Europe; its cards say "National Gallery Victoria" (her decision)', JSON.stringify([orderOf('occ-ngv-vic-gov-au'), lv['occ-ngv-vic-gov-au'].card]));
   }
   // ── AL-046: the shop screen asks only about a venue with a card going in (her decision) ─
   {
@@ -486,11 +485,11 @@ function runtime() {
     ok(o3(SM) < o3('occ-palazzoducale-genova-it') && Math.floor(o3(SM)) === Math.floor(o3('occ-palazzorealemilano-it')) && short === 'San Marco',
       'AL-046c: San Marco (museitoscana.cultura.gov.it) first of the Italian Occasional venues, named "San Marco" (her decision)', JSON.stringify([o3(SM), short]));
     const oc = fn('occCountry'), rg = fn('occRegion'), CO = fn('OCC_COUNTRY_ORDER');
-    const ord = ['occ-mfa-org', 'occ-courtauld-ac-uk', 'occ-staatsgalerie-de', 'occ-kmska-be', 'occ-galerie-karsten-greve-com', 'occ-kunstmuseumbasel-ch', SM, 'occ-museothyssen-org', 'occ-mauritshuis-nl', 'occ-ngv-vic-gov-au'].map(o3);
+    const ord = ['occ-mfa-org', 'occ-ngv-vic-gov-au', 'occ-courtauld-ac-uk', 'occ-staatsgalerie-de', 'occ-kmska-be', 'occ-galerie-karsten-greve-com', 'occ-kunstmuseumbasel-ch', SM, 'occ-museothyssen-org', 'occ-mauritshuis-nl'].map(o3);
     ok(ord.every((v, i) => !i || ord[i - 1] < v) && CO.join() === 'United States,United Kingdom,Germany,Belgium,France,Switzerland,Italy,Spain,Netherlands',
-      'OC-001: Occasional venues run United States, UK, Germany, Belgium, France, Switzerland, Italy, Spain, Netherlands, then the rest (her order)', ord.join());
-    ok(rg('occ-dia-org') === 'us' && rg('occ-courtauld-ac-uk') === 'eu' && rg('occ-kunstmuseumbasel-ch') === 'eu' && rg('occ-ngv-vic-gov-au') === 'other' && rg('ashmolean') === 'eu',
-      'OC-002: the Occasional venues fall under Occ - US, Occ - Europe (UK included) and Occ - Other', ['occ-dia-org', 'occ-courtauld-ac-uk', 'occ-ngv-vic-gov-au'].map(rg).join());
+      'OC-001: Occasional venues run United States, Australia, then UK, Germany, Belgium, France, Switzerland, Italy, Spain, Netherlands (her order)', ord.join());
+    ok(rg('occ-dia-org') === 'us' && rg('occ-courtauld-ac-uk') === 'eu' && rg('occ-kunstmuseumbasel-ch') === 'eu' && rg('occ-ngv-vic-gov-au') === 'us' && rg('ashmolean') === 'eu' && rg('occ-new-unseen-it') === 'eu' && rg('occ-new-unseen-com') === 'us',
+      'OC-002: the Occasional venues fall under Occ - US (Australia included) or Occ - Europe (UK included); no Occ - Other', ['occ-dia-org', 'occ-courtauld-ac-uk', 'occ-ngv-vic-gov-au'].map(rg).join());
   }
   // ── AL-031: NGA Souvenirs of the Gilded Age — a doubled colon becomes one ─
   // Live page on docs/link_proof_pages.json; its page title reads "Age:: French".
@@ -1050,8 +1049,8 @@ function runtime() {
   // ── AL-010: accepted, they file under their venues and the one chip ─────
   ok(!!dialog() && /Links/.test(dialog().textContent), 'AL-010z:  two links could not be read, so the import pop-up waits under it');
   await click([...dialog().querySelectorAll('button')].find(b => b.textContent === 'Cancel'));
-  const occChips = [buttons(/^Occ - US$/)[0], buttons(/^Occ - Europe$/)[0], buttons(/^Occ - Other$/)[0]];
-  ok(occChips.every(Boolean) && !buttons(/^Occasional$/).length, 'AL-010: "Occ - US", "Occ - Europe" and "Occ - Other" chips sit with the venue chips, no "Occasional"');
+  const occChips = [buttons(/^Occ - US$/)[0], buttons(/^Occ - Europe$/)[0]];
+  ok(occChips.every(Boolean) && !buttons(/^Occasional$/).length && !buttons(/^Occ - Other$/).length, 'AL-010: "Occ - US" and "Occ - Europe" chips sit with the venue chips, no "Occasional", no "Occ - Other"');
   for (const c of occChips) await click(c);
   const arts = [...win.document.querySelectorAll('article')];
   ok(arts.length === 9, 'AL-010a:  pressed, it shows the nine occasional shows accepted (the RA one rejected) and nothing else', arts.length);

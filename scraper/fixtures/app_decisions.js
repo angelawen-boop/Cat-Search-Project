@@ -66,7 +66,7 @@ async function mount({ save, db = true, starMetrics } = {}) {
   const vc = new VirtualConsole();   // jsdom's "not implemented: navigation" is not the app's
   const dom = new JSDOM('<!doctype html><html><body><div id="root"></div></body></html>',
     { pretendToBeVisual: true, url: 'https://claude.ai/', virtualConsole: vc });
-  const win = dom.window;
+  const win = dom.window; win.__catWatchTest = true;   // Reset to Seed is drawn only for tests: unwired from her page
   const saves = [], files = [];
   if (save) {
     const store = new Map();
@@ -256,11 +256,11 @@ async function buyNextDot() {
 async function noStatusLineWithoutLedger() {
   const NAME = 'AD-004 No status line when no ledger is open';
   // As her published page: nothing with words in it sits between the button row
-  // and the "Last refreshed" line, except the cloud branch's own cloud line (☁).
+  // and the "Last sweep" line, except the cloud branch's own cloud line (☁).
   const page = await mount({ save: 'ok' });
   const between = () => {
     const out = [];
-    for (let n = page.buttonRow().nextElementSibling; n && !/^Last refreshed/.test(n.textContent.trim()); n = n.nextElementSibling) {
+    for (let n = page.buttonRow().nextElementSibling; n && !/^Last sweep/.test(n.textContent.trim()); n = n.nextElementSibling) {
       const t = n.textContent.trim();
       if (t && !t.startsWith('☁')) out.push(t);
     }

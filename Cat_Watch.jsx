@@ -76,8 +76,8 @@ const VENUE_ORDER=["met","ng","occ-nga-gov","frick","morgan","artic","menil",
   "louvre","orsay","jacquemart","mad","rijks","khm","occ-alte-pinakothek","occ-pinakothek-der-moderne","occ-sammlung-schack","occ-smb-museum","occ-alte-nationalgalerie","occ-neue-nationalgalerie","occ-gemaeldegalerie-skd-museum","occ-staedelmuseum-de","uffizi","dellav","borghese","brera","capo","moma",
   "tate-modern","mam",
   ];
-// The Occasional venues (no chip of their own) follow, by country: the United States, then Europe in her
-// country order, then the rest (her decision). Hard-coded, her decision: the countries of the venues that
+// The Occasional venues (no chip of their own) follow, by country: the United States, the rest of that group
+// (Australia), then Europe in her country order (her decision). Hard-coded, her decision: the countries of the venues that
 // store no country (below); a venue the store holds a country for takes that one.
 const OCC_COUNTRY_ORDER=["United States","United Kingdom","Germany","Belgium","France","Switzerland","Italy","Spain","Netherlands"];
 const OCC_EUROPE_ELSE=["Austria","Denmark","Sweden","Norway","Finland","Portugal","Ireland","Poland","Czechia","Hungary","Greece","Luxembourg"];
@@ -89,14 +89,19 @@ const OCC_COUNTRY={"occ-mfa-org":"United States","occ-clevelandart-org":"United 
   "occ-ngv-vic-gov-au":"Australia"};
 const occCountry=id=>{ const c=OCC_COUNTRY[id]||(MU[id]||{}).country||""; const k=String(c).trim().toLowerCase(); return OCC_COUNTRY_NAMES[k]||String(c).trim(); };
 // "us", "eu" or "other": the three chips that hold the venues with no chip of their own.
-const occRegion=id=>{ const c=occCountry(id); return c==="United States"?"us":(OCC_COUNTRY_ORDER.includes(c)||OCC_EUROPE_ELSE.includes(c))?"eu":"other"; };
-const OCC_CHIPS=[["occ:us","Occ - US"],["occ:eu","Occ - Europe"],["occ:other","Occ - Other"]];
+// Two groups only (her decision): Europe, UK included, and everything else under Occ - US (Australia last).
+// No country stored: the address's country ending (".uk", ".de"…) says.
+const OCC_EUROPE_TLD=["uk","de","be","fr","ch","it","es","nl","at","dk","se","no","fi","pt","ie","pl","cz","hu","gr","lu"];
+const occRegion=id=>{ const c=occCountry(id); if(c)return(OCC_COUNTRY_ORDER.includes(c)&&c!=="United States")||OCC_EUROPE_ELSE.includes(c)?"eu":"us";
+  const m=/-([a-z]{2})$/.exec(String(id)); return m&&OCC_EUROPE_TLD.includes(m[1])?"eu":"us"; };
+const OCC_CHIPS=[["occ:us","Occ - US"],["occ:eu","Occ - Europe"]];
 const hasNoChip=id=>MUSEUMS.some(m=>m.id===id&&m.underOcc)||(String(id).startsWith("occ-")&&!ownChip(id));   // the venue list is sorted at load, before isOcc and LINK_VENUES exist
 // Within a country, the venues her order already named come first, in that order; the rest follow by name.
 const OCC_NAMED_ORDER=["occ-mfa-org","occ-clevelandart-org","occ-dia-org","occ-archive-worcesterart-org","occ-courtauld-ac-uk","occ-royalacademy-org-uk","ashmolean","occ-museitoscana-cultura-gov-it","occ-palazzoducale-genova-it","occ-palazzorealemilano-it","occ-museothyssen-org"];
 const orderOf=id=>{ const i=VENUE_ORDER.indexOf(id); if(i>=0)return i; if(!hasNoChip(id))return 1e6;
   const c=occCountry(id),j=OCC_COUNTRY_ORDER.indexOf(c),k=OCC_NAMED_ORDER.indexOf(id);
-  return (j>=0?100+j:OCC_EUROPE_ELSE.includes(c)?150:199)+(k>=0?k/100:0.5); };
+  const base=c==="United States"?100:occRegion(id)==="eu"?(j>=0?110+j:150):105;   // the United States, the rest of the US group (Australia), then Europe
+  return base+(k>=0?k/100:0.5); };
 MUSEUMS.sort((a,b)=>orderOf(a.id)-orderOf(b.id));
 const lookupName=mu=>mu.lookupName||mu.short;
 const MU = Object.fromEntries(MUSEUMS.map(m=>[m.id,m]));
@@ -6447,8 +6452,7 @@ const LedgerCard=React.memo(function LedgerCard({r,mu,isOpen,isBusy,busy,recheck
             <div style={{display:"flex",justifyContent:"space-between",fontSize:8.5,color:C.soft,marginTop:3,letterSpacing:"0.05em"}}><span>CLOSED</span><span>3 MO</span><span>6 MO</span><span>12 MO</span></div>
           </div>
         )}
-        {!noCat&&!isAcq&&<div style={{fontSize:11,color:tier.ink,fontWeight:500,marginBottom:8}}>{tier.note}</div>}
-        <div style={{display:"flex",alignItems:"center",gap:5,flexWrap:"wrap",paddingTop:8,borderTop:"1px solid "+C.rule}}>
+                <div style={{display:"flex",alignItems:"center",gap:5,flexWrap:"wrap",paddingTop:8,borderTop:"1px solid "+C.rule}}>
           <span style={{fontSize:9,letterSpacing:"0.1em",textTransform:"uppercase",color:C.soft}}>Want the catalogue?</span>
           <button onClick={()=>act("setAcq",r.id,"yes")} style={chip(r.acquiring==="yes")}>Yes</button>
           <button onClick={()=>act("setAcq",r.id,"no")} style={chip(r.acquiring==="no")}>No</button>
@@ -6719,9 +6723,10 @@ export default function App(){
   const[acqHasCat,setAcqHasCat]=useState(false);
   const[acqNoCat,setAcqNoCat]=useState(false);
   const[acqBuyNext,setAcqBuyNext]=useState(false);
+  const bnOnly=acqBuyNext&&!acqOwned;   // Buy next alone: her dragged order; with Owned it is an ordinary list
   const[drag,setDrag]=useState(null); // the card being dragged in the Buy next view
   const[bnPeriod,setBnPeriod]=useState(false);
-  const dragOn=acqBuyNext&&!bnPeriod&&!readOnly;
+  const dragOn=bnOnly&&!bnPeriod&&!readOnly;
   const[showAll,setShowAll]=useState(false);
   const[dismissedOnly,setDismissedOnly]=useState(false);
   const[labelledF,setLabelledF]=useState(false);
@@ -6751,7 +6756,7 @@ export default function App(){
   const[pinTouched,setPinTouched]=useState(false); // pin those ids to the top this session
   // Buy next by period (her design): Period in the Buy next view switches between her dragged
   // order and the period order with its dividers; she drags only in her own order.
-  const periodView=acqBuyNext?bnPeriod:(sortBy==="period"&&!pinTouched);
+  const periodView=bnOnly?bnPeriod:(sortBy==="period"&&!pinTouched);
   const[showTop,setShowTop]=useState(false); // show the return-to-top button once scrolled down
   // Light or dark: remembered in browser storage (a per-device convenience, wrapped —
   // storage can throw). First visit follows the machine; her pick then wins there.
@@ -7617,7 +7622,7 @@ export default function App(){
     }
     dropHeldVenues(); setShopScreen(null); setReadVenues([]); setProposals(null); setDecisions({}); setCoverage([]); setTally(null); setSeenInFile(null); }
   // A second tap on Date reverses it; a third goes back to the usual order.
-  const pickSort=k=>{if(acqBuyNext){if(k==="period"){if(!bnPeriod){setBnPeriod(true);setDateReversed(false);}else if(!dateReversed)setDateReversed(true);else{setBnPeriod(false);setDateReversed(false);}}return;}setDateReversed((k==="date"||k==="period")&&sortBy===k&&!pinTouched&&!dateReversed);setSortBy(k);setPinTouched(false);}; // manual sort releases the pinned refresh group
+  const pickSort=k=>{if(bnOnly){if(k==="period"){if(!bnPeriod){setBnPeriod(true);setDateReversed(false);}else if(!dateReversed)setDateReversed(true);else{setBnPeriod(false);setDateReversed(false);}}return;}setDateReversed((k==="date"||k==="period")&&sortBy===k&&!pinTouched&&!dateReversed);setSortBy(k);setPinTouched(false);}; // manual sort releases the pinned refresh group
 
 
 
@@ -7917,20 +7922,19 @@ export default function App(){
       if(labelledF&&(!newestRun||r.labelledAt!==newestRun))return false;
       // Period shows only labelled shows.
       if(periodView&&!periodLabelled(r))return false;
-      // Acquiring filters stack as AND across the axes, OR within an axis. Wanted, Owned and Buy next are
-      // one axis: Owned with Buy next shows both lists, as two venues do (her decision).
-      if(acqWanted||acqOwned||acqBuyNext){if(!((acqWanted&&r.acquiring==="yes")||(acqOwned&&r.acquiring==="acquired")||(acqBuyNext&&isBuyNext(r))))return false;}
+      // Acquiring filters stack as AND across the axes, OR within an axis. Owned beside Wanted or Buy next shows
+      // both lists, as two venues do (her decision); Buy next is the part of Wanted she has put in her order.
+      if(acqWanted||acqOwned||acqBuyNext){if(!((acqOwned&&r.acquiring==="acquired")||(acqWanted&&r.acquiring==="yes"&&(!acqBuyNext||isBuyNext(r)))||(acqBuyNext&&!acqWanted&&isBuyNext(r))))return false;}
       if(acq3mo||acq6mo){if(!((acq3mo&&t==="closing")||(acq6mo&&(t==="urgent"||t==="lapsed"))))return false;}
       if(acqHasCat||acqNoCat){if(!((acqHasCat&&r.looked&&r.hasCatalogue==="yes")||(acqNoCat&&r.looked&&r.hasCatalogue==="no")))return false;}
       return true;
     });
     out.sort((a,b)=>{
       // Buy next is in her own dragged order; the sort chips and the pinned group step aside.
-      // The Buy next books come first, in her order; any Owned or Wanted books shown beside them follow.
-      if(acqBuyNext&&bnPeriod)return(dateReversed?-1:1)*periodCompare(a,b,byArtist);
-      if(acqBuyNext){const ba=isBuyNext(a),bb=isBuyNext(b);if(ba!==bb)return ba?-1:1;
-        if(ba){const ka=Number.isFinite(a.buyRank)?a.buyRank:-Infinity,kb=Number.isFinite(b.buyRank)?b.buyRank:-Infinity;if(ka!==kb)return kb>ka?1:-1;}}
-      if(pinTouched&&!acqBuyNext){const aT=refreshTouched.includes(a.id)?0:1,bT=refreshTouched.includes(b.id)?0:1;if(aT!==bT)return aT-bT;}
+      // Buy next alone is in her own dragged order; with Owned the list sorts like any other.
+      if(bnOnly&&bnPeriod)return(dateReversed?-1:1)*periodCompare(a,b,byArtist);
+      if(bnOnly){const ka=Number.isFinite(a.buyRank)?a.buyRank:-Infinity,kb=Number.isFinite(b.buyRank)?b.buyRank:-Infinity;if(ka!==kb)return kb>ka?1:-1;}
+      if(pinTouched&&!bnOnly){const aT=refreshTouched.includes(a.id)?0:1,bT=refreshTouched.includes(b.id)?0:1;if(aT!==bT)return aT-bT;}
       if(sortBy==="added"){const d=String(b.addedAt||"").localeCompare(String(a.addedAt||""));if(d!==0)return d;}
       if(sortBy==="labelled"){const d=String(lastLabel(b)).localeCompare(String(lastLabel(a)));if(d!==0)return d;const aL=periodLabelled(a)?1:0,bL=periodLabelled(b)?1:0;if(aL!==bL)return bL-aL;}
       if(sortBy==="edited"){const d=String(b.editedAt||"").localeCompare(String(a.editedAt||""));if(d!==0)return d;if(!a.editedAt&&!b.editedAt){const aH=a.addedAt?1:0,bH=b.addedAt?1:0;if(aH!==bH)return bH-aH;}}
@@ -8097,7 +8101,7 @@ export default function App(){
     <div style={{fontFamily:"'Inter',system-ui,sans-serif",background:C.bg,color:C.ink,minHeight:"100vh",padding:"20px 16px 60px"}}>
       <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
       <header style={{maxWidth:760,margin:"0 auto 14px"}}>
-        <div style={{fontSize:10,letterSpacing:"0.18em",textTransform:"uppercase",color:C.soft,marginBottom:4}}>Exhibition catalogues · acquisition window</div>
+        <div style={{fontSize:10,letterSpacing:"0.18em",textTransform:"uppercase",color:C.soft,marginBottom:4}}>Exhibition catalogues</div>
         <h1 style={{fontFamily:"'Fraunces',Georgia,serif",fontSize:36,lineHeight:1,fontWeight:500,margin:0,letterSpacing:"-0.02em"}}>Before it goes<span style={{color:C.accent}}> out of print</span></h1>
         <div style={{marginTop:14,display:"flex",flexWrap:"wrap",gap:5,alignItems:"center"}}>
           {/* Load and Import (her decision): Load opens a ledger file; Import brings in a
@@ -8143,7 +8147,7 @@ export default function App(){
         :<div style={{marginTop:6,fontSize:11,color:C.okEdge,fontWeight:600,display:"flex",gap:8,alignItems:"baseline",flexWrap:"wrap"}}>
           <span>{"☁ "}{
             saveState==="saving"?"Saving to the cloud copy…"
-            :lastSaved?("Last cloud save: "+localReadable(lastSaved.savedAt)+" ("+relTime(lastSaved.savedAt)+") · "+lastSaved.rows+" exhibitions"+(saveState==="saved"?"":" — not yet updated this session"))
+            :lastSaved?("Last cloud save: "+localReadable(lastSaved.savedAt)+" ("+relTime(lastSaved.savedAt)+") · "+lastSaved.rows+" exhibitions")
             :cloudLive&&cloudLive.why?("Cloud copy: "+cloudLive.why)
             :cloudLive&&cloudLive.rec===null?"No cloud copy yet — it starts when you open your ledger."
             :"Checking the cloud copy…"
@@ -8171,7 +8175,7 @@ export default function App(){
               clause keeps the numbers adding up (the way back is on the partial-import
               confirm box). Two paragraphs, her wording: the instruction, then the counts. */}
           <span>
-            <span style={{display:"block",marginBottom:"1.45em"}}>{"Import complete. Save it now both offline and to the cloud."}</span>
+            <span style={{display:"block",marginBottom:"1.45em"}}>{"Import complete. Save it now."}</span>
             <span style={{display:"block"}}>{refreshDone.added+" added, "+refreshDone.filled+" filled in, "+refreshDone.changed+" updated"+(refreshDone.never?", "+refreshDone.never+" quarantined":"")+(refreshDone.left?", "+refreshDone.left+" left undecided":"")+"."}</span>
           </span>
         </div>}
@@ -8212,7 +8216,7 @@ export default function App(){
         <div style={{marginTop:6,fontSize:10.5,color:C.soft,display:"flex",gap:12,flexWrap:"wrap",alignItems:"center"}}>
           {/* "Unknown", never "never" (her decision): an empty store is not evidence
               that no sweep ran. */}
-          <span>Last refreshed: {lastSweep?fmtRefresh(lastSweep):"Unknown"}</span>
+          <span>Last sweep: {lastSweep?fmtRefresh(lastSweep):"Unknown"}</span>
           {/* Per-venue freshness: collapsed by default, ALWAYS shown — a control that
               disappears when the log is empty cannot report anything. */}
           <button onClick={()=>setShowFresh(v=>!v)} style={{background:"none",border:"none",color:C.soft,fontSize:10.5,textDecoration:"underline",cursor:"pointer",padding:0}}>{showFresh?"Hide details":"Details"}</button>
@@ -8226,7 +8230,7 @@ export default function App(){
             {counts.dismissed>0&&<span><b>{counts.dismissed}</b> Dismissed</span>}
           </div>
           <div style={{fontSize:10,color:C.soft,marginBottom:6,lineHeight:1.5}}>
-            {"When each venue was last swept, and when it last actually gave us exhibitions. A venue swept recently but with no rows since an older date is being refused \u2014 worth a solo re-run."}
+            {"When each venue was last swept, and when it last actually gave us exhibitions."}
           </div>
           {/* "NO SWEEPS YET" AND "COULDN'T READ THE STORE" LOOK IDENTICAL AND
               MEAN OPPOSITE THINGS, so an empty panel always says which. */}
@@ -8239,9 +8243,9 @@ export default function App(){
             const v=venueSeen[m.id]; if(!v)return null;
             const stale=v.returned&&v.attempted&&v.returned!==v.attempted;
             return(
-              <div key={m.id} style={{display:"flex",gap:8,fontSize:10.5,color:C.soft,padding:"2px 0",alignItems:"baseline"}}>
-                <span style={{minWidth:130,color:C.ink}}>{m.short}</span>
-                <span style={{minWidth:150}}>swept {fmtRefresh(v.attempted)}</span>
+              <div key={m.id} style={{display:"grid",gridTemplateColumns:"minmax(0,0.9fr) minmax(0,1.4fr) minmax(0,1.4fr)",gap:8,fontSize:10.5,color:C.soft,padding:"2px 0",alignItems:"baseline"}}>
+                <span style={{color:C.ink}}>{m.short}</span>
+                <span>swept {fmtRefresh(v.attempted)}</span>
                 <span style={{color:v.returned?(stale?TH.urgent.ink:C.soft):TH.urgent.ink,fontWeight:stale||!v.returned?600:400}}>
                   {v.returned?("rows "+fmtRefresh(v.returned)):"no rows \u2014 refused"}
                 </span>
@@ -8270,7 +8274,7 @@ export default function App(){
       <div style={{maxWidth:760,margin:"0 auto 12px",display:"flex",flexDirection:"column",gap:5}}>
         <div style={{display:"flex",gap:4,flexWrap:"wrap",alignItems:"center"}}>
           <span style={{fontSize:9,letterSpacing:"0.12em",textTransform:"uppercase",color:C.soft,marginRight:2}}>Sort</span>
-          {[["date","Date"],["venue","Venue"],["period","Period"],["added","Recently added"],["edited","Recently edited"],["labelled","Recently labelled"]].map(([k,l])=><button key={k} onClick={()=>pickSort(k)} style={chip(acqBuyNext?(k==="period"&&bnPeriod):(sortBy===k&&!pinTouched))}>{l}{(acqBuyNext?k==="period"&&bnPeriod:(k==="date"||k==="period")&&sortBy===k&&!pinTouched)?(dateReversed?" \u2191":" \u2193"):""}</button>)}
+          {[["date","Date"],["venue","Venue"],["period","Period"],["added","Recently added"],["edited","Recently edited"],["labelled","Recently labelled"]].map(([k,l])=><button key={k} onClick={()=>pickSort(k)} style={chip(bnOnly?(k==="period"&&bnPeriod):(sortBy===k&&!pinTouched))}>{l}{(bnOnly?k==="period"&&bnPeriod:(k==="date"||k==="period")&&sortBy===k&&!pinTouched)?(dateReversed?" \u2191":" \u2193"):""}</button>)}
           {pinTouched&&<span style={{fontSize:10.5,color:C.action,fontWeight:600}}>{"\u2191 just-refreshed entries shown first"}</span>}
         </div>
         <div style={{display:"flex",gap:4,flexWrap:"wrap",alignItems:"center"}}>
@@ -8289,7 +8293,7 @@ export default function App(){
         <div style={{display:"flex",gap:4,flexWrap:"wrap",alignItems:"center"}}>
           <span style={{fontSize:9,letterSpacing:"0.12em",textTransform:"uppercase",color:C.soft,marginRight:2}}>Acquiring?</span>
           <button onClick={()=>setAcqWanted(v=>!v)} style={chip(acqWanted)}>Wanted</button>
-          <button onClick={()=>setAcqOwned(v=>!v)} style={chip(acqOwned)}>Owned</button>
+          <button onClick={()=>{setAcqOwned(v=>!v);if(acqBuyNext){setBnPeriod(false);setDateReversed(false);}}} style={chip(acqOwned)}>Owned</button>
           <button onClick={()=>setAcq3mo(v=>!v)} style={chip(acq3mo)}>3+ mos</button>
           <button onClick={()=>setAcq6mo(v=>!v)} style={chip(acq6mo)}>6+ mos closing window</button>
           <button onClick={()=>setAcqHasCat(v=>!v)} style={chip(acqHasCat)}>Has catalogue</button>
@@ -8309,9 +8313,9 @@ export default function App(){
       <div style={{maxWidth:760,margin:"0 auto",display:"flex",flexDirection:"column",gap:10}}>
         {view.length===0&&<div style={{background:C.card,border:"1px solid "+C.rule,borderRadius:5,padding:18,fontSize:12.5,color:C.soft}}>Nothing matches those filters.</div>}
         {(()=>{
-          const pinnedCount=pinTouched&&!acqBuyNext?view.filter(x=>refreshTouched.includes(x.id)).length:0;
+          const pinnedCount=pinTouched&&!bnOnly?view.filter(x=>refreshTouched.includes(x.id)).length:0;
           // Band headers for the "recently" sorts (only when not in the post-import pinned snapshot).
-          const bandMode=(!pinTouched&&!acqBuyNext&&(sortBy==="added"||sortBy==="edited"||sortBy==="labelled"))?sortBy:null;
+          const bandMode=(!pinTouched&&!bnOnly&&(sortBy==="added"||sortBy==="edited"||sortBy==="labelled"))?sortBy:null;
           const newestAdd=bandMode==="added"?(view.find(x=>x.addedAt)?.addedAt||null):null;
           const newestEdit=bandMode==="edited"?(view.find(x=>x.editedAt)?.editedAt||null):null;
           const newestLabel=bandMode==="labelled"?(lastLabel(view.find(x=>lastLabel(x)))||null):null;
@@ -8362,7 +8366,8 @@ export default function App(){
       <div style={{maxWidth:760,margin:"18px auto 0",paddingTop:10,borderTop:"1px solid "+C.rule,fontSize:10,color:C.soft,lineHeight:1.6,display:"flex",justifyContent:"space-between",alignItems:"baseline",gap:12,flexWrap:"wrap"}}>
         {/* Two buttons on the left, no sentence (her decision), spaced like the drawers on the right. */}
         <span style={{display:"flex",gap:14}}>
-          <button onClick={requestReset} style={{background:"none",border:"none",color:C.soft,fontSize:10,textDecoration:"underline",cursor:"pointer",padding:0}}>Reset to Seed</button>
+          {/* Reset to Seed is unwired from her page (her decision), requestReset kept; drawn only for the tests. */}
+          {typeof window!=="undefined"&&window.__catWatchTest&&<button onClick={requestReset} style={{background:"none",border:"none",color:C.soft,fontSize:10,textDecoration:"underline",cursor:"pointer",padding:0}}>Reset to Seed</button>}
           <button onClick={()=>{if(showResetCards)setResetQuery("");setShowResetCards(v=>!v);}} style={{background:"none",border:"none",color:C.soft,fontSize:10,textDecoration:"underline",cursor:"pointer",padding:0}}>Clear search</button>
           <button onClick={labelLedger} style={{background:"none",border:"none",color:C.soft,fontSize:10,textDecoration:"underline",cursor:"pointer",padding:0}}>Label</button>
         </span>
@@ -8428,16 +8433,16 @@ export default function App(){
           </div>
           {/* By venue only (her decision): venues in the app's order, titles A–Z. */}
           {ignoredByVenue.map(x=>(
-            <div key={x.key} style={{display:"flex",gap:10,fontSize:12.5,color:C.ink,padding:"4px 0",alignItems:"baseline"}}>
-              <span style={{minWidth:130,fontWeight:600}}>{MU[x.venueId]?MU[x.venueId].short:x.venueId}</span>
-              <span style={{flex:1}}>{x.title||"(no title)"}</span>
+            <div key={x.key} style={{display:"grid",gridTemplateColumns:"minmax(60px,0.7fr) minmax(0,2fr) auto",gap:10,fontSize:12.5,color:C.ink,padding:"4px 0",alignItems:"baseline"}}>
+              <span style={{fontWeight:600}}>{MU[x.venueId]?MU[x.venueId].short:x.venueId}</span>
+              <span>{x.title||"(no title)"}</span>
               <button onClick={()=>{
                 if(roStop())return;
                 const at=new Date().toISOString();
                 setQuarantine(prev=>{ const next=mergeQuarantine(prev,{[x.key]:{venueId:x.venueId,title:x.title,at,state:"released"}});
                   writeQuarantine(next).then(ok=>{ if(!ok) setQuarWhy("That release couldn\u2019t be saved to this page\u2019s store, so it may come back when you reload."); });
                   return next; });
-                setDirty(true);}} style={{background:"none",border:"none",color:C.action,fontSize:12.5,fontWeight:600,textDecoration:"underline",cursor:"pointer",padding:0,whiteSpace:"nowrap"}}>Remove from quarantine</button>
+                setDirty(true);}} style={{background:"none",border:"none",color:C.action,fontSize:12.5,fontWeight:600,textDecoration:"underline",cursor:"pointer",padding:0,whiteSpace:"nowrap"}}>Remove</button>
             </div>
           ))}
         </div>}

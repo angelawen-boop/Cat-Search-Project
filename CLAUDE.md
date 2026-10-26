@@ -298,13 +298,18 @@ under it (her decision; AL-075). Her re-import of the Brancusi link confirms.
 
 #### 2.2.12 52.2 — UI adjustments, built on `main`, not yet published; her next use confirms
 
-Recently labelled back on the Sort line; footer "Clear search"; Buy next with Period reverses (first tap period
-order, second reverses, third back to her order); Wanted, Owned and Buy next are one axis, so Owned with Buy next
-shows both lists (Buy next books first, in her order; only they drag); no placeholder text in the search and
-Clear search boxes; theme chips "Decorative – Hard / Soft"; chip "Jacquemart". **Occasional is three chips: Occ - US,
-Occ - Europe (UK included), Occ - Other** (her decision). Order: United States, UK, Germany, Belgium, France,
-Switzerland, Italy, Spain, Netherlands, the rest. **Hard-coded:** the countries of the venues that store none
-(`OCC_COUNTRY`); a venue whose stored country is known takes that. Tests PR-035, BP-004–007, OC-001–002, AL-010.
+Recently labelled back on the Sort line; footer "Clear search"; no placeholder text in the search and Clear search
+boxes; theme chips "Decorative – Hard / Soft"; chip "Jacquemart". **Buy next:** alone it is her dragged order, and
+Period there reverses (first tap period order, second reverses, third back to her order). **Owned beside Buy next
+shows both lists as an ordinary list** — Date order by default, the usual sorts, nothing draggable; Buy next with
+Wanted stays Buy next only, a part of Wanted (her decisions). **Occasional is two chips: Occ - US (Australia last in
+it) and Occ - Europe (UK included); there is no Occ - Other** (her decision). Europe's order: UK, Germany, Belgium,
+France, Switzerland, Italy, Spain, Netherlands. **Hard-coded:** the countries of the venues that store none
+(`OCC_COUNTRY`); otherwise the stored country, then the address's country ending. Also: the cloud line, "Last
+sweep:", the sweep notes and the card sentences ("Assume out of print…") trimmed or removed, the heading ends at
+"Exhibition catalogues", the sweep and quarantine tables laid out in columns for mobile, the quarantine button
+says "Remove", "Reset to Seed" unwired from her page (function kept, drawn only when a test sets
+`window.__catWatchTest`), "Import complete. Save it now." Tests PR-035, BP-004–011, OC-001–002, AL-010.
 
 #### 2.2.6 Tests that failed — recorded, not investigated
 
