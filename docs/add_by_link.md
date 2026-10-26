@@ -399,13 +399,18 @@ Its shop: the Publications section on Touchnet (AL-042, above), confirmed in her
 subtitle, read by code (`subtitleUnderHeading`); the dates sit at the page's foot, so the description is read
 from under the heading.
 
-**Berlin** (Staatliche Museen zu Berlin, `occ-smb-museum`): its own chip "Berlin", after KHM; cards say
-"Berlin Gemäldegalerie" (her decision); its shop is searched as "Staatliche Museen zu Berlin" (`LINK_VENUES`). Dates are numbers with dots, day first (DS-004). On the proof list.
+**Berlin** (Staatliche Museen zu Berlin, smb.museum) — two venues under one chip "Berlin", after Munich (her
+decision; `group`): **Berlin Gemäldegalerie** (`occ-smb-museum`) and **Berlin Alte NG** (`occ-alte-nationalgalerie`,
+her name, written exactly so). A show page prints its house as a link on the line under the dates ("Alte
+Nationalgalerie"); that line files the show (`afterDates`, `linkVenue`). A page naming no other house files under
+the Gemäldegalerie, smb.museum's own venue — so another house's show (Bode, Kupferstichkabinett) still comes in as
+"Berlin Gemäldegalerie". Both shops are searched as "Staatliche Museen zu Berlin" (one webshop). Dates are numbers
+with dots, day first (DS-004). On the proof list (Böcklin for the Alte NG); AL-043j.
 
 **Munich** — three venues, each its own cards, under one chip "Munich", the Alte first,
 before Berlin (her decision; `group`, `chipKey`): **Munich Alte Pinakothek**
-(`occ-alte-pinakothek`), **Munich der Moderne** (`occ-pinakothek-der-moderne`) and **Sammlung Schack**
-(`occ-sammlung-schack`, her name, no "Munich"). The Neue is left out (her decision): its pictures hang in the
+(`occ-alte-pinakothek`), **Munich der Moderne** (`occ-pinakothek-der-moderne`) and **Munich Sammlung Schack**
+(`occ-sammlung-schack`). The Neue is left out (her decision): its pictures hang in the
 Alte and Schack while it is closed, and their pages name those. Titles the site types in capitals are recased,
 each part alone (`capsTitles`, the scraper's `capsTitleParts` in `dates.js`; "da", "van" stay small mid-name;
 CT-001). "Venezia 500<<" is the museum's own title.

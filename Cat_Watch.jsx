@@ -73,7 +73,7 @@ const MUSEUMS = [
 // refresh screen. A venue not named here goes last, by name.
 const VENUE_ORDER=["met","ng","occ-nga-gov","frick","morgan","artic","menil",
   "acq","lgd","occ-new-artsmia-org","cincinnati","occ-britishart-yale-edu","brit","tate-britain","wallace","va","occ-nationalgalleries-org",
-  "louvre","orsay","jacquemart","mad","rijks","khm","occ-alte-pinakothek","occ-pinakothek-der-moderne","occ-sammlung-schack","occ-smb-museum","occ-gemaeldegalerie-skd-museum","occ-staedelmuseum-de","uffizi","dellav","borghese","brera","capo","moma",
+  "louvre","orsay","jacquemart","mad","rijks","khm","occ-alte-pinakothek","occ-pinakothek-der-moderne","occ-sammlung-schack","occ-smb-museum","occ-alte-nationalgalerie","occ-gemaeldegalerie-skd-museum","occ-staedelmuseum-de","uffizi","dellav","borghese","brera","capo","moma",
   "tate-modern","mam",
   "occ-museitoscana-cultura-gov-it","occ-palazzoducale-genova-it","occ-palazzorealemilano-it","occ-mfa-org","occ-clevelandart-org","occ-dia-org","occ-archive-worcesterart-org","occ-courtauld-ac-uk",
   "occ-royalacademy-org-uk","ashmolean","occ-museothyssen-org","occ-mauritshuis-nl","occ-ngv-vic-gov-au"];
@@ -929,12 +929,13 @@ const PRM_BOX=/^(?:Current|Upcoming|Past) Exhibitions$|^Mostre (?:in corso|futur
 // (venues/occasional) and this entry wins over it (occVenue). A venue with no entry here
 // files under its own site, named by Claude when first met.
 //   ownChip      a chip of its own, labelled `chip`, else `short`; without it, "Occasional"
-//   group        venues sharing one chip (Munich)
+//   group        venues sharing one chip (Munich, Berlin)
 //   short        her name for it; `card`: her name on its cards, where that differs
 //   notCard      the card name Claude gave before she renamed it: her renames are Claude's examples
 //   name         its full name; `lookupName`: the name the catalogue lookup searches with
 //   sites        other sites its pages sit on, {host, path, line}: `path` a part of a shared
-//                site, `line` the house line naming it on a site several houses share
+//                site, `line` the house line naming it on a site several houses share,
+//                between the title and the dates or just under the dates (Berlin)
 //   linkRead     how its pages are read (as on a MUSEUMS entry)
 //   shopHome, shopCatalogues, shopUnseen, shopQueries, shopNamed, rankAsOwn — its shop (below)
 const LINK_VENUES={
@@ -959,10 +960,15 @@ const LINK_VENUES={
   "occ-pinakothek-der-moderne":{ownChip:true,short:"Munich der Moderne",chip:"Munich",group:"munich-pinakotheken",lookupName:"Pinakothek der Moderne",name:"Pinakothek der Moderne M\u00fcnchen",
     sites:[{host:"pinakothek.de",line:/^Pinakothek der Moderne\b/i},{host:"pinakothek-der-moderne.de"}],
     shopQueries:["Pinakothek der Moderne M\u00fcnchen Museumsshop Kataloge"],shopNamed:"Pinakothek der Moderne",linkRead:{capsTitles:true,slashDayFirst:true}},
-  "occ-sammlung-schack":{ownChip:true,short:"Sammlung Schack",chip:"Munich",group:"munich-pinakotheken",lookupName:"Sammlung Schack",name:"Sammlung Schack",
+  "occ-sammlung-schack":{ownChip:true,short:"Munich Sammlung Schack",chip:"Munich",group:"munich-pinakotheken",lookupName:"Sammlung Schack",name:"Sammlung Schack",
     sites:[{host:"pinakothek.de",line:/^Sammlung Schack\b/i}],linkRead:{capsTitles:true}},
-  // Staatliche Museen zu Berlin (smb.museum): chip "Berlin" after KHM, cards "Berlin Gemäldegalerie" (her decision).
-  "occ-smb-museum":{ownChip:true,short:"Berlin",card:"Berlin Gem\u00e4ldegalerie",lookupName:"Gem\u00e4ldegalerie Berlin",name:"Staatliche Museen zu Berlin"},
+  // Staatliche Museen zu Berlin (smb.museum): one chip "Berlin" after Munich, two venues (her
+  // decision): the Gemäldegalerie, and the Alte Nationalgalerie, cards "Berlin Alte NG" (her
+  // name). The house line under the dates says which ("Alte Nationalgalerie"); a page naming no
+  // other house files under the Gemäldegalerie, smb.museum's own venue. One shop for both.
+  "occ-smb-museum":{ownChip:true,short:"Berlin Gem\u00e4ldegalerie",chip:"Berlin",group:"berlin-smb",lookupName:"Gem\u00e4ldegalerie Berlin",name:"Staatliche Museen zu Berlin"},
+  "occ-alte-nationalgalerie":{ownChip:true,short:"Berlin Alte NG",chip:"Berlin",group:"berlin-smb",lookupName:"Alte Nationalgalerie Berlin",name:"Staatliche Museen zu Berlin",
+    sites:[{host:"smb.museum",line:/^Alte Nationalgalerie\b/i}]},
   // Dresden's Gemäldegalerie Alte Meister: chip "Dresden", cards "Dresden Gemäldegalerie" (her
   // decision). Its pages open with a short "# " name above every SKD museum's menu; the show's
   // own heading follows "Active page:" (titleAfter). Dates day first with slashes; the site
@@ -1613,10 +1619,12 @@ function pageResult(pg){
   const{lr,url,lines,h,rule,range,found,site,vc,host}=pg;
   // The first line under the heading, for a venue whose subtitle sits there.
   const under=lines.slice(h+1).map(stripMd).find(Boolean)||"";
+  // The first line under the dates, for a site whose house line sits there (Berlin).
+  const afterDates=found.noDates||pg.dEnd==null?"":lines.slice(pg.dEnd+1).map(stripMd).find(Boolean)||"";
   let tracked=false; try{ tracked=[...new URL(url).searchParams.keys()].some(k=>TRACKING_PARAM.test(k)); }catch{}
   const link=lr&&lr.cleanLink?String(url).split(/[?#]/)[0]:tracked?withoutTracking(url):url;
   if(link!==url)rule(lr&&lr.cleanLink?"cleanLink":"tracking");
-  return{ok:true,base:pg.base,between:pg.between,under,start:range.start||"",end:range.end||"",raw:pg.raw.slice(0,LINK_RAW_CHARS),site:site||(linkEntry(vc)||{}).name||host.replace(/^www\./,""),link,noDates:!!found.noDates,shown:found.shown||"",shownWhy:found.shownWhy||"",dateLine:found.noDates&&!found.shown?"":pg.dateLine};
+  return{ok:true,base:pg.base,between:pg.between,under,afterDates,start:range.start||"",end:range.end||"",raw:pg.raw.slice(0,LINK_RAW_CHARS),site:site||(linkEntry(vc)||{}).name||host.replace(/^www\./,""),link,noDates:!!found.noDates,shown:found.shown||"",shownWhy:found.shownWhy||"",dateLine:found.noDates&&!found.shown?"":pg.dateLine};
 }
 
 // A venue's title from its own headings (linkRead.title). "pieces": the heading is the "##"
@@ -1789,12 +1797,15 @@ function addressVenue(url){
 }
 // The venue a read page files under → {id, line} (line: the house line, not a subtitle),
 // or {id:null, why} for a shared site's page naming none of its houses (her decision; Munich).
+// A shared site that is also a venue's own (smb.museum, the Gemäldegalerie's) files such a page there.
 function linkVenue(url,page){
   const known=addressVenue(url);
   if(known)return{id:known};
   const houses=siteVenues(url).filter(([,re])=>re);
-  if(!houses.length)return{id:occVenueId(hostOf(siteUrlOf(url)))};
-  for(const l of (page&&page.between)||[]) for(const [id,re] of houses) if(re.test(l.trim()))return{id,line:l};
+  const site=occVenueId(hostOf(siteUrlOf(url)));
+  if(!houses.length)return{id:site};
+  for(const l of [...((page&&page.between)||[]),...(page&&page.afterDates?[page.afterDates]:[])]) for(const [id,re] of houses) if(re.test(l.trim()))return{id,line:l};
+  if(linkEntry(site))return{id:site};
   const names=houses.map(([id])=>LINK_VENUES[id].short);
   return{id:null,why:"The page doesn’t say which museum the show is in ("+names.slice(0,-1).join(", ")+" or "+names[names.length-1]+")."};
 }

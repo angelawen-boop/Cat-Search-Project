@@ -281,6 +281,14 @@ decisions and every period and theme rule: `docs/periods.md`. Read it before any
 - **Period with every Acquiring filter — published at 51.2; her use confirms.** Buy next keeps her dragged
   order; Period there switches to period order with dividers, no dragging, and back again (her choice; BP-).
 
+#### 2.2.11 On `main`, not yet published
+
+- **Berlin as two venues under one chip** (her decision): "Berlin Gemäldegalerie" and "Berlin Alte NG", filed by the
+  house line under the dates; Schack's cards "Munich Sammlung Schack". Proved live on Böcklin and the proof pages.
+  Her shows already imported stay as filed. `docs/add_by_link.md`, "Berlin".
+- **Waiting on her go:** "Recently labelled" sort off (filter kept, code kept); search ignoring accents ("Bocklin"
+  finds "Böcklin"); filters open Current, Past, Announced.
+
 #### 2.2.6 Tests that failed — recorded, not investigated
 
 A session records each failing suite here and does not investigate it (`docs/testing.md`).

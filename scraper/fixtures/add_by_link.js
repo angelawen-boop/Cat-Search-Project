@@ -748,12 +748,19 @@ function runtime() {
     ok(linkVenue('https://www.pinakothek-der-moderne.de/en/exhibitions/dana-schutz-trouble-and-appearance/', { between: [] }).id === M,
       'AL-043a:  a show on the Pinakothek der Moderne\'s own site files under it');
     const none = linkVenue('https://www.pinakothek.de/de/ausstellung/spitzentreffen', { between: ['Museum Brandhorst'] });
-    ok(none.id === null && /Munich Alte Pinakothek, Munich der Moderne or Sammlung Schack/.test(none.why), 'AL-043b:  a page naming none of the houses is a line, never a card', JSON.stringify(none));
+    ok(none.id === null && /Munich Alte Pinakothek, Munich der Moderne or Munich Sammlung Schack/.test(none.why), 'AL-043b:  a page naming none of the houses is a line, never a card', JSON.stringify(none));
     const S = 'occ-sammlung-schack';
     const schack = linkVenue('https://www.pinakothek.de/en/exhibition/boecklin-and-schack-a-dialogue-between-artist-and-collector', { between: ['On the 200th Anniversary of Arnold Böcklin’s Birth', 'Sammlung Schack'] });
-    ok(schack.id === S && own[S].short === 'Sammlung Schack' && own[S].group === own[A].group && !own[S].shopQueries && !own[S].shopNamed
+    ok(schack.id === S && own[S].short === 'Munich Sammlung Schack' && own[S].group === own[A].group && !own[S].shopQueries && !own[S].shopNamed
       && order.indexOf(M) + 1 === order.indexOf(S),
-      'AL-043h:  Sammlung Schack files as its own venue under "Munich", named without "Munich", with no shop settings (the finder answers "none"; her decision)', JSON.stringify(schack));
+      'AL-043h:  Sammlung Schack files as its own venue under "Munich", cards "Munich Sammlung Schack", with no shop settings (the finder answers "none"; her decision)', JSON.stringify(schack));
+    // Berlin: two venues under one chip; the house line sits under the dates (her decision).
+    const G = 'occ-smb-museum', N = 'occ-alte-nationalgalerie';
+    const ng = linkVenue('https://www.smb.museum/en/exhibitions/detail/boecklin/', { between: ['Beyond the Myth'], afterDates: 'Alte Nationalgalerie' });
+    const gg = linkVenue('https://www.smb.museum/en/museums-institutions/gemaeldegalerie/exhibitions/detail/thomas-gainsborough/', { between: ['Painter of Life'], afterDates: 'Gemäldegalerie' });
+    ok(ng.id === N && gg.id === G && own[N].short === 'Berlin Alte NG' && own[G].short === 'Berlin Gemäldegalerie'
+      && own[N].chip === 'Berlin' && own[G].chip === 'Berlin' && own[N].group === own[G].group && order.indexOf(G) + 1 === order.indexOf(N),
+      'AL-043j:  Berlin: the house line under the dates files an Alte Nationalgalerie show as "Berlin Alte NG", any other as "Berlin Gemäldegalerie", one chip "Berlin" (her decision)', JSON.stringify([ng, gg]));
     ok([A, M, S].every(id => own[id].linkRead && own[id].linkRead.capsTitles), 'AL-043i:  titles the Munich houses type in capitals are recased');
     const D = 'occ-gemaeldegalerie-skd-museum', card = id => own[id].card;
     ok(own[D].short === 'Dresden' && card(D) === 'Dresden Gemäldegalerie' && own[D].linkRead.slashDayFirst && own[D].linkRead.titleAfter.test('Active page: Hopper')
