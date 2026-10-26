@@ -920,6 +920,34 @@ const searches = calls => calls.filter(c => c.tool === 'web_search').map(c => c.
     eq(m.row.shopState, 'script', 'YS-005: a shelf with neither prices nor product links (MoMA’s pop-up) is still JS-rendered', JSON.stringify(m.row.shopState));
   }
 
+  // ── GK-001..GK-002: a gallery's list of titles without prices, its books under its own address (Galerie
+  // Karsten Greve, live 26 Oct: ".../en/publications/detail/…", "80 €" on a book's page) ──
+  {
+    const G = 'https://www.testgalerie.de/en/publications', D = G + '/detail/';
+    const LIST = '# Publications\n\n* [All](' + G + '?filter=alle)\n* [Catalogues](' + G + '?filter=C)\n* [Cart](https://www.testgalerie.de/en/checkout)\n\n'
+      + ['483-qiu-shihua', '451-soulages-chamberlain', '127-wols', '96-paintings'].map(h => '[Artist _' + h.replace(/^\d+-/, '').replace(/-/g, ' ') + '_](' + D + h + ')').join('\n\n')
+      + '\n\n' + 'GALERIE COLOGNE Drususgasse 1-5 50667 Cologne Tuesday – Friday 10 am – 6.30 pm. '.repeat(4);
+    const BOOK = '# Qiu Shihua\n\n_Qiu Shihua_\n2026\nTestgalerie Cologne\n236 p., 105 ill.\nHardcover, 2 vols. in slipcase\n\n80 €\nadd. shipping and packing\n\nAdd to cart';
+    const page = u => u === G ? LIST : u === D + '483-qiu-shihua' ? BOOK : '';
+    const callsG = [];
+    const yg = lift({ mcp: (tool, args) => tool === 'web_search' ? { payload: { results: [] } }
+      : { payload: { errors: [], results: args.urls.map(u => ({ url: u, title: 'Publications', excerpts: [page(u).slice(0, 300)], ...(args.full_content ? { full_content: page(u) } : {}) })) } },
+      sample: () => ({ found: false }) }, callsG);
+    yg.registerOccasional({ 'occ-testgalerie-de': { id: 'occ-testgalerie-de', name: 'Testgalerie', host: 'www.testgalerie.de', gallery: true,
+      shop: 'found', confirmed: true, finder: 3, shopHome: 'https://www.testgalerie.de/', shopCatalogues: G, shelfKind: 'books', shopSearch: null } });
+    const gk = await yg.lookupCatalogue(row('occ-testgalerie-de', 'A Show Not On The List'), { label: () => {} });
+    ok(gk.row.shopState !== 'script' && callsG.some(c => c.tool === 'web_fetch' && c.args.urls.includes(D + '483-qiu-shihua')),
+      'GK-001: a list of titles with no prices is proved books by its first book under its own address: a show not on it is not in the shop, never "cannot be seen"', JSON.stringify([gk.row.shopState, gk.detail && gk.detail.slice(-300)]));
+    const callsN = [];
+    const yn = lift({ mcp: (tool, args) => tool === 'web_search' ? { payload: { results: [] } }
+      : { payload: { errors: [], results: args.urls.map(u => ({ url: u, title: 'Publications', excerpts: [u === G ? LIST.slice(0, 300) : ''], ...(args.full_content ? { full_content: u === G ? LIST : '' } : {}) })) } },
+      sample: () => ({ found: false }) }, callsN);
+    yn.registerOccasional({ 'occ-testgalerie-de': { id: 'occ-testgalerie-de', name: 'Testgalerie', host: 'www.testgalerie.de', gallery: true,
+      shop: 'found', confirmed: true, finder: 3, shopHome: 'https://www.testgalerie.de/', shopCatalogues: G, shelfKind: 'books', shopSearch: null } });
+    const gn = await yn.lookupCatalogue(row('occ-testgalerie-de', 'A Show Not On The List'), { label: () => {} });
+    eq(gn.row.shopState, 'script', 'GK-002: its first book opened and not a book (no price, no make): still "cannot be seen", as before', JSON.stringify(gn.row.shopState));
+  }
+
   // ── FS-001..FS-005: the Städel — Parallel drops its books (her decision: "Parallel fault") ──
   // Parallel's live answer for its section: docs/link_pages/shop_search/staedel_shelf_live.json.
   {

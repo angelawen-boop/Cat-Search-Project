@@ -97,6 +97,49 @@ code first, one book's page never a section, a file or an app store never the sh
 own site kept as itself, a shop address on another site followed, and one more search for the shop itself when
 the first finds nothing shop-like. AL-059.
 
+## A gallery's shop — her design (built 26 Oct, not yet published)
+
+**Why its own path** (her decision): galleries sell their books differently from museums — from a "Publications",
+"Publishing" or "Library" page on their own site, or a shop on another (shop.pacegallery.com, a Shopify shop), rarely
+called a shop, and never with an "exhibition catalogues" section. The museum finder recognised a shop only by its
+name, so Galerie Karsten Greve's Publications page was thrown away and the walk never started. Rules for galleries
+are kept apart so no museum can get worse: Claude says whether a new venue is a gallery (`gallery`, asked with every
+link, kept on the venue); a gallery goes down this path first; when it finds no shop, the museum path runs unchanged.
+
+**The path** (`galleryShop`), each step only if the one before found nothing:
+1. **The show page read** (the link's page): a link named Shop, Store, Books, Publications, Publishing or Library
+   (in the languages met; never "Editions" — a gallery's editions are prints), or whose address is one of those
+   words; a link into a shop site (that shop); a book's "Purchase" / "Buy now" (its list).
+2. **The home page**, a redirect followed (kamelmennour.com → mennour.com); read the same way.
+3. **The usual addresses** in one call: /shop, /store, /books, /publications, /publishing and their /en/ forms. One
+   that lands on the home page proves nothing.
+4. **A search**, its results judged as pages are: a shop site, a page of the gallery's own named for its books.
+
+**What counts:** a shop elsewhere is the shop. A page of the gallery's own is the shop when it sells books: priced
+books on it, or one of its books opened (the one under a books heading first — Massimo De Carlo lists prints before
+its "Catalogues") showing a price and its make (ISBN, binding, page count). No cart is needed (Lisson: prices and
+"Enquire"). A price with no cents counts on a book's page ("80 €"). A list read without its links is proved by its
+books linked from the gallery's other pages (Karsten Greve's home page).
+
+**Which list:** the widest list of books — "All", "All Books", "Books", "Publications" — never a part of it (New,
+Selected, Rare, Sale, Archive, Exhibition-Related, Monographs), editions, prints or posters, a tax copy ("Books Zero
+Rated UK") or a list of everything ("All Items"). Lists named alike are told apart by size ("Books & Magazines" over
+"Gagosian Books"). A Shopify shop's own list of lists is read; none books-only → its whole list when that is books;
+a shop with no books-only list → its front page, when it sells books (Mennour: books, caps and bags). A gallery in a
+country that does not speak English: the list's English version, by the page's own language link (its words would
+not do: English titles make Karsten Greve's German list read as English), its filter dropped; taken when it carries
+the same titles.
+
+**Never "no shop" for a site that could not be read:** a gallery whose home page could not be read, and where the
+museum path then finds nothing, is "Search failed".
+
+**The lookup** (shared; in the design she approved): a list of titles without prices is proved books by its first book under its
+own address too, read as a gallery's book page — so a show missing from Karsten Greve's list is not in the shop,
+never "cannot be seen" (GK-001–002). The museum finder's own proof is unchanged.
+
+**Tests:** AL-076–076g (offline); `node scraper/gallery_shop_check.js` — the app's own finder, live, on fifteen
+galleries (`docs/gallery_shop_check.json`), each against the list set from its live site before the run.
+
 ## The shop finder — her design (built, not yet published)
 
 **There is one right section per shop: the finder finds it, or says it could not.** Never "the best of whatever the

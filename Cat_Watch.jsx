@@ -1706,7 +1706,8 @@ function linkPrompt(page,askVenue,url){
     +"\"summary\": the summary, following the rules above — or null if the raw text does not describe an exhibition.\n"
     +(page.between.length?"\"subtitle\": if one of the LINES BETWEEN THE TITLE AND THE DATES is the second part of the exhibition's own name — the part a catalogue's title would carry after the main title — copy that line exactly as written. Otherwise \"\". Never a category (\"Special Exhibition\"), a sponsor, a place, a price or a date.\n":"")
     +"\"english\": the exhibition's title"+(page.between.length?" (with the subtitle you gave, if any)":"")+" in natural English if it is not in English; \"\" if it already is, names aside. Keep every name as written and the title's own full stops. Plain words: no \"In English\", no quotation marks.\n"
-    +"\"englishSpeaking\": true if the museum is in an English-speaking country, false if not."
+    +"\"englishSpeaking\": true if the museum is in an English-speaking country, false if not.\n"
+    +"\"gallery\": true if the venue that held the exhibition is a commercial art gallery (a dealer that shows and sells artists' work), false if it is a museum or another public institution."
     +(askVenue?"\n\"venue\": the museum or gallery of THE SHOWING THIS CARD IS FOR: the one that line names, even when the text lists other showings or another venue first; if the line names none, the museum that held the exhibition on its dates. The museum itself, not a building, wing or room of it. Its full official name, written out (no acronym). \"\" if the page does not say.\n"
       +"\"venueCity\": that museum's city, in English. \"\" if not known.\n"
       +"\"venueCountry\": that museum's country, in English. \"\" if not known.\n"
@@ -1720,7 +1721,7 @@ function linkAnswer(a){
   const o=a&&typeof a==="object"?a:{};
   const str=v=>typeof v==="string"?v.replace(/["“”]/g,"").replace(/\s+/g," ").trim():"";
   return{summary:typeof o.summary==="string"?o.summary.trim():"",subtitle:typeof o.subtitle==="string"?o.subtitle.trim():"",
-    english:str(o.english).replace(/^In English:\s*/i,""),englishSpeaking:o.englishSpeaking!==false,
+    english:str(o.english).replace(/^In English:\s*/i,""),englishSpeaking:o.englishSpeaking!==false,gallery:o.gallery===true,
     venue:str(o.venue),venueCity:str(o.venueCity),venueCountry:str(o.venueCountry),venueAlso:(Array.isArray(o.venueAlso)?o.venueAlso:[]).map(str).filter(Boolean).slice(0,4),venueShort:str(o.venueShort),venueOwnPage:o.venueOwnPage!==false};
 }
 
@@ -2177,11 +2178,20 @@ async function openShopPage(open,url,objective,queries,opts){
 // A list of titles without prices (Yale's Publications): its first product is opened, and
 // must read as one book with a price (her decision; AL-042). One copy: the finder and the
 // lookup's shop step.
-async function firstProductIsBook(open,text,host){
-  const items=productLinksOn(text,host);
+// `list`: the list's own address. Its books under it count as its items when no address looks like a
+// shop's product (Galerie Karsten Greve's ".../en/publications/detail/…").
+function itemsUnder(text,host,list){
+  let base=""; try{ base=new URL(list).pathname.replace(/\/?$/,"/"); }catch{ return []; }
+  if(base==="/")return [];
+  return [...new Set(mdLinks(text).filter(l=>{ if(hostOf(l.url)!==host||NOT_A_BOOK_LINK.test(l.url))return false; let p=""; try{ p=new URL(l.url).pathname; }catch{ return false; } return p.startsWith(base)&&p.length>base.length+1; }).map(l=>l.url.split("#")[0]))];
+}
+async function firstProductIsBook(open,text,host,list){
+  let items=productLinksOn(text,host), under=false;
+  if(items.length<2&&list){ items=itemsUnder(text,host,list); under=true; }
   if(items.length<2)return false;
   const b=await openShopPage(open,items[0],"This book's title, price and ISBN.",null,{full:true});
-  return b.ok&&looksLikeOneBook(pageTextOf(b.results));
+  // A book under its list's address is read as a gallery's book page: "80 €" with no cents counts.
+  return b.ok&&(looksLikeOneBook(pageTextOf(b.results))||(under&&galleryBookPage(pageTextOf(b.results))));
 }
 // A page's links on the shop's own site, as menu entries. A long label is read by its first
 // six words: Touchnet adds "The number of products in this category is" to each (Yale).
@@ -2400,7 +2410,16 @@ function firstPageOf(u){
 // if it is that section; otherwise the shop is walked for it. Only when the shop has none does the finder
 // take the best it saw, and the shop screen says "Shop found, but not its catalogues section" (her wording).
 // `foreign`: the venue's country does not speak English — its shop's English version is looked for first.
-async function discoverShop(pageShop,museumHost,venueName,turnedDown,venueId,trace,foreign){
+// `gallery`: Claude named the venue a gallery — {page, url}, the show page read, or true when there is none
+// (Look again). The gallery path runs first; when it finds no shop, the museum path below runs unchanged.
+async function discoverShop(pageShop,museumHost,venueName,turnedDown,venueId,trace,foreign,gallery){
+  if(gallery){
+    const g=await galleryShop(gallery===true?{}:gallery,museumHost,venueName,turnedDown,trace,foreign);
+    if(g.shop==="found")return g;
+    const m=await discoverShop(pageShop,museumHost,venueName,turnedDown,venueId,trace,foreign);
+    // A gallery whose own site could not be read is never "no shop" (her design).
+    return m.shop==="none"&&g.unread?{shop:"failed",why:g.unread,finder:3}:m;
+  }
   const sf=shopFinderStart(pageShop,museumHost,venueName,turnedDown,venueId,trace);
   sf.foreign=!!foreign;
   const ruled=shopFromRule(sf);
@@ -2711,6 +2730,208 @@ async function shopResult(sf){
   const out=root?{shop:"noshelf",shopHome:front||sf.homeOf(root),shopSearch:searchFor(seenText,root)||(await proveShopSearch(seenText,root))||null,finder:3,searchRule:SEARCH_RULE}:{shop:"none",finder:3};
   sf.note("result",{shop:out.shop,shopHome:out.shopHome||null});
   return out;
+}
+
+// ── A GALLERY'S SHOP — her design (docs/add_by_link.md, "A gallery's shop") ──
+// A gallery sells its books from a shop of its own, on its own site ("Publications", "Library") or another
+// (shop.pacegallery.com, a Shopify shop), rarely called a shop. The way in is read off its pages: the show page,
+// then its home page, then the usual addresses, then a search. The list taken is its widest list of books.
+// Each step runs only if the one before found nothing. Never "Editions": a gallery's editions are prints.
+const GALLERY_OPENS=14;
+const GALLERY_WAY_WORD="shop|store|boutique|bookshop|bookstore|books?|publications?|publishing|library|librairie|livres|publikationen|bucher|buecher|libreria|libri|pubblicazioni|publicaciones|libros|tienda|negozio|winkel|butik|webshop";
+const GALLERY_WAY=new RegExp("^(?:the\\s+|our\\s+|online\\s+|alle\\s+)*(?:"+GALLERY_WAY_WORD+")(?:\\s+online)?$");
+const GALLERY_WAY_PATH=new RegExp("^\\/(?:"+LANG_PART+"\\/)?(?:"+GALLERY_WAY_WORD+")\\/?$","i");
+const GALLERY_BUY=/^(?:purchase|buy(?: now)?|add to (?:cart|bag|basket)|shop now|order|acheter|kaufen|in den warenkorb|comprar|acquista)$/;
+const GALLERY_SHOP_IN=/\b(?:shop|store|boutique)\b/;
+const GALLERY_NOT_PAGE=/\/(?:cart|basket|checkout|account|login|wishlist)\b|ticket/i;
+// A book's own page: its price and its make (ISBN, binding, page count), in the languages met.
+const GALLERY_BOOK_MAKE=/\bisbn\b|\bhard ?(?:cover|back)\b|\bsoft ?cover\b|\bpaperback\b|\bbroschur|\bgebunden\b|\breliure\b|\bbroche\b|\b\d+\s?(?:pages|pp\b|p\.|s\.|seiten|pagine|paginas)/;
+// A price with no cents counts on a book's own page ("80 €", Galerie Karsten Greve).
+const GALLERY_PRICE=new RegExp(PRICE.source+"|\\b\\d+\\s?(?:€|eur\\b|chf\\b)");
+// A Shopify shop under the gallery's own store name (acquavellagalleries.myshopify.com).
+function ownShopifyStore(u,host){
+  const h=hostOf(u);
+  if(!/\.myshopify\.com$/.test(h))return false;
+  const store=h.split(".")[0].replace(/[^a-z0-9]/g,""), own=baseDomain(host).split(".")[0].replace(/[^a-z0-9]/g,"");
+  return own.length>=4&&(store.includes(own)||own.includes(store));
+}
+const galleryBookPage=t=>{ const f=foldText(t); return GALLERY_BOOK_MAKE.test(f)&&GALLERY_PRICE.test(f); };
+// A list of books named whole (best first), never part of the list, editions, prints or posters alone. Lists
+// named alike are told apart by size: the widest ("Books & Magazines" over "Gagosian Books", Gagosian).
+const GALLERY_BOOKS=/\bbooks?\b|\bpublications?\b|\bcatalog(?:ue)?s\b|\blivres\b|\bpublikationen\b|\bbu(?:e)?cher\b|\blibri\b|\blibros\b|\bpubblicazioni\b|\bpublicaciones\b|\bpublished by\b|\bpublishers?\b/;
+const GALLERY_PART=/\b(?:new|latest|recent|selected|featured|highlights?|rare|signed|sale|archive|backlist|special|limited|holiday|gifts?|spotlight|edit|zero rated|vat|world book day|wbd|exhibition related|monographs?|artists books|staff picks|pre ?orders?|coming soon|from the archives|writings|lives|biography)\b/;
+function galleryListScore(words){
+  const t=foldText(words).replace(/[^a-z0-9& ]+/g," ").replace(/\s+/g," ").trim();
+  if(!t||/\beditions?\b|\bprints?\b|\bposters?\b|\bmultiples?\b/.test(t)&&!/\bbooks?\b|\bpublications?\b/.test(t))return 0;
+  if(GALLERY_PART.test(t))return 0;
+  if(/^(?:all|alle|tout|tous|tutti|todos)$/.test(t))return 3;
+  if(!GALLERY_BOOKS.test(t))return 0;
+  if(/^(?:(?:all|alle|tous les|tutti i|todos los)\s+)?(?:books|publications|catalogues|livres|publikationen|bucher|libri|libros|pubblicazioni|publicaciones)$/.test(t))return 3;
+  return 2;
+}
+async function galleryShop(page,museumHost,venueName,turnedDown,trace,foreign){
+  const g={host:museumHost,opens:0,seen:"",no:new Set((turnedDown||[]).map(normalizeUrlKey)),tried:new Set(),home:"",unread:null};
+  const note=(step,what)=>{ if(trace)trace.push({step:"gallery-"+step,...what}); };
+  const open=async(url,objective)=>{
+    if(g.opens>=GALLERY_OPENS)return null;
+    g.opens++;
+    const f=await openShopPage(fetchPage,url,objective||"The page's links: the shop, books and publications, and the books with their prices.",null,{full:true});
+    if(!f.ok||!f.results.length)return null;
+    const t=pageTextOf(f.results); g.seen+="\n"+t;
+    return t;
+  };
+  const own=u=>baseDomain(hostOf(u))===baseDomain(g.host);
+  const shopSite=u=>!!hostOf(u)&&hostOf(u)!==g.host&&(SHOP_HOST.test(hostOf(u))||isShopPlace(u,g.host,"")||ownShopifyStore(u,g.host));
+  const pathOf=u=>{ try{ return new URL(u).pathname; }catch{ return ""; } };
+  const parentOf=u=>{ try{ const x=new URL(u); const p=x.pathname.replace(/\/[^/]+\/?$/,"/"); return p==="/"?"":x.origin+p; }catch{ return ""; } };
+  // The ways in on a page, in its order: a shop elsewhere, a page of the gallery's own named for its books, a
+  // book's "Purchase" (its list), a link into a shop site (that shop).
+  const waysIn=text=>{
+    const out=[];
+    for(const l of mdLinks(text)){
+      const u=l.url.split("#")[0], lab=foldText(l.label).replace(/[^a-z0-9 ]+/g," ").replace(/\s+/g," ").trim();
+      if(notAShop(u)||GALLERY_NOT_PAGE.test(u))continue;
+      const named=GALLERY_WAY.test(lab)||(own(u)&&GALLERY_WAY_PATH.test(pathOf(u))), buy=GALLERY_BUY.test(lab);
+      if(shopSite(u))out.push({kind:"away",url:/\/(?:products?|collections|p|detail|item)\//i.test(u)?originOf(u):u});
+      else if(!own(u)){ if(named||buy||GALLERY_SHOP_IN.test(lab))out.push({kind:"away",url:originOf(u)}); }
+      else if(named)out.push({kind:"own",url:u});
+      else if(buy&&parentOf(u))out.push({kind:"own",url:parentOf(u)});
+    }
+    const seen=new Set();
+    return out.filter(c=>{ const k=c.kind+normalizeUrlKey(c.url); if(seen.has(k)||g.tried.has(k))return false; seen.add(k); return true; });
+  };
+  // A list proved as books: priced books on it, or one of its books opened — the one under a books heading
+  // first (Massimo De Carlo's "Catalogues" among its prints), else the first.
+  const sells=async(text,url)=>{
+    if(looksLikeBookShelf(text))return true;
+    const host=hostOf(url);
+    let items=productLinksOn(text,host);
+    if(items.length<2)items=itemsUnder(text,host,url);
+    // The list read without its links: its books linked from the gallery's other pages (its home page).
+    if(items.length<2)items=itemsUnder(g.seen,host,url);
+    if(items.length<2)items=[...new Set(mdLinks(text).filter(l=>GALLERY_BUY.test(foldText(l.label).trim())&&hostOf(l.url)===host).map(l=>l.url))];
+    if(!items.length)return false;
+    const at=String(text).search(/^#+\s*.*(?:catalog|books?|publication|livres|publikation|libri)/im);
+    const after=at>=0?items.find(u=>String(text).indexOf(u,at)>at):null;
+    for(const u of [...new Set([after,items[0]].filter(Boolean))]){
+      const b=await open(u,"This book's title, price, binding, page count and ISBN.");
+      if(b&&galleryBookPage(b))return true;
+    }
+    return false;
+  };
+  // Inside a shop: its widest list of books. A Shopify shop's own list of lists, else its front page's links;
+  // no books-only list → the front page itself, when it sells books (Mennour: books, caps and bags).
+  const inShop=async front=>{
+    const o=originOf(front);
+    const pick=async(cands,how)=>{
+      const ranked=cands.map(c=>({...c,score:galleryListScore(c.words)})).filter(c=>c.score&&!g.no.has(normalizeUrlKey(c.url)))
+        .sort((a,b)=>b.score-a.score||(b.count||0)-(a.count||0));
+      for(const c of ranked.slice(0,3)){
+        const pj=shopifyProductsUrl(c.url);
+        if(pj){ if(g.opens>=GALLERY_OPENS)break; g.opens++; const j=await fetchPage(pj,"The products in this list: titles, types and prices.",null,{full:true}); if(j.ok&&shopifyShelfIsBooks(pageTextOf(j.results),false))return{url:c.url,how}; continue; }
+        const t=await open(c.url); if(t&&await sells(t,c.url))return{url:c.url,how};
+      }
+      return null;
+    };
+    if(g.opens<GALLERY_OPENS){
+      g.opens++;
+      const f=await fetchPage(o+"collections.json?limit=250","The shop's lists: titles and handles.",null,{full:true});
+      const t=f.ok?pageTextOf(f.results):"";
+      if(/"collections"\s*:/.test(t)){
+        const lists=shopifySections(t,o).map(c=>({...c,count:+((t.split('"handle":"'+c.handle+'"')[1]||"").match(/"products_count"\s*:\s*(\d+)/)||[])[1]||0}));
+        const r=await pick(lists,"the shop's lists");
+        if(r)return r;
+        if(g.opens<GALLERY_OPENS){ g.opens++; const j=await fetchPage(o+"collections/all/products.json?limit=8","The products in this shop: titles, types and prices.",null,{full:true}); if(j.ok&&shopifyShelfIsBooks(pageTextOf(j.results),false))return{url:o+"collections/all",how:"the shop's whole list"}; }
+        return null;
+      }
+    }
+    const t=await open(front);
+    if(!t)return null;
+    const r=await pick(menuLinks(t,hostOf(front)).map(c=>({...c,words:c.label||c.words})),"the shop's menu");
+    if(r)return r;
+    return await sells(t,front)?{url:front,how:"the shop's front page"}:null;
+  };
+  // A page of the gallery's own: a link on it to a shop elsewhere is followed; else it is the shop when it sells
+  // books. Its whole list ("All", "Alle Publikationen") is taken when that sells too; for a gallery in a country
+  // that does not speak English, its English version when the page links one.
+  const onOwn=async(url,text)=>{
+    const t=text!=null?text:await open(url);
+    if(!t||t.trim().length<SHELL_CHARS)return null;
+    const away=mdLinks(t).find(l=>shopSite(l.url)||(!own(l.url)&&!notAShop(l.url)&&GALLERY_SHOP_IN.test(foldText(l.label))));
+    if(away){ const r=await inShop(shopSite(away.url)&&!/\/(?:products?|collections)\//i.test(away.url)?away.url:originOf(away.url)); if(r)return{...r,home:originOf(away.url)}; }
+    if(!await sells(t,url))return null;
+    let list=url, listText=t;
+    const all=mdLinks(t).find(l=>own(l.url)&&galleryListScore(l.label)===3&&/^(?:all|alle|tout|tous|tutti|todos)\b/.test(foldText(l.label).trim())&&normalizeUrlKey(l.url)!==normalizeUrlKey(url));
+    if(all){ const at=await open(all.url); if(at&&await sells(at,all.url)){ list=all.url; listText=at; } }
+    // Its own language link, not its words: English titles make a German list read as English (Galerie Karsten Greve).
+    const bare=u=>{ try{ const x=new URL(u); return x.host+x.pathname.replace(/\/$/,""); }catch{ return u; } };
+    const en=foreign?[listText,t].map(x=>mdLinks(x).find(l=>EN_LABEL.test(foldText(l.label).trim())&&own(l.url)&&bare(l.url)!==bare(list))).find(Boolean):null;
+    if(en){
+      let eu=en.url; try{ const x=new URL(eu); if(!/lang|locale|language/i.test(x.search))x.search=""; eu=x.toString(); }catch{}
+      const et=await open(eu);
+      // The same list in English: its titles are the list's own (names are not translated), or it sells itself.
+      const lines=x=>new Set(String(x).split("\n").map(l=>stripMd(l).trim()).filter(l=>l.length>=8));
+      const ours=lines(listText), same=et?[...lines(et)].filter(l=>ours.has(l)).length:0;
+      if(et&&pageLanguage(eu,et)==="en"&&(same>=5||await sells(et,eu)))list=eu;
+    }
+    return{url:list,how:"the gallery's own page",home:originOf(url)};
+  };
+  const tryAll=async(cands,step)=>{
+    for(const c of cands){
+      g.tried.add(c.kind+normalizeUrlKey(c.url));
+      if(g.no.has(normalizeUrlKey(c.url)))continue;
+      const r=c.kind==="away"?await inShop(c.url):await onOwn(c.url);
+      note(step,{tried:c.url,kind:c.kind,found:r?r.url:null,opens:g.opens});
+      if(r)return c.kind==="away"?{...r,home:originOf(c.url)}:r;
+      if(g.opens>=GALLERY_OPENS)break;
+    }
+    return null;
+  };
+  let hit=null;
+  // 1. The show page read.
+  if(page.page)hit=await tryAll(waysIn(page.page),"show-page");
+  // 2. The home page, a redirect followed (kamelmennour.com → mennour.com).
+  if(!hit){
+    let home="https://"+g.host+"/", t=await open(home,"The site's menu and footer links: shop, books, publications, library.");
+    const moved=t&&t.trim().length<SHELL_CHARS&&/redirect/i.test(t)?mdLinks(t).find(l=>!own(l.url))||(t.match(/<(https?:\/\/[^>\s]+)>/)?{url:t.match(/<(https?:\/\/[^>\s]+)>/)[1]}:null):null;
+    if(moved){ g.host=hostOf(moved.url); home=originOf(moved.url); t=await open(home,"The site's menu and footer links: shop, books, publications, library."); }
+    g.home=t||"";
+    if(!t||t.trim().length<SHELL_CHARS)g.unread="The gallery's site could not be read.";
+    note("home",{home,read:!!t,chars:(t||"").length});
+    if(t)hit=await tryAll(waysIn(t),"home");
+  }
+  // 3. The usual addresses, in one call. One that lands on the home page proves nothing.
+  if(!hit&&g.opens<GALLERY_OPENS){
+    const o="https://"+g.host+"/", paths=["shop","store","books","publications","publishing","en/shop","en/books","en/publications","en/publishing"];
+    g.opens++;
+    const f=await fetchPage(paths.map(p=>o+p),"The page's books with their prices, and its links to the shop.",null,{full:true});
+    const answers=f.ok?paths.map(p=>(f.results||[]).find(r=>r&&normalizeUrlKey(r.url)===normalizeUrlKey(o+p))).filter(Boolean):[];
+    for(const r of answers){
+      const t=pageTextOf([r]);
+      if(t.trim().length<SHELL_CHARS||(g.home&&t.slice(0,600)===g.home.slice(0,600)))continue;
+      g.seen+="\n"+t;
+      const got=await onOwn(r.url,t);
+      note("address",{tried:r.url,found:got?got.url:null,opens:g.opens});
+      if(got){ hit=got; break; }
+      if(g.opens>=GALLERY_OPENS)break;
+    }
+  }
+  // 4. A search, its results judged as the pages were: a shop site, a page of the gallery's own named for its books.
+  if(!hit&&g.opens<GALLERY_OPENS){
+    g.opens++;
+    const s=await searchWeb("Where "+venueName+" sells its books and exhibition catalogues online.",[venueName+" shop books",venueName+" publications catalogues buy"]);
+    const res=s.ok?s.results||[]:[];
+    const cands=[...res.filter(r=>shopSite(r.url)).map(r=>({kind:"away",url:originOf(r.url)})),
+      ...res.filter(r=>own(r.url)&&GALLERY_WAY_PATH.test(pathOf(r.url))&&!/\/(?:detail|products?)\//i.test(r.url)).map(r=>({kind:"own",url:r.url}))]
+      .filter((c,i,a)=>a.findIndex(x=>x.kind+normalizeUrlKey(x.url)===c.kind+normalizeUrlKey(c.url))===i&&!g.tried.has(c.kind+normalizeUrlKey(c.url)));
+    note("search",{results:res.length,ways:cands.map(c=>c.url)});
+    hit=await tryAll(cands,"search");
+  }
+  if(!hit){ note("result",{shop:"none",unread:g.unread,opens:g.opens}); return{shop:"none",unread:g.unread}; }
+  const home=hit.home||originOf(hit.url);
+  const search=searchFor(g.seen+"\n"+hit.url,home)||(await proveShopSearch(g.seen,home))||null;
+  note("result",{shop:"found",shopCatalogues:hit.url,how:hit.how,opens:g.opens});
+  return{shop:"found",shopHome:home,shopCatalogues:hit.url,shelfKind:"books",shopSearch:search,foundBy:hit.how,finder:3,searchRule:SEARCH_RULE};
 }
 
 // One pro forma file, built in memory, so a link goes through the very same
@@ -4835,9 +5056,9 @@ async function shopStep(row,io){
     if(!whole.ok)return{out:{ran:true,ok:false,detail:s1.detail+"\n"+whole.detail,data:null}};
     let books=whole.results.filter(r=>!pageIsShell([r])&&SHOP_PRICE.test(oneText(r)));
     // No price on any page: a list of titles is books when its first product is one
-    // (firstProductIsBook, Yale's Publications).
+    // (firstProductIsBook, Yale's Publications), or its first book under its own address (Galerie Karsten Greve).
     const listed=books.length?null:whole.results.find(r=>!pageIsShell([r]));
-    if(listed&&await firstProductIsBook(io.fetch,oneText(listed),dom))books=[listed];
+    if(listed&&await firstProductIsBook(io.fetch,oneText(listed),dom,listed.url))books=[listed];
     if(!books.length)
       return{out:{ran:true,ok:true,blocked:"script",detail:s1.detail+"\n"+whole.detail+"\nThe museum shop’s pages came back with no books on them, so it could not be searched.",data:null}};
     return{whole};
@@ -7105,7 +7326,8 @@ export default function App(){
             const name=venueSearchName(vc,{...(had&&!namedByAddress(had)?had:{name:page.site}),...(named&&(!had||namedByAddress(had))?{name:named.name}:{}),...(named?{aka:named.aka,city:named.city,country:named.country}:{})});
             setProg({done:n,total:urls.length,label:"Reading "+(n+1)+" of "+urls.length+"\u2026 looking for "+name+"\u2019s shop"});
             const pageShop=away?"":shopLinkOnPage(oneText(res),host);
-            const shop=await discoverShop(pageShop,host,name,had?had.turnedDown:[],vc,null,(had&&had.english===false)||(ask.ok&&a.englishSpeaking===false));
+            const gallery=had&&had.gallery!==undefined?had.gallery:ask.ok&&a.gallery;
+            const shop=await discoverShop(pageShop,host,name,had?had.turnedDown:[],vc,null,(had&&had.english===false)||(ask.ok&&a.englishSpeaking===false),gallery&&!away?{page:oneText(res),url}:gallery);
             venues={...venues,[vc]:{...(had||{}),id:vc,name:had?had.name:named?named.name:page.site,host,english:had?had.english:undefined,
               shopHome:null,shopCatalogues:null,shelfKind:null,shopSearch:null,why:null,shopEnglishUnread:null,englishPicked:false,
               ...shop,confirmed:false,turnedDown:had?had.turnedDown||[]:[],pageShop,addedAt:had?had.addedAt:new Date().toISOString()}};
@@ -7117,6 +7339,7 @@ export default function App(){
           venues={...venues,[vc]:{...venues[vc],...(renamed?{name:named.name,short:named.short}:{}),aka:named.aka,city:named.city,country:named.country}}; venuesChanged=true; seen.named=named;
         }
         if(isOcc(vc)&&venues[vc]&&venues[vc].english===undefined&&ask.ok){ venues={...venues,[vc]:{...venues[vc],english:a.englishSpeaking}}; venuesChanged=true; }
+        if(isOcc(vc)&&venues[vc]&&venues[vc].gallery===undefined&&ask.ok){ venues={...venues,[vc]:{...venues[vc],gallery:a.gallery}}; venuesChanged=true; }
         // A venue whose subtitle sits under the heading: read by code. A line
         // ending like a sentence is the text, not a subtitle.
         const own=(MU[vc]||{}).subtitleUnderHeading&&page.under&&page.under.length<=120&&!/[.!?]$/.test(page.under)?page.under:"";
@@ -7202,7 +7425,7 @@ export default function App(){
     const turnedDown=[...(v.turnedDown||[]),v.shopCatalogues].filter(Boolean);
     setShopLooking(id);
     let shop;
-    try{ shop=await discoverShop(v.pageShop||"",v.host,venueSearchName(v.id,v),turnedDown,v.id,null,v.english===false); }
+    try{ shop=await discoverShop(v.pageShop||"",v.host,venueSearchName(v.id,v),turnedDown,v.id,null,v.english===false,v.gallery===true); }
     catch(e){ shop={shop:"failed",why:"Couldn\u2019t look ("+String((e&&e.message)||e)+")."}; }
     setShopLooking(null);
     setOccVenues(prev=>{

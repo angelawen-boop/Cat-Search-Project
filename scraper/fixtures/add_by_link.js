@@ -162,6 +162,24 @@ Object.assign(SHOPS, {
   [AT + 'en/products/publications/']: EN_SHELF,
 });
 
+// AL-076: a gallery's shop (her design). Made to the shapes of Galerie Karsten Greve's live pages (26 Oct): its
+// home page's "Publikationen" and links to its books, its list read with no links on its titles, its language
+// links carrying a filter, a book's page priced without cents; and Marian Goodman's Shopify lists.
+const TG = 'https://www.testgalerie.de/';
+const TG_FOOT = '\n\nTESTGALERIE KÖLN\nDrususgasse 1-5\n50667 Köln\nDienstag – Freitag 10 – 18.30 Uhr\nSamstag 10 – 18 Uhr\n[info@testgalerie.de](mailto:info@testgalerie.de)\nImpressum · Datenschutz\nDiese Webseite unterstützt den Internet Explorer 11 nicht.';
+const TG_TITLES = '\n\n_Pierre Soulages / John Chamberlain_\n\nQiu Shihua _Qiu Shihua_\n\nLucio Fontana _Lucio Fontana_\n\nGeorgia Russell _The Pattern of Surface_\n\nDing Yi _Constellations_\n\nGideon Rubin _Look Again_\n\nHerbert List _Das Magische Auge_\n\nIlse Bing _Photographs 1928–1935_';
+const TG_BOOK = '# Qiu Shihua\n\n_Qiu Shihua_\n\n2026\nTestgalerie Köln\n\nTexte: Mael Bellec\n236 S., 105 Abb., 29 Fotos\nHardcover, 2 Bde. in Schuber, Auflage: 1.200\n\n80 €\nzzgl. Versand- und Verpackungskosten\n\nIn den Warenkorb';
+const SG = 'https://www.shoptestgalerie.com/';
+Object.assign(SHOPS, {
+  [TG]: 'DE\n\n* [Ausstellungen](' + TG + 'ausstellungen)\n* [Publikationen](' + TG + 'publikationen)\n\n# Testgalerie\n\n[Alle Publikationen](' + TG + 'publikationen)\n\n[Cy Twombly _Sperlonga 1959_](' + TG + 'publikationen/detail/new1-sperlonga-1959)\n\n[Qiu Shihua _Qiu Shihua_](' + TG + 'publikationen/detail/483-qiu-shihua)\n\n[Lucio Fontana](' + TG + 'publikationen/detail/new2-lucio-fontana)' + TG_FOOT,
+  [TG + 'publikationen']: 'DE\n\n* [Deutsch](' + TG + 'publikationen?filter=C&cHash=73e4)\n* [English](' + TG + 'en/publications?filter=C&cHash=73e4)\n\n# Publikationen\n\n* [Alle](' + TG + 'publikationen?filter=alle)\n* [Kataloge](' + TG + 'publikationen?filter=C)\n* Warenkorb' + TG_TITLES + TG_FOOT,
+  [TG + 'publikationen/detail/new1-sperlonga-1959']: TG_BOOK.replace(/Qiu Shihua/g, 'Cy Twombly'),
+  [TG + 'publikationen/detail/483-qiu-shihua']: TG_BOOK,
+  [TG + 'en/publications']: 'EN\n\n# Publications\n\n* [All](' + TG + 'en/publications?filter=alle)\n* [Catalogues](' + TG + 'en/publications?filter=C)\n* Cart' + TG_TITLES + '\n\nTESTGALERIE COLOGNE\nTuesday – Friday 10 am – 6.30 pm\nSaturday 10 am – 6 pm\nSubscribe to newsletter\nThis website does not support Internet Explorer 11. Please open the page with a modern browser.',
+  [SG + 'collections.json?limit=250']: '{"collections":[{"id":1,"title":"All Items","handle":"shop","products_count":227},{"id":2,"title":"All Publications","handle":"all-publications","products_count":137},{"id":3,"title":"All Editions","handle":"all-editions","products_count":76},{"id":4,"title":"New Releases","handle":"new","products_count":12}]}',
+  [SG + 'collections/all-publications/products.json?limit=8']: '{"products":[{"title":"Ana Mendieta: Back to the Source","product_type":"Books","variants":[{"price":"45.00"}]},{"title":"Delcy Morelos: Profundis","product_type":"Books","variants":[{"price":"60.00"}]},{"title":"Tacita Dean","product_type":"Books","variants":[{"price":"55.00"}]}]}',
+});
+
 // DIA's own search (BigCommerce) answers only at search.php, with the product
 // the words name — made to the shape of DIA's own link to one
 // (?searchuuid=…&search_query=…, 4 Oct). Every other address answers empty.
@@ -758,6 +776,38 @@ function runtime() {
     const asked3 = calls.slice(before).filter(c => c.kind === 'mcp' && c.tool === 'web_search').map(c => c.args.search_queries[0]);
     ok(asked3.length === 1 && asked3[0] === 'Testhaus Berlin shop exhibition catalogues' && !calls.slice(before).some(c => c.kind === 'mcp' && c.tool === 'web_fetch' && c.args.urls.length > 1 && c.args.urls.some(u => /\/en-int\//.test(u))),
       'AL-073e:  a venue in an English-speaking country: the plain search only, no English version looked for', JSON.stringify(asked3));
+    // ── AL-076: a gallery's shop (her design: docs/add_by_link.md, "A gallery's shop") ──
+    const score = fn('galleryListScore');
+    ok(score('All Publications') === 3 && score('Books') === 3 && score('All') === 3 && score('Contemporary Art Books') === 2 && score('Books & Magazines') === 2
+      && score('Selected Publications') === 0 && score('New Releases') === 0 && score('Perrotin Editions') === 0 && score('Books Zero Rated UK') === 0 && score('All Items') === 0 && score('Exhibition-Related Books') === 0,
+      'AL-076:  a gallery\'s widest list of books ranks first; never part of the list, editions, a tax copy or a list of everything', JSON.stringify(['All Publications', 'Selected Publications', 'Perrotin Editions', 'Books & Magazines'].map(score)));
+    const isp = fn('ownShopifyStore');
+    ok(isp('https://acquavellagalleries.myshopify.com/', 'www.acquavellagalleries.com') && !isp('https://marian-goodman-shop.myshopify.com/', 'www.acquavellagalleries.com'),
+      'AL-076a:  a Shopify shop under the venue\'s own store name is its shop (Acquavella); another store is not');
+    const under = fn('itemsUnder')('[A](https://g.com/en/publications/detail/1-a) [B](https://g.com/en/publications/detail/2-b) [Cart](https://g.com/en/checkout) [C](https://g.com/en/exhibitions/3)', 'g.com', 'https://g.com/en/publications?filter=C');
+    const book = fn('galleryBookPage');
+    ok(under.length === 2 && book(TG_BOOK) && book('Herbert List\nITALIA\n48 p., 33 photographs\nSoftcover\n20 €') && !book('Berkeley: Suite 8, 2018\nMcArthur Binion\n$ 5.000\nEdition of 6'),
+      'AL-076b:  a list\'s books under its own address count as its items; a book\'s page is its price ("80 €") and its make (binding, pages, ISBN), never a priced print', JSON.stringify(under));
+    let tr = [];
+    before = calls.length;
+    const gk = await discoverShop('', 'www.testgalerie.de', 'Testgalerie Köln', [], 'occ-testgalerie-de', tr, true, true);
+    ok(gk.shop === 'found' && gk.shopCatalogues === TG + 'en/publications' && !calls.slice(before).some(c => c.kind === 'mcp' && c.tool === 'web_search'),
+      'AL-076c:  no show page: its home page\'s "Publikationen" is the way in, its list proved by one book opened (linked from the home page), its English list taken by its language link, its filter dropped (Galerie Karsten Greve)', JSON.stringify([gk, tr.map(x => x.step + ' ' + (x.tried || x.found || ''))]));
+    const show = '# Tacita Dean and Bruce Nauman\nSeptember 10 – October 25, 2026\n\n* [Artists](https://www.testgalerie-ny.com/artists/)\n* [Shop](' + SG + ')\n* [Basket](https://www.testgalerie-ny.com/shop/basket/)';
+    const gm = await discoverShop('', 'www.testgalerie-ny.com', 'Testgalerie New York', [], 'occ-testgalerie-ny-com', null, false, { page: show, url: 'https://www.testgalerie-ny.com/exhibitions/638-dean-nauman/' });
+    ok(gm.shop === 'found' && gm.shopCatalogues === SG + 'collections/all-publications' && gm.shopSearch === SG + 'search?q=',
+      'AL-076d:  the show page\'s Shop link to a shop on its own domain: the Shopify shop\'s widest list of books, All Publications, never All Items, All Editions or New Releases (Marian Goodman)', JSON.stringify(gm));
+    tr = []; before = calls.length;
+    const gn = await discoverShop('', 'www.nothinggalerie.com', 'Nothing Galerie', [], 'occ-nothinggalerie-com', tr, false, true);
+    const museumAsked = calls.slice(before).some(c => c.kind === 'mcp' && c.tool === 'web_search' && c.args.search_queries[0] === 'Nothing Galerie shop exhibition catalogues');
+    ok(gn.shop === 'failed' && /could not be read/.test(gn.why) && museumAsked,
+      'AL-076e:  the gallery path finds nothing: the museum path runs as it is; a gallery whose own site could not be read is never "no shop"', JSON.stringify([gn, tr.map(x => x.step)]));
+    tr = [];
+    await discoverShop('', 'www.testhaus.de', 'Testhaus Berlin', [], 'occ-testhaus-de', tr);
+    ok(tr.length && !tr.some(x => /^gallery-/.test(x.step)), 'AL-076f:  a museum never goes down the gallery path', JSON.stringify(tr.map(x => x.step)));
+    const la = fn('linkAnswer');
+    ok(la({ gallery: true }).gallery === true && la({ gallery: 'yes' }).gallery === false && la({}).gallery === false,
+      'AL-076g:  Claude\'s gallery answer is taken only as true; anything else is a museum');
   }
 
   // ── AL-043: Munich — two houses on one site, each its own venue and shop (her decision) ──
