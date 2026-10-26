@@ -2815,7 +2815,10 @@ async function galleryShop(page,museumHost,venueName,turnedDown,trace,foreign){
     const after=at>=0?items.find(u=>String(text).indexOf(u,at)>at):null;
     for(const u of [...new Set([after,items[0]].filter(Boolean))]){
       const b=await open(u,"This book's title, price, binding, page count and ISBN.");
-      if(b&&galleryBookPage(b))return true;
+      if(!b||!galleryBookPage(b))continue;
+      // The book bought in a shop elsewhere (Lévy Gorvy Dayan's Library: "Buy" → its shop): that shop.
+      const buy=mdLinks(b).find(l=>shopSite(l.url)&&(GALLERY_BUY.test(foldText(l.label).trim())||/\/products?\//i.test(l.url)));
+      return buy?{away:originOf(buy.url)}:true;
     }
     return false;
   };
@@ -2829,7 +2832,7 @@ async function galleryShop(page,museumHost,venueName,turnedDown,trace,foreign){
       for(const c of ranked.slice(0,3)){
         const pj=shopifyProductsUrl(c.url);
         if(pj){ if(g.opens>=GALLERY_OPENS)break; g.opens++; const j=await fetchPage(pj,"The products in this list: titles, types and prices.",null,{full:true}); if(j.ok&&shopifyShelfIsBooks(pageTextOf(j.results),false))return{url:c.url,how}; continue; }
-        const t=await open(c.url); if(t&&await sells(t,c.url))return{url:c.url,how};
+        const t=await open(c.url); if(t&&await sells(t,c.url)===true)return{url:c.url,how};
       }
       return null;
     };
@@ -2842,14 +2845,16 @@ async function galleryShop(page,museumHost,venueName,turnedDown,trace,foreign){
         const r=await pick(lists,"the shop's lists");
         if(r)return r;
         if(g.opens<GALLERY_OPENS){ g.opens++; const j=await fetchPage(o+"collections/all/products.json?limit=8","The products in this shop: titles, types and prices.",null,{full:true}); if(j.ok&&shopifyShelfIsBooks(pageTextOf(j.results),false))return{url:o+"collections/all",how:"the shop's whole list"}; }
-        return null;
+        // Products with no type given (Lévy Gorvy Dayan's): the whole list read as a page, one of its books opened.
+        const all=await open(o+"collections/all");
+        return all&&await sells(all,o+"collections/all")===true?{url:o+"collections/all",how:"the shop's whole list"}:null;
       }
     }
     const t=await open(front);
     if(!t)return null;
     const r=await pick(menuLinks(t,hostOf(front)).map(c=>({...c,words:c.label||c.words})),"the shop's menu");
     if(r)return r;
-    return await sells(t,front)?{url:front,how:"the shop's front page"}:null;
+    return await sells(t,front)===true?{url:front,how:"the shop's front page"}:null;
   };
   // A page of the gallery's own: a link on it to a shop elsewhere is followed; else it is the shop when it sells
   // books. Its whole list ("All", "Alle Publikationen") is taken when that sells too; for a gallery in a country
@@ -2859,10 +2864,12 @@ async function galleryShop(page,museumHost,venueName,turnedDown,trace,foreign){
     if(!t||t.trim().length<SHELL_CHARS)return null;
     const away=mdLinks(t).find(l=>shopSite(l.url)||(!own(l.url)&&!notAShop(l.url)&&GALLERY_SHOP_IN.test(foldText(l.label))));
     if(away){ const r=await inShop(shopSite(away.url)&&!/\/(?:products?|collections)\//i.test(away.url)?away.url:originOf(away.url)); if(r)return{...r,home:originOf(away.url)}; }
-    if(!await sells(t,url))return null;
+    const sold=await sells(t,url);
+    if(!sold)return null;
+    if(sold.away){ const r=await inShop(sold.away); return r?{...r,home:sold.away}:null; }
     let list=url, listText=t;
     const all=mdLinks(t).find(l=>own(l.url)&&galleryListScore(l.label)===3&&/^(?:all|alle|tout|tous|tutti|todos)\b/.test(foldText(l.label).trim())&&normalizeUrlKey(l.url)!==normalizeUrlKey(url));
-    if(all){ const at=await open(all.url); if(at&&await sells(at,all.url)){ list=all.url; listText=at; } }
+    if(all){ const at=await open(all.url); if(at&&await sells(at,all.url)===true){ list=all.url; listText=at; } }
     // Its own language link, not its words: English titles make a German list read as English (Galerie Karsten Greve).
     const bare=u=>{ try{ const x=new URL(u); return x.host+x.pathname.replace(/\/$/,""); }catch{ return u; } };
     const en=foreign?[listText,t].map(x=>mdLinks(x).find(l=>EN_LABEL.test(foldText(l.label).trim())&&own(l.url)&&bare(l.url)!==bare(list))).find(Boolean):null;
@@ -2872,7 +2879,7 @@ async function galleryShop(page,museumHost,venueName,turnedDown,trace,foreign){
       // The same list in English: its titles are the list's own (names are not translated), or it sells itself.
       const lines=x=>new Set(String(x).split("\n").map(l=>stripMd(l).trim()).filter(l=>l.length>=8));
       const ours=lines(listText), same=et?[...lines(et)].filter(l=>ours.has(l)).length:0;
-      if(et&&pageLanguage(eu,et)==="en"&&(same>=5||await sells(et,eu)))list=eu;
+      if(et&&pageLanguage(eu,et)==="en"&&(same>=5||await sells(et,eu)===true))list=eu;
     }
     return{url:list,how:"the gallery's own page",home:originOf(url)};
   };

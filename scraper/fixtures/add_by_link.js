@@ -169,7 +169,7 @@ const TG = 'https://www.testgalerie.de/';
 const TG_FOOT = '\n\nTESTGALERIE KÖLN\nDrususgasse 1-5\n50667 Köln\nDienstag – Freitag 10 – 18.30 Uhr\nSamstag 10 – 18 Uhr\n[info@testgalerie.de](mailto:info@testgalerie.de)\nImpressum · Datenschutz\nDiese Webseite unterstützt den Internet Explorer 11 nicht.';
 const TG_TITLES = '\n\n_Pierre Soulages / John Chamberlain_\n\nQiu Shihua _Qiu Shihua_\n\nLucio Fontana _Lucio Fontana_\n\nGeorgia Russell _The Pattern of Surface_\n\nDing Yi _Constellations_\n\nGideon Rubin _Look Again_\n\nHerbert List _Das Magische Auge_\n\nIlse Bing _Photographs 1928–1935_';
 const TG_BOOK = '# Qiu Shihua\n\n_Qiu Shihua_\n\n2026\nTestgalerie Köln\n\nTexte: Mael Bellec\n236 S., 105 Abb., 29 Fotos\nHardcover, 2 Bde. in Schuber, Auflage: 1.200\n\n80 €\nzzgl. Versand- und Verpackungskosten\n\nIn den Warenkorb';
-const SG = 'https://www.shoptestgalerie.com/';
+const SG = 'https://www.shoptestgalerie.com/', TL = 'https://www.testlibrary.com/', TLS = 'https://shop.testlibrary.com/';
 Object.assign(SHOPS, {
   [TG]: 'DE\n\n* [Ausstellungen](' + TG + 'ausstellungen)\n* [Publikationen](' + TG + 'publikationen)\n\n# Testgalerie\n\n[Alle Publikationen](' + TG + 'publikationen)\n\n[Cy Twombly _Sperlonga 1959_](' + TG + 'publikationen/detail/new1-sperlonga-1959)\n\n[Qiu Shihua _Qiu Shihua_](' + TG + 'publikationen/detail/483-qiu-shihua)\n\n[Lucio Fontana](' + TG + 'publikationen/detail/new2-lucio-fontana)' + TG_FOOT,
   [TG + 'publikationen']: 'DE\n\n* [Deutsch](' + TG + 'publikationen?filter=C&cHash=73e4)\n* [English](' + TG + 'en/publications?filter=C&cHash=73e4)\n\n# Publikationen\n\n* [Alle](' + TG + 'publikationen?filter=alle)\n* [Kataloge](' + TG + 'publikationen?filter=C)\n* Warenkorb' + TG_TITLES + TG_FOOT,
@@ -178,6 +178,12 @@ Object.assign(SHOPS, {
   [TG + 'en/publications']: 'EN\n\n# Publications\n\n* [All](' + TG + 'en/publications?filter=alle)\n* [Catalogues](' + TG + 'en/publications?filter=C)\n* Cart' + TG_TITLES + '\n\nTESTGALERIE COLOGNE\nTuesday – Friday 10 am – 6.30 pm\nSaturday 10 am – 6 pm\nSubscribe to newsletter\nThis website does not support Internet Explorer 11. Please open the page with a modern browser.',
   [SG + 'collections.json?limit=250']: '{"collections":[{"id":1,"title":"All Items","handle":"shop","products_count":227},{"id":2,"title":"All Publications","handle":"all-publications","products_count":137},{"id":3,"title":"All Editions","handle":"all-editions","products_count":76},{"id":4,"title":"New Releases","handle":"new","products_count":12}]}',
   [SG + 'collections/all-publications/products.json?limit=8']: '{"products":[{"title":"Ana Mendieta: Back to the Source","product_type":"Books","variants":[{"price":"45.00"}]},{"title":"Delcy Morelos: Profundis","product_type":"Books","variants":[{"price":"60.00"}]},{"title":"Tacita Dean","product_type":"Books","variants":[{"price":"55.00"}]}]}',
+  // Lévy Gorvy Dayan's shape (live 26 Oct): its Library lists books whose pages say "Buy" in its shop.
+  [TL]: '* [Lévy](' + TL + ')\n* [EXHIBITIONS](' + TL + 'exhibitions)\n\n[](' + TL + 'library)' + TG_FOOT,
+  [TL + 'library']: '## Library\n\nPublications\n\n* [+ Adrian Piper + 2017](' + TL + 'library/adrian-piper)\n* [+ Calder / Kelly + 2018](' + TL + 'library/calder-kelly)\n* [+ Warhol Women + 2019](' + TL + 'library/warhol-women)' + TG_FOOT,
+  [TL + 'library/adrian-piper']: '## Adrian Piper\n\nYear\n    2017\n\nPrice\n    $25\n\nComposition\n    Soft Cover\n\nISBN\n    9781944379209\n\n[Buy](' + TLS + 'products/adrian-piper)',
+  [TLS + 'collections.json?limit=250']: '{"collections":[{"id":1,"title":"Home page","handle":"frontpage","products_count":30},{"id":2,"title":"Selected Publications","handle":"selected-publications","products_count":4}]}',
+  [TLS + 'collections/all/products.json?limit=8']: '{"products":[{"title":"Adrian Piper","product_type":"Book","variants":[{"price":"25.00"}]},{"title":"Calder / Kelly","product_type":"Book","variants":[{"price":"85.00"}]}]}',
 });
 
 // DIA's own search (BigCommerce) answers only at search.php, with the product
@@ -805,6 +811,9 @@ function runtime() {
     tr = [];
     await discoverShop('', 'www.testhaus.de', 'Testhaus Berlin', [], 'occ-testhaus-de', tr);
     ok(tr.length && !tr.some(x => /^gallery-/.test(x.step)), 'AL-076f:  a museum never goes down the gallery path', JSON.stringify(tr.map(x => x.step)));
+    const gl = await discoverShop('', 'www.testlibrary.com', 'Test Library Gallery', [], 'occ-testlibrary-com', null, false, true);
+    ok(gl.shop === 'found' && gl.shopCatalogues === TLS + 'collections/all',
+      'AL-076h:  a Library of books whose pages say "Buy" in a shop elsewhere: that shop, its whole list, never Selected Publications (Lévy Gorvy Dayan)', JSON.stringify(gl));
     const la = fn('linkAnswer');
     ok(la({ gallery: true }).gallery === true && la({ gallery: 'yes' }).gallery === false && la({}).gallery === false,
       'AL-076g:  Claude\'s gallery answer is taken only as true; anything else is a museum');
