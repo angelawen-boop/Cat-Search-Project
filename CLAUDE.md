@@ -428,7 +428,8 @@ Each line came from a real failure. Details are in git history and `docs/`.
   the free tier, and stalled for hours while she waited unaware. A stalled run is stopped and reported, never waited on.
 - **A test link goes to her only after it is read live, end to end, the way she will run it** (Louisiana's page never
   read; Parallel's 202). **A check's right answer must test what the design requires** — Belvedere's "no books
-  section" passed in German under the English-shop design.
+  section" passed in German under the English-shop design; the gallery path's right answers were set by its own
+  "widest list" rule, so every gallery passed while Karsten Greve's Catalogues tab was passed over.
 - **Every sentence shown on screen goes to her word for word before it is built, and nothing is called her
   design or her wording that she did not give** — "Shop found, but not its exhibition catalogues section — its
   publications" and a publications-then-books order were written in as "her design" and never shown to her.
