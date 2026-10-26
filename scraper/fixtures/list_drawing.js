@@ -106,8 +106,8 @@ const until = async (fn, ms = 8000) => { const t = Date.now(); while (Date.now()
 
     // A new search starts from the top again.
     click([...doc.querySelectorAll('button')].find(b => b.title === 'Search'));
-    await until(() => doc.querySelector('input[placeholder^="Search exhibitions"]'));
-    await typeInto(doc.querySelector('input[placeholder^="Search exhibitions"]'), 'e');
+    await until(() => doc.querySelector('header input:not([type=file])'));
+    await typeInto(doc.querySelector('header input:not([type=file])'), 'e');
     await settle(100);
     ok(cards() === 200, 'LD-004: a new search draws from the top again (200)', String(cards()));
 
@@ -115,7 +115,7 @@ const until = async (fn, ms = 8000) => { const t = Date.now(); while (Date.now()
     Object.defineProperty(win, 'scrollY', { value: 1000, configurable: true });
     win.dispatchEvent(new win.Event('scroll'));
     await until(() => doc.querySelector('button[aria-label="Jump to bottom"]'));
-    await typeInto(doc.querySelector('input[placeholder^="Search exhibitions"]'), '');
+    await typeInto(doc.querySelector('header input:not([type=file])'), '');
     await settle(100);
     scrolledTo = null;
     click(doc.querySelector('button[aria-label="Jump to bottom"]'));

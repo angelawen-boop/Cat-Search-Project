@@ -61,7 +61,7 @@ Watch by `build/sync_shelf.js`; `npm test` fails if the copies differ.
   and centred: Remove (greyed with no cover), a book-shaped Drag box, Load, Cancel.
 - **Themes:** a chip row; Add from library, Rename, Delete beside a chosen theme; a new
   theme opens the library list (ticks, Add, Cancel). Remove book is in the footer, as Cat
-  Watch's Reset search. Source is always the last line of the book view.
+  Watch's Clear search. Source is always the last line of the book view.
 - **Light-mode rose** #B24D6E (her pick); dark #D99AAE.
 
 **Unproven:** adding by ISBN or link through her Parallel connector (never run live); tapping

@@ -52,7 +52,7 @@ const MUSEUMS = [
   { id:"mad", english:false, short:"MAD Paris", name:"Mus\u00e9e des Arts D\u00e9coratifs", city:"Paris", exBase:null, shopSearch:null, shopCatalogues:"https://boutique.madparis.fr/en/mads-publications/c462/1/", shopHome:"https://boutique.madparis.fr/en/mads-publications/c462/1/", listUrl:null },
   // subtitleUnderHeading: the line under a show page's heading is its subtitle, read by code
   // for Add by link (docs/link_pages/).
-  { id:"jacquemart", subtitleUnderHeading:true, english:false, short:"Jacquemart-Andr\u00e9", name:"Mus\u00e9e Jacquemart-Andr\u00e9", city:"Paris", exBase:null, shopSearch:"https://boutique.musee-jacquemart-andre.com/en/search/products/?q=", shopCatalogues:"https://boutique.musee-jacquemart-andre.com/en/products/116-exhibition-catalogs/", shopHome:"https://boutique.musee-jacquemart-andre.com/en/", listUrl:null },
+  { id:"jacquemart", chip:"Jacquemart", subtitleUnderHeading:true, english:false, short:"Jacquemart-Andr\u00e9", name:"Mus\u00e9e Jacquemart-Andr\u00e9", city:"Paris", exBase:null, shopSearch:"https://boutique.musee-jacquemart-andre.com/en/search/products/?q=", shopCatalogues:"https://boutique.musee-jacquemart-andre.com/en/products/116-exhibition-catalogs/", shopHome:"https://boutique.musee-jacquemart-andre.com/en/", listUrl:null },
   // Search address is hers. The shop answers with a waiting room, so the lookup reports it
   // blocked; the address stays for her shop link.
   { id:"khm", english:false, short:"KHM", name:"Kunsthistorisches Museum", city:"Vienna", exBase:null, shopSearch:"https://shop.khm.at/en/products?shop%5Bq%5D=", shopHome:"https://shop.khm.at/en/", listUrl:null },
@@ -75,9 +75,28 @@ const VENUE_ORDER=["met","ng","occ-nga-gov","frick","morgan","artic","menil",
   "acq","lgd","occ-new-artsmia-org","cincinnati","occ-britishart-yale-edu","brit","tate-britain","wallace","va","occ-nationalgalleries-org",
   "louvre","orsay","jacquemart","mad","rijks","khm","occ-alte-pinakothek","occ-pinakothek-der-moderne","occ-sammlung-schack","occ-smb-museum","occ-alte-nationalgalerie","occ-neue-nationalgalerie","occ-gemaeldegalerie-skd-museum","occ-staedelmuseum-de","uffizi","dellav","borghese","brera","capo","moma",
   "tate-modern","mam",
-  "occ-museitoscana-cultura-gov-it","occ-palazzoducale-genova-it","occ-palazzorealemilano-it","occ-mfa-org","occ-clevelandart-org","occ-dia-org","occ-archive-worcesterart-org","occ-courtauld-ac-uk",
-  "occ-royalacademy-org-uk","ashmolean","occ-museothyssen-org","occ-mauritshuis-nl","occ-ngv-vic-gov-au"];
-const orderOf=id=>{ const i=VENUE_ORDER.indexOf(id); return i<0?1e6:i; };
+  ];
+// The Occasional venues (no chip of their own) follow, by country: the United States, then Europe in her
+// country order, then the rest (her decision). Hard-coded, her decision: the countries of the venues that
+// store no country (below); a venue the store holds a country for takes that one.
+const OCC_COUNTRY_ORDER=["United States","United Kingdom","Germany","Belgium","France","Switzerland","Italy","Spain","Netherlands"];
+const OCC_EUROPE_ELSE=["Austria","Denmark","Sweden","Norway","Finland","Portugal","Ireland","Poland","Czechia","Hungary","Greece","Luxembourg"];
+const OCC_COUNTRY_NAMES={"usa":"United States","us":"United States","united states of america":"United States","uk":"United Kingdom","great britain":"United Kingdom","england":"United Kingdom","scotland":"United Kingdom","wales":"United Kingdom","northern ireland":"United Kingdom","the netherlands":"Netherlands","holland":"Netherlands","czech republic":"Czechia","deutschland":"Germany"};
+const OCC_COUNTRY={"occ-mfa-org":"United States","occ-clevelandart-org":"United States","occ-dia-org":"United States","occ-archive-worcesterart-org":"United States","occ-philamuseum-org":"United States","occ-adelsongalleries-com":"United States",
+  "occ-courtauld-ac-uk":"United Kingdom","occ-royalacademy-org-uk":"United Kingdom","ashmolean":"United Kingdom","occ-rct-uk":"United Kingdom",
+  "occ-staatsgalerie-de":"Germany","occ-hlmd-de":"Germany","occ-kmska-be":"Belgium","occ-mskgent-be":"Belgium","occ-galerie-karsten-greve-com":"France","occ-kunstmuseumbasel-ch":"Switzerland",
+  "occ-museitoscana-cultura-gov-it":"Italy","occ-palazzoducale-genova-it":"Italy","occ-palazzorealemilano-it":"Italy","occ-museothyssen-org":"Spain","occ-museoreinasofia-es":"Spain","occ-mauritshuis-nl":"Netherlands",
+  "occ-ngv-vic-gov-au":"Australia"};
+const occCountry=id=>{ const c=OCC_COUNTRY[id]||(MU[id]||{}).country||""; const k=String(c).trim().toLowerCase(); return OCC_COUNTRY_NAMES[k]||String(c).trim(); };
+// "us", "eu" or "other": the three chips that hold the venues with no chip of their own.
+const occRegion=id=>{ const c=occCountry(id); return c==="United States"?"us":(OCC_COUNTRY_ORDER.includes(c)||OCC_EUROPE_ELSE.includes(c))?"eu":"other"; };
+const OCC_CHIPS=[["occ:us","Occ - US"],["occ:eu","Occ - Europe"],["occ:other","Occ - Other"]];
+const hasNoChip=id=>MUSEUMS.some(m=>m.id===id&&m.underOcc)||(String(id).startsWith("occ-")&&!ownChip(id));   // the venue list is sorted at load, before isOcc and LINK_VENUES exist
+// Within a country, the venues her order already named come first, in that order; the rest follow by name.
+const OCC_NAMED_ORDER=["occ-mfa-org","occ-clevelandart-org","occ-dia-org","occ-archive-worcesterart-org","occ-courtauld-ac-uk","occ-royalacademy-org-uk","ashmolean","occ-museitoscana-cultura-gov-it","occ-palazzoducale-genova-it","occ-palazzorealemilano-it","occ-museothyssen-org"];
+const orderOf=id=>{ const i=VENUE_ORDER.indexOf(id); if(i>=0)return i; if(!hasNoChip(id))return 1e6;
+  const c=occCountry(id),j=OCC_COUNTRY_ORDER.indexOf(c),k=OCC_NAMED_ORDER.indexOf(id);
+  return (j>=0?100+j:OCC_EUROPE_ELSE.includes(c)?150:199)+(k>=0?k/100:0.5); };
 MUSEUMS.sort((a,b)=>orderOf(a.id)-orderOf(b.id));
 const lookupName=mu=>mu.lookupName||mu.short;
 const MU = Object.fromEntries(MUSEUMS.map(m=>[m.id,m]));
@@ -907,7 +926,7 @@ const SUMMARY_EXAMPLES=[{"title":"German Expressionism","raw":"Across Germany’
 // shows' dates too). The model writes only the description and the English title,
 // and picks the subtitle from the page's own lines. A link that cannot be read is a
 // line, never a card. No lookback for a link (her decision).
-const OCC_CHIP="occasional";
+
 const OCC_DOC="venues/occasional";
 const LINKS_DOC="links/pending";
 const isOcc=id=>String(id||"").startsWith("occ-");
@@ -1865,7 +1884,7 @@ function occVenue(id,v,fallback){
   const name=own.name||s.name||fallback;
   // Her pick on the shop screen: the English section the finder could not read (`shopEnglishUnread`), contents unseen.
   const en=!!(s.englishPicked&&s.shopEnglishUnread);
-  return{id,shopLink:own.shopCatalogues||undefined,short:own.short||s.short||name,chip:own.chip,card:own.card,lookupName:own.lookupName||own.name||s.short||name,name,occasional:true,shopUnseen:own.shopUnseen||(en?"unconfirmed":undefined),english:s.english===false?false:undefined,
+  return{id,shopLink:own.shopCatalogues||undefined,short:own.short||s.short||name,chip:own.chip,card:own.card,lookupName:own.lookupName||own.name||s.short||name,name,country:s.country||undefined,occasional:true,shopUnseen:own.shopUnseen||(en?"unconfirmed":undefined),english:s.english===false?false:undefined,
     exBase:null,listUrl:null,
     shopHome:live?s.shopHome||null:null,shopCatalogues:live?(en?s.shopEnglishUnread:s.shopCatalogues||null):null,shopSearch:live?s.shopSearch||null:null,
     shopUnknown:!live&&!(s.shop==="none"&&s.confirmed)};
@@ -3125,7 +3144,7 @@ const THEME_KEYS=new Set(THEMES.map(t=>t.key));
 const THEME_NAME=Object.fromEntries(THEMES.map(t=>[t.key,t.name]));
 // Her chips, in her order; Ex-themes is every labelled show with no theme, Surveys and
 // Non-Western Art included (they are groups, not themes).
-const THEME_CHIPS=[["fashion","Fashion & Jewellery"],["architecture","Architecture"],["sculpture","Sculpture"],["animals","Animals"],["nature","Nature"],["photography","Photography"],["dechard","Decorative Arts – Hard"],["decsoft","Decorative Arts – Soft"],["books","Books"],["exthemes","Ex-themes"]];
+const THEME_CHIPS=[["fashion","Fashion & Jewellery"],["architecture","Architecture"],["sculpture","Sculpture"],["animals","Animals"],["nature","Nature"],["photography","Photography"],["dechard","Decorative – Hard"],["decsoft","Decorative – Soft"],["books","Books"],["exthemes","Ex-themes"]];
 const THEME_CHIP_OF=Object.fromEntries(THEMES.map(t=>[t.key,t.chip]));
 // A theme chip set and a labelled show: in when any of its themes is under a picked chip,
 // or Ex-themes is picked and it has none. A show never asked about themes is in none.
@@ -3136,6 +3155,7 @@ function themeMatch(r,picked){
 }
 
 const periodLabelled=r=>!!(r&&PERIOD_RANK[r.period]!==undefined&&Number.isInteger(r.periodYear));
+const isBuyNext=r=>!!r&&r.acquiring==="yes"&&!!r.buyNext;
 // Label fills a show missing its period or its themes (a show labelled before themes is asked again).
 // When a show was last labelled: a Relabel, else its Label run or import (the Recently labelled sort).
 const lastLabel=r=>(r&&(r.relabelledAt||r.labelledAt))||"";
@@ -7597,7 +7617,7 @@ export default function App(){
     }
     dropHeldVenues(); setShopScreen(null); setReadVenues([]); setProposals(null); setDecisions({}); setCoverage([]); setTally(null); setSeenInFile(null); }
   // A second tap on Date reverses it; a third goes back to the usual order.
-  const pickSort=k=>{if(acqBuyNext){if(k==="period")setBnPeriod(v=>!v);return;}setDateReversed((k==="date"||k==="period")&&sortBy===k&&!pinTouched&&!dateReversed);setSortBy(k);setPinTouched(false);}; // manual sort releases the pinned refresh group
+  const pickSort=k=>{if(acqBuyNext){if(k==="period"){if(!bnPeriod){setBnPeriod(true);setDateReversed(false);}else if(!dateReversed)setDateReversed(true);else{setBnPeriod(false);setDateReversed(false);}}return;}setDateReversed((k==="date"||k==="period")&&sortBy===k&&!pinTouched&&!dateReversed);setSortBy(k);setPinTouched(false);}; // manual sort releases the pinned refresh group
 
 
 
@@ -7684,7 +7704,7 @@ export default function App(){
   // all are renumbered. Not an edit: editedAt is untouched (her decision).
   const moveBuyNext=(id,beforeId,afterId)=>{
     const shown=new Map(view.map((r,i)=>[r.id,i])),key=r=>Number.isFinite(r.buyRank)?r.buyRank:-Infinity;
-    const all=rows.filter(r=>r.acquiring==="yes"&&r.buyNext).sort((a,b)=>key(b)-key(a)||(shown.get(a.id)??1e9)-(shown.get(b.id)??1e9)).map(r=>r.id);
+    const all=rows.filter(isBuyNext).sort((a,b)=>key(b)-key(a)||(shown.get(a.id)??1e9)-(shown.get(b.id)??1e9)).map(r=>r.id);
     const order=all.filter(x=>x!==id);let at=beforeId?order.indexOf(beforeId):afterId?order.indexOf(afterId)+1:-1;if(at<0)at=order.length;
     order.splice(at,0,id);const rank=new Map(order.map((x,i)=>[x,order.length-i]));
     commit(rows.map(r=>rank.has(r.id)?{...r,buyRank:rank.get(r.id)}:r));};
@@ -7889,7 +7909,7 @@ export default function App(){
       if(dismissedOnly){ if(r.interested)return false; }
       else if(!r.interested&&!showAll&&!sq)return false;
       if(themeF.size>0&&!themeMatch(r,themeF))return false;
-      if(venueF.size>0&&!venueF.has(chipKey(r.museumId))&&!(venueF.has(OCC_CHIP)&&((isOcc(r.museumId)&&!ownChip(r.museumId))||(MU[r.museumId]||{}).underOcc)))return false;
+      if(venueF.size>0&&!venueF.has(chipKey(r.museumId))&&!(hasNoChip(r.museumId)&&venueF.has("occ:"+occRegion(r.museumId))))return false;
       const t=tierOf(r),ts=TIERS[t]?.time||"current";
       if(timeF.size>0){let match=timeF.has(ts);if(timeF.has("recent")&&t==="recent")match=true;if(timeF.has("current")&&t==="recent")match=true;if(!match)return false;}
       if(watchedF&&!r.watching)return false;
@@ -7897,17 +7917,19 @@ export default function App(){
       if(labelledF&&(!newestRun||r.labelledAt!==newestRun))return false;
       // Period shows only labelled shows.
       if(periodView&&!periodLabelled(r))return false;
-      // Acquiring filters stack as AND across the three axes, OR within an axis.
-      if(acqWanted||acqOwned){if(!((acqWanted&&r.acquiring==="yes")||(acqOwned&&r.acquiring==="acquired")))return false;}
+      // Acquiring filters stack as AND across the axes, OR within an axis. Wanted, Owned and Buy next are
+      // one axis: Owned with Buy next shows both lists, as two venues do (her decision).
+      if(acqWanted||acqOwned||acqBuyNext){if(!((acqWanted&&r.acquiring==="yes")||(acqOwned&&r.acquiring==="acquired")||(acqBuyNext&&isBuyNext(r))))return false;}
       if(acq3mo||acq6mo){if(!((acq3mo&&t==="closing")||(acq6mo&&(t==="urgent"||t==="lapsed"))))return false;}
       if(acqHasCat||acqNoCat){if(!((acqHasCat&&r.looked&&r.hasCatalogue==="yes")||(acqNoCat&&r.looked&&r.hasCatalogue==="no")))return false;}
-      if(acqBuyNext){if(!(r.acquiring==="yes"&&r.buyNext))return false;}
       return true;
     });
     out.sort((a,b)=>{
       // Buy next is in her own dragged order; the sort chips and the pinned group step aside.
-      if(acqBuyNext&&bnPeriod)return periodCompare(a,b,byArtist);
-      if(acqBuyNext){const ka=Number.isFinite(a.buyRank)?a.buyRank:-Infinity,kb=Number.isFinite(b.buyRank)?b.buyRank:-Infinity;if(ka!==kb)return kb>ka?1:-1;}
+      // The Buy next books come first, in her order; any Owned or Wanted books shown beside them follow.
+      if(acqBuyNext&&bnPeriod)return(dateReversed?-1:1)*periodCompare(a,b,byArtist);
+      if(acqBuyNext){const ba=isBuyNext(a),bb=isBuyNext(b);if(ba!==bb)return ba?-1:1;
+        if(ba){const ka=Number.isFinite(a.buyRank)?a.buyRank:-Infinity,kb=Number.isFinite(b.buyRank)?b.buyRank:-Infinity;if(ka!==kb)return kb>ka?1:-1;}}
       if(pinTouched&&!acqBuyNext){const aT=refreshTouched.includes(a.id)?0:1,bT=refreshTouched.includes(b.id)?0:1;if(aT!==bT)return aT-bT;}
       if(sortBy==="added"){const d=String(b.addedAt||"").localeCompare(String(a.addedAt||""));if(d!==0)return d;}
       if(sortBy==="labelled"){const d=String(lastLabel(b)).localeCompare(String(lastLabel(a)));if(d!==0)return d;const aL=periodLabelled(a)?1:0,bL=periodLabelled(b)?1:0;if(aL!==bL)return bL-aL;}
@@ -8240,7 +8262,7 @@ export default function App(){
           <button onClick={()=>{if(showSearch)setSearch("");setShowSearch(v=>!v);setTimeout(()=>searchRef.current?.focus(),100);}} style={{marginLeft:"auto",background:"none",border:"none",cursor:"pointer",fontSize:16,color:C.soft,padding:0,lineHeight:1}} title="Search">{"\uD83D\uDD0D"}</button>
         </div>
         {/* The cross clears what she typed (her ask): right-aligned, shown while there is text. */}
-        {showSearch&&<div style={{marginTop:6,position:"relative"}}><input ref={searchRef} value={search} onChange={e=>setSearch(e.target.value)} placeholder={"Search exhibitions\u2026"} style={{width:"100%",padding:"7px 30px 7px 10px",border:"1px solid "+C.rule,borderRadius:4,background:C.card,color:C.ink,fontSize:12.5,fontFamily:"inherit",boxSizing:"border-box"}}/>
+        {showSearch&&<div style={{marginTop:6,position:"relative"}}><input ref={searchRef} value={search} onChange={e=>setSearch(e.target.value)} style={{width:"100%",padding:"7px 30px 7px 10px",border:"1px solid "+C.rule,borderRadius:4,background:C.card,color:C.ink,fontSize:12.5,fontFamily:"inherit",boxSizing:"border-box"}}/>
           {search&&<button onClick={()=>{setSearch("");if(searchRef.current)searchRef.current.focus();}} aria-label="Clear search" title="Clear"
             style={{position:"absolute",right:6,top:"50%",transform:"translateY(-50%)",background:"none",border:"none",color:C.soft,fontSize:16,lineHeight:1,cursor:"pointer",padding:"2px 4px"}}>{"\u00d7"}</button>}</div>}
       </header>
@@ -8248,7 +8270,7 @@ export default function App(){
       <div style={{maxWidth:760,margin:"0 auto 12px",display:"flex",flexDirection:"column",gap:5}}>
         <div style={{display:"flex",gap:4,flexWrap:"wrap",alignItems:"center"}}>
           <span style={{fontSize:9,letterSpacing:"0.12em",textTransform:"uppercase",color:C.soft,marginRight:2}}>Sort</span>
-          {[["date","Date"],["venue","Venue"],["period","Period"],["added","Recently added"],["edited","Recently edited"]].map(([k,l])=><button key={k} onClick={()=>pickSort(k)} style={chip(acqBuyNext?(k==="period"&&bnPeriod):(sortBy===k&&!pinTouched))}>{l}{(k==="date"||k==="period")&&sortBy===k&&!pinTouched&&!acqBuyNext?(dateReversed?" \u2191":" \u2193"):""}</button>)}
+          {[["date","Date"],["venue","Venue"],["period","Period"],["added","Recently added"],["edited","Recently edited"],["labelled","Recently labelled"]].map(([k,l])=><button key={k} onClick={()=>pickSort(k)} style={chip(acqBuyNext?(k==="period"&&bnPeriod):(sortBy===k&&!pinTouched))}>{l}{(acqBuyNext?k==="period"&&bnPeriod:(k==="date"||k==="period")&&sortBy===k&&!pinTouched)?(dateReversed?" \u2191":" \u2193"):""}</button>)}
           {pinTouched&&<span style={{fontSize:10.5,color:C.action,fontWeight:600}}>{"\u2191 just-refreshed entries shown first"}</span>}
         </div>
         <div style={{display:"flex",gap:4,flexWrap:"wrap",alignItems:"center"}}>
@@ -8258,7 +8280,7 @@ export default function App(){
         <div style={{display:"flex",gap:4,flexWrap:"wrap",alignItems:"center"}}>
           <span style={{fontSize:9,letterSpacing:"0.12em",textTransform:"uppercase",color:C.soft,marginRight:2}}>Venue</span>
           {MUSEUMS.filter(m=>!m.underOcc).map(m=>m.id).concat(Object.keys(LINK_VENUES).filter(ownChip)).sort((a,b)=>orderOf(a)-orderOf(b)).filter((id,i,all)=>all.findIndex(x=>chipKey(x)===chipKey(id))===i).map(id=><button key={chipKey(id)} onClick={()=>toggleSet(setVenueF,chipKey(id))} style={chip(venueF.has(chipKey(id)))}>{(x=>x.chip||x.short)(MU[id]||LINK_VENUES[id])}</button>)}
-          <button onClick={()=>toggleSet(setVenueF,OCC_CHIP)} style={chip(venueF.has(OCC_CHIP))}>Occasional</button>
+          {OCC_CHIPS.map(([k,l])=><button key={k} onClick={()=>toggleSet(setVenueF,k)} style={chip(venueF.has(k))}>{l}</button>)}
         </div>
         <div style={{display:"flex",gap:4,flexWrap:"wrap",alignItems:"center"}}>
           <span style={{fontSize:9,letterSpacing:"0.12em",textTransform:"uppercase",color:C.soft,marginRight:2}}>Theme</span>
@@ -8311,7 +8333,7 @@ export default function App(){
           const isBusy=busyId===r.id;
           const card=<LedgerCard r={r} mu={MU[r.museumId]} isOpen={!!openCards[r.id]} isBusy={isBusy} busy={busy} rechecking={isBusy&&rechecking} lookLabel={isBusy?lookLabel:null}
               said={recheckSaid&&recheckSaid.id===r.id?recheckSaid:null} relabelling={relabelId===r.id} C={C} TH={TH} chip={chip} pBtn={pBtn} lnk={lnk} act={cardAct}/>;
-          if(!dragOn)return <React.Fragment key={r.id}>{lead}{card}</React.Fragment>;
+          if(!dragOn||!isBuyNext(r))return <React.Fragment key={r.id}>{lead}{card}</React.Fragment>;
           // The lifted card follows the finger; the cards it passes slide aside by its height.
           let ds={userSelect:"none",WebkitUserSelect:"none",WebkitTouchCallout:"none",cursor:"grab"};
           if(drag&&r.id===drag.id)ds={...ds,position:"relative",zIndex:5,transform:"translateY("+drag.dy+"px) scale(1.02)",boxShadow:"0 6px 18px rgba(0,0,0,0.28)",borderRadius:5,cursor:"grabbing"};
@@ -8341,7 +8363,7 @@ export default function App(){
         {/* Two buttons on the left, no sentence (her decision), spaced like the drawers on the right. */}
         <span style={{display:"flex",gap:14}}>
           <button onClick={requestReset} style={{background:"none",border:"none",color:C.soft,fontSize:10,textDecoration:"underline",cursor:"pointer",padding:0}}>Reset to Seed</button>
-          <button onClick={()=>{if(showResetCards)setResetQuery("");setShowResetCards(v=>!v);}} style={{background:"none",border:"none",color:C.soft,fontSize:10,textDecoration:"underline",cursor:"pointer",padding:0}}>Reset search</button>
+          <button onClick={()=>{if(showResetCards)setResetQuery("");setShowResetCards(v=>!v);}} style={{background:"none",border:"none",color:C.soft,fontSize:10,textDecoration:"underline",cursor:"pointer",padding:0}}>Clear search</button>
           <button onClick={labelLedger} style={{background:"none",border:"none",color:C.soft,fontSize:10,textDecoration:"underline",cursor:"pointer",padding:0}}>Label</button>
         </span>
         <span style={{marginLeft:"auto",display:"flex",gap:14}}>
@@ -8383,7 +8405,7 @@ export default function App(){
             result is cleared (resetCard) and it shows "Find catalogue" again. Her marks
             stay. One card per confirm. */}
         {showResetCards&&<div style={{marginTop:6,padding:"8px 10px",background:C.drawer,border:"1px solid "+C.rule,borderRadius:4}}>
-          <input value={resetQuery} onChange={e=>setResetQuery(e.target.value)} placeholder={"Search cards\u2026"} style={{width:"100%",padding:"7px 10px",border:"1px solid "+C.rule,borderRadius:4,background:C.card,color:C.ink,fontSize:12.5,fontFamily:"inherit",boxSizing:"border-box"}}/>
+          <input value={resetQuery} onChange={e=>setResetQuery(e.target.value)} style={{width:"100%",padding:"7px 10px",border:"1px solid "+C.rule,borderRadius:4,background:C.card,color:C.ink,fontSize:12.5,fontFamily:"inherit",boxSizing:"border-box"}}/>
           {resetQuery.trim()&&(()=>{
             const hits=cardsToReset(rows,resetQuery);
             if(!hits.length)return <div style={{fontSize:12,color:C.soft,marginTop:8}}>{"No searched cards match."}</div>;

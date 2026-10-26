@@ -438,9 +438,10 @@ function runtime() {
     const other = read({ title: 'Some show | Elsewhere', full_content: '# Some show' + body }, 'https://example.org/show', null);
     ok(!other.start && !other.end, 'AL-038b:  two-digit years are read at NGV only', JSON.stringify([other.start, other.end]));
     const fn = name => new Function('React', 'window', 'document', 'localStorage', code + '\n;return ' + name + ';')(React, win, win.document, win.localStorage);
-    const order = fn('VENUE_ORDER'), lv = fn('LINK_VENUES');
-    ok(order[order.length - 1] === 'occ-ngv-vic-gov-au' && lv['occ-ngv-vic-gov-au'].card === 'National Gallery Victoria',
-      'AL-038c:  NGV goes last in the Occasional group; its cards say "National Gallery Victoria" (her decision)', JSON.stringify([order[order.length - 1], lv['occ-ngv-vic-gov-au'].card]));
+    const orderOf = fn('orderOf'), lv = fn('LINK_VENUES');
+    const others = ['occ-mfa-org', 'occ-museothyssen-org', 'occ-mauritshuis-nl', 'occ-kmska-be', 'ashmolean', 'occ-courtauld-ac-uk'];
+    ok(others.every(id => orderOf(id) < orderOf('occ-ngv-vic-gov-au')) && lv['occ-ngv-vic-gov-au'].card === 'National Gallery Victoria',
+      'AL-038c:  NGV goes last of the Occasional venues; its cards say "National Gallery Victoria" (her decision)', JSON.stringify([orderOf('occ-ngv-vic-gov-au'), lv['occ-ngv-vic-gov-au'].card]));
   }
   // ── AL-046: the shop screen asks only about a venue with a card going in (her decision) ─
   {
@@ -472,18 +473,24 @@ function runtime() {
     ok(gd.show === 'Van Dyck, the European' && split('Show – ', 'x.org').show === 'Show' && split('A - B', 'x.org').show === 'A - B',
       'AL-047:  Genoa Van Dyck: a page title ending in a separator with no site after it loses the separator; a dash inside a title stays', JSON.stringify(gd));
     const GD = 'occ-palazzoducale-genova-it', PR = 'occ-palazzorealemilano-it';
-    const o2 = fn('VENUE_ORDER'), lv2 = fn('LINK_VENUES'), s2 = id => lv2[id].short;
-    ok(o2[o2.indexOf(SM) + 1] === GD && o2[o2.indexOf(SM) + 2] === PR && s2(GD) === 'Palazzo Ducale Genova' && s2(PR) === 'Palazzo Reale Milano',
-      'AL-046e: Palazzo Ducale Genova second and Palazzo Reale Milano third under Occasional, by her names (her decision)', JSON.stringify([o2[o2.indexOf(SM) + 1], o2[o2.indexOf(SM) + 2]]));
+    const o2 = fn('orderOf'), lv2 = fn('LINK_VENUES'), s2 = id => lv2[id].short;
+    ok(o2(SM) < o2(GD) && o2(GD) < o2(PR) && o2(PR) < o2('occ-museothyssen-org') && s2(GD) === 'Palazzo Ducale Genova' && s2(PR) === 'Palazzo Reale Milano',
+      'AL-046e: Palazzo Ducale Genova second and Palazzo Reale Milano third of the Italian Occasional venues, by her names (her decision)', JSON.stringify([o2(SM), o2(GD), o2(PR)]));
     // Shaped as the live reply (palazzorealemilano.it/en/-/brueghel): heading, short name, full name, dates.
     const readPage = fn('readShowPage'), nil = fn('nameInLines');
     const br = readPage({ title: 'I Brueghel - Palazzo Reale Milano - Comune di Milano', full_content: '4. I Brueghel\n\n# I Brueghel - Palazzo Reale Milano\n\n I Brueghel\n\n## I Brueghel. Le origini dei generi pittorici in Europa\n\nfrom 29 Sep 2026 to 31 Jan 2027\n\n# A Palazzo Reale dal 29 settembre 2026 al 31 gennaio 2027 la prima grande esposizione in Italia dedicata a una delle più influenti dinastie artistiche del Rinascimento europeo.\n\nIn programma dal 29 settembre 2026 al 31 gennaio 2027, la mostra accompagna il visitatore in un percorso storico e artistico attraverso oltre 80 opere tra dipinti, disegni e stampe.' }, 'https://www.palazzorealemilano.it/en/-/brueghel', PR);
     ok(br.ok && nil(br, PR) === 'I Brueghel. Le origini dei generi pittorici in Europa' && br.start === '2026-09-29',
       'AL-048:  Palazzo Reale Milano Brueghel: the full name below the heading is the title, "- Palazzo Reale Milano" dropped', JSON.stringify([br.base, nil(br, PR), br.start]));
     ok(nil(br, 'occ-other-org') === '', 'AL-048a: at any other venue the rule does nothing');
-    const order = fn('VENUE_ORDER'), short = fn('LINK_VENUES')[SM].short;
-    ok(order[order.indexOf('mam') + 1] === SM && short === 'San Marco',
-      'AL-046c: San Marco (museitoscana.cultura.gov.it) first in the Occasional group, named "San Marco" (her decision)', JSON.stringify([order[order.indexOf('mam') + 1], short]));
+    const o3 = fn('orderOf'), short = fn('LINK_VENUES')[SM].short;
+    ok(o3(SM) < o3('occ-palazzoducale-genova-it') && Math.floor(o3(SM)) === Math.floor(o3('occ-palazzorealemilano-it')) && short === 'San Marco',
+      'AL-046c: San Marco (museitoscana.cultura.gov.it) first of the Italian Occasional venues, named "San Marco" (her decision)', JSON.stringify([o3(SM), short]));
+    const oc = fn('occCountry'), rg = fn('occRegion'), CO = fn('OCC_COUNTRY_ORDER');
+    const ord = ['occ-mfa-org', 'occ-courtauld-ac-uk', 'occ-staatsgalerie-de', 'occ-kmska-be', 'occ-galerie-karsten-greve-com', 'occ-kunstmuseumbasel-ch', SM, 'occ-museothyssen-org', 'occ-mauritshuis-nl', 'occ-ngv-vic-gov-au'].map(o3);
+    ok(ord.every((v, i) => !i || ord[i - 1] < v) && CO.join() === 'United States,United Kingdom,Germany,Belgium,France,Switzerland,Italy,Spain,Netherlands',
+      'OC-001: Occasional venues run United States, UK, Germany, Belgium, France, Switzerland, Italy, Spain, Netherlands, then the rest (her order)', ord.join());
+    ok(rg('occ-dia-org') === 'us' && rg('occ-courtauld-ac-uk') === 'eu' && rg('occ-kunstmuseumbasel-ch') === 'eu' && rg('occ-ngv-vic-gov-au') === 'other' && rg('ashmolean') === 'eu',
+      'OC-002: the Occasional venues fall under Occ - US, Occ - Europe (UK included) and Occ - Other', ['occ-dia-org', 'occ-courtauld-ac-uk', 'occ-ngv-vic-gov-au'].map(rg).join());
   }
   // ── AL-031: NGA Souvenirs of the Gilded Age — a doubled colon becomes one ─
   // Live page on docs/link_proof_pages.json; its page title reads "Age:: French".
@@ -1043,9 +1050,9 @@ function runtime() {
   // ── AL-010: accepted, they file under their venues and the one chip ─────
   ok(!!dialog() && /Links/.test(dialog().textContent), 'AL-010z:  two links could not be read, so the import pop-up waits under it');
   await click([...dialog().querySelectorAll('button')].find(b => b.textContent === 'Cancel'));
-  const chip = buttons(/^Occasional$/)[0];
-  ok(!!chip, 'AL-010: an "Occasional" chip sits with the venue chips');
-  await click(chip);
+  const occChips = [buttons(/^Occ - US$/)[0], buttons(/^Occ - Europe$/)[0], buttons(/^Occ - Other$/)[0]];
+  ok(occChips.every(Boolean) && !buttons(/^Occasional$/).length, 'AL-010: "Occ - US", "Occ - Europe" and "Occ - Other" chips sit with the venue chips, no "Occasional"');
+  for (const c of occChips) await click(c);
   const arts = [...win.document.querySelectorAll('article')];
   ok(arts.length === 9, 'AL-010a:  pressed, it shows the nine occasional shows accepted (the RA one rejected) and nothing else', arts.length);
   const cle = arts.find(a => a.textContent.includes('Filippino Lippi'));
@@ -1055,7 +1062,7 @@ function runtime() {
   ok(dia && /^Detroit/.test(dia.textContent) && !/^Detroit Institute/.test(dia.textContent), 'AL-011: a venue\'s short name, hers, heads its cards', dia && dia.textContent.slice(0, 40));
   ok((((store.get('venues/occasional') || {}).venues || {})['occ-dia-org'] || {}).short === 'Detroit', 'AL-011a:   and survives its shop being looked for again');
   ok(!arts.some(a => a.textContent.includes('NGA Chip Show')), 'AL-030: NGA: an NGA show is not in the Occasional pile');
-  await click(chip);
+  for (const c of occChips) await click(c);
   const nga = buttons(/^NG Washington$/)[0];
   ok(!!nga, 'AL-030a:  NGA has a chip of its own, "NG Washington"');
   if (nga) {

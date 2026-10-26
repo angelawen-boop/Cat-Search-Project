@@ -1006,10 +1006,10 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
     const btns = () => [...doc.querySelectorAll('button')];
     const footer = btns().find(b => b.textContent === 'Reset to Seed');
     ok(!!footer && !/starter set from venue pages|force-loads/.test(doc.body.textContent), 'RC-001: the footer says only "Reset to Seed" \u2014 no sentence', doc.body.textContent.match(/.{0,40}Reset to Seed.{0,40}/));
-    const rc = btns().find(b => b.textContent === 'Reset search');
-    ok(!!rc && rc.parentElement === footer.parentElement, 'RC-002:   with "Reset search" beside it');
+    const rc = btns().find(b => b.textContent === 'Clear search');
+    ok(!!rc && rc.parentElement === footer.parentElement, 'RC-002:   with "Clear search" beside it');
     await click(rc);
-    const box = doc.querySelector('input[placeholder^="Search cards"]');
+    const box = [...doc.querySelectorAll('input:not([type])')].find(i => !i.closest('header'));
     ok(!!box, 'RC-003: Reset cards opens a search box');
     const type = async v => { const props = box[Object.keys(box).find(k => k.startsWith('__reactProps'))]; await act(async () => { props.onChange({ target: { value: v } }); }); await settle(); };
     await type('nature show');
@@ -1075,7 +1075,7 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
     win.HTMLElement.prototype.attachEvent = function () {};
     win.HTMLElement.prototype.detachEvent = function () {};
     await click([...doc.querySelectorAll('button')].find(b => b.title === 'Search'));
-    const box = doc.querySelector('input[placeholder^="Search exhibitions"]');
+    const box = doc.querySelector('header input:not([type=file])');
     // React was loaded before this jsdom existed, so it cannot hear a synthetic
     // input event here. Its own onChange is called instead — the same handler
     // a keystroke reaches in a browser.
@@ -1096,7 +1096,7 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
     const clear = doc.querySelector('button[aria-label="Clear search"]');
     ok(!!clear, 'S-004: with text typed, a clear cross sits inside the search box');
     if (clear) await click(clear);
-    const box2 = doc.querySelector('input[placeholder^="Search exhibitions"]');
+    const box2 = doc.querySelector('header input:not([type=file])');
     ok(box2 && box2.value === '' && !doc.querySelector('button[aria-label="Clear search"]'),
       'S-004a:   pressing it empties the box, and the cross goes with the text', box2 && box2.value);
     // S-005: accents count as plain letters, either way round (her ask: "Bocklin" finds Böcklin).
@@ -1113,14 +1113,14 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
     const btns = () => [...doc.querySelectorAll('button')];
     const typeIn = async (box, v) => { const props = box[Object.keys(box).find(k => k.startsWith('__reactProps'))]; await act(async () => { props.onChange({ target: { value: v } }); }); await settle(); };
     const searchBtn = () => btns().find(b => b.title === 'Search');
-    const sbox = () => doc.querySelector('input[placeholder^="Search exhibitions"]');
+    const sbox = () => doc.querySelector('header input:not([type=file])');
     if (!sbox()) await click(searchBtn());
     await typeIn(sbox(), 'Test');
     await click(searchBtn());
     await click(searchBtn());
     ok(sbox() && sbox().value === '', 'SC-001: closing the search bar and opening it again finds it empty', sbox() && sbox().value);
-    const rc = () => btns().find(b => b.textContent === 'Reset search');
-    const rbox = () => doc.querySelector('input[placeholder^="Search cards"]');
+    const rc = () => btns().find(b => b.textContent === 'Clear search');
+    const rbox = () => [...doc.querySelectorAll('input:not([type])')].find(i => !i.closest('header'));
     if (!rbox()) await click(rc());
     await typeIn(rbox(), 'nature');
     await click(rc());

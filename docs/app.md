@@ -48,7 +48,7 @@ Confirmed by her on real files, not only by fixtures. **Design and evidence:
   top; leaving Yes clears it), saved in her ledger; a drag is not an edit. That
   view ignores the sort chips and dividers, except Period: a tap shows the same cards in period order
   under dividers, with no dragging, and a second tap goes back to her order (her design; BP-); hidden cards keep their places
-  (`moveBuyNext`, `startDrag`; AD-011). Closing the search bar or Reset search (once "Reset cards") empties its box.
+  (`moveBuyNext`, `startDrag`; AD-011). Closing the search bar or Clear search (once "Reset cards") empties its box.
 - **Per-venue freshness**, two dates, from `swept_at`.
 - **The confirm box is the TOP layer** (`zIndex` 1200), above the refresh review
   at 1100. **Any new overlay goes BELOW 1200.** Fixture 18i.

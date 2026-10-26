@@ -283,7 +283,7 @@ decisions and every period and theme rule: `docs/periods.md`. Read it before any
 
 #### 2.2.11 51.3–51.6 — published; her next links confirm
 
-The Recently labelled sort unwired (code kept; the filter stays); every search ignores accents ("Bocklin" finds
+The Recently labelled sort was unwired here and is back at 52.2; every search ignores accents ("Bocklin" finds
 Böcklin); the When line Current, Past, Announced; "Munich Sammlung Schack" on its cards; "Berlin Alte NG" a second
 venue under the Berlin chip (`docs/add_by_link.md`, "Berlin"); Period the last line of a new show's approval card.
 Tests AL-074, AD-012, PR-035–036, S-005; PR-032–033 retired with the sort. She reverts to her 25 Oct close file,
@@ -295,6 +295,16 @@ stored No shop reset with her yes — her next Basel import shows it to confirm.
 51.6: two shared title rules in the link reader, proved live on every proof page: a "##" heading that is part of the tab
 title is a title (Brancusi, Neue NG); a line that is only the venue's name is never the title unless the show's dates sit
 under it (her decision; AL-075). Her re-import of the Brancusi link confirms.
+
+#### 2.2.12 52.2 — UI adjustments, built on `main`, not yet published; her next use confirms
+
+Recently labelled back on the Sort line; footer "Clear search"; Buy next with Period reverses (first tap period
+order, second reverses, third back to her order); Wanted, Owned and Buy next are one axis, so Owned with Buy next
+shows both lists (Buy next books first, in her order; only they drag); no placeholder text in the search and
+Clear search boxes; theme chips "Decorative – Hard / Soft"; chip "Jacquemart". **Occasional is three chips: Occ - US,
+Occ - Europe (UK included), Occ - Other** (her decision). Order: United States, UK, Germany, Belgium, France,
+Switzerland, Italy, Spain, Netherlands, the rest. **Hard-coded:** the countries of the venues that store none
+(`OCC_COUNTRY`); a venue whose stored country is known takes that. Tests PR-035, BP-004–007, OC-001–002, AL-010.
 
 #### 2.2.6 Tests that failed — recorded, not investigated
 

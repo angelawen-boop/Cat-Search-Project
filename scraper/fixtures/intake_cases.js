@@ -404,10 +404,9 @@ check('18f: the real sample file starts with every card undecided',
   const chips=['met','ng','occ-nga-gov','frick','morgan','artic','menil',
     'acq','lgd','occ-new-artsmia-org','cincinnati','occ-britishart-yale-edu','brit','tate-britain','wallace','va','occ-nationalgalleries-org',
     'louvre','orsay','jacquemart','mad','rijks','khm','occ-alte-pinakothek','occ-pinakothek-der-moderne','occ-sammlung-schack','occ-smb-museum','occ-alte-nationalgalerie','occ-neue-nationalgalerie','occ-gemaeldegalerie-skd-museum','occ-staedelmuseum-de','uffizi','dellav','borghese','brera','capo','moma',
-    'tate-modern','mam','occ-museitoscana-cultura-gov-it','occ-palazzoducale-genova-it','occ-palazzorealemilano-it','occ-mfa-org','occ-clevelandart-org','occ-dia-org','occ-archive-worcesterart-org',
-    'occ-courtauld-ac-uk','occ-royalacademy-org-uk','ashmolean','occ-museothyssen-org','occ-mauritshuis-nl','occ-ngv-vic-gov-au'];
+    'tate-modern','mam'];   // the Occasional venues follow by country (orderOf), not in this list
   check('19c: chips and Sort by Venue follow her list', H.VENUE_ORDER.join()===chips.join(), {got:H.VENUE_ORDER});
-  check('19d: and it names all 28', got.every(id=>H.VENUE_ORDER.includes(id)), {});
+  check('19d: and it names all 28 but the Ashmolean, which files under Occasional by its country', got.every(id=>id==='ashmolean'||H.VENUE_ORDER.includes(id)), {});
   check('19a: and all 28 are still there', got.length===28, {count:got.length});
   // 19b. A venue in MUSEUMS is a venue the import files — Cincinnati, 4 Oct.
   H.setRows([]);
