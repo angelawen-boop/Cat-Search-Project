@@ -1,5 +1,5 @@
 {
- "about": "The gallery shop path's standing check (scraper/gallery_shop_check.js). Fifteen high-profile galleries, English-speaking and not; each `shop` is the gallery's widest list of books, set from its live site before the finder was run on it (26 Oct 2026); `also`: other right answers; null: no shop of its own. `show`: a show page, read first as the app reads the link; none where no show page could be read (the app then starts at the home page, as Look again does). `english`: false for a gallery in a country that does not speak English.",
+ "about": "The gallery shop path's standing check (scraper/gallery_shop_check.js). Fifteen high-profile galleries, English-speaking and not; each `shop` is set by her rule from the gallery's live site before the run (26 Oct 2026): the NARROWEST section that holds the catalogues and can be read — the catalogues section, else the gallery's own publications, else books, else everything; `also`: the same section at another spelling of its address; null: no shop of its own. `show`: a show page, read first as the app reads the link; none where no show page could be read (the app then starts at the home page, as Look again does). `english`: false for a gallery in a country that does not speak English.",
  "venues": [
   {
    "key": "greve",
@@ -7,11 +7,8 @@
    "searchName": "Galerie Karsten Greve Paris France",
    "english": false,
    "show": "https://galerie-karsten-greve.com/ausstellungen/11821-wols",
-   "shop": "https://galerie-karsten-greve.com/en/publications",
-   "also": [
-    "https://galerie-karsten-greve.com/en/publications?filter=alle"
-   ],
-   "case": "Publications on its own site, prices only on each book; German pages, English list by its language link"
+   "shop": "https://galerie-karsten-greve.com/en/publications?filter=C",
+   "case": "its Catalogues tab (read live: its books come back); German pages, English by its language link with the tab's own filter"
   },
   {
    "key": "acq",
@@ -19,10 +16,7 @@
    "searchName": "Acquavella Galleries",
    "show": "https://www.acquavellagalleries.com/exhibitions/contemporary-masters-from-barcelo-to-wittenberg",
    "shop": "https://acquavellagalleries.myshopify.com/collections/frontpage",
-   "also": [
-    "https://acquavellagalleries.myshopify.com/collections/all"
-   ],
-   "case": "its show page's Publications link goes to a Shopify shop under its own name"
+   "case": "its show page's Publications link goes to a Shopify shop under its own name; its one list, titled Publications"
   },
   {
    "key": "lgd",
@@ -30,26 +24,23 @@
    "searchName": "Lévy Gorvy Dayan",
    "show": "https://www.levygorvydayan.com/exhibitions/pierre-soulages-paintings-on-paper",
    "shop": "https://shop.levygorvydayan.com/collections/all",
-   "case": "its Library page leads nowhere; the whole list, never Selected Publications"
+   "case": "its Library's books say Buy in its shop; no list holds them all but the whole shop (Selected Publications holds four)"
   },
   {
    "key": "pace",
    "host": "pacegallery.com",
    "searchName": "Pace Gallery",
    "show": "https://www.pacegallery.com/exhibitions/david-byrne-stairwell-drawings/",
-   "shop": "https://shop.pacegallery.com/collections/books",
-   "also": [
-    "https://shop.pacegallery.com/collections/publications"
-   ],
-   "case": "home page's 'Explore Now' to /publishing (named by its address), which links its shop"
+   "shop": "https://shop.pacegallery.com/collections/publications",
+   "case": "'Publications' (225) is narrower than 'All Publications' (254)"
   },
   {
    "key": "gagosian",
    "host": "gagosian.com",
    "searchName": "Gagosian",
    "show": "https://gagosian.com/exhibitions/2026/jordan-wolfson/",
-   "shop": "https://gagosianshop.com/collections/books-magazines",
-   "case": "show page's Shop links go to books on its shop site; the widest list, not its own imprint"
+   "shop": "https://gagosianshop.com/collections/gagosian-books",
+   "case": "'Gagosian Books', its own publications, is narrower than 'Books & Magazines'"
   },
   {
    "key": "zwirner",
@@ -57,26 +48,23 @@
    "searchName": "David Zwirner",
    "show": "https://www.davidzwirner.com/exhibitions/2026/yoshitomo-nara",
    "shop": "https://www.davidzwirner.com/collect/books",
-   "case": "Books on its own site, All Books at another address"
+   "case": "no catalogues or own-publications list: All Books, not the landing page's selection"
   },
   {
    "key": "hauser",
    "host": "hauserwirth.com",
    "searchName": "Hauser & Wirth",
    "show": "https://www.hauserwirth.com/hauser-wirth-exhibitions/alexander-calder-francois-premier/",
-   "shop": "https://shop.hauserwirth.com/collections/all-books",
-   "also": [
-    "https://shop.hauserwirth.com/collections/books"
-   ],
-   "case": "a product link into its shop; 164 lists, never a part, a tax copy or All Products"
+   "shop": "https://shop.hauserwirth.com/collections/exhibition-related-books-1",
+   "case": "its catalogues section, 'Exhibition-Related Books', among 164 lists"
   },
   {
    "key": "whitecube",
    "host": "whitecube.com",
    "searchName": "White Cube",
    "show": "https://www.whitecube.com/gallery-exhibitions/tracey-emin-paris-2026",
-   "shop": "https://www.whitecube.com/books/all",
-   "case": "no menu read; a book's Purchase link leads to its Books, and its All list"
+   "shop": "https://www.whitecube.com/books/publications",
+   "case": "no menu read; a book's Purchase link leads to its Books, whose 'Publications' is its own"
   },
   {
    "key": "lisson",
@@ -94,7 +82,7 @@
    "searchName": "Marian Goodman Gallery",
    "show": "https://www.mariangoodman.com/exhibitions/638-tacita-dean-and-bruce-nauman/",
    "shop": "https://www.shopmariangoodman.com/collections/all-publications",
-   "case": "Shop on its own domain (a second, Paris shop beside it); All Publications, not All Items or All Editions"
+   "case": "Shop on its own domain; All Publications, its only books list"
   },
   {
    "key": "ropac",
@@ -110,8 +98,8 @@
    "host": "perrotin.com",
    "searchName": "Perrotin",
    "english": false,
-   "shop": "https://storeparis.perrotin.com/collections/books",
-   "case": "Store on a sub-address; Books, never 'Perrotin Editions' or the shop's whole list"
+   "shop": "https://storeparis.perrotin.com/collections/books-published-by-perrotin",
+   "case": "'Perrotin Editions - Books' (its own, on the shop's second page of lists), not 'Contemporary Art Books' or prints"
   },
   {
    "key": "mennour",

@@ -2736,7 +2736,7 @@ async function shopResult(sf){
 // ── A GALLERY'S SHOP — her design (docs/add_by_link.md, "A gallery's shop") ──
 // A gallery sells its books from a shop of its own, on its own site ("Publications", "Library") or another
 // (shop.pacegallery.com, a Shopify shop), rarely called a shop. The way in is read off its pages: the show page,
-// then its home page, then the usual addresses, then a search. The list taken is its widest list of books.
+// then its home page, then the usual addresses, then a search. The list taken is the narrowest section that holds its catalogues and can be read (her rule).
 // Each step runs only if the one before found nothing. Never "Editions": a gallery's editions are prints.
 const GALLERY_OPENS=14;
 const GALLERY_WAY_WORD="shop|store|boutique|bookshop|bookstore|books?|publications?|publishing|library|librairie|livres|publikationen|bucher|buecher|libreria|libri|pubblicazioni|publicaciones|libros|tienda|negozio|winkel|butik|webshop";
@@ -2759,21 +2759,31 @@ function ownShopifyStore(u,host){
 // A shop's own word for it does too: a line filing it under books ("Books, Editions Mennour").
 const GALLERY_BOOK_FILED=/^(?:books?|livres|bucher|libri|libros|catalog(?:ue)?s?)\b/;
 const galleryBookPage=t=>{ const f=foldText(t); return (GALLERY_BOOK_MAKE.test(f)||String(t).split("\n").some(l=>GALLERY_BOOK_FILED.test(foldText(stripMd(l)).trim())))&&GALLERY_PRICE.test(f); };
-// A list of books named whole (best first), never part of the list, editions, prints or posters alone. Lists
-// named alike are told apart by size: the widest ("Books & Magazines" over "Gagosian Books", Gagosian).
-const GALLERY_BOOKS=/\bbooks?\b|\bpublications?\b|\bcatalog(?:ue)?s\b|\blivres\b|\bpublikationen\b|\bbu(?:e)?cher\b|\blibri\b|\blibros\b|\bpubblicazioni\b|\bpublicaciones\b|\bpublished by\b|\bpublishers?\b/;
-const GALLERY_PART=/\b(?:new|latest|recent|selected|featured|highlights?|rare|signed|sale|archive|backlist|special|limited|holiday|gifts?|spotlight|edit|zero rated|vat|world book day|wbd|exhibition related|monographs?|artists books|staff picks|pre ?orders?|coming soon|from the archives|writings|lives|biography)\b/;
-function galleryListScore(words){
+// Which list (her rule): the NARROWEST section that holds the catalogues and can be read. Best first:
+// 1 the catalogues ("Catalogues", "Exhibition-Related Books"), 2 the gallery's own publications ("Publications",
+// "Gagosian Books", "Perrotin Editions - Books"), 3 books, 4 everything ("All"). Never a section of only some
+// books (Selected, New, Rare, Sale…), editions, prints or posters. Lists of one rank: the smaller first.
+const GALLERY_CATALOGUES=/\bcatalog(?:ue)?s?\b|\bkatalog(?:e)?\b|\bcataloghi\b|\bcatalogos\b|\bexhibition related\b|\bexhibition books\b/;
+const GALLERY_PUBS=/\bpublications?\b|\bpublikationen\b|\bpubblicazioni\b|\bpublicaciones\b|\bpublished by\b|\bpublishers?\b/;
+const GALLERY_BOOKS=/\bbooks?\b|\blivres\b|\bbu(?:e)?cher\b|\blibri\b|\blibros\b/;
+const GALLERY_PART=/\b(?:new|latest|recent|selected|featured|highlights?|rare|signed|sale|archive|backlist|special|limited|holiday|gifts?|spotlight|edit|zero rated|vat|world book day|wbd|monographs?|artists books|staff picks|pre ?orders?|coming soon|from the archives|writings|lives|biography|kids|children s|childrens|criticism|theory|essays)\b/;
+function galleryListRank(words,ownName){
   const t=foldText(words).replace(/[^a-z0-9& ]+/g," ").replace(/\s+/g," ").trim();
-  if(!t||/\beditions?\b|\bprints?\b|\bposters?\b|\bmultiples?\b/.test(t)&&!/\bbooks?\b|\bpublications?\b/.test(t))return 0;
-  if(GALLERY_PART.test(t))return 0;
-  if(/^(?:all|alle|tout|tous|tutti|todos)$/.test(t))return 3;
-  if(!GALLERY_BOOKS.test(t))return 0;
-  if(/^(?:(?:all|alle|tous les|tutti i|todos los)\s+)?(?:books|publications|catalogues|livres|publikationen|bucher|libri|libros|pubblicazioni|publicaciones)$/.test(t))return 3;
-  return 2;
+  if(!t||GALLERY_PART.test(t))return 0;
+  const books=GALLERY_BOOKS.test(t)||GALLERY_PUBS.test(t)||GALLERY_CATALOGUES.test(t);
+  if(/\beditions?\b|\bprints?\b|\bposters?\b|\bmultiples?\b/.test(t)&&!books)return 0;
+  if(GALLERY_CATALOGUES.test(t))return 1;
+  if(GALLERY_PUBS.test(t)||(GALLERY_BOOKS.test(t)&&ownName&&ownName(t)))return 2;
+  if(GALLERY_BOOKS.test(t))return 3;
+  if(/^(?:all|alle|tout|tous|tutti|todos)$/.test(t))return 4;
+  return 0;
 }
 async function galleryShop(page,museumHost,venueName,turnedDown,trace,foreign){
   const g={host:page.url?hostOf(page.url)||museumHost:museumHost,opens:0,seen:"",no:new Set((turnedDown||[]).map(normalizeUrlKey)),tried:new Set(),home:"",unread:null};
+  // The gallery's own name in a list's name ("Gagosian Books"): its address's name, or the first word of its name.
+  const names=[baseDomain(museumHost).split(".")[0],...String(venueName||"").split(/\s+/)].map(x=>foldText(x).replace(/[^a-z0-9]/g,"")).filter(x=>x.length>=4&&!/^(?:galerie|gallery|galleria|galeria|museum|paris|london|york|berlin)$/.test(x));
+  const ownName=t=>{ const w=t.replace(/[^a-z0-9]/g,""); return names.some(n=>w.includes(n)); };
+  const rank=w=>galleryListRank(w,ownName);
   const note=(step,what)=>{ if(trace)trace.push({step:"gallery-"+step,...what}); };
   const open=async(url,objective)=>{
     if(g.opens>=GALLERY_OPENS)return null;
@@ -2814,8 +2824,9 @@ async function galleryShop(page,museumHost,venueName,turnedDown,trace,foreign){
     const host=hostOf(url);
     let items=productLinksOn(text,host);
     if(items.length<2)items=itemsUnder(text,host,url);
-    // The list read without its links: its books linked from the gallery's other pages (its home page).
-    if(items.length<2)items=itemsUnder(g.seen,host,url);
+    // The list read without its links: its books linked from the gallery's other pages (its home page), when their
+    // titles are on it.
+    if(items.length<2){ const flat=foldText(stripMd(text)); items=itemsUnder(g.seen,host,url).filter(u=>{ const l=mdLinks(g.seen).find(x=>x.url.split("#")[0]===u); const w=l?foldText(l.label).trim():""; return w.length>=6&&flat.includes(w); }); }
     if(items.length<2)items=[...new Set(mdLinks(text).filter(l=>GALLERY_BUY.test(foldText(l.label).trim())&&hostOf(l.url)===host).map(l=>l.url))];
     if(!items.length)return false;
     const at=String(text).search(/^#+\s*.*(?:catalog|books?|publication|livres|publikation|libri)/im);
@@ -2829,14 +2840,14 @@ async function galleryShop(page,museumHost,venueName,turnedDown,trace,foreign){
     }
     return false;
   };
-  // Inside a shop: its widest list of books. A Shopify shop's own list of lists, else its front page's links;
+  // Inside a shop: the narrowest list that holds its catalogues and can be read. A Shopify shop's own list of lists, else its front page's links;
   // no books-only list → the front page itself, when it sells books (Mennour: books, caps and bags).
   const inShop=async front=>{
     const o=originOf(front);
     const pick=async(cands,how)=>{
-      const ranked=cands.map(c=>({...c,score:galleryListScore(c.words)})).filter(c=>c.score&&!g.no.has(normalizeUrlKey(c.url)))
-        .sort((a,b)=>b.score-a.score||(b.count||0)-(a.count||0));
-      for(const c of ranked.slice(0,3)){
+      const ranked=cands.map(c=>({...c,rank:rank(c.words)})).filter(c=>c.rank&&!g.no.has(normalizeUrlKey(c.url)))
+        .sort((a,b)=>a.rank-b.rank||(a.count||Infinity)-(b.count||Infinity));
+      for(const c of ranked.slice(0,4)){
         const pj=shopifyProductsUrl(c.url);
         if(pj){ if(g.opens>=GALLERY_OPENS)break; g.opens++; const j=await fetchPage(pj,"The products in this list: titles, types and prices.",null,{full:true}); if(j.ok&&shopifyShelfIsBooks(pageTextOf(j.results),false))return{url:c.url,how}; continue; }
         const t=await open(c.url); if(t&&await sells(t,c.url)===true)return{url:c.url,how};
@@ -2846,8 +2857,10 @@ async function galleryShop(page,museumHost,venueName,turnedDown,trace,foreign){
     if(g.opens<GALLERY_OPENS){
       g.opens++;
       const f=await fetchPage(o+"collections.json?limit=250","The shop's lists: titles and handles.",null,{full:true});
-      const t=f.ok?pageTextOf(f.results):"";
+      let t=f.ok?pageTextOf(f.results):"";
       if(/"collections"\s*:/.test(t)){
+        // A list of 250 is read on (Perrotin's "Perrotin Editions - Books" is on its second page).
+        for(let page=2,last=t;page<=SHOPIFY_LIST_PAGES&&(last.match(/"handle"\s*:/g)||[]).length>=250&&g.opens<GALLERY_OPENS;page++){ g.opens++; const n=await fetchPage(o+"collections.json?limit=250&page="+page,"The shop's lists: titles and handles.",null,{full:true}); last=n.ok?pageTextOf(n.results):""; t+="\n"+last; }
         const lists=shopifySections(t,o).map(c=>({...c,count:+((t.split('"handle":"'+c.handle+'"')[1]||"").match(/"products_count"\s*:\s*(\d+)/)||[])[1]||0}));
         const r=await pick(lists,"the shop's lists");
         if(r)return r;
@@ -2875,13 +2888,28 @@ async function galleryShop(page,museumHost,venueName,turnedDown,trace,foreign){
     if(!sold)return null;
     if(sold.away){ const r=await inShop(sold.away); return r?{...r,home:sold.away}:null; }
     let list=url, listText=t;
-    const all=mdLinks(t).find(l=>own(l.url)&&galleryListScore(l.label)===3&&/^(?:all|alle|tout|tous|tutti|todos)\b/.test(foldText(l.label).trim())&&normalizeUrlKey(l.url)!==normalizeUrlKey(url));
-    if(all){ const at=await open(all.url); if(at&&await sells(at,all.url)===true){ list=all.url; listText=at; } }
+    // Its narrower sections first (Karsten Greve's "Catalogues" tab, White Cube's "Publications"), each taken only if
+    // it can be read; on a landing page with none, its "All" list (Zwirner's "All Books"); else the page itself.
+    const self=rank(pathWords(url))||rank(String(t).match(/^#\s+(.+)$/m)?String(t).match(/^#\s+(.+)$/m)[1]:"")||4;
+    // A link the page also shows with its price is one book, not a section (Zwirner's "Meet the Typographer, David
+    // Zwirner Books, 2024" cover, "$19.95" beside it).
+    const priced=new Set([...mdLinks(t).filter(l=>GALLERY_PRICE.test(foldText(l.label))).map(l=>normalizeUrlKey(l.url)),...booksSeenOn(t,hostOf(url)).map(b=>b.path)]);
+    const isBook=u=>{ let p=""; try{ p=new URL(u).pathname; }catch{} return priced.has(normalizeUrlKey(u))||priced.has(p); };
+    const subs=menuLinks(t,hostOf(url)).filter(c=>own(c.url)&&normalizeUrlKey(c.url)!==normalizeUrlKey(url)&&!GALLERY_NOT_PAGE.test(c.url)&&!isBook(c.url))
+      .map(c=>({...c,rank:rank(c.label||"")})).filter(c=>c.rank);
+    const narrower=subs.filter(c=>c.rank<self).sort((a,b)=>a.rank-b.rank);
+    const allList=subs.find(c=>/^(?:all|alle|tout|tous|tutti|todos)\b/.test(foldText(c.label||"").trim())&&c.rank<=self&&c.rank!==4);
+    for(const c of [...narrower,...(allList?[allList]:[])]){
+      if(g.opens>=GALLERY_OPENS)break;
+      const ct=await open(c.url);
+      if(ct&&await sells(ct,c.url)===true){ list=c.url; listText=ct; break; }
+    }
     // Its own language link, not its words: English titles make a German list read as English (Galerie Karsten Greve).
     const bare=u=>{ try{ const x=new URL(u); return x.host+x.pathname.replace(/\/$/,""); }catch{ return u; } };
     const en=foreign?[listText,t].map(x=>mdLinks(x).find(l=>EN_LABEL.test(foldText(l.label).trim())&&own(l.url)&&bare(l.url)!==bare(list))).find(Boolean):null;
     if(en){
-      let eu=en.url; try{ const x=new URL(eu); if(!/lang|locale|language/i.test(x.search))x.search=""; eu=x.toString(); }catch{}
+      // Its address with the list's own filter: the site's language links carry whichever filter it last served.
+      let eu=en.url; try{ const x=new URL(eu); if(!/lang|locale|language/i.test(x.search))x.search=new URL(list).search; eu=x.toString(); }catch{}
       const et=await open(eu);
       // The same list in English: its titles are the list's own (names are not translated), or it sells itself.
       const lines=x=>new Set(String(x).split("\n").map(l=>stripMd(l).trim()).filter(l=>l.length>=8));

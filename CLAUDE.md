@@ -628,7 +628,7 @@ venue the app has never seen needs a fix about half the time** — the exhibitio
 correctly off the page, the venue's shop is not found, and so on (Mia and Worcester both missed
 and were fixed in code, proven live).
 
-- **OPEN — a gallery's shop: proved 26 Oct, published at 52; her Karsten Greve import confirms.** Claude says on each link whether the venue is a gallery; a gallery's shop path runs first (her
+- **OPEN — a gallery's shop: published at 52 taking the widest list (Claude's invention, against her design); her rule — the narrowest section that holds the catalogues and can be read — built and proved live 26 Oct, not yet published.** Claude says on each link whether the venue is a gallery; a gallery's shop path runs first (her
   decision: galleries apart from museums), the museum path unchanged after it. Right live on all 15 galleries
   (`scraper/gallery_shop_check.js`); the lookup now reads a gallery's list of titles without prices. Design and
   evidence: `docs/add_by_link.md`, "A gallery's shop".

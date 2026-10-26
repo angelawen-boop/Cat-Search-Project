@@ -125,15 +125,25 @@ book pages come back empty (Massimo De Carlo's "Catalogues"). A book whose page 
 the path to that shop (Lévy Gorvy Dayan's Library). The gallery's own site is the show page's (a moved site,
 kamelmennour.com → mennour.com); "www." or not is the same site.
 
-**Which list:** the widest list of books — "All", "All Books", "Books", "Publications" — never a part of it (New,
-Selected, Rare, Sale, Archive, Exhibition-Related, Monographs), editions, prints or posters, a tax copy ("Books Zero
-Rated UK") or a list of everything ("All Items"). Lists named alike are told apart by size ("Books & Magazines" over
-"Gagosian Books"). A Shopify shop's own list of lists is read; none books-only → its whole list when that is books;
-a shop whose products carry no type (Lévy Gorvy Dayan's) → its whole list read as a page, one book opened; a shop
-with no books-only list → its front page, when it sells books (Mennour: books, caps and bags). A gallery in a
-country that does not speak English: the list's English version, by the page's own language link (its words would
-not do: English titles make Karsten Greve's German list read as English), its filter dropped; taken when it carries
-the same titles.
+**Which list — her rule:** the NARROWEST section that holds the catalogues and can be read. The catalogues section
+("Catalogues", "Exhibition-Related Books") if it can be read; if not, the next wider section that can be — the
+gallery's own publications ("Publications", "Gagosian Books", "Perrotin Editions - Books"), then books, then the
+whole shop; with no catalogues section, the narrowest that exists. Lists of one kind: the smaller first. Never a
+section of only some books (Selected, New, Rare, Sale…), editions, prints or posters, a tax copy ("Books Zero Rated
+UK") or a list of everything ("All Items"); never one book's page (a link the page also shows with its price).
+On a gallery's own page its narrower sections are tried first (Karsten Greve's "Catalogues" tab, White Cube's
+"Publications"); a landing page with none gives way to its "All" list (Zwirner's "All Books"). A Shopify shop's lists
+are read to their last page (Perrotin's "Perrotin Editions - Books" is on its second); a shop whose products carry no
+type (Lévy Gorvy Dayan's) → its whole list read as a page, one book opened; a shop with no books-only list → its
+front page, when it sells books (Mennour: books, caps and bags). A gallery in a country that does not speak English:
+the section's English version, by the page's own language link (its words would not do: English titles make Karsten
+Greve's German list read as English), with the section's own filter (the site's language links carry whichever
+filter it served last); taken when it carries the same titles. **Corrected 26 Oct:** the path was first built to
+take the widest list, Claude's invention against her design; her rule replaced it the same day, and the check's
+right answers were reset by it.
+
+**Karsten Greve's Catalogues tab** (`?filter=C`) reads with its books, but read live it is the whole list (a bag
+among them): the site filters it in the browser. It holds the catalogues, so lookups find them there.
 
 **Never "no shop" for a site that could not be read:** a gallery whose home page could not be read, and where the
 museum path then finds nothing, is "Search failed".
@@ -142,9 +152,9 @@ museum path then finds nothing, is "Search failed".
 own address too, read as a gallery's book page — so a show missing from Karsten Greve's list is not in the shop,
 never "cannot be seen" (GK-001–002). The museum finder's own proof is unchanged.
 
-**Tests:** AL-076–076i (offline); `node scraper/gallery_shop_check.js` — the app's own finder, live, on fifteen
+**Tests:** AL-076–076j (offline); `node scraper/gallery_shop_check.js` — the app's own finder, live, on fifteen
 galleries (`docs/gallery_shop_check.json`), each against the list set from its live site before the run. **26 Oct,
-final code: every gallery right** (Sprüth Magers: no shop, rightly). Claude's gallery call, with a stand-in Claude
+final code, right answers by her rule: every gallery right** (Sprüth Magers: no shop, rightly). Claude's gallery call, with a stand-in Claude
 (Sonnet) on the app's own prompt: right on all 13 gallery and 10 museum show pages read live, the museums named
 "Gallery" (National Gallery, Galleria Borghese, Gemäldegalerie, Neue Nationalgalerie) included; her own imports prove
 it.
