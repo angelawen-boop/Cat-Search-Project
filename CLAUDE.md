@@ -492,7 +492,7 @@ price, her decision).
 > restating `capabilities` must restate all four; omitting it carries them
 > forward. **Renaming the connector means restating them.**
 
-**Live: 52 in her app**, with the cloud ledger (merged at 46). What each recent version changed is in
+**Live: 52.1 in her app**, with the cloud ledger (merged at 46). What each recent version changed is in
 `docs/publishing.md`, "What is live now".
 
 #### The mental model, load-bearing
@@ -628,7 +628,7 @@ venue the app has never seen needs a fix about half the time** — the exhibitio
 correctly off the page, the venue's shop is not found, and so on (Mia and Worcester both missed
 and were fixed in code, proven live).
 
-- **OPEN — a gallery's shop: published at 52 taking the widest list (Claude's invention, against her design); her rule — the narrowest section that holds the catalogues and can be read — built and proved live 26 Oct, not yet published.** Claude says on each link whether the venue is a gallery; a gallery's shop path runs first (her
+- **OPEN — a gallery's shop, her rule (the narrowest section that holds the catalogues and can be read), published at 52.1; her Karsten Greve import confirms** (52 took the widest list — Claude's invention against her design, replaced). Claude says on each link whether the venue is a gallery; a gallery's shop path runs first (her
   decision: galleries apart from museums), the museum path unchanged after it. Right live on all 15 galleries
   (`scraper/gallery_shop_check.js`); the lookup now reads a gallery's list of titles without prices. Design and
   evidence: `docs/add_by_link.md`, "A gallery's shop".
