@@ -466,7 +466,8 @@ cannot confirm holds books, because the page's contents never arrive. When she b
    on the venue's `LINK_VENUES` entry (`shopHome`, `shopCatalogues`), with `shopUnseen: "script"`. A
    hard-coded answer: say so to her.
 3. **Its lookups** read "The museum shop contents cannot be seen — JS-rendering", search the web for the book,
-   and the card links the written-in section for her own search. Re-check the same.
+   and the card's "Museum shop" link is the written-in section, for her own search (`shopLink`, `shopButtonUrl`;
+   BS-004). Re-check the same.
 4. **If she has already answered the shop screen for it** (No shop), the store's record is reset with her yes:
    `shop: "found"`, the section, `foundBy: "the venue's rule"`, unconfirmed, so her next import shows it to confirm.
 **Basel** (`occ-kunstmuseumbasel-ch`, under Occasional) is the first: `shop.kunstmuseumbasel.ch` is an empty frame

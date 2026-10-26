@@ -778,6 +778,12 @@ function runtime() {
     const nnPath = linkVenue('https://www.smb.museum/en/museums-institutions/neue-nationalgalerie/exhibitions/detail/x/', { between: [] });
     ok(wols.id === NN && nnPath.id === NN && own[NN].short === 'Berlin Neue NG' && chipKey(NN) === chipKey(G) && order.indexOf(N) + 1 === order.indexOf(NN),
       'AL-074a: the Neue Nationalgalerie files as "Berlin Neue NG" by its path or house line (Wols), under "Berlin" after the Alte', JSON.stringify([wols, nnPath]));
+    const occV = fn('occVenue'), btn = fn('shopButtonUrl');
+    const basel = occV('occ-kunstmuseumbasel-ch', { id: 'occ-kunstmuseumbasel-ch', name: 'Kunstmuseum Basel', shop: 'found', confirmed: true,
+      shopHome: 'https://shop.kunstmuseumbasel.ch/en/', shopCatalogues: 'https://shop.kunstmuseumbasel.ch/en/merchandise?category=Exhibition+Catalogues' });
+    const xorg = occV('occ-x-org', { id: 'occ-x-org', name: 'X', shop: 'found', confirmed: true, shopHome: 'https://shop.x.org/', shopCatalogues: 'https://shop.x.org/books', shopSearch: 'https://shop.x.org/search?q=' });
+    ok(btn(basel, 'Verso') === 'https://shop.kunstmuseumbasel.ch/en/merchandise?category=Exhibition+Catalogues' && btn(xorg, 'A B') === 'https://shop.x.org/search?q=A%20B',
+      'BS-004: the card\'s Museum shop link is the section written in for the venue (Basel); elsewhere as before', JSON.stringify([btn(basel, 'Verso'), btn(xorg, 'A B')]));
     const D = 'occ-gemaeldegalerie-skd-museum', card = id => own[id].card;
     ok(own[D].short === 'Dresden' && card(D) === 'Dresden Gemäldegalerie' && own[D].linkRead.slashDayFirst && own[D].linkRead.titleAfter.test('Active page: Hopper')
       && own[D].linkRead.skip.test('Exhibition Site Zwinger') && !own[D].shopQueries,

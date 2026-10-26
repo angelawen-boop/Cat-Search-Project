@@ -3,7 +3,7 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 // The footer prints APP_VERSION and its date, so she can tell one build from the next.
 // Numbering, her decision: a whole number for a substantial change, a decimal for a
 // small one, one number per publish. Bump it with the change it describes.
-const APP_VERSION = "51.4";
+const APP_VERSION = "51.5";
 const APP_VERSION_DATE = "26 Oct 2026";
 
 // The venue order is VENUE_ORDER, below the list, which sorts MUSEUMS; drawer, chips,
@@ -1849,7 +1849,7 @@ function occVenue(id,v,fallback){
   const name=own.name||s.name||fallback;
   // Her pick on the shop screen: the English section the finder could not read (`shopEnglishUnread`), contents unseen.
   const en=!!(s.englishPicked&&s.shopEnglishUnread);
-  return{id,short:own.short||s.short||name,chip:own.chip,card:own.card,lookupName:own.lookupName||own.name||s.short||name,name,occasional:true,shopUnseen:own.shopUnseen||(en?"unconfirmed":undefined),english:s.english===false?false:undefined,
+  return{id,shopLink:own.shopCatalogues||undefined,short:own.short||s.short||name,chip:own.chip,card:own.card,lookupName:own.lookupName||own.name||s.short||name,name,occasional:true,shopUnseen:own.shopUnseen||(en?"unconfirmed":undefined),english:s.english===false?false:undefined,
     exBase:null,listUrl:null,
     shopHome:live?s.shopHome||null:null,shopCatalogues:live?(en?s.shopEnglishUnread:s.shopCatalogues||null):null,shopSearch:live?s.shopSearch||null:null,
     shopUnknown:!live&&!(s.shop==="none"&&s.confirmed)};
@@ -3349,7 +3349,7 @@ function dateRange(r){const a=fmtDate(r.startDate),b=fmtDate(r.endDate);if(a&&b)
 // The shop link searches by the EXHIBITION's title (her decision): shops index the
 // show's name; resellers use the ISBN or the book's title. Booko: booko.au/<isbn>,
 // or its title search with no ISBN.
-function buyLinks(r){const isbn=cleanIsbn(r.isbn13),title=r.catalogueTitle||r.title,q=encodeURIComponent(isbn||title),tq=encodeURIComponent(title),mu=MU[r.museumId],out=[];if(r.shopUrl)out.push({name:shopLinkLabel(r.shopState),href:r.shopUrl});else if(mu&&mu.shopSearch)out.push({name:"Museum shop",href:mu.shopSearch+encodeURIComponent(r.title)});else if(mu&&mu.shopHome)out.push({name:"Museum shop",href:mu.shopHome});if(r.publisherUrl)out.push({name:publisherLinkLabel(r.publisherResult),href:r.publisherUrl});out.push({name:"Amazon",href:"https://www.amazon.com.au/s?k="+q},{name:"AbeBooks",href:"https://www.abebooks.com/servlet/SearchResults?ds=30&dym=on&kn="+(isbn||tq)+"&rollup=on&sortby=17"},{name:"Alibris",href:"https://www.alibris.com/booksearch?keyword="+q},{name:"Booko",href:isbn?"https://booko.au/"+isbn:"https://booko.au/search?query_type=1&q="+tq.replace(/%20/g,"+")});return out;}
+function buyLinks(r){const isbn=cleanIsbn(r.isbn13),title=r.catalogueTitle||r.title,q=encodeURIComponent(isbn||title),tq=encodeURIComponent(title),mu=MU[r.museumId],out=[];if(r.shopUrl)out.push({name:shopLinkLabel(r.shopState),href:r.shopUrl});else if(shopButtonUrl(mu,r.title))out.push({name:"Museum shop",href:shopButtonUrl(mu,r.title)});if(r.publisherUrl)out.push({name:publisherLinkLabel(r.publisherResult),href:r.publisherUrl});out.push({name:"Amazon",href:"https://www.amazon.com.au/s?k="+q},{name:"AbeBooks",href:"https://www.abebooks.com/servlet/SearchResults?ds=30&dym=on&kn="+(isbn||tq)+"&rollup=on&sortby=17"},{name:"Alibris",href:"https://www.alibris.com/booksearch?keyword="+q},{name:"Booko",href:isbn?"https://booko.au/"+isbn:"https://booko.au/search?query_type=1&q="+tq.replace(/%20/g,"+")});return out;}
 
 // ── FINDING A CATALOGUE (docs/app.md §1; CLAUDE.md §5.1 "Catalogue lookup") ────
 // The page cannot reach the internet, so searching and reading go through her keyed
@@ -4382,6 +4382,12 @@ function englishLine(r){
 
 // The shop button's label. "(last seen)" is what tells her the page may be
 // dead or sold out while the link is still worth keeping.
+// The card's "Museum shop" link with no book page of its own: a section written in for the venue (her decision:
+// Basel, the Städel), else the shop's search for the show, else its front page. Null when there is none.
+function shopButtonUrl(mu,title){
+  if(!mu)return null;
+  return mu.shopLink||(mu.shopSearch?mu.shopSearch+encodeURIComponent(title):mu.shopHome||null);
+}
 function shopLinkLabel(shopState){ return shopState==="gone"?"Museum shop (last seen)":"Museum shop"; }
 
 // Reset cards (her design): every lookup field blank, her marks kept, so the next
@@ -6267,7 +6273,7 @@ function CatalogueBox({r,mu,C,TH,lnk,isAcq,noShop,vl,picked,onPick,actions}){
           ):buyLinks(r).map(l=><a key={l.name} href={l.href} target="_blank" rel="noopener noreferrer" style={lnk}>{l.name} {"\u2197"}</a>)}
         </div>
       </>):(<>
-        {mu&&(mu.shopSearch||mu.shopHome)&&<div style={{display:"flex",flexWrap:"wrap",gap:5}}><a href={mu.shopSearch?mu.shopSearch+encodeURIComponent(r.title):mu.shopHome} target="_blank" rel="noopener noreferrer" style={lnk}>Museum shop {"\u2197"}</a></div>}
+        {shopButtonUrl(mu,r.title)&&<div style={{display:"flex",flexWrap:"wrap",gap:5}}><a href={shopButtonUrl(mu,r.title)} target="_blank" rel="noopener noreferrer" style={lnk}>Museum shop {"\u2197"}</a></div>}
       </>)}
       {actions}
     </div>
@@ -6284,7 +6290,7 @@ function CatalogueNone({r,mu,C,TH,lnk,actions}){
           <p style={{fontSize:12,color:C.soft,margin:"0 0 6px"}}><span style={{color:TH.lapsed.ink,fontWeight:700}}>{shopUnreadHead(r.shopState)}</span>{SHOP_BLOCKED_NONE_REST}</p>
           {/* "Search manually" needs somewhere to press: the shop's own
               search with the title in it, as on a found card. */}
-          {mu&&(mu.shopSearch||mu.shopHome)&&<a href={mu.shopSearch?mu.shopSearch+encodeURIComponent(r.title):mu.shopHome} target="_blank" rel="noopener noreferrer" style={lnk}>Museum shop {"\u2197"}</a>}
+          {shopButtonUrl(mu,r.title)&&<a href={shopButtonUrl(mu,r.title)} target="_blank" rel="noopener noreferrer" style={lnk}>Museum shop {"\u2197"}</a>}
         </div>
       ):<p style={{fontSize:12,color:C.soft,margin:"0 0 8px"}}>No catalogue found for this exhibition.</p>}
       {actions}
