@@ -281,6 +281,13 @@ decisions and every period and theme rule: `docs/periods.md`. Read it before any
 - **Period with every Acquiring filter — published at 51.2; her use confirms.** Buy next keeps her dragged
   order; Period there switches to period order with dividers, no dragging, and back again (her choice; BP-).
 
+#### 2.2.11 Built on `main`, not yet published — her go-ahead pending
+
+The Recently labelled sort unwired (code kept; the filter stays); every search ignores accents ("Bocklin" finds
+Böcklin); the When line Current, Past, Announced; "Munich Sammlung Schack" on its cards; "Berlin Alte NG" a second
+venue under the Berlin chip (`docs/add_by_link.md`, "Berlin"); Period the last line of a new show's approval card.
+Tests AL-074, AD-012, PR-035–036, S-005; PR-032–033 retired with the sort.
+
 #### 2.2.6 Tests that failed — recorded, not investigated
 
 A session records each failing suite here and does not investigate it (`docs/testing.md`).

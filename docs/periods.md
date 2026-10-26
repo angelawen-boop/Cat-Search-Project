@@ -33,7 +33,8 @@ Tests: `period_sort.js` (PS-), `period_render.js` (PR-), in the screen group (`s
 - **v2.1 published: stage 2, her review pending.** Eleven venues added, picked for kinds of show the first
   seven lacked: MAD, Morgan, British Museum, Menil, Rijksmuseum, Uffizi, Capodimonte, Borghese, Louvre,
   Tate Britain, Wallace. She taps Label (it asks only the new venues' shows) and reviews them under
-  **Recently labelled** (her ask; the fourth "recently" sort, copied from Recently added): bands "This
+  **Recently labelled** (her ask; the fourth "recently" sort, copied from Recently added; since unwired from the
+  Sort line, its code kept — her decision; the filter stays): bands "This
   labelling", "Earlier labellings", "Stage 1" (labelled before the sort existed), "Not labelled". The band
   names are Claude's, copied from the import's pattern. 2.1 adds a **Recently labelled filter** (her ask), on
   the Showing line after Dismissed: only the newest Label run or import, so it works with Period. A Label run

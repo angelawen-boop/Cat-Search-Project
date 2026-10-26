@@ -1099,6 +1099,12 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
     const box2 = doc.querySelector('input[placeholder^="Search exhibitions"]');
     ok(box2 && box2.value === '' && !doc.querySelector('button[aria-label="Clear search"]'),
       'S-004a:   pressing it empties the box, and the cross goes with the text', box2 && box2.value);
+    // S-005: accents count as plain letters, either way round (her ask: "Bocklin" finds Böcklin).
+    // NG UK is still on from S-003; the show's title is plain, the search accented.
+    if (box2) { const p2 = box2[Object.keys(box2).find(k => k.startsWith('__reactProps'))]; await act(async () => { p2.onChange({ target: { value: 'T\u00ebst Sh\u00f6w Outside' } }); }); await settle(); }
+    const hit = titles();
+    ok(hit.length === 1 && hit[0].includes(webRow.title), 'S-005: a search with accents finds the same show without them', hit.length + ': ' + hit.map(x => x.slice(0, 40)).join(' | '));
+    if (box2) { const p2 = box2[Object.keys(box2).find(k => k.startsWith('__reactProps'))]; await act(async () => { p2.onChange({ target: { value: '' } }); }); await settle(); }
   }
 
   // ── SC-001..SC-002: closing a search box empties it — her ask, 2 Oct ──────

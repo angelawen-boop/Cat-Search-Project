@@ -485,6 +485,10 @@ async function probablyNotForYou() {
     const a = [...page.doc.querySelectorAll('a')].find(x => x.getAttribute('href') === 'https://www.metmuseum.org/exhibitions/fx-hok');
     check('AD-010 A new show\'s Link on its approval card is a clickable link, in a new tab',
       !!a && a.getAttribute('target') === '_blank' && a.textContent === 'https://www.metmuseum.org/exhibitions/fx-hok');
+    // Her ask: Period is the last line of a new show's card, after the Link.
+    const rowsOf = a && [...a.closest('div').parentNode.children].map(d => (d.querySelector('b') || {}).textContent).filter(Boolean);
+    check('AD-012 Period is the last line of a new show\'s approval card, after Link',
+      !!rowsOf && rowsOf.join() === 'Dates:,Description:,Link:,Period:', rowsOf && rowsOf.join());
   } finally { await page.close(); }
 }
 

@@ -401,11 +401,17 @@ from under the heading.
 
 **Berlin** (Staatliche Museen zu Berlin, `occ-smb-museum`): its own chip "Berlin", after KHM; cards say
 "Berlin Gemäldegalerie" (her decision); its shop is searched as "Staatliche Museen zu Berlin" (`LINK_VENUES`). Dates are numbers with dots, day first (DS-004). On the proof list.
+**Berlin Alte NG** (`occ-alte-nationalgalerie`, her decision): a second venue under the chip. A smb.museum page
+files there by its path (`/museums-institutions/alte-nationalgalerie/`) or by the house line "Alte Nationalgalerie"
+just under the dates (`afterDates`; Böcklin's page sits at `/en/exhibitions/detail/`); every other smb.museum
+page files under the Gemäldegalerie as before — a shared site whose own host has a link venue falls back to it,
+never a "doesn't say which museum" line (`linkVenue`). Proved live on her Böcklin and Cassirer pages and the four
+Gemäldegalerie proof pages (AL-074). Its shop is found by the finder at its first link.
 
 **Munich** — three venues, each its own cards, under one chip "Munich", the Alte first,
 before Berlin (her decision; `group`, `chipKey`): **Munich Alte Pinakothek**
-(`occ-alte-pinakothek`), **Munich der Moderne** (`occ-pinakothek-der-moderne`) and **Sammlung Schack**
-(`occ-sammlung-schack`, her name, no "Munich"). The Neue is left out (her decision): its pictures hang in the
+(`occ-alte-pinakothek`), **Munich der Moderne** (`occ-pinakothek-der-moderne`) and **Munich Sammlung Schack**
+(`occ-sammlung-schack`). The Neue is left out (her decision): its pictures hang in the
 Alte and Schack while it is closed, and their pages name those. Titles the site types in capitals are recased,
 each part alone (`capsTitles`, the scraper's `capsTitleParts` in `dates.js`; "da", "van" stay small mid-name;
 CT-001). "Venezia 500<<" is the museum's own title.

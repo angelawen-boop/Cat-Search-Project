@@ -158,15 +158,15 @@ const until = async (fn, ms = 8000) => { const t = Date.now(); while (Date.now()
       `PR-007: Label asks about every unlabelled show at every venue (stage 3), dismissed included (${unlabelled}), 40 at a time; a failed batch is asked again`, asked.join(','));
     ok(doc.body.textContent.includes(`Label: all ${unlabelled} exhibitions labelled.`), 'PR-012: after a full run her line says every show was labelled');
     ok(cards().length === shownAfter, `PR-008: after Label, Period shows every not-dismissed show (${shownAfter})`, String(cards().length));
-    // Recently labelled (her ask): this run's shows first, then the shows labelled before the sort existed.
-    click(chipBtnSort('Recently labelled')); await settle(150);
-    const before_ = (el, other) => !!(el.compareDocumentPosition(other) & win.Node.DOCUMENT_POSITION_FOLLOWING);
-    const band = t => [...doc.querySelectorAll('span')].find(x => x.textContent === t);
-    const thisBand = band('This labelling'), s1Band = band('Stage 1');
-    const inThis = cards().filter(a => thisBand && s1Band && before_(thisBand, a) && before_(a, s1Band));
-    ok(!!thisBand && !!s1Band && inThis.length === shownAfter - 4 && !inThis.some(a => [ng1, ng2, met1, met2].some(x => is(a, x))),
-      'PR-032: Recently labelled puts this Label run\'s shows under "This labelling", the earlier ones under "Stage 1"', inThis.length + ' of ' + (shownAfter - 4));
-    click(chipBtnSort('Period')); await settle(150); click(chipBtnSort('Period')); await settle(150);   // back to Period, reversed as before
+    // The Recently labelled sort is unwired, its code kept (her decision; PR-032 and PR-033 tested it):
+    // the Sort line no longer offers it, the Showing line's filter stays (PR-034).
+    const sortLine = [...doc.querySelectorAll('span')].find(x => x.textContent === 'Sort');
+    const sortNames = sortLine ? [...sortLine.parentNode.querySelectorAll('button')].map(b => b.textContent.replace(/[\u2191\u2193 ]+$/, '')) : [];
+    ok(sortNames.length > 0 && !sortNames.includes('Recently labelled'), 'PR-035: the Sort line has no Recently labelled (her decision)', sortNames.join());
+    const whenLine = [...doc.querySelectorAll('span')].find(x => x.textContent === 'When');
+    const whenRow = whenLine ? [...whenLine.parentNode.querySelectorAll('button')].map(b => b.textContent) : [];
+    ok(whenRow.slice(0, 3).join() === 'Current,Past,Announced', 'PR-036: the When line starts Current, Past, Announced (her order)', whenRow.join());
+    // Period is still reversed from above.
     const fin = cards();
     ok(has(fin[fin.length - 1], ng2) && has(fin[0], met2), 'PR-009: a show already labelled keeps its label', fin[0].textContent.slice(0, 40));
     // Relabel, at the foot of a card's drawer, replaces that one show's label.
@@ -204,11 +204,7 @@ const until = async (fn, ms = 8000) => { const t = Date.now(); while (Date.now()
     themeNames.forEach(t => click(chipBtn(t))); await settle(150);
     ok(cards().length === allShown, 'PR-022: the theme chips and Ex-themes together hold every show in the Period view, once', cards().length + ' of ' + allShown);
     themeNames.forEach(t => click(chipBtn(t))); await settle(150);
-    click(chipBtnSort('Recently labelled')); await settle(150);
-    const lone = cards().filter(a => before_(band('This labelling'), a) && before_(a, band('Earlier labellings')));
-    ok(lone.length === 1 && lone[0].querySelector('h3').textContent === firstTitle,
-      'PR-033: a Relabel puts that one show under "This labelling", the run before it under "Earlier labellings"', lone.length + '');
-    click(chipBtnSort('Period')); await settle(150);
+    click(chipBtnSort('Period')); await settle(150);   // Period in its usual order again
     // The Recently labelled filter, on the Showing line after Dismissed: the newest Label run, in period order.
     const showing = [...doc.querySelectorAll('span')].find(x => x.textContent === 'Showing');
     const showRow = showing ? [...showing.parentNode.querySelectorAll('button')].map(b => b.textContent) : [];

@@ -73,7 +73,7 @@ const MUSEUMS = [
 // refresh screen. A venue not named here goes last, by name.
 const VENUE_ORDER=["met","ng","occ-nga-gov","frick","morgan","artic","menil",
   "acq","lgd","occ-new-artsmia-org","cincinnati","occ-britishart-yale-edu","brit","tate-britain","wallace","va","occ-nationalgalleries-org",
-  "louvre","orsay","jacquemart","mad","rijks","khm","occ-alte-pinakothek","occ-pinakothek-der-moderne","occ-sammlung-schack","occ-smb-museum","occ-gemaeldegalerie-skd-museum","occ-staedelmuseum-de","uffizi","dellav","borghese","brera","capo","moma",
+  "louvre","orsay","jacquemart","mad","rijks","khm","occ-alte-pinakothek","occ-pinakothek-der-moderne","occ-sammlung-schack","occ-smb-museum","occ-alte-nationalgalerie","occ-gemaeldegalerie-skd-museum","occ-staedelmuseum-de","uffizi","dellav","borghese","brera","capo","moma",
   "tate-modern","mam",
   "occ-museitoscana-cultura-gov-it","occ-palazzoducale-genova-it","occ-palazzorealemilano-it","occ-mfa-org","occ-clevelandart-org","occ-dia-org","occ-archive-worcesterart-org","occ-courtauld-ac-uk",
   "occ-royalacademy-org-uk","ashmolean","occ-museothyssen-org","occ-mauritshuis-nl","occ-ngv-vic-gov-au"];
@@ -959,10 +959,15 @@ const LINK_VENUES={
   "occ-pinakothek-der-moderne":{ownChip:true,short:"Munich der Moderne",chip:"Munich",group:"munich-pinakotheken",lookupName:"Pinakothek der Moderne",name:"Pinakothek der Moderne M\u00fcnchen",
     sites:[{host:"pinakothek.de",line:/^Pinakothek der Moderne\b/i},{host:"pinakothek-der-moderne.de"}],
     shopQueries:["Pinakothek der Moderne M\u00fcnchen Museumsshop Kataloge"],shopNamed:"Pinakothek der Moderne",linkRead:{capsTitles:true,slashDayFirst:true}},
-  "occ-sammlung-schack":{ownChip:true,short:"Sammlung Schack",chip:"Munich",group:"munich-pinakotheken",lookupName:"Sammlung Schack",name:"Sammlung Schack",
+  "occ-sammlung-schack":{ownChip:true,short:"Munich Sammlung Schack",chip:"Munich",group:"munich-pinakotheken",lookupName:"Sammlung Schack",name:"Sammlung Schack",
     sites:[{host:"pinakothek.de",line:/^Sammlung Schack\b/i}],linkRead:{capsTitles:true}},
   // Staatliche Museen zu Berlin (smb.museum): chip "Berlin" after KHM, cards "Berlin Gemäldegalerie" (her decision).
-  "occ-smb-museum":{ownChip:true,short:"Berlin",card:"Berlin Gem\u00e4ldegalerie",lookupName:"Gem\u00e4ldegalerie Berlin",name:"Staatliche Museen zu Berlin"},
+  // The Alte Nationalgalerie is a second venue under the chip, cards "Berlin Alte NG" (her decision): its
+  // pages sit under its own path, or carry its house line just under the dates (Böcklin); every other
+  // smb.museum page files under the Gemäldegalerie, as before (linkVenue).
+  "occ-smb-museum":{ownChip:true,short:"Berlin",chip:"Berlin",group:"berlin",card:"Berlin Gem\u00e4ldegalerie",lookupName:"Gem\u00e4ldegalerie Berlin",name:"Staatliche Museen zu Berlin"},
+  "occ-alte-nationalgalerie":{ownChip:true,short:"Berlin Alte NG",chip:"Berlin",group:"berlin",lookupName:"Alte Nationalgalerie Berlin",name:"Alte Nationalgalerie",
+    sites:[{host:"smb.museum",path:/\/museums-institutions\/alte-nationalgalerie\//i},{host:"smb.museum",line:/^Alte Nationalgalerie$/i}]},
   // Dresden's Gemäldegalerie Alte Meister: chip "Dresden", cards "Dresden Gemäldegalerie" (her
   // decision). Its pages open with a short "# " name above every SKD museum's menu; the show's
   // own heading follows "Active page:" (titleAfter). Dates day first with slashes; the site
@@ -1253,7 +1258,7 @@ function pageUnreadWhy(e){
 // Rules and the case behind each: docs/add_by_link.md, "The general reader". `rules`, when given,
 // collects the name of every rule that changed this page's result: the proof list keeps a page only
 // for a rule no other page at its venue shows (docs/testing.md). The app passes none.
-// One page → {ok, base, between, under, start, end, raw, site, link, noDates, shown, shownWhy, dateLine} or {ok:false, why}.
+// One page → {ok, base, between, under, afterDates, start, end, raw, site, link, noDates, shown, shownWhy, dateLine} or {ok:false, why}.
 function readShowPage(res,url,vc,rules){
   const pg=pageToRead(res,url,vc,rules);
   if(pg.fail)return pg.fail;
@@ -1613,10 +1618,12 @@ function pageResult(pg){
   const{lr,url,lines,h,rule,range,found,site,vc,host}=pg;
   // The first line under the heading, for a venue whose subtitle sits there.
   const under=lines.slice(h+1).map(stripMd).find(Boolean)||"";
+  // The first two lines under the dates, where a house line can sit (linkVenue).
+  const afterDates=pg.d>h?lines.slice(pg.dEnd+1).map(stripMd).filter(Boolean).slice(0,2):[];
   let tracked=false; try{ tracked=[...new URL(url).searchParams.keys()].some(k=>TRACKING_PARAM.test(k)); }catch{}
   const link=lr&&lr.cleanLink?String(url).split(/[?#]/)[0]:tracked?withoutTracking(url):url;
   if(link!==url)rule(lr&&lr.cleanLink?"cleanLink":"tracking");
-  return{ok:true,base:pg.base,between:pg.between,under,start:range.start||"",end:range.end||"",raw:pg.raw.slice(0,LINK_RAW_CHARS),site:site||(linkEntry(vc)||{}).name||host.replace(/^www\./,""),link,noDates:!!found.noDates,shown:found.shown||"",shownWhy:found.shownWhy||"",dateLine:found.noDates&&!found.shown?"":pg.dateLine};
+  return{ok:true,base:pg.base,between:pg.between,under,afterDates,start:range.start||"",end:range.end||"",raw:pg.raw.slice(0,LINK_RAW_CHARS),site:site||(linkEntry(vc)||{}).name||host.replace(/^www\./,""),link,noDates:!!found.noDates,shown:found.shown||"",shownWhy:found.shownWhy||"",dateLine:found.noDates&&!found.shown?"":pg.dateLine};
 }
 
 // A venue's title from its own headings (linkRead.title). "pieces": the heading is the "##"
@@ -1784,8 +1791,8 @@ function siteVenues(url){
 function addressVenue(url){
   const known=knownVenueFor(url);
   if(known)return known;
-  const s=siteVenues(url);
-  return s.length===1&&!s[0][1]?s[0][0]:null;
+  const s=siteVenues(url).filter(([,l])=>!l);
+  return s.length===1?s[0][0]:null;
 }
 // The venue a read page files under → {id, line} (line: the house line, not a subtitle),
 // or {id:null, why} for a shared site's page naming none of its houses (her decision; Munich).
@@ -1795,6 +1802,11 @@ function linkVenue(url,page){
   const houses=siteVenues(url).filter(([,re])=>re);
   if(!houses.length)return{id:occVenueId(hostOf(siteUrlOf(url)))};
   for(const l of (page&&page.between)||[]) for(const [id,re] of houses) if(re.test(l.trim()))return{id,line:l};
+  // A house line just under the dates (Berlin's Alte Nationalgalerie).
+  for(const l of (page&&page.afterDates)||[]) for(const [id,re] of houses) if(re.test(l.trim()))return{id};
+  // No house named: the site's own link venue, where it has one (smb.museum, the Gemäldegalerie).
+  const own=occVenueId(hostOf(siteUrlOf(url)));
+  if(linkEntry(own))return{id:own};
   const names=houses.map(([id])=>LINK_VENUES[id].short);
   return{id:null,why:"The page doesn’t say which museum the show is in ("+names.slice(0,-1).join(", ")+" or "+names[names.length-1]+")."};
 }
@@ -4374,7 +4386,7 @@ function resetCard(r){
 // The cards Reset cards can offer: searched ones whose title, catalogue title
 // or venue carry what she typed. Accents and capitals do not count.
 function cardsToReset(rows,q){
-  const k=t=>String(t||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
+  const k=foldText;
   const want=k(q).trim();
   if(!want)return[];
   return rows.filter(r=>r.looked&&[r.title,r.catalogueTitle,MU[r.museumId]&&MU[r.museumId].short,MU[r.museumId]&&MU[r.museumId].name]
@@ -7555,14 +7567,15 @@ export default function App(){
   // One artist, one group: worked out from every labelled show, dismissed ones included.
   const byArtist=useMemo(()=>artistPeriods(rows),[rows]);
   const view=useMemo(()=>{
-    const sq=search.toLowerCase().trim();
+    const sq=foldText(search).trim();
     // Each row's tier, worked out once: the sort below asks for it thousands of times.
     const tiers=new Map();
     const tierOf=r=>{let t=tiers.get(r);if(t===undefined){t=tierFor(r);tiers.set(r,t);}return t;};
     const newestRun=labelledF?rows.reduce((m,r)=>r.labelledAt&&r.labelledAt>m?r.labelledAt:m,""):"";
     let out=rows.filter(r=>{
-      // The search narrows; it does not end the check, so every other filter applies.
-      if(sq&&!(r.title.toLowerCase().includes(sq)||r.summary.toLowerCase().includes(sq)||(MU[r.museumId]?.name||"").toLowerCase().includes(sq)))return false;
+      // The search narrows; it does not end the check, so every other filter applies. Accents
+      // count as plain letters both ways ("Bocklin" finds Böcklin; her ask).
+      if(sq&&![r.title,r.summary,MU[r.museumId]?.name].some(t=>foldText(t).includes(sq)))return false;
       // Dismissed narrows too. A search still finds a dismissed show unless Dismissed
       // is on.
       if(dismissedOnly){ if(r.interested)return false; }
@@ -7670,9 +7683,9 @@ export default function App(){
         {p.type==="add"&&<div style={{fontSize:11.5,color:C.ink,lineHeight:1.5}}>
           <div style={{fontWeight:700,marginBottom:3}}>{"New show \u2014 not in your ledger yet."}</div>
           {infoRow("Dates",dateRange(p.cand))}
-          {infoRow("Period",periodText(p.cand))}
           {infoRow("Description",p.cand.summary)}
           {infoRow("Link",p.cand.exUrl&&<a href={p.cand.exUrl} target="_blank" rel="noopener noreferrer" style={{color:C.ink}}>{p.cand.exUrl}</a>)}
+          {infoRow("Period",periodText(p.cand))}
         </div>}
 
         {(p.type==="fill"||p.type==="change")&&<div style={{fontSize:11.5,color:C.ink}}>
@@ -7927,12 +7940,12 @@ export default function App(){
       <div style={{maxWidth:760,margin:"0 auto 12px",display:"flex",flexDirection:"column",gap:5}}>
         <div style={{display:"flex",gap:4,flexWrap:"wrap",alignItems:"center"}}>
           <span style={{fontSize:9,letterSpacing:"0.12em",textTransform:"uppercase",color:C.soft,marginRight:2}}>Sort</span>
-          {[["date","Date"],["venue","Venue"],["period","Period"],["added","Recently added"],["edited","Recently edited"],["labelled","Recently labelled"]].map(([k,l])=><button key={k} onClick={()=>pickSort(k)} style={chip(acqBuyNext?(k==="period"&&bnPeriod):(sortBy===k&&!pinTouched))}>{l}{(k==="date"||k==="period")&&sortBy===k&&!pinTouched&&!acqBuyNext?(dateReversed?" \u2191":" \u2193"):""}</button>)}
+          {[["date","Date"],["venue","Venue"],["period","Period"],["added","Recently added"],["edited","Recently edited"]].map(([k,l])=><button key={k} onClick={()=>pickSort(k)} style={chip(acqBuyNext?(k==="period"&&bnPeriod):(sortBy===k&&!pinTouched))}>{l}{(k==="date"||k==="period")&&sortBy===k&&!pinTouched&&!acqBuyNext?(dateReversed?" \u2191":" \u2193"):""}</button>)}
           {pinTouched&&<span style={{fontSize:10.5,color:C.action,fontWeight:600}}>{"\u2191 just-refreshed entries shown first"}</span>}
         </div>
         <div style={{display:"flex",gap:4,flexWrap:"wrap",alignItems:"center"}}>
           <span style={{fontSize:9,letterSpacing:"0.12em",textTransform:"uppercase",color:C.soft,marginRight:2}}>When</span>
-          {[["current","Current"],["upcoming","Upcoming"],["past","Past"],["recent","Recently opened"]].map(([k,l])=><button key={k} onClick={()=>toggleSet(setTimeF,k)} style={chip(timeF.has(k))}>{l}</button>)}
+          {[["current","Current"],["past","Past"],["upcoming","Announced"],["recent","Recently opened"]].map(([k,l])=><button key={k} onClick={()=>toggleSet(setTimeF,k)} style={chip(timeF.has(k))}>{l}</button>)}
         </div>
         <div style={{display:"flex",gap:4,flexWrap:"wrap",alignItems:"center"}}>
           <span style={{fontSize:9,letterSpacing:"0.12em",textTransform:"uppercase",color:C.soft,marginRight:2}}>Venue</span>

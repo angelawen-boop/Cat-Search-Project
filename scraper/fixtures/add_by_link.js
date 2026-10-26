@@ -748,13 +748,23 @@ function runtime() {
     ok(linkVenue('https://www.pinakothek-der-moderne.de/en/exhibitions/dana-schutz-trouble-and-appearance/', { between: [] }).id === M,
       'AL-043a:  a show on the Pinakothek der Moderne\'s own site files under it');
     const none = linkVenue('https://www.pinakothek.de/de/ausstellung/spitzentreffen', { between: ['Museum Brandhorst'] });
-    ok(none.id === null && /Munich Alte Pinakothek, Munich der Moderne or Sammlung Schack/.test(none.why), 'AL-043b:  a page naming none of the houses is a line, never a card', JSON.stringify(none));
+    ok(none.id === null && /Munich Alte Pinakothek, Munich der Moderne or Munich Sammlung Schack/.test(none.why), 'AL-043b:  a page naming none of the houses is a line, never a card', JSON.stringify(none));
     const S = 'occ-sammlung-schack';
     const schack = linkVenue('https://www.pinakothek.de/en/exhibition/boecklin-and-schack-a-dialogue-between-artist-and-collector', { between: ['On the 200th Anniversary of Arnold Böcklin’s Birth', 'Sammlung Schack'] });
-    ok(schack.id === S && own[S].short === 'Sammlung Schack' && own[S].group === own[A].group && !own[S].shopQueries && !own[S].shopNamed
+    ok(schack.id === S && own[S].short === 'Munich Sammlung Schack' && own[S].group === own[A].group && !own[S].shopQueries && !own[S].shopNamed
       && order.indexOf(M) + 1 === order.indexOf(S),
-      'AL-043h:  Sammlung Schack files as its own venue under "Munich", named without "Munich", with no shop settings (the finder answers "none"; her decision)', JSON.stringify(schack));
+      'AL-043h:  Sammlung Schack files as its own venue under "Munich", cards "Munich Sammlung Schack", with no shop settings (the finder answers "none"; her decision)', JSON.stringify(schack));
     ok([A, M, S].every(id => own[id].linkRead && own[id].linkRead.capsTitles), 'AL-043i:  titles the Munich houses type in capitals are recased');
+    // Berlin (her decision): the Alte Nationalgalerie a second venue under the chip, by its path or its
+    // house line under the dates (Böcklin, proved live); every other smb.museum page the Gemäldegalerie.
+    const G = 'occ-smb-museum', N = 'occ-alte-nationalgalerie', chipKey = fn('chipKey');
+    const boe = linkVenue('https://www.smb.museum/en/exhibitions/detail/boecklin/', { between: ['Beyond the Myth'], afterDates: ['Alte Nationalgalerie', 'The Alte Nationagalerie dedicates an exhibition…'] });
+    const cas = linkVenue('https://www.smb.museum/en/museums-institutions/alte-nationalgalerie/exhibitions/detail/cassirer-and-the-breakthrough-of-impressionism/', { between: [] });
+    const gg = linkVenue('https://www.smb.museum/en/museums-institutions/gemaeldegalerie/exhibitions/detail/renaissance-faces/', { between: [], afterDates: ['Gemäldegalerie'] });
+    const other = linkVenue('https://www.smb.museum/en/exhibitions/detail/some-show/', { between: [], afterDates: ['Bode-Museum'] });
+    ok(boe.id === N && cas.id === N && gg.id === G && other.id === G && own[N].short === 'Berlin Alte NG' && own[G].card === 'Berlin Gemäldegalerie'
+      && chipKey(N) === chipKey(G) && own[N].chip === 'Berlin' && order.indexOf(G) + 1 === order.indexOf(N),
+      'AL-074: Berlin: the Alte Nationalgalerie files as "Berlin Alte NG" by its path or house line, the rest as before, one chip "Berlin"', JSON.stringify([boe, cas, gg, other]));
     const D = 'occ-gemaeldegalerie-skd-museum', card = id => own[id].card;
     ok(own[D].short === 'Dresden' && card(D) === 'Dresden Gemäldegalerie' && own[D].linkRead.slashDayFirst && own[D].linkRead.titleAfter.test('Active page: Hopper')
       && own[D].linkRead.skip.test('Exhibition Site Zwinger') && !own[D].shopQueries,
