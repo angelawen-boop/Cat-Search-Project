@@ -296,7 +296,7 @@ stored No shop reset with her yes — her next Basel import shows it to confirm.
 title is a title (Brancusi, Neue NG); a line that is only the venue's name is never the title unless the show's dates sit
 under it (her decision; AL-075). Her re-import of the Brancusi link confirms.
 
-#### 2.2.12 53 — UI adjustments, published; her next use confirms
+#### 2.2.12 53–53.2 — UI adjustments, published; her next use confirms
 
 Recently labelled back on the Sort line; footer "Clear search"; no placeholder text in the search and Clear search
 boxes; theme chips "Decorative – Hard / Soft"; chip "Jacquemart". **Buy next:** alone it is her dragged order, and
@@ -310,6 +310,11 @@ sweep:", the sweep notes and the card sentences ("Assume out of print…") trimm
 "Exhibition catalogues", the sweep and quarantine tables laid out in columns for mobile, the quarantine button
 says "Remove", "Reset to Seed" unwired from her page (function kept, drawn only when a test sets
 `window.__catWatchTest`), "Import complete. Save it now." Tests PR-035, BP-004–011, OC-001–002, AL-010.
+53.1: Buy next alone also sorts by Date (first tap oldest to newest, second reverses, third back to her order;
+Date and Period exclusive; BP-012–014); the sweep list shows each date and time on two lines. 53.2: footer
+"v 53.2", Label before Clear search, three instruction lines gone ("Check and approve each shop link.",
+"Review each one below.", "Accept or reject each."). A layout fix is checked by rendering the page at phone
+width, never by reading the code.
 
 #### 2.2.6 Tests that failed — recorded, not investigated
 
