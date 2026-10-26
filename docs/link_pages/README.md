@@ -35,3 +35,7 @@ page's own HTML are missing (FS-, "Parallel fault").
 `shop_search/moma_popup_live.json` (19 Oct): MoMA's catalogue shelf as the connector returned it in her
 Brancusi Re-check (lookup log, saved by script) — the "Become a Member" pop-up only, too long to count as an
 empty page (B-007).
+
+`brancusi_neue_ng_live.json` (26 Oct) is the free Parallel server's answer byte for byte for the Neue
+Nationalgalerie's *Brancusi* page: a one-word "## Brancusi" heading inside the tab title "Brancusi at the
+Neue Nationalgalerie", and the house line "Neue Nationalgalerie" under the dates (AL-075).

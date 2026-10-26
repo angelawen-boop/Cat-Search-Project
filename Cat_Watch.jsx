@@ -3,7 +3,7 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 // The footer prints APP_VERSION and its date, so she can tell one build from the next.
 // Numbering, her decision: a whole number for a substantial change, a decimal for a
 // small one, one number per publish. Bump it with the change it describes.
-const APP_VERSION = "51.5";
+const APP_VERSION = "51.6";
 const APP_VERSION_DATE = "26 Oct 2026";
 
 // The venue order is VENUE_ORDER, below the list, which sorts MUSEUMS; drawer, chips,
@@ -1368,8 +1368,19 @@ function titleCandidates(pg){
 
 // Step 5. The dates: under a title line, else just above it, else none — what the page shows kept for the note.
 // Sets the title line `h`, the date line `d`…`dEnd` and the range; returns a failure, or null.
+// The names of the venue a page is read for, and of the houses sharing its site, and the site the tab
+// title names: a line that is only one of these is never the show's title unless its dates sit under
+// it (her decision; Brancusi's "Neue Nationalgalerie" line under the dates).
+function venueNamesFor(pg){
+  const{vc,host,site,words}=pg;
+  const h=String(host||"").replace(/^www\./,"");
+  const houses=Object.entries(LINK_VENUES).filter(([id,v])=>id===vc||(v.sites||[]).some(x=>x.host===h)).map(([,v])=>v);
+  const names=[site,...[MU[vc]||{},...houses].flatMap(v=>[v.name,v.short,v.card,v.lookupName])];
+  return new Set(names.filter(Boolean).map(words).filter(Boolean));
+}
 function findDates(pg){
   const{lr,lines,rule,rangeIn,dateText,cands,candRule}=pg;
+  const venueNames=venueNamesFor(pg), nameOnly=i=>venueNames.has(pg.words(lines[i]));
   const datesAboveFor=(h,n,via)=>{
     for(let k=h-1,seen=0;k>=0&&seen<n;k--){
       const l=stripMd(lines[k]); if(!l)continue; seen++;
@@ -1422,16 +1433,18 @@ function findDates(pg){
   let h=cands[0],found=null;
   for(const i of cands){ found=datesUnder(i); if(found){ h=i; break; } }
   // None under any candidate: dates printed just above the heading ("Until 25.10.2026", Kunsthaus).
-  if(!found)for(const i of cands){ found=datesAboveFor(i,2,"dates:above-heading"); if(found){ h=i; break; } }
+  if(!found)for(const i of cands){ if(nameOnly(i))continue; found=datesAboveFor(i,2,"dates:above-heading"); if(found){ h=i; break; } }
   if(found)rule("title:"+candRule[cands.indexOf(h)]+(h===cands[0]?"":"-not-first"));
   if(!found){
-    const h0=cands[0], near=[];
+    const h0=cands.find(i=>!nameOnly(i));
+    if(h0===undefined){ rule("fail:venue-name-only"); return{ok:false,why:"Couldn’t find the show’s title on the page."}; }
+    const near=[];
     for(let k=h0+1;k<lines.length&&near.length<LINK_DATE_LINES;k++){ const l=stripMd(lines[k]); if(!l)continue; if(lr&&lr.datesUntil&&lr.datesUntil.test(l.trim()))break; near.push([k,l]); }
     // A date the page prints but that is not one (months only, a season, no year), else none at all:
     // kept undated with the sweep's own note, the dates left blank (her decision: the sweep's rules, a day
     // never invented). The Borghese prints most past shows' dates only in the poster.
     const mo=near.map(([k,l])=>({k,r:DATES.findDateRange(dateText(l),{looseSingles:true})})).find(x=>x.r.shownText);
-    h=h0; rule("title:"+candRule[0]);
+    h=h0; rule("title:"+candRule[cands.indexOf(h0)]);
     found=mo?{d:mo.k,range:{start:"",end:""},noDates:true,shown:mo.r.shownText,shownWhy:mo.r.shownWhy,via:"dates:shown-only"}
       :{d:h0,range:{start:"",end:""},noDates:true,via:"dates:none"};
   }

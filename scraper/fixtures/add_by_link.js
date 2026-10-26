@@ -468,6 +468,23 @@ function runtime() {
     ok(r.ok && r.base === "Matrimonial Bliss: Chagall's Double Portrait with Wine Glass" && r.site === 'Minneapolis Institute of Art',
       'AL-032: Mia: no "–– Minneapolis Institute of Art" tail, no "&#039;", the venue named in full', JSON.stringify([r.base, r.site]));
   }
+  // ── AL-075: a heading that is part of the tab title is the title; a line that is only the venue's name is
+  // never the title unless the show's dates sit under it (her decision). Brancusi, read live (26 Oct). ─
+  {
+    const fn = name => new Function('React', 'window', 'document', 'localStorage', code + '\n;return ' + name + ';')(React, win, win.document, win.localStorage);
+    const read = fn('readShowPage'), NN = 'occ-neue-nationalgalerie';
+    const live = JSON.parse(fs.readFileSync(path.join(__dirname, '..', '..', 'docs', 'link_pages', 'brancusi_neue_ng_live.json'), 'utf8'));
+    const r = read(live, live.url, NN);
+    ok(r.ok && r.base === 'Brancusi' && r.start === '2026-03-20' && r.end === '2026-08-09',
+      'AL-075:  "## Brancusi", part of the tab title, is the title, its dates under it', JSON.stringify([r.base, r.start, r.end]));
+    const noHeading = { ...live, full_content: live.full_content.replace('## Brancusi\n', 'Brancusi\n') };
+    const r2 = read(noHeading, live.url, NN);
+    ok(!r2.ok && /title/.test(r2.why), 'AL-075a: with no heading, the "Neue Nationalgalerie" line under the dates is never taken as the title: the link fails, no card', JSON.stringify(r2));
+    const named = { title: 'Neue Nationalgalerie | Staatliche Museen zu Berlin', full_content: '## Neue Nationalgalerie\n\n20.03.2026\nto\n09.08.2026\n\n'
+      + 'The museum shows the history of its own building by Mies van der Rohe, from the first sketches to the reopening. '.repeat(10) };
+    const r3 = read(named, 'https://www.smb.museum/en/museums-institutions/neue-nationalgalerie/exhibitions/detail/x/', NN);
+    ok(r3.ok && r3.base === 'Neue Nationalgalerie' && r3.start === '2026-03-20', 'AL-075b: a show named only for the venue, its dates under it, is still read', JSON.stringify([r3.base, r3.start]));
+  }
   // ── AL-040: Yale CBA — clock times between the dates (the shared reader, DS-003) ─
   // Made from the live pages (17 Oct); all three on docs/link_proof_pages.json.
   {

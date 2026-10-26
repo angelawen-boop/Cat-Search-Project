@@ -289,6 +289,11 @@ those 25 read clean before, 25 after, with no proof page worse. Code: `readShowP
   (NGA's "Global Search") — unless the page title names the site and the heading does not: then it is the
   site's own label ("Information: Wallraf-Richartz-Museum") and the heading stays (AL-056a). AL-056.
 - **Tours are never added** (her decision) — a page about a show touring other museums is a title test only.
+- **R2b The venue's name alone is never the title** (her decision): a line that is only the venue's name, a house's
+  name on its site, or the site the tab title names is not taken as the title unless the show's dates sit under it
+  (Brancusi's "Neue Nationalgalerie" line under its dates); with no other candidate the link fails, never a card
+  (`venueNamesFor`, AL-075a–b). A "##"/"###" heading that is part of the tab title is a title candidate, before any
+  plain line (Brancusi: "## Brancusi" in "Brancusi at the Neue Nationalgalerie"; AL-075).
 - **R2a Generic label** — "Exhibition", "Mostra", "Ausstellung"… before the name leaves it (NGA, San Marco,
   Van Gogh Museum; AL-054).
 - **R2b Capitals** — a title typed wholly in capitals is recased, unless one short word (Scuderie, Albertina,

@@ -281,7 +281,7 @@ decisions and every period and theme rule: `docs/periods.md`. Read it before any
 - **Period with every Acquiring filter — published at 51.2; her use confirms.** Buy next keeps her dragged
   order; Period there switches to period order with dividers, no dragging, and back again (her choice; BP-).
 
-#### 2.2.11 51.3–51.5 — published; her next links confirm
+#### 2.2.11 51.3–51.6 — published; her next links confirm
 
 The Recently labelled sort unwired (code kept; the filter stays); every search ignores accents ("Bocklin" finds
 Böcklin); the When line Current, Past, Announced; "Munich Sammlung Schack" on its cards; "Berlin Alte NG" a second
@@ -292,6 +292,9 @@ re-imports the 9 Berlin links (all should file under Berlin Alte NG; its shop fo
 (AL-009o2, AL-046f); Basel's shop, drawn by script, written in under her decision (below, §5.4; BS-001–003) and its
 stored No shop reset with her yes — her next Basel import shows it to confirm.
 51.5: the card's "Museum shop" link is the written-in section (Basel, the Städel), as her decision always said (BS-004).
+51.6: two shared title rules in the link reader, proved live on every proof page: a "##" heading that is part of the tab
+title is a title (Brancusi, Neue NG); a line that is only the venue's name is never the title unless the show's dates sit
+under it (her decision; AL-075). Her re-import of the Brancusi link confirms.
 
 #### 2.2.6 Tests that failed — recorded, not investigated
 
@@ -489,7 +492,7 @@ price, her decision).
 > restating `capabilities` must restate all four; omitting it carries them
 > forward. **Renaming the connector means restating them.**
 
-**Live: 51.5 in her app**, with the cloud ledger (merged at 46). What each recent version changed is in
+**Live: 51.6 in her app**, with the cloud ledger (merged at 46). What each recent version changed is in
 `docs/publishing.md`, "What is live now".
 
 #### The mental model, load-bearing
