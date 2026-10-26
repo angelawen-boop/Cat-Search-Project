@@ -138,7 +138,7 @@ async function renderOnce(label, withRuntime) {
     // not draw answers that question no better than no line at all. Read back
     // out of the rendered document for that reason — grepping the built page
     // would find the string whether or not it reaches her.
-    const ver = /version\s+\d+(\.\d+)?/i.exec(text);
+    const ver = /\bv\s+\d+(\.\d+)?/.exec(text);
     if (!ver) {
       fail(label + ': the opening screen shows no version line');
     } else {

@@ -970,7 +970,7 @@ function runtime() {
   const press = async (name, label) => { const c = shopCard(name); const b = c && [...c.querySelectorAll('button')].find(x => x.textContent === label); if (b) await click(b); return !!b; };
   const footer = () => [...shops().querySelectorAll('button')].pop().textContent;
   ok(footer() === '5 still to decide' && !shopCard('Royal Academy of Arts'), 'AL-009c:  five venues to answer — not the RA, its one card rejected — and the ledger button says so', footer());
-  ok(shops().textContent.includes('Check and approve each shop link.'), 'AL-009c2:  her heading and line');
+  ok(/New Venue Shops/.test(shops().textContent) && !shops().textContent.includes('Check and approve each shop link.'), 'AL-009c2:  her heading, with no line under it');
   {
     const has = (name, u) => shopCard(name).textContent.includes(u);
     ok(has('Courtauld', 'https://shop.courtauld.ac.uk/collections/courtauld-catalogues')

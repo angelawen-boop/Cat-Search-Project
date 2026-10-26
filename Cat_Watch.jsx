@@ -3,7 +3,7 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 // The footer prints APP_VERSION and its date, so she can tell one build from the next.
 // Numbering, her decision: a whole number for a substantial change, a decimal for a
 // small one, one number per publish. Bump it with the change it describes.
-const APP_VERSION = "53.1";
+const APP_VERSION = "53.2";
 const APP_VERSION_DATE = "27 Oct 2026";
 
 // The venue order is VENUE_ORDER, below the list, which sorts MUSEUMS; drawer, chips,
@@ -8372,8 +8372,8 @@ export default function App(){
         <span style={{display:"flex",gap:14}}>
           {/* Reset to Seed is unwired from her page (her decision), requestReset kept; drawn only for the tests. */}
           {typeof window!=="undefined"&&window.__catWatchTest&&<button onClick={requestReset} style={{background:"none",border:"none",color:C.soft,fontSize:10,textDecoration:"underline",cursor:"pointer",padding:0}}>Reset to Seed</button>}
-          <button onClick={()=>{if(showResetCards)setResetQuery("");setShowResetCards(v=>!v);}} style={{background:"none",border:"none",color:C.soft,fontSize:10,textDecoration:"underline",cursor:"pointer",padding:0}}>Clear search</button>
           <button onClick={labelLedger} style={{background:"none",border:"none",color:C.soft,fontSize:10,textDecoration:"underline",cursor:"pointer",padding:0}}>Label</button>
+          <button onClick={()=>{if(showResetCards)setResetQuery("");setShowResetCards(v=>!v);}} style={{background:"none",border:"none",color:C.soft,fontSize:10,textDecoration:"underline",cursor:"pointer",padding:0}}>Clear search</button>
         </span>
         <span style={{marginLeft:"auto",display:"flex",gap:14}}>
           {/* Cloud Saves sit beside Quarantine, in the same type, always drawn — a control
@@ -8556,7 +8556,6 @@ export default function App(){
                 </div>
                 );
               })()}
-              <div style={{fontSize:11.5,color:C.soft,marginTop:6,lineHeight:1.5}}>Review each one below.</div>
             </div>
             <div style={{overflow:"auto",padding:"12px 18px",flex:1}}>
               {/* Triage first, then the ordinary work (her decision): odd cases batched
@@ -8656,7 +8655,7 @@ export default function App(){
                     <div style={{marginBottom:12,display:"flex",alignItems:"flex-end",gap:12,flexWrap:"wrap"}}>
                       <div style={{flex:"1 1 260px",minWidth:0}}>
                         <div style={{fontFamily:"'Fraunces',Georgia,serif",fontSize:15,color:C.ink,marginBottom:2}}>Normal cases {"\u00b7"} {ordinary.length}</div>
-                        <div style={{fontSize:11.5,color:C.soft,lineHeight:1.55}}>Nothing unusual about these {"\u2014"} one row in the file, nothing combined, nothing disagreeing. Accept or reject each.</div>
+                        <div style={{fontSize:11.5,color:C.soft,lineHeight:1.55}}>Nothing unusual about these {"\u2014"} one row in the file, nothing combined, nothing disagreeing.</div>
                       </div>
                       <button onClick={()=>{
                           const next={};
@@ -8745,7 +8744,6 @@ export default function App(){
           <div style={{background:C.bg,borderRadius:8,maxWidth:820,width:"100%",margin:"0 auto",display:"flex",flexDirection:"column",maxHeight:"100%",overflow:"hidden",boxShadow:"0 8px 30px rgba(0,0,0,0.3)"}}>
             <div style={{padding:"14px 18px",borderBottom:"1px solid "+C.rule}}>
               <div style={{fontFamily:"'Fraunces',Georgia,serif",fontSize:20,fontWeight:500,color:C.ink}}>New Venue Shops</div>
-              <div style={{fontSize:11.5,color:C.soft,marginTop:4}}>Check and approve each shop link.</div>
             </div>
             <div style={{overflow:"auto",padding:"4px 18px 14px",flex:1}}>
               {/* The review cards' buttons (decBtn), always the same three in the same
@@ -8802,7 +8800,7 @@ export default function App(){
       {/* The version, small and grey: something she checks, not acts on. Reads
           APP_VERSION, so there is one copy of the number. */}
       <footer style={{maxWidth:760,margin:"28px auto 0",fontSize:10.5,color:C.soft,textAlign:"center"}}>
-        Cat Watch {"·"} version {APP_VERSION} {"·"} {APP_VERSION_DATE}
+        Cat Watch {"·"} v {APP_VERSION} {"·"} {APP_VERSION_DATE}
       </footer>
     </div>
   );
