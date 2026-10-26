@@ -236,6 +236,17 @@ const until = async (fn, ms = 8000) => { const t = Date.now(); while (Date.now()
     bn = cards();
     ok(bn.length === 2 && has(bn[0], met1) && has(bn[1], ng2) && !doc.querySelector('[data-period]') && grab(),
       'BP-005: a third tap goes back to her order', bn.map(x => x.querySelector('h3').textContent).join(' | '));
+    // BP-012..BP-014: Buy next by date (her ask): the Date chip's taps, as Period's.
+    const names = () => cards().map(x => x.querySelector('h3').textContent);
+    click(chipBtnSort('Date')); await settle(150);
+    const byDate = names();
+    ok(byDate.length === 2 && !grab() && !doc.querySelector('[data-period]') && chipBtnSort('Date').textContent.includes('\u2193'),
+      'BP-012: Date in Buy next sorts the same cards by date, with no dragging', byDate.join(' | '));
+    click(chipBtnSort('Date')); await settle(150);
+    ok(names().join('|') === byDate.slice().reverse().join('|') && chipBtnSort('Date').textContent.includes('\u2191'), 'BP-013: a second tap reverses the date order', names().join(' | '));
+    click(chipBtnSort('Date')); await settle(150);
+    bn = cards();
+    ok(bn.length === 2 && has(bn[0], met1) && has(bn[1], ng2) && grab(), 'BP-014: a third tap goes back to her dragged order', names().join(' | '));
     const wantedChip = [...doc.querySelectorAll('button')].find(b => b.textContent === 'Wanted');
     click(wantedChip); await settle(150);
     ok(cards().length === 2 && cards().some(x => has(x, met1)) && cards().some(x => has(x, ng2)), 'BP-010: Buy next with Wanted still shows only the Buy next books, a part of Wanted', String(cards().length));
