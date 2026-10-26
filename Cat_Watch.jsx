@@ -1357,8 +1357,10 @@ function titleCandidates(pg){
   if(show){
     const fs=foldText(show);
     add(lines.findIndex(l=>/^\s*#{2,3}\s+\S/.test(l)&&foldText(stripMd(l)).includes(fs)),"h2-h3-holds-tab");
-    add(lines.findIndex(l=>foldText(stripMd(l)).includes(fs)),"line-holds-tab");
     const piece=" "+words(show)+" ";
+    // A "##"/"###" heading that is part of the tab ("## Brancusi" in "Brancusi at the Neue Nationalgalerie").
+    add(lines.findIndex(l=>/^\s*#{2,3}\s+\S/.test(l)&&words(l)&&piece.includes(" "+words(l)+" ")),"h2-h3-inside-tab");
+    add(lines.findIndex(l=>foldText(stripMd(l)).includes(fs)),"line-holds-tab");
     add(lines.findIndex(l=>{ const w=words(l); return w.split(" ").length>=2&&w.length<=80&&piece.includes(" "+w+" "); }),"line-inside-tab");
   }
   pg.cands=cands; pg.candRule=candRule;
