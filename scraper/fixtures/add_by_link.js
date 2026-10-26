@@ -169,7 +169,7 @@ const TG = 'https://www.testgalerie.de/';
 const TG_FOOT = '\n\nTESTGALERIE KÖLN\nDrususgasse 1-5\n50667 Köln\nDienstag – Freitag 10 – 18.30 Uhr\nSamstag 10 – 18 Uhr\n[info@testgalerie.de](mailto:info@testgalerie.de)\nImpressum · Datenschutz\nDiese Webseite unterstützt den Internet Explorer 11 nicht.';
 const TG_TITLES = '\n\n_Pierre Soulages / John Chamberlain_\n\nQiu Shihua _Qiu Shihua_\n\nLucio Fontana _Lucio Fontana_\n\nGeorgia Russell _The Pattern of Surface_\n\nDing Yi _Constellations_\n\nGideon Rubin _Look Again_\n\nHerbert List _Das Magische Auge_\n\nIlse Bing _Photographs 1928–1935_';
 const TG_BOOK = '# Qiu Shihua\n\n_Qiu Shihua_\n\n2026\nTestgalerie Köln\n\nTexte: Mael Bellec\n236 S., 105 Abb., 29 Fotos\nHardcover, 2 Bde. in Schuber, Auflage: 1.200\n\n80 €\nzzgl. Versand- und Verpackungskosten\n\nIn den Warenkorb';
-const SG = 'https://www.shoptestgalerie.com/', TL = 'https://www.testlibrary.com/', TLS = 'https://shop.testlibrary.com/';
+const SG = 'https://www.shoptestgalerie.com/', TL = 'https://www.testlibrary.com/', TLS = 'https://shop.testlibrary.com/', TM = 'https://testdecarlo.com/';
 Object.assign(SHOPS, {
   [TG]: 'DE\n\n* [Ausstellungen](' + TG + 'ausstellungen)\n* [Publikationen](' + TG + 'publikationen)\n\n# Testgalerie\n\n[Alle Publikationen](' + TG + 'publikationen)\n\n[Cy Twombly _Sperlonga 1959_](' + TG + 'publikationen/detail/new1-sperlonga-1959)\n\n[Qiu Shihua _Qiu Shihua_](' + TG + 'publikationen/detail/483-qiu-shihua)\n\n[Lucio Fontana](' + TG + 'publikationen/detail/new2-lucio-fontana)' + TG_FOOT,
   [TG + 'publikationen']: 'DE\n\n* [Deutsch](' + TG + 'publikationen?filter=C&cHash=73e4)\n* [English](' + TG + 'en/publications?filter=C&cHash=73e4)\n\n# Publikationen\n\n* [Alle](' + TG + 'publikationen?filter=alle)\n* [Kataloge](' + TG + 'publikationen?filter=C)\n* Warenkorb' + TG_TITLES + TG_FOOT,
@@ -183,7 +183,12 @@ Object.assign(SHOPS, {
   [TL + 'library']: '## Library\n\nPublications\n\n* [+ Adrian Piper + 2017](' + TL + 'library/adrian-piper)\n* [+ Calder / Kelly + 2018](' + TL + 'library/calder-kelly)\n* [+ Warhol Women + 2019](' + TL + 'library/warhol-women)' + TG_FOOT,
   [TL + 'library/adrian-piper']: '## Adrian Piper\n\nYear\n    2017\n\nPrice\n    $25\n\nComposition\n    Soft Cover\n\nISBN\n    9781944379209\n\n[Buy](' + TLS + 'products/adrian-piper)',
   [TLS + 'collections.json?limit=250']: '{"collections":[{"id":1,"title":"Home page","handle":"frontpage","products_count":30},{"id":2,"title":"Selected Publications","handle":"selected-publications","products_count":4}]}',
-  [TLS + 'collections/all/products.json?limit=8']: '{"products":[{"title":"Adrian Piper","product_type":"Book","variants":[{"price":"25.00"}]},{"title":"Calder / Kelly","product_type":"Book","variants":[{"price":"85.00"}]}]}',
+  // Its products carry no type (live): the whole list is read as a page, one book opened — whose page links itself.
+  [TLS + 'collections/all/products.json?limit=8']: '{"products":[{"title":"Adrian Piper","product_type":"","variants":[{"price":"25.00"}]},{"title":"Calder / Kelly","product_type":"","variants":[{"price":"85.00"}]}]}',
+  [TLS + 'collections/all']: '* Adrian Piper\n### [Adrian Piper](' + TLS + 'products/adrian-piper)\nRegular price $25.00\n* Calder / Kelly\n### [Calder / Kelly](' + TLS + 'products/calder-kelly)\nRegular price $85.00\n\n[View all](' + TLS + 'collections/all)',
+  [TLS + 'products/adrian-piper']: '# Adrian Piper\n\n[## Adrian Piper](' + TLS + 'products/adrian-piper)\n\nRegular price $25.00\n\nAdd to cart\n\nCOMPOSITION Soft cover\n\nISBN 9781944379209\n\nPAGE COUNT 92',
+  // Massimo De Carlo's /shop (live): prints first, then "## Catalogues" with priced books whose own pages come back empty.
+  [TM + 'shop']: '## McArthur Binion\n\n[Berkeley: Suite 8, 2018 McArthur Binion $ 5.000](https://www.' + TM.slice(8) + 'shop/berkley-suite-8)\n\n## Catalogues\n\n[Jean-Marie Appriou $ 58](https://www.' + TM.slice(8) + 'shop/jean-marie-appriou)\n\n[Le Grand Tour John Armleder $ 58 Sold out](https://www.' + TM.slice(8) + 'shop/john-armleder-le-grand-tour)\n\n[Hagoromo Massimo Bartolini $ 46](https://www.' + TM.slice(8) + 'shop/massimo-bartolini-hagoromo)' + TG_FOOT,
 });
 
 // DIA's own search (BigCommerce) answers only at search.php, with the product
@@ -814,6 +819,9 @@ function runtime() {
     const gl = await discoverShop('', 'www.testlibrary.com', 'Test Library Gallery', [], 'occ-testlibrary-com', null, false, true);
     ok(gl.shop === 'found' && gl.shopCatalogues === TLS + 'collections/all',
       'AL-076h:  a Library of books whose pages say "Buy" in a shop elsewhere: that shop, its whole list, never Selected Publications (Lévy Gorvy Dayan)', JSON.stringify(gl));
+    const gd = await discoverShop('', 'testdecarlo.com', 'Test De Carlo', [], 'occ-testdecarlo-com', null, false, true);
+    ok(gd.shop === 'found' && gd.shopCatalogues === TM + 'shop' && book('Dhewadi Hadjab\nMonograph\n€35.00\nBuy Now\nBooks, Editions Mennour') && !book('Ryan Gander Cap\n€50.00\nBuy Now\nObjects'),
+      'AL-076i:  a list whose heading names its books, priced under it, sells (Massimo De Carlo\'s "Catalogues" after its prints, at its usual /shop address); a page filed under Books is a book\'s page (Mennour), a cap is not', JSON.stringify(gd));
     const la = fn('linkAnswer');
     ok(la({ gallery: true }).gallery === true && la({ gallery: 'yes' }).gallery === false && la({}).gallery === false,
       'AL-076g:  Claude\'s gallery answer is taken only as true; anything else is a museum');

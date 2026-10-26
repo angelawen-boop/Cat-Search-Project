@@ -39,6 +39,8 @@ not in the environment, so the script cannot spend it).
   hours. **One run at a time, never in the background unwatched; a run that keeps meeting the limit is stopped and
   reported** — never waited on.
 - **Live only — never saved copies of the shops' replies** (her decision; proposed and refused).
+- **The gallery path** has its own: `node scraper/gallery_shop_check.js <keys>` (`docs/gallery_shop_check.json`), the
+  same rules. A change to the gallery path runs it; a change to the museum finder runs the museum check.
 
 ## Cloud saving and speed
 

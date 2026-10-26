@@ -2183,7 +2183,8 @@ async function openShopPage(open,url,objective,queries,opts){
 function itemsUnder(text,host,list){
   let base=""; try{ base=new URL(list).pathname.replace(/\/?$/,"/"); }catch{ return []; }
   if(base==="/")return [];
-  return [...new Set(mdLinks(text).filter(l=>{ if(hostOf(l.url)!==host||NOT_A_BOOK_LINK.test(l.url))return false; let p=""; try{ p=new URL(l.url).pathname; }catch{ return false; } return p.startsWith(base)&&p.length>base.length+1; }).map(l=>l.url.split("#")[0]))];
+  const bare=h=>String(h||"").replace(/^www\./,"");
+  return [...new Set(mdLinks(text).filter(l=>{ if(bare(hostOf(l.url))!==bare(host)||NOT_A_BOOK_LINK.test(l.url))return false; let p=""; try{ p=new URL(l.url).pathname; }catch{ return false; } return p.startsWith(base)&&p.length>base.length+1; }).map(l=>l.url.split("#")[0]))];
 }
 async function firstProductIsBook(open,text,host,list){
   let items=productLinksOn(text,host), under=false;
@@ -2755,7 +2756,9 @@ function ownShopifyStore(u,host){
   const store=h.split(".")[0].replace(/[^a-z0-9]/g,""), own=baseDomain(host).split(".")[0].replace(/[^a-z0-9]/g,"");
   return own.length>=4&&(store.includes(own)||own.includes(store));
 }
-const galleryBookPage=t=>{ const f=foldText(t); return GALLERY_BOOK_MAKE.test(f)&&GALLERY_PRICE.test(f); };
+// A shop's own word for it does too: a line filing it under books ("Books, Editions Mennour").
+const GALLERY_BOOK_FILED=/^(?:books?|livres|bucher|libri|libros|catalog(?:ue)?s?)\b/;
+const galleryBookPage=t=>{ const f=foldText(t); return (GALLERY_BOOK_MAKE.test(f)||String(t).split("\n").some(l=>GALLERY_BOOK_FILED.test(foldText(stripMd(l)).trim())))&&GALLERY_PRICE.test(f); };
 // A list of books named whole (best first), never part of the list, editions, prints or posters alone. Lists
 // named alike are told apart by size: the widest ("Books & Magazines" over "Gagosian Books", Gagosian).
 const GALLERY_BOOKS=/\bbooks?\b|\bpublications?\b|\bcatalog(?:ue)?s\b|\blivres\b|\bpublikationen\b|\bbu(?:e)?cher\b|\blibri\b|\blibros\b|\bpubblicazioni\b|\bpublicaciones\b|\bpublished by\b|\bpublishers?\b/;
@@ -2770,7 +2773,7 @@ function galleryListScore(words){
   return 2;
 }
 async function galleryShop(page,museumHost,venueName,turnedDown,trace,foreign){
-  const g={host:museumHost,opens:0,seen:"",no:new Set((turnedDown||[]).map(normalizeUrlKey)),tried:new Set(),home:"",unread:null};
+  const g={host:page.url?hostOf(page.url)||museumHost:museumHost,opens:0,seen:"",no:new Set((turnedDown||[]).map(normalizeUrlKey)),tried:new Set(),home:"",unread:null};
   const note=(step,what)=>{ if(trace)trace.push({step:"gallery-"+step,...what}); };
   const open=async(url,objective)=>{
     if(g.opens>=GALLERY_OPENS)return null;
@@ -2804,6 +2807,10 @@ async function galleryShop(page,museumHost,venueName,turnedDown,trace,foreign){
   // first (Massimo De Carlo's "Catalogues" among its prints), else the first.
   const sells=async(text,url)=>{
     if(looksLikeBookShelf(text))return true;
+    // A heading naming its books, two priced entries under it (Massimo De Carlo's "## Catalogues", whose own pages
+    // come back without the book).
+    const head=String(text).search(/^#+\s*(?:catalog|books?\b|publications?\b|livres|publikationen|libri|pubblicazioni)/im);
+    if(head>=0){ const part=String(text).slice(head).split(/\n#+\s/)[0]; if(part.split("\n").filter(l=>GALLERY_PRICE.test(foldText(l))).length>=2)return true; }
     const host=hostOf(url);
     let items=productLinksOn(text,host);
     if(items.length<2)items=itemsUnder(text,host,url);
@@ -2817,7 +2824,7 @@ async function galleryShop(page,museumHost,venueName,turnedDown,trace,foreign){
       const b=await open(u,"This book's title, price, binding, page count and ISBN.");
       if(!b||!galleryBookPage(b))continue;
       // The book bought in a shop elsewhere (Lévy Gorvy Dayan's Library: "Buy" → its shop): that shop.
-      const buy=mdLinks(b).find(l=>shopSite(l.url)&&(GALLERY_BUY.test(foldText(l.label).trim())||/\/products?\//i.test(l.url)));
+      const buy=mdLinks(b).find(l=>hostOf(l.url)!==hostOf(u)&&shopSite(l.url)&&(GALLERY_BUY.test(foldText(l.label).trim())||/\/products?\//i.test(l.url)));
       return buy?{away:originOf(buy.url)}:true;
     }
     return false;

@@ -628,6 +628,11 @@ venue the app has never seen needs a fix about half the time** — the exhibitio
 correctly off the page, the venue's shop is not found, and so on (Mia and Worcester both missed
 and were fixed in code, proven live).
 
+- **OPEN — a gallery's shop: built and proved 26 Oct, not published; her yes to publish, then her Karsten Greve
+  import confirms.** Claude says on each link whether the venue is a gallery; a gallery's shop path runs first (her
+  decision: galleries apart from museums), the museum path unchanged after it. Right live on all 15 galleries
+  (`scraper/gallery_shop_check.js`); the lookup now reads a gallery's list of titles without prices. Design and
+  evidence: `docs/add_by_link.md`, "A gallery's shop".
 - **OPEN — the Add-by-link redesign, published at 50; her links confirm** (her decisions: rebuilt the scraper's way —
   shared rules, a venue rule only where needed; Add by link signed off before Add by page, which shares the
   reader and changes with it). **Done:** one `LINK_VENUES` entry per venue (seven tables folded); Claude names a
