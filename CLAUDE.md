@@ -325,6 +325,9 @@ checks waiting 8 seconds for an automatic save (CA-002, CA-005d, CA-006, TC-001)
 now run alone (her decision; the 8 seconds kept). If one still fails when run alone, record it here — that
 is a real fault, not crowding.
 
+**OPEN, watching — `pacing.test.js` froze once inside the full `npm test`** (live shop checks were running beside it);
+stopped after 15 minutes, it passed in 3 seconds alone and with its group. Likely crowding — needs investigation if it recurs.
+
 ---
 
 ## 3. Where the rest lives
