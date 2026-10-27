@@ -316,7 +316,7 @@ Date and Period exclusive; BP-012–014); the sweep list shows each date and tim
 "Review each one below.", "Accept or reject each."). A layout fix is checked by rendering the page at phone
 width, never by reading the code.
 
-#### 2.2.13 Dates and museum shop front pages — on `main`, not yet published
+#### 2.2.13 Dates and museum shop front pages — published at 53.3; her next links confirm
 
 Shared date rules (her decision: shared, the sweep too): a dotted range with a two-digit year on the closing side
 ("01.02 – 30.04.20", MSK Ghent); an opening date over a "to …" line, whatever word comes first (Reina Sofía); a run
@@ -536,7 +536,7 @@ price, her decision).
 > restating `capabilities` must restate all four; omitting it carries them
 > forward. **Renaming the connector means restating them.**
 
-**Live: 53.2 in her app**, with the cloud ledger (merged at 46). What each recent version changed is in
+**Live: 53.3 in her app**, with the cloud ledger (merged at 46). What each recent version changed is in
 `docs/publishing.md`, "What is live now".
 
 #### The mental model, load-bearing
