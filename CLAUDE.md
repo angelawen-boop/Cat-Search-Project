@@ -272,8 +272,7 @@ Recently labelled (sort and filter). Built in three stages on its own test page,
 the same shows, her marks reconciled). Her view, kept for later: both Misc bins should ultimately go. Her design,
 decisions and every period and theme rule: `docs/periods.md`. Read it before any Period work.
 **A period rule change needs no back-test on other shows (her decision):** a new rule reaches a show only when she
-relabels that one card, so no other show moves. Test it on the show she named, with her agreed wording exactly as
-agreed — never a narrower or hard-coded version.
+relabels that one card, so no other show moves.
 
 #### 2.2.10 51.1–51.2 — her next links, lookups and Buy next confirm
 
@@ -456,7 +455,7 @@ Each line came from a real failure. Details are in git history and `docs/`.
 - **One owner per fact.** Two steps looking for the same thing contradict each other on the card (Canaletto): one step finds it, code decides it, one sentence says it.
 - **An excerpt is what matches the query, not the page.** Short excerpts are not an empty page; judge emptiness on the whole page (Watteau).
 - **Subagents:** send only the rows and fields the question needs. Wording is not a control — remove the tool or check the answer.
-- **A general rule ships only if no page gets worse** (not period rules — §2.2.9). Try it against every live page in hand, old reader beside new; a rule that fixes ten and breaks one is a venue rule, not a general one.
+- **A general rule ships only if no page gets worse.** Try it against every live page in hand, old reader beside new; a rule that fixes ten and breaks one is a venue rule, not a general one.
 - **Before resetting stored data, trace every path that reads it** (Yale's shop, cleared, left every Yale card
   shopless until a link was read). **Copy a fixture's reply shape from a live reply, never assume it**, and search
   for every copy of a rule before calling it fixed (the lookup kept its own "books need prices" check).
