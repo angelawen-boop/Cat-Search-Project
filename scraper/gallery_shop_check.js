@@ -20,6 +20,7 @@
 const fs = require('fs');
 const path = require('path');
 const load = require('./claude_read_check/load.js');
+const W = require('./test_watch.js');
 
 const ROOT = path.join(__dirname, '..');
 const LIST = path.join(ROOT, 'docs', 'gallery_shop_check.json');
@@ -30,7 +31,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 
 let sid = null, rid = 1;
 async function rpc(body) {
-  const r = await fetch(EP, { method: 'POST', headers: { ...H, ...(sid ? { 'Mcp-Session-Id': sid } : {}) }, body: JSON.stringify(body) });
+  const r = await W.timedFetch(EP, { method: 'POST', headers: { ...H, ...(sid ? { 'Mcp-Session-Id': sid } : {}) }, body: JSON.stringify(body) });
   const t = await r.text(); let j = null;
   try { j = JSON.parse(t); } catch { const m = t.match(/^data: (.*)$/m); if (m) j = JSON.parse(m[1]); }
   sid = r.headers.get('mcp-session-id') || sid;
@@ -40,7 +41,7 @@ async function connect() {
   await rpc({ jsonrpc: '2.0', id: rid++, method: 'initialize', params: { protocolVersion: '2025-03-26', capabilities: {}, clientInfo: { name: 'cw-shop-check', version: '1' } } });
   await rpc({ jsonrpc: '2.0', method: 'notifications/initialized' });
 }
-let calls = 0;
+let calls = 0, watch = { answered() {} };
 const SAVE = (process.argv.find(a => a.startsWith('--save=')) || '').slice(7) || null;
 if (SAVE) fs.mkdirSync(SAVE, { recursive: true });
 // The page's connector, played by the free server: the same tool names, the reply as the page gets it.
@@ -50,7 +51,7 @@ async function callTool(server, tool, args) {
     const msg = JSON.stringify((j && j.error) || '');
     if (/rate limit/i.test(msg)) { process.stdout.write(`  (free tier's limit — waiting ${WAIT_MS / 1000}s)\n`); await sleep(WAIT_MS); continue; }
     if (j && j.error) throw { code: 'server_unavailable', message: msg.slice(0, 200) };
-    calls++;
+    calls++; watch.answered();
     const c = (((j || {}).result || {}).content || []).find(x => x.type === 'text');
     const payload = c ? JSON.parse(c.text) : null;
     if (SAVE) fs.writeFileSync(path.join(SAVE, String(calls).padStart(3, '0') + '-' + tool + '.json'), JSON.stringify({ tool, args, payload }, null, 1));
@@ -78,12 +79,17 @@ const stepLine = s => '    ' + s.step.padEnd(16) + JSON.stringify(Object.fromEnt
 (async () => {
   const args = process.argv.slice(2), write = args.includes('--write'), only = args.filter(a => !a.startsWith('--'));
   const list = JSON.parse(fs.readFileSync(LIST, 'utf8'));
+  // One run at a time, its expected time first, and stopped if Parallel stops answering (test_watch.js).
+  const expected = W.liveEstimate('scraper/gallery_shop_check.js', args);
+  W.takeLock('node scraper/gallery_shop_check.js ' + args.join(' '), expected);
+  console.log(W.line(expected));
+  watch = W.liveWatchdog('gallery_shop_check');
   await connect();
   let misses = 0, run = 0;
   for (const v of list.venues) {
     if (only.length && !only.includes(v.key)) continue;
     run++;
-    const trace = [], before = calls;
+    const trace = [], before = calls, t0 = Date.now();
     let got;
     try {
       let page = null;
@@ -92,6 +98,7 @@ const stepLine = s => '    ' + s.step.padEnd(16) + JSON.stringify(Object.fromEnt
     }
     catch (e) { got = { shop: 'failed', why: String((e && e.message) || e) }; }
     const wrong = judge(v, got);
+    if (got.shop !== 'failed') W.record({ ['gallery_shop_check:' + v.key]: (Date.now() - t0) / 1000 });
     console.log((wrong ? 'MISS  ' : 'ok    ') + v.key.padEnd(14) + (wrong || (got.shopCatalogues || got.shop)) + `  [${calls - before} calls]`);
     if (got.shopEnglishUnread) console.log('      English section offered beside it, unread: ' + got.shopEnglishUnread);
     console.log('      guards: ' + v.case);

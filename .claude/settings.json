@@ -20,6 +20,16 @@
             "statusMessage": "Waiting for approval to spawn a subagent"
           }
         ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/test-guard.js\"",
+            "statusMessage": "Checking test run"
+          }
+        ]
       }
     ]
   },

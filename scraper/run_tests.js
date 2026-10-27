@@ -40,6 +40,7 @@ const SUITES = [
   [SCRAPER, 'node --test scraper/date.test.js scraper/qc.test.js scraper/sweep_log.test.js scraper/venue_status.test.js scraper/pacing.test.js scraper/sweep_diff.test.js scraper/routine_window.test.js'],
   [BOTH,    'node --test scraper/compress.test.js'],
   [[...BOTH, LINKS], 'node --test scraper/answer_check.test.js'],
+  [[...EVERY_APP, SCRAPER], 'node --test scraper/test_watch.test.js'],
   [[...EVERY_APP, SCRAPER], 'node scraper/fixtures/intake_cases.js'],
   [EVERY_APP, 'node scraper/fixtures/page_loads.js'],
   [EVERY_APP, 'node scraper/fixtures/page_renders.js'],
@@ -79,71 +80,157 @@ const SUITES = [
   [[APP, LINKS], 'node scraper/fixtures/add_by_page.js'],
 ];
 
-const half = process.argv[2];
-if (half && !GROUPS.includes(half)) {
-  console.error(`Unknown group "${half}" — use ${GROUPS.join(', ')}, or nothing for both halves.`);
-  process.exit(2);
-}
-const chosen = SUITES.filter(([tags]) => !half || [].concat(tags).includes(half));
-const alone = new Set(chosen.filter(([, , how]) => how === ALONE).map(([, cmd]) => cmd));
-const picked = chosen.map(([, cmd]) => cmd);
+
+// No run is left unwatched (her decision; scraper/test_watch.js): one run at a time, its expected time
+// printed first, and a suite that runs well past its usual time is stopped and re-run alone.
+//   node scraper/run_tests.js links --only cloud_app   only the suites whose command holds "cloud_app"
+//   node scraper/run_tests.js links --estimate         print the expected time and stop
+//   node scraper/run_tests.js --save-times             keep this machine's usual times in test_times.json
+const W = require('./test_watch.js');
 
 const branchFile = path.join(ROOT, 'scraper/fixtures/branch_tests.txt');
-const branchSuites = fs.existsSync(branchFile)
+const branchSuites = () => (fs.existsSync(branchFile)
   ? fs.readFileSync(branchFile, 'utf8').split('\n').map(l => l.trim()).filter(l => l && !l.startsWith('#'))
-  : [];
+  : []);
 
 // The doc budget and the guide check warn and never fail; they run last, on their
 // own, so their report is the final thing printed.
-const all = [...picked, ...(half === SCRAPER ? [] : branchSuites)];
 const LAST = 'node scraper/doc_budget.js && node scraper/guide_check.js';
+const JOBS = Math.max(1, os.cpus().length);
 
-function run(cmd) {
-  return new Promise(resolve => {
-    const t0 = Date.now();
-    const child = spawn(cmd, { cwd: ROOT, shell: true });
-    let out = '';
-    child.stdout.on('data', d => { out += d; });
-    child.stderr.on('data', d => { out += d; });
-    child.on('close', code => resolve({ cmd, code, out, secs: (Date.now() - t0) / 1000 }));
-  });
+// What a run's arguments pick: { half, all, alone, last, error }.
+function plan(args) {
+  const flags = new Set(), only = [];
+  let half = null;
+  for (let i = 0; i < args.length; i++) {
+    if (args[i] === '--only') { while (args[i + 1] && !args[i + 1].startsWith('--')) only.push(args[++i]); }
+    else if (args[i].startsWith('--')) flags.add(args[i]);
+    else if (!half) half = args[i];
+  }
+  if (half && !GROUPS.includes(half)) return { error: `Unknown group "${half}" — use ${GROUPS.join(', ')}, or nothing for both halves.` };
+  const chosen = SUITES.filter(([tags]) => !half || [].concat(tags).includes(half));
+  let all = [...chosen.map(([, cmd]) => cmd), ...(half === SCRAPER ? [] : branchSuites())];
+  if (only.length) {
+    all = [...SUITES.map(([, cmd]) => cmd), ...branchSuites()].filter(c => only.some(o => c.includes(o)));
+    if (!all.length) return { error: `No suite's command holds ${only.map(o => '"' + o + '"').join(' or ')}.` };
+  }
+  const alone = new Set(SUITES.filter(([, cmd, how]) => how === ALONE && all.includes(cmd)).map(([, cmd]) => cmd));
+  return { half, all, alone, last: !only.length, flags, only };
 }
 
-async function main() {
-  const t0 = Date.now();
-  const jobs = Math.max(1, os.cpus().length);
-  console.log(`Running ${all.length} suites (${half || 'app and scraper'}), ${jobs} at a time` +
-    (branchSuites.length && half !== SCRAPER ? ` (${branchSuites.length} from this branch's branch_tests.txt)` : '') + '.');
+// The expected time: the alone suites one after another, then the rest shared out as the workers take
+// them, then the last check.
+function estimate(args) {
+  const p = plan(args);
+  if (p.error) return 0;
+  const t = c => W.usual(c) ?? W.UNKNOWN_S;
+  let s = 0;
+  const free = new Array(JOBS).fill(0);
+  for (const c of p.all) {
+    if (p.alone.has(c)) { s += t(c); continue; }
+    const i = free.indexOf(Math.min(...free));
+    free[i] += t(c);
+  }
+  return s + Math.max(...free) + (p.last ? t(LAST) : 0);
+}
 
-  const results = new Array(all.length);
+const running = new Set();
+// One suite, stopped (its whole process group) once it passes `limit` seconds.
+function run(cmd, limit) {
+  return new Promise(resolve => {
+    const t0 = Date.now();
+    const child = spawn(cmd, { cwd: ROOT, shell: true, detached: true });
+    running.add(child);
+    let out = '', stalled = false;
+    child.stdout.on('data', d => { out += d; });
+    child.stderr.on('data', d => { out += d; });
+    const kill = sig => { try { process.kill(-child.pid, sig); } catch {} };
+    const timer = limit ? setTimeout(() => { stalled = true; kill('SIGTERM'); setTimeout(() => kill('SIGKILL'), 5000).unref(); }, limit * 1000) : null;
+    child.on('close', code => {
+      clearTimeout(timer); running.delete(child);
+      resolve({ cmd, code, out, stalled, secs: (Date.now() - t0) / 1000 });
+    });
+  });
+}
+process.on('exit', () => { for (const c of running) { try { process.kill(-c.pid, 'SIGKILL'); } catch {} } });
+
+const usualText = c => (W.usual(c) == null ? 'no time on record' : `usually ${W.usual(c).toFixed(1)}s`);
+
+async function main() {
+  const args = process.argv.slice(2);
+  const p = plan(args);
+  if (p.error) { console.error(p.error); process.exit(2); }
+  if (p.flags.has('--save-times')) { console.log(`Kept the usual times of ${W.saveTimes()} parts in scraper/test_times.json.`); return; }
+  const expected = estimate(args);
+  if (p.flags.has('--estimate')) { console.log(W.line(expected)); return; }
+
+  const what = 'node scraper/run_tests.js ' + args.join(' ');
+  W.takeLock(what.trim(), expected);
+  const t0 = Date.now();
+  const bs = p.half === SCRAPER || p.only.length ? 0 : branchSuites().length;
+  console.log(W.line(expected));
+  console.log(`Running ${p.all.length} suites (${p.only.length ? 'only ' + p.only.join(', ') : p.half || 'app and scraper'}), ${JOBS} at a time` +
+    (bs ? ` (${bs} from this branch's branch_tests.txt)` : '') + '.');
+
+  const start = {};
+  // Every minute, which suites are still going and for how long — in the run's own output, for the session.
+  const beat = setInterval(() => {
+    const now = Object.entries(start).map(([c, t]) => `${c.replace(/^node (--test )?/, '')} (${Math.round((Date.now() - t) / 1000)}s, ${usualText(c)})`);
+    if (now.length) console.log(`… ${Math.round((Date.now() - t0) / 1000)}s in; still running: ${now.join('; ')}`);
+  }, 60000);
+  beat.unref();
+  const timed = async c => { start[c] = Date.now(); const r = await run(c, W.stallLimit(W.usual(c))); delete start[c]; return r; };
+
+  const results = new Array(p.all.length);
   let next = 0, printed = 0;
-  const flush = () => {
-    while (printed < all.length && results[printed]) {
-      const r = results[printed++];
-      console.log(`\n===== ${r.code === 0 ? 'PASS' : 'FAIL'} (${r.secs.toFixed(1)}s) ${r.cmd}`);
-      process.stdout.write(r.out);
-    }
+  const show = (r, label) => {
+    const head = r.stalled ? `STALLED — stopped after ${r.secs.toFixed(0)}s (${usualText(r.cmd)})` : `${r.code === 0 ? 'PASS' : 'FAIL'} (${r.secs.toFixed(1)}s)`;
+    console.log(`\n===== ${label || ''}${head} ${r.cmd}`);
+    process.stdout.write(r.out);
   };
+  const flush = () => { while (printed < p.all.length && results[printed]) show(results[printed++]); };
   const worker = async () => {
-    while (next < all.length) {
+    while (next < p.all.length) {
       const i = next++;
       if (results[i]) continue;
-      results[i] = await run(all[i]);
+      results[i] = await timed(p.all[i]);
       flush();
     }
   };
-  for (let i = 0; i < all.length; i++) if (alone.has(all[i])) results[i] = await run(all[i]);
+  for (let i = 0; i < p.all.length; i++) if (p.alone.has(p.all[i])) results[i] = await timed(p.all[i]);
   flush();
-  await Promise.all(Array.from({ length: Math.min(jobs, all.length) }, worker));
+  await Promise.all(Array.from({ length: Math.min(JOBS, p.all.length) }, worker));
 
-  const last = await run(LAST);
-  console.log(`\n===== ${LAST}`);
-  process.stdout.write(last.out);
+  // A stalled suite runs again with the machine to itself. Passing then says the crowding stalled it;
+  // stalling again is a real fault.
+  const retried = [];
+  for (const r of results.filter(x => x.stalled)) {
+    const again = await timed(r.cmd);
+    show(again, 're-run alone: ');
+    retried.push({ first: r, again });
+  }
 
-  const failed = results.filter(r => r.code !== 0);
-  console.log(`\n${all.length - failed.length} of ${all.length} suites passed in ${((Date.now() - t0) / 1000).toFixed(0)}s.`);
-  for (const r of failed) console.log(`FAILED (exit ${r.code}): ${r.cmd}`);
-  process.exit(failed.length || last.code ? 1 : 0);
+  let last = null;
+  if (p.last) {
+    last = await run(LAST, W.stallLimit(W.usual(LAST)));
+    console.log(`\n===== ${last.stalled ? 'STALLED ' : ''}${LAST}`);
+    process.stdout.write(last.out);
+  }
+
+  const finals = results.map(r => (r.stalled ? retried.find(x => x.first === r).again : r));
+  const passed = [...finals, ...(last ? [last] : [])].filter(r => r.code === 0 && !r.stalled);
+  W.record(Object.fromEntries(passed.map(r => [r.cmd, r.secs])));
+
+  const failed = finals.filter(r => r.code !== 0 || r.stalled);
+  const secs = (Date.now() - t0) / 1000;
+  console.log(`\n${p.all.length - failed.length} of ${p.all.length} suites passed in ${secs.toFixed(0)}s (expected ${W.phrase(expected)}).`);
+  for (const { first, again } of retried) {
+    console.log(again.stalled ? `STALLED TWICE (a real fault, not crowding): ${first.cmd}`
+      : `STALLED with others running, then ${again.code === 0 ? 'passed' : 'FAILED'} alone in ${again.secs.toFixed(1)}s: ${first.cmd}`);
+  }
+  for (const r of failed) if (!r.stalled) console.log(`FAILED (exit ${r.code}): ${r.cmd}`);
+  process.exit(failed.length || (last && last.code) ? 1 : 0);
 }
 
-main();
+module.exports = { plan, estimate };
+if (require.main === module) main();
