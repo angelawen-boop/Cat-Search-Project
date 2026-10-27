@@ -160,6 +160,8 @@ Tests: `period_sort.js` (PS-), `period_render.js` (PR-), in the screen group (`s
   with no period or no themes, dismissed included, 40 a question, and never relabels. An import labels each new show
   on its approval card ("Period: …"). Relabel, on its own line at the foot of a card's drawer, asks
   again about one show and says the result there, its themes after the year.
+- **Claude's reason (her ask; 53.6, not yet published; PS-025):** each label carries `why`, one sentence on what
+  in the text decided it; it lives only in the lookup log, never on the card or in the ledger.
 - **No hand corrections (her decision):** a wrong label is reported and fixed in the rules, so the app
   learns.
 - **Every run is checked:** a failed batch is asked again after a wait (above); her line after Label says all labelled,

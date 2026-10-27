@@ -3,7 +3,7 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 // The footer prints APP_VERSION and its date, so she can tell one build from the next.
 // Numbering, her decision: a whole number for a substantial change, a decimal for a
 // small one, one number per publish. Bump it with the change it describes.
-const APP_VERSION = "53.5";
+const APP_VERSION = "53.6";
 const APP_VERSION_DATE = "27 Oct 2026";
 
 // The venue order is VENUE_ORDER, below the list, which sorts MUSEUMS; drawer, chips,
@@ -3271,8 +3271,9 @@ function periodPrompt(shows){
     "year: one whole number, the year of the art shown (negative for BC). One artist: the middle of the works shown. A show spanning a long stretch: the midpoint of the stretch.",
     "response: true or false, as above.",
     "artist: for a show about ONE artist, their full name as usually written (\"John Singer Sargent\"); otherwise \"\".",
+    "why: one short sentence on what in the exhibition's text decided the period and year.",
     "",
-    "Answer with JSON only, one entry per exhibition: {\"labels\":[{\"i\":0,\"period\":\"highren\",\"year\":1510,\"response\":false,\"artist\":\"Raphael\",\"themes\":[]}]}",
+    "Answer with JSON only, one entry per exhibition: {\"labels\":[{\"i\":0,\"period\":\"highren\",\"year\":1510,\"response\":false,\"artist\":\"Raphael\",\"themes\":[],\"why\":\"Raphael's works of about 1510.\"}]}",
     "",
     "Exhibitions:",
     ...shows.map(s=>JSON.stringify({i:s.i,venue:s.venue,title:s.title,dates:s.dates,text:String(s.summary||"").replace(/\s+/g," ").slice(0,600)})),
