@@ -3,7 +3,7 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 // The footer prints APP_VERSION and its date, so she can tell one build from the next.
 // Numbering, her decision: a whole number for a substantial change, a decimal for a
 // small one, one number per publish. Bump it with the change it describes.
-const APP_VERSION = "53.4";
+const APP_VERSION = "53.5";
 const APP_VERSION_DATE = "27 Oct 2026";
 
 // The venue order is VENUE_ORDER, below the list, which sorts MUSEUMS; drawer, chips,
@@ -3839,7 +3839,9 @@ async function readResultsCall(prompt){
   const sample=await useCap("sample");
   if(!sample)return{ok:false,data:null,code:"unavailable",detail:"Claude isn\u2019t available to this page in this viewer."};
   try{
-    const data=await sample.json(prompt,{modelTier:"default"});
+    // Never a replayed answer: the platform replays an identical question asked within five minutes,
+    // so Relabel, Search again and Re-check would not ask again (her Metamorphoses Relabel).
+    const data=await sample.json(prompt,{modelTier:"default",cache:false});
     return{ok:true,data,detail:"read the results"};
   }catch(e){
     const code=String((e&&e.code)||"");

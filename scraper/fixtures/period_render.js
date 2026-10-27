@@ -58,7 +58,9 @@ const until = async (fn, ms = 8000) => { const t = Date.now(); while (Date.now()
   // Claude stands in: every show it is asked about is Baroque, 1650.
   // failNext: how many questions fail before answering (the retry and her line).
   const asked = []; let failNext = 0, relabelNext = false, relabelHold = null;
-  win.claude = { use: async name => name !== 'sample' ? null : { json: async prompt => {
+  const opts = [];
+  win.claude = { use: async name => name !== 'sample' ? null : { json: async (prompt, o) => {
+    opts.push(o || {});
     const shows = prompt.split('Exhibitions:\n')[1].split('\n').filter(Boolean).map(l => JSON.parse(l));
     asked.push(shows.length);
     if (failNext > 0) { failNext--; throw { code: 'rate_limited', message: 'slow down' }; }
@@ -185,6 +187,7 @@ const until = async (fn, ms = 8000) => { const t = Date.now(); while (Date.now()
     await until(() => /Relabelled: High Renaissance/.test(doc.body.textContent));
     ok(starNow().title !== starWas, 'LC-005: a star changed while Relabel ran is kept when its answer lands', starWas + ' → ' + starNow().title);
     ok(asked.length === nAsked + 1 && asked[nAsked] === 1, 'PR-015: Relabel asks Claude about that one show only', asked.slice(nAsked).join(','));
+    ok(opts.length > 0 && opts.every(o => o.cache === false), 'PR-037: every question to Claude is asked afresh, never a replayed answer (her Metamorphoses Relabel)', JSON.stringify(opts.slice(-1)));
     ok(doc.body.textContent.includes('Relabelled: High Renaissance \u00b7 c. 1505 \u00b7 Sculpture.'), 'PR-015: the drawer says the new label, its themes included');
     const hr = [...doc.querySelectorAll('span')].some(x => x.textContent === 'High Renaissance');
     ok(hr && [...doc.querySelectorAll('article h3')].some(h => h.textContent === firstTitle), 'PR-016: the show moves under its new divider', firstTitle);
