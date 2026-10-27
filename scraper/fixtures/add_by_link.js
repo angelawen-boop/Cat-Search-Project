@@ -1056,6 +1056,15 @@ function runtime() {
     'AL-009i2:  and the shop answers given before Back are still there', footer());
   await press('Royal Academy of Arts', 'No shop');
   ok(/^✓ No shop$/.test([...shopCard('Royal Academy of Arts').querySelectorAll('button')][2].textContent), 'AL-009j:  No shop is an answer');
+  {
+    // ── AL-079: "Shop found, but not its books section": Confirm takes the shop shown (her ask) ──
+    const conf = () => [...shopCard('Detroit').querySelectorAll('button')].find(b => /Confirm$/.test(b.textContent));
+    const was = footer(), enabled = !conf().disabled;
+    await press('Detroit', 'Confirm');
+    ok(enabled && /^✓ Confirm$/.test(conf().textContent) && shopCard('Detroit').textContent.includes('Shop found, but not its catalogues section https://diashop.org/')
+       && footer() === String(Number(was.split(' ')[0]) - 1) + ' still to decide',
+      'AL-079:  a shop with no books section seen can be confirmed: Confirm ticks, the shop shown is taken as its section, one fewer to decide', shopCard('Detroit').textContent + ' | ' + footer());
+  }
   await press('Detroit', 'No shop');
   await press('Courtauld', 'Confirm'); await press('Cleveland Museum of Art', 'Confirm'); await press('Mauritshuis', 'Confirm');
   // The RA's card rejected again: off the screen; its answer is kept while the import is open (Back keeps

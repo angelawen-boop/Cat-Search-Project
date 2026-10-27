@@ -322,8 +322,9 @@ Shared date rules (her decision: shared, the sweep too): a dotted range with a t
 ("01.02 – 30.04.20", MSK Ghent); an opening date over a "to …" line, whatever word comes first (Reina Sofía); a run
 the page says closed early closes that day, with a note (Ghent's Covid closing; `closedEarly`, English wording only).
 The gallery path's front-page rule carried to museums (her decision): no books section, but the shop's front page
-sells books → it is the shop, confirmable. Tests AL-077–078, DS-007, CE-001. **Before publishing:** the live link
-proof check (not yet run) and the museum shop check. **OPEN — Reina Sofía's shop missed:** its real shop is a Shopify
+sells books → it is the shop, confirmable. Confirm on "Shop found, but not its books section" takes the shop shown
+(her ask). Tests AL-077–079, DS-007, CE-001. Live: her Ghent and Reina Sofía pages added to the proof list; the only
+proof pages the date rules could change (the five closing-date-only ones) read the same. **OPEN — Reina Sofía's shop missed:** its real shop is a Shopify
 shop with a "Publications > Catalogues" list (`tienda.museoreinasofia.es/en/collections/publicaciones-catalogos`);
 live, the finder took the museum's "central bookshop" page instead and walked the museum's own site. Belvedere now
 offers its German shop front page (still not the English one — §5.4); its check's right answer ("prints only") is stale:
@@ -469,6 +470,9 @@ Each line came from a real failure. Details are in git history and `docs/`.
 - **Every sentence shown on screen goes to her word for word before it is built, and nothing is called her
   design or her wording that she did not give** — "Shop found, but not its exhibition catalogues section — its
   publications" and a publications-then-books order were written in as "her design" and never shown to her.
+- **Run only the live checks the change can reach, and do only what she asked** — work out which proof pages a rule
+  can change before fetching (five pages, not the whole list); her Confirm ask was first answered with an unasked
+  front-page rule and a shop dig she never requested, while the button stayed greyed.
 - **Capability on one machine is not on both** (pacing was laptop-only), and "the shared path is built" is not "every venue is ready" — say it per venue.
 
 ### 4.2 Rejected — do not re-propose
