@@ -470,6 +470,9 @@ Each line came from a real failure. Details are in git history and `docs/`.
 - **Every sentence shown on screen goes to her word for word before it is built, and nothing is called her
   design or her wording that she did not give** — "Shop found, but not its exhibition catalogues section — its
   publications" and a publications-then-books order were written in as "her design" and never shown to her.
+- **Run only the live checks the change can reach, and do only what she asked** — work out which proof pages a rule
+  can change before fetching (five pages, not the whole list); her Confirm ask was first answered with an unasked
+  front-page rule and a shop dig she never requested, while the button stayed greyed.
 - **Capability on one machine is not on both** (pacing was laptop-only), and "the shared path is built" is not "every venue is ready" — say it per venue.
 
 ### 4.2 Rejected — do not re-propose
