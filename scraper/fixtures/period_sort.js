@@ -60,6 +60,7 @@ const vd=[{period:'flemish',periodYear:1630,periodArtist:'Anthony van Dyck'},{pe
 const vdBy=H.artistPeriods(vd);
 check('PS-020 Van Dyck in England keeps Tudor / Stuart; his retrospectives stay Flemish Baroque', H.periodOf(vd[2],vdBy)==='tudor'&&H.periodOf(vd[0],vdBy)==='flemish');
 check('PS-023 Books takes albums of drawings (Vasari\'s Book of Drawings)', H.periodPrompt([]).includes('albums: a collector\'s book of drawings or prints'));
+check('PS-024 a show responding to one older source takes the period where most of its works sit (Rijksmuseum Metamorphoses)', H.periodPrompt([]).includes("- A show of art responding to one older source (a text, a myth or a story): the period most of its works come from (its heart), with that period's year, and response true."));
 check('PS-022 the staging line, her wording', H.periodPrompt([]).includes('Do not label shows by their staging – eg. a sculpture show in a garden is not Nature, a show of paintings among drapery is not Decorative Arts.'));
 check('PS-020 the prompt sends English-years shows to tudor and keeps Nature out of garden settings', H.periodPrompt([]).includes('Van Dyck in England): tudor')&&H.periodPrompt([]).includes('displayed outdoors or in a garden'));
 check('PS-009 response and artist are kept', b.get(2).periodResponse===true&&b.get(3).periodResponse===false&&b.get(3).periodArtist==='John Singer Sargent');

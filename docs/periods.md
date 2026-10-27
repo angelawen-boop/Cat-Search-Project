@@ -127,6 +127,9 @@ Tests: `period_sort.js` (PS-), `period_render.js` (PR-), in the screen group (`s
   older art (response, placed last); a long-span show goes to its heart, the period most of its works
   come from — Surveys only when the works spread with no heart (five centuries of cats); ancient art
   from anywhere is Antiquity; non-Western art that is not ancient is Non-Western Art.
+  A show responding to one older source (a text, a myth, a story) takes the period most of its works come from,
+  marked a response (her decision, published at 53.4; PS-024) — chosen over the source's own period, which sent Blake's
+  *Paradise Lost* to Milton's time. Rijksmuseum *Metamorphoses*: Baroque on trial; her Relabel confirms.
 - **Themes (her design):** a kind of thing is a label, never a group — every show sits in its period, and
   Claude gives it any number of themes (`THEMES`, each with its rule in the prompt): Fashion, Jewellery,
   Architecture, Sculpture, Animals (mythical creatures included), Nature (trees, plants, botanical
