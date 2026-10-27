@@ -271,9 +271,12 @@ Recently labelled (sort and filter). Built in three stages on its own test page,
 (the whole ledger). She loads her latest test-page export into 51 (the two ledgers checked by script beforehand:
 the same shows, her marks reconciled). Her view, kept for later: both Misc bins should ultimately go. Her design,
 decisions and every period and theme rule: `docs/periods.md`. Read it before any Period work.
-**Published at 53.5: every question to Claude is asked afresh** (`cache:false`; PR-037) — the
-platform replays an identical question asked within five minutes, so Relabel, Search again and Re-check answered
-instantly with the old answer. Her Relabel of *Metamorphoses* confirms.
+**53.4–53.6, published:** the source rule (a show responding to one older source takes the period where most of its
+works sit); every question to Claude asked afresh (`cache:false` — the platform replayed an identical question
+within five minutes, so Relabel, Search again and Re-check never re-asked); Claude's one-line reason with each label,
+in the lookup log only. **OPEN — Rijksmuseum *Metamorphoses*:** her Claude kept Surveys on the card's one line; her
+re-import by link rewrote the description and Relabel then gave Baroque. Proposed, not agreed: same catalogue → one
+period (code, like one artist, one group); reading the show's page for hard cases (parked). `docs/periods.md`.
 
 #### 2.2.10 51.1–51.2 — her next links, lookups and Buy next confirm
 
@@ -479,6 +482,8 @@ Each line came from a real failure. Details are in git history and `docs/`.
 - **Run only the live checks the change can reach, and do only what she asked** — work out which proof pages a rule
   can change before fetching (five pages, not the whole list); her Confirm ask was first answered with an unasked
   front-page rule and a shop dig she never requested, while the button stayed greyed.
+- **A stand-in Claude does not predict hers** — Sonnet said Baroque, her app's Claude Surveys (*Metamorphoses*); her
+  own run's record decides. A repeat ask through `sample` is replayed unless `cache:false`.
 - **Capability on one machine is not on both** (pacing was laptop-only), and "the shared path is built" is not "every venue is ready" — say it per venue.
 
 ### 4.2 Rejected — do not re-propose
@@ -539,7 +544,7 @@ price, her decision).
 > restating `capabilities` must restate all four; omitting it carries them
 > forward. **Renaming the connector means restating them.**
 
-**Live: 53.5 in her app**, with the cloud ledger (merged at 46). What each recent version changed is in
+**Live: 53.6 in her app**, with the cloud ledger (merged at 46). What each recent version changed is in
 `docs/publishing.md`, "What is live now".
 
 #### The mental model, load-bearing

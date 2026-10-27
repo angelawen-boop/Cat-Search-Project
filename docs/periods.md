@@ -129,7 +129,12 @@ Tests: `period_sort.js` (PS-), `period_render.js` (PR-), in the screen group (`s
   from anywhere is Antiquity; non-Western art that is not ancient is Non-Western Art.
   A show responding to one older source (a text, a myth, a story) takes the period most of its works come from,
   marked a response (her decision, published at 53.4; PS-024) — chosen over the source's own period, which sent Blake's
-  *Paradise Lost* to Milton's time. Rijksmuseum *Metamorphoses*: Baroque on trial; her Relabel confirms.
+  *Paradise Lost* to Milton's time. **OPEN — Rijksmuseum *Metamorphoses*:** her Claude still said Surveys (the card's
+  one line names Bernini to Bourgeois: no visible heart); after her re-import by link rewrote the description, Relabel
+  gave Baroque. The Borghese copy of the same show is Baroque (a guess: the Borghese is Bernini's house; its card names
+  no artist). Proposed to her, not agreed: two shows with the same catalogue sort as one, in one period (code at sort
+  time, tie to the earlier group, like one artist, one group); no heart → the earliest period of its works; reading
+  the show's page for hard cases (still parked, never built or tested).
 - **Themes (her design):** a kind of thing is a label, never a group — every show sits in its period, and
   Claude gives it any number of themes (`THEMES`, each with its rule in the prompt): Fashion, Jewellery,
   Architecture, Sculpture, Animals (mythical creatures included), Nature (trees, plants, botanical
@@ -160,7 +165,7 @@ Tests: `period_sort.js` (PS-), `period_render.js` (PR-), in the screen group (`s
   with no period or no themes, dismissed included, 40 a question, and never relabels. An import labels each new show
   on its approval card ("Period: …"). Relabel, on its own line at the foot of a card's drawer, asks
   again about one show and says the result there, its themes after the year.
-- **Claude's reason (her ask; 53.6, not yet published; PS-025):** each label carries `why`, one sentence on what
+- **Claude's reason (her ask; published at 53.6; PS-025):** each label carries `why`, one sentence on what
   in the text decided it; it lives only in the lookup log, never on the card or in the ledger.
 - **No hand corrections (her decision):** a wrong label is reported and fixed in the rules, so the app
   learns.
