@@ -322,8 +322,9 @@ Shared date rules (her decision: shared, the sweep too): a dotted range with a t
 ("01.02 – 30.04.20", MSK Ghent); an opening date over a "to …" line, whatever word comes first (Reina Sofía); a run
 the page says closed early closes that day, with a note (Ghent's Covid closing; `closedEarly`, English wording only).
 The gallery path's front-page rule carried to museums (her decision): no books section, but the shop's front page
-sells books → it is the shop, confirmable. Tests AL-077–078, DS-007, CE-001. **Before publishing:** the live link
-proof check (not yet run) and the museum shop check. **OPEN — Reina Sofía's shop missed:** its real shop is a Shopify
+sells books → it is the shop, confirmable. Confirm on "Shop found, but not its books section" takes the shop shown
+(her ask). Tests AL-077–079, DS-007, CE-001. Live: her Ghent and Reina Sofía pages added to the proof list; the only
+proof pages the date rules could change (the five closing-date-only ones) read the same. **OPEN — Reina Sofía's shop missed:** its real shop is a Shopify
 shop with a "Publications > Catalogues" list (`tienda.museoreinasofia.es/en/collections/publicaciones-catalogos`);
 live, the finder took the museum's "central bookshop" page instead and walked the museum's own site. Belvedere now
 offers its German shop front page (still not the English one — §5.4); its check's right answer ("prints only") is stale:

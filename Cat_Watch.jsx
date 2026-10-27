@@ -7528,7 +7528,9 @@ export default function App(){
   }
   // Each answer keeps what the finder found (`beforeAnswer`), so an answer for a venue with no show going in is
   // dropped when the ledger moves (answeredOnly).
-  function confirmShop(id,english){ const v=occVenues[id]; if(v)holdVenues({...occVenues,[id]:{...v,beforeAnswer:v.beforeAnswer||foundShop(v),confirmed:true,englishPicked:!!english}}); }
+  // A shop with no books section seen ("Shop found, but not its books section"): her Confirm takes the shop shown as its section.
+  function confirmShop(id,english){ const v=occVenues[id]; if(!v)return; const whole=v.shop==="noshelf"&&v.shopHome?{shop:"found",shopCatalogues:v.shopHome,shelfKind:"front"}:{};
+    holdVenues({...occVenues,[id]:{...v,beforeAnswer:v.beforeAnswer||foundShop(v),...whole,confirmed:true,englishPicked:!!english}}); }
   // "No shop": the lookup goes straight to the web, as at Capodimonte.
   function noShopFor(id){ const v=occVenues[id]; if(v)holdVenues({...occVenues,[id]:{...v,beforeAnswer:v.beforeAnswer||foundShop(v),shop:"none",confirmed:true,shopHome:null,shopCatalogues:null,shelfKind:null,shopSearch:null,why:null,shopEnglishUnread:null,englishPicked:false}}); }
   // "Look again": a new search NOW, skipping only the pages she turned down, never the
@@ -8790,7 +8792,7 @@ export default function App(){
             </div>
             <div style={{overflow:"auto",padding:"4px 18px 14px",flex:1}}>
               {/* The review cards' buttons (decBtn), always the same three in the same
-                  places (her decision); Confirm greyed with no section to confirm. */}
+                  places (her decision); Confirm greyed only with no shop to confirm. */}
               {shopScreen.ids.map(id=>{
                 const v=occVenues[id]||{}, link=v.shop==="found"?v.shopCatalogues:null, looking=shopLooking===id;
                 const home=v.shop==="noshelf"||v.shop==="failed"?v.shopHome:null;
@@ -8806,7 +8808,7 @@ export default function App(){
                     :<div style={{color:C.soft}}>{said}{home&&v.shop==="noshelf"&&<a href={home} target="_blank" rel="noopener noreferrer" style={{color:C.action,overflowWrap:"anywhere"}}>{home}</a>}</div>}
                   <div style={{display:"flex",gap:6,marginTop:6,alignItems:"center",flexWrap:"wrap"}}>
                     {looking?<span style={{fontSize:11.5,color:C.soft}}>Looking{"\u2026"}</span>:<>
-                      <button onClick={()=>confirmShop(id)} disabled={!!shopLooking||!link} style={{...decBtn(yes,C.okEdge),...(!link?{opacity:0.4,cursor:"not-allowed"}:{})}}>{yes?"\u2713 ":""}Confirm</button>
+                      <button onClick={()=>confirmShop(id)} disabled={!!shopLooking||!(link||home)} style={{...decBtn(yes,C.okEdge),...(!(link||home)?{opacity:0.4,cursor:"not-allowed"}:{})}}>{yes?"\u2713 ":""}Confirm</button>
                       <button onClick={()=>lookAgain(id)} disabled={!!shopLooking} style={decBtn(false,C.okEdge)}>Look again</button>
                       <button onClick={()=>noShopFor(id)} disabled={!!shopLooking} style={decBtn(none,C.rejectInk)}>{none?"\u2713 ":""}No shop</button>
                     </>}

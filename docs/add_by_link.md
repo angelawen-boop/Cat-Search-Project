@@ -293,7 +293,8 @@ A pick is **opened and must read as books with prices** (unless its excerpt alre
 product must read as one book with a price** — her decision, for a list of titles only (Yale's Publications;
 `firstProductIsBook`, one copy with the lookup's shop step, AL-042, YS-001–005). Nothing → "Shop
 found, but not its books section: <shop>" / "No museum shop found." / "Search failed." — and **a miss is a
-finder bug, fixed in code: she never pastes a shop link** (her decision). **Look again** skips only the pages
+finder bug, fixed in code: she never pastes a shop link** (her decision). **Confirm** on "Shop found, but not its books
+section" takes the shop shown as its section (her ask; `confirmShop`, AL-079). **Look again** skips only the pages
 she turned down, never the site. **No shop** → lookups go to the web, as at Capodimonte. Venues found by the
 old finder and never confirmed are looked for again on their next link. Evidence:
 `docs/link_pages/shop_search/`.
