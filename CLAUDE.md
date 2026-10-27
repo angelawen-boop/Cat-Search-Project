@@ -271,7 +271,7 @@ Recently labelled (sort and filter). Built in three stages on its own test page,
 (the whole ledger). She loads her latest test-page export into 51 (the two ledgers checked by script beforehand:
 the same shows, her marks reconciled). Her view, kept for later: both Misc bins should ultimately go. Her design,
 decisions and every period and theme rule: `docs/periods.md`. Read it before any Period work.
-**On `main`, not yet published (53.5): every question to Claude is asked afresh** (`cache:false`; PR-037) — the
+**Published at 53.5: every question to Claude is asked afresh** (`cache:false`; PR-037) — the
 platform replays an identical question asked within five minutes, so Relabel, Search again and Re-check answered
 instantly with the old answer. Her Relabel of *Metamorphoses* confirms.
 
@@ -539,7 +539,7 @@ price, her decision).
 > restating `capabilities` must restate all four; omitting it carries them
 > forward. **Renaming the connector means restating them.**
 
-**Live: 53.4 in her app**, with the cloud ledger (merged at 46). What each recent version changed is in
+**Live: 53.5 in her app**, with the cloud ledger (merged at 46). What each recent version changed is in
 `docs/publishing.md`, "What is live now".
 
 #### The mental model, load-bearing
