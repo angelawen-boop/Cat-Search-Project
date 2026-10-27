@@ -173,7 +173,10 @@ doesn't exist). How a person does it, and so how the finder does it:
    has no catalogues section does it take the best section it saw, and the shop screen says **"Shop found, but
    not its catalogues section"** — her wording, one line for every such case, nothing about what was taken
    instead (her decision: she asked only for better looking, never for lines describing kinds of result).
-3. **Where it cannot work it says so** ("Shop found, but not its books section"): a menu drawn by script that
+3. **No books section, but the shop's front page sells books → the front page is the shop** (the gallery path's rule,
+   carried to museums at her decision): the shop screen says "Shop found, but not its catalogues section" and she can
+   Confirm it (`shelfKind: "front"`; AL-078). A front page selling only gifts or tickets stays as below (Dresden).
+4. **Where it cannot work it says so** ("Shop found, but not its books section"): a menu drawn by script that
    Parallel gets nearly empty (Hamburg's Friends' shop), a page Parallel cannot fetch (bot check, 202, a "301
    Moved" notice).
 
@@ -378,7 +381,9 @@ those 25 read clean before, 25 after, with no proof page worse. Code: `readShowP
   (`DATES.shownOnlyNote`); nothing at all: "No closing date found anywhere on the venue's pages."
   (`DATES.NO_DATES_NOTE`). One copy of each, the sweep's (`dates.js`). The Borghese prints most past shows'
   dates only in the poster (Louise Bourgeois). AL-064, AP-002, AP-006b–c.
-- **R13 Dates around the heading** — "From …" over "Until …" read together; a paragraph's one-sided date
+- **R13 Dates around the heading** — an opening date over "Until …"/"to …" read together, whatever word comes first
+  (Van Gogh Museum's "From", Reina Sofía's "Held on"; AL-077b); a run the page says closed early ends that day
+  (`DATES.closedEarly`, shared with the sweep; MSK Ghent, AL-077); a paragraph's one-sided date
   waits six lines for a full range (Van Gogh Museum, AL-054); with none under any title line, the two lines
   above the heading (Kunsthaus, Boston, Pinakothek der Moderne; AL-055).
 - **R3 Closing-only dates** — "Through …", "Until …", "Closes …", "fino al …", "Now–…", in the shared `dates.js` after

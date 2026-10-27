@@ -298,6 +298,34 @@ function extensionNote(range) {
   return '';
 }
 
+/**
+ * A run cut short ("the COVID-19 crisis forced us to close the exhibition earlier", MSK Ghent): a
+ * paragraph that says the show closed early AND gives the run again with the same opening day moves
+ * the closing date to that paragraph's. Only ever EARLIER and after the opening, so a museum's
+ * early-closing hours, which never restate the run, cannot match.
+ */
+const CLOSED_EARLY = /\b(?:clos(?:e|ed|ing)|end(?:ed)?|shut)\b[^.]{0,25}\b(?:exhibition|show)\b[^.]{0,25}\b(?:early|earlier|prematurely|ahead of schedule)\b|\b(?:exhibition|show)\b[^.]{0,40}\b(?:closed|ended|shut)\b[^.]{0,25}\b(?:early|earlier|prematurely|ahead of schedule)\b/i;
+
+function closedEarly(range, text) {
+  if (!range || !range.start || !range.end || !text) return range;
+  for (const para of String(text).split(/\n+/)) {
+    const m = CLOSED_EARLY.exec(para);
+    if (!m) continue;
+    const p = findDateRangeInProseCore(para, range.end.slice(0, 4));
+    if (p.start === range.start && p.end && p.end > range.start && p.end < range.end) {
+      return { ...range, end: p.end, closedEarlyFrom: range.end, closedEarlyRaw: frag(m) };
+    }
+  }
+  return range;
+}
+
+/** The one note for a run cut short, on every path. */
+function closedEarlyNote(range) {
+  return range && range.closedEarlyFrom
+    ? `Closed early on ${dayText(range.end)}, not ${dayText(range.closedEarlyFrom)} as published: "${range.closedEarlyRaw}".`
+    : '';
+}
+
 function dayText(iso) {
   const [y, m, d] = iso.split('-').map(Number);
   return `${d} ${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][m - 1]} ${y}`;
@@ -330,7 +358,8 @@ function findDateRangeCore(raw, opts = {}) {
   // Berlin's "02.09.2022 to 08.01.2023"). Slashes: listing cards only — on a page it read
   // a sidebar's dates.
   // Dots with two-digit years on both sides ("11.10.24 - 27.4.25", Louisiana) or the year on the
-  // closing side only ("25.05.–24.11.2024", Kunstmuseum Basel) are day-first too.
+  // closing side only ("25.05.–24.11.2024", Kunstmuseum Basel; "01.02 – 30.04.20", MSK Ghent) are
+  // day-first too.
   const dotted2 = s.match(new RegExp(
     `\\b(\\d{1,2})\\.(\\d{1,2})\\.(\\d{2})${RANGE_SEP}(\\d{1,2})\\.(\\d{1,2})\\.(\\d{2})(?![\\d.:])`));
   if (dotted2) {
@@ -338,9 +367,10 @@ function findDateRangeCore(raw, opts = {}) {
     if (r.start || r.end) return r;
   }
   const dottedOpen = s.match(new RegExp(
-    `\\b(\\d{1,2})\\.(\\d{1,2})\\.?${RANGE_SEP}(\\d{1,2})\\.(\\d{1,2})\\.(\\d{4})\\b`));
-  if (dottedOpen && plausibleYear(dottedOpen[5])) {
-    const [sDay, sMo, eDay, eMo, endYr] = [1,2,3,4,5].map(i => Number(dottedOpen[i]));
+    `\\b(\\d{1,2})\\.(\\d{1,2})\\.?${RANGE_SEP}(\\d{1,2})\\.(\\d{1,2})\\.(\\d{4}\\b|\\d{2}(?![\\d:]|\\.\\d))`));
+  const openYr = dottedOpen && (dottedOpen[5].length === 2 ? 2000 + +dottedOpen[5] : +dottedOpen[5]);
+  if (dottedOpen && plausibleYear(openYr)) {
+    const [sDay, sMo, eDay, eMo] = [1,2,3,4].map(i => Number(dottedOpen[i])), endYr = openYr;
     if (sMo >= 1 && sMo <= 12 && eMo >= 1 && eMo <= 12) {
       const r = sane(ymd(startYearFor(sMo, sDay, eMo, eDay, endYr), sMo, sDay), ymd(endYr, eMo, eDay), frag(dottedOpen));
       if (r.start || r.end) return r;
@@ -780,7 +810,7 @@ const NO_DATES_NOTE = "No closing date found anywhere on the venue's pages.";
 function shownOnlyNote(shown, why) {
   return `The venue's page shows only "${shown}" for this exhibition's dates — ${why || 'no year is published anywhere'}.`;
 }
-return { findDateRange, findDateRangeInProse, capsTitleParts, NO_DATES_NOTE, shownOnlyNote, sweptVenueTitle };
+return { findDateRange, findDateRangeInProse, capsTitleParts, NO_DATES_NOTE, shownOnlyNote, sweptVenueTitle, closedEarly, closedEarlyNote };
 })();
 const SUMMARY_RULES="- Maximum 10 words. The examples average about six.\n- End with a full stop. Avoid colons — the accepted summaries almost never use one.\n- Name the artist or artists the exhibition is built around.\n\nNAME THEM THE WAY A GALLERY-GOER WOULD. Surname alone, unless the surname alone\nwould be ambiguous. Write \"Zurbarán\", not \"Francisco de Zurbarán\". \"Shonibare\",\nnot \"Yinka Shonibare\". \"Velasco\", not \"Mexican artist José María Velasco\". Drop\n\"painter\", \"artist\" and similar labels in front of a name — the reader already\nknows. Full names, honorifics and formal titles read stiff and waste words that\ncould carry meaning instead.\n\nALWAYS WRITE IN ENGLISH, whatever language the raw text is in. Several venues\npublish only in Italian and one only in French; she reads the summaries in\nEnglish. Translating a phrase does not break the traceability rule below — a\ntranslated phrase is still traceable to the text it came from. Keep the\nexhibition's own title in its original language if that is how it is written;\ntranslate the description around it.\n\nTHE RULE THAT MATTERS MOST: every word of your summary must be traceable to a\nphrase in that row's own raw text. If you cannot point to where something came\nfrom, leave it out. In particular:\n\n- Never add an artist, place, medium or date that you happen to know about but the\n  text does not mention.\n- Use a number only if the text states that number. Do not count a list of names\n  and report the total — the page may state a different figure, and the page is\n  right, not your count.\n\nBeing vague is a much smaller failure than being confidently wrong. If the text\nwill only support something general, write something general.\n\nIf the raw text is not a description of an exhibition — a bare link, a curator's\nbiography, ticketing or opening-hours copy, cookie or consent boilerplate, a \"page\nnot found\" message, or empty — answer null for that row. Do not invent one.";
 const EN_PREFIX = 'In English: ';
@@ -1288,7 +1318,7 @@ function pageUnreadWhy(e){
 // Rules and the case behind each: docs/add_by_link.md, "The general reader". `rules`, when given,
 // collects the name of every rule that changed this page's result: the proof list keeps a page only
 // for a rule no other page at its venue shows (docs/testing.md). The app passes none.
-// One page → {ok, base, between, under, afterDates, start, end, raw, site, link, noDates, shown, shownWhy, dateLine} or {ok:false, why}.
+// One page → {ok, base, between, under, afterDates, start, end, raw, site, link, noDates, shown, shownWhy, dateLine, dateNote} or {ok:false, why}.
 function readShowPage(res,url,vc,rules){
   const pg=pageToRead(res,url,vc,rules);
   if(pg.fail)return pg.fail;
@@ -1438,8 +1468,9 @@ function findDates(pg){
       const nx=[];
       for(let j=k+1;j<lines.length&&nx.length<2;j++){ const t=stripMd(lines[j]); if(t)nx.push([j,t]); }
       // Opening and closing dates on two lines, "From 12 June 2026" over "Until 6 September 2026"
-      // (Van Gogh Museum): read together before either alone.
-      if(nx.length&&/^(?:from|vom|von|du|dal|desde)\b/i.test(l)&&/^(?:until|till|to|through|bis|au|al|jusqu|hasta)\b/i.test(nx[0][1])){
+      // (Van Gogh Museum), "Held on 14 feb 2014" over "to 26 may 2014" (Reina Sofía): read together
+      // before either alone, whatever word comes before the opening date.
+      if(nx.length&&!(rangeIn(l).start&&rangeIn(l).end)&&/^(?:until|till|to|through|bis|au|al|jusqu|hasta)\b/i.test(nx[0][1])){
         const r2=rangeIn(l+" "+nx[0][1]);
         if(r2.start&&r2.end)return{d:k,dEnd:nx[0][0],range:r2,via:"dates:two-lines"};
       }
@@ -1490,6 +1521,9 @@ function findDates(pg){
       if(r.start&&r.end&&((range.end&&r.end===range.end)||(range.start&&r.start===range.start))){ range={...range,start:r.start,end:r.end}; rule("dates:one-side-completed"); break; }
     }
   }
+  // A run the page says was cut short closes on the day it really closed (MSK Ghent's Van Eyck).
+  range=DATES.closedEarly(range,lines.map(stripMd).join("\n"));
+  if(range.closedEarlyFrom)rule("dates:closed-early");
   Object.assign(pg,{h,found,d,dEnd,range,heading:stripMd(lines[h])});
   return null;
 }
@@ -1668,7 +1702,7 @@ function pageResult(pg){
   let tracked=false; try{ tracked=[...new URL(url).searchParams.keys()].some(k=>TRACKING_PARAM.test(k)); }catch{}
   const link=lr&&lr.cleanLink?String(url).split(/[?#]/)[0]:tracked?withoutTracking(url):url;
   if(link!==url)rule(lr&&lr.cleanLink?"cleanLink":"tracking");
-  return{ok:true,base:pg.base,between:pg.between,under,afterDates,start:range.start||"",end:range.end||"",raw:pg.raw.slice(0,LINK_RAW_CHARS),site:site||(linkEntry(vc)||{}).name||host.replace(/^www\./,""),link,noDates:!!found.noDates,shown:found.shown||"",shownWhy:found.shownWhy||"",dateLine:found.noDates&&!found.shown?"":pg.dateLine};
+  return{ok:true,base:pg.base,between:pg.between,under,afterDates,start:range.start||"",end:range.end||"",raw:pg.raw.slice(0,LINK_RAW_CHARS),site:site||(linkEntry(vc)||{}).name||host.replace(/^www\./,""),link,noDates:!!found.noDates,shown:found.shown||"",shownWhy:found.shownWhy||"",dateLine:found.noDates&&!found.shown?"":pg.dateLine,dateNote:DATES.closedEarlyNote(range)};
 }
 
 // A venue's title from its own headings (linkRead.title). "pieces": the heading is the "##"
@@ -2729,7 +2763,7 @@ async function englishVersion(sf){
 }
 
 // Step 8. The answer: a books section and the shop's search; a step that died (said as such, not as
-// "nothing found"); a shop with no books section, still searched as KHM's is; or no shop.
+// "nothing found"); its front page when that sells books; a shop with no books section, still searched as KHM's is; or no shop.
 async function shopResult(sf){
   const{pick,root,front,seenText,died}=sf;
   if(pick){
@@ -2752,6 +2786,15 @@ async function shopResult(sf){
     return out;
   }
   if(died){ sf.note("result",{shop:"failed",why:died}); return{shop:"failed",shopHome:front||(root?sf.homeOf(root):null),why:died,finder:3}; }
+  // No books section: the shop's front page itself, when it sells books — the gallery path's rule (Mennour), for
+  // museums too; one of its products opened only while the walk has an open left.
+  const fp=root?front||sf.homeOf(root):"", ft=fp?sf.texts.get(normalizeUrlKey(fp))||"":"";
+  if(ft&&(looksLikeBookShelf(ft)||(sf.walkOpens<WALK_OPENS&&(sf.walkOpens++,await firstProductIsBook(fetchPage,ft,hostOf(fp)))))){
+    const out={shop:"found",shopHome:fp,shopCatalogues:fp,shelfKind:"front",
+      shopSearch:searchFor(seenText,root)||(await proveShopSearch(seenText,root))||null,foundBy:"the shop's front page",finder:3,searchRule:SEARCH_RULE};
+    sf.note("result",{shop:out.shop,shopCatalogues:out.shopCatalogues,shopSearch:out.shopSearch,foundBy:out.foundBy});
+    return out;
+  }
   const out=root?{shop:"noshelf",shopHome:front||sf.homeOf(root),shopSearch:searchFor(seenText,root)||(await proveShopSearch(seenText,root))||null,finder:3,searchRule:SEARCH_RULE}:{shop:"none",finder:3};
   sf.note("result",{shop:out.shop,shopHome:out.shopHome||null});
   return out;
@@ -7420,7 +7463,7 @@ export default function App(){
         tape.row={title,museumId:vc,exUrl:url};
         got.push({venue_code:vc,title,start_date:page.start,end_date:page.end,
           summary:a.summary?composeSummary(cardTitle(a.english,vc),a.summary):"",url:page.link,
-          notes:[page.noDates?(page.shown?DATES.shownOnlyNote(page.shown,page.shownWhy):DATES.NO_DATES_NOTE):"",
+          notes:[page.noDates?(page.shown?DATES.shownOnlyNote(page.shown,page.shownWhy):DATES.NO_DATES_NOTE):"",page.dateNote||"",
             ask.ok?"":"Description not written \u2014 "+ask.detail.replace(/\s+\[.*$/,"")].filter(Boolean).join(" ")});
       }catch(e){ fails.push({url,why:"Couldn\u2019t read it ("+String((e&&e.message)||e)+")."}); }
       finally{

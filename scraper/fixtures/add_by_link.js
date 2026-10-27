@@ -162,6 +162,18 @@ Object.assign(SHOPS, {
   [AT + 'en/products/publications/']: EN_SHELF,
 });
 
+// AL-078: a museum shop with no books section whose front page sells books (the gallery path's rule, for museums
+// too); and one whose front page sells only gifts (Dresden's shape).
+const TS = 'https://tienda.testmuseo.es/', TD = 'https://tienda.testmuseo-dos.es/';
+SEARCHES.unshift(
+  [/^Testmuseo Madrid shop/, { results: [{ url: TS, title: 'Tienda Testmuseo' }] }],
+  [/^Testmuseo Dos shop/, { results: [{ url: TD, title: 'Tienda Testmuseo Dos' }] }]);
+Object.assign(SHOPS, {
+  [TS]: '# Tienda Testmuseo\n* [Regalos](' + TS + 'regalos)\n* [Moda](' + TS + 'moda)\n## Novedades\n[Wols. Cosmos y calle — catálogo de la exposición, tapa blanda](' + TS + 'wols-cosmos-y-calle) 35,00 €\n'
+    + '[Picasso. Guernica — catálogo, tapa dura](' + TS + 'picasso-guernica) 45,00 €\n[Dalí. Libro de la exposición](' + TS + 'dali-libro) 29,00 €',
+  [TD]: '# Tienda Testmuseo Dos\n* [Tickets](' + TD + 'tickets)\n* [Geschenke](' + TD + 'geschenke)\n## Neu\n[Tasse Zwinger](' + TD + 'tasse) 12,00 €\n[Poster Sixtinische Madonna](' + TD + 'poster) 15,00 €',
+});
+
 // AL-076: a gallery's shop (her design). Made to the shapes of Galerie Karsten Greve's live pages (26 Oct): its
 // home page's "Publikationen" and links to its books, its list read with no links on its titles, its language
 // links carrying a filter, a book's page priced without cents; and Marian Goodman's Shopify lists.
@@ -530,6 +542,24 @@ function runtime() {
     const r3 = read(named, 'https://www.smb.museum/en/museums-institutions/neue-nationalgalerie/exhibitions/detail/x/', NN);
     ok(r3.ok && r3.base === 'Neue Nationalgalerie' && r3.start === '2026-03-20', 'AL-075b: a show named only for the venue, its dates under it, is still read', JSON.stringify([r3.base, r3.start]));
   }
+  // ── AL-077: dates the reader missed, read live (27 Oct). MSK Ghent prints "01.02 – 30.04.20" (a two-digit year
+  // on the closing side only) and says Covid closed the show on 12 March; Reina Sofía prints "Held on 14 feb 2014"
+  // over "to 26 may 2014". ─
+  {
+    const fn = name => new Function('React', 'window', 'document', 'localStorage', code + '\n;return ' + name + ';')(React, win, win.document, win.localStorage);
+    const read = fn('readShowPage');
+    const live = f => JSON.parse(fs.readFileSync(path.join(__dirname, '..', '..', 'docs', 'link_pages', f), 'utf8'));
+    const g = live('ghent_van_eyck_live.json'), r = read(g, g.url, 'occ-mskgent-be');
+    ok(r.ok && r.start === '2020-02-01' && r.end === '2020-03-12' && /^Closed early on 12 Mar 2020, not 30 Apr 2020 as published/.test(r.dateNote),
+      'AL-077:  MSK Ghent Van Eyck: opens 1 Feb 2020, closes 12 Mar 2020 (closed early, said in the note), not "until 12 Mar"', JSON.stringify([r.start, r.end, r.dateNote, r.why]));
+    const plain = { ...g, full_content: g.full_content.replace(/but unfortunately the COVID-19 crisis forced us to close the exhibition earlier/, 'and it was a great success') };
+    const r1 = read(plain, g.url, 'occ-mskgent-be');
+    ok(r1.ok && r1.start === '2020-02-01' && r1.end === '2020-04-30' && !r1.dateNote,
+      'AL-077a: with no word of closing early, the printed 1 Feb – 30 Apr 2020 stands', JSON.stringify([r1.start, r1.end, r1.dateNote]));
+    const w = live('reina_wols_live.json'), r2 = read(w, w.url, 'occ-museoreinasofia-es');
+    ok(r2.ok && r2.start === '2014-02-14' && r2.end === '2014-05-26',
+      'AL-077b: Reina Sofía Wols: "Held on 14 feb 2014" over "to 26 may 2014" read as one range', JSON.stringify([r2.start, r2.end, r2.why]));
+  }
   // ── AL-040: Yale CBA — clock times between the dates (the shared reader, DS-003) ─
   // Made from the live pages (17 Oct); all three on docs/link_proof_pages.json.
   {
@@ -803,6 +833,13 @@ function runtime() {
     const asked3 = calls.slice(before).filter(c => c.kind === 'mcp' && c.tool === 'web_search').map(c => c.args.search_queries[0]);
     ok(asked3.length === 1 && asked3[0] === 'Testhaus Berlin shop exhibition catalogues' && !calls.slice(before).some(c => c.kind === 'mcp' && c.tool === 'web_fetch' && c.args.urls.length > 1 && c.args.urls.some(u => /\/en-int\//.test(u))),
       'AL-073e:  a venue in an English-speaking country: the plain search only, no English version looked for', JSON.stringify(asked3));
+    // ── AL-078: a museum shop's front page that sells books is its shop, hers to confirm ──
+    const fs1 = await discoverShop('', 'www.testmuseo.es', 'Testmuseo Madrid', [], 'occ-testmuseo-es');
+    ok(fs1.shop === 'found' && fs1.shopCatalogues === TS && fs1.shelfKind === 'front',
+      'AL-078:  no books section, but its front page sells books: the front page is the shop, confirmable, under "Shop found, but not its catalogues section"', JSON.stringify(fs1));
+    const fs2 = await discoverShop('', 'www.testmuseo-dos.es', 'Testmuseo Dos', [], 'occ-testmuseo-dos-es');
+    ok(fs2.shop === 'noshelf' && fs2.shopHome === TD,
+      'AL-078a: a front page selling only gifts stays "Shop found, but not its books section" (Dresden)', JSON.stringify(fs2));
     // ── AL-076: a gallery's shop (her design: docs/add_by_link.md, "A gallery's shop") ──
     const gRank = fn('galleryListRank'), gOwn = w => /gagosian|perrotin/.test(w.replace(/[^a-z]/g, ''));
     const gr = w => gRank(w, gOwn);

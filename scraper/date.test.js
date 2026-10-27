@@ -23,7 +23,7 @@ const {
   classifyLoadError, isOwnListingPage, saysOngoing,
   expandYearArchive, expandDateRange, keptDespiteLookback, withoutQuery, listingPages, followPagination, VENUES, pickTitleLine, venueTitle, isPlace, placesOf,
   stripWeekdays,
-  addNote, filledDatesNote, finishNotes, scopeSelector, extensionNote, applyLookback,
+  addNote, filledDatesNote, finishNotes, scopeSelector, extensionNote, closedEarly, closedEarlyNote, applyLookback,
 } = require('./sweep_prototype.js');
 const { seenOn, listingNote } = require('./listing_note.js');
 
@@ -2130,4 +2130,24 @@ test('DS-006: a slashed range on a show page only with opts.slashes, and only wh
   assert.equal(p.start, '2026-06-09'); assert.equal(p.end, '2026-09-27');
   assert.equal(findDateRange('Madrid 6/9/2026 - 9/27/2026', { looseSingles: false }).start, '');
   assert.equal(findDateRange('02/09/2022 to 08/01/2023', { looseSingles: false, slashes: true }).start, '');
+});
+
+test('DS-007: a dotted range with a two-digit year on the closing side only (MSK Ghent, "01.02 – 30.04.20")', () => {
+  const g = findDateRange('Exhibition 01.02 – 30.04.20', { looseSingles: false });
+  assert.equal(g.start, '2020-02-01'); assert.equal(g.end, '2020-04-30');
+  assert.equal(findDateRange('01.11 – 28.02.27', { looseSingles: false }).start, '2026-11-01');
+  assert.equal(findDateRange('01.02 – 30.04.20.5', { looseSingles: false }).start, '');
+  assert.equal(findDateRange('01.02 – 30.04.20:30', { looseSingles: false }).start, '');
+});
+
+test('CE-001: a run the page says was cut short closes on that day, only earlier, only with the same opening day (MSK Ghent)', () => {
+  const run = { start: '2020-02-01', end: '2020-04-30' };
+  const page = 'From February 1st until March 12th 2020, the MSK hosted the largest Jan van Eyck exhibition in history. During these weeks, nearly 130,000 visitors came, but unfortunately the COVID-19 crisis forced us to close the exhibition earlier.';
+  const c = closedEarly(run, 'Intro\n' + page);
+  assert.deepEqual([c.start, c.end, c.closedEarlyFrom], ['2020-02-01', '2020-03-12', '2020-04-30']);
+  assert.equal(closedEarlyNote(c), 'Closed early on 12 Mar 2020, not 30 Apr 2020 as published: "close the exhibition earlier".');
+  assert.equal(closedEarly(run, page.replace('forced us to close the exhibition earlier', 'was a success')).end, '2020-04-30');
+  assert.equal(closedEarly(run, page.replace('February 1st', 'February 3rd')).end, '2020-04-30');
+  assert.equal(closedEarly({ start: '2025-12-01', end: '2026-03-30' }, 'The museum and the exhibition will close early on 24 December 2025.').end, '2026-03-30');
+  assert.equal(closedEarlyNote(run), '');
 });

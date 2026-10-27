@@ -198,6 +198,34 @@ function extensionNote(range) {
   return '';
 }
 
+/**
+ * A run cut short ("the COVID-19 crisis forced us to close the exhibition earlier", MSK Ghent): a
+ * paragraph that says the show closed early AND gives the run again with the same opening day moves
+ * the closing date to that paragraph's. Only ever EARLIER and after the opening, so a museum's
+ * early-closing hours, which never restate the run, cannot match.
+ */
+const CLOSED_EARLY = /\b(?:clos(?:e|ed|ing)|end(?:ed)?|shut)\b[^.]{0,25}\b(?:exhibition|show)\b[^.]{0,25}\b(?:early|earlier|prematurely|ahead of schedule)\b|\b(?:exhibition|show)\b[^.]{0,40}\b(?:closed|ended|shut)\b[^.]{0,25}\b(?:early|earlier|prematurely|ahead of schedule)\b/i;
+
+function closedEarly(range, text) {
+  if (!range || !range.start || !range.end || !text) return range;
+  for (const para of String(text).split(/\n+/)) {
+    const m = CLOSED_EARLY.exec(para);
+    if (!m) continue;
+    const p = findDateRangeInProseCore(para, range.end.slice(0, 4));
+    if (p.start === range.start && p.end && p.end > range.start && p.end < range.end) {
+      return { ...range, end: p.end, closedEarlyFrom: range.end, closedEarlyRaw: frag(m) };
+    }
+  }
+  return range;
+}
+
+/** The one note for a run cut short, on every path. */
+function closedEarlyNote(range) {
+  return range && range.closedEarlyFrom
+    ? `Closed early on ${dayText(range.end)}, not ${dayText(range.closedEarlyFrom)} as published: "${range.closedEarlyRaw}".`
+    : '';
+}
+
 function dayText(iso) {
   const [y, m, d] = iso.split('-').map(Number);
   return `${d} ${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][m - 1]} ${y}`;
@@ -230,7 +258,8 @@ function findDateRangeCore(raw, opts = {}) {
   // Berlin's "02.09.2022 to 08.01.2023"). Slashes: listing cards only — on a page it read
   // a sidebar's dates.
   // Dots with two-digit years on both sides ("11.10.24 - 27.4.25", Louisiana) or the year on the
-  // closing side only ("25.05.–24.11.2024", Kunstmuseum Basel) are day-first too.
+  // closing side only ("25.05.–24.11.2024", Kunstmuseum Basel; "01.02 – 30.04.20", MSK Ghent) are
+  // day-first too.
   const dotted2 = s.match(new RegExp(
     `\\b(\\d{1,2})\\.(\\d{1,2})\\.(\\d{2})${RANGE_SEP}(\\d{1,2})\\.(\\d{1,2})\\.(\\d{2})(?![\\d.:])`));
   if (dotted2) {
@@ -238,9 +267,10 @@ function findDateRangeCore(raw, opts = {}) {
     if (r.start || r.end) return r;
   }
   const dottedOpen = s.match(new RegExp(
-    `\\b(\\d{1,2})\\.(\\d{1,2})\\.?${RANGE_SEP}(\\d{1,2})\\.(\\d{1,2})\\.(\\d{4})\\b`));
-  if (dottedOpen && plausibleYear(dottedOpen[5])) {
-    const [sDay, sMo, eDay, eMo, endYr] = [1,2,3,4,5].map(i => Number(dottedOpen[i]));
+    `\\b(\\d{1,2})\\.(\\d{1,2})\\.?${RANGE_SEP}(\\d{1,2})\\.(\\d{1,2})\\.(\\d{4}\\b|\\d{2}(?![\\d:]|\\.\\d))`));
+  const openYr = dottedOpen && (dottedOpen[5].length === 2 ? 2000 + +dottedOpen[5] : +dottedOpen[5]);
+  if (dottedOpen && plausibleYear(openYr)) {
+    const [sDay, sMo, eDay, eMo] = [1,2,3,4].map(i => Number(dottedOpen[i])), endYr = openYr;
     if (sMo >= 1 && sMo <= 12 && eMo >= 1 && eMo <= 12) {
       const r = sane(ymd(startYearFor(sMo, sDay, eMo, eDay, endYr), sMo, sDay), ymd(endYr, eMo, eDay), frag(dottedOpen));
       if (r.start || r.end) return r;
@@ -703,6 +733,9 @@ module.exports = {
   readDayMonth,
   precedingDate,
   extensionNote,
+  CLOSED_EARLY,
+  closedEarly,
+  closedEarlyNote,
   dayText,
   findDateRange,
   findDateRangeCore,

@@ -120,6 +120,7 @@ Through Oct 4 / Ongoing from Oct 19  no year — derived
 From May 16, 2025, to May 17, 2027   comma before the separator (Brera)
 since 11. November 2025              German day stop; read only with a year (KHM)
 …28/09/2025, extended to02/11/2025   an extension (Uffizi; "prorogata al…")
+01.02 – 30.04.20                     dotted, two-digit year on the closing side only (MSK Ghent)
 ```
 
 - **A closing side that is not a date** (`–Summer 2027`, `–ongoing`) is read
@@ -138,6 +139,10 @@ since 11. November 2025              German day stop; read only with a year (KHM
 - **An extension only moves the closing date later**, applied once by both parsers.
   A yearless one takes its year from the closing date written just before it,
   never by rolling the range's end forward (Gricci and Lotto went a year late).
+- **A run cut short closes on the day it really closed** (`closedEarly`, her decision; MSK Ghent's Covid closing):
+  only when a paragraph says the exhibition closed early AND restates the run with the same opening day; only
+  earlier, never before the opening; the note says so. English wording only so far. The sweep reads it in the
+  summary; Add by link in the whole page. DS-007, CE-001, AL-077.
 - **Every dash is normalised** (U+2010–U+2015, minus, maqaf).
 - **Clock times are dropped** ("10:00 am ET", "5pm"; am/pm required) — Yale prints one beside
   each date. Checked on every saved page: only Yale's dates changed (DS-003).

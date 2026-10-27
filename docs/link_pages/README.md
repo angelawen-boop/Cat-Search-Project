@@ -39,3 +39,7 @@ empty page (B-007).
 `brancusi_neue_ng_live.json` (26 Oct) is the free Parallel server's answer byte for byte for the Neue
 Nationalgalerie's *Brancusi* page: a one-word "## Brancusi" heading inside the tab title "Brancusi at the
 Neue Nationalgalerie", and the house line "Neue Nationalgalerie" under the dates (AL-075).
+
+`ghent_van_eyck_live.json` and `reina_wols_live.json` (27 Oct) are the free Parallel server's answers byte for byte:
+MSK Ghent's "01.02 – 30.04.20" with its Covid early closing in the text, and Reina Sofía's "Held on 14 feb 2014" over
+"to 26 may 2014" (AL-077).

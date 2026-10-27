@@ -751,7 +751,7 @@ function rebuildSweepCsv() {
 
 // ── Date helpers — moved to dates.js, 4 Oct 2026 (one copy, shared with the app) ──
 const {
-  MONTHS, WEEKDAY_PREFIX_SRC, ORDINAL_SUFFIX, MONTH_PATTERN, monthNum, ymd, startYearFor, parseMonthDay, RANGE_SEP, WEEKDAY_PREFIX, stripWeekdays, EXTENDED_TO, applyExtension, readDayMonth, precedingDate, extensionNote, dayText, findDateRange, findDateRangeCore, PLAUSIBLE_YEAR_MIN, PLAUSIBLE_YEAR_MAX, plausibleYear, frag, sane, unusableDateText, findDateRangeInProse, findDateRangeInProseCore, titleCase, titleFromCaps, capsTitleParts, NO_DATES_NOTE, shownOnlyNote, capsTitleRule, sweptVenueTitle,
+  MONTHS, WEEKDAY_PREFIX_SRC, ORDINAL_SUFFIX, MONTH_PATTERN, monthNum, ymd, startYearFor, parseMonthDay, RANGE_SEP, WEEKDAY_PREFIX, stripWeekdays, EXTENDED_TO, applyExtension, readDayMonth, precedingDate, extensionNote, closedEarly, closedEarlyNote, dayText, findDateRange, findDateRangeCore, PLAUSIBLE_YEAR_MIN, PLAUSIBLE_YEAR_MAX, plausibleYear, frag, sane, unusableDateText, findDateRangeInProse, findDateRangeInProseCore, titleCase, titleFromCaps, capsTitleParts, NO_DATES_NOTE, shownOnlyNote, capsTitleRule, sweptVenueTitle,
 } = require('./dates.js');
 
 function afterLookback(endDateStr, floor = LOOKBACK) {
@@ -5454,6 +5454,12 @@ async function fetchIndividualPagesEach(page, rows, venueCode) {
           }
         } catch {}
       }
+
+      // A run the page says was cut short closes on the day it really closed (shared with Add by link).
+      if (row.start_date && row.end_date && row.summary) {
+        const cut = closedEarly({ start: row.start_date, end: row.end_date }, row.summary);
+        if (cut.closedEarlyFrom) { row.end_date = cut.end; row.notes = addNote(row.notes, closedEarlyNote(cut)); }
+      }
     } catch (e) {
       broke = true;
       rethrowIfAborted(e);
@@ -6211,7 +6217,7 @@ module.exports = {
   findDateRange, findDateRangeInProse, parseMonthDay,
   // Exported for the 23 Sep repair of her import file, which must apply the
   // CORRECTED rule rather than a copy of it.
-  applyExtension, extensionNote, ymd, startYearFor,
+  applyExtension, extensionNote, closedEarly, closedEarlyNote, ymd, startYearFor,
   // Mirrored in compress.js, which orders run folders by it; MEM-006.
   RUN_TZ,
   // Exported so the weekday strip can be tested for what it does rather than
