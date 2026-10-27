@@ -271,8 +271,6 @@ Recently labelled (sort and filter). Built in three stages on its own test page,
 (the whole ledger). She loads her latest test-page export into 51 (the two ledgers checked by script beforehand:
 the same shows, her marks reconciled). Her view, kept for later: both Misc bins should ultimately go. Her design,
 decisions and every period and theme rule: `docs/periods.md`. Read it before any Period work.
-**A period rule change needs no back-test on other shows (her decision):** a new rule reaches a show only when she
-relabels that one card, so no other show moves.
 
 #### 2.2.10 51.1–51.2 — her next links, lookups and Buy next confirm
 

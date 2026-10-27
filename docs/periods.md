@@ -6,10 +6,6 @@ Tests: `period_sort.js` (PS-), `period_render.js` (PR-), in the screen group (`s
 
 ## Open
 
-- **OPEN — her rule, agreed, not built:** "A show built around one named source with a fixed date (Ovid, a
-  Mesopotamian goddess) files under that source's period." Add it to `periodPrompt` as worded, nothing more. Tested
-  on Rijksmuseum *Metamorphoses* (now Surveys after her Relabel): Antiquity, c. 8 AD, three of three. Then she Relabels it.
-
 - **Merged at 51: her load of the test page's ledger confirms.** She loads her latest test-page export into 51
   (checked by script against her app's ledger before stage 3: the same shows, her marks reconciled). In Buy next's
   dragged order the Period dividers and scrubber stand aside, as the other sorts do.
