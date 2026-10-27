@@ -21,6 +21,17 @@ spans two groups runs both. Which suites each group holds is `scraper/run_tests.
 suite only a branch has goes in that branch's `scraper/fixtures/branch_tests.txt` and runs with every app
 group (none today). **The exit code says whether everything run passed.**
 
+## Watched runs (her decision: hard-wired)
+
+Every run goes through `scraper/run_tests.js` (one suite: `--only <part of its command>`; the expected time alone:
+`--estimate`). It prints the expected time first, holds a lock so no second run or live check starts beside it, prints
+every minute what is still running, and stops a suite well past its usual time (`stallLimit`, `scraper/test_watch.js`),
+then re-runs it alone: "STALLED with others running, then passed alone" is crowding, "STALLED TWICE" a real fault —
+record either in CLAUDE.md §2.2.6. The live shop checks hold the same lock and stop after six minutes with no answer
+from Parallel. Usual times: `scraper/test_times.json`, refreshed from this machine's runs by `--save-times`. The Bash
+hook (`.claude/hooks/test-guard.js`) refuses a direct suite run, a second run, `&`/`nohup`, a long run in the
+foreground, and a run of a minute or more until the session has written her the exact "Expected test run: …" line.
+
 ## When a test fails
 
 **Do not investigate it in the session.** Record it in CLAUDE.md §2.2.6 as an OPEN item, one or two lines:
@@ -35,9 +46,8 @@ on the venues in `docs/shop_check.json`, each against its ONE right shop (strict
 finder's steps beside its last good run. About five calls a venue, on the free Parallel server (paced; her key is
 not in the environment, so the script cannot spend it).
 - **After a fix: only the venues that fix can reach** (her decision). **All of them once, before publishing.**
-- **Tell her how long first.** A clean full run is about half an hour; once the free tier is spent it can refuse for
-  hours. **One run at a time, never in the background unwatched; a run that keeps meeting the limit is stopped and
-  reported** — never waited on.
+- **How long, one at a time, a stall stopped** — hard-wired (Watched runs, above). A clean full run is about half an
+  hour.
 - **Live only — never saved copies of the shops' replies** (her decision; proposed and refused).
 - **The gallery path** has its own: `node scraper/gallery_shop_check.js <keys>` (`docs/gallery_shop_check.json`), the
   same rules. A change to the gallery path runs it; a change to the museum finder runs the museum check.

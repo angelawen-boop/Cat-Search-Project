@@ -339,8 +339,9 @@ checks waiting 8 seconds for an automatic save (CA-002, CA-005d, CA-006, TC-001)
 now run alone (her decision; the 8 seconds kept). If one still fails when run alone, record it here — that
 is a real fault, not crowding.
 
-**OPEN, watching — `pacing.test.js` froze once inside the full `npm test`** (live shop checks were running beside it);
-stopped after 15 minutes, it passed in 3 seconds alone and with its group. Likely crowding — needs investigation if it recurs.
+**OPEN — the scraper's unit group (`node --test scraper/date.test.js …`, `pacing.test.js` in it) freezes now and then
+when other suites run beside it**; twice so far, each time passing in seconds alone. It recurred, so it needs
+investigation. The runner now stops it and re-runs it alone (below), so it costs about a minute, never her wait.
 
 ---
 
@@ -460,9 +461,11 @@ Each line came from a real failure. Details are in git history and `docs/`.
 - **A page that extends Cat Watch copies its controls one for one** — placement, wording, layout, pop-ups —
   not just its colours; render both side by side before showing her (Theme Shelf drew its own look twice).
 - **Never say "it works" before the check that proves it has run** (Wallraf's title fix, said to work before Claude was asked on it). Never guess what she would or would not add: the test pages stand for faults any museum can show.
-- **Tell her before any run that takes more than a few minutes, and how long** (her decision). Never leave a
-  check running in the background unwatched or start a second over it: four live shop checks ran at once, used up
-  the free tier, and stalled for hours while she waited unaware. A stalled run is stopped and reported, never waited on.
+- **No test run is left unwatched — hard-wired, her decision** (`scraper/test_watch.js`, the Bash hook
+  `.claude/hooks/test-guard.js`): tests only through `scraper/run_tests.js` (`--only <name>` for one suite); one run
+  at a time; a run of a minute or more starts only after the session has written her its "Expected test run: …" line,
+  then nothing until it ends; a suite well past its usual time is stopped and re-run alone; a live check stops after
+  six minutes without an answer. The hook's refusal says what to do — do it, never work round it.
 - **A test link goes to her only after it is read live, end to end, the way she will run it** (Louisiana's page never
   read; Parallel's 202). **A check's right answer must test what the design requires** — Belvedere's "no books
   section" passed in German under the English-shop design; the gallery path's right answers were set by its own
