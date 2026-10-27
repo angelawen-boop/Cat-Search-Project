@@ -316,6 +316,19 @@ Date and Period exclusive; BP-012–014); the sweep list shows each date and tim
 "Review each one below.", "Accept or reject each."). A layout fix is checked by rendering the page at phone
 width, never by reading the code.
 
+#### 2.2.13 Dates and museum shop front pages — on `main`, not yet published
+
+Shared date rules (her decision: shared, the sweep too): a dotted range with a two-digit year on the closing side
+("01.02 – 30.04.20", MSK Ghent); an opening date over a "to …" line, whatever word comes first (Reina Sofía); a run
+the page says closed early closes that day, with a note (Ghent's Covid closing; `closedEarly`, English wording only).
+The gallery path's front-page rule carried to museums (her decision): no books section, but the shop's front page
+sells books → it is the shop, confirmable. Tests AL-077–078, DS-007, CE-001. **Before publishing:** the live link
+proof check (not yet run) and the museum shop check. **OPEN — Reina Sofía's shop missed:** its real shop is a Shopify
+shop with a "Publications > Catalogues" list (`tienda.museoreinasofia.es/en/collections/publicaciones-catalogos`);
+live, the finder took the museum's "central bookshop" page instead and walked the museum's own site. Belvedere now
+offers its German shop front page (still not the English one — §5.4); its check's right answer ("prints only") is stale:
+its English shop lists Catalogues.
+
 #### 2.2.6 Tests that failed — recorded, not investigated
 
 A session records each failing suite here and does not investigate it (`docs/testing.md`).
