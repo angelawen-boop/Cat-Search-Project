@@ -567,6 +567,10 @@ function runtime() {
     const ci = live('correr_canova_it'), ri = read(ci, ci.url, 'occ-archivio-correr-visitmuve-it');
     ok(ri.ok && ri.base === 'CANOVA E VENEZIA 1822-2022. Fotografie di Fabio Zonta' && ri.start === '2022-10-29' && ri.end === '2023-02-05',
       'AL-089a: the Correr\'s archive in Italian: the heading after "Menù di sezione", not the sub-page heading split by its bold ("C ANOVA")', JSON.stringify([ri.base, ri.start, ri.end]));
+    const cardT = new Function('React', 'window', 'document', 'localStorage', code + '\n;return cardTitle;')(React, win, win.document, win.localStorage);
+    const ct = cardT(ri.base, 'occ-archivio-correr-visitmuve-it');
+    ok(ct === 'Canova e Venezia 1822-2022. Fotografie di Fabio Zonta',
+      'AL-089b: the Correr\'s archive: titles typed in capitals recased (her decision)', JSON.stringify(ct));
     ok(rt.ok && rt.noDates && rt.scriptDates && !rg.scriptDates,
       'AL-088:  no dates and a script placeholder left on the page ("{{daysLeft(exhibition.end)}}"): "Dates cannot be seen — JS-rendering." (her wording); no placeholder, the usual note', JSON.stringify([rt.scriptDates, rg.scriptDates]));
     const note = new Function('React', 'window', 'document', 'localStorage', code + '\n;return SCRIPT_DATES_NOTE;')(React, win, win.document, win.localStorage);

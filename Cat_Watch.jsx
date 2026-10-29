@@ -3,7 +3,7 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 // The footer prints APP_VERSION and its date, so she can tell one build from the next.
 // Numbering, her decision: a whole number for a substantial change, a decimal for a
 // small one, one number per publish. Bump it with the change it describes.
-const APP_VERSION = "53.10";
+const APP_VERSION = "53.11";
 const APP_VERSION_DATE = "29 Oct 2026";
 
 // The venue order is VENUE_ORDER, below the list, which sorts MUSEUMS; drawer, chips,
@@ -1118,7 +1118,8 @@ const LINK_VENUES={
   "occ-getty-edu":{linkRead:{tabNotName:/^Museum Collection$/}},
   // The Correr's archive site (that site only): each show has several pages, its tab title the
   // page's own name ("Project", "Mostra"); the show's name is the heading after "Section menu" ("Menù di sezione").
-  "occ-archivio-correr-visitmuve-it":{linkRead:{titleAfter:/^(?:Section menu|Men\u00f9 di sezione)$/}},
+  // Titles typed in capitals are recased (her decision), each part either side of a full stop.
+  "occ-archivio-correr-visitmuve-it":{linkRead:{titleAfter:/^(?:Section menu|Men\u00f9 di sezione)$/,capsTitles:true,capsStops:true}},
   // Under "Occasional". Boston MFA prints the dates on the line above the show's title.
   "occ-mfa-org":{short:"Boston",card:"Boston MFA"},
   "occ-archive-worcesterart-org":{short:"Worcester"},
@@ -1371,7 +1372,10 @@ function cardTitle(t,vc){
   // A swept venue's title as the sweep writes it (Borghese's em dash; her decision: the sweep's rules).
   const swept=DATES.sweptVenueTitle(vc,t);
   if(swept!==t)return swept;
-  if((linkOptions(vc)||{}).capsTitles)return DATES.capsTitleParts(t);
+  const lo=linkOptions(vc)||{};
+  // A venue whose name and subtitle are parted by a full stop (capsStops; the Correr's archive) recases each part.
+  if(lo.capsTitles&&lo.capsStops)return String(t||"").split(/(\.\s+)/).map((p,i)=>i%2?p:DATES.capsTitleParts(p)).join("");
+  if(lo.capsTitles)return DATES.capsTitleParts(t);
   const s=String(t||"");
   if(/\p{Ll}/u.test(s)||!/\p{Lu}/u.test(s))return s;
   const words=s.split(/[^\p{L}]+/u).filter(w=>w.length>=3);
