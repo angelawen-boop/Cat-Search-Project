@@ -346,6 +346,15 @@ deciding the venue as for any new venue (AL-084). **To confirm:** she re-reads h
 Chantilly links (Claude Lorrain, Watteau). Claude answers the Cini house only on first meeting cini.it; a later Stanze
 show there files under the foundation — her accepted outcome (she orders them next time).
 
+#### 2.2.15 Dates in numbers and the Prado — on `main`, not yet published; her Prado re-import confirms
+
+Her design: every date shape is read the same at every venue; only day first or month first is a fact per venue,
+in `DATE_ORDER` (`dates.js`, the sweep's and the app's), used when no number over 12 settles it. An unlisted venue
+whose numbers cannot settle it gets "Dates not yet read — confirm whether the venue's date format is day first or
+month first." (her wording) and a session adds it. The blanket "dots are day first" rule is gone — never hers.
+The Prado: month first, chip "Prado" after KHM, cards "Prado Madrid". `docs/scraper.md` §3; DS-004, DS-006,
+DS-009, AL-085. She reverts to a backup without her five Prado imports and re-imports them once published.
+
 #### 2.2.6 Tests that failed — recorded, not investigated
 
 A session records each failing suite here and does not investigate it (`docs/testing.md`).
