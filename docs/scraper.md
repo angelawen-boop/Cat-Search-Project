@@ -122,6 +122,7 @@ From May 16, 2025, to May 17, 2027   comma before the separator (Brera)
 since 11. November 2025              German day stop; read only with a year (KHM)
 …28/09/2025, extended to02/11/2025   an extension (Uffizi; "prorogata al…")
 01.02 – 30.04.20                     dotted, two-digit year on the closing side only (MSK Ghent)
+September 29 th 2012 to January 6 th 2013  spaced ordinal (small letters only), no comma before the year (Correr's archive; DS-010)
 ```
 
 - **A closing side that is not a date** (`–Summer 2027`, `–ongoing`) is read

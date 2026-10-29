@@ -138,8 +138,10 @@ const WEEKDAY_PREFIX_SRC =
   '\\b(?:monday|tuesday|wednesday|thursday|friday|saturday|sunday' +
   '|thurs|thur|tues|weds|mon|tue|wed|thu|fri|sat|sun)\\.?,?\\s+';
 
-// Ordinal days ("May 23rd", Orsay's cards; French "1er"): both parsers drop the suffix first.
-const ORDINAL_SUFFIX = /\b(\d{1,2})(?:st|nd|rd|th|er)\b/gi;
+// Ordinal days ("May 23rd", Orsay's cards; French "1er"): both parsers drop the suffix first. A suffix
+// set apart by a space ("September 29 th 2012", the Correr's archive) only in small letters, so "5 St"
+// (a saint, a street) stays.
+const ORDINAL_SUFFIX = /\b(\d{1,2})(?:[sS][tT]|[nN][dD]|[rR][dD]|[tT][hH]|[eE][rR]| (?:st|nd|rd|th))\b/g;
 
 // One month pattern for every parser; long names first, a trailing full stop allowed
 // ("Sept."). The (?![A-Za-z]) is load-bearing: without it "7 November 2025" can match
@@ -458,9 +460,11 @@ function findDateRangeCore(raw, opts = {}) {
     }
   }
 
-  // "Month D, YYYY - Month D, YYYY" — year on both sides
-  let m = s.match(new RegExp(`(${M}\\s+\\d{1,2},\\s*\\d{4})${RANGE_SEP}(${M}\\s+\\d{1,2},\\s*\\d{4})`, 'i'));
-  if (m) return sane(parseMonthDay(titleCase(m[1]), null) || '', parseMonthDay(titleCase(m[2]), null) || '', frag(m));
+  // "Month D, YYYY - Month D, YYYY" — year on both sides; the comma may be left out ("September 29 2012 to
+  // January 6 2013", the Correr's archive).
+  let m = s.match(new RegExp(`(${M}\\s+\\d{1,2}(?:,\\s*|\\s+)\\d{4})${RANGE_SEP}(${M}\\s+\\d{1,2}(?:,\\s*|\\s+)\\d{4})\\b`, 'i'));
+  const withComma = d => titleCase(d).replace(/(\d)\s+(\d{4})$/, '$1, $2');
+  if (m) return sane(parseMonthDay(withComma(m[1]), null) || '', parseMonthDay(withComma(m[2]), null) || '', frag(m));
 
   // "Month D - Month D, YYYY": the opening year is worked out (startYearFor).
   m = s.match(new RegExp(`(${M})\\s+(\\d{1,2})${RANGE_SEP}(${M})\\s+(\\d{1,2}),\\s*(\\d{4})`, 'i'));
@@ -1112,6 +1116,9 @@ const LINK_VENUES={
   // The Getty (her decision, Getty only): its collection database's exhibition pages are titled
   // "Museum Collection", so their heading is the show's name.
   "occ-getty-edu":{linkRead:{tabNotName:/^Museum Collection$/}},
+  // The Correr's archive site (that site only): each show has several pages, its tab title the
+  // page's own name ("Project", "Mostra"); the show's name is the heading after "Section menu" ("Menù di sezione").
+  "occ-archivio-correr-visitmuve-it":{linkRead:{titleAfter:/^(?:Section menu|Men\u00f9 di sezione)$/}},
   // Under "Occasional". Boston MFA prints the dates on the line above the show's title.
   "occ-mfa-org":{short:"Boston",card:"Boston MFA"},
   "occ-archive-worcesterart-org":{short:"Worcester"},

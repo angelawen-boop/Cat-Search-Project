@@ -559,6 +559,14 @@ function runtime() {
     const t = live('getty_transcending_time'), rt = read(t, t.url, 'occ-getty-edu');
     ok(rt.ok && rt.base === 'Transcending Time: The Medieval Book of Hours',
       'AL-087a: Getty: an exhibition page keeps its own title', JSON.stringify(rt.base));
+    // AL-089: the Correr's archive (that site only): the tab title is the sub-page's name ("Project"); the show's
+    // name is the heading after "Section menu". Its dates: a spaced ordinal, no comma, an extension (shared). Read live (29 Oct).
+    const cg = live('correr_guardi'), rc = read(cg, cg.url, 'occ-archivio-correr-visitmuve-it');
+    ok(rc.ok && rc.base === 'Francesco Guardi - 1712/1793' && rc.start === '2012-09-29' && rc.end === '2013-02-17',
+      'AL-089:  the Correr\'s archive: the heading after "Section menu" is the title, not the sub-page "Project"; dates read', JSON.stringify([rc.base, rc.start, rc.end]));
+    const ci = live('correr_canova_it'), ri = read(ci, ci.url, 'occ-archivio-correr-visitmuve-it');
+    ok(ri.ok && ri.base === 'CANOVA E VENEZIA 1822-2022. Fotografie di Fabio Zonta' && ri.start === '2022-10-29' && ri.end === '2023-02-05',
+      'AL-089a: the Correr\'s archive in Italian: the heading after "Menù di sezione", not the sub-page heading split by its bold ("C ANOVA")', JSON.stringify([ri.base, ri.start, ri.end]));
     ok(rt.ok && rt.noDates && rt.scriptDates && !rg.scriptDates,
       'AL-088:  no dates and a script placeholder left on the page ("{{daysLeft(exhibition.end)}}"): "Dates cannot be seen — JS-rendering." (her wording); no placeholder, the usual note', JSON.stringify([rt.scriptDates, rg.scriptDates]));
     const note = new Function('React', 'window', 'document', 'localStorage', code + '\n;return SCRIPT_DATES_NOTE;')(React, win, win.document, win.localStorage);

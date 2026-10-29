@@ -362,6 +362,13 @@ wording; shared, her ask); Łazienki's title from its page title, Getty's "Museu
 (venue rules); HTML codes in a heading decoded. Getty's dates are drawn by script (from data.getty.edu): its links come
 in undated — reading them from there is unbuilt, proposed. `docs/add_by_link.md`, "Venue link rules".
 
+#### 2.2.17 The Correr's archive — in code, not yet published
+
+Her Guardi link (archivio-correr.visitmuve.it) came in as "Project", undated, by link and by page. Two faults, both fixed
+and read live by link and from a saved page: the title is the heading after "Section menu" / "Menù di sezione" (a
+reader option for that site only — not yet her decision); "September 29 th 2012 to January 6 th 2013" is read (shared
+date shapes: a spaced ordinal, no comma before the year; DS-010, AL-089). Her go-ahead publishes it.
+
 #### 2.2.6 Tests that failed — recorded, not investigated
 
 A session records each failing suite here and does not investigate it (`docs/testing.md`).
@@ -372,7 +379,7 @@ now run alone (her decision; the 8 seconds kept). If one still fails when run al
 is a real fault, not crowding.
 
 **OPEN — the scraper's unit group (`node --test scraper/date.test.js …`, `pacing.test.js` in it) freezes now and then
-when other suites run beside it**; twice so far, each time passing in seconds alone. It recurred, so it needs
+when other suites run beside it**; three times so far, each time passing in seconds alone. It recurred, so it needs
 investigation. The runner now stops it and re-runs it alone (below), so it costs about a minute, never her wait.
 
 ---

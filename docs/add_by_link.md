@@ -366,7 +366,8 @@ those 25 read clean before, 25 after, with no proof page worse. Code: `readShowP
   Borghese; AL-058). `cardTitle`, the same for the app and the proof check. A swept venue that types its titles
   in capitals takes the sweep's own rule (`DATES.sweptVenueTitle`, `SWEPT_CAPS_TITLES` in `dates.js`, one copy):
   the Borghese's em dash between name and subtitle (AL-068). The Italian "e" stays small, as "di" does.
-- **R12 Date forms** — dotted dates with the year on the closing side only or two-digit years, a dotted
+- **R12 Date forms** — an ordinal set apart by a space, in small letters ("September 29 th 2012"; "5 St" untouched),
+  and a month-first range with no comma before either year (the Correr's archive; DS-010); dotted dates with the year on the closing side only or two-digit years, a dotted
   closing date (DS-005); a slashed range on the date line; an all-number date in the order its numbers
   settle, else its venue's in `DATE_ORDER`, else the order-unknown note (docs/scraper.md §3; Prado month first, DS-006, DS-009);
   two full dotted dates either side of a bar, "22.05.2008 | 14.08.2008" (the Borghese's archive site, AL-065).
@@ -470,6 +471,12 @@ gets "Dates cannot be seen — JS-rendering." in place of the sweep's no-dates n
 `SCRIPT_DATES_NOTE`, AL-088). A page with no placeholder (Getty's collection pages) keeps the sweep's note. Live: the
 four undated proof pages read; only *Transcending Time* changed. Shared: HTML codes left in a heading are decoded
 in the title (AL-086a; no proof page carries one). All three pages are on the proof list.
+
+**The Correr's archive** (`occ-archivio-correr-visitmuve-it`, a reader option for that site only — not yet her
+decision): a show there has several pages, each tab titled with the page's own name ("Project", "Mostra"); the show's
+name is the "# " heading after "Section menu" / "Menù di sezione" (`titleAfter`, as Dresden; AL-089). Without it her
+Guardi link came in as "Project". Italian titles there are typed in capitals and stay so (no `capsTitles` — hers to
+say). Both pages are on the proof list.
 
 **NGA has its own chip** (her decision): National Gallery of Art links (`occ-nga-gov`) are an occasional venue
 in every other way, but sit under an "NG Washington" chip, never "Occasional", and their cards say NG Washington (`LINK_VENUES`;

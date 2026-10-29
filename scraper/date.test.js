@@ -26,7 +26,7 @@ const {
   addNote, filledDatesNote, finishNotes, scopeSelector, extensionNote, closedEarly, closedEarlyNote, applyLookback,
 } = require('./sweep_prototype.js');
 const { seenOn, listingNote } = require('./listing_note.js');
-const { ORDER_UNKNOWN_NOTE, numberOrder } = require('./dates.js');
+const { ORDER_UNKNOWN_NOTE, numberOrder, ORDINAL_SUFFIX } = require('./dates.js');
 
 const range = (s, hint) => {
   const r = hint ? findDateRangeInProse(s, hint) : findDateRange(s);
@@ -2189,4 +2189,12 @@ test('DS-008: French dates, "du … au …" (Chantilly, "Du 2 mars au 19 mai 202
   assert.deepStrictEqual(range('Du 12 septembre 2025 au 4 janvier 2026'), ['2025-09-12', '2026-01-04']);
   assert.deepStrictEqual(range('Du 5 déc. 2025 au 2 mars 2026'), ['2025-12-05', '2026-03-02']);
   assert.strictEqual(unusableDateText('Du 8 mars au 15 juin'), '8 mars au 15 juin');
+});
+
+test('DS-010: a spaced ordinal and no comma before the year ("September 29 th 2012 to January 6 th 2013", the Correr\'s archive)', () => {
+  assert.deepStrictEqual(range('From September 29 th 2012 to January 6 th 2013'), ['2012-09-29', '2013-01-06']);
+  assert.deepStrictEqual(range('September 29 2012 - January 6 2013'), ['2012-09-29', '2013-01-06']);
+  assert.deepStrictEqual(range('September 29, 2012 to January 6, 2013'), ['2012-09-29', '2013-01-06']);
+  assert.strictEqual(String('5 St Mark 2012').replace(ORDINAL_SUFFIX, '$1'), '5 St Mark 2012');
+  assert.strictEqual(String('29 th and 21ST').replace(ORDINAL_SUFFIX, '$1'), '29 and 21');
 });
