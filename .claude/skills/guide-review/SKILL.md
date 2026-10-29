@@ -81,6 +81,11 @@ index of side docs, guardrails, the app explainers, future considerations — an
      the result, the decision and the lesson. If the evidence is worth keeping,
      compress it FIRST, then move it to the right doc; a side doc is never a
      place to park text uncompressed.
+     **A version-by-version log** (e.g. "Before that 53.9: … Before that 53.8: …")
+     is a diary: keep the last few versions, and for older ones keep only what a
+     later session still needs — her decisions, judgement calls, lessons, open
+     items, each with just enough background to carry on cold. Compress, never
+     dump: not a verbatim move, not a lazy trim. The full text stays in git.
    - **Copies of facts kept elsewhere** — the same fact in two places, or a
      hand-typed copy of what a script or the code prints (venue tables,
      addresses, counts, fixture lists). Keep one copy; point to the script.
@@ -92,10 +97,16 @@ index of side docs, guardrails, the app explainers, future considerations — an
 7. **"Do not re-break" (§4.1):** merge new entries into the lesson they
    illustrate; one lesson, one line where possible. Never drop a lesson.
 8. **Budgets:** every file within `scraper/doc_budget.js`. A NEW doc's budget
-   is its size rounded up to the next 50. Getting within budget is the finish
-   line, not a reason to cut substance — if a file cannot fit without losing a
-   decision or a lesson, stop and report it; **raising an existing budget is
-   hers.**
+   is its size rounded up to the next 50. **Every file over budget is your
+   job to bring within it, this run.** For each, first work out WHY it is over
+   (read it; use `git log -p` on it): diary, history, test lists, duplicated
+   text, content that belongs in a better-fitting doc. Then compress to
+   judgements, decisions, lessons and open items with enough background to
+   continue (see Diaries), and fix duplicates by pointer. Getting within
+   budget never costs a decision or a lesson. Only when, after real
+   compression, a file still cannot fit without losing one, leave it and ask:
+   say what you tried, what is left, and what the budget would need to be.
+   A bare line count is never a finding. **Raising a budget is hers.**
 9. **Anything you cannot trace** — a line whose origin, meaning or current
    truth you cannot establish from the repo and its history
    (`git log -S"<phrase>" -- CLAUDE.md docs/` is the tool) — gets
@@ -123,7 +134,10 @@ a session DOES next, it is not your question.
 as `docs/doc_rules.md` says. Keep a date only where an open item's story needs
 the sequence, it names a run, or it is a deadline.
 
-**Fix it yourself** when the repo gives exactly one right answer: a stale
+**Fix it yourself** — the default. Compressing a diary, history or log,
+bringing a file within budget and cutting duplicates are fixes, not
+questions. When in doubt whether to fix or report, fix. Do it when the repo
+gives exactly one right answer: a stale
 count or version, a finished item still listed, a broken pointer, a story
 compressed to its result, a duplicated passage, an entry merged into its
 lesson, a file brought within budget.
@@ -150,7 +164,15 @@ remove a rule rather than restate it.
    - **Fixed** — what changed, one line each, with line counts before → after.
    - **Questions for you** — each with what you found and your suggestion,
      numbered so she can answer "1: yes, 2: no".
-   - **Watch** — anything growing fast or near its budget, and any side doc
-     that has started to name another.
+   - **FYI** — only facts that need nothing from her, each saying so, and why
+     it is fine (e.g. "Twelve side docs point to another as a see-also; all
+     are allowed — none lives only behind another, and all lead back to the
+     trunk."). Verify that claim first, per doc. A doc that breaks it is fixed
+     (its content moved or a trunk pointer added), not reported.
+
+   **No "watch" items.** Never list something for her to keep an eye on, nor
+   a bare count, size or trend. Either you fixed it (Fixed), it needs her
+   answer (Questions), or it is fine and needs nothing (FYI). She has nobody
+   to hand the work to: it is yours.
 
    If nothing needed doing, say so in one line — that is a good result.
