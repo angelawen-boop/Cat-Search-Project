@@ -104,9 +104,20 @@ index of side docs, guardrails, the app explainers, future considerations — an
    judgements, decisions, lessons and open items with enough background to
    continue (see Diaries), and fix duplicates by pointer. Getting within
    budget never costs a decision or a lesson. Only when, after real
-   compression, a file still cannot fit without losing one, leave it and ask:
-   say what you tried, what is left, and what the budget would need to be.
-   A bare line count is never a finding. **Raising a budget is hers.**
+   compression, a file still cannot fit without losing one, stop there and
+   put it under Open items: what you tried, what is left, what the budget
+   would need to be. **Raising a budget is hers.**
+   Think first how it can be fixed, do the fix, then draw the line at losing
+   a decision, judgement call or the context to continue — never before.
+   **A file only slightly over (about 5% — 308 of 300) goes under FYI**, but
+   only after you have read it and compressed what plainly can be; a line
+   count alone never earns FYI, and the FYI line says what you reviewed.
+   A bare line count is never a finding.
+   **Check every compression against the original before you push:** for each
+   file you compressed, read `git diff` and list what the old text held —
+   each decision, judgement call, lesson, open item, pointer, name and number
+   a session would need. Confirm each is still there, in the new text or its
+   new home. Anything missing goes back in. Do not push until this passes.
 9. **Anything you cannot trace** — a line whose origin, meaning or current
    truth you cannot establish from the repo and its history
    (`git log -S"<phrase>" -- CLAUDE.md docs/` is the tool) — gets
@@ -162,17 +173,22 @@ remove a rule rather than restate it.
    plain English, short bullets, spoken TO her (never "she"/"her"), no
    visible thinking. Three parts:
    - **Fixed** — what changed, one line each, with line counts before → after.
-   - **Questions for you** — each with what you found and your suggestion,
-     numbered so she can answer "1: yes, 2: no".
-   - **FYI** — only facts that need nothing from her, each saying so, and why
-     it is fine (e.g. "Twelve side docs point to another as a see-also; all
-     are allowed — none lives only behind another, and all lead back to the
+   - **Open items for you** — only what you could not fix without her:
+     a judgement call, a clarification, a file that cannot fit its budget
+     without losing a decision or lesson (so the budget is hers to raise).
+     Each with what you found, what you tried and your suggestion, numbered so
+     she can answer "1: yes, 2: no".
+   - **FYI** — things that were never a problem, or are close enough not to
+     matter, and need nothing from her (Fixed is a problem you have now
+     handled; FYI never was one), each saying why it is fine
+     (e.g. "Twelve side docs point to another as a see-also; all are allowed — none lives only behind another, and all lead back to the
      trunk."). Verify that claim first, per doc. A doc that breaks it is fixed
      (its content moved or a trunk pointer added), not reported.
 
    **No "watch" items.** Never list something for her to keep an eye on, nor
    a bare count, size or trend. Either you fixed it (Fixed), it needs her
-   answer (Questions), or it is fine and needs nothing (FYI). She has nobody
-   to hand the work to: it is yours.
+   answer (Open items), or it is fine and needs nothing (FYI). She has nobody
+   to hand the work to: it is yours. The sections are Fixed, Open items,
+   FYI — in that order.
 
    If nothing needed doing, say so in one line — that is a good result.
