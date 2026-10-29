@@ -953,6 +953,10 @@ function runtime() {
     const C = 'occ-chateaudechantilly-fr', chip = fn('occVenue')(C, { short: 'Chantilly Musée Condé', name: 'Musée Condé, Château de Chantilly' });
     ok(own[C].ownChip && chip.chip === 'Chantilly' && chip.short === 'Chantilly Musée Condé' && order.indexOf('jacquemart') + 1 === order.indexOf(C),
       'AL-081:  Chantilly: chip "Chantilly" right after Jacquemart, cards keep the store\'s "Chantilly Musée Condé" (her decision)', JSON.stringify([chip.chip, chip.short]));
+    const CI = 'occ-cini-it', lv = u => fn('linkVenue')(u, { between: [], afterDates: [] }).id;
+    ok(['https://www.cini.it/eventi/manuel-cicchetti-dolomiti/', 'https://lestanzedelvetro.org/mostre/x/', 'https://www.lestanzedellafotografia.it/mostre/y/'].every(u => lv(u) === CI)
+      && own[CI].ownChip && own[CI].short === 'Cini' && card(CI) === 'Cini Foundation Venice' && order.indexOf('capo') + 1 === order.indexOf(CI),
+      'AL-084:  Cini: its pages and both Stanze sites file under "Cini Foundation Venice", chip "Cini" after Capo (her decision)');
     {
       const before = calls.length, r = await discoverShop('', 'www.staedelmuseum.de', 'Städel Museum', [], F);
       ok(r.shop === 'found' && r.shopCatalogues === 'https://liebieghaus.ticketfritz.de/Shop/Index/staedel-publikationen/43885'

@@ -73,7 +73,7 @@ const MUSEUMS = [
 // refresh screen. A venue not named here goes last, by name.
 const VENUE_ORDER=["met","ng","occ-nga-gov","frick","morgan","artic","menil",
   "acq","lgd","occ-new-artsmia-org","cincinnati","occ-britishart-yale-edu","brit","tate-britain","wallace","va","occ-nationalgalleries-org",
-  "louvre","orsay","jacquemart","occ-chateaudechantilly-fr","mad","rijks","khm","occ-alte-pinakothek","occ-pinakothek-der-moderne","occ-sammlung-schack","occ-smb-museum","occ-alte-nationalgalerie","occ-neue-nationalgalerie","occ-gemaeldegalerie-skd-museum","occ-staedelmuseum-de","uffizi","dellav","borghese","brera","capo","moma",
+  "louvre","orsay","jacquemart","occ-chateaudechantilly-fr","mad","rijks","khm","occ-alte-pinakothek","occ-pinakothek-der-moderne","occ-sammlung-schack","occ-smb-museum","occ-alte-nationalgalerie","occ-neue-nationalgalerie","occ-gemaeldegalerie-skd-museum","occ-staedelmuseum-de","uffizi","dellav","borghese","brera","capo","occ-cini-it","moma",
   "tate-modern","mam",
   ];
 // The Occasional venues (no chip of their own) follow, by country: the United States, the rest of that group
@@ -1047,6 +1047,10 @@ const LINK_VENUES={
   "occ-kunstmuseumbasel-ch":{shopHome:"https://shop.kunstmuseumbasel.ch/en/",shopCatalogues:"https://shop.kunstmuseumbasel.ch/en/merchandise?category=Exhibition+Catalogues",shopUnseen:"script"},
   // Chantilly (Musée Condé): chip "Chantilly" after Jacquemart; its cards keep the store's name (her decision).
   "occ-chateaudechantilly-fr":{ownChip:true,chip:"Chantilly"},
+  // The Cini Foundation (cini.it): chip "Cini" after Capodimonte, cards "Cini Foundation Venice" (her decision).
+  // Its island's two houses' sites file under it too, and a cini.it page is never filed elsewhere.
+  "occ-cini-it":{ownChip:true,short:"Cini",card:"Cini Foundation Venice",name:"Fondazione Giorgio Cini",
+    sites:[{host:"lestanzedelvetro.org"},{host:"lestanzedellafotografia.it"}]},
   // Moretti (her decision, Moretti only): the place after " : " leaves the title ("… : Monaco", "… : New York,
   // Sotheby's"); its description is typed in capitals (capsText); the cookie panel ends the passage.
   "occ-morettigallery-com":{linkRead:{titleDrop:/\s+:\s+[^:]+$/,capsText:true,until:/^Manage cookies$/}},
