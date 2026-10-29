@@ -23,6 +23,10 @@ const MONTHS = { january:1,february:2,march:3,april:4,may:5,june:6,
   // Three-letter Italian forms ("10 set 2026 - 22 nov 2026", the Accademia).
   set:9, gen:1, mag:5,
 
+  // French ("Du 2 mars au 19 mai 2024", Chantilly), with and without accents.
+  janvier:1, février:2, fevrier:2, mars:3, avril:4, mai:5, juin:6, juillet:7, août:8, aout:8,
+  septembre:9, octobre:10, décembre:12, decembre:12, janv:1, févr:2, fevr:2, avr:4, juil:7, déc:12,
+
   // A venue's own misspelling (Jacquemart-André, "Feburary").
   feburary:2 };
 
@@ -34,18 +38,19 @@ const WEEKDAY_PREFIX_SRC =
   '\\b(?:monday|tuesday|wednesday|thursday|friday|saturday|sunday' +
   '|thurs|thur|tues|weds|mon|tue|wed|thu|fri|sat|sun)\\.?,?\\s+';
 
-// Ordinal days ("May 23rd", Orsay's cards): both parsers drop the suffix first.
-const ORDINAL_SUFFIX = /\b(\d{1,2})(?:st|nd|rd|th)\b/gi;
+// Ordinal days ("May 23rd", Orsay's cards; French "1er"): both parsers drop the suffix first.
+const ORDINAL_SUFFIX = /\b(\d{1,2})(?:st|nd|rd|th|er)\b/gi;
 
 // One month pattern for every parser; long names first, a trailing full stop allowed
 // ("Sept."). The (?![A-Za-z]) is load-bearing: without it "7 November 2025" can match
 // as "7 Nov" + "ember 2025", silently defeating any lookahead after it.
 const MONTH_PATTERN =
   '(?:January|February|Feburary|March|April|May|June|July|August|September|October|November|December' +
-  '|gennaio|febbraio|marzo|aprile|maggio|giugno|luglio|agosto|settembre|ottobre|novembre|dicembre' +
+  '|gennaio|febbraio|marzo|aprile|maggio|giugno|luglio|agosto|settembre|ottobre|novembre|dicembre'
+  + '|janvier|février|fevrier|mars|avril|mai|juin|juillet|août|aout|septembre|octobre|décembre|decembre' +
   '|Sept|Jan|Feb|Mar|Apr|Jun|Jul|Aug|Sep|Oct|Nov|Dec' +
   // Longest first within each language: sett before set, genn before gen, magg before mag.
-  '|genn|febbr|magg|giu|lug|ago|sett|ott|dic|set|gen|mag)\\.?(?![A-Za-z])';
+  '|genn|febbr|magg|giu|lug|ago|sett|ott|dic|set|gen|mag|janv|févr|fevr|avr|juil|déc)\\.?(?![A-Za-z])';
 
 // Month name to number, tolerating the trailing full stop the pattern allows.
 function monthNum(name) {
@@ -88,10 +93,10 @@ function parseMonthDay(str, fallbackYear) {
 }
 
 // Range separators, shared by both parsers (they once drifted): "-", "to", "till",
-// "until", "through", Dutch "t/m", Italian "al" and its elisions "all'"/"alle"/"allo".
+// "until", "through", Dutch "t/m", Italian "al" and its elisions "all'"/"alle"/"allo", French "au".
 // Longest alternative first, or "al" eats "all'8". A comma may sit before the
 // separator ("From May 16, 2025, to May 17, 2027" — Brera).
-const RANGE_SEP = "\\s*,?\\s*(?:-|t/m|to|till|until|through|all['\u2019]|all[oe]|al)\\s*";
+const RANGE_SEP = "\\s*,?\\s*(?:-|t/m|to|till|until|through|all['\u2019]|all[oe]|al|au)\\s*";
 
 const WEEKDAY_PREFIX = new RegExp(WEEKDAY_PREFIX_SRC + '(?=\\d|' + MONTH_PATTERN + ')', 'gi');
 const stripWeekdays = t => String(t || '').replace(WEEKDAY_PREFIX, '');

@@ -1554,6 +1554,26 @@ function runtime() {
     if (close) await click(close);
   }
 
+  // ── AL-082: a day and month with no year: undated, with the sweep's own note quoting them ──
+  {
+    const NY = 'https://chateaudechantilly.fr/en/evenement/exhibition-the-princely-fleet-of-the-chateau-de-chantilly/';
+    P[NY] = { url: NY, title: 'Exhibition - The Princely Fleet of Chantilly - Château de Chantilly', full_content: '# Exhibition \u2013 The Princely Fleet of the Chateau de Chantilly\n\nFrom 8 March to 2 June\n\nChâteau\n\n' + 'Bringing together the Château de Chantilly\u2019s vast collection of archives, plans, books and engravings, this exhibition offers a glimpse into the princely fleet and its boats. '.repeat(3) };
+    await click(importBtn());
+    if (!dialog().querySelector('textarea')) await click(inDialog('Links'));
+    const box = dialog().querySelector('textarea');
+    await act(async () => { setter.call(box, NY); box.dispatchEvent(new win.Event('input', { bubbles: true })); });
+    await settle();
+    await click([...dialog().querySelectorAll('button')].find(b => b.textContent === 'Read'));
+    await settle(30);
+    const ex = buttons(/^Expand all venues$/)[0];
+    if (ex) await click(ex);
+    const shown = win.document.body.textContent;
+    ok(shown.includes('The venue\'s page shows only "8 March to 2 June" for this exhibition\'s dates \u2014 no year is published anywhere.') && !shown.includes('No closing date found anywhere'),
+      'AL-082: "From 8 March to 2 June", no year: undated, with the sweep\'s note quoting it (her decision)', shown.slice(-700));
+    const cancel = buttons(/^Cancel import$/)[0];
+    if (cancel) await click(cancel);
+  }
+
   if (shouted.some(s => /Warning: Each child|Cannot update|Maximum update/.test(s))) fail('React complained: ' + shouted.find(s => /Warning/.test(s)));
   console.log(failures ? '\n' + failures + ' FAILED' : '\nadd_by_link: all passed');
   process.exit(failures ? 1 : 0);

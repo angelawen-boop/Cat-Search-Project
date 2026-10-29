@@ -525,6 +525,8 @@ the name Claude gave, "Chantilly Musée Condé" (her decision; `LINK_VENUES`; AL
 
 **A link to a quarantined show** reads "Read 1 link, but nothing to add — already in your quarantine." when every
 show read is quarantined (her wording; AL-080); otherwise "…your ledger already matches it" as before.
+Its English pages print "From 8 March to 15 June" with no year (the French pages carry it): undated, with the
+sweep's own note quoting what the page shows (`unusableDateText`, shared; her decision; AL-082).
 
 **Frankfurt** (the Städel, `occ-staedelmuseum-de`): its own chip "Frankfurt", after Dresden; cards "Frankfurt
 Städel" (her decision; `LINK_VENUES`; AL-049). No pages on the proof list yet. **Its shop**

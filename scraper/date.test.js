@@ -2151,3 +2151,12 @@ test('CE-001: a run the page says was cut short closes on that day, only earlier
   assert.equal(closedEarly({ start: '2025-12-01', end: '2026-03-30' }, 'The museum and the exhibition will close early on 24 December 2025.').end, '2026-03-30');
   assert.equal(closedEarlyNote(run), '');
 });
+
+test('DS-008: French dates, "du … au …" (Chantilly, "Du 2 mars au 19 mai 2024")', () => {
+  assert.deepStrictEqual(range('Du 2 mars au 19 mai 2024'), ['2024-03-02', '2024-05-19']);
+  assert.deepStrictEqual(range('Du 8 mars au 15 juin 2025'), ['2025-03-08', '2025-06-15']);
+  assert.deepStrictEqual(range('Du 1er février au 3 août 2025'), ['2025-02-01', '2025-08-03']);
+  assert.deepStrictEqual(range('Du 12 septembre 2025 au 4 janvier 2026'), ['2025-09-12', '2026-01-04']);
+  assert.deepStrictEqual(range('Du 5 déc. 2025 au 2 mars 2026'), ['2025-12-05', '2026-03-02']);
+  assert.strictEqual(unusableDateText('Du 8 mars au 15 juin'), '8 mars au 15 juin');
+});

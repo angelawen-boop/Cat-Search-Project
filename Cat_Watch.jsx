@@ -123,6 +123,10 @@ const MONTHS = { january:1,february:2,march:3,april:4,may:5,june:6,
   // Three-letter Italian forms ("10 set 2026 - 22 nov 2026", the Accademia).
   set:9, gen:1, mag:5,
 
+  // French ("Du 2 mars au 19 mai 2024", Chantilly), with and without accents.
+  janvier:1, février:2, fevrier:2, mars:3, avril:4, mai:5, juin:6, juillet:7, août:8, aout:8,
+  septembre:9, octobre:10, décembre:12, decembre:12, janv:1, févr:2, fevr:2, avr:4, juil:7, déc:12,
+
   // A venue's own misspelling (Jacquemart-André, "Feburary").
   feburary:2 };
 
@@ -134,18 +138,19 @@ const WEEKDAY_PREFIX_SRC =
   '\\b(?:monday|tuesday|wednesday|thursday|friday|saturday|sunday' +
   '|thurs|thur|tues|weds|mon|tue|wed|thu|fri|sat|sun)\\.?,?\\s+';
 
-// Ordinal days ("May 23rd", Orsay's cards): both parsers drop the suffix first.
-const ORDINAL_SUFFIX = /\b(\d{1,2})(?:st|nd|rd|th)\b/gi;
+// Ordinal days ("May 23rd", Orsay's cards; French "1er"): both parsers drop the suffix first.
+const ORDINAL_SUFFIX = /\b(\d{1,2})(?:st|nd|rd|th|er)\b/gi;
 
 // One month pattern for every parser; long names first, a trailing full stop allowed
 // ("Sept."). The (?![A-Za-z]) is load-bearing: without it "7 November 2025" can match
 // as "7 Nov" + "ember 2025", silently defeating any lookahead after it.
 const MONTH_PATTERN =
   '(?:January|February|Feburary|March|April|May|June|July|August|September|October|November|December' +
-  '|gennaio|febbraio|marzo|aprile|maggio|giugno|luglio|agosto|settembre|ottobre|novembre|dicembre' +
+  '|gennaio|febbraio|marzo|aprile|maggio|giugno|luglio|agosto|settembre|ottobre|novembre|dicembre'
+  + '|janvier|février|fevrier|mars|avril|mai|juin|juillet|août|aout|septembre|octobre|décembre|decembre' +
   '|Sept|Jan|Feb|Mar|Apr|Jun|Jul|Aug|Sep|Oct|Nov|Dec' +
   // Longest first within each language: sett before set, genn before gen, magg before mag.
-  '|genn|febbr|magg|giu|lug|ago|sett|ott|dic|set|gen|mag)\\.?(?![A-Za-z])';
+  '|genn|febbr|magg|giu|lug|ago|sett|ott|dic|set|gen|mag|janv|févr|fevr|avr|juil|déc)\\.?(?![A-Za-z])';
 
 // Month name to number, tolerating the trailing full stop the pattern allows.
 function monthNum(name) {
@@ -188,10 +193,10 @@ function parseMonthDay(str, fallbackYear) {
 }
 
 // Range separators, shared by both parsers (they once drifted): "-", "to", "till",
-// "until", "through", Dutch "t/m", Italian "al" and its elisions "all'"/"alle"/"allo".
+// "until", "through", Dutch "t/m", Italian "al" and its elisions "all'"/"alle"/"allo", French "au".
 // Longest alternative first, or "al" eats "all'8". A comma may sit before the
 // separator ("From May 16, 2025, to May 17, 2027" — Brera).
-const RANGE_SEP = "\\s*,?\\s*(?:-|t/m|to|till|until|through|all['\u2019]|all[oe]|al)\\s*";
+const RANGE_SEP = "\\s*,?\\s*(?:-|t/m|to|till|until|through|all['\u2019]|all[oe]|al|au)\\s*";
 
 const WEEKDAY_PREFIX = new RegExp(WEEKDAY_PREFIX_SRC + '(?=\\d|' + MONTH_PATTERN + ')', 'gi');
 const stripWeekdays = t => String(t || '').replace(WEEKDAY_PREFIX, '');
@@ -810,7 +815,7 @@ const NO_DATES_NOTE = "No closing date found anywhere on the venue's pages.";
 function shownOnlyNote(shown, why) {
   return `The venue's page shows only "${shown}" for this exhibition's dates — ${why || 'no year is published anywhere'}.`;
 }
-return { findDateRange, findDateRangeInProse, capsTitleParts, NO_DATES_NOTE, shownOnlyNote, sweptVenueTitle, closedEarly, closedEarlyNote };
+return { findDateRange, findDateRangeInProse, capsTitleParts, NO_DATES_NOTE, shownOnlyNote, unusableDateText, sweptVenueTitle, closedEarly, closedEarlyNote };
 })();
 const SUMMARY_RULES="- Maximum 10 words. The examples average about six.\n- End with a full stop. Avoid colons — the accepted summaries almost never use one.\n- Name the artist or artists the exhibition is built around.\n\nNAME THEM THE WAY A GALLERY-GOER WOULD. Surname alone, unless the surname alone\nwould be ambiguous. Write \"Zurbarán\", not \"Francisco de Zurbarán\". \"Shonibare\",\nnot \"Yinka Shonibare\". \"Velasco\", not \"Mexican artist José María Velasco\". Drop\n\"painter\", \"artist\" and similar labels in front of a name — the reader already\nknows. Full names, honorifics and formal titles read stiff and waste words that\ncould carry meaning instead.\n\nALWAYS WRITE IN ENGLISH, whatever language the raw text is in. Several venues\npublish only in Italian and one only in French; she reads the summaries in\nEnglish. Translating a phrase does not break the traceability rule below — a\ntranslated phrase is still traceable to the text it came from. Keep the\nexhibition's own title in its original language if that is how it is written;\ntranslate the description around it.\n\nTHE RULE THAT MATTERS MOST: every word of your summary must be traceable to a\nphrase in that row's own raw text. If you cannot point to where something came\nfrom, leave it out. In particular:\n\n- Never add an artist, place, medium or date that you happen to know about but the\n  text does not mention.\n- Use a number only if the text states that number. Do not count a list of names\n  and report the total — the page may state a different figure, and the page is\n  right, not your count.\n\nBeing vague is a much smaller failure than being confidently wrong. If the text\nwill only support something general, write something general.\n\nIf the raw text is not a description of an exhibition — a bare link, a curator's\nbiography, ticketing or opening-hours copy, cookie or consent boilerplate, a \"page\nnot found\" message, or empty — answer null for that row. Do not invent one.";
 const EN_PREFIX = 'In English: ';
@@ -1500,9 +1505,12 @@ function findDates(pg){
     // A date the page prints but that is not one (months only, a season, no year), else none at all:
     // kept undated with the sweep's own note, the dates left blank (her decision: the sweep's rules, a day
     // never invented). The Borghese prints most past shows' dates only in the poster.
+    // A day and month with no year (Chantilly's English pages): quoted as the sweep quotes it (unusableDateText).
     const mo=near.map(([k,l])=>({k,r:DATES.findDateRange(dateText(l),{looseSingles:true})})).find(x=>x.r.shownText);
+    const ny=mo?null:near.map(([k,l])=>({k,t:DATES.unusableDateText(dateText(l))})).find(x=>x.t);
     h=h0; rule("title:"+candRule[cands.indexOf(h0)]);
     found=mo?{d:mo.k,range:{start:"",end:""},noDates:true,shown:mo.r.shownText,shownWhy:mo.r.shownWhy,via:"dates:shown-only"}
+      :ny?{d:ny.k,range:{start:"",end:""},noDates:true,shown:ny.t,shownWhy:"no year is published anywhere",via:"dates:no-year"}
       :{d:h0,range:{start:"",end:""},noDates:true,via:"dates:none"};
   }
   const d=found.d,dEnd=found.dEnd||found.d;
