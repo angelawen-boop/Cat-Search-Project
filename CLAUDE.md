@@ -362,12 +362,21 @@ wording; shared, her ask); Łazienki's title from its page title, Getty's "Museu
 (venue rules); HTML codes in a heading decoded. Getty's dates are drawn by script (from data.getty.edu): its links come
 in undated — reading them from there is unbuilt, proposed. `docs/add_by_link.md`, "Venue link rules".
 
-#### 2.2.17 The Correr's archive — in code, not yet published
+#### 2.2.17 The Correr's archive — published at 53.11; her Guardi re-import confirms
 
-Her Guardi link (archivio-correr.visitmuve.it) came in as "Project", undated, by link and by page. Two faults, both fixed
-and read live by link and from a saved page: the title is the heading after "Section menu" / "Menù di sezione" (a
-reader option for that site only — not yet her decision); "September 29 th 2012 to January 6 th 2013" is read (shared
-date shapes: a spaced ordinal, no comma before the year; DS-010, AL-089). Her go-ahead publishes it.
+archivio-correr.visitmuve.it, by link and by page: the title is the heading after "Section menu" / "Menù di sezione"
+(that site only), titles typed in capitals recased either side of a full stop (her decision; `capsStops`); "September
+29 th 2012 to January 6 th 2013" read (shared date shapes: a spaced ordinal, no comma before the year). DS-010, AL-089.
+
+#### 2.2.18 Queued — her asks
+
+- **OPEN — merge Paste (Import → Paste, `claude/paste-import`, its own test page) into her app.** The branch stops at
+  50.x; main has moved on since (the reader's shared rules, dates, titles, the shop finder, the store-read lock, venue
+  rules up to 53.11). Confirm Paste runs the same reader and shop finder as Links and Pages — one copy, never a
+  copy behind them — and close what is left on pasting and its Clear buttons (the branch's own guide lists it). Its
+  rule filing a page under a swept venue by domain must not break the Ashmolean's Occasional filing (§5.4).
+- **OPEN — review the names of venues that came in by link or page** (Claude-named, in her store): her card and
+  short names, each rename written into `LINK_VENUES` as `docs/add_by_link.md`, "Renaming a link venue" says.
 
 #### 2.2.6 Tests that failed — recorded, not investigated
 
@@ -581,7 +590,7 @@ price, her decision).
 > restating `capabilities` must restate all four; omitting it carries them
 > forward. **Renaming the connector means restating them.**
 
-**Live: 53.10 in her app**, with the cloud ledger (merged at 46). What each recent version changed is in
+**Live: 53.11 in her app**, with the cloud ledger (merged at 46). What each recent version changed is in
 `docs/publishing.md`, "What is live now".
 
 #### The mental model, load-bearing

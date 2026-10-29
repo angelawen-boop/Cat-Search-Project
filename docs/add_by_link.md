@@ -472,11 +472,10 @@ gets "Dates cannot be seen — JS-rendering." in place of the sweep's no-dates n
 four undated proof pages read; only *Transcending Time* changed. Shared: HTML codes left in a heading are decoded
 in the title (AL-086a; no proof page carries one). All three pages are on the proof list.
 
-**The Correr's archive** (`occ-archivio-correr-visitmuve-it`, a reader option for that site only — not yet her
-decision): a show there has several pages, each tab titled with the page's own name ("Project", "Mostra"); the show's
-name is the "# " heading after "Section menu" / "Menù di sezione" (`titleAfter`, as Dresden; AL-089). Without it her
-Guardi link came in as "Project". Italian titles there are typed in capitals and stay so (no `capsTitles` — hers to
-say). Both pages are on the proof list.
+**The Correr's archive** (`occ-archivio-correr-visitmuve-it`, that site only): a show there has several pages, each tab
+titled with the page's own name ("Project", "Mostra"); the show's name is the "# " heading after "Section menu" /
+"Menù di sezione" (`titleAfter`, as Dresden; AL-089). Titles typed in capitals are recased, each part either side of a
+full stop (her decision; `capsTitles`, `capsStops`; AL-089b). Both pages are on the proof list.
 
 **NGA has its own chip** (her decision): National Gallery of Art links (`occ-nga-gov`) are an occasional venue
 in every other way, but sit under an "NG Washington" chip, never "Occasional", and their cards say NG Washington (`LINK_VENUES`;
