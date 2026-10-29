@@ -367,7 +367,8 @@ those 25 read clean before, 25 after, with no proof page worse. Code: `readShowP
   in capitals takes the sweep's own rule (`DATES.sweptVenueTitle`, `SWEPT_CAPS_TITLES` in `dates.js`, one copy):
   the Borghese's em dash between name and subtitle (AL-068). The Italian "e" stays small, as "di" does.
 - **R12 Date forms** — dotted dates with the year on the closing side only or two-digit years, a dotted
-  closing date (DS-005); a slashed range on the date line when the numbers prove its order (Prado, DS-006);
+  closing date (DS-005); a slashed range on the date line; an all-number date in the order its numbers
+  settle, else its venue's in `DATE_ORDER`, else the order-unknown note (docs/scraper.md §3; Prado month first, DS-006, DS-009);
   two full dotted dates either side of a bar, "22.05.2008 | 14.08.2008" (the Borghese's archive site, AL-065).
 - **R14 Under a top heading, dates stop at the next top heading** — its dates are its own part of the page (the
   Borghese's archive: "# Insights | 1998 / 2026", the site, over "# Correggio and Antiquity"; AL-065). A lower
@@ -475,7 +476,7 @@ subtitle, read by code (`subtitleUnderHeading`); the dates sit at the page's foo
 from under the heading.
 
 **Berlin** (Staatliche Museen zu Berlin, `occ-smb-museum`): its own chip "Berlin", after KHM; cards say
-"Berlin Gemäldegalerie" (her decision); its shop is searched as "Staatliche Museen zu Berlin" (`LINK_VENUES`). Dates are numbers with dots, day first (DS-004). On the proof list.
+"Berlin Gemäldegalerie" (her decision); its shop is searched as "Staatliche Museen zu Berlin" (`LINK_VENUES`). Dates are numbers with dots, day first (`DATE_ORDER`, DS-004). On the proof list.
 **Berlin Alte NG** (`occ-alte-nationalgalerie`, her decision): a second venue under the chip. A smb.museum page
 files there by its path (`/museums-institutions/alte-nationalgalerie/`) or by the house line "Alte Nationalgalerie"
 just under the dates (`afterDates`; Böcklin's page sits at `/en/exhibitions/detail/`); every other smb.museum
@@ -497,7 +498,7 @@ CT-001). "Venezia 500<<" is the museum's own title.
 - **Which house** (`sites` with a house `line`, `linkVenue`): a pinakothek.de show page prints its house on the line between title
   and dates ("Alte Pinakothek", "Pinakothek der Moderne | Art", "Sammlung Schack"); that line files the show and
   is never offered as a subtitle. A page naming none is a line, not a card. The Pinakothek der Moderne's own site files under it;
-  it prints "10/07/2026 - 04/10/2026" above the title, day first (R13, `slashDayFirst` on der Moderne's entry).
+  it prints "10/07/2026 - 04/10/2026" above the title, day first (R13, `DATE_ORDER`).
 - **Shops: CEDON**, a company running several museums' shops, a section per house
   (`museumsshop.cedon.de/Kataloge/Alte-Pinakothek-Muenchen`, `…/Pinakothek-der-Moderne-Muenchen`), linked only
   from the museums' house pages. Searched in German, one query per house (`shopQueries`: "<house> München
@@ -515,13 +516,17 @@ CT-001). "Venezia 500<<" is the museum's own title.
 **Dresden** (Gemäldegalerie Alte Meister, `occ-gemaeldegalerie-skd-museum`): its own chip "Dresden", after
 Berlin; cards "Dresden Gemäldegalerie" (her decision; `LINK_VENUES`). A page opens with a short
 "# Hopper" above every SKD museum's menu; the show's own heading follows "Active page:" and is the title
-(`titleAfter`). Dates "14/04/2022—31/07/2022", day first (`slashDayFirst`). The site line ("Exhibition Site
+(`titleAfter`). Dates "14/04/2022—31/07/2022", day first (`DATE_ORDER`). The site line ("Exhibition Site
 Zwinger") never reaches Claude, as passage or subtitle (her decision; `skip`). Shop: shop.skd.museum sells tickets
 and gifts only; the finder says "Shop found, but not its books section" and she answers **No shop** once (her
 decision; lookups go to the web). On the proof list; AL-045.
 
 **Chantilly** (Musée Condé, `occ-chateaudechantilly-fr`): its own chip "Chantilly", after Jacquemart; its cards keep
 the name Claude gave, "Chantilly Musée Condé" (her decision; `LINK_VENUES`; AL-081).
+
+**The Prado** (`occ-museodelprado-es`): its own chip "Prado", right after KHM; cards "Prado Madrid" (her decision;
+AL-085). Its English pages write dates month first, "4/2/2019 - 7/7/2019" (`DATE_ORDER`, DS-006). A touring
+show's page names the other house on its date line (Rubens, Brueghel, Lorrain: Lisbon) and still files here.
 
 **Cini** (her decision): three venues under one chip "Cini", after Capo — the foundation (`occ-cini-it`), Le Stanze
 del Vetro, Le Stanze della Fotografia, in that order, each keeping the name Claude gave (`group`). Claude decides

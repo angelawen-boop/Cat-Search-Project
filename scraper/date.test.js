@@ -26,6 +26,7 @@ const {
   addNote, filledDatesNote, finishNotes, scopeSelector, extensionNote, closedEarly, closedEarlyNote, applyLookback,
 } = require('./sweep_prototype.js');
 const { seenOn, listingNote } = require('./listing_note.js');
+const { ORDER_UNKNOWN_NOTE, numberOrder } = require('./dates.js');
 
 const range = (s, hint) => {
   const r = hint ? findDateRangeInProse(s, hint) : findDateRange(s);
@@ -664,11 +665,13 @@ test('DO-001: "23rd", "06th", "1st" are read as day numbers, in both parsers', (
 // her urgency ladder. Capodimonte writes the same thing in Italian, so this is a
 // shared rule, not a Uffizi one.
 
-test('EX-001: an English extension moves the closing date', () => {
-  const r = findDateRange('From 18/06/2025 to 28/09/2025, extended to02/11/2025');
+test('EX-001: an English extension moves the closing date, its numbers in the venue\'s order (Uffizi, day first)', () => {
+  const r = findDateRange('From 18/06/2025 to 28/09/2025, extended to02/11/2025', { venue: 'uffizi' });
   assert.equal(r.start, '2025-06-18');
   assert.equal(r.end, '2025-11-02');
   assert.equal(r.extendedFrom, '2025-09-28');
+  // A venue with no recorded order: "02/11" is never guessed; the closing date stays as published.
+  assert.equal(findDateRange('From 18/06/2025 to 28/09/2025, extended to02/11/2025').end, '2025-09-28');
 });
 
 test('EX-002: and the Italian forms, including the elided "all\'"', () => {
@@ -680,7 +683,7 @@ test('EX-002: and the Italian forms, including the elided "all\'"', () => {
 
 test('EX-003: an extension may only move the closing date LATER', () => {
   // A stray match must never shorten a run or rewrite an opening date.
-  const r = findDateRange('From 18/06/2025 to 28/09/2025, extended to 01/07/2025');
+  const r = findDateRange('From 18/06/2025 to 28/09/2025, extended to 01/07/2025', { venue: 'uffizi' });
   assert.equal(r.end, '2025-09-28');
   assert.equal(r.extendedFrom, undefined);
 });
@@ -2106,13 +2109,17 @@ test('DS-003: a clock time beside each date is dropped, so the range reads (Yale
   assert.equal(a.start, '2026-05-02'); assert.equal(a.end, '2026-06-03');
 });
 
-test('DS-004: numbers with dots are day first, on a page too (Berlin, her decision); slashes still need the numbers to prove it', () => {
-  const d = findDateRange('02.09.2022 to 08.01.2023', { looseSingles: false });
+test('DS-004: all-number dates the numbers cannot settle are read in the venue\'s recorded order (Berlin, day first)', () => {
+  const d = findDateRange('02.09.2022 to 08.01.2023', { looseSingles: false, venue: 'occ-smb-museum' });
   assert.equal(d.start, '2022-09-02'); assert.equal(d.end, '2023-01-08');
+  assert.equal(findDateRange('02.09.2022 to 08.01.2023 extra', { looseSingles: false, venue: 'occ-smb-museum' }).end, '2023-01-08');
+  // Settled by the numbers (30 cannot be a month), any venue.
   const m = findDateRange('01.03.2019 \u2013 30.06.2019');
   assert.equal(m.start, '2019-03-01'); assert.equal(m.end, '2019-06-30');
-  assert.equal(findDateRange('02/09/2022 to 08/01/2023').start, '');
-  assert.equal(findDateRange('02.09.2022 to 08.01.2023 extra', { looseSingles: false }).end, '2023-01-08');
+  // Dots carry no order: a venue with none recorded is not guessed.
+  const u = findDateRange('02.09.2022 to 08.01.2023', { looseSingles: false });
+  assert.equal(u.start, ''); assert.equal(u.end, ''); assert.equal(u.orderUnknown, true);
+  assert.equal(findDateRange('02/09/2022 to 08/01/2023').orderUnknown, true);
 });
 
 test('DS-005: dotted dates with the year on the closing side only (Kunstmuseum Basel) or two-digit years (Louisiana); a dotted closing date (Kunsthaus)', () => {
@@ -2125,11 +2132,34 @@ test('DS-005: dotted dates with the year on the closing side only (Kunstmuseum B
   assert.equal(findDateRange('1.2.3 - 4.5.6', { looseSingles: false }).start, '');
 });
 
-test('DS-006: a slashed range on a show page only with opts.slashes, and only when the numbers prove the order (Prado)', () => {
-  const p = findDateRange('Museo Nacional del Prado. Madrid 6/9/2026 - 9/27/2026', { looseSingles: false, slashes: true });
+test('DS-006: the Prado writes month first; a slashed range on a show page only with opts.slashes', () => {
+  const o = { looseSingles: false, slashes: true, venue: 'occ-museodelprado-es' };
+  const p = findDateRange('Museo Nacional del Prado. Madrid 6/9/2026 - 9/27/2026', o);
   assert.equal(p.start, '2026-06-09'); assert.equal(p.end, '2026-09-27');
-  assert.equal(findDateRange('Madrid 6/9/2026 - 9/27/2026', { looseSingles: false }).start, '');
-  assert.equal(findDateRange('02/09/2022 to 08/01/2023', { looseSingles: false, slashes: true }).start, '');
+  // Her three Prado links: no number over 12, read in the Prado's order.
+  const g = findDateRange('Museo Nacional del Prado. Madrid 4/2/2019 - 7/7/2019', o);
+  assert.equal(g.start, '2019-04-02'); assert.equal(g.end, '2019-07-07');
+  const b = findDateRange('Museo Nacional del Prado. Madrid 11/6/2014 - 2/8/2015', o);
+  assert.equal(b.start, '2014-11-06'); assert.equal(b.end, '2015-02-08');
+  const r = findDateRange('Museu Nacional de Arte Antiga. Lisbon 12/4/2013 - 4/6/2014', o);
+  assert.equal(r.start, '2013-12-04'); assert.equal(r.end, '2014-04-06');
+  // The numbers outrank the recorded order when they settle it.
+  assert.equal(findDateRange('Madrid 18/06/2025 - 28/09/2025', o).start, '2025-06-18');
+  assert.equal(findDateRange('Madrid 6/9/2026 - 9/27/2026', { looseSingles: false, venue: 'occ-museodelprado-es' }).start, '');
+});
+
+test('DS-009: an all-number date nothing settles, at a venue with no order recorded, says so (her wording)', () => {
+  const u = findDateRange('Madrid 4/2/2019 - 7/7/2019', { looseSingles: false, slashes: true, venue: 'occ-somewhere-es' });
+  assert.equal(u.start, ''); assert.equal(u.end, ''); assert.equal(u.orderUnknown, true);
+  assert.equal(u.shownText, '4/2/2019 - 7/7/2019');
+  assert.equal(ORDER_UNKNOWN_NOTE, "Dates not yet read \u2014 confirm whether the venue's date format is day first or month first.");
+  // A later pattern that reads the text wins over the note.
+  const w = findDateRange('4/2/2019 - 7/7/2019 · 2 April 2019 to 7 July 2019', { looseSingles: false, slashes: true });
+  assert.equal(w.start, '2019-04-02'); assert.equal(w.orderUnknown, undefined);
+  // Numbers that contradict each other are no date.
+  assert.equal(findDateRange('13/14/2019 - 1/2/2019', { slashes: true }).start, '');
+  assert.equal(numberOrder([[13, 1]], ''), 'day'); assert.equal(numberOrder([[1, 13]], ''), 'month');
+  assert.equal(numberOrder([[1, 2]], 'occ-museodelprado-es'), 'month'); assert.equal(numberOrder([[1, 2]], 'nowhere'), '');
 });
 
 test('DS-007: a dotted range with a two-digit year on the closing side only (MSK Ghent, "01.02 – 30.04.20")', () => {

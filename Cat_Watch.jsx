@@ -73,7 +73,7 @@ const MUSEUMS = [
 // refresh screen. A venue not named here goes last, by name.
 const VENUE_ORDER=["met","ng","occ-nga-gov","frick","morgan","artic","menil",
   "acq","lgd","occ-new-artsmia-org","cincinnati","occ-britishart-yale-edu","brit","tate-britain","wallace","va","occ-nationalgalleries-org",
-  "louvre","orsay","jacquemart","occ-chateaudechantilly-fr","mad","rijks","khm","occ-alte-pinakothek","occ-pinakothek-der-moderne","occ-sammlung-schack","occ-smb-museum","occ-alte-nationalgalerie","occ-neue-nationalgalerie","occ-gemaeldegalerie-skd-museum","occ-staedelmuseum-de","uffizi","dellav","borghese","brera","capo","occ-cini-it","occ-lestanzedelvetro-org","occ-lestanzedellafotografia-it","moma",
+  "louvre","orsay","jacquemart","occ-chateaudechantilly-fr","mad","rijks","khm","occ-museodelprado-es","occ-alte-pinakothek","occ-pinakothek-der-moderne","occ-sammlung-schack","occ-smb-museum","occ-alte-nationalgalerie","occ-neue-nationalgalerie","occ-gemaeldegalerie-skd-museum","occ-staedelmuseum-de","uffizi","dellav","borghese","brera","capo","occ-cini-it","occ-lestanzedelvetro-org","occ-lestanzedellafotografia-it","moma",
   "tate-modern","mam",
   ];
 // The Occasional venues (no chip of their own) follow, by country: the United States, the rest of that group
@@ -198,6 +198,43 @@ function parseMonthDay(str, fallbackYear) {
 // separator ("From May 16, 2025, to May 17, 2027" — Brera).
 const RANGE_SEP = "\\s*,?\\s*(?:-|t/m|to|till|until|through|all['\u2019]|all[oe]|al|au)\\s*";
 
+// ── Day first or month first ── A date written only in numbers ("4/2/2019") is read in an order the
+// numbers settle (a number over 12 cannot be a month) or, when they cannot, in the order recorded here
+// for its venue. Each venue's order comes from its own pages; a venue not listed whose numbers cannot
+// settle it gets ORDER_UNKNOWN_NOTE, and a session records its order (her design; docs/scraper.md §3).
+const DATE_ORDER = {
+  // Swept venues.
+  uffizi: 'day',                                // "From 18/06/2025 to 28/09/2025"
+  // Link venues.
+  'occ-museodelprado-es': 'month',              // "6/9/2026 - 9/27/2026"
+  'occ-smb-museum': 'day',                      // "14.05.2027 to 12.09.2027"
+  'occ-alte-nationalgalerie': 'day',            // "19.03.2027 to 01.08.2027"
+  'occ-neue-nationalgalerie': 'day',            // "20.03.2026 to 09.08.2026"
+  'occ-alte-pinakothek': 'day',                 // "27.10.2023-04.02.2024"
+  'occ-pinakothek-der-moderne': 'day',          // "10/07/2026 - 04/10/2026", "09.10.2026-21.02.2027"
+  'occ-sammlung-schack': 'day',                 // "14.10.2027-13.02.2028"
+  'occ-gemaeldegalerie-skd-museum': 'day',      // "14/04/2022—31/07/2022"
+  'occ-kunstmuseumbasel-ch': 'day',             // "25.05.–24.11.2024"
+  'occ-kunsthaus-ch': 'day',                    // "Until 25.10.2026"
+  'occ-louisiana-dk': 'day',                    // "11.10.24 - 27.4.25"
+  'occ-mskgent-be': 'day',                      // "01.02 – 30.04.20"
+  'occ-approfondimentimostre-com': 'day',       // "22.05.2008 | 14.08.2008"
+};
+const ORDER_UNKNOWN_NOTE = "Dates not yet read \u2014 confirm whether the venue's date format is day first or month first.";
+
+/**
+ * 'day' or 'month' for numeric [first, second] pairs: settled by a number over 12, else the venue's
+ * recorded order; 'bad' when the numbers contradict each other, '' when nothing settles it.
+ */
+function numberOrder(pairs, venue) {
+  const dayFirst = pairs.some(([a]) => a > 12), monthFirst = pairs.some(([, b]) => b > 12);
+  if (dayFirst && monthFirst) return 'bad';
+  if (dayFirst) return 'day';
+  if (monthFirst) return 'month';
+  return DATE_ORDER[venue] || '';
+}
+const byOrder = (order, a, b) => order === 'day' ? { day: a, mon: b } : { day: b, mon: a };
+
 const WEEKDAY_PREFIX = new RegExp(WEEKDAY_PREFIX_SRC + '(?=\\d|' + MONTH_PATTERN + ')', 'gi');
 const stripWeekdays = t => String(t || '').replace(WEEKDAY_PREFIX, '');
 // A clock time, with any time zone: "10:00 am ET", "5pm", "10:30–11 a.m." (Yale prints
@@ -221,13 +258,13 @@ const EXTENDED_TO = new RegExp(
   ')', 'i');
 
 /** Apply an extension: it only ever moves the closing date LATER, so a stray match cannot shorten a run. */
-function applyExtension(range, text) {
+function applyExtension(range, text, venue) {
   if (!range || !range.end || !text) return range;
   const t = String(text);
   const m = EXTENDED_TO.exec(t);
   if (!m) return range;
 
-  const dm = readDayMonth(m[1]);
+  const dm = readDayMonth(m[1], venue);
   if (!dm) return range;
   let { day, mon, year } = dm;
   const quote = frag(m);
@@ -256,11 +293,14 @@ function applyExtension(range, text) {
   return { ...range, end: iso, extendedFrom: range.end, extendedRaw: quote };
 }
 
-/** "11 novembre", "October 11", "02/11/2025" → { day, mon, year (0 if none) }. */
-function readDayMonth(s) {
+/** "11 novembre", "October 11", "02/11/2025" → { day, mon, year (0 if none) }; numbers in the venue's order. */
+function readDayMonth(s, venue) {
   const M = MONTH_PATTERN;
   const numeric = s.match(/^(\d{1,2})\s*[/.]\s*(\d{1,2})\s*[/.]\s*(\d{4})$/);
-  if (numeric) return { day: +numeric[1], mon: +numeric[2], year: +numeric[3] };  // day-first everywhere seen
+  if (numeric) {
+    const order = numberOrder([[+numeric[1], +numeric[2]]], venue);
+    return order === 'day' || order === 'month' ? { ...byOrder(order, +numeric[1], +numeric[2]), year: +numeric[3] } : null;
+  }
   const dayFirst = s.match(new RegExp(`^(\\d{1,2})\\s+(${M})(?:\\s+(\\d{4}))?$`, 'i'));
   if (dayFirst) return ok(+dayFirst[1], monthNum(dayFirst[2]), +(dayFirst[3] || 0));
   const monthFirst = s.match(new RegExp(`^(${M})\\s+(\\d{1,2})(?:,?\\s*(\\d{4}))?$`, 'i'));
@@ -311,12 +351,12 @@ function extensionNote(range) {
  */
 const CLOSED_EARLY = /\b(?:clos(?:e|ed|ing)|end(?:ed)?|shut)\b[^.]{0,25}\b(?:exhibition|show)\b[^.]{0,25}\b(?:early|earlier|prematurely|ahead of schedule)\b|\b(?:exhibition|show)\b[^.]{0,40}\b(?:closed|ended|shut)\b[^.]{0,25}\b(?:early|earlier|prematurely|ahead of schedule)\b/i;
 
-function closedEarly(range, text) {
+function closedEarly(range, text, venue) {
   if (!range || !range.start || !range.end || !text) return range;
   for (const para of String(text).split(/\n+/)) {
     const m = CLOSED_EARLY.exec(para);
     if (!m) continue;
-    const p = findDateRangeInProseCore(para, range.end.slice(0, 4));
+    const p = findDateRangeInProseCore(para, range.end.slice(0, 4), venue);
     if (p.start === range.start && p.end && p.end > range.start && p.end < range.end) {
       return { ...range, end: p.end, closedEarlyFrom: range.end, closedEarlyRaw: frag(m) };
     }
@@ -341,8 +381,9 @@ function dayText(iso) {
 // opts.looseSingles: true for a listing card (a short string about one show); false for
 // page text, where loose patterns are a lottery (a 1994 photo caption once became a 2024
 // show's opening date).
+// opts.venue: the venue's code, for the order of an all-number date (DATE_ORDER).
 function findDateRange(raw, opts = {}) {
-  return applyExtension(findDateRangeCore(raw, opts), raw);
+  return applyExtension(findDateRangeCore(raw, opts), raw, opts.venue);
 }
 
 function findDateRangeCore(raw, opts = {}) {
@@ -357,46 +398,46 @@ function findDateRangeCore(raw, opts = {}) {
     .replace(/\s+/g, ' ').trim();
   const M = MONTH_PATTERN;
 
-  // All-numeric range, its order PROVED from the numbers: a component over 12 decides
-  // day-first or month-first for both ends; neither proves it → refused (Uffizi).
-  // Written with dots on both sides it is day-first, page text included (her decision;
-  // Berlin's "02.09.2022 to 08.01.2023"). Slashes: listing cards only — on a page it read
-  // a sidebar's dates.
-  // Dots with two-digit years on both sides ("11.10.24 - 27.4.25", Louisiana) or the year on the
-  // closing side only ("25.05.–24.11.2024", Kunstmuseum Basel; "01.02 – 30.04.20", MSK Ghent) are
-  // day-first too.
+  // All-numeric ranges, in the order the numbers settle or the venue's recorded order (numberOrder).
+  // Unsettled, the result says so (orderUnknown) unless a later pattern reads the text. Slashes on a
+  // listing card or a show page's date line only (opts.slashes): on a sweep's page they read a sidebar.
+  let unknown = null;
+  const numRange = (m, sDay, sMo, eDay, eMo, sYr, eYr) => {
+    const order = numberOrder([[sDay, sMo], [eDay, eMo]], opts.venue);
+    if (order === 'bad') return null;
+    if (!order) { if (!unknown) unknown = { start: '', end: '', orderUnknown: true, shownText: frag(m), raw: frag(m) }; return null; }
+    const a = byOrder(order, sDay, sMo), b = byOrder(order, eDay, eMo);
+    const startYr = sYr || startYearFor(a.mon, a.day, b.mon, b.day, eYr);
+    const r = sane(ymd(startYr, a.mon, a.day), ymd(eYr, b.mon, b.day), frag(m));
+    return r.start || r.end ? r : null;
+  };
+  // Two-digit years on both sides ("11.10.24 - 27.4.25", Louisiana).
   const dotted2 = s.match(new RegExp(
     `\\b(\\d{1,2})\\.(\\d{1,2})\\.(\\d{2})${RANGE_SEP}(\\d{1,2})\\.(\\d{1,2})\\.(\\d{2})(?![\\d.:])`));
   if (dotted2) {
-    const r = sane(ymd(2000 + +dotted2[3], dotted2[2], dotted2[1]), ymd(2000 + +dotted2[6], dotted2[5], dotted2[4]), frag(dotted2));
-    if (r.start || r.end) return r;
+    const [a1, b1, y1, a2, b2, y2] = [1,2,3,4,5,6].map(i => Number(dotted2[i]));
+    const r = numRange(dotted2, a1, b1, a2, b2, 2000 + y1, 2000 + y2);
+    if (r) return r;
   }
+  // The year on the closing side only ("25.05.–24.11.2024", Kunstmuseum Basel; "01.02 – 30.04.20", MSK Ghent).
   const dottedOpen = s.match(new RegExp(
     `\\b(\\d{1,2})\\.(\\d{1,2})\\.?${RANGE_SEP}(\\d{1,2})\\.(\\d{1,2})\\.(\\d{4}\\b|\\d{2}(?![\\d:]|\\.\\d))`));
   const openYr = dottedOpen && (dottedOpen[5].length === 2 ? 2000 + +dottedOpen[5] : +dottedOpen[5]);
   if (dottedOpen && plausibleYear(openYr)) {
-    const [sDay, sMo, eDay, eMo] = [1,2,3,4].map(i => Number(dottedOpen[i])), endYr = openYr;
-    if (sMo >= 1 && sMo <= 12 && eMo >= 1 && eMo <= 12) {
-      const r = sane(ymd(startYearFor(sMo, sDay, eMo, eDay, endYr), sMo, sDay), ymd(endYr, eMo, eDay), frag(dottedOpen));
-      if (r.start || r.end) return r;
-    }
+    const [a1, b1, a2, b2] = [1,2,3,4].map(i => Number(dottedOpen[i]));
+    const r = numRange(dottedOpen, a1, b1, a2, b2, 0, openYr);
+    if (r) return r;
   }
-  // Two full dotted dates either side of a bar are a range too ("22.05.2008 | 14.08.2008", the
-  // Borghese's archive site).
-  const dotted = s.match(new RegExp(
-    `\\b(\\d{1,2})\\.(\\d{1,2})\\.(\\d{4})(?:${RANGE_SEP}|\\s*\\|\\s*)(\\d{1,2})\\.(\\d{1,2})\\.(\\d{4})\\b`));
-  // opts.slashes: a show page's own date line, read for a range whose order the numbers prove (Prado).
-  const num = dotted || ((looseSingles || opts.slashes) && s.match(new RegExp(
+  // Full years on both sides, a dash or a bar between ("22.05.2008 | 14.08.2008", the Borghese's archive site).
+  const num = s.match(new RegExp(
+    `\\b(\\d{1,2})\\.(\\d{1,2})\\.(\\d{4})(?:${RANGE_SEP}|\\s*\\|\\s*)(\\d{1,2})\\.(\\d{1,2})\\.(\\d{4})\\b`))
+    || ((looseSingles || opts.slashes) && s.match(new RegExp(
     `\\b(\\d{1,2})[\\/.](\\d{1,2})[\\/.](\\d{4})${RANGE_SEP}(\\d{1,2})[\\/.](\\d{1,2})[\\/.](\\d{4})\\b`)));
   if (num) {
     const [a1, b1, y1, a2, b2, y2] = [1,2,3,4,5,6].map(i => Number(num[i]));
-    const dayFirst   = !!dotted || a1 > 12 || a2 > 12;
-    const monthFirst = !dotted && (b1 > 12 || b2 > 12);
-    if (dayFirst !== monthFirst && plausibleYear(y1) && plausibleYear(y2)) {
-      const start = dayFirst ? ymd(y1, b1, a1) : ymd(y1, a1, b1);
-      const end   = dayFirst ? ymd(y2, b2, a2) : ymd(y2, a2, b2);
-      const r = sane(start, end, frag(num));
-      if (r.start || r.end) return r;
+    if (plausibleYear(y1) && plausibleYear(y2)) {
+      const r = numRange(num, a1, b1, a2, b2, y1, y2);
+      if (r) return r;
     }
   }
 
@@ -505,9 +546,16 @@ function findDateRangeCore(raw, opts = {}) {
     if (mo) return { start: '', end: ymd(m[3], mo, m[1]), raw: frag(m) };
   }
 
-  // The same with a dotted date, day first: "Until 25.10.2026" (Kunsthaus Zürich), "bis 25.10.2026".
+  // The same with a dotted date: "Until 25.10.2026" (Kunsthaus Zürich), "bis 25.10.2026".
   m = s.match(/\b(?:till|until|through|closes?|closing|bis|fino\s+al)\s+(\d{1,2})\.(\d{1,2})\.(\d{4})\b/i);
-  if (m && plausibleYear(m[3]) && +m[2] >= 1 && +m[2] <= 12) return { start: '', end: ymd(m[3], m[2], m[1]), raw: frag(m) };
+  if (m && plausibleYear(m[3])) {
+    const order = numberOrder([[+m[1], +m[2]]], opts.venue);
+    if (order === 'day' || order === 'month') {
+      const x = byOrder(order, +m[1], +m[2]);
+      return { start: '', end: ymd(m[3], x.mon, x.day), raw: frag(m) };
+    }
+    if (!order && !unknown) unknown = { start: '', end: '', orderUnknown: true, shownText: frag(m), raw: frag(m) };
+  }
 
   // The same, month first: "Through January 10, 2027", "Closes November 15, 2026".
   m = s.match(new RegExp(`\\b(?:(?:till|until|through|thru|closes?|closing)\\s+|now\\s*-\\s*)(${M})\\s+(\\d{1,2}),?\\s*(\\d{4})`, 'i'));
@@ -552,7 +600,7 @@ function findDateRangeCore(raw, opts = {}) {
     };
   }
 
-  return { start: '', end: '', raw: '' };
+  return unknown || { start: '', end: '', raw: '' };
 }
 
 // Plausible exhibition years: wide enough for any archive a venue still lists, narrow
@@ -609,13 +657,13 @@ function unusableDateText(text) {
  * hintYear supplies a missing year from the listing. Returns the matched sentence, so a
  * wrong grab shows in the notes.
  */
-function findDateRangeInProse(text, hintYear) {
+function findDateRangeInProse(text, hintYear, venue) {
   // The extension rule runs here too: the parsers must not diverge (Giorgio Armani's
   // extended run lost its opening date when only one knew about extensions).
-  return applyExtension(findDateRangeInProseCore(text, hintYear), text);
+  return applyExtension(findDateRangeInProseCore(text, hintYear, venue), text, venue);
 }
 
-function findDateRangeInProseCore(text, hintYear) {
+function findDateRangeInProseCore(text, hintYear, venue) {
   if (!text) return { start: '', end: '', raw: '' };
   const s = String(text).replace(/[–—]/g, '-').replace(ORDINAL_SUFFIX, '$1').replace(/\s+/g, ' ');
   const M = MONTH_PATTERN;
@@ -718,7 +766,7 @@ function findDateRangeInProseCore(text, hintYear) {
   // Last resort: the listing parser's CORE (ranges and preposition dates only), so any
   // pattern either parser knows serves both. The core, not the wrapper — applying the
   // extension twice put Gricci and Lotto a year late.
-  const viaListing = findDateRangeCore(s, { looseSingles: false });
+  const viaListing = findDateRangeCore(s, { looseSingles: false, venue });
   if (viaListing.start || viaListing.end) return viaListing;
 
   return { start: '', end: '', raw: '' };
@@ -815,7 +863,7 @@ const NO_DATES_NOTE = "No closing date found anywhere on the venue's pages.";
 function shownOnlyNote(shown, why) {
   return `The venue's page shows only "${shown}" for this exhibition's dates — ${why || 'no year is published anywhere'}.`;
 }
-return { findDateRange, findDateRangeInProse, capsTitleParts, NO_DATES_NOTE, shownOnlyNote, unusableDateText, sweptVenueTitle, closedEarly, closedEarlyNote };
+return { findDateRange, findDateRangeInProse, capsTitleParts, NO_DATES_NOTE, ORDER_UNKNOWN_NOTE, shownOnlyNote, unusableDateText, sweptVenueTitle, closedEarly, closedEarlyNote };
 })();
 const SUMMARY_RULES="- Maximum 10 words. The examples average about six.\n- End with a full stop. Avoid colons — the accepted summaries almost never use one.\n- Name the artist or artists the exhibition is built around.\n\nNAME THEM THE WAY A GALLERY-GOER WOULD. Surname alone, unless the surname alone\nwould be ambiguous. Write \"Zurbarán\", not \"Francisco de Zurbarán\". \"Shonibare\",\nnot \"Yinka Shonibare\". \"Velasco\", not \"Mexican artist José María Velasco\". Drop\n\"painter\", \"artist\" and similar labels in front of a name — the reader already\nknows. Full names, honorifics and formal titles read stiff and waste words that\ncould carry meaning instead.\n\nALWAYS WRITE IN ENGLISH, whatever language the raw text is in. Several venues\npublish only in Italian and one only in French; she reads the summaries in\nEnglish. Translating a phrase does not break the traceability rule below — a\ntranslated phrase is still traceable to the text it came from. Keep the\nexhibition's own title in its original language if that is how it is written;\ntranslate the description around it.\n\nTHE RULE THAT MATTERS MOST: every word of your summary must be traceable to a\nphrase in that row's own raw text. If you cannot point to where something came\nfrom, leave it out. In particular:\n\n- Never add an artist, place, medium or date that you happen to know about but the\n  text does not mention.\n- Use a number only if the text states that number. Do not count a list of names\n  and report the total — the page may state a different figure, and the page is\n  right, not your count.\n\nBeing vague is a much smaller failure than being confidently wrong. If the text\nwill only support something general, write something general.\n\nIf the raw text is not a description of an exhibition — a bare link, a curator's\nbiography, ticketing or opening-hours copy, cookie or consent boilerplate, a \"page\nnot found\" message, or empty — answer null for that row. Do not invent one.";
 const EN_PREFIX = 'In English: ';
@@ -1017,7 +1065,7 @@ const LINK_VENUES={
     shopQueries:["Alte Pinakothek M\u00fcnchen Museumsshop Kataloge"],shopNamed:"Alte Pinakothek",linkRead:{capsTitles:true}},
   "occ-pinakothek-der-moderne":{ownChip:true,short:"Munich der Moderne",chip:"Munich",group:"munich-pinakotheken",lookupName:"Pinakothek der Moderne",name:"Pinakothek der Moderne M\u00fcnchen",
     sites:[{host:"pinakothek.de",line:/^Pinakothek der Moderne\b/i},{host:"pinakothek-der-moderne.de"}],
-    shopQueries:["Pinakothek der Moderne M\u00fcnchen Museumsshop Kataloge"],shopNamed:"Pinakothek der Moderne",linkRead:{capsTitles:true,slashDayFirst:true}},
+    shopQueries:["Pinakothek der Moderne M\u00fcnchen Museumsshop Kataloge"],shopNamed:"Pinakothek der Moderne",linkRead:{capsTitles:true}},
   "occ-sammlung-schack":{ownChip:true,short:"Munich Sammlung Schack",chip:"Munich",group:"munich-pinakotheken",lookupName:"Sammlung Schack",name:"Sammlung Schack",
     sites:[{host:"pinakothek.de",line:/^Sammlung Schack\b/i}],linkRead:{capsTitles:true}},
   // Staatliche Museen zu Berlin (smb.museum): chip "Berlin" after KHM, cards "Berlin Gemäldegalerie" (her decision).
@@ -1034,7 +1082,7 @@ const LINK_VENUES={
   // own heading follows "Active page:" (titleAfter). Dates day first with slashes; the site
   // line ("Exhibition Site Zwinger") never reaches Claude (her decision; skip).
   "occ-gemaeldegalerie-skd-museum":{ownChip:true,short:"Dresden",card:"Dresden Gem\u00e4ldegalerie",lookupName:"Gem\u00e4ldegalerie Alte Meister Dresden",name:"Gem\u00e4ldegalerie Alte Meister",
-    linkRead:{titleAfter:/^Active page:/,slashDayFirst:true,skip:/^(?:Exhibition Site\b|Opening Hours\b|\[Translate to English:\]|\u00a9)/}},
+    linkRead:{titleAfter:/^Active page:/,skip:/^(?:Exhibition Site\b|Opening Hours\b|\[Translate to English:\]|\u00a9)/}},
   // The Städel (staedelmuseum.de): chip "Frankfurt" after Dresden, cards "Frankfurt Städel" (her decision).
   // Written in, her decision: its shop's books section (the finder cannot see its books), and
   // `shopUnseen` — its books are in the page's HTML but Parallel drops them, so a shop page
@@ -1045,6 +1093,9 @@ const LINK_VENUES={
   // script) gets its best section written in and `shopUnseen` "script": a lookup there reads "contents
   // cannot be seen — JS-rendering" and goes to the web (docs/add_by_link.md, "A shop drawn by script").
   "occ-kunstmuseumbasel-ch":{shopHome:"https://shop.kunstmuseumbasel.ch/en/",shopCatalogues:"https://shop.kunstmuseumbasel.ch/en/merchandise?category=Exhibition+Catalogues",shopUnseen:"script"},
+  // The Prado: chip "Prado" right after KHM, cards "Prado Madrid" (her decision). Its dates are month first
+  // (DATE_ORDER, dates.js).
+  "occ-museodelprado-es":{ownChip:true,chip:"Prado",short:"Prado Madrid",name:"Museo Nacional del Prado"},
   // Chantilly (Musée Condé): chip "Chantilly" after Jacquemart; its cards keep the store's name (her decision).
   "occ-chateaudechantilly-fr":{ownChip:true,chip:"Chantilly"},
   // The Cini Foundation and its island's two houses: three venues, Claude's names, under one chip "Cini" after
@@ -1363,14 +1414,16 @@ function pageToRead(res,url,vc,rules){
   const{show,site}=splitPageTitle(res&&res.title,host);
   if(site)rule(String(res.title).includes(" | ")?"tab:bars":"tab:site-after-dash");
   if(TITLE_LABEL.test(decodeEntities(stripMd(res&&res.title)).split(" | ")[0].trim()))rule("tab:label");
-  // A venue's own date forms rewritten before reading: two-digit years (shortYear, NGV), slashes day
-  // first (slashDayFirst), "as of" for "to" (asOfTo, Palazzo Reale Milano).
-  const dateText=l=>lr&&lr.shortYear?withLongYears(l):lr&&lr.slashDayFirst?String(l).replace(/\b(\d{1,2})\/(\d{1,2})\/(\d{4})\b/g,"$1.$2.$3"):lr&&lr.asOfTo?String(l).replace(/\s+as of\s+/gi," to "):l;
-  return{res,url,vc,rules,rule,lr,host,show,site,lines:text.split("\n"),dateText,broken:-1,after:-1,
+  // A venue's own date forms rewritten before reading: two-digit years (shortYear, NGV), "as of" for
+  // "to" (asOfTo, Palazzo Reale Milano).
+  const dateText=l=>lr&&lr.shortYear?withLongYears(l):lr&&lr.asOfTo?String(l).replace(/\s+as of\s+/gi," to "):l;
+  // The venue an all-number date's order is looked up under (DATE_ORDER, dates.js): its own site's,
+  // whether or not it has an entry here.
+  const dateVenue=vc||occVenueId(hostOf(siteUrlOf(url)));
+  return{res,url,vc,rules,rule,lr,host,show,site,lines:text.split("\n"),dateText,dateVenue,broken:-1,after:-1,
     words:l=>foldText(stripMd(l)).replace(/[^a-z0-9]+/g," ").trim(),
-    // A show page's own date line: page text, so no loose single dates; slashes only where the
-    // numbers prove the order (Prado).
-    rangeIn:l=>DATES.findDateRange(dateText(l),{looseSingles:false,slashes:true})};
+    // A show page's own date line: page text, so no loose single dates.
+    rangeIn:l=>DATES.findDateRange(dateText(l),{looseSingles:false,slashes:true,venue:dateVenue})};
 }
 
 // Step 2. A heading broken over two lines (Berlin: "## Donatello  " then "Inventor of the
@@ -1379,12 +1432,12 @@ function pageToRead(res,url,vc,rules){
 // tab titles can be misspelt or German, so the heading wins over them. A date line is
 // never the heading's second half (Munich: "### Alte Pinakothek" over the dates).
 function joinHeadingOverTwoLines(pg){
-  const{lines,show,rule}=pg;
+  const{lines,show,rule,dateVenue}=pg;
   for(let i=0;i+1<lines.length;i++){
     const hm=lines[i].match(/^(\s*#{1,6}\s+)(\S.*?)\s{2,}$/);
     const next=stripMd(lines[i+1]);
     if(!hm||!next||/^\s*#/.test(lines[i+1]))continue;
-    const nd=DATES.findDateRange(next,{looseSingles:false});
+    const nd=DATES.findDateRange(next,{looseSingles:false,venue:dateVenue});
     if(nd.start||nd.end){ rule("heading:date-line-not-joined"); continue; }
     const name=stripMd(hm[2]),lo=String(show||"").toLowerCase();
     const sep=lo.startsWith(name.toLowerCase())&&lo.endsWith(next.toLowerCase())?show.slice(name.length,show.length-next.length):"";
@@ -1448,7 +1501,7 @@ function venueNamesFor(pg){
   return new Set(names.filter(Boolean).map(words).filter(Boolean));
 }
 function findDates(pg){
-  const{lr,lines,rule,rangeIn,dateText,cands,candRule}=pg;
+  const{lr,lines,rule,rangeIn,dateText,dateVenue,cands,candRule}=pg;
   const venueNames=venueNamesFor(pg), nameOnly=i=>venueNames.has(pg.words(lines[i]));
   const datesAboveFor=(h,n,via)=>{
     for(let k=h-1,seen=0;k>=0&&seen<n;k--){
@@ -1514,10 +1567,12 @@ function findDates(pg){
     // kept undated with the sweep's own note, the dates left blank (her decision: the sweep's rules, a day
     // never invented). The Borghese prints most past shows' dates only in the poster.
     // A day and month with no year (Chantilly's English pages): quoted as the sweep quotes it (unusableDateText).
-    const mo=near.map(([k,l])=>({k,r:DATES.findDateRange(dateText(l),{looseSingles:true})})).find(x=>x.r.shownText);
+    // All numbers in an order nothing settles: the order-unknown note (orderUnknown).
+    const mo=near.map(([k,l])=>({k,r:DATES.findDateRange(dateText(l),{looseSingles:true,venue:dateVenue})})).find(x=>x.r.shownText);
     const ny=mo?null:near.map(([k,l])=>({k,t:DATES.unusableDateText(dateText(l))})).find(x=>x.t);
     h=h0; rule("title:"+candRule[cands.indexOf(h0)]);
-    found=mo?{d:mo.k,range:{start:"",end:""},noDates:true,shown:mo.r.shownText,shownWhy:mo.r.shownWhy,via:"dates:shown-only"}
+    found=mo&&mo.r.orderUnknown?{d:mo.k,range:{start:"",end:""},noDates:true,orderUnknown:true,via:"dates:order-unknown"}
+      :mo?{d:mo.k,range:{start:"",end:""},noDates:true,shown:mo.r.shownText,shownWhy:mo.r.shownWhy,via:"dates:shown-only"}
       :ny?{d:ny.k,range:{start:"",end:""},noDates:true,shown:ny.t,shownWhy:"no year is published anywhere",via:"dates:no-year"}
       :{d:h0,range:{start:"",end:""},noDates:true,via:"dates:none"};
   }
@@ -1535,12 +1590,12 @@ function findDates(pg){
   // ending on another day never does.
   if(!range.start||!range.end){
     for(let k=d+1;k<lines.length;k++){
-      const r=DATES.findDateRange(dateText(stripMd(lines[k])),{looseSingles:false});
+      const r=DATES.findDateRange(dateText(stripMd(lines[k])),{looseSingles:false,venue:dateVenue});
       if(r.start&&r.end&&((range.end&&r.end===range.end)||(range.start&&r.start===range.start))){ range={...range,start:r.start,end:r.end}; rule("dates:one-side-completed"); break; }
     }
   }
   // A run the page says was cut short closes on the day it really closed (MSK Ghent's Van Eyck).
-  range=DATES.closedEarly(range,lines.map(stripMd).join("\n"));
+  range=DATES.closedEarly(range,lines.map(stripMd).join("\n"),dateVenue);
   if(range.closedEarlyFrom)rule("dates:closed-early");
   Object.assign(pg,{h,found,d,dEnd,range,heading:stripMd(lines[h])});
   return null;
@@ -1555,7 +1610,7 @@ function findDates(pg){
 // title gives way to the page title. A title line that is not a heading keeps the page title's
 // show, or the line when it runs on.
 function settleName(pg){
-  const{lr,lines,rule,dateText,h,heading,show,site,broken,after,words,host}=pg;
+  const{lr,lines,rule,dateText,dateVenue,h,heading,show,site,broken,after,words,host}=pg;
   const flatName=x=>foldText(stripMd(x)).replace(/&/g," and ").replace(/[^a-z0-9]/g,"");
   const nameWords=x=>foldText(stripMd(x)).replace(/&/g," and ").split(/[^a-z0-9]+/).filter(w=>w&&!GENERIC_TITLE_WORDS.has(w));
   const isHeading=/^\s*#{1,6}\s/.test(lines[h])||h===broken||(after>=0&&h===after);
@@ -1571,7 +1626,7 @@ function settleName(pg){
   let base;
   if(isHeading&&!headingIsSite){
     base=heading.trim();
-    const datedText=x=>{ const r=DATES.findDateRange(dateText(x),{looseSingles:true}); return !!(r.start||r.end)||/^\(?\d{4}\)?$/.test(x.trim()); };
+    const datedText=x=>{ const r=DATES.findDateRange(dateText(x),{looseSingles:true,venue:dateVenue}); return !!(r.start||r.end)||/^\(?\d{4}\)?$/.test(x.trim()); };
     const k=lines.findIndex((l,i)=>i>h&&stripMd(l)), next=k>0?decodeEntities(stripMd(lines[k])).trim():"";
     const nw=new Set(nameWords(next)), extra=show?nameWords(show).filter(w=>!hw.has(w)):[];
     const rest=show&&flatName(show).startsWith(flatName(heading))?show.slice(show.length-(show.length-heading.length)).replace(/^[^\s.:–—-]*/,""):"";
@@ -1720,7 +1775,7 @@ function pageResult(pg){
   let tracked=false; try{ tracked=[...new URL(url).searchParams.keys()].some(k=>TRACKING_PARAM.test(k)); }catch{}
   const link=lr&&lr.cleanLink?String(url).split(/[?#]/)[0]:tracked?withoutTracking(url):url;
   if(link!==url)rule(lr&&lr.cleanLink?"cleanLink":"tracking");
-  return{ok:true,base:pg.base,between:pg.between,under,afterDates,start:range.start||"",end:range.end||"",raw:pg.raw.slice(0,LINK_RAW_CHARS),site:site||(linkEntry(vc)||{}).name||host.replace(/^www\./,""),link,noDates:!!found.noDates,shown:found.shown||"",shownWhy:found.shownWhy||"",dateLine:found.noDates&&!found.shown?"":pg.dateLine,dateNote:DATES.closedEarlyNote(range)};
+  return{ok:true,base:pg.base,between:pg.between,under,afterDates,start:range.start||"",end:range.end||"",raw:pg.raw.slice(0,LINK_RAW_CHARS),site:site||(linkEntry(vc)||{}).name||host.replace(/^www\./,""),link,noDates:!!found.noDates,orderUnknown:!!found.orderUnknown,shown:found.shown||"",shownWhy:found.shownWhy||"",dateLine:found.noDates&&!found.shown?"":pg.dateLine,dateNote:DATES.closedEarlyNote(range)};
 }
 
 // A venue's title from its own headings (linkRead.title). "pieces": the heading is the "##"
@@ -7486,7 +7541,7 @@ export default function App(){
         tape.row={title,museumId:vc,exUrl:url};
         got.push({venue_code:vc,title,start_date:page.start,end_date:page.end,
           summary:a.summary?composeSummary(cardTitle(a.english,vc),a.summary):"",url:page.link,
-          notes:[page.noDates?(page.shown?DATES.shownOnlyNote(page.shown,page.shownWhy):DATES.NO_DATES_NOTE):"",page.dateNote||"",
+          notes:[page.noDates?(page.orderUnknown?DATES.ORDER_UNKNOWN_NOTE:page.shown?DATES.shownOnlyNote(page.shown,page.shownWhy):DATES.NO_DATES_NOTE):"",page.dateNote||"",
             ask.ok?"":"Description not written \u2014 "+ask.detail.replace(/\s+\[.*$/,"")].filter(Boolean).join(" ")});
       }catch(e){ fails.push({url,why:"Couldn\u2019t read it ("+String((e&&e.message)||e)+")."}); }
       finally{

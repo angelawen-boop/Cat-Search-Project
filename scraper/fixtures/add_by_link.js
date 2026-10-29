@@ -944,9 +944,13 @@ function runtime() {
     ok(btn(basel, 'Verso') === 'https://shop.kunstmuseumbasel.ch/en/merchandise?category=Exhibition+Catalogues' && btn(xorg, 'A B') === 'https://shop.x.org/search?q=A%20B',
       'BS-004: the card\'s Museum shop link is the section written in for the venue (Basel); elsewhere as before', JSON.stringify([btn(basel, 'Verso'), btn(xorg, 'A B')]));
     const D = 'occ-gemaeldegalerie-skd-museum', card = id => own[id].card;
-    ok(own[D].short === 'Dresden' && card(D) === 'Dresden Gemäldegalerie' && own[D].linkRead.slashDayFirst && own[D].linkRead.titleAfter.test('Active page: Hopper')
+    ok(own[D].short === 'Dresden' && card(D) === 'Dresden Gemäldegalerie' && own[D].linkRead.titleAfter.test('Active page: Hopper')
       && own[D].linkRead.skip.test('Exhibition Site Zwinger') && !own[D].shopQueries,
-      'AL-045:  Dresden: chip "Dresden", cards "Dresden Gemäldegalerie", dates day first, the site line never reaches Claude (her decision)');
+      'AL-045:  Dresden: chip "Dresden", cards "Dresden Gemäldegalerie", the site line never reaches Claude (her decision)');
+    const P = 'occ-museodelprado-es', prado = fn('occVenue')(P, { short: 'Museo del Prado', name: 'Museo Nacional del Prado' });
+    ok(fn('occVenueId')('www.museodelprado.es') === P && own[P].ownChip && prado.chip === 'Prado' && prado.short === 'Prado Madrid'
+      && order.indexOf('khm') + 1 === order.indexOf(P),
+      'AL-085:  the Prado: chip "Prado" right after KHM, cards "Prado Madrid" (her decision)', JSON.stringify([prado.chip, prado.short]));
     const F = 'occ-staedelmuseum-de';
     ok(fn('occVenueId')('www.staedelmuseum.de') === F && own[F].short === 'Frankfurt' && card(F) === 'Frankfurt Städel' && order.indexOf(D) + 1 === order.indexOf(F),
       'AL-049:  the Städel: chip "Frankfurt" right after Dresden, cards "Frankfurt Städel" (her decision)');

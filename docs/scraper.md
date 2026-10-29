@@ -132,9 +132,15 @@ since 11. November 2025              German day stop; read only with a year (KHM
   name first (Wallace's Churchill row once arrived undated, blamed on the venue).
 - **Italian is in the shared month map**, three-letter forms included (`set`);
   longest alternative first so "al" doesn't eat "all'8".
-- **All-numeric ranges are read only when the numbers prove their order** (a
-  component over 12); otherwise refused. Listing cards only. **With dots on both
-  sides they are day first, page text too** (her decision; Berlin, DS-004).
+- **A date written only in numbers: day first or month first** (her design). Every shape — dots or
+  slashes, one or two digits, two- or four-digit years, the year on the closing side only — is read the
+  same at every venue. Only the order needs a fact: the numbers settle it when one is over 12 (no month
+  18); otherwise the venue's order in `DATE_ORDER` (`dates.js`, one list, the sweep's and the app's),
+  each recorded from the venue's own pages. A venue not on it whose numbers cannot settle the order gets
+  no dates and the note "Dates not yet read — confirm whether the venue's date format is day first or
+  month first." (her wording, `ORDER_UNKNOWN_NOTE`); a session adds the venue to the list. Slashes are
+  read on listing cards and Add by link's date line, not in a sweep's page text (a sidebar's dates).
+  DS-004, DS-006, DS-009, EX-001.
 - **A backwards range crosses the new year** — the opening year is worked out.
 - **`ymd()` checks every date exists** — JavaScript rolls 31 Feb into March.
 - **An extension only moves the closing date later**, applied once by both parsers.

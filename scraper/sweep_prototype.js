@@ -751,7 +751,7 @@ function rebuildSweepCsv() {
 
 // ── Date helpers — moved to dates.js, 4 Oct 2026 (one copy, shared with the app) ──
 const {
-  MONTHS, WEEKDAY_PREFIX_SRC, ORDINAL_SUFFIX, MONTH_PATTERN, monthNum, ymd, startYearFor, parseMonthDay, RANGE_SEP, WEEKDAY_PREFIX, stripWeekdays, EXTENDED_TO, applyExtension, readDayMonth, precedingDate, extensionNote, closedEarly, closedEarlyNote, dayText, findDateRange, findDateRangeCore, PLAUSIBLE_YEAR_MIN, PLAUSIBLE_YEAR_MAX, plausibleYear, frag, sane, unusableDateText, findDateRangeInProse, findDateRangeInProseCore, titleCase, titleFromCaps, capsTitleParts, NO_DATES_NOTE, shownOnlyNote, capsTitleRule, sweptVenueTitle,
+  MONTHS, WEEKDAY_PREFIX_SRC, ORDINAL_SUFFIX, MONTH_PATTERN, monthNum, ymd, startYearFor, parseMonthDay, RANGE_SEP, WEEKDAY_PREFIX, stripWeekdays, EXTENDED_TO, applyExtension, readDayMonth, precedingDate, extensionNote, closedEarly, closedEarlyNote, dayText, findDateRange, findDateRangeCore, PLAUSIBLE_YEAR_MIN, PLAUSIBLE_YEAR_MAX, plausibleYear, frag, sane, unusableDateText, findDateRangeInProse, findDateRangeInProseCore, titleCase, titleFromCaps, capsTitleParts, NO_DATES_NOTE, ORDER_UNKNOWN_NOTE, shownOnlyNote, capsTitleRule, sweptVenueTitle,
 } = require('./dates.js');
 
 function afterLookback(endDateStr, floor = LOOKBACK) {
@@ -834,7 +834,8 @@ function applyLookback(rows, venueCode, stage) {
         // "Shows only X" is a claim about the whole page, so it may only be made
         // when NEITHER date was read. With an opening date already in the row,
         // the honest statement is the narrower one about the closing date.
-        row.notes = addNote(row.notes, (row._shownDateText && !row.start_date)
+        row.notes = addNote(row.notes, row._orderUnknown && !row.start_date ? ORDER_UNKNOWN_NOTE
+          : (row._shownDateText && !row.start_date)
           ? shownOnlyNote(row._shownDateText, row._shownDateWhy)
           : NO_DATES_NOTE);
       }
@@ -1059,12 +1060,14 @@ async function textFromListingRow(link, rowSpec) {
   }
 }
 
-async function datesNearLink(link, selector) {
+async function datesNearLink(link, selector, venueCode) {
   let linkText = '';
   try { linkText = await getText(link); } catch {}
   let ongoing = saysOngoing(linkText);
-  let d = findDateRange(linkText);
+  let d = findDateRange(linkText, { venue: venueCode });
   if (d.start || d.end || d.latestYear) return { ...d, ongoing };
+  // All numbers in an order nothing settles: kept for the note unless a wider box reads a date.
+  let unknown = d.orderUnknown ? d : null;
 
   // Walk up a strictly limited distance. The dates often live in the same
   // card container as the title (Rijksmuseum: "WORN till 21 March 2027"), but
@@ -1098,11 +1101,12 @@ async function datesNearLink(link, selector) {
       // boundary check above guarantees it — so a label found here belongs to
       // this row, the same reasoning that lets us read its dates here.
       if (!ongoing) ongoing = saysOngoing(raw);
-      d = findDateRange(text);
+      d = findDateRange(text, { venue: venueCode });
       if (d.start || d.end || d.latestYear) return { ...d, ongoing };
+      if (!unknown && d.orderUnknown) unknown = d;
     } catch { break; }
   }
-  return { start: '', end: '', raw: linkText, ongoing };
+  return unknown ? { ...unknown, ongoing } : { start: '', end: '', raw: linkText, ongoing };
 }
 
 // Distinct exhibition addresses inside this box. One means we are still within
@@ -2357,7 +2361,7 @@ async function fillBlanksFromRepeatLink(row, link, venueCode, ctx, selector) {
   }
 
   if (!row.start_date || !row.end_date) {
-    const d = await datesNearLink(link, selector);
+    const d = await datesNearLink(link, selector, venueCode);
     if (!row.start_date && d.start) row.start_date = d.start;
     if (!row.end_date && d.end) row.end_date = d.end;
     if (!row.latest_year && d.latestYear) row.latest_year = d.latestYear;
@@ -3242,14 +3246,14 @@ async function collectFromListing(page, opts) {
         const el = card && card.querySelector(sel);
         return el ? el.innerText : '';
       }, opts.datesAt).catch(() => '');
-      const d = dt ? findDateRange(dt) : null;
+      const d = dt ? findDateRange(dt, { venue: venueCode }) : null;
       if (d && (d.start || d.end || d.latestYear)) dates = { ...d, ongoing: saysOngoing(dt) };
       // A named field saying "Ongoing" and nothing else holds no date, and is
       // still the venue's own answer — the Morgan's J. Pierpont Morgan's
       // Library (MP-007). Same shape datesNearLink gives an undated card.
       else if (dt && saysOngoing(dt)) dates = { start: '', end: '', raw: squash(dt), ongoing: true };
     }
-    if (!dates) dates = await datesNearLink(link, selector);
+    if (!dates) dates = await datesNearLink(link, selector, venueCode);
 
     // A permanent display, said so by the venue itself. She tracks temporary
     // exhibitions and their catalogues; a gallery reinstallation that has been
@@ -3420,6 +3424,7 @@ async function collectFromListing(page, opts) {
       // date, so the note can quote it instead of claiming nothing was found.
       _shownDateText: dates.shownText || '',
       _shownDateWhy: dates.shownWhy || '',
+      _orderUnknown: !!dates.orderUnknown,
       summary: '', url: fullUrl,
       notes: titleNote,
     };
@@ -5273,7 +5278,7 @@ async function fetchIndividualPagesEach(page, rows, venueCode) {
           const lines = p ? String(p.innerText || p.textContent).split('\n').map(sq).filter(Boolean) : [];
           return { name: sq(n.innerText || n.textContent), sub: lines[0] || '' };
         }, vrec.pageTitle).catch(() => null);
-        const d = h && h.sub ? findDateRange(h.sub) : null;
+        const d = h && h.sub ? findDateRange(h.sub, { venue: venueCode }) : null;
         // A line in another script is the name translated (Li Jin's Chinese
         // title under the English one), not a subtitle.
         const subOk = h && h.sub && h.sub.length <= 150 && /[A-Za-z]/.test(h.sub) && !(d && (d.start || d.end));
@@ -5327,7 +5332,7 @@ async function fetchIndividualPagesEach(page, rows, venueCode) {
       // pick up). A field, so read before structured data and prose.
       if ((!row.start_date || !row.end_date) && vrec.detailDates) {
         const dt = await page.$eval(vrec.detailDates, el => el.innerText).catch(() => '');
-        const d = dt ? findDateRange(dt) : null;
+        const d = dt ? findDateRange(dt, { venue: venueCode }) : null;
         if (d) {
           if (!row.start_date && d.start) row.start_date = d.start;
           if (!row.end_date && d.end) row.end_date = d.end;
@@ -5375,7 +5380,7 @@ async function fetchIndividualPagesEach(page, rows, venueCode) {
         // code has no applicable logic — here it has some.
         const hintYear = (row.start_date || row.end_date || '').slice(0, 4)
           || (row.latest_year ? String(row.latest_year) : '');
-        const p = findDateRangeInProse(bodyText, hintYear);
+        const p = findDateRangeInProse(bodyText, hintYear, venueCode);
         // Whether the year was borrowed rather than printed beside the days —
         // used below so the note can say so instead of implying the page stated
         // a full date.
@@ -5445,7 +5450,7 @@ async function fetchIndividualPagesEach(page, rows, venueCode) {
           const dateEl = await page.$('[class*="date"], [class*="Date"], time');
           if (dateEl) {
             const raw = await getText(dateEl);
-            const dates = findDateRange(raw);
+            const dates = findDateRange(raw, { venue: venueCode });
             if (dates.start) row.start_date = dates.start;
             if (dates.end) row.end_date = dates.end;
             if (raw && !dates.start && !dates.end) {
@@ -5457,7 +5462,7 @@ async function fetchIndividualPagesEach(page, rows, venueCode) {
 
       // A run the page says was cut short closes on the day it really closed (shared with Add by link).
       if (row.start_date && row.end_date && row.summary) {
-        const cut = closedEarly({ start: row.start_date, end: row.end_date }, row.summary);
+        const cut = closedEarly({ start: row.start_date, end: row.end_date }, row.summary, venueCode);
         if (cut.closedEarlyFrom) { row.end_date = cut.end; row.notes = addNote(row.notes, closedEarlyNote(cut)); }
       }
     } catch (e) {

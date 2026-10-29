@@ -61,7 +61,7 @@ function datesBlock() {
   if (start < 0 || end < 0) die('scraper/dates.js has lost its \'use strict\' line or its module.exports');
   const body = src.slice(start + "'use strict';".length, end).trim();
   // Wrapped so its names (ymd, frag, MONTHS…) cannot collide with the app's.
-  return 'const DATES=(()=>{\n' + body + '\nreturn { findDateRange, findDateRangeInProse, capsTitleParts, NO_DATES_NOTE, shownOnlyNote, unusableDateText, sweptVenueTitle, closedEarly, closedEarlyNote };\n})();';
+  return 'const DATES=(()=>{\n' + body + '\nreturn { findDateRange, findDateRangeInProse, capsTitleParts, NO_DATES_NOTE, ORDER_UNKNOWN_NOTE, shownOnlyNote, unusableDateText, sweptVenueTitle, closedEarly, closedEarlyNote };\n})();';
 }
 
 function rulesBlock() {

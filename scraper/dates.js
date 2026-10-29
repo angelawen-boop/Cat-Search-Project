@@ -98,6 +98,43 @@ function parseMonthDay(str, fallbackYear) {
 // separator ("From May 16, 2025, to May 17, 2027" — Brera).
 const RANGE_SEP = "\\s*,?\\s*(?:-|t/m|to|till|until|through|all['\u2019]|all[oe]|al|au)\\s*";
 
+// ── Day first or month first ── A date written only in numbers ("4/2/2019") is read in an order the
+// numbers settle (a number over 12 cannot be a month) or, when they cannot, in the order recorded here
+// for its venue. Each venue's order comes from its own pages; a venue not listed whose numbers cannot
+// settle it gets ORDER_UNKNOWN_NOTE, and a session records its order (her design; docs/scraper.md §3).
+const DATE_ORDER = {
+  // Swept venues.
+  uffizi: 'day',                                // "From 18/06/2025 to 28/09/2025"
+  // Link venues.
+  'occ-museodelprado-es': 'month',              // "6/9/2026 - 9/27/2026"
+  'occ-smb-museum': 'day',                      // "14.05.2027 to 12.09.2027"
+  'occ-alte-nationalgalerie': 'day',            // "19.03.2027 to 01.08.2027"
+  'occ-neue-nationalgalerie': 'day',            // "20.03.2026 to 09.08.2026"
+  'occ-alte-pinakothek': 'day',                 // "27.10.2023-04.02.2024"
+  'occ-pinakothek-der-moderne': 'day',          // "10/07/2026 - 04/10/2026", "09.10.2026-21.02.2027"
+  'occ-sammlung-schack': 'day',                 // "14.10.2027-13.02.2028"
+  'occ-gemaeldegalerie-skd-museum': 'day',      // "14/04/2022—31/07/2022"
+  'occ-kunstmuseumbasel-ch': 'day',             // "25.05.–24.11.2024"
+  'occ-kunsthaus-ch': 'day',                    // "Until 25.10.2026"
+  'occ-louisiana-dk': 'day',                    // "11.10.24 - 27.4.25"
+  'occ-mskgent-be': 'day',                      // "01.02 – 30.04.20"
+  'occ-approfondimentimostre-com': 'day',       // "22.05.2008 | 14.08.2008"
+};
+const ORDER_UNKNOWN_NOTE = "Dates not yet read \u2014 confirm whether the venue's date format is day first or month first.";
+
+/**
+ * 'day' or 'month' for numeric [first, second] pairs: settled by a number over 12, else the venue's
+ * recorded order; 'bad' when the numbers contradict each other, '' when nothing settles it.
+ */
+function numberOrder(pairs, venue) {
+  const dayFirst = pairs.some(([a]) => a > 12), monthFirst = pairs.some(([, b]) => b > 12);
+  if (dayFirst && monthFirst) return 'bad';
+  if (dayFirst) return 'day';
+  if (monthFirst) return 'month';
+  return DATE_ORDER[venue] || '';
+}
+const byOrder = (order, a, b) => order === 'day' ? { day: a, mon: b } : { day: b, mon: a };
+
 const WEEKDAY_PREFIX = new RegExp(WEEKDAY_PREFIX_SRC + '(?=\\d|' + MONTH_PATTERN + ')', 'gi');
 const stripWeekdays = t => String(t || '').replace(WEEKDAY_PREFIX, '');
 // A clock time, with any time zone: "10:00 am ET", "5pm", "10:30–11 a.m." (Yale prints
@@ -121,13 +158,13 @@ const EXTENDED_TO = new RegExp(
   ')', 'i');
 
 /** Apply an extension: it only ever moves the closing date LATER, so a stray match cannot shorten a run. */
-function applyExtension(range, text) {
+function applyExtension(range, text, venue) {
   if (!range || !range.end || !text) return range;
   const t = String(text);
   const m = EXTENDED_TO.exec(t);
   if (!m) return range;
 
-  const dm = readDayMonth(m[1]);
+  const dm = readDayMonth(m[1], venue);
   if (!dm) return range;
   let { day, mon, year } = dm;
   const quote = frag(m);
@@ -156,11 +193,14 @@ function applyExtension(range, text) {
   return { ...range, end: iso, extendedFrom: range.end, extendedRaw: quote };
 }
 
-/** "11 novembre", "October 11", "02/11/2025" → { day, mon, year (0 if none) }. */
-function readDayMonth(s) {
+/** "11 novembre", "October 11", "02/11/2025" → { day, mon, year (0 if none) }; numbers in the venue's order. */
+function readDayMonth(s, venue) {
   const M = MONTH_PATTERN;
   const numeric = s.match(/^(\d{1,2})\s*[/.]\s*(\d{1,2})\s*[/.]\s*(\d{4})$/);
-  if (numeric) return { day: +numeric[1], mon: +numeric[2], year: +numeric[3] };  // day-first everywhere seen
+  if (numeric) {
+    const order = numberOrder([[+numeric[1], +numeric[2]]], venue);
+    return order === 'day' || order === 'month' ? { ...byOrder(order, +numeric[1], +numeric[2]), year: +numeric[3] } : null;
+  }
   const dayFirst = s.match(new RegExp(`^(\\d{1,2})\\s+(${M})(?:\\s+(\\d{4}))?$`, 'i'));
   if (dayFirst) return ok(+dayFirst[1], monthNum(dayFirst[2]), +(dayFirst[3] || 0));
   const monthFirst = s.match(new RegExp(`^(${M})\\s+(\\d{1,2})(?:,?\\s*(\\d{4}))?$`, 'i'));
@@ -211,12 +251,12 @@ function extensionNote(range) {
  */
 const CLOSED_EARLY = /\b(?:clos(?:e|ed|ing)|end(?:ed)?|shut)\b[^.]{0,25}\b(?:exhibition|show)\b[^.]{0,25}\b(?:early|earlier|prematurely|ahead of schedule)\b|\b(?:exhibition|show)\b[^.]{0,40}\b(?:closed|ended|shut)\b[^.]{0,25}\b(?:early|earlier|prematurely|ahead of schedule)\b/i;
 
-function closedEarly(range, text) {
+function closedEarly(range, text, venue) {
   if (!range || !range.start || !range.end || !text) return range;
   for (const para of String(text).split(/\n+/)) {
     const m = CLOSED_EARLY.exec(para);
     if (!m) continue;
-    const p = findDateRangeInProseCore(para, range.end.slice(0, 4));
+    const p = findDateRangeInProseCore(para, range.end.slice(0, 4), venue);
     if (p.start === range.start && p.end && p.end > range.start && p.end < range.end) {
       return { ...range, end: p.end, closedEarlyFrom: range.end, closedEarlyRaw: frag(m) };
     }
@@ -241,8 +281,9 @@ function dayText(iso) {
 // opts.looseSingles: true for a listing card (a short string about one show); false for
 // page text, where loose patterns are a lottery (a 1994 photo caption once became a 2024
 // show's opening date).
+// opts.venue: the venue's code, for the order of an all-number date (DATE_ORDER).
 function findDateRange(raw, opts = {}) {
-  return applyExtension(findDateRangeCore(raw, opts), raw);
+  return applyExtension(findDateRangeCore(raw, opts), raw, opts.venue);
 }
 
 function findDateRangeCore(raw, opts = {}) {
@@ -257,46 +298,46 @@ function findDateRangeCore(raw, opts = {}) {
     .replace(/\s+/g, ' ').trim();
   const M = MONTH_PATTERN;
 
-  // All-numeric range, its order PROVED from the numbers: a component over 12 decides
-  // day-first or month-first for both ends; neither proves it → refused (Uffizi).
-  // Written with dots on both sides it is day-first, page text included (her decision;
-  // Berlin's "02.09.2022 to 08.01.2023"). Slashes: listing cards only — on a page it read
-  // a sidebar's dates.
-  // Dots with two-digit years on both sides ("11.10.24 - 27.4.25", Louisiana) or the year on the
-  // closing side only ("25.05.–24.11.2024", Kunstmuseum Basel; "01.02 – 30.04.20", MSK Ghent) are
-  // day-first too.
+  // All-numeric ranges, in the order the numbers settle or the venue's recorded order (numberOrder).
+  // Unsettled, the result says so (orderUnknown) unless a later pattern reads the text. Slashes on a
+  // listing card or a show page's date line only (opts.slashes): on a sweep's page they read a sidebar.
+  let unknown = null;
+  const numRange = (m, sDay, sMo, eDay, eMo, sYr, eYr) => {
+    const order = numberOrder([[sDay, sMo], [eDay, eMo]], opts.venue);
+    if (order === 'bad') return null;
+    if (!order) { if (!unknown) unknown = { start: '', end: '', orderUnknown: true, shownText: frag(m), raw: frag(m) }; return null; }
+    const a = byOrder(order, sDay, sMo), b = byOrder(order, eDay, eMo);
+    const startYr = sYr || startYearFor(a.mon, a.day, b.mon, b.day, eYr);
+    const r = sane(ymd(startYr, a.mon, a.day), ymd(eYr, b.mon, b.day), frag(m));
+    return r.start || r.end ? r : null;
+  };
+  // Two-digit years on both sides ("11.10.24 - 27.4.25", Louisiana).
   const dotted2 = s.match(new RegExp(
     `\\b(\\d{1,2})\\.(\\d{1,2})\\.(\\d{2})${RANGE_SEP}(\\d{1,2})\\.(\\d{1,2})\\.(\\d{2})(?![\\d.:])`));
   if (dotted2) {
-    const r = sane(ymd(2000 + +dotted2[3], dotted2[2], dotted2[1]), ymd(2000 + +dotted2[6], dotted2[5], dotted2[4]), frag(dotted2));
-    if (r.start || r.end) return r;
+    const [a1, b1, y1, a2, b2, y2] = [1,2,3,4,5,6].map(i => Number(dotted2[i]));
+    const r = numRange(dotted2, a1, b1, a2, b2, 2000 + y1, 2000 + y2);
+    if (r) return r;
   }
+  // The year on the closing side only ("25.05.–24.11.2024", Kunstmuseum Basel; "01.02 – 30.04.20", MSK Ghent).
   const dottedOpen = s.match(new RegExp(
     `\\b(\\d{1,2})\\.(\\d{1,2})\\.?${RANGE_SEP}(\\d{1,2})\\.(\\d{1,2})\\.(\\d{4}\\b|\\d{2}(?![\\d:]|\\.\\d))`));
   const openYr = dottedOpen && (dottedOpen[5].length === 2 ? 2000 + +dottedOpen[5] : +dottedOpen[5]);
   if (dottedOpen && plausibleYear(openYr)) {
-    const [sDay, sMo, eDay, eMo] = [1,2,3,4].map(i => Number(dottedOpen[i])), endYr = openYr;
-    if (sMo >= 1 && sMo <= 12 && eMo >= 1 && eMo <= 12) {
-      const r = sane(ymd(startYearFor(sMo, sDay, eMo, eDay, endYr), sMo, sDay), ymd(endYr, eMo, eDay), frag(dottedOpen));
-      if (r.start || r.end) return r;
-    }
+    const [a1, b1, a2, b2] = [1,2,3,4].map(i => Number(dottedOpen[i]));
+    const r = numRange(dottedOpen, a1, b1, a2, b2, 0, openYr);
+    if (r) return r;
   }
-  // Two full dotted dates either side of a bar are a range too ("22.05.2008 | 14.08.2008", the
-  // Borghese's archive site).
-  const dotted = s.match(new RegExp(
-    `\\b(\\d{1,2})\\.(\\d{1,2})\\.(\\d{4})(?:${RANGE_SEP}|\\s*\\|\\s*)(\\d{1,2})\\.(\\d{1,2})\\.(\\d{4})\\b`));
-  // opts.slashes: a show page's own date line, read for a range whose order the numbers prove (Prado).
-  const num = dotted || ((looseSingles || opts.slashes) && s.match(new RegExp(
+  // Full years on both sides, a dash or a bar between ("22.05.2008 | 14.08.2008", the Borghese's archive site).
+  const num = s.match(new RegExp(
+    `\\b(\\d{1,2})\\.(\\d{1,2})\\.(\\d{4})(?:${RANGE_SEP}|\\s*\\|\\s*)(\\d{1,2})\\.(\\d{1,2})\\.(\\d{4})\\b`))
+    || ((looseSingles || opts.slashes) && s.match(new RegExp(
     `\\b(\\d{1,2})[\\/.](\\d{1,2})[\\/.](\\d{4})${RANGE_SEP}(\\d{1,2})[\\/.](\\d{1,2})[\\/.](\\d{4})\\b`)));
   if (num) {
     const [a1, b1, y1, a2, b2, y2] = [1,2,3,4,5,6].map(i => Number(num[i]));
-    const dayFirst   = !!dotted || a1 > 12 || a2 > 12;
-    const monthFirst = !dotted && (b1 > 12 || b2 > 12);
-    if (dayFirst !== monthFirst && plausibleYear(y1) && plausibleYear(y2)) {
-      const start = dayFirst ? ymd(y1, b1, a1) : ymd(y1, a1, b1);
-      const end   = dayFirst ? ymd(y2, b2, a2) : ymd(y2, a2, b2);
-      const r = sane(start, end, frag(num));
-      if (r.start || r.end) return r;
+    if (plausibleYear(y1) && plausibleYear(y2)) {
+      const r = numRange(num, a1, b1, a2, b2, y1, y2);
+      if (r) return r;
     }
   }
 
@@ -405,9 +446,16 @@ function findDateRangeCore(raw, opts = {}) {
     if (mo) return { start: '', end: ymd(m[3], mo, m[1]), raw: frag(m) };
   }
 
-  // The same with a dotted date, day first: "Until 25.10.2026" (Kunsthaus Zürich), "bis 25.10.2026".
+  // The same with a dotted date: "Until 25.10.2026" (Kunsthaus Zürich), "bis 25.10.2026".
   m = s.match(/\b(?:till|until|through|closes?|closing|bis|fino\s+al)\s+(\d{1,2})\.(\d{1,2})\.(\d{4})\b/i);
-  if (m && plausibleYear(m[3]) && +m[2] >= 1 && +m[2] <= 12) return { start: '', end: ymd(m[3], m[2], m[1]), raw: frag(m) };
+  if (m && plausibleYear(m[3])) {
+    const order = numberOrder([[+m[1], +m[2]]], opts.venue);
+    if (order === 'day' || order === 'month') {
+      const x = byOrder(order, +m[1], +m[2]);
+      return { start: '', end: ymd(m[3], x.mon, x.day), raw: frag(m) };
+    }
+    if (!order && !unknown) unknown = { start: '', end: '', orderUnknown: true, shownText: frag(m), raw: frag(m) };
+  }
 
   // The same, month first: "Through January 10, 2027", "Closes November 15, 2026".
   m = s.match(new RegExp(`\\b(?:(?:till|until|through|thru|closes?|closing)\\s+|now\\s*-\\s*)(${M})\\s+(\\d{1,2}),?\\s*(\\d{4})`, 'i'));
@@ -452,7 +500,7 @@ function findDateRangeCore(raw, opts = {}) {
     };
   }
 
-  return { start: '', end: '', raw: '' };
+  return unknown || { start: '', end: '', raw: '' };
 }
 
 // Plausible exhibition years: wide enough for any archive a venue still lists, narrow
@@ -509,13 +557,13 @@ function unusableDateText(text) {
  * hintYear supplies a missing year from the listing. Returns the matched sentence, so a
  * wrong grab shows in the notes.
  */
-function findDateRangeInProse(text, hintYear) {
+function findDateRangeInProse(text, hintYear, venue) {
   // The extension rule runs here too: the parsers must not diverge (Giorgio Armani's
   // extended run lost its opening date when only one knew about extensions).
-  return applyExtension(findDateRangeInProseCore(text, hintYear), text);
+  return applyExtension(findDateRangeInProseCore(text, hintYear, venue), text, venue);
 }
 
-function findDateRangeInProseCore(text, hintYear) {
+function findDateRangeInProseCore(text, hintYear, venue) {
   if (!text) return { start: '', end: '', raw: '' };
   const s = String(text).replace(/[–—]/g, '-').replace(ORDINAL_SUFFIX, '$1').replace(/\s+/g, ' ');
   const M = MONTH_PATTERN;
@@ -618,7 +666,7 @@ function findDateRangeInProseCore(text, hintYear) {
   // Last resort: the listing parser's CORE (ranges and preposition dates only), so any
   // pattern either parser knows serves both. The core, not the wrapper — applying the
   // extension twice put Gricci and Lotto a year late.
-  const viaListing = findDateRangeCore(s, { looseSingles: false });
+  const viaListing = findDateRangeCore(s, { looseSingles: false, venue });
   if (viaListing.start || viaListing.end) return viaListing;
 
   return { start: '', end: '', raw: '' };
@@ -718,6 +766,9 @@ function shownOnlyNote(shown, why) {
 
 module.exports = {
   NO_DATES_NOTE,
+  DATE_ORDER,
+  ORDER_UNKNOWN_NOTE,
+  numberOrder,
   SWEPT_CAPS_TITLES,
   capsTitleRule,
   sweptVenueTitle,
