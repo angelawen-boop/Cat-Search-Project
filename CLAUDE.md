@@ -459,6 +459,8 @@ Each line came from a real failure. Details are in git history and `docs/`.
 - **One owner per fact.** Two steps looking for the same thing contradict each other on the card (Canaletto): one step finds it, code decides it, one sentence says it.
 - **An excerpt is what matches the query, not the page.** Short excerpts are not an empty page; judge emptiness on the whole page (Watteau).
 - **Subagents:** send only the rows and fields the question needs. Wording is not a control — remove the tool or check the answer.
+- **A venue's fault gets that venue's rule, not a shared one (her decision).** Past pages passing proves nothing
+  about future ones; shared rules pile up for every later import to wrestle with. Build a shared rule only when she asks.
 - **A general rule ships only if no page gets worse.** Try it against every live page in hand, old reader beside new; a rule that fixes ten and breaks one is a venue rule, not a general one.
 - **Before resetting stored data, trace every path that reads it** (Yale's shop, cleared, left every Yale card
   shopless until a link was read). **Copy a fixture's reply shape from a live reply, never assume it**, and search
