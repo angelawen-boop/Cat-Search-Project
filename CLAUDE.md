@@ -336,6 +336,16 @@ live, the finder took the museum's "central bookshop" page instead and walked th
 offers its German shop front page (still not the English one — §5.4); its check's right answer ("prints only") is stale:
 its English shop lists Catalogues.
 
+#### 2.2.14 53.7–53.8 — published; her next links confirm
+
+A link to a quarantined show says "nothing to add — already in your quarantine" (AL-080); Chantilly's chip after
+Jacquemart (AL-081); French "du … au …" dates, shared with the sweep (DS-008); a link with no year gets the sweep's own
+note (AL-082); Moretti only: the place after " : " leaves the title, its capitals description is read (AL-083); Cini:
+the foundation, Le Stanze del Vetro, Le Stanze della Fotografia under one chip "Cini" after Capo, Claude's names, Claude
+deciding the venue as for any new venue (AL-084). **To confirm:** she re-reads her Cini, Moretti and two French
+Chantilly links (Claude Lorrain, Watteau). Claude answers the Cini house only on first meeting cini.it; a later Stanze
+show there files under the foundation — her accepted outcome (she orders them next time).
+
 #### 2.2.6 Tests that failed — recorded, not investigated
 
 A session records each failing suite here and does not investigate it (`docs/testing.md`).
@@ -461,6 +471,8 @@ Each line came from a real failure. Details are in git history and `docs/`.
 - **Subagents:** send only the rows and fields the question needs. Wording is not a control — remove the tool or check the answer.
 - **A venue's fault gets that venue's rule, not a shared one (her decision).** Past pages passing proves nothing
   about future ones; shared rules pile up for every later import to wrestle with. Build a shared rule only when she asks.
+- **Build only what she named, nothing beside it** — asked for a Cini chip, a session also made Claude re-decide the
+  venue on every link, which split one series three ways. A side effect you foresee goes to her as a sentence, not code.
 - **A general rule ships only if no page gets worse.** Try it against every live page in hand, old reader beside new; a rule that fixes ten and breaks one is a venue rule, not a general one.
 - **Before resetting stored data, trace every path that reads it** (Yale's shop, cleared, left every Yale card
   shopless until a link was read). **Copy a fixture's reply shape from a live reply, never assume it**, and search
