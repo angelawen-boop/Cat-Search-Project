@@ -96,28 +96,33 @@ index of side docs, guardrails, the app explainers, future considerations — an
    guide and a doc, between a doc and the code).
 7. **"Do not re-break" (§4.1):** merge new entries into the lesson they
    illustrate; one lesson, one line where possible. Never drop a lesson.
-8. **Budgets:** every file within `scraper/doc_budget.js`. A NEW doc's budget
-   is its size rounded up to the next 50. **Every file over budget is your
-   job to bring within it, this run.** For each, first work out WHY it is over
-   (read it; use `git log -p` on it): diary, history, test lists, duplicated
-   text, content that belongs in a better-fitting doc. Then compress to
-   judgements, decisions, lessons and open items with enough background to
-   continue (see Diaries), and fix duplicates by pointer. Getting within
-   budget never costs a decision or a lesson. Only when, after real
-   compression, a file still cannot fit without losing one, stop there and
-   put it under Open items: what you tried, what is left, what the budget
-   would need to be. **Raising a budget is hers.**
-   Think first how it can be fixed, do the fix, then draw the line at losing
-   a decision, judgement call or the context to continue — never before.
-   **A file only slightly over (about 5% — 308 of 300) goes under FYI**, but
-   only after you have read it and compressed what plainly can be; a line
-   count alone never earns FYI, and the FYI line says what you reviewed.
-   A bare line count is never a finding.
-   **Check every compression against the original before you push:** for each
-   file you compressed, read `git diff` and list what the old text held —
-   each decision, judgement call, lesson, open item, pointer, name and number
-   a session would need. Confirm each is still there, in the new text or its
-   new home. Anything missing goes back in. Do not push until this passes.
+8. **Budgets — the main work of this review.** Every file within
+   `scraper/doc_budget.js` (a NEW doc's budget is its size rounded up to the
+   next 50), with about 5% over tolerated. **Reading comes first and is
+   not optional.** Every file you are asked to clean up is read in full, line
+   by line, before you decide anything about it. A line count is never a
+   basis for a decision. Then, for each file, largest overage first:
+   1. **Diagnose** against how a guide is meant to be written (the shape above
+      and `docs/doc_rules.md`): why is it over — a diary or stream of
+      consciousness, a version log, history, test lists, duplicated text,
+      content that belongs in another doc, or genuinely dense, considered
+      text?
+   2. **Compress.** Rambling and narrated history are easy and obvious: cut
+      them to judgements, decisions, lessons and open items, with enough
+      background that a cold session can continue. Do it. Dense text that is
+      already compressed is different: be surgical, and never shrink it
+      wholesale — cut only what is duplicated, stale or misplaced.
+   3. **Check against the original.** Read `git diff`; list what the old text
+      held (each decision, judgement call, lesson, open item, pointer, name,
+      number) and confirm each is still there or in its new home. Put back
+      anything missing. Commit that file on its own once it passes.
+   4. **Conclude.** Within tolerance → done. Still over → the only valid
+      reason is a specific decision or lesson that cannot be lost; name it.
+   **Never accepted as a reason:** the file is large, the work is big, the run
+   is unattended, it needs a supervised session, or it is risky. Time and size
+   are no limit — the run may take an hour or more. Doing the reading and
+   writing in the background is the job; none of it goes to her.
+   Raising a budget is hers.
 9. **Anything you cannot trace** — a line whose origin, meaning or current
    truth you cannot establish from the repo and its history
    (`git log -S"<phrase>" -- CLAUDE.md docs/` is the tool) — gets
@@ -169,26 +174,30 @@ remove a rule rather than restate it.
    `node scraper/guide_check.js --strict` exit 0.
 2. Commit on `main` with a message listing what changed, then
    `git pull --rebase origin main` and `git push origin main`.
-3. **The report — this is what she reads.** Follow the guide's house rules:
-   plain English, short bullets, spoken TO her (never "she"/"her"), no
-   visible thinking. Three parts:
+3. **The report — this is what she reads, and it is short.** Follow the
+   guide's house rules: plain English, short bullets, spoken TO her (never
+   "she"/"her"), no visible thinking. The work is done in the background;
+   the report is not a debrief or a diary of it, and the review of each file
+   (what you read, what was wrong, what you checked) goes in the commit
+   message, not here. Three parts:
    - **Fixed** — what changed, one line each, with line counts before → after.
-   - **Open items for you** — only what you could not fix without her:
-     a judgement call, a clarification, a file that cannot fit its budget
-     without losing a decision or lesson (so the budget is hers to raise).
-     Each with what you found, what you tried and your suggestion, numbered so
-     she can answer "1: yes, 2: no".
-   - **FYI** — things that were never a problem, or are close enough not to
-     matter, and need nothing from her (Fixed is a problem you have now
-     handled; FYI never was one), each saying why it is fine
-     (e.g. "Twelve side docs point to another as a see-also; all are allowed — none lives only behind another, and all lead back to the
-     trunk."). Verify that claim first, per doc. A doc that breaks it is fixed
-     (its content moved or a trunk pointer added), not reported.
+   - **Open items for you** — only a decision she must make, each one
+     concise: the question, the specific passage or decision at stake
+     (named), and your suggestion, numbered so she can answer "1: yes, 2: no".
+     Never a list of what you did, a remaining-line tally or a breakdown of
+     what is left over.
+   - **FYI** — one line each: things that were never a problem or are within
+     tolerance, and why they need nothing from her (e.g. "Twelve side docs
+     point to another as a see-also; all allowed — none lives only behind
+     another"). Verify first, per doc; a doc that breaks it is fixed, not
+     reported.
 
-   **No "watch" items.** Never list something for her to keep an eye on, nor
-   a bare count, size or trend. Either you fixed it (Fixed), it needs her
-   answer (Open items), or it is fine and needs nothing (FYI). She has nobody
-   to hand the work to: it is yours. The sections are Fixed, Open items,
-   FYI — in that order.
+   **No "watch" items**: nothing for her to keep an eye on, no bare count,
+   size or trend. Either you fixed it, it needs her decision, or it is fine.
+   She has nobody to hand the work to: it is yours.
+
+   **Before reporting, check yourself:** every file under `docs/` and
+   `CLAUDE.md` was read in full; every over-budget file was diagnosed and
+   compressed, or has a named blocker. If not, go back — do not report.
 
    If nothing needed doing, say so in one line — that is a good result.
