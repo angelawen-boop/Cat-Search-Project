@@ -520,6 +520,12 @@ Zwinger") never reaches Claude, as passage or subtitle (her decision; `skip`). S
 and gifts only; the finder says "Shop found, but not its books section" and she answers **No shop** once (her
 decision; lookups go to the web). On the proof list; AL-045.
 
+**Chantilly** (Musée Condé, `occ-chateaudechantilly-fr`): its own chip "Chantilly", after Jacquemart; its cards keep
+the name Claude gave, "Chantilly Musée Condé" (her decision; `LINK_VENUES`; AL-081).
+
+**A link to a quarantined show** reads "Read 1 link, but nothing to add — already in your quarantine." when every
+show read is quarantined (her wording; AL-080); otherwise "…your ledger already matches it" as before.
+
 **Frankfurt** (the Städel, `occ-staedelmuseum-de`): its own chip "Frankfurt", after Dresden; cards "Frankfurt
 Städel" (her decision; `LINK_VENUES`; AL-049). No pages on the proof list yet. **Its shop**
 (`liebieghaus.ticketfritz.de/Shop/Index/staedel-publikationen/43885`, linked "Kataloge online kaufen" from the

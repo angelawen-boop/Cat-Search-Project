@@ -90,6 +90,9 @@ const ledger = { rows: [{ id: 'occ-mauritshuis-nl-thegrandtourdestinationitaly',
   catalogueTitle: null, isbn13: null, publisher: null, publisherUrl: null, publisherResult: null,
   shopUrl: null, shopState: null, shopChange: null, addedAt: '2026-10-01T00:00:00.000Z', editedAt: null }],
   ignored: [], lastRun: null };
+// A show she quarantined, never in her ledger: its link brings nothing (AL-080).
+const QUARANTINED = 'https://scuderiequirinale.it/en/exhibition/quarantined-show';
+ledger.ignored.push({ key: 'occ-scuderiequirinale-it|' + QUARANTINED, venueId: 'occ-scuderiequirinale-it', title: 'Quarantined Show', at: '2026-09-22T13:29:27.413Z' });
 // An NGA show already in her ledger: its own chip, never the Occasional pile (AL-030).
 const NGA_URL = 'https://www.nga.gov/exhibitions/nga-chip-show';
 ledger.rows.push({ ...ledger.rows[0], id: 'occ-nga-gov-ngachipshow', museumId: 'occ-nga-gov', title: 'NGA Chip Show',
@@ -934,6 +937,9 @@ function runtime() {
     const F = 'occ-staedelmuseum-de';
     ok(fn('occVenueId')('www.staedelmuseum.de') === F && own[F].short === 'Frankfurt' && card(F) === 'Frankfurt Städel' && order.indexOf(D) + 1 === order.indexOf(F),
       'AL-049:  the Städel: chip "Frankfurt" right after Dresden, cards "Frankfurt Städel" (her decision)');
+    const C = 'occ-chateaudechantilly-fr', chip = fn('occVenue')(C, { short: 'Chantilly Musée Condé', name: 'Musée Condé, Château de Chantilly' });
+    ok(own[C].ownChip && chip.chip === 'Chantilly' && chip.short === 'Chantilly Musée Condé' && order.indexOf('jacquemart') + 1 === order.indexOf(C),
+      'AL-081:  Chantilly: chip "Chantilly" right after Jacquemart, cards keep the store\'s "Chantilly Musée Condé" (her decision)', JSON.stringify([chip.chip, chip.short]));
     {
       const before = calls.length, r = await discoverShop('', 'www.staedelmuseum.de', 'Städel Museum', [], F);
       ok(r.shop === 'found' && r.shopCatalogues === 'https://liebieghaus.ticketfritz.de/Shop/Index/staedel-publikationen/43885'
@@ -1528,6 +1534,24 @@ function runtime() {
       'AL-062b:  one that never passes, asked twice more, leaves the link unread with the reason (her decision)', asks('Never Passes').length);
     const cancel = buttons(/^Cancel import$/)[0];
     if (cancel) await click(cancel);
+  }
+
+  // ── AL-080: a link to a show in her quarantine says so, not "your ledger already matches it" ──
+  {
+    P[QUARANTINED] = { url: QUARANTINED, title: 'Quarantined Show', full_content: '# Quarantined Show\n\n9 Oct 2026 \u2013 7 Feb 2027\n\n' + 'The Quarantined Show brings together the artist\u2019s most important paintings alongside an exceptional selection of drawings, offering an opportunity to explore the full breadth of his artistic production. '.repeat(3) };
+    await click(importBtn());
+    if (!dialog().querySelector('textarea')) await click(inDialog('Links'));
+    const box = dialog().querySelector('textarea');
+    await act(async () => { setter.call(box, QUARANTINED); box.dispatchEvent(new win.Event('input', { bubbles: true })); });
+    await settle();
+    calls.length = 0;
+    await click([...dialog().querySelectorAll('button')].find(b => b.textContent === 'Read'));
+    await settle(30);
+    const shown = win.document.body.textContent;
+    ok(shown.includes('Read 1 link, but nothing to add \u2014 already in your quarantine.') && !shown.includes('your ledger already matches it'),
+      'AL-080: a link to a quarantined show: "Read 1 link, but nothing to add \u2014 already in your quarantine." (her wording)', shown.slice(-400));
+    const close = buttons(/^Cancel$/)[0];
+    if (close) await click(close);
   }
 
   if (shouted.some(s => /Warning: Each child|Cannot update|Maximum update/.test(s))) fail('React complained: ' + shouted.find(s => /Warning/.test(s)));
