@@ -3,8 +3,8 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 // The footer prints APP_VERSION and its date, so she can tell one build from the next.
 // Numbering, her decision: a whole number for a substantial change, a decimal for a
 // small one, one number per publish. Bump it with the change it describes.
-const APP_VERSION = "53.6";
-const APP_VERSION_DATE = "27 Oct 2026";
+const APP_VERSION = "53.7";
+const APP_VERSION_DATE = "29 Oct 2026";
 
 // The venue order is VENUE_ORDER, below the list, which sorts MUSEUMS; drawer, chips,
 // Sort by Venue and refresh headings all follow it.
@@ -73,7 +73,7 @@ const MUSEUMS = [
 // refresh screen. A venue not named here goes last, by name.
 const VENUE_ORDER=["met","ng","occ-nga-gov","frick","morgan","artic","menil",
   "acq","lgd","occ-new-artsmia-org","cincinnati","occ-britishart-yale-edu","brit","tate-britain","wallace","va","occ-nationalgalleries-org",
-  "louvre","orsay","jacquemart","occ-chateaudechantilly-fr","mad","rijks","khm","occ-alte-pinakothek","occ-pinakothek-der-moderne","occ-sammlung-schack","occ-smb-museum","occ-alte-nationalgalerie","occ-neue-nationalgalerie","occ-gemaeldegalerie-skd-museum","occ-staedelmuseum-de","uffizi","dellav","borghese","brera","capo","occ-cini-it","moma",
+  "louvre","orsay","jacquemart","occ-chateaudechantilly-fr","mad","rijks","khm","occ-alte-pinakothek","occ-pinakothek-der-moderne","occ-sammlung-schack","occ-smb-museum","occ-alte-nationalgalerie","occ-neue-nationalgalerie","occ-gemaeldegalerie-skd-museum","occ-staedelmuseum-de","uffizi","dellav","borghese","brera","capo","occ-cini-it","occ-lestanzedelvetro-org","occ-lestanzedellafotografia-it","moma",
   "tate-modern","mam",
   ];
 // The Occasional venues (no chip of their own) follow, by country: the United States, the rest of that group
@@ -1047,10 +1047,11 @@ const LINK_VENUES={
   "occ-kunstmuseumbasel-ch":{shopHome:"https://shop.kunstmuseumbasel.ch/en/",shopCatalogues:"https://shop.kunstmuseumbasel.ch/en/merchandise?category=Exhibition+Catalogues",shopUnseen:"script"},
   // Chantilly (Musée Condé): chip "Chantilly" after Jacquemart; its cards keep the store's name (her decision).
   "occ-chateaudechantilly-fr":{ownChip:true,chip:"Chantilly"},
-  // The Cini Foundation (cini.it): chip "Cini" after Capodimonte, cards "Cini Foundation Venice" (her decision).
-  // Its island's two houses' sites file under it too, and a cini.it page is never filed elsewhere.
-  "occ-cini-it":{ownChip:true,short:"Cini",card:"Cini Foundation Venice",name:"Fondazione Giorgio Cini",
-    sites:[{host:"lestanzedelvetro.org"},{host:"lestanzedellafotografia.it"}]},
+  // The Cini Foundation and its island's two houses: three venues, Claude's names, under one chip "Cini" after
+  // Capodimonte (her decision). A cini.it page is always asked which house holds the show (askElsewhere).
+  "occ-cini-it":{ownChip:true,chip:"Cini",group:"cini",askElsewhere:true},
+  "occ-lestanzedelvetro-org":{ownChip:true,chip:"Cini",group:"cini"},
+  "occ-lestanzedellafotografia-it":{ownChip:true,chip:"Cini",group:"cini"},
   // Moretti (her decision, Moretti only): the place after " : " leaves the title ("… : Monaco", "… : New York,
   // Sotheby's"); its description is typed in capitals (capsText); the cookie panel ends the passage.
   "occ-morettigallery-com":{linkRead:{titleDrop:/\s+:\s+[^:]+$/,capsText:true,until:/^Manage cookies$/}},
@@ -7432,8 +7433,8 @@ export default function App(){
         // A venue not met before (or stored named only by its address): Claude names it (her
         // decision). On someone else's page, code files the show at the venue Claude names
         // (heldElsewhere; her decision, a last resort).
-        const askVenue=isOcc(vc)&&needsFacts(venues[vc]);
-        const ownSite=vc===occVenueId(host)&&!linkEntry(vc);
+        const askVenue=isOcc(vc)&&(needsFacts(venues[vc])||!!(linkEntry(vc)||{}).askElsewhere);
+        const ownSite=vc===occVenueId(host)&&(!linkEntry(vc)||!!linkEntry(vc).askElsewhere);
         const prompt=linkPrompt(page,askVenue,url);
         let ask=await readResults(prompt);
         let faults=ask.ok?answerFaults(ask.data,page):[];

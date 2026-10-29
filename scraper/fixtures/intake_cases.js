@@ -403,7 +403,7 @@ check('18f: the real sample file starts with every card undecided',
   check('19: the venues are in her order', got.join()===want.join(), {got});
   const chips=['met','ng','occ-nga-gov','frick','morgan','artic','menil',
     'acq','lgd','occ-new-artsmia-org','cincinnati','occ-britishart-yale-edu','brit','tate-britain','wallace','va','occ-nationalgalleries-org',
-    'louvre','orsay','jacquemart','occ-chateaudechantilly-fr','mad','rijks','khm','occ-alte-pinakothek','occ-pinakothek-der-moderne','occ-sammlung-schack','occ-smb-museum','occ-alte-nationalgalerie','occ-neue-nationalgalerie','occ-gemaeldegalerie-skd-museum','occ-staedelmuseum-de','uffizi','dellav','borghese','brera','capo','occ-cini-it','moma',
+    'louvre','orsay','jacquemart','occ-chateaudechantilly-fr','mad','rijks','khm','occ-alte-pinakothek','occ-pinakothek-der-moderne','occ-sammlung-schack','occ-smb-museum','occ-alte-nationalgalerie','occ-neue-nationalgalerie','occ-gemaeldegalerie-skd-museum','occ-staedelmuseum-de','uffizi','dellav','borghese','brera','capo','occ-cini-it','occ-lestanzedelvetro-org','occ-lestanzedellafotografia-it','moma',
     'tate-modern','mam'];   // the Occasional venues follow by country (orderOf), not in this list
   check('19c: chips and Sort by Venue follow her list', H.VENUE_ORDER.join()===chips.join(), {got:H.VENUE_ORDER});
   check('19d: and it names all 28 but the Ashmolean, which files under Occasional by its country', got.every(id=>id==='ashmolean'||H.VENUE_ORDER.includes(id)), {});
