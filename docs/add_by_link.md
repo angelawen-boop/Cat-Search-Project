@@ -524,8 +524,8 @@ decision; lookups go to the web). On the proof list; AL-045.
 the name Claude gave, "Chantilly Musée Condé" (her decision; `LINK_VENUES`; AL-081).
 
 **Cini** (her decision): three venues under one chip "Cini", after Capo — the foundation (`occ-cini-it`), Le Stanze
-del Vetro, Le Stanze della Fotografia, in that order, each keeping the name Claude gave (`group`). A cini.it page is
-always asked which house holds the show (`askElsewhere`), so a Stanze show files under its house (AL-084).
+del Vetro, Le Stanze della Fotografia, in that order, each keeping the name Claude gave (`group`). Claude decides
+the venue as for any new venue; the entry only places the chip (AL-084).
 
 **Moretti** (`occ-morettigallery-com`, her decision: a Moretti rule, not a shared one): the place after " : " leaves
 the title ("… : Monaco"), and the title, then wholly in capitals, is recased; its description, typed in capitals

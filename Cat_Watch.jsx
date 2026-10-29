@@ -3,7 +3,7 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 // The footer prints APP_VERSION and its date, so she can tell one build from the next.
 // Numbering, her decision: a whole number for a substantial change, a decimal for a
 // small one, one number per publish. Bump it with the change it describes.
-const APP_VERSION = "53.7";
+const APP_VERSION = "53.8";
 const APP_VERSION_DATE = "29 Oct 2026";
 
 // The venue order is VENUE_ORDER, below the list, which sorts MUSEUMS; drawer, chips,
@@ -1048,8 +1048,8 @@ const LINK_VENUES={
   // Chantilly (Musée Condé): chip "Chantilly" after Jacquemart; its cards keep the store's name (her decision).
   "occ-chateaudechantilly-fr":{ownChip:true,chip:"Chantilly"},
   // The Cini Foundation and its island's two houses: three venues, Claude's names, under one chip "Cini" after
-  // Capodimonte (her decision). A cini.it page is always asked which house holds the show (askElsewhere).
-  "occ-cini-it":{ownChip:true,chip:"Cini",group:"cini",askElsewhere:true},
+  // Capodimonte (her decision).
+  "occ-cini-it":{ownChip:true,chip:"Cini",group:"cini"},
   "occ-lestanzedelvetro-org":{ownChip:true,chip:"Cini",group:"cini"},
   "occ-lestanzedellafotografia-it":{ownChip:true,chip:"Cini",group:"cini"},
   // Moretti (her decision, Moretti only): the place after " : " leaves the title ("… : Monaco", "… : New York,
@@ -7433,8 +7433,9 @@ export default function App(){
         // A venue not met before (or stored named only by its address): Claude names it (her
         // decision). On someone else's page, code files the show at the venue Claude names
         // (heldElsewhere; her decision, a last resort).
-        const askVenue=isOcc(vc)&&(needsFacts(venues[vc])||!!(linkEntry(vc)||{}).askElsewhere);
-        const ownSite=vc===occVenueId(host)&&(!linkEntry(vc)||!!linkEntry(vc).askElsewhere);
+        const askVenue=isOcc(vc)&&needsFacts(venues[vc]);
+        // An entry that only places the venue's chip leaves this as it was (Cini).
+        const lk=linkEntry(vc), ownSite=vc===occVenueId(host)&&(!lk||Object.keys(lk).every(k=>k==="ownChip"||k==="chip"||k==="group"));
         const prompt=linkPrompt(page,askVenue,url);
         let ask=await readResults(prompt);
         let faults=ask.ok?answerFaults(ask.data,page):[];
