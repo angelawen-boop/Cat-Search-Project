@@ -56,6 +56,21 @@ index of side docs, guardrails, the app explainers, future considerations — an
 
 ## The review — do all of it
 
+**The gate.** This review is enforced by code, not by this text.
+`node scraper/guide_review_gate.js start` first (clean tree): it writes
+`.claude/guide_review_ledger.json` with a row for every file in the guide and
+docs, and names lines to copy out of each. For every file, fill in: the
+probe lines' exact text (so the file is read to the end), `diagnosis`,
+`finding`, `action`, and — only for already-compressed ("dense") text that
+still cannot reach its budget — the `blocker` (a quote of the passage, with its
+line) with `blockerWhy` and `needs`. The gate computes the rest itself: sizes,
+budget and the 5% tolerance, and every decision-marked name or sentence of the
+old text that is no longer anywhere (put it back, or list it under `dropped`
+with the reason). `node scraper/guide_review_gate.js check` lists what is
+still missing. **A push is refused by a hook until it passes** (`done` marks the
+ledger finished — commit it with the review). So there is nothing to report
+until the gate passes: what it lists is work, not findings.
+
 1. **Run the mechanical check first:** `node scraper/guide_check.js`. It
    prints every missing path, every `§` pointer that lands on no heading,
    every side doc missing from the index, any missing or misordered section,
@@ -170,8 +185,9 @@ remove a rule rather than restate it.
 
 ## Finish
 
-1. `npm test` — exit 0, the budget report all `ok`, and
-   `node scraper/guide_check.js --strict` exit 0.
+1. `node scraper/guide_review_gate.js done` — exit 0 — then `npm test` exit 0 and
+   `node scraper/guide_check.js --strict` exit 0. Commit the ledger with the review.
+   The commit message starts "Guide review:" and holds the per-file findings.
 2. Commit on `main` with a message listing what changed, then
    `git pull --rebase origin main` and `git push origin main`.
 3. **The report — this is what she reads, and it is short.** Follow the
@@ -196,8 +212,8 @@ remove a rule rather than restate it.
    size or trend. Either you fixed it, it needs her decision, or it is fine.
    She has nobody to hand the work to: it is yours.
 
-   **Before reporting, check yourself:** every file under `docs/` and
-   `CLAUDE.md` was read in full; every over-budget file was diagnosed and
-   compressed, or has a named blocker. If not, go back — do not report.
+   **Open items come from the gate:** its "Open items for the report" list is
+   the only source of budget items. If the gate has not passed, there is no
+   report yet.
 
    If nothing needed doing, say so in one line — that is a good result.

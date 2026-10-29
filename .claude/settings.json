@@ -28,6 +28,21 @@
             "type": "command",
             "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/test-guard.js\"",
             "statusMessage": "Checking test run"
+          },
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/guide-review-gate.js\"",
+            "statusMessage": "Checking guide review"
+          }
+        ]
+      },
+      {
+        "matcher": "mcp__github__push_files|mcp__github__create_or_update_file|mcp__github__delete_file",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/guide-review-gate.js\"",
+            "statusMessage": "Checking guide review"
           }
         ]
       }
