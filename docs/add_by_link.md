@@ -523,6 +523,10 @@ decision; lookups go to the web). On the proof list; AL-045.
 **Chantilly** (Musée Condé, `occ-chateaudechantilly-fr`): its own chip "Chantilly", after Jacquemart; its cards keep
 the name Claude gave, "Chantilly Musée Condé" (her decision; `LINK_VENUES`; AL-081).
 
+**Moretti** (`occ-morettigallery-com`, her decision: a Moretti rule, not a shared one): the place after " : " leaves
+the title ("… : Monaco"), and the title, then wholly in capitals, is recased; its description, typed in capitals
+under small headings, is kept (`capsText`); the passage ends at "Manage cookies" (AL-083).
+
 **A link to a quarantined show** reads "Read 1 link, but nothing to add — already in your quarantine." when every
 show read is quarantined (her wording; AL-080); otherwise "…your ledger already matches it" as before.
 Its English pages print "From 8 March to 15 June" with no year (the French pages carry it): undated, with the
@@ -560,7 +564,7 @@ A venue's page can carry its own options (`linkRead` on its `MUSEUMS` entry; her
 live in the app, never the scraper). They only tidy what Claude is handed. Options: `title`, `titleDrop` (a
 label before the show's name), `dateLine` (dates from the first line matching, anywhere), `from` / `until`
 (passage starts after / ends at a matching line), `skip` / `skipEntities` / `minLine` (lines left out),
-`cleanLink` (address loses query and fragment), `crumb` (title from the breadcrumb when the page never prints its tab title), `titleAfter` (the first heading after a matching line is the title), `capsTitles` (titles typed in capitals recased). `skip` lines are never offered as a subtitle either. An
+`cleanLink` (address loses query and fragment), `crumb` (title from the breadcrumb when the page never prints its tab title), `titleAfter` (the first heading after a matching line is the title), `capsTitles` (titles typed in capitals recased), `capsText` (a passage typed in capitals is kept, Moretti). `skip` lines are never offered as a subtitle either. An
 occasional venue takes them from its `LINK_VENUES` entry; read by `readShowPage`, `venueTitle`. Junk at the end of a
 passage is tolerated (her decision).
 

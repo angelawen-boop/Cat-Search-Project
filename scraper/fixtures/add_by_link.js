@@ -528,6 +528,19 @@ function runtime() {
     ok(r.ok && r.base === "Matrimonial Bliss: Chagall's Double Portrait with Wine Glass" && r.site === 'Minneapolis Institute of Art',
       'AL-032: Mia: no "–– Minneapolis Institute of Art" tail, no "&#039;", the venue named in full', JSON.stringify([r.base, r.site]));
   }
+  // ── AL-083: Moretti (her decision, Moretti only): the place after " : " leaves the title, the capitals are
+  // recased, and its description typed in capitals reaches Claude, the cookie panel not. Read live (29 Oct). ─
+  {
+    const fn = name => new Function('React', 'window', 'document', 'localStorage', code + '\n;return ' + name + ';')(React, win, win.document, win.localStorage);
+    const read = fn('readShowPage'), card = fn('cardTitle'), MO = 'occ-morettigallery-com';
+    const live = n => JSON.parse(fs.readFileSync(path.join(__dirname, '..', '..', 'docs', 'link_pages', 'moretti_' + n + '_live.json'), 'utf8'));
+    const g = live('della_robbia'), a = live('artemisia');
+    const rg = read(g, g.url, MO), ra = read(a, a.url, MO);
+    ok(card(rg.base, MO) === 'Glazed - The Legacy of The Della Robbia' && card(ra.base, MO) === 'A Woman\u2019s Masterpiece: A \u2018Sleeping Child\u2019 by Artemisia Gentileschi',
+      'AL-083:  Moretti: the place leaves the title (": New York, Sotheby\'s", ": Monaco"), the capitals recased', JSON.stringify([card(rg.base, MO), card(ra.base, MO)]));
+    ok(/^MORETTI FINE ART IS PLEASED TO ANNOUNCE/.test(rg.raw) && /DELLA ROBBIA FAMILY/.test(rg.raw) && !/cookie|Required for the website/i.test(rg.raw) && /^Moretti Fine Art is proud/.test(ra.raw),
+      'AL-083a: Moretti: its description typed in capitals is the passage, the cookie panel never', rg.raw.slice(0, 120) + ' … ' + rg.raw.slice(-120));
+  }
   // ── AL-075: a heading that is part of the tab title is the title; a line that is only the venue's name is
   // never the title unless the show's dates sit under it (her decision). Brancusi, read live (26 Oct). ─
   {

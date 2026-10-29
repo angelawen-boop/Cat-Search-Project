@@ -1047,6 +1047,9 @@ const LINK_VENUES={
   "occ-kunstmuseumbasel-ch":{shopHome:"https://shop.kunstmuseumbasel.ch/en/",shopCatalogues:"https://shop.kunstmuseumbasel.ch/en/merchandise?category=Exhibition+Catalogues",shopUnseen:"script"},
   // Chantilly (Musée Condé): chip "Chantilly" after Jacquemart; its cards keep the store's name (her decision).
   "occ-chateaudechantilly-fr":{ownChip:true,chip:"Chantilly"},
+  // Moretti (her decision, Moretti only): the place after " : " leaves the title ("… : Monaco", "… : New York,
+  // Sotheby's"); its description is typed in capitals (capsText); the cookie panel ends the passage.
+  "occ-morettigallery-com":{linkRead:{titleDrop:/\s+:\s+[^:]+$/,capsText:true,until:/^Manage cookies$/}},
   // Under "Occasional". Boston MFA prints the dates on the line above the show's title.
   "occ-mfa-org":{short:"Boston",card:"Boston MFA"},
   "occ-archive-worcesterart-org":{short:"Worcester"},
@@ -1648,7 +1651,7 @@ function takePassage(pg){
     if(kind==="text"&&/\s#{2,6}\s/.test(line)){ kind="heading"; t=t.replace(/^.*\s#{2,6}\s+/,""); }
     // A lead paragraph set as a heading ("##### In 1938, René Magritte gave a lecture…", KMSKA) is a
     // paragraph; a heading that is a link is a card for other matter.
-    if(kind==="heading"&&!/\]\(/.test(line)&&t.split(/\s+/).length>=15&&isProse(t))kind="text";
+    if(kind==="heading"&&(!/\]\(/.test(line)||lr&&lr.capsText)&&t.split(/\s+/).length>=15&&isProse(t))kind="text";
     if(kind==="heading"||!cur||cur.kind!==kind||kind==="list"&&/^\s*(?:[*+-]|\d+\.)\s/.test(line)){
       cur={kind,text:t,k}; blocks.push(cur);
       if(kind==="heading")cur=null;
@@ -1688,7 +1691,7 @@ function takePassage(pg){
     // A line typed in capitals is a heading or a quotation shouted (Rijksmuseum's "THIS IS AN ABSOLUTELY
     // FABULOUS SHOW…"), not the show's text.
     const letters=t.replace(/[^\p{L}]/gu,"");
-    if(letters.length>=12&&(t.match(/\p{Lu}/gu)||[]).length/letters.length>0.7){ rule("skip:capitals"); continue; }
+    if(!(lr&&lr.capsText)&&letters.length>=12&&(t.match(/\p{Lu}/gu)||[]).length/letters.length>0.7){ rule("skip:capitals"); continue; }
     const l=withoutBoilerplate(t);
     if(l!==t)rule("boilerplate");
     if(!l||!isProse(l)||isCaption(l))continue;
