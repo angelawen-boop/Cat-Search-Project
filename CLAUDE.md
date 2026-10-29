@@ -355,6 +355,13 @@ month first." (her wording) and a session adds it. The blanket "dots are day fir
 The Prado: month first, chip "Prado" after KHM, cards "Prado Madrid". `docs/scraper.md` §3; DS-004, DS-006,
 DS-009, AL-085. She reverts to a backup without her five Prado imports and re-imports them.
 
+#### 2.2.16 53.10 — published; her next links confirm
+
+"Dates cannot be seen — JS-rendering." on a link with no dates whose page holds a script's unfilled placeholder (her
+wording; shared, her ask); Łazienki's title from its page title, Getty's "Museum Collection" pages from their heading
+(venue rules); HTML codes in a heading decoded. Getty's dates are drawn by script (from data.getty.edu): its links come
+in undated — reading them from there is unbuilt, proposed. `docs/add_by_link.md`, "Venue link rules".
+
 #### 2.2.6 Tests that failed — recorded, not investigated
 
 A session records each failing suite here and does not investigate it (`docs/testing.md`).
@@ -567,7 +574,7 @@ price, her decision).
 > restating `capabilities` must restate all four; omitting it carries them
 > forward. **Renaming the connector means restating them.**
 
-**Live: 53.9 in her app**, with the cloud ledger (merged at 46). What each recent version changed is in
+**Live: 53.10 in her app**, with the cloud ledger (merged at 46). What each recent version changed is in
 `docs/publishing.md`, "What is live now".
 
 #### The mental model, load-bearing

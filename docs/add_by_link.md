@@ -463,8 +463,12 @@ archived copies: those links cannot be read.
 **Łazienki** (`occ-lazienki-krolewskie-pl`, her decision, Łazienki only): its heading runs on into the show's opening
 paragraph; the page title, less its section tail (" - Events"), is the title (`tabTitle`; AL-086). **Getty**
 (`occ-getty-edu`, her decision, Getty only): its collection database's exhibition pages are titled "Museum
-Collection", so their heading is the title (`tabNotName`; AL-087). Neither Getty page type shows dates (the old
-exhibition pages draw them by script): its links come in undated. Shared: HTML codes left in a heading are decoded
+Collection", so their heading is the title (`tabNotName`; AL-087). Both Getty page types draw their dates by
+script (the collection pages fetch them from data.getty.edu): Parallel's copy holds none, so its links come in undated.
+**A link with no dates whose page still holds a script's unfilled placeholder** ("{{daysLeft(exhibition.end)}}")
+gets "Dates cannot be seen — JS-rendering." in place of the sweep's no-dates note (her wording and decision, shared;
+`SCRIPT_DATES_NOTE`, AL-088). A page with no placeholder (Getty's collection pages) keeps the sweep's note. Live: the
+four undated proof pages read; only *Transcending Time* changed. Shared: HTML codes left in a heading are decoded
 in the title (AL-086a; no proof page carries one). All three pages are on the proof list.
 
 **NGA has its own chip** (her decision): National Gallery of Art links (`occ-nga-gov`) are an occasional venue

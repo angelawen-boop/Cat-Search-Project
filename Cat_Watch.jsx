@@ -3,7 +3,7 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 // The footer prints APP_VERSION and its date, so she can tell one build from the next.
 // Numbering, her decision: a whole number for a substantial change, a decimal for a
 // small one, one number per publish. Bump it with the change it describes.
-const APP_VERSION = "53.9";
+const APP_VERSION = "53.10";
 const APP_VERSION_DATE = "29 Oct 2026";
 
 // The venue order is VENUE_ORDER, below the list, which sorts MUSEUMS; drawer, chips,
@@ -1391,6 +1391,10 @@ function pageUnreadWhy(e){
 // collects the name of every rule that changed this page's result: the proof list keeps a page only
 // for a rule no other page at its venue shows (docs/testing.md). The app passes none.
 // One page → {ok, base, between, under, afterDates, start, end, raw, site, link, noDates, shown, shownWhy, dateLine, dateNote} or {ok:false, why}.
+// A link's page whose dates a script draws after loading (her wording); and the sign of it, a template
+// placeholder the script never filled ("{{daysLeft(exhibition.end)}}").
+const SCRIPT_DATES_NOTE="Dates cannot be seen \u2014 JS-rendering.";
+const SCRIPT_PLACEHOLDER=/\{\{[^{}\n]{1,80}\}\}/;
 function readShowPage(res,url,vc,rules){
   const pg=pageToRead(res,url,vc,rules);
   if(pg.fail)return pg.fail;
@@ -1584,6 +1588,9 @@ function findDates(pg){
       :mo?{d:mo.k,range:{start:"",end:""},noDates:true,shown:mo.r.shownText,shownWhy:mo.r.shownWhy,via:"dates:shown-only"}
       :ny?{d:ny.k,range:{start:"",end:""},noDates:true,shown:ny.t,shownWhy:"no year is published anywhere",via:"dates:no-year"}
       :{d:h0,range:{start:"",end:""},noDates:true,via:"dates:none"};
+    // No dates, and the page still holds a script's unfilled placeholder ("{{daysLeft(exhibition.end)}}", Getty):
+    // its dates are drawn by script, so the card says so (SCRIPT_DATES_NOTE).
+    if(found.via==="dates:none"&&SCRIPT_PLACEHOLDER.test(lines.join("\n"))){ found.scriptDates=true; rule("dates:script"); }
   }
   const d=found.d,dEnd=found.dEnd||found.d;
   let range=found.range;
@@ -1790,7 +1797,7 @@ function pageResult(pg){
   let tracked=false; try{ tracked=[...new URL(url).searchParams.keys()].some(k=>TRACKING_PARAM.test(k)); }catch{}
   const link=lr&&lr.cleanLink?String(url).split(/[?#]/)[0]:tracked?withoutTracking(url):url;
   if(link!==url)rule(lr&&lr.cleanLink?"cleanLink":"tracking");
-  return{ok:true,base:pg.base,between:pg.between,under,afterDates,start:range.start||"",end:range.end||"",raw:pg.raw.slice(0,LINK_RAW_CHARS),site:site||(linkEntry(vc)||{}).name||host.replace(/^www\./,""),link,noDates:!!found.noDates,orderUnknown:!!found.orderUnknown,shown:found.shown||"",shownWhy:found.shownWhy||"",dateLine:found.noDates&&!found.shown?"":pg.dateLine,dateNote:DATES.closedEarlyNote(range)};
+  return{ok:true,base:pg.base,between:pg.between,under,afterDates,start:range.start||"",end:range.end||"",raw:pg.raw.slice(0,LINK_RAW_CHARS),site:site||(linkEntry(vc)||{}).name||host.replace(/^www\./,""),link,noDates:!!found.noDates,scriptDates:!!found.scriptDates,orderUnknown:!!found.orderUnknown,shown:found.shown||"",shownWhy:found.shownWhy||"",dateLine:found.noDates&&!found.shown?"":pg.dateLine,dateNote:DATES.closedEarlyNote(range)};
 }
 
 // A venue's title from its own headings (linkRead.title). "pieces": the heading is the "##"
@@ -7556,7 +7563,7 @@ export default function App(){
         tape.row={title,museumId:vc,exUrl:url};
         got.push({venue_code:vc,title,start_date:page.start,end_date:page.end,
           summary:a.summary?composeSummary(cardTitle(a.english,vc),a.summary):"",url:page.link,
-          notes:[page.noDates?(page.orderUnknown?DATES.ORDER_UNKNOWN_NOTE:page.shown?DATES.shownOnlyNote(page.shown,page.shownWhy):DATES.NO_DATES_NOTE):"",page.dateNote||"",
+          notes:[page.noDates?(page.orderUnknown?DATES.ORDER_UNKNOWN_NOTE:page.shown?DATES.shownOnlyNote(page.shown,page.shownWhy):page.scriptDates?SCRIPT_DATES_NOTE:DATES.NO_DATES_NOTE):"",page.dateNote||"",
             ask.ok?"":"Description not written \u2014 "+ask.detail.replace(/\s+\[.*$/,"")].filter(Boolean).join(" ")});
       }catch(e){ fails.push({url,why:"Couldn\u2019t read it ("+String((e&&e.message)||e)+")."}); }
       finally{

@@ -559,6 +559,12 @@ function runtime() {
     const t = live('getty_transcending_time'), rt = read(t, t.url, 'occ-getty-edu');
     ok(rt.ok && rt.base === 'Transcending Time: The Medieval Book of Hours',
       'AL-087a: Getty: an exhibition page keeps its own title', JSON.stringify(rt.base));
+    ok(rt.ok && rt.noDates && rt.scriptDates && !rg.scriptDates,
+      'AL-088:  no dates and a script placeholder left on the page ("{{daysLeft(exhibition.end)}}"): "Dates cannot be seen — JS-rendering." (her wording); no placeholder, the usual note', JSON.stringify([rt.scriptDates, rg.scriptDates]));
+    const note = new Function('React', 'window', 'document', 'localStorage', code + '\n;return SCRIPT_DATES_NOTE;')(React, win, win.document, win.localStorage);
+    const jsx = fs.readFileSync(path.join(__dirname, '..', '..', 'Cat_Watch.jsx'), 'utf8');
+    ok(note === 'Dates cannot be seen \u2014 JS-rendering.' && jsx.includes('page.scriptDates?SCRIPT_DATES_NOTE:DATES.NO_DATES_NOTE'),
+      'AL-088a: the card note is her sentence word for word, in place of "No closing date found…"', JSON.stringify(note));
   }
   // ── AL-075: a heading that is part of the tab title is the title; a line that is only the venue's name is
   // never the title unless the show's dates sit under it (her decision). Brancusi, read live (26 Oct). ─
