@@ -460,6 +460,13 @@ Milano" with the full name on a line below: `titleDrop` plus `nameInLines` (AL-0
 show's text in Italian. The city's site (www2.comune.milano.it) refuses Parallel (403) and has no cached or
 archived copies: those links cannot be read.
 
+**Łazienki** (`occ-lazienki-krolewskie-pl`, her decision, Łazienki only): its heading runs on into the show's opening
+paragraph; the page title, less its section tail (" - Events"), is the title (`tabTitle`; AL-086). **Getty**
+(`occ-getty-edu`, her decision, Getty only): its collection database's exhibition pages are titled "Museum
+Collection", so their heading is the title (`tabNotName`; AL-087). Neither Getty page type shows dates (the old
+exhibition pages draw them by script): its links come in undated. Shared: HTML codes left in a heading are decoded
+in the title (AL-086a; no proof page carries one). All three pages are on the proof list.
+
 **NGA has its own chip** (her decision): National Gallery of Art links (`occ-nga-gov`) are an occasional venue
 in every other way, but sit under an "NG Washington" chip, never "Occasional", and their cards say NG Washington (`LINK_VENUES`;
 AL-030). A leading "Exhibition:" is dropped from titles (her ask; *Hubert Robert, 1733–1808*): an `LINK_VENUES`

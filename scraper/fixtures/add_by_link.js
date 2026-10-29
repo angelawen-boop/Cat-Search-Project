@@ -541,6 +541,25 @@ function runtime() {
     ok(/^MORETTI FINE ART IS PLEASED TO ANNOUNCE/.test(rg.raw) && /DELLA ROBBIA FAMILY/.test(rg.raw) && !/cookie|Required for the website/i.test(rg.raw) && /^Moretti Fine Art is proud/.test(ra.raw),
       'AL-083a: Moretti: its description typed in capitals is the passage, the cookie panel never', rg.raw.slice(0, 120) + ' … ' + rg.raw.slice(-120));
   }
+  // ── AL-086: Łazienki (her decision, Łazienki only): its heading runs on into the opening paragraph, so the page
+  // title's name is the title; HTML codes left in a heading are decoded (shared). Getty (her decision, Getty only):
+  // a collection page titled "Museum Collection" takes its heading. Read live (29 Oct). ─
+  {
+    const read = new Function('React', 'window', 'document', 'localStorage', code + '\n;return readShowPage;')(React, win, win.document, win.localStorage);
+    const live = n => JSON.parse(fs.readFileSync(path.join(__dirname, '..', '..', 'docs', 'link_pages', n + '_live.json'), 'utf8'));
+    const lz = live('lazienki_nabis'), r = read(lz, lz.url, 'occ-lazienki-krolewskie-pl');
+    ok(r.ok && r.base === 'The Nabis. Prophets of a New Art' && r.start === '2026-07-16' && r.end === '2026-11-15',
+      'AL-086:  Łazienki: the page title\'s name is the title, not the heading run on into the paragraph', JSON.stringify([r.base, r.start, r.end]));
+    const runOn = read(lz, lz.url, null);
+    ok(runOn.ok && /Sérusier.*Musée d’Orsay/.test(runOn.base) && !/&\w+;/.test(runOn.base),
+      'AL-086a: HTML codes left in a heading are decoded in the title ("S&eacute;rusier" → "Sérusier")', JSON.stringify(runOn.base));
+    const g = live('getty_103nge'), rg = read(g, g.url, 'occ-getty-edu');
+    ok(rg.ok && rg.base === 'Illuminating the Renaissance: The Triumph of Flemish Manuscript Painting in Europe',
+      'AL-087:  Getty: a collection page titled "Museum Collection" takes its heading', JSON.stringify(rg.base));
+    const t = live('getty_transcending_time'), rt = read(t, t.url, 'occ-getty-edu');
+    ok(rt.ok && rt.base === 'Transcending Time: The Medieval Book of Hours',
+      'AL-087a: Getty: an exhibition page keeps its own title', JSON.stringify(rt.base));
+  }
   // ── AL-075: a heading that is part of the tab title is the title; a line that is only the venue's name is
   // never the title unless the show's dates sit under it (her decision). Brancusi, read live (26 Oct). ─
   {

@@ -1106,6 +1106,12 @@ const LINK_VENUES={
   // Moretti (her decision, Moretti only): the place after " : " leaves the title ("… : Monaco", "… : New York,
   // Sotheby's"); its description is typed in capitals (capsText); the cookie panel ends the passage.
   "occ-morettigallery-com":{linkRead:{titleDrop:/\s+:\s+[^:]+$/,capsText:true,until:/^Manage cookies$/}},
+  // Łazienki (her decision, Łazienki only): its heading runs on into the show's opening paragraph; the
+  // page title is the show's name and its section ("The Nabis. Prophets of a New Art - Events"): the name is the title.
+  "occ-lazienki-krolewskie-pl":{linkRead:{tabTitle:/\s+[-–—]\s+[^-–—]+$/}},
+  // The Getty (her decision, Getty only): its collection database's exhibition pages are titled
+  // "Museum Collection", so their heading is the show's name.
+  "occ-getty-edu":{linkRead:{tabNotName:/^Museum Collection$/}},
   // Under "Occasional". Boston MFA prints the dates on the line above the show's title.
   "occ-mfa-org":{short:"Boston",card:"Boston MFA"},
   "occ-archive-worcesterart-org":{short:"Worcester"},
@@ -1411,7 +1417,10 @@ function pageToRead(res,url,vc,rules){
   const head=(text.match(/^\s*#\s+(.+)$/m)||[])[1];
   if(CHALLENGE_TITLE.test(String(res&&res.title||""))||CHALLENGE_TITLE.test(stripMd(head))){ rule("fail:bot-check"); return{fail:{ok:false,why:BOT_CHECK_SAID.charAt(0).toUpperCase()+BOT_CHECK_SAID.slice(1)+"."}}; }
   const host=hostOf(siteUrlOf(url));
-  const{show,site}=splitPageTitle(res&&res.title,host);
+  let{show,site}=splitPageTitle(res&&res.title,host);
+  // A venue whose page title on some pages is a section's name, never the show's (linkRead.tabNotName;
+  // Getty's collection pages, "Museum Collection | Museum Collection | Getty"): the heading names the show.
+  if(lr&&lr.tabNotName&&lr.tabNotName.test(show)){ show=""; rule("tabNotName"); }
   if(site)rule(String(res.title).includes(" | ")?"tab:bars":"tab:site-after-dash");
   if(TITLE_LABEL.test(decodeEntities(stripMd(res&&res.title)).split(" | ")[0].trim()))rule("tab:label");
   // A venue's own date forms rewritten before reading: two-digit years (shortYear, NGV), "as of" for
@@ -1653,6 +1662,10 @@ function finishName(pg){
   // Vincent's Path to Fame" (Van Gogh Museum), "Mostra Rothko a Firenze" (San Marco).
   { const b=base.replace(/^(?:exhibitions?|mostra|ausstellung|exposition|exposición|tentoonstelling)\s*[:–—-]?\s+(?=\S)/i,"").trim();
     if(b!==base&&b.split(/\s+/).length>=1&&/\p{L}{2}/u.test(b)){ base=b; rule("label-dropped"); } }
+  // A venue whose heading runs on past the page title's name (linkRead.tabTitle, the page title's tail
+  // that is not the name; Łazienki): that name.
+  if(lr&&lr.tabTitle){ const t=(pg.show||"").replace(lr.tabTitle,"").trim();
+    if(t&&base.length>t.length&&foldText(base).startsWith(foldText(t))){ base=t; rule("tabTitle"); } }
   // A venue whose headline runs on past the show's name (linkRead.firstSentence; San Marco's
   // press releases): its first sentence only.
   if(lr&&lr.firstSentence){ const b=base.split(/[.!?](?=\s+\p{Lu})/u)[0].trim()||base; if(b!==base)rule("firstSentence"); base=b; }
@@ -1662,6 +1675,8 @@ function finishName(pg){
   if(lr&&lr.unquote){ const b=base.replace(/^[“"«‘']\s*(.+?)\s*[”"»’']$/u,"$1"); if(b!==base)rule("unquote"); base=b; }
   // A doubled colon is the venue's typo (NGA, Souvenirs of the Gilded Age).
   if(/\s*:{2,}/.test(base)){ base=base.replace(/\s*:{2,}/g,":"); rule("doubled-colon"); }
+  // HTML codes the site left in its heading are decoded, as in the rest of the page ("S&eacute;rusier", Łazienki).
+  { const b=decodeEntities(base); if(b!==base)rule("entities"); base=b; }
   pg.base=base;
 }
 
