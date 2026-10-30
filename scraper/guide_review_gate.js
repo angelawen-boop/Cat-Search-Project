@@ -400,14 +400,24 @@ function check() {
   return { bad: [], infos };
 }
 
+const REPORT_NAMES = ['', 'Mechanical check', 'Facts vs repo', 'Open work (§2.2)', 'Lessons (§4.1)', 'Redundancies', 'Contradictions', 'Untraceable lines', 'Nothing lost', 'Budgets'];
+
+// Exceptions only: a tick where there is nothing to say; a step's extra lines are rows of their own under it.
 function report(led, infos) {
-  const rows = guideFiles().map((f) => {
+  const cut = (x, n) => { const t = norm(x).replace(/\|/g, '/'); return t.length > n ? t.slice(0, n - 1) + '…' : t; };
+  const stepRows = infos.flatMap((i, k) => {
+    const [first, ...more] = String(i).split('<br>');
+    return [`| ${k + 1}. ${REPORT_NAMES[k + 1]} | ${norm(first) || '✓'} |`, ...more.map((m) => `| | ${norm(m)} |`)];
+  });
+  const docRows = guideFiles().map((f) => {
     const r = led.files[f];
     const cur = lineCount(nowText(f)), was = r.linesBefore, bud = budgetOf(f);
-    const room = bud - cur;
-    let verdict = cur <= bud ? 'Within budget' : cur <= limitOf(f) ? 'Within 5% tolerance' : 'Over — needs your call';
-    const cut = (s, n) => norm(s).replace(/\|/g, '/').slice(0, n);
-    return `| \`${f}\` | ${bud} | ${cur}${was !== cur ? ` (was ${was})` : ''} | ${room >= 0 ? room + ' spare' : -room + ' over'} | ${verdict} | ${cut(r.finding, 170)} | ${r.action === 'none' ? '—' : r.action} | ${norm(r.remaining) === 'nothing' ? 'nothing' : cut(r.blockerWhy || r.remaining, 120)} |`;
+    let status;
+    if (cur > limitOf(f)) status = `Over by ${cur - bud} — ${cut(r.blockerWhy || r.remaining, 110)}`;
+    else if (cur > bud) status = `Over by ${cur - bud}, within 5% tolerance`;
+    else if (r.action !== 'none') status = `${r.action} — ${cut(r.finding, 110)}`;
+    else status = '✓';
+    return `| \`${f}\` | ${bud} | ${cur}${was !== cur ? ` (was ${was})` : ''} | ${status} |`;
   });
   const open = [];
   for (const f of guideFiles()) {
@@ -418,11 +428,8 @@ function report(led, infos) {
   for (const u of (led.untraceable || []).filter((x) => corpusText().includes(norm(x.phrase)))) open.push(`Could not trace, in ${u.file}: "${u.phrase}" — ${norm(u.searched)}`);
   const out = [
     '## Guide review', '',
-    '### The nine steps', '', '| Step | Problems |', '|---|---|',
-    ...infos.map((i, k) => `| ${k + 1}. ${STEP_NAMES[k + 1]} | ${norm(i.split('<br>')[0]) || '✓'} |`), '',
-    ...infos.flatMap((i, k) => (i.split('<br>').length > 1 ? [`**${k + 1}. ${STEP_NAMES[k + 1]} — the list:**`, '', ...i.split('<br>').slice(1), ''] : [])),
-    '### Every document', '',
-    '| Document | Budget | Now | Room | Verdict | Found | Done | Still needed |', '|---|---|---|---|---|---|---|---|', ...rows, '',
+    '### Steps', '', '| Step | Problems |', '|---|---|', ...stepRows, '',
+    '### Documents', '', '| Document | Budget | Now | Status |', '|---|---|---|---|', ...docRows, '',
     '### Open items for you', '', ...(open.length ? open.map((o, i) => `${i + 1}. ${o}`) : ['None.']), '',
     ...((led.fyi || []).length ? ['### FYI', '', ...led.fyi.map((x) => `- ${norm(x)}`), ''] : []),
   ].join('\n');

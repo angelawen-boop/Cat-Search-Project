@@ -205,9 +205,10 @@ remove a rule rather than restate it.
    `git pull --rebase origin main` and `git push origin main`.
 3. **The report is the gate's own file** — `.claude/guide_review_report.md`,
    written by `done`. Send it as your message, word for word, adding
-   nothing: the nine steps and their problems, if any, every document in one row
-   (budget, size now and before, room, verdict, what was found, what was done,
-   what is still needed), the open items for her, any FYI. Plain English,
+   nothing: the steps table (a tick where clean; each file still over listed
+   as its own row), every document in one row (budget, size now and before, a
+   tick or what was done or is still over), then the open items for her and any
+   FYI. Plain English,
    spoken TO her. It is short because the work was done, not because it was
    skipped. No "watch" items; no debrief of how the work went (the per-file
    review is in the ledger and the commit message). If you add a sentence of
