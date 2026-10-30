@@ -159,10 +159,10 @@ full, line by line, before you decide anything about it. Then:
 3. **Check against the original.** Read `git diff`; list what the old text held
    (each decision, judgement call, lesson, open item, pointer, name, number) and
    confirm each is still there or in its new home. Put back anything missing.
-**Never accepted as a reason to leave something:** it is large, the work is
-big, the run is unattended, it needs a supervised session, or it is risky. Time
-is no limit — the run may take an hour or more. If there is truly nothing more
-to cut without harm, say which passage and why, in the ledger.
+**Never accepted as a reason to leave something:** the work is big, the run is
+unattended, it needs a supervised session, or it is risky. Time is no limit —
+the run may take an hour or more. If you find nothing more to improve, say which
+passage you checked and why, in the ledger.
 
 ## You review the WRITING, never the project
 

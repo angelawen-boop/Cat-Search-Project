@@ -11,7 +11,7 @@
  * limit or a tolerance, so the only way through is the substantive work. When the ten steps pass, `done` measures
  * every document against its budget, by code: a document more than 5% over is sent back ONCE with the words "go
  * through these again" — still no number. The second pass must change the file, or name the one passage it
- * cannot cut and why. Whatever remains is printed to her in the report. Within 5% is printed, nothing more.
+ * checked and why it needs no further improvement. Whatever remains is printed to her in the report. Within 5% is printed, nothing more.
  *
  *   node scraper/guide_review_gate.js start     begin (clean tree): writes .claude/guide_review_ledger.json
  *   node scraper/guide_review_gate.js step      check the current step; pass it, or list what is missing
@@ -549,7 +549,7 @@ function measure() {
   return { over, near };
 }
 // A document measured well over is sent back once ("go through these again"); the second pass must change the file or
-// name the one passage it cannot cut and why. Never a number in anything the reviewer reads.
+// name the one passage it checked and why it needs no further improvement. Never a number in anything the reviewer reads.
 function finalProblems(led) {
   const m = measure();
   if (!m.over.length) return [];
@@ -560,13 +560,13 @@ function finalProblems(led) {
     const was = (led.sentBack || {})[o.f];
     const p2 = row.pass2 || {};
     if (was && sha(nowText(o.f)) !== was) {
-      if (norm(p2.note).length < 30) bad.push(`${o.f}: say what you changed on this second pass — files["${o.f}"].pass2.note, 30+ characters.`);
+      if (norm(p2.note).length < 30) bad.push(`${o.f}: say what you changed — files["${o.f}"].pass2.note, 30+ characters.`);
       continue;
     }
-    const c = p2.cannot || {};
+    const c = p2.nothingMore || {};
     const line = (nowText(o.f) || '').split('\n')[(c.line || 0) - 1] || '';
-    if (norm(c.quote).length < 60 || !norm(line).includes(norm(c.quote).slice(0, 60))) bad.push(`${o.f}: it did not change. Go through it again, or name the passage you cannot cut — files["${o.f}"].pass2.cannot = {quote: 60+ characters copied from it, line: its line number, why: one sentence}.`);
-    else if (norm(c.why).length < 30 || norm(c.why).length > 200 || /\d+\s*(lines?|characters?|words?)/i.test(c.why)) bad.push(`${o.f}: pass2.cannot.why — one sentence (30–200 characters) on why that passage cannot go, with no counts.`);
+    if (norm(c.quote).length < 60 || !norm(line).includes(norm(c.quote).slice(0, 60))) bad.push(`${o.f} did not change. If you found nothing more to improve in it, say why — files["${o.f}"].pass2.nothingMore = {quote: a passage from it, 60+ characters, line: its line number, why: one sentence on why it needs no further improvement}.`);
+    else if (norm(c.why).length < 30 || norm(c.why).length > 200 || /\d+\s*(lines?|characters?|words?)/i.test(c.why)) bad.push(`${o.f}: pass2.nothingMore.why — one sentence, in words, with no figures.`);
   }
   return bad;
 }
@@ -586,7 +586,7 @@ function report(led, infos) {
   const m = measure();
   const reasonOf = (f) => {
     const p2 = ((led.files[f] || {}).pass2) || {};
-    return p2.cannot && norm(p2.cannot.why) ? `cannot cut: ${norm(p2.cannot.why)}` : norm(p2.note) ? `second pass: ${norm(p2.note)}` : '';
+    return p2.nothingMore && norm(p2.nothingMore.why) ? `nothing more to improve: ${norm(p2.nothingMore.why)}` : norm(p2.note) ? `second pass: ${norm(p2.note)}` : '';
   };
   const near = m.near.map((o) => `${o.f} ${o.lines}/${o.bud}`);
   const nearLine = near.length ? `${near.length} over budget but within the 5% tolerance: ${near.join(', ')}` : '';
