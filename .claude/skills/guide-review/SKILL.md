@@ -56,17 +56,17 @@ index of side docs, guardrails, the app explainers, future considerations — an
 
 ## The review — do all of it
 
-**The gate — all nine steps below are enforced by code, in order.**
+**The gate — the reading and the eight steps below are enforced by code, in order.**
 `node scraper/guide_review_gate.js start` first (clean tree): it writes
 `.claude/guide_review_ledger.json` — a row per file, a row per §2.2 section —
 and names lines to copy out of each file. Then `node scraper/guide_review_gate.js
-step` after each step's work: a step a script owns (1 the mechanical check, 3
+step` after each step's work: a step a script owns (1 the mechanical check, 2
 facts against the repo, and the duplicate, lost-decision and lost-lesson
-tests) is run by the gate itself; a judgement step (2 reading, 4 open work,
-5–6 diaries, overturned rules and contradictions, 7 lessons, 8 budgets, 9
-untraceable lines) needs its proof of work in the ledger, which the gate
+tests) is run by the gate itself; a judgement step (the reading, 3 open work,
+4–5 diaries, overturned rules and contradictions, 6 lessons, 7
+untraceable lines, 8 budgets) needs its proof of work in the ledger, which the gate
 checks. **A step cannot pass before the one before it, and a push is refused
-by a hook until all nine stand.** What the gate lists is work, not findings.
+by a hook until all stand.** What the gate lists is work, not findings.
 `done` writes `.claude/guide_review_report.md`.
 
 Per file the ledger asks for: the lines copied out exactly, `diagnosis`
@@ -78,27 +78,28 @@ stay over only if it is already-compressed text more than 25% over, with a
 quoted blocker, its reason and the lines it would need — the gate then offers
 her a budget rounded to the next 50, never a bare "+1".
 
-1. **Run the mechanical check first:** `node scraper/guide_check.js`. It
+**First, before step 1 — read.** **Read `CLAUDE.md` in full, then every file under `docs/`, then the skill
+   files that cite the guide (`.claude/skills/*/SKILL.md`).** Run
+   `node scraper/doc_budget.js`, `node scraper/venue_status.js`,
+   `git log --since="16 days ago" --stat` and `git log --oneline -40`.
+
+1. **Run the mechanical check:** `node scraper/guide_check.js`. It
    prints every missing path, every `§` pointer that lands on no heading,
    every side doc missing from the index, any missing or misordered section,
    and the list of side docs that name another side doc. Fix what it flags.
    It cannot tell whether a pointer lands on the RIGHT section — spot-check
    five.
-2. **Read `CLAUDE.md` in full, then every file under `docs/`, then the skill
-   files that cite the guide (`.claude/skills/*/SKILL.md`).** Run
-   `node scraper/doc_budget.js`, `node scraper/venue_status.js`,
-   `git log --since="16 days ago" --stat` and `git log --oneline -40`.
-3. **Check every factual claim you can against the repo:** file and script
+2. **Check every factual claim you can against the repo:** file and script
    names exist; fixture ranges exist (`grep` the fixture files); version
    numbers match `APP_VERSION` on `main` and on `claude/ledger-cloud`
    (`git fetch origin claude/ledger-cloud`); branch list matches
    `git ls-remote --heads origin`; counts and run folders named in open work
    exist under `scraper/output/`.
-4. **Open work (§2.2):** for each item, look at the commits since the last
+3. **Open work (§2.2):** for each item, look at the commits since the last
    review. Finished → cut to its one-line result or remove it. Still open →
    keep its backstory, enough for a cold session to pick it up. Check the shape
    rules above: nothing standing in 2.2, no ideas nobody is working on.
-5. **The three tests, for every doc:**
+4. **The three tests, for every doc:**
    - **Diaries** — events narrated in order ("first we tried…, then…"). Cut to
      the result, the decision and the lesson. If the evidence is worth keeping,
      compress it FIRST, then move it to the right doc; a side doc is never a
@@ -114,10 +115,15 @@ her a budget rounded to the next 50, never a bare "+1".
    - **Overturned rules** — a rule the code or a later decision no longer
      follows. The code wins over prose. Two prose decisions that disagree →
      ASK, don't pick.
-6. **Contradictions:** the same fact stated two ways (in the guide, between the
+5. **Contradictions:** the same fact stated two ways (in the guide, between the
    guide and a doc, between a doc and the code).
-7. **"Do not re-break" (§4.1):** merge new entries into the lesson they
+6. **"Do not re-break" (§4.1):** merge new entries into the lesson they
    illustrate; one lesson, one line where possible. Never drop a lesson.
+7. **Anything you cannot trace** — a line whose origin, meaning or current
+   truth you cannot establish from the repo and its history
+   (`git log -S"<phrase>" -- CLAUDE.md docs/` is the tool) — gets
+   investigated as far as the repo allows, then goes in the report as a
+   question with what you found.
 8. **Budgets — the main work of this review.** Every file within
    `scraper/doc_budget.js` (a NEW doc's budget is its size rounded up to the
    next 50), with about 5% over tolerated. **Reading comes first and is
@@ -145,11 +151,6 @@ her a budget rounded to the next 50, never a bare "+1".
    are no limit — the run may take an hour or more. Doing the reading and
    writing in the background is the job; none of it goes to her.
    Raising a budget is hers.
-9. **Anything you cannot trace** — a line whose origin, meaning or current
-   truth you cannot establish from the repo and its history
-   (`git log -S"<phrase>" -- CLAUDE.md docs/` is the tool) — gets
-   investigated as far as the repo allows, then goes in the report as a
-   question with what you found.
 
 ## You review the WRITING, never the project
 
@@ -199,7 +200,7 @@ remove a rule rather than restate it.
    `git pull --rebase origin main` and `git push origin main`.
 3. **The report is the gate's own file** — `.claude/guide_review_report.md`,
    written by `done`. Send it as your message, word for word, adding
-   nothing: the nine steps and what each found, every document in one row
+   nothing: the eight steps and their problems, if any, every document in one row
    (budget, size now and before, room, verdict, what was found, what was done,
    what is still needed), the open items for her, any FYI. Plain English,
    spoken TO her. It is short because the work was done, not because it was

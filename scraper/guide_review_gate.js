@@ -2,27 +2,28 @@
 /*
  * GUIDE REVIEW GATE — her decision: the review's finish line is code, not a promise.
  *
- * The review has nine steps (.claude/skills/guide-review/SKILL.md). Sessions skipped some and reported the
- * rest, so every step is now a gate: a step that belongs to a script is run by this script; a step that is
- * judgement must leave proof of work in the ledger, which the script checks. A step cannot be passed before
- * the one before it, and a Guide-review push is refused (.claude/hooks/guide-review-gate.js) until all nine
- * stand.
+ * The review has eight steps (.claude/skills/guide-review/SKILL.md) after one thing that must come first:
+ * reading every file. Sessions skipped steps and reported the rest, so every step is a gate: a step a script
+ * owns is run by this script; a judgement step must leave proof of work in the ledger, which the script
+ * checks. A step cannot be passed before the one before it, and a Guide-review push is refused
+ * (.claude/hooks/guide-review-gate.js) until all stand.
  *
  *   node scraper/guide_review_gate.js start     begin (clean tree): writes .claude/guide_review_ledger.json
  *   node scraper/guide_review_gate.js step      check the current step; pass it, or list what is missing
- *   node scraper/guide_review_gate.js check     all nine, in order — what the push hook runs
+ *   node scraper/guide_review_gate.js check     everything, in order — what the push hook runs
  *   node scraper/guide_review_gate.js done      check, mark the ledger done, write .claude/guide_review_report.md
  *
- * Steps (numbers are the skill's):
- *   1 mechanical check   script  guide_check.js --strict
- *   2 read everything    proof   each file's named lines copied out exactly
- *   3 facts vs repo      script  version, branch table vs origin, run folders named in open work
- *   4 open work          proof   a verdict and evidence per §2.2 section
- *   5 three tests        script + proof   duplicated passages (script); diagnosis and overturned rules per file
- *   6 contradictions     script + proof   one live version everywhere (script); contradictions per file
- *   7 lessons            script + proof   no §4.1 lesson lost (script); a note
- *   8 budgets            script + proof   size, tolerance, diagnosis, action, blocker per file
- *   9 untraceable lines  proof   each listed with the search made, or none with what was searched
+ *   (read)  every file's named lines copied out exactly — before step 1, not shown in the report
+ *   1 Mechanical check        script  guide_check.js --strict
+ *   2 Facts against the repo  script  app version, branch table against origin, run folders named in open work
+ *   3 Open work               proof   a verdict and evidence per §2.2 section
+ *   4 Redundancies            script + proof  duplicates (script); diagnosis and overturned rules per file
+ *   5 Contradictions          script + proof  contradictions per file
+ *   6 Lessons                 script + proof  no §4.1 lesson lost (script); a note and a count
+ *   7 Untraceable lines       proof   each with the search made, or what was searched
+ *   8 Budgets                 script + proof  size, tolerance, diagnosis, action, blocker per file
+ *
+ * A step's "info" is what the report shows under Problems: empty when there is nothing to say (shown as a tick).
  */
 'use strict';
 const fs = require('fs');
@@ -38,8 +39,9 @@ const MODEST = 1.25; // dense text this close to its budget keeps being cut; no 
 const DIAGNOSES = ['clean', 'diary', 'history', 'duplicate', 'misplaced', 'dense', 'mixed'];
 const ACTIONS = ['none', 'compressed', 'moved', 'fixed'];
 const MARKS = /\b(her (decision|judge?ment|call|wording|design|count|choice|view|instruction|rule)|rejected|OPEN)\b/i;
-const STEP_NAMES = ['', 'Mechanical check', 'Read everything', 'Facts against the repo', 'Open work', 'Duplicates, diaries, overturned rules',
-  'Contradictions', 'Lessons', 'Budgets', 'Lines that cannot be traced'];
+const STEP_NAMES = ['', 'Mechanical check – paths, pointers, index, section order', 'Facts against the repo – app version, branch table, run folders',
+  'Open work', 'Redundancies – duplicates, diaries, overturned rules', 'Contradictions', 'Lessons', 'Untraceable lines', 'Budgets'];
+const LAST = 8;
 
 const git = (...a) => execFileSync('git', a, { cwd: ROOT, encoding: 'utf8', maxBuffer: 1 << 28, stdio: ['ignore', 'pipe', 'ignore'] });
 const norm = (s) => String(s || '').replace(/\s+/g, ' ').trim();
@@ -148,19 +150,19 @@ function start() {
   const openWork = {};
   for (const s of openWorkSections()) openWork[s.id] = { verdict: '', evidence: '' };
   writeLedger({ status: 'in_progress', baseCommit: base, startedAt: new Date().toISOString(), currentStep: 1, stamps: {}, files, openWork,
-    lessons: { note: '' }, untraceable: [], untraceableChecked: '', dupOk: {}, fyi: [] });
+    lessons: { note: '', merged: null }, untraceable: [], untraceableChecked: '', dupOk: {}, fyi: [] });
   console.log(`Review started at ${base.slice(0, 7)}: ${Object.keys(files).length} files, ${Object.keys(openWork).length} open-work sections. Fill .claude/guide_review_ledger.json as each step asks, then: node scraper/guide_review_gate.js step`);
 }
 
 // ---- the nine steps: each returns { bad: [...], info: 'one line for the report' } ----
 
-function step1() {
+function sMech() {
   const r = spawnSync('node', [path.join(__dirname, 'guide_check.js'), '--strict'], { cwd: ROOT, encoding: 'utf8' });
-  if (r.status === 0) return { bad: [], info: 'guide check clean: paths, § pointers, index, section order' };
+  if (r.status === 0) return { bad: [], info: '' };
   return { bad: ['guide_check.js --strict fails — fix what it prints:', ...String(r.stdout).split('\n').filter((l) => /^\s+\S|FAIL|MISSING|✗/i.test(l)).slice(0, 25)], info: '' };
 }
 
-function step2(led) {
+function sRead(led) {
   const bad = [];
   for (const f of guideFiles()) {
     const row = led.files[f];
@@ -172,10 +174,10 @@ function step2(led) {
       if (!p.text || norm(p.text) !== norm(oldLines[p.line - 1] || '')) { bad.push(`${f}: line ${p.line} not copied out exactly as it was at the start — not read to the end.`); break; }
     }
   }
-  return { bad, info: `${guideFiles().length} files read to the end (named lines copied out exactly)` };
+  return { bad, info: '' };
 }
 
-function step3() {
+function sFacts() {
   const bad = [];
   const jsx = nowText('Cat_Watch.jsx') || '';
   const ver = (/APP_VERSION\s*=\s*"([^"]+)"/.exec(jsx) || [])[1];
@@ -204,13 +206,12 @@ function step3() {
   walk(path.join(ROOT, 'scraper', 'output'), 0);
   const openText = openWorkSections().map((s) => s.text).join('\n');
   for (const m of new Set(openText.match(/\b(?:run_\d{4}-\d{2}-\d{2}_\d{6}|stitch_\d{8}_\d{4})\b/g) || [])) if (!dirs.has(m)) bad.push(`Open work names ${m}, which is not under scraper/output/.`);
-  return { bad, info: `app ${ver} matches the guide and publishing doc; branch table matches origin (${remote.length} branches); run folders named in open work exist` };
+  return { bad, info: '' };
 }
 
-function step4(led) {
+function sOpen(led) {
   const bad = [];
   const secs = openWorkSections();
-  let open = 0, cut = 0;
   for (const s of secs) {
     const r = led.openWork[s.id] || {};
     if (!['open', 'updated', 'finished-cut'].includes(r.verdict)) { bad.push(`§${s.id}: verdict must be open | updated | finished-cut (look at the commits since the last review).`); continue; }
@@ -218,11 +219,11 @@ function step4(led) {
     const filep = (norm(r.evidence).match(/[\w./-]+\.(?:js|md|json|jsx)\b/g) || []).find((p) => fs.existsSync(path.join(ROOT, p)));
     if (norm(r.evidence).length < 20 || !(hash || filep)) bad.push(`§${s.id}: evidence must name a real commit or file that shows the section is still open (or finished).`);
     if (r.verdict === 'finished-cut' && s.text.split('\n').length > 4) bad.push(`§${s.id}: marked finished-cut but the section is still ${s.text.split('\n').length} lines — cut it to its one-line result or remove it.`);
-    if (r.verdict === 'finished-cut') cut++; else open++;
     if (!/OPEN|confirm|queued|pending|PAUSED|next|propos|unbuilt|review|watch|investigat|Expect/i.test(s.text) && r.verdict !== 'finished-cut') bad.push(`§${s.id}: nothing in it is open, pending or to confirm — a standing fact or finished work. Cut it, or move it to §2.1/§6.`);
   }
   for (const id of Object.keys(led.openWork)) if (!secs.find((s) => s.id === id)) delete led.openWork[id];
-  return { bad, info: `${secs.length} open-work sections checked against the commits: ${open} still open, ${cut} cut` };
+  const cutIds = secs.filter((x) => (led.openWork[x.id] || {}).verdict === 'finished-cut').map((x) => x.id);
+  return { bad, info: cutIds.length ? `${cutIds.length} no longer open work, cut (${cutIds.join(', ')})` : '' };
 }
 
 function perFileFields(led, key, label) {
@@ -234,27 +235,35 @@ function perFileFields(led, key, label) {
   return bad;
 }
 
-function step5(led) {
+function sRedundant(led) {
   const bad = perFileFields(led, 'overturned', 'rule the code or a later decision overturned');
   for (const f of guideFiles()) {
     const r = led.files[f] || {};
     if (norm(r.overturned) !== 'none' && norm(r.overturned).length >= 30 && r.action === 'none' && !r.askHer) bad.push(`${f}: found an overturned rule but did nothing — fix the prose (the code wins), or put the conflict in "askHer".`);
   }
+  for (const f of guideFiles()) if (!DIAGNOSES.includes((led.files[f] || {}).diagnosis)) bad.push(`${f}: diagnosis must be one of ${DIAGNOSES.join(' | ')}.`);
   for (const d of duplicates()) if (norm((led.dupOk || {})[d.key]).length < 15) bad.push(`The same passage is in ${d.files.join(' and ')} — keep one, point from the other (or give a reason in dupOk["${d.key}"]): "${d.text}…"`);
-  return { bad, info: `${guideFiles().length} files tested for diaries, copies of facts kept elsewhere and overturned rules; ${duplicates().length} passages written in two files remain` };
+  const changed = (k) => guideFiles().filter((f) => norm((led.files[f] || {})[k]) !== 'none' && led.files[f].action !== 'none').map((f) => path.basename(f));
+  const diaries = guideFiles().filter((f) => ['diary', 'history'].includes((led.files[f] || {}).diagnosis) && led.files[f].action !== 'none').map((f) => path.basename(f));
+  const parts = [];
+  if (diaries.length) parts.push(`${diaries.length} diar${diaries.length > 1 ? 'ies' : 'y'} compressed (${diaries.join(', ')})`);
+  if (changed('overturned').length) parts.push(`${changed('overturned').length} overturned rule${changed('overturned').length > 1 ? 's' : ''} fixed (${changed('overturned').join(', ')})`);
+  return { bad, info: parts.join('; ') };
 }
 
-function step6(led) {
+function sContra(led) {
   const bad = perFileFields(led, 'contradictions', 'contradiction');
   for (const f of guideFiles()) {
     const r = led.files[f] || {};
     if (norm(r.contradictions) !== 'none' && norm(r.contradictions).length >= 30 && r.action === 'none' && !r.askHer) bad.push(`${f}: found a contradiction but did nothing — fix it, or put it in "askHer".`);
   }
-  return { bad, info: 'one live version everywhere (step 3); every file checked for the same fact stated two ways' };
+  const hit = guideFiles().filter((f) => norm((led.files[f] || {}).contradictions) !== 'none').map((f) => path.basename(f));
+  return { bad, info: hit.length ? `${hit.length} fixed (${hit.join(', ')})` : '' };
 }
 
-function step7(led) {
+function sLessons(led) {
   const bad = [];
+  if (!Number.isInteger((led.lessons || {}).merged)) bad.push('lessons.merged: how many lessons you merged into a sibling (a whole number, 0 if none).');
   if (norm((led.lessons || {}).note).length < 40) bad.push('lessons.note: say what you merged or found in §4.1 (40+ characters), or why none needed it.');
   const old = baseText(led.baseCommit, 'CLAUDE.md') || '';
   const lessonsOf = (t) => [...t.matchAll(/^- \*\*([^*]{8,80}?)\*\*/gm)].map((m) => norm(m[1]));
@@ -264,10 +273,10 @@ function step7(led) {
     const key = l.replace(/[.:]+$/, '').toLowerCase();
     if (!now.toLowerCase().includes(key.slice(0, Math.min(28, key.length))) && norm(((led.files['CLAUDE.md'] || {}).dropped || {})[l]).length < 15) bad.push(`§4.1 lesson "${l}" is gone — never drop a lesson: put it back (merged into a sibling is fine), or list it in files["CLAUDE.md"].dropped.`);
   }
-  return { bad, info: 'no §4.1 lesson lost from the base; ' + norm((led.lessons || {}).note).slice(0, 80) };
+  return { bad, info: (led.lessons || {}).merged > 0 ? `${led.lessons.merged} merged` : '' };
 }
 
-function step8(led) {
+function sBudgets(led) {
   const bad = [];
   const corpus = corpusText();
   let compressed = 0;
@@ -304,10 +313,14 @@ function step8(led) {
       for (const sent of lostDecisions(old, corpus)) if (norm(dropped[sent.slice(0, 40)]).length < 15) fail(`this marked-as-hers sentence is no longer anywhere — put it back (shortened is fine), or list it in "dropped" under its first 40 characters with the reason: "${sent.slice(0, 110)}"`);
     }
   }
-  return { bad, info: `${guideFiles().length} files against budget; ${compressed} changed` };
+  const stillOver = guideFiles().filter((f) => lineCount(nowText(f)) > limitOf(f)).length;
+  const parts = [];
+  if (compressed) parts.push(`${compressed} file${compressed > 1 ? 's' : ''} edited`);
+  if (stillOver) parts.push(`${stillOver} still over, see Open items`);
+  return { bad, info: parts.join('; ') };
 }
 
-function step9(led) {
+function sUntraced(led) {
   const bad = [];
   if (norm(led.untraceableChecked).length < 40) bad.push('untraceableChecked: say what you searched (git log -S …) and found, even if nothing was untraceable (40+ characters).');
   const corpus = corpusText();
@@ -315,21 +328,34 @@ function step9(led) {
     if (!corpus.includes(norm(u.phrase))) continue;
     if (norm(u.searched).length < 20) bad.push(`untraceable "${u.phrase}": give the git log -S search made and what it found (20+ characters).`);
   }
-  return { bad, info: `${(led.untraceable || []).length} untraceable line(s) raised; ${norm(led.untraceableChecked).slice(0, 80)}` };
+  const n = (led.untraceable || []).filter((u) => corpus.includes(norm(u.phrase))).length;
+  return { bad, info: n ? `${n}, see Open items` : '' };
 }
 
-const STEPS = [null, step1, step2, step3, step4, step5, step6, step7, step8, step9];
+const STEPS = [null, sMech, sFacts, sOpen, sRedundant, sContra, sLessons, sUntraced, sBudgets];
 
 function runStep(led, n) { return STEPS[n](led); }
 
 function stepCommand() {
   const led = readLedger();
   if (!led) { console.log('No review started: run `node scraper/guide_review_gate.js start` first.'); process.exit(1); }
+  if (!led.stamps[0]) {
+    const rd = sRead(led);
+    if (rd.bad.length) {
+      console.log(`Before step 1 — read every file to the end. ${rd.bad.length} thing(s) left; do them, do not report them:`);
+      rd.bad.slice(0, 40).forEach((b) => console.log('  - ' + b));
+      process.exit(1);
+    }
+    led.stamps[0] = { at: new Date().toISOString(), info: '' };
+    writeLedger(led);
+    console.log('Reading proved. Next: step 1 — ' + STEP_NAMES[1] + '.');
+    return;
+  }
   const n = led.currentStep || 1;
-  if (n > 9) { console.log('All nine steps passed. Run: node scraper/guide_review_gate.js done'); return; }
+  if (n > LAST) { console.log('All eight steps passed. Run: node scraper/guide_review_gate.js done'); return; }
   const r = runStep(led, n);
   if (r.bad.length) {
-    console.log(`Step ${n} of 9 — ${STEP_NAMES[n]} — not passed; ${n < 9 ? `steps ${n + 1}–9 stay closed` : "the review cannot close"}. ${r.bad.length} thing(s) left; do them, do not report them:`);
+    console.log(`Step ${n} of ${LAST} — ${STEP_NAMES[n]} — not passed; ${n < LAST ? `steps ${n + 1}–${LAST} stay closed` : 'the review cannot close'}. ${r.bad.length} thing(s) left; do them, do not report them:`);
     r.bad.slice(0, 40).forEach((b) => console.log('  - ' + b));
     if (r.bad.length > 40) console.log(`  … and ${r.bad.length - 40} more`);
     writeLedger(led);
@@ -338,7 +364,7 @@ function stepCommand() {
   led.stamps[n] = { at: new Date().toISOString(), info: r.info };
   led.currentStep = n + 1;
   writeLedger(led);
-  console.log(`Step ${n} of 9 — ${STEP_NAMES[n]} — passed (${r.info}).` + (n < 9 ? ` Next: step ${n + 1} — ${STEP_NAMES[n + 1]}.` : ' Run: node scraper/guide_review_gate.js done'));
+  console.log(`Step ${n} of ${LAST} — ${STEP_NAMES[n]} — passed.` + (n < LAST ? ` Next: step ${n + 1} — ${STEP_NAMES[n + 1]}.` : ' Run: node scraper/guide_review_gate.js done'));
 }
 
 // Every step in order, each re-run now: what the push hook asks.
@@ -346,11 +372,12 @@ function check() {
   const led = readLedger();
   if (!led) return { bad: ['No review started: run `node scraper/guide_review_gate.js start` first.'], infos: [] };
   const infos = [];
-  for (let n = 1; n <= 9; n++) {
-    if (!led.stamps || !led.stamps[n]) return { bad: [`Step ${n} of 9 (${STEP_NAMES[n]}) not passed yet — run: node scraper/guide_review_gate.js step`], infos };
+  if (!led.stamps || !led.stamps[0]) return { bad: ['Before step 1: read every file — run: node scraper/guide_review_gate.js step'], infos: [] };
+  for (let n = 1; n <= LAST; n++) {
+    if (!led.stamps || !led.stamps[n]) return { bad: [`Step ${n} of ${LAST} (${STEP_NAMES[n]}) not passed yet — run: node scraper/guide_review_gate.js step`], infos };
     if (n > 1 && led.stamps[n].at < led.stamps[n - 1].at) return { bad: [`Step ${n} was passed before step ${n - 1}.`], infos };
     const r = runStep(led, n);
-    if (r.bad.length) return { bad: [`Step ${n} of 9 (${STEP_NAMES[n]}) no longer holds:`, ...r.bad.slice(0, 30)], infos };
+    if (r.bad.length) return { bad: [`Step ${n} of ${LAST} (${STEP_NAMES[n]}) no longer holds:`, ...r.bad.slice(0, 30)], infos };
     infos.push(r.info);
   }
   return { bad: [], infos };
@@ -374,8 +401,8 @@ function report(led, infos) {
   for (const u of led.untraceable || []) open.push(`Could not trace: "${u.phrase}" — ${norm(u.searched)}`);
   const out = [
     '## Guide review', '',
-    '### The nine steps', '', '| Step | Result |', '|---|---|',
-    ...infos.map((i, k) => `| ${k + 1}. ${STEP_NAMES[k + 1]} | ${norm(i)} |`), '',
+    '### The eight steps', '', '| Step | Problems |', '|---|---|',
+    ...infos.map((i, k) => `| ${k + 1}. ${STEP_NAMES[k + 1]} | ${norm(i) || '✓'} |`), '',
     '### Every document', '',
     '| Document | Budget | Now | Room | Verdict | Found | Done | Still needed |', '|---|---|---|---|---|---|---|---|', ...rows, '',
     '### Open items for you', '', ...(open.length ? open.map((o, i) => `${i + 1}. ${o}`) : ['None.']), '',
@@ -407,8 +434,8 @@ if (require.main === module) {
       bad.forEach((b) => console.log('  ' + (b.startsWith('Step') ? '' : '- ') + b));
       process.exit(1);
     }
-    console.log(mode === 'done' ? 'Guide review gate: all nine steps passed. Report written to .claude/guide_review_report.md — send it as the report.' : 'Guide review gate: passed.');
+    console.log(mode === 'done' ? 'Guide review gate: all eight steps passed. Report written to .claude/guide_review_report.md — send it as the report.' : 'Guide review gate: passed.');
   } else { console.log('usage: guide_review_gate.js start | step | check | done'); process.exit(2); }
 }
 
-module.exports = { report, readLedger, check, anchorsOf, probeLines, guideFiles, limitOf, lostDecisions, duplicates, step3, openWorkSections };
+module.exports = { report, readLedger, check, anchorsOf, probeLines, guideFiles, limitOf, lostDecisions, duplicates, sFacts, openWorkSections };
