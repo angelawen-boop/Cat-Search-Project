@@ -56,15 +56,15 @@ index of side docs, guardrails, the app explainers, future considerations — an
 
 ## The review — do all of it
 
-**The gate — the reading and the ten steps below are enforced by code, in order.**
+**The gate — the reading and the nine steps below are enforced by code, in order.**
 `node scraper/guide_review_gate.js start` first (clean tree): it writes
 `.claude/guide_review_ledger.json` — a row per file, a row per §2.2 section —
 and names lines to copy out of each file. Then `node scraper/guide_review_gate.js
 step` after each step's work: a step a script owns (1 the mechanical check, 2
-facts against the repo, 6 names that exist in no code, 10 nothing lost, and the
-duplicate and lost-lesson tests) is run by the gate itself; a judgement step
-(the reading, 3 open work, 4 lessons, 5 the lean trunk, 7 diaries and overturned
-rules, 8 contradictions, 9 untraceable lines) needs its proof of work in the
+facts against the repo, 9 nothing lost, and the duplicate and lost-lesson
+tests) is run by the gate itself; a judgement step
+(the reading, 3 open work, 4 lessons, 5 the lean trunk, 6 diaries and overturned
+rules, 7 contradictions, 8 untraceable lines) needs its proof of work in the
 ledger, which the gate checks. **A step cannot pass before the one before it,
 and a push is refused by a hook until all stand.** What the gate lists is work,
 not findings. `done` runs last and writes `.claude/guide_review_report.md`; if it
@@ -98,7 +98,8 @@ A document is never fine because of its size: diagnose it and clean it.
    numbers match `APP_VERSION` on `main` and on `claude/ledger-cloud`
    (`git fetch origin claude/ledger-cloud`); branch list matches
    `git ls-remote --heads origin`; counts and run folders named in open work
-   exist under `scraper/output/`.
+   exist under `scraper/output/`; a name a doc puts in backticks exists in the
+   code (the gate lists each that does not — fix it or say where it lives).
 3. **Open work (§2.2):** for each item, look at the commits since the last
    review. Finished → cut to its one-line result or remove it. Still open →
    keep its backstory, enough for a cold session to pick it up. Check the shape
@@ -114,10 +115,7 @@ A document is never fine because of its size: diagnose it and clean it.
    pointer left. No numbers: read what each section says. The gate flags
    sections that mostly repeat a side doc, or a "schematic" holding test ids,
    versions or chains of decisions, and checks every move happened.
-6. **Code owns it.** A name a doc puts in backticks that exists in no code
-   is stale, or lives on another branch. Fix it or say where it lives; the gate
-   lists each.
-7. **The three tests, for every doc:**
+6. **The three tests, for every doc:**
    - **Diaries** — events narrated in order ("first we tried…, then…"). Cut to
      the result, the decision and the lesson. If the evidence is worth keeping,
      compress it FIRST, then move it to the right doc; a side doc is never a
@@ -133,19 +131,19 @@ A document is never fine because of its size: diagnose it and clean it.
    - **Overturned rules** — a rule the code or a later decision no longer
      follows. The code wins over prose. Two prose decisions that disagree →
      ASK, don't pick.
-8. **Contradictions:** the same fact stated two ways (in the guide, between the
+7. **Contradictions:** the same fact stated two ways (in the guide, between the
    guide and a doc, between a doc and the code).
-9. **Anything you cannot trace** — a line whose origin, meaning or current
+8. **Anything you cannot trace** — a line whose origin, meaning or current
    truth you cannot establish from the repo and its history
    (`git log -S"<phrase>" -- CLAUDE.md docs/` is the tool) — gets
    investigated as far as the repo allows, then goes in the report as a
    question with what you found.
-10. **Nothing lost.** After the cutting, check each changed file against the
+9. **Nothing lost.** After the cutting, check each changed file against the
    original (`git diff`): every decision, judgement call, wording, name and
    number her old text marked is still somewhere in the guide or docs — in the
    new text or its new home. Put back anything missing; shortened is fine,
    gone is not. The gate does this check itself and lists what is gone.
-**Cleaning any document — all of steps 5 to 10.** Every document is read in
+**Cleaning any document — all of steps 5 to 9.** Every document is read in
 full, line by line, before you decide anything about it. Then:
 1. **Diagnose** it against how a guide is meant to be written (the shape above
    and `docs/doc_rules.md`): a diary or stream of consciousness, a version log,
