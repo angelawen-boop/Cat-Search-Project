@@ -69,6 +69,13 @@ checks. **A step cannot pass before the one before it, and a push is refused
 by a hook until all stand.** What the gate lists is work, not findings.
 `done` writes `.claude/guide_review_report.md`.
 
+The gate also looks at every file itself, whatever its size and whatever you
+called it: a version-by-version log, events narrated in order, a run-on
+paragraph, a pile of test ids. Each such flag must be cut down — or, only for
+text that is truly already compressed, justified with a quote copied from the
+flagged lines and a reason (`smellOk`). Calling a flagged file "clean" does
+not pass.
+
 Per file the ledger asks for: the lines copied out exactly, `diagnosis`
 (clean | diary | history | duplicate | misplaced | dense | mixed), `finding`
 (what is wrong, or why it is fine), `action`, `remaining` ("nothing" unless a

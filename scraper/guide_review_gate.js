@@ -123,6 +123,29 @@ function duplicates() {
   return [...seen].filter(([, fs_]) => fs_.size > 1).map(([k, fs_]) => ({ key: k.slice(0, 40), text: k.slice(0, 120), files: [...fs_] }));
 }
 
+// A script's own look at a file, whatever its size or what the session thinks of it: the shapes a diary, a
+// stream of consciousness or a pile of test ids takes. Each flag must be cleaned up or justified with a quote.
+const SMELLS = {
+  versionLog: 'a version-by-version log ("Before that 53.9: …")',
+  narration: 'events narrated in order (First… Then… After that…)',
+  runOn: 'a run-on paragraph (one line over 900 characters, or two over 500)',
+  idSoup: 'a pile of test ids (more than one in four lines)',
+};
+function smells(text) {
+  const L = text.split('\n');
+  const at = (re) => L.map((l, i) => (re.test(l) ? i + 1 : 0)).filter(Boolean);
+  const out = {};
+  const vlog = at(/Before that\s+\d/);
+  if (vlog.length >= 3) out.versionLog = vlog;
+  const narr = at(/(?:^|[.;:]\s+)(?:First|Then|After that|Later|Next|Previously|Afterwards|Before that)\b/);
+  if (narr.length >= 5) out.narration = narr;
+  const long = L.map((l, i) => (l.length > 500 ? i + 1 : 0)).filter(Boolean);
+  if (L.some((l) => l.length > 900) || long.length >= 2) out.runOn = long;
+  const ids = (text.match(/\b[A-Z]{1,4}-\d{3}[a-z0-9]*\b/g) || []).length;
+  if (ids >= 30 && ids / L.length > 0.25) out.idSoup = at(/\b[A-Z]{1,4}-\d{3}[a-z0-9]*\b/);
+  return out;
+}
+
 const readLedger = () => { try { return JSON.parse(fs.readFileSync(LEDGER, 'utf8')); } catch { return null; } };
 const writeLedger = (l) => fs.writeFileSync(LEDGER, JSON.stringify(l, null, 2) + '\n');
 
@@ -254,6 +277,13 @@ function sRedundant(led) {
     if (row.action === 'compressed' && lineCount(cur) >= (old ? lineCount(old) : 0)) fail(`action says compressed but it is ${lineCount(cur)} lines, was ${old ? lineCount(old) : 0}.`);
     if (row.diagnosis && row.diagnosis !== 'clean' && row.diagnosis !== 'dense' && row.action === 'none') fail(`diagnosed "${row.diagnosis}" and nothing done — a problem found is a problem fixed.`);
     if (old && row.action === 'none' && cur !== old) fail('action says none but the file changed.');
+    const L = cur.split('\n');
+    for (const [flag, lines] of Object.entries(smells(cur))) {
+      const ok = (row.smellOk || {})[flag] || {};
+      const passage = norm(lines.slice(0, 12).map((n) => L[n - 1]).join(' '));
+      if (norm(ok.quote).length >= 40 && passage.includes(norm(ok.quote)) && norm(ok.why).length >= 30) continue;
+      fail(`${SMELLS[flag]} at line${lines.length > 1 ? 's' : ''} ${lines.slice(0, 8).join(', ')}${lines.length > 8 ? '…' : ''}: cut it down to decisions, lessons and open items — or, only if it is truly already compressed, justify it in smellOk.${flag} = {quote: 40+ characters copied from those lines, why: 30+ characters}.`);
+    }
   }
   for (const d of duplicates()) if (norm((led.dupOk || {})[d.key]).length < 15) bad.push(`The same passage is in ${d.files.join(' and ')} — keep one, point from the other (or give a reason in dupOk["${d.key}"]): "${d.text}…"`);
   const changed = (k) => guideFiles().filter((f) => norm((led.files[f] || {})[k]) !== 'none' && led.files[f].action !== 'none').map((f) => path.basename(f));
@@ -463,4 +493,4 @@ if (require.main === module) {
   } else { console.log('usage: guide_review_gate.js start | step | check | done'); process.exit(2); }
 }
 
-module.exports = { report, readLedger, check, anchorsOf, probeLines, guideFiles, limitOf, lostDecisions, duplicates, sFacts, openWorkSections };
+module.exports = { smells, report, readLedger, check, anchorsOf, probeLines, guideFiles, limitOf, lostDecisions, duplicates, sFacts, openWorkSections };
