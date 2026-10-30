@@ -430,14 +430,13 @@ function check() {
   return { bad: [], infos };
 }
 
-const REPORT_NAMES = ['', 'Mechanical check', 'Facts vs repo', 'Open work (§2.2)', 'Lessons (§4.1)', 'Redundancies', 'Contradictions', 'Untraceable lines', 'Nothing lost', 'Budgets'];
 
 // Exceptions only: a tick where there is nothing to say; a step's extra lines are rows of their own under it.
 function report(led, infos) {
   const cut = (x, n) => { const t = norm(x).replace(/\|/g, '/'); return t.length > n ? t.slice(0, n - 1) + '…' : t; };
   const stepRows = infos.flatMap((i, k) => {
     const [first, ...more] = String(i).split('<br>');
-    return [`| ${k + 1}. ${REPORT_NAMES[k + 1]} | ${norm(first) || '✓'} |`, ...more.map((m) => `| | ${norm(m)} |`)];
+    return [`| ${k + 1}. ${STEP_NAMES[k + 1]} | ${norm(first) || '✓'} |`, ...more.map((m) => `| | ${norm(m)} |`)];
   });
   const docRows = guideFiles().map((f) => {
     const r = led.files[f];
