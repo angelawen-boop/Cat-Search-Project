@@ -56,20 +56,27 @@ index of side docs, guardrails, the app explainers, future considerations — an
 
 ## The review — do all of it
 
-**The gate.** This review is enforced by code, not by this text.
+**The gate — all nine steps below are enforced by code, in order.**
 `node scraper/guide_review_gate.js start` first (clean tree): it writes
-`.claude/guide_review_ledger.json` with a row for every file in the guide and
-docs, and names lines to copy out of each. For every file, fill in: the
-probe lines' exact text (so the file is read to the end), `diagnosis`,
-`finding`, `action`, and — only for already-compressed ("dense") text that
-still cannot reach its budget — the `blocker` (a quote of the passage, with its
-line) with `blockerWhy` and `needs`. The gate computes the rest itself: sizes,
-budget and the 5% tolerance, and every decision-marked name or sentence of the
-old text that is no longer anywhere (put it back, or list it under `dropped`
-with the reason). `node scraper/guide_review_gate.js check` lists what is
-still missing. **A push is refused by a hook until it passes** (`done` marks the
-ledger finished — commit it with the review). So there is nothing to report
-until the gate passes: what it lists is work, not findings.
+`.claude/guide_review_ledger.json` — a row per file, a row per §2.2 section —
+and names lines to copy out of each file. Then `node scraper/guide_review_gate.js
+step` after each step's work: a step a script owns (1 the mechanical check, 3
+facts against the repo, and the duplicate, lost-decision and lost-lesson
+tests) is run by the gate itself; a judgement step (2 reading, 4 open work,
+5–6 diaries, overturned rules and contradictions, 7 lessons, 8 budgets, 9
+untraceable lines) needs its proof of work in the ledger, which the gate
+checks. **A step cannot pass before the one before it, and a push is refused
+by a hook until all nine stand.** What the gate lists is work, not findings.
+`done` writes `.claude/guide_review_report.md`.
+
+Per file the ledger asks for: the lines copied out exactly, `diagnosis`
+(clean | diary | history | duplicate | misplaced | dense | mixed), `finding`
+(what is wrong, or why it is fine), `action`, `remaining` ("nothing" unless a
+blocker), `overturned`, `contradictions`. A file is not fine because its line
+count is under budget: diagnose it and clean it whatever its size. A file may
+stay over only if it is already-compressed text more than 25% over, with a
+quoted blocker, its reason and the lines it would need — the gate then offers
+her a budget rounded to the next 50, never a bare "+1".
 
 1. **Run the mechanical check first:** `node scraper/guide_check.js`. It
    prints every missing path, every `§` pointer that lands on no heading,
@@ -190,30 +197,12 @@ remove a rule rather than restate it.
    The commit message starts "Guide review:" and holds the per-file findings.
 2. Commit on `main` with a message listing what changed, then
    `git pull --rebase origin main` and `git push origin main`.
-3. **The report — this is what she reads, and it is short.** Follow the
-   guide's house rules: plain English, short bullets, spoken TO her (never
-   "she"/"her"), no visible thinking. The work is done in the background;
-   the report is not a debrief or a diary of it, and the review of each file
-   (what you read, what was wrong, what you checked) goes in the commit
-   message, not here. Three parts:
-   - **Fixed** — what changed, one line each, with line counts before → after.
-   - **Open items for you** — only a decision she must make, each one
-     concise: the question, the specific passage or decision at stake
-     (named), and your suggestion, numbered so she can answer "1: yes, 2: no".
-     Never a list of what you did, a remaining-line tally or a breakdown of
-     what is left over.
-   - **FYI** — one line each: things that were never a problem or are within
-     tolerance, and why they need nothing from her (e.g. "Twelve side docs
-     point to another as a see-also; all allowed — none lives only behind
-     another"). Verify first, per doc; a doc that breaks it is fixed, not
-     reported.
-
-   **No "watch" items**: nothing for her to keep an eye on, no bare count,
-   size or trend. Either you fixed it, it needs her decision, or it is fine.
-   She has nobody to hand the work to: it is yours.
-
-   **Open items come from the gate:** its "Open items for the report" list is
-   the only source of budget items. If the gate has not passed, there is no
-   report yet.
-
-   If nothing needed doing, say so in one line — that is a good result.
+3. **The report is the gate's own file** — `.claude/guide_review_report.md`,
+   written by `done`. Send it as your message, word for word, adding
+   nothing: the nine steps and what each found, every document in one row
+   (budget, size now and before, room, verdict, what was found, what was done,
+   what is still needed), the open items for her, any FYI. Plain English,
+   spoken TO her. It is short because the work was done, not because it was
+   skipped. No "watch" items; no debrief of how the work went (the per-file
+   review is in the ledger and the commit message). If you add a sentence of
+   your own, it is one line at the end.
