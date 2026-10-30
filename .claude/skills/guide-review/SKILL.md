@@ -56,15 +56,15 @@ index of side docs, guardrails, the app explainers, future considerations — an
 
 ## The review — do all of it
 
-**The gate — the reading and the eight steps below are enforced by code, in order.**
+**The gate — the reading and the nine steps below are enforced by code, in order.**
 `node scraper/guide_review_gate.js start` first (clean tree): it writes
 `.claude/guide_review_ledger.json` — a row per file, a row per §2.2 section —
 and names lines to copy out of each file. Then `node scraper/guide_review_gate.js
 step` after each step's work: a step a script owns (1 the mechanical check, 2
-facts against the repo, and the duplicate, lost-decision and lost-lesson
+facts against the repo, 8 nothing lost, and the duplicate and lost-lesson
 tests) is run by the gate itself; a judgement step (the reading, 3 open work,
-4–5 diaries, overturned rules and contradictions, 6 lessons, 7
-untraceable lines, 8 budgets) needs its proof of work in the ledger, which the gate
+4 lessons, 5 diaries and overturned rules, 6 contradictions, 7
+untraceable lines, 9 budgets) needs its proof of work in the ledger, which the gate
 checks. **A step cannot pass before the one before it, and a push is refused
 by a hook until all stand.** What the gate lists is work, not findings.
 `done` writes `.claude/guide_review_report.md`.
@@ -99,7 +99,9 @@ her a budget rounded to the next 50, never a bare "+1".
    review. Finished → cut to its one-line result or remove it. Still open →
    keep its backstory, enough for a cold session to pick it up. Check the shape
    rules above: nothing standing in 2.2, no ideas nobody is working on.
-4. **The three tests, for every doc:**
+4. **"Do not re-break" (§4.1):** merge new entries into the lesson they
+   illustrate; one lesson, one line where possible. Never drop a lesson.
+5. **The three tests, for every doc:**
    - **Diaries** — events narrated in order ("first we tried…, then…"). Cut to
      the result, the decision and the lesson. If the evidence is worth keeping,
      compress it FIRST, then move it to the right doc; a side doc is never a
@@ -115,16 +117,19 @@ her a budget rounded to the next 50, never a bare "+1".
    - **Overturned rules** — a rule the code or a later decision no longer
      follows. The code wins over prose. Two prose decisions that disagree →
      ASK, don't pick.
-5. **Contradictions:** the same fact stated two ways (in the guide, between the
+6. **Contradictions:** the same fact stated two ways (in the guide, between the
    guide and a doc, between a doc and the code).
-6. **"Do not re-break" (§4.1):** merge new entries into the lesson they
-   illustrate; one lesson, one line where possible. Never drop a lesson.
 7. **Anything you cannot trace** — a line whose origin, meaning or current
    truth you cannot establish from the repo and its history
    (`git log -S"<phrase>" -- CLAUDE.md docs/` is the tool) — gets
    investigated as far as the repo allows, then goes in the report as a
    question with what you found.
-8. **Budgets — the main work of this review.** Every file within
+8. **Nothing lost.** After the cutting, check each changed file against the
+   original (`git diff`): every decision, judgement call, wording, name and
+   number her old text marked is still somewhere in the guide or docs — in the
+   new text or its new home. Put back anything missing; shortened is fine,
+   gone is not. The gate does this check itself and lists what is gone.
+9. **Budgets — measured last, after all the work above.** Every file within
    `scraper/doc_budget.js` (a NEW doc's budget is its size rounded up to the
    next 50), with about 5% over tolerated. **Reading comes first and is
    not optional.** Every file you are asked to clean up is read in full, line
@@ -200,7 +205,7 @@ remove a rule rather than restate it.
    `git pull --rebase origin main` and `git push origin main`.
 3. **The report is the gate's own file** — `.claude/guide_review_report.md`,
    written by `done`. Send it as your message, word for word, adding
-   nothing: the eight steps and their problems, if any, every document in one row
+   nothing: the nine steps and their problems, if any, every document in one row
    (budget, size now and before, room, verdict, what was found, what was done,
    what is still needed), the open items for her, any FYI. Plain English,
    spoken TO her. It is short because the work was done, not because it was

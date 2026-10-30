@@ -2,7 +2,7 @@
 /*
  * GUIDE REVIEW GATE — her decision: the review's finish line is code, not a promise.
  *
- * The review has eight steps (.claude/skills/guide-review/SKILL.md) after one thing that must come first:
+ * The review has nine steps (.claude/skills/guide-review/SKILL.md) after one thing that must come first:
  * reading every file. Sessions skipped steps and reported the rest, so every step is a gate: a step a script
  * owns is run by this script; a judgement step must leave proof of work in the ledger, which the script
  * checks. A step cannot be passed before the one before it, and a Guide-review push is refused
@@ -16,13 +16,13 @@
  *   (read)  every file's named lines copied out exactly — before step 1, not shown in the report
  *   1 Mechanical check        script  guide_check.js --strict
  *   2 Facts against the repo  script  app version, branch table against origin, run folders named in open work
- *   3 Open work               proof   a verdict and evidence per §2.2 section
- *   4 Redundancies            script + proof  duplicates (script); diagnosis and overturned rules per file
- *   5 Contradictions          script + proof  contradictions per file
- *   6 Lessons                 script + proof  no §4.1 lesson lost (script); a note and a count
+ *   3 Open work – trunk §2.2  proof   a verdict and evidence per §2.2 section
+ *   4 Lessons – trunk §4.1    script + proof  no §4.1 lesson lost (script); a note and a count
+ *   5 Redundancies            script + proof  duplicates (script); diagnosis, finding, action and overturned rules per file
+ *   6 Contradictions          proof   contradictions per file
  *   7 Untraceable lines       proof   each with the search made, or what was searched
- *   8 Budgets                 script + proof  size, tolerance, diagnosis, action, blocker per file
- *
+ *   8 Nothing lost            script  every decision, wording and name her old text marked is still somewhere
+ *   9 Budgets                 script + proof  size against budget only; over means a quoted blocker and a one-line reason
  * A step's "info" is what the report shows under Problems: empty when there is nothing to say (shown as a tick).
  */
 'use strict';
@@ -40,8 +40,9 @@ const DIAGNOSES = ['clean', 'diary', 'history', 'duplicate', 'misplaced', 'dense
 const ACTIONS = ['none', 'compressed', 'moved', 'fixed'];
 const MARKS = /\b(her (decision|judge?ment|call|wording|design|count|choice|view|instruction|rule)|rejected|OPEN)\b/i;
 const STEP_NAMES = ['', 'Mechanical check – paths, pointers, index, section order', 'Facts against the repo – app version, branch table, run folders',
-  'Open work', 'Redundancies – duplicates, diaries, overturned rules', 'Contradictions', 'Lessons', 'Untraceable lines', 'Budgets'];
-const LAST = 8;
+  'Open work – trunk, §2.2', 'Lessons – trunk, §4.1', 'Redundancies – duplicates, diaries, overturned rules', 'Contradictions', 'Untraceable lines',
+  'Nothing lost – decisions, wording and lessons kept', 'Budgets'];
+const LAST = 9;
 
 const git = (...a) => execFileSync('git', a, { cwd: ROOT, encoding: 'utf8', maxBuffer: 1 << 28, stdio: ['ignore', 'pipe', 'ignore'] });
 const norm = (s) => String(s || '').replace(/\s+/g, ' ').trim();
@@ -223,7 +224,7 @@ function sOpen(led) {
   }
   for (const id of Object.keys(led.openWork)) if (!secs.find((s) => s.id === id)) delete led.openWork[id];
   const cutIds = secs.filter((x) => (led.openWork[x.id] || {}).verdict === 'finished-cut').map((x) => x.id);
-  return { bad, info: cutIds.length ? `${cutIds.length} no longer open work, cut (${cutIds.join(', ')})` : '' };
+  return { bad, info: cutIds.length ? `${cutIds.map((i) => '§' + i).join(', ')} finished — cut` : '' };
 }
 
 function perFileFields(led, key, label) {
@@ -241,7 +242,19 @@ function sRedundant(led) {
     const r = led.files[f] || {};
     if (norm(r.overturned) !== 'none' && norm(r.overturned).length >= 30 && r.action === 'none' && !r.askHer) bad.push(`${f}: found an overturned rule but did nothing — fix the prose (the code wins), or put the conflict in "askHer".`);
   }
-  for (const f of guideFiles()) if (!DIAGNOSES.includes((led.files[f] || {}).diagnosis)) bad.push(`${f}: diagnosis must be one of ${DIAGNOSES.join(' | ')}.`);
+  for (const f of guideFiles()) {
+    const row = led.files[f];
+    if (!row) { bad.push(`${f}: no ledger row.`); continue; }
+    const old = baseText(led.baseCommit, f);
+    const cur = nowText(f);
+    const fail = (m) => bad.push(`${f}: ${m}`);
+    if (!DIAGNOSES.includes(row.diagnosis)) fail(`diagnosis must be one of ${DIAGNOSES.join(' | ')}.`);
+    if (!ACTIONS.includes(row.action)) fail(`action must be one of ${ACTIONS.join(' | ')}.`);
+    if (norm(row.finding).length < 40) fail('finding: what is wrong with it, or why it is fine (40+ characters).');
+    if (row.action === 'compressed' && lineCount(cur) >= (old ? lineCount(old) : 0)) fail(`action says compressed but it is ${lineCount(cur)} lines, was ${old ? lineCount(old) : 0}.`);
+    if (row.diagnosis && row.diagnosis !== 'clean' && row.diagnosis !== 'dense' && row.action === 'none') fail(`diagnosed "${row.diagnosis}" and nothing done — a problem found is a problem fixed.`);
+    if (old && row.action === 'none' && cur !== old) fail('action says none but the file changed.');
+  }
   for (const d of duplicates()) if (norm((led.dupOk || {})[d.key]).length < 15) bad.push(`The same passage is in ${d.files.join(' and ')} — keep one, point from the other (or give a reason in dupOk["${d.key}"]): "${d.text}…"`);
   const changed = (k) => guideFiles().filter((f) => norm((led.files[f] || {})[k]) !== 'none' && led.files[f].action !== 'none').map((f) => path.basename(f));
   const diaries = guideFiles().filter((f) => ['diary', 'history'].includes((led.files[f] || {}).diagnosis) && led.files[f].action !== 'none').map((f) => path.basename(f));
@@ -276,48 +289,51 @@ function sLessons(led) {
   return { bad, info: (led.lessons || {}).merged > 0 ? `${led.lessons.merged} merged` : '' };
 }
 
+// Step 9 only measures what steps 1–8 left: size against budget. All the substantive work is done before it.
 function sBudgets(led) {
   const bad = [];
-  const corpus = corpusText();
-  let compressed = 0;
+  const over = [];
   for (const f of guideFiles()) {
-    const row = led.files[f];
-    if (!row) { bad.push(`${f}: no ledger row.`); continue; }
-    const old = baseText(led.baseCommit, f);
+    const row = led.files[f] || {};
     const cur = nowText(f);
+    const old = baseText(led.baseCommit, f);
     const before = old ? lineCount(old) : 0;
     const after = lineCount(cur);
     const fail = (m) => bad.push(`${f}: ${m}`);
-    if (!DIAGNOSES.includes(row.diagnosis)) fail(`diagnosis must be one of ${DIAGNOSES.join(' | ')}.`);
-    if (!ACTIONS.includes(row.action)) fail(`action must be one of ${ACTIONS.join(' | ')}.`);
-    if (norm(row.finding).length < 40) fail('finding: what is wrong with it, or why it is fine (40+ characters).');
-    if (row.action === 'compressed' && after >= before) fail(`action says compressed but it is ${after} lines, was ${before}.`);
-    if (row.action !== 'none') compressed++;
-    if (row.diagnosis && row.diagnosis !== 'clean' && row.action === 'none' && !(row.diagnosis === 'dense' && after <= limitOf(f))) fail(`diagnosed "${row.diagnosis}" and nothing done — a problem found is a problem fixed.`);
-    if (row.action === 'none' && cur !== old && old) fail('action says none but the file changed.');
     if (after > limitOf(f)) {
-      if (row.diagnosis !== 'dense') fail(`${after} lines against ${budgetOf(f)} (tolerance ${limitOf(f)}), diagnosed "${row.diagnosis}" — only already-compressed ("dense") text may stay over. Compress it.`);
-      else if (before && after >= before) fail(`still over (${after}/${budgetOf(f)}) and not cut at all — cut what is duplicated, stale or misplaced first.`);
-      else if (after <= Math.ceil(budgetOf(f) * MODEST)) fail(`${after} lines against ${budgetOf(f)} is within reach — keep cutting (duplicates, stale and misplaced text); no budget is asked for a small overage.`);
+      if (row.diagnosis !== 'dense') fail(`${after} lines against ${budgetOf(f)} (tolerance ${limitOf(f)}), diagnosed "${row.diagnosis}" — only already-compressed ("dense") text may stay over. Go back to step 5 and compress it.`);
+      else if (before && after >= before) fail(`still over (${after}/${budgetOf(f)}) and not cut at all — back to step 5: cut what is duplicated, stale or misplaced first.`);
+      else if (after <= Math.ceil(budgetOf(f) * MODEST)) fail(`${after} lines against ${budgetOf(f)} is within reach — back to step 5 and keep cutting; no budget is asked for a small overage.`);
       else {
         const b = row.blocker || {};
         const where = cur.split('\n')[(b.line || 0) - 1] || '';
         if (norm(b.quote).length < 60 || !norm(where).includes(norm(b.quote).slice(0, 60))) fail('name the blocker — a 60+ character quote of the passage that cannot go, with its current line number.');
-        if (norm(row.blockerWhy).length < 40) fail('blockerWhy: why that passage cannot be cut or shortened (40+ characters).');
+        if (norm(row.blockerWhy).length < 30 || norm(row.blockerWhy).length > 200) fail('blockerWhy: one sentence (30–200 characters) on why that passage cannot be cut.');
         if (!(row.needs > limitOf(f))) fail(`needs: the line count the file would need — a number above ${limitOf(f)}.`);
+        over.push({ f, after, why: norm(row.blockerWhy) });
       }
     } else if (norm(row.remaining) !== 'nothing' && !row.askHer) fail('remaining: write "nothing" — within its budget there is nothing left to leave.');
-    if (old && cur !== old) {
-      const dropped = row.dropped || {};
-      for (const a of anchorsOf(old)) if (!corpus.includes(a) && norm(dropped[a]).length < 15) fail(`the old text marked as hers names "${a}", now nowhere in the guide or docs — put it back, or list it in "dropped" with the reason.`);
-      for (const sent of lostDecisions(old, corpus)) if (norm(dropped[sent.slice(0, 40)]).length < 15) fail(`this marked-as-hers sentence is no longer anywhere — put it back (shortened is fine), or list it in "dropped" under its first 40 characters with the reason: "${sent.slice(0, 110)}"`);
-    }
   }
-  const stillOver = guideFiles().filter((f) => lineCount(nowText(f)) > limitOf(f)).length;
-  const parts = [];
-  if (compressed) parts.push(`${compressed} file${compressed > 1 ? 's' : ''} edited`);
-  if (stillOver) parts.push(`${stillOver} still over, see Open items`);
-  return { bad, info: parts.join('; ') };
+  return { bad, info: over.length ? `${over.length} still over, see Open items:<br>` + over.map((o, i) => `${i + 1}. ${o.f} – ${o.after} against ${budgetOf(o.f)} – ${o.why}`).join('<br>') : '' };
+}
+
+// Step 8: whatever the earlier steps cut, nothing she decided is gone.
+function sLost(led) {
+  const bad = [];
+  const corpus = corpusText();
+  const droppedOn = [];
+  for (const f of guideFiles()) {
+    const row = led.files[f] || {};
+    const old = baseText(led.baseCommit, f);
+    const cur = nowText(f);
+    if (!old || cur === old) continue;
+    const dropped = row.dropped || {};
+    if (Object.keys(dropped).length) droppedOn.push(path.basename(f));
+    const fail = (m) => bad.push(`${f}: ${m}`);
+    for (const a of anchorsOf(old)) if (!corpus.includes(a) && norm(dropped[a]).length < 15) fail(`the old text marked as hers names "${a}", now nowhere in the guide or docs — put it back, or list it in "dropped" with the reason.`);
+    for (const sent of lostDecisions(old, corpus)) if (norm(dropped[sent.slice(0, 40)]).length < 15) fail(`this marked-as-hers sentence is no longer anywhere — put it back (shortened is fine), or list it in "dropped" under its first 40 characters with the reason: "${sent.slice(0, 110)}"`);
+  }
+  return { bad, info: droppedOn.length ? `dropped on purpose, with reasons: ${droppedOn.join(', ')}` : '' };
 }
 
 function sUntraced(led) {
@@ -328,11 +344,12 @@ function sUntraced(led) {
     if (!corpus.includes(norm(u.phrase))) continue;
     if (norm(u.searched).length < 20) bad.push(`untraceable "${u.phrase}": give the git log -S search made and what it found (20+ characters).`);
   }
-  const n = (led.untraceable || []).filter((u) => corpus.includes(norm(u.phrase))).length;
-  return { bad, info: n ? `${n}, see Open items` : '' };
+  const live = (led.untraceable || []).filter((u) => corpus.includes(norm(u.phrase)));
+  for (const u of live) if (!guideFiles().includes(u.file)) bad.push(`untraceable "${u.phrase}": give the guide file it is in ("file").`);
+  return { bad, info: live.length ? `${live.length} (${[...new Set(live.map((u) => path.basename(u.file || '?')))].join(', ')}), see Open items` : '' };
 }
 
-const STEPS = [null, sMech, sFacts, sOpen, sRedundant, sContra, sLessons, sUntraced, sBudgets];
+const STEPS = [null, sMech, sFacts, sOpen, sLessons, sRedundant, sContra, sUntraced, sLost, sBudgets];
 
 function runStep(led, n) { return STEPS[n](led); }
 
@@ -352,7 +369,7 @@ function stepCommand() {
     return;
   }
   const n = led.currentStep || 1;
-  if (n > LAST) { console.log('All eight steps passed. Run: node scraper/guide_review_gate.js done'); return; }
+  if (n > LAST) { console.log('All nine steps passed. Run: node scraper/guide_review_gate.js done'); return; }
   const r = runStep(led, n);
   if (r.bad.length) {
     console.log(`Step ${n} of ${LAST} — ${STEP_NAMES[n]} — not passed; ${n < LAST ? `steps ${n + 1}–${LAST} stay closed` : 'the review cannot close'}. ${r.bad.length} thing(s) left; do them, do not report them:`);
@@ -398,11 +415,12 @@ function report(led, infos) {
     if (r.blocker && lineCount(nowText(f)) > limitOf(f)) open.push(`**${f}** is ${lineCount(nowText(f))} lines against a budget of ${budgetOf(f)}. ${norm(r.blockerWhy)} Suggestion: raise the budget to ${roundUp50(r.needs)}.`);
     if (r.askHer) open.push(`**${f}**: ${norm(r.askHer)}`);
   }
-  for (const u of led.untraceable || []) open.push(`Could not trace: "${u.phrase}" — ${norm(u.searched)}`);
+  for (const u of (led.untraceable || []).filter((x) => corpusText().includes(norm(x.phrase)))) open.push(`Could not trace, in ${u.file}: "${u.phrase}" — ${norm(u.searched)}`);
   const out = [
     '## Guide review', '',
-    '### The eight steps', '', '| Step | Problems |', '|---|---|',
-    ...infos.map((i, k) => `| ${k + 1}. ${STEP_NAMES[k + 1]} | ${norm(i) || '✓'} |`), '',
+    '### The nine steps', '', '| Step | Problems |', '|---|---|',
+    ...infos.map((i, k) => `| ${k + 1}. ${STEP_NAMES[k + 1]} | ${norm(i.split('<br>')[0]) || '✓'} |`), '',
+    ...infos.flatMap((i, k) => (i.split('<br>').length > 1 ? [`**${k + 1}. ${STEP_NAMES[k + 1]} — the list:**`, '', ...i.split('<br>').slice(1), ''] : [])),
     '### Every document', '',
     '| Document | Budget | Now | Room | Verdict | Found | Done | Still needed |', '|---|---|---|---|---|---|---|---|', ...rows, '',
     '### Open items for you', '', ...(open.length ? open.map((o, i) => `${i + 1}. ${o}`) : ['None.']), '',
@@ -434,7 +452,7 @@ if (require.main === module) {
       bad.forEach((b) => console.log('  ' + (b.startsWith('Step') ? '' : '- ') + b));
       process.exit(1);
     }
-    console.log(mode === 'done' ? 'Guide review gate: all eight steps passed. Report written to .claude/guide_review_report.md — send it as the report.' : 'Guide review gate: passed.');
+    console.log(mode === 'done' ? 'Guide review gate: all nine steps passed. Report written to .claude/guide_review_report.md — send it as the report.' : 'Guide review gate: passed.');
   } else { console.log('usage: guide_review_gate.js start | step | check | done'); process.exit(2); }
 }
 
