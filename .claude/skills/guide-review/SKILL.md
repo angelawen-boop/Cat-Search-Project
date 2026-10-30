@@ -1,6 +1,6 @@
 ---
 name: guide-review
-description: The fortnightly outside review of CLAUDE.md and docs/ — finds stale, contradictory, bloated or hand-typed content, fixes what has one right answer, and asks her about anything that is hers to decide. Run by the "Guide review" routine on the 15th and 30th; also on request ("review the guide").
+description: Shared rules for the two-part guide review of CLAUDE.md and docs/ — the editor (guide-review-editor) rewrites what is a mess, then the housekeeper (guide-review-housekeeper) checks everything holds and reports. Read by both; not run on its own.
 ---
 
 # Guide review — the outside reader
@@ -17,6 +17,14 @@ Scope: `CLAUDE.md` and everything under `docs/` (and `.md` READMEs inside it).
 folders, or saved pages — except a code COMMENT, or a line in `.claude/skills/`
 or `.claude/hooks/`, that points at a guide section or doc you renumbered or
 renamed.
+
+## Two parts, two sessions
+
+The review runs as two sessions, one after the other, each starting cold:
+**the editor** (skill `guide-review-editor`) does the hard rewriting — steps 5,
+6, 7 and 10 below — and pushes; **the housekeeper** (skill
+`guide-review-housekeeper`) then does steps 1, 2, 3, 4, 8, 9 and 10 and sends
+the report. This file holds what both share. Use the skill for your part.
 
 ## Hard limits — this runs unattended
 
@@ -56,20 +64,19 @@ index of side docs, guardrails, the app explainers, future considerations — an
 
 ## The review — do all of it
 
-**The gate — the reading and the ten steps below are enforced by code, in order.**
-`node scraper/guide_review_gate.js start` first (clean tree): it writes
-`.claude/guide_review_ledger.json` — a row per file, a row per §2.2 section —
-and names lines to copy out of each file. Then `node scraper/guide_review_gate.js
-step` after each step's work: a step a script owns (1 the mechanical check, 2
-facts against the repo, 10 nothing lost, and the duplicate and lost-lesson
-tests) is run by the gate itself; a judgement step
-(the reading, 3 open work, 4 lessons, 5 the lean trunk, 6 the lean side docs,
-7 diaries and overturned rules, 8 contradictions, 9 untraceable lines) needs its proof of work in the
-ledger, which the gate checks. **A step cannot pass before the one before it,
-and a push is refused by a hook until all stand.** What the gate lists is work,
-not findings. `done` runs last and writes `.claude/guide_review_report.md`; if it
-sends documents back, go through them again — every step, the whole of each —
-then run `done` again.
+**The gate — enforced by code, in order.** `node scraper/guide_review_gate.js
+start editor` (or `start housekeeper`) first, on a clean tree: it writes or
+continues `.claude/guide_review_ledger.json` and names lines to copy out of each
+file. Then `node scraper/guide_review_gate.js step` after each step's work. A
+step a script owns (1 the mechanical check, 2 facts against the repo, 10 nothing
+lost, and the duplicate and lost-lesson tests) is run by the gate itself; a
+judgement step (the reading, 3 open work, 4 lessons, 5 the lean trunk, 6 the
+lean side docs, 7 diaries and overturned rules, 8 contradictions, 9
+untraceable lines) needs its proof of work in the ledger, which the gate
+checks. **A step cannot pass before the one before it, and a push is refused by
+a hook until your steps stand.** What the gate lists is work, not findings.
+`done` finishes your part; if it sends documents back, go through them again —
+every step, the whole of each — then run `done` again.
 
 The gate also looks at every file itself, whatever you called it: a
 version-by-version log, events narrated in order, a run-on paragraph, a pile of
@@ -219,18 +226,7 @@ remove a rule rather than restate it.
 
 ## Finish
 
-1. `node scraper/guide_review_gate.js done` — exit 0 — then `npm test` exit 0 and
-   `node scraper/guide_check.js --strict` exit 0. Commit the ledger with the review.
-   The commit message starts "Guide review:" and holds the per-file findings.
-2. Commit on `main` with a message listing what changed, then
-   `git pull --rebase origin main` and `git push origin main`.
-3. **The report is the gate's own file** — `.claude/guide_review_report.md`,
-   written by `done`. Send it as your message, word for word, adding
-   nothing: the headline ("All N documents read and checked."), then ONE
-   steps table — a tick where a step found nothing; otherwise the documents
-   and what was done, with sizes; each decision for her is a row marked
-   "your call" under its step. No other tables or lists. Plain English,
-   spoken TO her. It is short because the work was done, not because it was
-   skipped. No "watch" items; no debrief of how the work went (the per-file
-   review is in the ledger and the commit message). If you add a sentence of
-   your own, it is one line at the end.
+Your own skill (`guide-review-editor` or `guide-review-housekeeper`) says how
+your part ends. For guide-only changes run `node scraper/guide_check.js
+--strict`; the full `npm test` covers only the app and the scraper, so it is
+not needed here.

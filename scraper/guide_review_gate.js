@@ -50,6 +50,9 @@ const STEP_NAMES = ['', 'Mechanical check – paths, pointers, index, section or
   'Open work – trunk, §2.2', 'Lessons – trunk, §4.1', 'Lean trunk', 'Lean side docs', 'Redundancies – duplicates, diaries, overturned rules',
   'Contradictions', 'Untraceable lines', 'Nothing lost – decisions, wording and lessons kept'];
 const LAST = 10;
+// Two sessions, one after the other, one ledger: the editor does the hard rewriting, the housekeeper everything else and the report.
+const PHASES = { editor: [5, 6, 7, 10], housekeeper: [1, 2, 3, 4, 8, 9, 10] };
+const roleOf = (led) => (led.phase === 'housekeeper' || led.phase === 'done' ? 'housekeeper' : 'editor');
 const TRUNK_KINDS = ['rule', 'lesson', 'open', 'pointer', 'schematic', 'moved'];
 
 const git = (...a) => execFileSync('git', a, { cwd: ROOT, encoding: 'utf8', maxBuffer: 1 << 28, stdio: ['ignore', 'pipe', 'ignore'] });
@@ -317,8 +320,22 @@ function openWorkSections() {
 }
 
 function start() {
+  const role = process.argv[3];
+  if (!['editor', 'housekeeper'].includes(role)) { console.log('usage: guide_review_gate.js start editor | start housekeeper'); process.exit(2); }
   if (git('status', '--porcelain').trim()) { console.log('Not started: commit or stash first — the review begins from a clean tree.'); process.exit(1); }
-  const base = git('rev-parse', process.argv[3] || 'HEAD').trim();
+  if (role === 'housekeeper') {
+    const led = readLedger();
+    if (!led || led.phase !== 'editor_done') { console.log('Not started: the editor part has not finished (run `start editor` first and finish it).'); process.exit(1); }
+    led.phase = 'housekeeper'; led.status = 'in_progress';
+    led.hBase = git('rev-parse', 'HEAD').trim();
+    led.hProbes = Object.fromEntries(guideFiles().map((f) => [f, probeLines(nowText(f) || '')]));
+    for (const n of PHASES.housekeeper) delete led.stamps[n];
+    delete led.stamps.h0;
+    writeLedger(led);
+    console.log(`Housekeeper part started at ${led.hBase.slice(0, 7)}. Fill .claude/guide_review_ledger.json as each step asks, then: node scraper/guide_review_gate.js step`);
+    return;
+  }
+  const base = git('rev-parse', process.argv[4] || 'HEAD').trim();
   const files = {};
   for (const f of guideFiles()) {
     const t = baseText(base, f) ?? '';
@@ -328,9 +345,9 @@ function start() {
   for (const key of Object.keys(trunkSections(baseText(base, 'CLAUDE.md') || ''))) trunk[key] = { kind: '', reason: '' };
   const openWork = {};
   for (const s of openWorkSections()) openWork[s.id] = { verdict: '', evidence: '' };
-  writeLedger({ status: 'in_progress', baseCommit: base, startedAt: new Date().toISOString(), currentStep: 1, stamps: {}, files, openWork, trunk,
+  writeLedger({ status: 'in_progress', phase: 'editor', baseCommit: base, startedAt: new Date().toISOString(), stamps: {}, files, openWork, trunk,
     lessons: { note: '', merged: null }, untraceable: [], untraceableChecked: '', dupOk: {}, fyi: [] });
-  console.log(`Review started at ${base.slice(0, 7)}: ${Object.keys(files).length} files, ${Object.keys(openWork).length} open-work sections. Fill .claude/guide_review_ledger.json as each step asks, then: node scraper/guide_review_gate.js step`);
+  console.log(`Editor part started at ${base.slice(0, 7)}: ${Object.keys(files).length} files. Fill .claude/guide_review_ledger.json as each step asks, then: node scraper/guide_review_gate.js step`);
 }
 
 // ---- the steps: each returns { bad: [...], info: 'one line for the report' } ----
@@ -343,18 +360,21 @@ function sMech() {
 
 function sRead(led) {
   const bad = [];
+  const hk = roleOf(led) === 'housekeeper';
   for (const f of guideFiles()) {
     const row = led.files[f];
     if (!row) { bad.push(`${f}: no ledger row — read it and add one.`); continue; }
-    const old = baseText(led.baseCommit, f);
+    const probes = hk ? (led.hProbes || {})[f] || [] : row.probes || [];
+    const old = hk ? nowTextAt(led.hBase, f) : baseText(led.baseCommit, f);
     if (!old) continue;
     const oldLines = old.split('\n');
-    for (const p of row.probes || []) {
-      if (!p.text || norm(p.text) !== norm(oldLines[p.line - 1] || '')) { bad.push(`${f}: line ${p.line} not copied out exactly as it was at the start — not read to the end.`); break; }
+    for (const p of probes) {
+      if (!p.text || norm(p.text) !== norm(oldLines[p.line - 1] || '')) { bad.push(`${f}: line ${p.line} not copied out exactly as it is now — not read to the end.`); break; }
     }
   }
   return { bad, info: '' };
 }
+const nowTextAt = (commit, f) => baseText(commit, f);
 
 function sFacts() {
   const bad = [];
@@ -529,49 +549,61 @@ function runStep(led, n) { return STEPS[n](led); }
 
 function stepCommand() {
   const led = readLedger();
-  if (!led) { console.log('No review started: run `node scraper/guide_review_gate.js start` first.'); process.exit(1); }
-  if (!led.stamps[0]) {
+  if (!led) { console.log('No review started: run `node scraper/guide_review_gate.js start editor` first.'); process.exit(1); }
+  const list = PHASES[roleOf(led)];
+  const readKey = roleOf(led) === 'housekeeper' ? 'h0' : '0';
+  if (!led.stamps[readKey]) {
     const rd = sRead(led);
     if (rd.bad.length) {
-      console.log(`Before step 1 — read every file to the end. ${rd.bad.length} thing(s) left; do them, do not report them:`);
+      console.log(`Before step ${list[0]} — read every file to the end. ${rd.bad.length} thing(s) left; do them, do not report them:`);
       rd.bad.slice(0, 40).forEach((b) => console.log('  - ' + b));
       process.exit(1);
     }
-    led.stamps[0] = { at: new Date().toISOString(), info: '' };
+    led.stamps[readKey] = { at: new Date().toISOString(), info: '' };
     writeLedger(led);
-    console.log('Reading proved. Next: step 1 — ' + STEP_NAMES[1] + '.');
+    console.log('Reading proved. Next: step ' + list[0] + ' — ' + STEP_NAMES[list[0]] + '.');
     return;
   }
-  const n = led.currentStep || 1;
-  if (n > LAST) { console.log('All ten steps passed. Run: node scraper/guide_review_gate.js done'); return; }
+  const n = list.find((x) => !led.stamps[x]);
+  if (!n) { console.log('All your steps passed. Run: node scraper/guide_review_gate.js done'); return; }
   const r = runStep(led, n);
+  const later = list.filter((x) => x > n);
   if (r.bad.length) {
-    console.log(`Step ${n} of ${LAST} — ${STEP_NAMES[n]} — not passed; ${n < LAST ? `steps ${n + 1}–${LAST} stay closed` : 'the review cannot close'}. ${r.bad.length} thing(s) left; do them, do not report them:`);
+    console.log(`Step ${n} — ${STEP_NAMES[n]} — not passed; ${later.length ? 'the later steps stay closed' : 'the review cannot close'}. ${r.bad.length} thing(s) left; do them, do not report them:`);
     r.bad.slice(0, 40).forEach((b) => console.log('  - ' + b));
     if (r.bad.length > 40) console.log(`  … and ${r.bad.length - 40} more`);
     writeLedger(led);
     process.exit(1);
   }
   led.stamps[n] = { at: new Date().toISOString(), info: r.info };
-  led.currentStep = n + 1;
   writeLedger(led);
-  console.log(`Step ${n} of ${LAST} — ${STEP_NAMES[n]} — passed.` + (n < LAST ? ` Next: step ${n + 1} — ${STEP_NAMES[n + 1]}.` : ' Run: node scraper/guide_review_gate.js done'));
+  const next = list.find((x) => !led.stamps[x]);
+  console.log(`Step ${n} — ${STEP_NAMES[n]} — passed.` + (next ? ` Next: step ${next} — ${STEP_NAMES[next]}.` : ' Run: node scraper/guide_review_gate.js done'));
 }
 
-// Every step in order, each re-run now: what the push hook asks.
+// Every step of this part, each re-run now: what the push hook asks.
 function check() {
   const led = readLedger();
-  if (!led) return { bad: ['No review started: run `node scraper/guide_review_gate.js start` first.'], infos: [] };
-  const infos = [];
-  if (!led.stamps || !led.stamps[0]) return { bad: ['Before step 1: read every file — run: node scraper/guide_review_gate.js step'], infos: [] };
-  for (let n = 1; n <= LAST; n++) {
-    if (!led.stamps || !led.stamps[n]) return { bad: [`Step ${n} of ${LAST} (${STEP_NAMES[n]}) not passed yet — run: node scraper/guide_review_gate.js step`], infos };
-    if (n > 1 && led.stamps[n].at < led.stamps[n - 1].at) return { bad: [`Step ${n} was passed before step ${n - 1}.`], infos };
-    const r = runStep(led, n);
-    if (r.bad.length) return { bad: [`Step ${n} of ${LAST} (${STEP_NAMES[n]}) no longer holds:`, ...r.bad.slice(0, 30)], infos };
-    infos.push(r.info);
+  if (!led) return { bad: ['No review started: run `node scraper/guide_review_gate.js start editor` first.'], infos: [] };
+  const role = roleOf(led);
+  const list = PHASES[role];
+  const readKey = role === 'housekeeper' ? 'h0' : '0';
+  if (!led.stamps || !led.stamps[readKey]) return { bad: ['Before the first step: read every file — run: node scraper/guide_review_gate.js step'], infos: [] };
+  let prev = null;
+  for (const n of list) {
+    if (!led.stamps[n]) return { bad: [`Step ${n} (${STEP_NAMES[n]}) not passed yet — run: node scraper/guide_review_gate.js step`], infos: [] };
+    if (prev && led.stamps[n].at < led.stamps[prev].at) return { bad: [`Step ${n} was passed before step ${prev}.`], infos: [] };
+    prev = n;
   }
-  return { bad: finalProblems(led), infos };
+  // everything must hold now: this part's steps, and — for the housekeeper — the editor's too
+  const all = role === 'housekeeper' ? Array.from({ length: LAST }, (_, i) => i + 1) : list;
+  const infos = new Array(LAST).fill('');
+  for (const n of all) {
+    const r = runStep(led, n);
+    if (r.bad.length) return { bad: [`Step ${n} (${STEP_NAMES[n]}) no longer holds:`, ...r.bad.slice(0, 30)], infos };
+    infos[n - 1] = r.info;
+  }
+  return { bad: role === 'editor' ? finalProblems(led) : [], infos };
 }
 
 // ---- measured last, by code, after the ten steps; the reviewer is never told these numbers ----
@@ -649,8 +681,9 @@ function report(led, infos) {
 function done() {
   const c = check();
   const led0 = readLedger();
-  if (led0 && c.bad.length === 1 && /run `node scraper\/guide_review_gate.js done`/.test(c.bad[0])) {
-    // all ten steps stand; measure by code and send back what is well over — once, with no number
+  const role = led0 ? roleOf(led0) : 'editor';
+  if (role === 'editor' && led0 && c.bad.length === 1 && /run `node scraper\/guide_review_gate.js done`/.test(c.bad[0])) {
+    // the editor's steps stand; measure by code and send back what is well over — once, with no number
     led0.pass = 2;
     led0.sentBack = Object.fromEntries(measure().over.map((o) => [o.f, sha(nowText(o.f))]));
     writeLedger(led0);
@@ -658,8 +691,9 @@ function done() {
   }
   if (c.bad.length) return c.bad;
   const led = readLedger();
-  led.status = 'done';
   led.finishedAt = new Date().toISOString();
+  if (role === 'editor') { led.status = 'editor_done'; led.phase = 'editor_done'; writeLedger(led); return []; }
+  led.status = 'done'; led.phase = 'done';
   writeLedger(led);
   report(led, c.infos);
   return [];
@@ -676,8 +710,9 @@ if (require.main === module) {
       bad.forEach((b) => console.log('  ' + (b.startsWith('Step') ? '' : '- ') + b));
       process.exit(1);
     }
-    console.log(mode === 'done' ? 'Guide review gate: all ten steps passed. Report written to .claude/guide_review_report.md — send it as the report.' : 'Guide review gate: passed.');
-  } else { console.log('usage: guide_review_gate.js start | step | check | done'); process.exit(2); }
+    const led = readLedger();
+    console.log(mode === 'done' ? (led && led.phase === 'editor_done' ? 'Editor part finished. Commit it, push it, and stop — the housekeeper runs next.' : 'Guide review gate: all steps passed. Report written to .claude/guide_review_report.md — send it as the report.') : 'Guide review gate: passed.');
+  } else { console.log('usage: guide_review_gate.js start editor|housekeeper | step | check | done'); process.exit(2); }
 }
 
 module.exports = { done, measure, finalProblems, sCode, trunkSections, tokensOf, overlapsSideDoc, sLean, smells, report, readLedger, check, anchorsOf, probeLines, guideFiles, limitOf, lostDecisions, duplicates, sFacts, openWorkSections };
