@@ -84,6 +84,14 @@ and for a side doc `leanNote` (what the doc is for, and whether anything in it
 belongs elsewhere).
 A document is never fine because of its size: diagnose it and clean it.
 
+**Write for her.** She is not technical and does not touch the repo. For every
+change, write one plain sentence in the ledger (`plain`): what was wrong and
+what it says now, as a person would say it — no code names, test ids or file
+jargon (the gate refuses them). Questions for her must be ones only she can
+answer, as one plain question ending in a question mark. Anything the repo can
+answer — including what is on the other branches (`git fetch --all`, then `git
+show origin/<branch>:<path>`) — you answer yourself.
+
 **First, before step 1 — read.** **Read `CLAUDE.md` in full, then every file under `docs/`, then the skill
    files that cite the guide (`.claude/skills/*/SKILL.md`).** Run
    `node scraper/venue_status.js`,

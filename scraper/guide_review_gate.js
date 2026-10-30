@@ -233,10 +233,12 @@ function sLean(led) {
         if (there < 0.5) fail(`moved to ${to}, but only ${Math.round(there * 100)}% of what it named is there — move the substance (compressed), not just a pointer.`);
         if (left > 0.4) fail(`marked moved but ${Math.round(left * 100)}% of what it named is still in the trunk section — cut it down to the pointer.`);
       } else if (before && body.length > before.length * 0.6) fail('marked moved but the section has not shrunk — cut it down to the pointer.');
-      moved.push(`§${key.split(' ')[0].replace(/\.$/, '')} → ${path.basename(to)}`);
+      const ppm = plainProblem(row.plain);
+      if (ppm) fail(`plain — one plain sentence on what moved out of the trunk and where it lives now: ${ppm}.`);
+      moved.push(key);
     }
   }
-  return { bad, info: moved.length ? `${moved.length} moved: ${moved.join(', ')}` : '' };
+  return { bad, info: moved.length ? `${moved.length} section${moved.length > 1 ? 's' : ''} moved — see What changed` : '' };
 }
 
 // Step 6: every side doc is held to the same test — is each section where it belongs, and is the doc not a dumping ground
@@ -284,6 +286,18 @@ function sCode(led) {
   }
   return { bad, info: '' };
 }
+
+// What she reads must be plain English: a sentence anyone could follow, with no code names, ids or file jargon.
+function plainProblem(text) {
+  const t = norm(text);
+  if (t.length < 30 || t.length > 260) return 'write one plain sentence of 30–260 characters';
+  if (/`/.test(t)) return 'no backticks or code names';
+  if (/\b[A-Z]{1,4}-\d{3}/.test(t)) return 'no test ids';
+  if (/[a-z][A-Z]/.test(t.replace(/\b[A-Z][a-z]+(?:[A-Z][a-z]+)+\b/g, '')) || /\b\w+_\w+\b/.test(t)) return 'no code names (camelCase or snake_case words)';
+  if (/pass2|ledger|\bgate\b|§/.test(t)) return 'no review-machinery words';
+  return '';
+}
+const nick = (f) => (f === 'CLAUDE.md' ? 'the main guide' : path.basename(f, '.md').replace(/[_-]+/g, ' '));
 
 const readLedger = () => { try { return JSON.parse(fs.readFileSync(LEDGER, 'utf8')); } catch { return null; } };
 const writeLedger = (l) => fs.writeFileSync(LEDGER, JSON.stringify(l, null, 2) + '\n');
@@ -388,7 +402,8 @@ function sOpen(led) {
   }
   for (const id of Object.keys(led.openWork)) if (!secs.find((s) => s.id === id)) delete led.openWork[id];
   const cutIds = secs.filter((x) => (led.openWork[x.id] || {}).verdict === 'finished-cut').map((x) => x.id);
-  return { bad, info: cutIds.length ? `${cutIds.map((i) => '§' + i).join(', ')} finished — cut` : '' };
+  for (const id of cutIds) { const pp = plainProblem((led.openWork[id] || {}).plain); if (pp) bad.push(`§${id}: plain — one plain sentence on what finished and was removed: ${pp}.`); }
+  return { bad, info: cutIds.length ? `${cutIds.length} finished item${cutIds.length > 1 ? 's' : ''} removed — see What changed` : '' };
 }
 
 function perFileFields(led, key, label) {
@@ -418,6 +433,11 @@ function sRedundant(led) {
     if (row.action === 'compressed' && lineCount(cur) >= (old ? lineCount(old) : 0)) fail(`action says compressed but it is ${lineCount(cur)} lines, was ${old ? lineCount(old) : 0}.`);
     if (row.diagnosis && row.diagnosis !== 'clean' && row.diagnosis !== 'dense' && row.action === 'none') fail(`diagnosed "${row.diagnosis}" and nothing done — a problem found is a problem fixed.`);
     if (old && row.action === 'none' && cur !== old) fail('action says none but the file changed.');
+    if (row.action !== 'none') {
+      const lines = Array.isArray(row.plain) ? row.plain : [];
+      if (!lines.length) fail('plain: write what you changed in plain English, one sentence per change (what was wrong, what it says now) — files["' + f + '"].plain = ["…"].');
+      for (const l of lines) { const pp = plainProblem(l); if (pp) fail(`plain line "${norm(l).slice(0, 50)}…" — ${pp}.`); }
+    }
     const L = cur.split('\n');
     for (const [flag, lines] of Object.entries(smells(cur))) {
       const ok = (row.smellOk || {})[flag] || {};
@@ -427,12 +447,12 @@ function sRedundant(led) {
     }
   }
   for (const d of duplicates()) if (norm((led.dupOk || {})[d.key]).length < 15) bad.push(`The same passage is in ${d.files.join(' and ')} — keep one, point from the other (or give a reason in dupOk["${d.key}"]): "${d.text}…"`);
-  const changed = (k) => guideFiles().filter((f) => norm((led.files[f] || {})[k]) !== 'none' && led.files[f].action !== 'none').map((f) => path.basename(f));
-  const diaries = guideFiles().filter((f) => ['diary', 'history'].includes((led.files[f] || {}).diagnosis) && led.files[f].action !== 'none').map((f) => `${path.basename(f)} ${led.files[f].linesBefore} → ${lineCount(nowText(f))}`);
+  const changed = (k) => guideFiles().filter((f) => norm((led.files[f] || {})[k]) !== 'none' && led.files[f].action !== 'none').length;
+  const diaries = guideFiles().filter((f) => ['diary', 'history'].includes((led.files[f] || {}).diagnosis) && led.files[f].action !== 'none').length;
   const parts = [];
-  if (diaries.length) parts.push(`${diaries.length} diar${diaries.length > 1 ? 'ies' : 'y'} fixed (${diaries.join(', ')})`);
-  if (changed('overturned').length) parts.push(`${changed('overturned').length} overturned rule${changed('overturned').length > 1 ? 's' : ''} fixed (${changed('overturned').join(', ')})`);
-  return { bad, info: parts.join('; ') };
+  if (diaries) parts.push(`${diaries} diar${diaries > 1 ? 'ies' : 'y'} fixed`);
+  if (changed('overturned')) parts.push(`${changed('overturned')} out-of-date rule${changed('overturned') > 1 ? 's' : ''} fixed`);
+  return { bad, info: parts.length ? parts.join('; ') + ' — see What changed' : '' };
 }
 
 function sContra(led) {
@@ -442,7 +462,8 @@ function sContra(led) {
     if (norm(r.contradictions) !== 'none' && norm(r.contradictions).length >= 30 && r.action === 'none' && !r.askHer) bad.push(`${f}: found a contradiction but did nothing — fix it, or put it in "askHer".`);
   }
   const hit = guideFiles().filter((f) => norm((led.files[f] || {}).contradictions) !== 'none').map((f) => path.basename(f));
-  return { bad, info: hit.length ? `${hit.length} fixed (${hit.join(', ')})` : '' };
+  for (const f of guideFiles()) { const a = (led.files[f] || {}).askHer; if (norm(a)) { const pp = plainProblem(a); if (pp || !/\?\s*$/.test(norm(a))) bad.push(`${f}: askHer must be one plain question for her, ending in a question mark — ${pp || 'add the question mark'}.`); } }
+  return { bad, info: hit.length ? `${hit.length} fixed — see What changed` : '' };
 }
 
 function sLessons(led) {
@@ -457,7 +478,8 @@ function sLessons(led) {
     const key = l.replace(/[.:]+$/, '').toLowerCase();
     if (!now.toLowerCase().includes(key.slice(0, Math.min(28, key.length))) && norm(((led.files['CLAUDE.md'] || {}).dropped || {})[l]).length < 15) bad.push(`§4.1 lesson "${l}" is gone — never drop a lesson: put it back (merged into a sibling is fine), or list it in files["CLAUDE.md"].dropped.`);
   }
-  return { bad, info: (led.lessons || {}).merged > 0 ? `${led.lessons.merged} merged` : '' };
+  if ((led.lessons || {}).merged > 0) { const pp = plainProblem(led.lessons.plain); if (pp) bad.push(`lessons.plain — one plain sentence on what was merged: ${pp}.`); }
+  return { bad, info: (led.lessons || {}).merged > 0 ? `${led.lessons.merged} merged — see What changed` : '' };
 }
 
 // Step 9: whatever the earlier steps cut, nothing she decided is gone.
@@ -476,7 +498,7 @@ function sLost(led) {
     for (const a of anchorsOf(old)) if (!corpus.includes(a) && norm(dropped[a]).length < 15) fail(`the old text marked as hers names "${a}", now nowhere in the guide or docs — put it back, or list it in "dropped" with the reason.`);
     for (const sent of lostDecisions(old, corpus)) if (norm(dropped[sent.slice(0, 40)]).length < 15) fail(`this marked-as-hers sentence is no longer anywhere — put it back (shortened is fine), or list it in "dropped" under its first 40 characters with the reason: "${sent.slice(0, 110)}"`);
   }
-  return { bad, info: droppedOn.length ? `dropped on purpose, with reasons: ${droppedOn.join(', ')}` : '' };
+  return { bad, info: '' };
 }
 
 function sUntraced(led) {
@@ -488,8 +510,12 @@ function sUntraced(led) {
     if (norm(u.searched).length < 20) bad.push(`untraceable "${u.phrase}": give the git log -S search made and what it found (20+ characters).`);
   }
   const live = (led.untraceable || []).filter((u) => corpus.includes(norm(u.phrase)));
-  for (const u of live) if (!guideFiles().includes(u.file)) bad.push(`untraceable "${u.phrase}": give the guide file it is in ("file").`);
-  return { bad, info: live.length ? `${live.length} — your call:<br>` + live.map((u, i) => `${i + 1}. ${u.file} – "${norm(u.phrase)}" – ${norm(u.searched)}`).join('<br>') : '' };
+  for (const u of live) {
+    if (!guideFiles().includes(u.file)) bad.push(`untraceable "${u.phrase}": give the guide file it is in ("file").`);
+    const pp = plainProblem(u.question);
+    if (pp || !/\?\s*$/.test(norm(u.question))) bad.push(`untraceable "${u.phrase}": question — only ask her what the repo and every branch cannot answer (read the other branches first), as one plain question ending in a question mark: ${pp || 'add the question mark'}.`);
+  }
+  return { bad, info: live.length ? `${live.length} question${live.length > 1 ? 's' : ''} for you — see Needs you` : '' };
 }
 
 // step 2 is the facts the docs state, checked against the repo: version, branches, run folders, and the names the docs mention
@@ -571,45 +597,50 @@ function finalProblems(led) {
     const was = (led.sentBack || {})[o.f];
     const p2 = row.pass2 || {};
     if (was && sha(nowText(o.f)) !== was) {
-      if (norm(p2.note).length < 30) bad.push(`${o.f}: say what you changed — files["${o.f}"].pass2.note, 30+ characters.`);
+      const ppn = plainProblem(p2.note);
+      if (ppn) bad.push(`${o.f}: say what you changed in plain English — files["${o.f}"].pass2.note: ${ppn}.`);
       continue;
     }
     const c = p2.nothingMore || {};
     const line = (nowText(o.f) || '').split('\n')[(c.line || 0) - 1] || '';
     if (norm(c.quote).length < 60 || !norm(line).includes(norm(c.quote).slice(0, 60))) bad.push(`${o.f} did not change. If you found nothing more to improve in it, say why — files["${o.f}"].pass2.nothingMore = {quote: a passage from it, 60+ characters, line: its line number, why: one sentence on why it needs no further improvement}.`);
-    else if (norm(c.why).length < 30 || norm(c.why).length > 200 || /\d+\s*(lines?|characters?|words?)/i.test(c.why)) bad.push(`${o.f}: pass2.nothingMore.why — one sentence, in words, with no figures.`);
+    else if (plainProblem(c.why) || /\d+\s*(lines?|characters?|words?)/i.test(c.why)) bad.push(`${o.f}: pass2.nothingMore.why — one plain sentence, in words, with no figures${plainProblem(c.why) ? ': ' + plainProblem(c.why) : ''}.`);
   }
   return bad;
 }
 
 
-// One table is the whole report. A tick where a step found nothing; a step's extra lines are rows of their own under it.
+// The report: a table of the checks (a tick where clean, a count where not), then what changed and what needs her, in plain English.
 function report(led, infos) {
-  const asks = (k) => guideFiles().filter((f) => norm((led.files[f] || {}).askHer)).filter((f) => (norm(led.files[f].overturned) !== 'none' ? 7 : 8) === k)
-    .map((f) => `${f} – ${norm(led.files[f].askHer)} – your call`);
-  const stepRows = infos.flatMap((i, k) => {
-    const [first, ...more] = String(i).split('<br>');
-    const extra = asks(k + 1);
-    const head = norm(first) || (extra.length ? `${extra.length} — your call:` : '✓');
-    return [`| ${k + 1}. ${STEP_NAMES[k + 1]} | ${head} |`, ...more.map((m) => `| | ${norm(m)} |`), ...extra.map((m) => `| | ${m} |`)];
-  });
-  const n = guideFiles().length;
   const m = measure();
   const reasonOf = (f) => {
     const p2 = ((led.files[f] || {}).pass2) || {};
-    return p2.nothingMore && norm(p2.nothingMore.why) ? `nothing more to improve: ${norm(p2.nothingMore.why)}` : norm(p2.note) ? `second pass: ${norm(p2.note)}` : '';
+    return p2.nothingMore && norm(p2.nothingMore.why) ? norm(p2.nothingMore.why) : norm(p2.note) ? `after a second look: ${norm(p2.note)}` : '';
   };
-  const near = m.near.map((o) => `${o.f} ${o.lines}/${o.bud}`);
-  const nearLine = near.length ? `${near.length} over budget but within the 5% tolerance: ${near.join(', ')}` : '';
-  const budgetRows = m.over.length
-    ? [`| ${LAST + 1}. Budgets | ${m.over.length} still over — your call: |`, ...m.over.map((o, i) => `| | ${i + 1}. ${o.f} – ${o.lines} against ${o.bud} – ${reasonOf(o.f) || 'no reason given'} – suggest ${roundUp50(o.lines)} |`), ...(nearLine ? [`| | ${nearLine} |`] : [])]
-    : [`| ${LAST + 1}. Budgets | ${nearLine || '✓'} |`];
+  const near = m.near.map((o) => `${nick(o.f)} (${o.lines}/${o.bud})`);
+  const budgetCell = m.over.length ? `${m.over.length} over their limit — see Needs you` : (near.length ? `${near.length} slightly over, within 5%: ${near.join(', ')}` : '✓');
+  const rows = infos.map((i, k) => `| ${k + 1}. ${STEP_NAMES[k + 1]} | ${norm(String(i).split('<br>')[0]) || '✓'} |`);
+  rows.push(`| ${LAST + 1}. Budgets | ${budgetCell} |`);
+  const changes = [];
+  for (const f of guideFiles()) for (const l of ((led.files[f] || {}).plain) || []) changes.push(`**${nick(f)}** — ${norm(l)}`);
+  for (const [k, v] of Object.entries(led.trunk || {})) if (v.kind === 'moved' && norm(v.plain)) changes.push(`**the main guide** — ${norm(v.plain)}`);
+  for (const v of Object.values(led.openWork || {})) if (v.verdict === 'finished-cut' && norm(v.plain)) changes.push(`**the main guide** — ${norm(v.plain)}`);
+  if ((led.lessons || {}).merged > 0 && norm(led.lessons.plain)) changes.push(`**the main guide** — ${norm(led.lessons.plain)}`);
+  const SHOW = 15;
+  const changeLines = changes.slice(0, SHOW).map((c) => `- ${c}`);
+  if (changes.length > SHOW) changeLines.push(`- …and ${changes.length - SHOW} smaller changes — ask and I will list them.`);
+  const needs = [];
+  for (const f of guideFiles()) { const a = norm((led.files[f] || {}).askHer); if (a) needs.push(`**${nick(f)}** — ${a}`); }
+  for (const u of (led.untraceable || []).filter((x) => corpusText().includes(norm(x.phrase)))) needs.push(`**${nick(u.file)}** — ${norm(u.question)}`);
+  for (const o of m.over) needs.push(`**${nick(o.f)}** is ${o.lines} lines and its limit is ${o.bud}. ${reasonOf(o.f) || 'No reason was given.'} Raise its limit to ${roundUp50(o.lines)}, or have it rewritten more deeply?`);
   const fyi = (led.fyi || []).map((x) => `- ${norm(x)}`);
   const out = [
     '## Guide review', '',
-    `**All ${n} documents read and checked.**`, '',
-    '| Step | Problems |', '|---|---|', ...stepRows, ...budgetRows, '',
-    ...(fyi.length ? ['FYI', '', ...fyi, ''] : []),
+    `**All ${guideFiles().length} documents read and checked.**`, '',
+    '| Step | Problems |', '|---|---|', ...rows, '',
+    '### What changed', '', ...(changeLines.length ? changeLines : ['Nothing needed changing.']), '',
+    '### Needs you', '', ...(needs.length ? needs.map((n, i) => `${i + 1}. ${n}`) : ['Nothing needs you.']), '',
+    ...(fyi.length ? ['### FYI', '', ...fyi, ''] : []),
   ].join('\n');
   fs.writeFileSync(REPORT, out);
   return out;
