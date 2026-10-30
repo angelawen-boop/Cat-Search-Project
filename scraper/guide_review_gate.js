@@ -287,7 +287,7 @@ function sRedundant(led) {
   }
   for (const d of duplicates()) if (norm((led.dupOk || {})[d.key]).length < 15) bad.push(`The same passage is in ${d.files.join(' and ')} — keep one, point from the other (or give a reason in dupOk["${d.key}"]): "${d.text}…"`);
   const changed = (k) => guideFiles().filter((f) => norm((led.files[f] || {})[k]) !== 'none' && led.files[f].action !== 'none').map((f) => path.basename(f));
-  const diaries = guideFiles().filter((f) => ['diary', 'history'].includes((led.files[f] || {}).diagnosis) && led.files[f].action !== 'none').map((f) => path.basename(f));
+  const diaries = guideFiles().filter((f) => ['diary', 'history'].includes((led.files[f] || {}).diagnosis) && led.files[f].action !== 'none').map((f) => `${path.basename(f)} ${led.files[f].linesBefore} → ${lineCount(nowText(f))}`);
   const parts = [];
   if (diaries.length) parts.push(`${diaries.length} diar${diaries.length > 1 ? 'ies' : 'y'} compressed (${diaries.join(', ')})`);
   if (changed('overturned').length) parts.push(`${changed('overturned').length} overturned rule${changed('overturned').length > 1 ? 's' : ''} fixed (${changed('overturned').join(', ')})`);
@@ -340,11 +340,11 @@ function sBudgets(led) {
         if (norm(b.quote).length < 60 || !norm(where).includes(norm(b.quote).slice(0, 60))) fail('name the blocker — a 60+ character quote of the passage that cannot go, with its current line number.');
         if (norm(row.blockerWhy).length < 30 || norm(row.blockerWhy).length > 200) fail('blockerWhy: one sentence (30–200 characters) on why that passage cannot be cut.');
         if (!(row.needs > limitOf(f))) fail(`needs: the line count the file would need — a number above ${limitOf(f)}.`);
-        over.push({ f, after, why: norm(row.blockerWhy) });
+        over.push({ f, after, why: norm(row.blockerWhy), suggest: roundUp50(row.needs) });
       }
     } else if (norm(row.remaining) !== 'nothing' && !row.askHer) fail('remaining: write "nothing" — within its budget there is nothing left to leave.');
   }
-  return { bad, info: over.length ? `${over.length} still over, see Open items:<br>` + over.map((o, i) => `${i + 1}. ${o.f} – ${o.after} against ${budgetOf(o.f)} – ${o.why}`).join('<br>') : '' };
+  return { bad, info: over.length ? `${over.length} still over — your call:<br>` + over.map((o, i) => `${i + 1}. ${o.f} – ${o.after} against ${budgetOf(o.f)} – ${o.why} – suggest ${o.suggest}`).join('<br>') : '' };
 }
 
 // Step 8: whatever the earlier steps cut, nothing she decided is gone.
@@ -376,7 +376,7 @@ function sUntraced(led) {
   }
   const live = (led.untraceable || []).filter((u) => corpus.includes(norm(u.phrase)));
   for (const u of live) if (!guideFiles().includes(u.file)) bad.push(`untraceable "${u.phrase}": give the guide file it is in ("file").`);
-  return { bad, info: live.length ? `${live.length} (${[...new Set(live.map((u) => path.basename(u.file || '?')))].join(', ')}), see Open items` : '' };
+  return { bad, info: live.length ? `${live.length} — your call:<br>` + live.map((u, i) => `${i + 1}. ${u.file} – "${norm(u.phrase)}" – ${norm(u.searched)}`).join('<br>') : '' };
 }
 
 const STEPS = [null, sMech, sFacts, sOpen, sLessons, sRedundant, sContra, sUntraced, sLost, sBudgets];
@@ -431,36 +431,23 @@ function check() {
 }
 
 
-// Exceptions only: a tick where there is nothing to say; a step's extra lines are rows of their own under it.
+// One table is the whole report. A tick where a step found nothing; a step's extra lines are rows of their own under it.
 function report(led, infos) {
-  const cut = (x, n) => { const t = norm(x).replace(/\|/g, '/'); return t.length > n ? t.slice(0, n - 1) + '…' : t; };
+  const asks = (k) => guideFiles().filter((f) => norm((led.files[f] || {}).askHer)).filter((f) => (norm(led.files[f].overturned) !== 'none' ? 5 : 6) === k)
+    .map((f) => `${f} – ${norm(led.files[f].askHer)} – your call`);
   const stepRows = infos.flatMap((i, k) => {
     const [first, ...more] = String(i).split('<br>');
-    return [`| ${k + 1}. ${STEP_NAMES[k + 1]} | ${norm(first) || '✓'} |`, ...more.map((m) => `| | ${norm(m)} |`)];
+    const extra = asks(k + 1);
+    const head = norm(first) || (extra.length ? `${extra.length} — your call:` : '✓');
+    return [`| ${k + 1}. ${STEP_NAMES[k + 1]} | ${head} |`, ...more.map((m) => `| | ${norm(m)} |`), ...extra.map((m) => `| | ${m} |`)];
   });
-  const docRows = guideFiles().map((f) => {
-    const r = led.files[f];
-    const cur = lineCount(nowText(f)), was = r.linesBefore, bud = budgetOf(f);
-    let status;
-    if (cur > limitOf(f)) status = `Over by ${cur - bud} — ${cut(r.blockerWhy || r.remaining, 110)}`;
-    else if (cur > bud) status = `Over by ${cur - bud}, within 5% tolerance`;
-    else if (r.action !== 'none') status = `${r.action} — ${cut(r.finding, 110)}`;
-    else status = '✓';
-    return `| \`${f}\` | ${bud} | ${cur}${was !== cur ? ` (was ${was})` : ''} | ${status} |`;
-  });
-  const open = [];
-  for (const f of guideFiles()) {
-    const r = led.files[f];
-    if (r.blocker && lineCount(nowText(f)) > limitOf(f)) open.push(`**${f}** is ${lineCount(nowText(f))} lines against a budget of ${budgetOf(f)}. ${norm(r.blockerWhy)} Suggestion: raise the budget to ${roundUp50(r.needs)}.`);
-    if (r.askHer) open.push(`**${f}**: ${norm(r.askHer)}`);
-  }
-  for (const u of (led.untraceable || []).filter((x) => corpusText().includes(norm(x.phrase)))) open.push(`Could not trace, in ${u.file}: "${u.phrase}" — ${norm(u.searched)}`);
+  const n = guideFiles().length;
+  const fyi = (led.fyi || []).map((x) => `- ${norm(x)}`);
   const out = [
     '## Guide review', '',
-    '### Steps', '', '| Step | Problems |', '|---|---|', ...stepRows, '',
-    '### Documents', '', '| Document | Budget | Now | Status |', '|---|---|---|---|', ...docRows, '',
-    '### Open items for you', '', ...(open.length ? open.map((o, i) => `${i + 1}. ${o}`) : ['None.']), '',
-    ...((led.fyi || []).length ? ['### FYI', '', ...led.fyi.map((x) => `- ${norm(x)}`), ''] : []),
+    `**All ${n} documents read and checked.**`, '',
+    '| Step | Problems |', '|---|---|', ...stepRows, '',
+    ...(fyi.length ? ['FYI', '', ...fyi, ''] : []),
   ].join('\n');
   fs.writeFileSync(REPORT, out);
   return out;
