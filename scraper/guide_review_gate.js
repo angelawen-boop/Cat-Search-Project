@@ -378,7 +378,7 @@ function sRedundant(led) {
   const changed = (k) => guideFiles().filter((f) => norm((led.files[f] || {})[k]) !== 'none' && led.files[f].action !== 'none').map((f) => path.basename(f));
   const diaries = guideFiles().filter((f) => ['diary', 'history'].includes((led.files[f] || {}).diagnosis) && led.files[f].action !== 'none').map((f) => `${path.basename(f)} ${led.files[f].linesBefore} → ${lineCount(nowText(f))}`);
   const parts = [];
-  if (diaries.length) parts.push(`${diaries.length} diar${diaries.length > 1 ? 'ies' : 'y'} compressed (${diaries.join(', ')})`);
+  if (diaries.length) parts.push(`${diaries.length} diar${diaries.length > 1 ? 'ies' : 'y'} fixed (${diaries.join(', ')})`);
   if (changed('overturned').length) parts.push(`${changed('overturned').length} overturned rule${changed('overturned').length > 1 ? 's' : ''} fixed (${changed('overturned').join(', ')})`);
   return { bad, info: parts.join('; ') };
 }
@@ -433,7 +433,11 @@ function sBudgets(led) {
       }
     } else if (norm(row.remaining) !== 'nothing' && !row.askHer) fail('remaining: write "nothing" — within its budget there is nothing left to leave.');
   }
-  return { bad, info: over.length ? `${over.length} still over after previous steps — your call:<br>` + over.map((o, i) => `${i + 1}. ${o.f} – ${o.after} against ${budgetOf(o.f)} – ${o.why} – suggest ${o.suggest}`).join('<br>') : '' };
+  const near = guideFiles().filter((f) => lineCount(nowText(f)) > budgetOf(f) && lineCount(nowText(f)) <= limitOf(f)).map((f) => `${f} ${lineCount(nowText(f))}/${budgetOf(f)}`);
+  const nearLine = near.length ? `${near.length} over budget but within the 5% tolerance: ${near.join(', ')}` : '';
+  const head = over.length ? `${over.length} still over after previous steps — your call:` : nearLine;
+  const rows = [...over.map((o, i) => `${i + 1}. ${o.f} – ${o.after} against ${budgetOf(o.f)} – ${o.why} – suggest ${o.suggest}`), ...(over.length && nearLine ? [nearLine] : [])];
+  return { bad, info: [head, ...rows].filter(Boolean).join('<br>') };
 }
 
 // Step 8: whatever the earlier steps cut, nothing she decided is gone.
@@ -568,4 +572,4 @@ if (require.main === module) {
   } else { console.log('usage: guide_review_gate.js start | step | check | done'); process.exit(2); }
 }
 
-module.exports = { trunkSections, tokensOf, overlapsSideDoc, sLean, smells, report, readLedger, check, anchorsOf, probeLines, guideFiles, limitOf, lostDecisions, duplicates, sFacts, openWorkSections };
+module.exports = { sBudgets, trunkSections, tokensOf, overlapsSideDoc, sLean, smells, report, readLedger, check, anchorsOf, probeLines, guideFiles, limitOf, lostDecisions, duplicates, sFacts, openWorkSections };
