@@ -20,6 +20,7 @@ Branches separate in-progress work from known-good work, never components.
 | `claude/quiet-user-agent` | Parked, her decision — do not merge or re-open |
 | `claude/personal-tracking-ledgers-z49s2h` | Dead — do not merge |
 | `claude/blissful-knuth-snbqci`, `claude/design-questions-87gj6w`, `claude/headless-chromium-claude-code-wl94l0` | Dead — early 7–10 Sep work from before `main` was the trunk (no shared history with it); superseded, do not merge. Kept on GitHub, her decision — never raise deleting them |
+| `ccr-60c7f62c-s3etqx` | A session's own branch, last commit 13 Oct ("Version 43.1: Mia's link titles and chip"); not a working branch — what is wanted from it is on `main` or `parked` |
 | `claude/met-connection-experiments` | Abandoned — do not merge |
 | `claude/playwright-scraper-prototype-z68iko` | Abandoned — merging it would undo the current scraper |
 

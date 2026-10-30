@@ -65,4 +65,4 @@ disagrees with them.
 `exhibition_5918_surrealist_book_27sep`, `exhibition_5932_nilima_sheikh`,
 saved by her. Used for the one-off saved-pages run (`from_saved_pages.js`) and
 now as the recipe's offline test. **MoMA has been swept live since 30 Sep** (her
-ruling — no more pages saved by hand). Images stripped; the page text is whole.
+decision — no more pages saved by hand). Images stripped; the page text is whole.

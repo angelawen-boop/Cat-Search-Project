@@ -6,7 +6,7 @@ running rules are in `docs/scraper.md` §9 and the prompts in
 
 ---
 
-## The design — her principle, 10 Sep
+## The design — her principle
 
 *"The model is the only part of this pipeline that thinks. Do not make it do
 dumb work for code to be clever on top of."* The first design ran the model
@@ -39,7 +39,7 @@ earlier compressed CSV (run_ and stitch_ folders, newest first;
   city's artist count onto the other. The city list is mirrored in
   `compress.js`; fixture L-008 asserts the copies agree.
 
-**What the app does with a summary** (her table, 10 Sep):
+**What the app does with a summary** (her table):
 
 | Ledger | Sweep | App |
 |---|---|---|

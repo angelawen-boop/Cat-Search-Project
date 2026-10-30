@@ -9,19 +9,8 @@ screen, quarantine, the sweep log or saving.** The full history is in git. The a
 Confirmed by her on real files, not only by fixtures. **Design and evidence:
 `docs/app.md`.**
 
-- **Loading and saving.** Open → empty portal; Import → pick file. **Export IS
-  Save.** Two save routes, differing in what is KNOWN — the runtime's file
-  handoff resolves or throws; a plain browser download cannot tell finished from
-  cancelled, so it does not clear the unsaved warning. **Never put back a
-  click-triggered green tick** — it once read "Saved — safe to close" while
-  nothing was written.
-- **Refreshing.** A sweep CSV goes in via Import Refresh; the app compares it
-  against the ledger with no internet access and shows proposals as cards grouped
-  by venue: Add / Fill / Change / Couldn't be filed. Bad data is always surfaced,
-  never dropped.
-- **Reading a stitched file.** Four bands for the odd cases; duplicate rows fold
-  on venue + URL and nothing else; rows with no URL never fold; marker rows
-  become a coverage panel, never proposals.
+- **Loading and saving, refreshing, reading a stitched file:** §2 and §3 below. **Never put back a click-triggered green tick**
+  (§2).
 - **The ledger will not move until every card is decided** — a hard block.
   Rejecting counts as deciding. **Permanent design.** Beside it sits the
   **partial-apply button** (applies only the cards decided so far, asks first,
@@ -29,10 +18,9 @@ Confirmed by her on real files, not only by fixtures. **Design and evidence:
   imports new venues in batches of 50–100 cards and needs to work them in
   sittings. The way back is re-importing the same file; rejections do not
   survive the round trip, which she accepted. It is not confirm-and-continue
-  (§4.2). To remove it one day: the marked block in `Cat_Watch.jsx`, `partial` on
+  (CLAUDE.md §4.2). To remove it one day: the marked block in `Cat_Watch.jsx`, `partial` on
   `applyRefresh`, `offerPartialApply` and its harness export, fixture 18h.
-- **Counts that reconcile.** One line accounts for every row read, two sentences
-  each ending in the number the next starts from. **Every term stays.**
+- **Counts that reconcile**, **sorting and dividers**, **dark mode**: §3. **The seed set**: §6.
 - **Quarantine ("never add this")**, keyed on normalised URL. Latest decision
   wins, which needs tombstones — a release is RECORDED, not merely absent.
 - **Reject and quarantine are different jobs.** Quarantine: never show me this
@@ -52,12 +40,6 @@ Confirmed by her on real files, not only by fixtures. **Design and evidence:
 - **Per-venue freshness**, two dates, from `swept_at`.
 - **The confirm box is the TOP layer** (`zIndex` 1200), above the refresh review
   at 1100. **Any new overlay goes BELOW 1200.** Fixture 18i.
-- **Dark mode**, every colour named; the shell paints a ground before React runs.
-- **Sorting, timestamps and dividers** — the only way to tell this import from
-  earlier ones from the seed. **Do NOT "simplify" it.**
-- **Seed set**, ~110 exhibitions read before the scraper existed, met / ng / rijks / acq only.
-  Thin on history at met and rijks by design of the tool that read it. **Nothing
-  to fix; do not re-diagnose this as a matching failure.**
 - **Titles.** A changed title is a Change card — a rename or only capitals.
   Nothing masked; the scraper records the venue's own letters (`restoreCase`).
   **A changed description is a Change card too** (`consider`), so descriptions
@@ -389,20 +371,11 @@ there is nothing to tune against. Only one `.jsx` has ever existed in this repo
 
 ## 2. Saving and loading (`main`)
 
-She holds the only real copy of the ledger; the app is the workspace. Open →
-empty portal; Import → pick file. Red **UNSAVED CHANGES** after any change.
-**Export IS Save.** Import and Reset ask before replacing unsaved work.
-
-The sandbox blocks any download a page starts itself (*"File downloads aren't
-available for this artifact"*). Two routes, differing in what is KNOWN:
-
-1. **The runtime's file handoff** (the `downloads` capability, declared at
-   publish). Saves or rejects — so the green tick means a save happened.
-2. **An ordinary browser download.** Cannot tell finished from cancelled, so it
-   does not clear the unsaved warning.
-
-**Never put back a click-triggered green tick** — it once read "Saved — safe to
-close" while nothing was written.
+She holds the only real copy of the ledger; the app is the workspace. Open → empty portal; Import → pick file. Red **UNSAVED
+CHANGES** after any change. **Export IS Save.** Import and Reset ask before replacing unsaved work. The sandbox blocks any download a
+page starts itself, so there are two routes: the runtime's file handoff (the `downloads` capability; saves or rejects, so the green
+tick means a save happened) and an ordinary browser download (cannot tell finished from cancelled, so it does not clear the
+unsaved warning). **Never put back a click-triggered green tick** — it once read "Saved — safe to close" while nothing was written.
 
 ### Removed code — warnings that outlive it (git `b043a9b` has the rest)
 
@@ -460,7 +433,7 @@ A hard block (her decision): skipping undecided cards silently loses a session's
 reading. **Rejecting is deciding.** The button says what is missing ("323 still
 to decide"). `countDecisions` lives outside the component so fixtures reach it;
 it and the jump-to-undecided button share `isUndecidedCard` (18g). Fixtures 18
-to 18g. The partial-apply button beside it: `CLAUDE.md` §5.1, fixture 18h.
+to 18g. The partial-apply button beside it: the top of this doc, fixture 18h.
 
 ### Counts that reconcile
 
@@ -566,12 +539,6 @@ baked into the JSX, shown via Reset. Its fetch tool couldn't see archives, so
 it is thin on history at met (51 vs 106 swept) and rijks (20 vs 37). 58 of 59
 closed-show Adds at seed venues were genuinely absent. **Nothing to fix; not a
 matching failure.**
-
----
-
-## 7. Tests
-
-In `CLAUDE.md` §1, "Procedures".
 
 ---
 

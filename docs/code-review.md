@@ -28,5 +28,5 @@ code, not the guide.
 | IR-18 | Drop an undated row whose START is long before the floor | **Reject** (her call) — would have caught one row in 87, and adds judgement the lookback deliberately avoids |
 | DEF-01 | Run venues in parallel with each other | Built 11 Sep — `--jobs=N`, default 4 |
 | DEF-02 | After a JavaScript filter, wait for proof the list changed | **Defer.** Trigger: wiring a venue that filters by JavaScript. Server-side filters (Met, Louvre years) don't need it |
-| DEF-03 | Generic summary fallback could capture ticketing or biography | Largely answered by the junk rules (`docs/scraper.md` §4). **Her ruling:** never defer bad text to "compression will catch it" |
+| DEF-03 | Generic summary fallback could capture ticketing or biography | Largely answered by the junk rules (`docs/scraper.md` §4). **Her decision:** never defer bad text to "compression will catch it" |
 | DEF-04 | Nothing bounds a hanging venue | Built 11 Sep — `--budget-mins`, default 10 |

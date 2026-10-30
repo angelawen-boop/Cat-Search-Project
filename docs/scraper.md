@@ -209,7 +209,7 @@ descending trust — use the next only when the one above gives nothing:
   `<body>`.
 - **Clearing one kind of junk can pull in another** — re-check reviewed venues
   after any change here.
-- **The 4-paragraph / 2,000-character cut stays** (her ruling, 25 Sep).
+- **The 4-paragraph / 2,000-character cut stays** (her decision).
 - Tested on saved pages: `summary_pages.js` and the per-venue `*_pages.js`.
 
 ---
@@ -393,14 +393,14 @@ Also:
 
 ## 13. artic — only the venue's own exhibition types
 
-**Her ruling, 12 Sep:** only `EXHIBITION` and `TICKETED EXHIBITION`; every
+**Her decision:** only `EXHIBITION` and `TICKETED EXHIBITION`; every
 `… INSTALLATION` and `COLLECTION ROTATION` is out — filtered, not just stripped
 from the title. Further exclusions: `docs/venues.md`.
 
 - **The tag is on the show's own page**, not on archive cards.
 - **Year pages group by OPENING date**, so the year before the floor is read too.
 - **The venue contradicts itself** — the annual Neapolitan Crèche is tagged
-  `HOLIDAY INSTALLATION` one year and `EXHIBITION` another. Her ruling: trust the
+  `HOLIDAY INSTALLATION` one year and `EXHIBITION` another. Her decision: trust the
   tag, accept the hole.
 - `show_tags.js` prints every row's tag (`tags_<venue>.txt`), reading the same
   window as the exclusion.
@@ -412,7 +412,7 @@ from the title. Further exclusions: `docs/venues.md`.
 
 ## 14. Blocked venues — what was learned
 
-- **`claude/quiet-user-agent` is parked** (her ruling, 19 Sep) — do not merge or
+- **`claude/quiet-user-agent` is parked** (her decision) — do not merge or
   reopen. Its one proven fact: removing `HeadlessChrome` from the user-agent
   opened MoMA's listing only, never its pages.
 - **A probe answers only the request it made.** One listing page read as "the
@@ -433,7 +433,7 @@ from the title. Further exclusions: `docs/venues.md`.
 
 ## 15. Capodimonte is closed differently
 
-Her ruling, 12 Sep. Italian only; checking a row against the site is uselessly
+Her decision. Italian only; checking a row against the site is uselessly
 slow. **Not count-verified and never will be.** She imports every row unless
 visibly mangled and uses the app's URL button with Chrome's translation.
 

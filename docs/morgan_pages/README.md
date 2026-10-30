@@ -43,11 +43,11 @@ dates and a paragraph each.
 - **Three year pairs** (2025-26, 2024-25, 2023-24): a show closing just after the
   1 July 2024 floor is filed under 2023-24. The pairs are derived from the floor
   and today, never typed.
-- **Past blurbs are read off the listing; pages are not opened** (her ruling) —
+- **Past blurbs are read off the listing; pages are not opened** (her decision) —
   eight listing loads instead of dozens of show pages. Collections Spotlight is
   excluded (docs/venues.md).
 - **Unless the listing has no description — then the page IS opened** (her
-  ruling, 30 Sep). The Bellini row's body is a picture and its caption only;
+  decision). The Bellini row's body is a picture and its caption only;
   captions are `p.small`, skipped (`listingRow.skip`), so the row comes back
   empty and its page is read. Show pages carry the same `p.small` captions
   inside the body, skipped there too (`descriptionSkip`). MP-004, MP-011/012.

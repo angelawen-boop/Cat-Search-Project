@@ -2,7 +2,7 @@
 
 She checked the scraper's output against the live sites herself. **Her
 findings, not a session's guesses. Do not ask her to re-review a venue here.**
-Counts are as of 12 Sep; later rulings (`docs/venues.md`) have changed some since
+Counts are as of 12 Sep; later decisions (`docs/venues.md`) have changed some since
 (e.g. Tate Britain's past exhibitions). Compressed 30 Sep; full text in git.
 
 ## Her overall verdict
@@ -29,10 +29,10 @@ Counts are as of 12 Sep; later rulings (`docs/venues.md`) have changed some sinc
 | `uffizi` | 13 | A one-day event in upcoming → excluded by its card shape (a single date); "extended to02/11/2025" lost → extensions read in the SHARED parser. A page whose links were all deliberately excluded is not an empty page. Headlines kept as titles; undated rows kept (her rulings) |
 | `brera` | 8 (7 + marker) | "From May 16, 2025, to May 17, 2027" — the comma broke the range; a listing's extended date made the prose guard discard an opening date → both parsers apply extensions. Lead-ins are `h4`s → read with paragraphs |
 | `borghese` | 8 (7 + marker) | "extraordinary extension through October 11" → wider extension rule (year inferred: an extension is later). Louise Bourgeois's blurb in divs, then vetoed whole by one ticket sentence → **boilerplate is stripped by the sentence, not the block** |
-| `capo` | 18, not count-verified | Her ruling: `docs/scraper.md` §15 |
+| `capo` | 18, not count-verified | Her decision: `docs/scraper.md` §15 |
 
 **Engine changes were re-verified against the reviewed venues in the same
-sitting** (her rule), and it paid: clearing Tate's caption pulled funder lists
+sitting** (her decision), and it paid: clearing Tate's caption pulled funder lists
 into the Menil's summaries → funder lists are boilerplate.
 
 ## Final state, 12 Sep

@@ -144,75 +144,58 @@ refused or empty page. Expect ~45 one-time compression re-checks.
 
 #### 2.2.3 Catalogue lookup generally
 
-**All search work after 43 is on `parked`, unpublished** (her decision) — the `parked` branch's own CLAUDE.md
-(§7.4 there) and `docs/handover_search_stage1.md` say where it stands. The text below is as it stood at 43.
+**All search work after 43 is on `parked`, unpublished** (her decision) — the `parked` branch's own CLAUDE.md (§7.4 there) and
+`docs/handover_search_stage1.md` say where it stands.
 
-**OPEN — search for every catalogue of the exhibition, at any showing** (her decision; search logic, kept apart
-from the display work; build with `parked` Stage 1/1b). Today the first read names one book and throws it away
-unless Claude ties it to this venue (the van Hemessen fix), and other versions are listed only after a book passes —
-*Victorian Radicals* lost both its books. Full record: `docs/catalogue_versions.md`, "Search: every catalogue of
-the exhibition" — read it before any search work.
+**OPEN — search for every catalogue of the exhibition, at any showing** (her decision; search logic, kept apart from the display work;
+build with `parked` Stage 1/1b). Today the first read names one book and throws it away unless Claude ties it to this venue (the van
+Hemessen fix), and other versions are listed only after a book passes — *Victorian Radicals* lost both its books. Full record:
+`docs/catalogue_versions.md`, "Search: every catalogue of the exhibition" — read it before any search work.
 
-**Done — the catalogue blocks, live at 47.1** (her call: done unless she finds bugs): her order, the first book
-picked, one block per book, a shop line true for whichever book she picks, Re-check for the picked book
-(`docs/catalogue_versions.md`). Noted for the search work: *Pearls to Pyramids* (Yale) kept a 21-page pamphlet.
+**Done — the catalogue blocks, live at 47.1** (her call: done unless she finds bugs): her order, the first book picked, one block per
+book, a shop line true for whichever book she picks, Re-check for the picked book (`docs/catalogue_versions.md`).
 
-**PAUSED — no lookup patches until the redesign is agreed** (her decision: past the third-patch limit —
-`lookupCatalogue` changed 10 times in three days). The redesign (find → choose → tell, every version kept, her
-starting-pick rules) and its nine agreed cases are in `docs/catalogue_versions.md`; every later change is checked
-against them. Awaiting her approval to build; no code before. She is noting issues as she uses it, for a later
-debugging session.
-- **OPEN — a link venue is searched under its short card name** ("Detroit"), not the long name; any search work
-  fixes it (`docs/catalogue_versions.md`, "Fault to fix").
-- **OPEN — three cases any search debugging must fix** (her decision; `docs/catalogue_versions.md`, cases 10–12;
-  case 13, Beato Angelico, is her report, not yet agreed): Munich's shop (CEDON) sells German and English editions
-  on ONE product page with a language choice — *Venezia 500* holds the English ISBN labelled German and says no
-  English edition; *Jacobus Vrel*'s English edition says "not in the museum shop" and its publisher reads "s,
-  Munich" (`PUBLISHER_LABEL` matches inside "Publishers"); Dresden's *Paradise on Earth* has the right book but
-  publisher "Gunter Oettel, ISBN: …", and Correggio's reads "Suchdialog öffnen" (junk text written as publisher).
-- **Shops tested by her in the app:** `brit`, `morgan`, `mad`, `orsay`, `louvre`, `moma`. `uffizi`'s shop sells no
-  books — settled.
-- **OPEN — MoMA *Brancusi* still reads "not in the museum shop" (49.3); two faults, her decision pending**
-  (lookup log L17924993786826e6v). (1) The B-007 fix does not hold live: the shelf's whole page carries the "Become
-  a Member" pop-up's prices (Explore $200, Access $110, Annual Pass $75), so `readWhole` takes it for books; B-007's
-  fixture used the short excerpt. Proposed: prices inside a membership offer do not count as books (general); refit
-  B-007 on the real page. (2) The web search finds the book's own page (`store.moma.org/products/brancusi-the-artist-
-  and-his-studio-hardcover`, "In Stock", $60), but the for-sale read rejects it for "Email When Available" and no
-  Add to cart (likely drawn by script — a guess). Her choice: A — "In Stock" counts as for sale unless sold out is
-  also said (general; checked against her agreed cases and the Morgan Tarot first); B — the same for
-  store.moma.org only (hard-coded venue rule); or leave it for the redesign. (1) finishes her "small fix only"
-  decision; (2) goes past it.
-- **OPEN — the publisher step's verdict is not stable.** *Metamorphoses* (Hannibal), two fresh lookups, same code:
-  "Publisher's section", then "Publisher" (right). Cause unproven (a different candidate page, the page empty —
-  `pageIsShell`, or the read judging a page differently); its lookup-log record settles it.
-- **OPEN — 40.10's fixes, unchecked in the app.** Her next lookups settle: *Hammershøi* (Jacquemart-André) finds
-  *Hammershøi : le maître de la peinture danoise*, ISBN 978-9462302495; *Watteau* no longer reads the shop as
-  blocked; *Canaletto - Guardi*'s English line names the publisher's page; a MoMA lookup still reads its shop as
-  blocked under the whole-page test.
-- **Diagnose a lookup from its record, never a pasted panel.** Every Find catalogue, Search again, Re-check and link
-  reading is recorded whole in the app's store (every call, what Claude was sent and answered, the card before and
-  after; `docs/app.md` §1, "The lookup log"; read it with ArtifactData `list` + `out_dir`, then
-  `node build/lookup_log.js <dir> [<id>]`).
-- **Fixed in 42.6, her next lookups confirm:** *Hubert Robert* (NGA) — a catalogue found with no title or ISBN now
-  goes on to the facts round (`unnamed`, UN-001–003); a reply holding two answers takes Claude's last
-  (`lastJsonObject`, TW-001–004).
-- **OPEN — the English-edition and versions rebuild, 42.7–42.9; her re-run of Hubert Robert (Louvre, NGA) and
-  Vasari on 42.9 confirms.** Rules and limits: `docs/app.md` §1, "The route" (Trust order). Tests HR-, BK-, VS-, R8-.
-- **Search again and Reset card + Find catalogue run the same lookup.** They differ only when a step fails
-  part-way (Search again then leaves the card untouched); otherwise a different result is the web answering
-  differently — get that run's log.
+**PAUSED — no lookup patches until the redesign is agreed** (her decision: past the third-patch limit — `lookupCatalogue` changed 10
+times in three days). The redesign (find → choose → tell, every version kept, her starting-pick rules) and its nine agreed cases are in
+`docs/catalogue_versions.md`; every later change is checked against them. Awaiting her approval to build; no code before. She is
+noting issues as she uses it, for a later debugging session.
+- **OPEN — a link venue is searched under its short card name** ("Detroit"), not the long name; any search work fixes it
+  (`docs/catalogue_versions.md`, "Fault to fix").
+- **OPEN — three cases any search debugging must fix** (her decision; `docs/catalogue_versions.md`, cases 10–12; case 13, Beato
+  Angelico, is her report, not yet agreed): Munich's CEDON shop sells German and English editions on ONE page with a language choice
+  (*Venezia 500*, *Jacobus Vrel*); `PUBLISHER_LABEL` matches inside "Publishers" and across lines, so junk is written as publisher
+  (Vrel "s, Munich", Dresden's *Paradise on Earth*, Correggio "Suchdialog öffnen").
+- **Shops tested by her in the app:** `brit`, `morgan`, `mad`, `orsay`, `louvre`, `moma`. `uffizi`'s shop sells no books — settled.
+- **OPEN — MoMA *Brancusi* still reads "not in the museum shop" (49.3); two faults, her decision pending** (lookup log
+  L17924993786826e6v). (1) The B-007 fix does not hold live: the shelf's whole page carries the "Become a Member" pop-up's prices
+  (Explore $200, Access $110, Annual Pass $75), so `readWhole` takes it for books; B-007's fixture used the short excerpt. Proposed:
+  prices inside a membership offer do not count as books (general); refit B-007 on the real page. (2) The web search finds the book's
+  own page (`store.moma.org/products/brancusi-the-artist-and-his-studio-hardcover`, "In Stock", $60), but the for-sale read rejects it
+  for "Email When Available" and no Add to cart (likely drawn by script — a guess). Her choice: A — "In Stock" counts as for sale
+  unless sold out is also said (general; checked against her agreed cases and the Morgan Tarot first); B — the same for
+  store.moma.org only (hard-coded venue rule); or leave it for the redesign. (1) finishes her "small fix only" decision; (2) goes past it.
+- **OPEN — the publisher step's verdict is not stable.** *Metamorphoses* (Hannibal), two fresh lookups, same code: "Publisher's
+  section", then "Publisher" (right). Cause unproven (a different candidate page, the page empty — `pageIsShell`, or the read judging a
+  page differently); its lookup-log record settles it.
+- **OPEN — 40.10's fixes, unchecked in the app.** Her next lookups settle: *Hammershøi* (Jacquemart-André) finds *Hammershøi : le
+  maître de la peinture danoise*, ISBN 978-9462302495; *Watteau* no longer reads the shop as blocked; *Canaletto - Guardi*'s English
+  line names the publisher's page; a MoMA lookup still reads its shop as blocked under the whole-page test.
+- **Diagnose a lookup from its record, never a pasted panel.** Every Find catalogue, Search again, Re-check and link reading is recorded
+  whole in the app's store (`docs/app.md` §1, "The lookup log"; read it with ArtifactData `list` + `out_dir`, then `node
+  build/lookup_log.js <dir> [<id>]`).
+- **Fixed in 42.6, her next lookups confirm:** *Hubert Robert* (NGA) — a catalogue found with no title or ISBN goes on to the facts
+  round (`unnamed`, UN-001–003); a reply holding two answers takes Claude's last (`lastJsonObject`, TW-001–004).
+- **OPEN — the English-edition and versions rebuild, 42.7–42.9; her re-run of Hubert Robert (Louvre, NGA) and Vasari on 42.9
+  confirms.** Rules and limits: `docs/app.md` §1, "The route" (Trust order). Tests HR-, BK-, VS-, R8-.
+- **Search again and Reset card + Find catalogue run the same lookup.** They differ only when a step fails part-way (Search again then
+  leaves the card untouched); otherwise a different result is the web answering differently — get that run's log.
 
 #### 2.2.4 The monthly sweep — 15 Oct imported
 
-**First run, 5 Oct — a test, not imported** (`run_2026-10-05_015417`, 359
-rows). `sweep_diff.js` now works out each change's cause; the skill asks only
-for the UNEXPLAINED pile. Its faults (V&A, National Gallery, Cincinnati, Brera,
-Tates) were fixed from her saves the same day; Louvre refused 3 pages.
-
-**15 Oct — container re-run passed her test** (pushed, reported, the five fixes held); her home
-sweep (met, artic, mad only — she checks the headed four by eye and sweeps them only for new shows)
-QC'd. Stitched and compressed as swept (`stitch_20261015_0920`, 536 rows) and **imported**.
-Faults found are fixed in code (§2.2.2).
+**5 Oct was a test, not imported** (`sweep_diff.js` works out each change's cause; the skill asks only for the UNEXPLAINED pile).
+**15 Oct** — container re-run passed her test; her home sweep (met, artic, mad only — she checks the headed four by eye and sweeps
+them only for new shows) QC'd; stitched and compressed as swept (`stitch_20261015_0920`, 536 rows) and **imported**. Faults found are
+fixed in code (§2.2.2).
 
 #### 2.2.5 Queued next
 
@@ -226,118 +209,72 @@ Faults found are fixed in code (§2.2.2).
 - **Then:** the comment tidy for the rest of `scraper/`, and tests for two scraper
   decisions — MoMA's visitor notices dropped; the Wallace keeps displays and trails.
 
-#### 2.2.7 "Probably not for you" — built, published at 46 (shown then as 45.1); her next monthly import checks it
+#### 2.2.7 "Probably not for you" — published at 46; her next monthly import checks it
 
-Compression labels a NEW show in a topic she always quarantines (Prompt D, `TOPICS` in
-`scraper/compress.js`; Asian art wins over any other label; the Met's rotations are never
-labelled — her decisions). Code writes "Topic: …" into the notes. On import those cards go in
-"Probably not for you · N", after Odd cases, pre-set to Never add; Add keeps one. Approval-card
-links are clickable. Tests: TP-, TP-A, AD-009–010; `scraper/topic_eval.js` re-scores the labeller
-on her decisions (last run: 69 of 86 quarantined caught; 8 of 40 kept wrongly labelled, mostly
-contemporary; labels at the edges differ between runs). Her rehearsal in the app passed.
-- **OPEN — her next monthly import:** are too many wanted shows pre-set to Never add
-  (contemporary the likeliest), and does any always-quarantined show slip through? Narrow a group
-  only if she says.
+Compression labels a NEW show in a topic she always quarantines (Prompt D, `TOPICS` in `scraper/compress.js`; Asian art wins over any
+other label; the Met's rotations are never labelled — her decisions). Code writes "Topic: …" into the notes. On import those cards go
+in "Probably not for you · N", after Odd cases, pre-set to Never add; Add keeps one. Tests: TP-, TP-A, AD-009–010;
+`scraper/topic_eval.js` re-scores the labeller on her decisions.
+- **OPEN — her next monthly import:** are too many wanted shows pre-set to Never add (contemporary the likeliest), and does any
+  always-quarantined show slip through? Narrow a group only if she says.
 
 #### 2.2.8 Theme Shelf — prototype 3 published, her review
 
-Art books by theme, an extension of Cat Watch on its own page while a prototype; code on
-`claude/theme-shelf`. Where it stands, her design and what is unproven: `docs/themes.md`.
-Read it before any Themes work.
+Art books by theme, an extension of Cat Watch on its own page while a prototype; code on `claude/theme-shelf`. Where it stands, her
+design and what is unproven: `docs/themes.md`. Read it before any Themes work.
 
-#### 2.2.9 Period sort — merged into her app at 51; her load of the test page's ledger confirms
+#### 2.2.9 Period sort — merged into her app at 51
 
-Every exhibition in art-period order, with dividers, scrubber and theme chips; Label, Relabel, Recently labelled.
-She loads her latest test-page export into 51 (ledgers checked by script beforehand). Her view, kept for later:
-both Misc bins should ultimately go. Design, decisions and every rule: `docs/periods.md` — read it before any Period work.
-Published 53.4–53.6: the source rule (a show responding to one older source takes the period where most of its
-works sit); every question to Claude asked afresh (`cache:false`); Claude's one-line reason with each label, in the
-lookup log only. **OPEN — Rijksmuseum *Metamorphoses*:** her Claude kept Surveys on the card's one line; her
-re-import by link rewrote the description and Relabel then gave Baroque. Proposed, not agreed: same catalogue →
-one period (code, like one artist, one group); reading the show's page for hard cases (parked).
+Every exhibition in art-period order (dividers, scrubber, theme chips; Label, Relabel, Recently labelled). Design, decisions and
+every rule: `docs/periods.md` — read it before any Period work. Her load of the test page's ledger into 51 confirms. Her view, kept
+for later: both Misc bins should ultimately go. **OPEN — Rijksmuseum *Metamorphoses*** (proposal not agreed): `docs/periods.md`, "Open".
 
-#### 2.2.10 51.1–51.6 — published; her next links, lookups and Buy next confirm
+#### 2.2.10 Published since 51 — her next links, lookups and use confirm
 
-- **OPEN — the re-ask sees the refused answer.** Her Memling link (Philadelphia) failed the 10-word cap on every
-  ask: told only the reason, Claude re-sent the same summary. Sonnet passed both asks, so the stand-in did not
-  reproduce her Claude's failure — her re-read confirms.
-- **Period with every Acquiring filter (51.2):** Buy next keeps her dragged order; Period there switches to period
-  order with dividers, no dragging, and back (BP-).
-- **51.3–51.6:** accent-blind search ("Bocklin" finds Böcklin); the When line Current, Past, Announced; "Munich
-  Sammlung Schack" cards; "Berlin Alte NG" and "Berlin Neue NG" under the Berlin chip (`docs/add_by_link.md`,
-  "Berlin"; AL-074/074a); Period the last line of a new show's approval card; a shop answer stored only for a venue
-  with a show going in (AL-009o2, AL-046f); Basel's shop drawn by script (BS-001–004; its stored No shop reset with
-  her yes); the card's "Museum shop" link is the written-in section (Basel, the Städel); two shared title rules:
-  a "##" heading that is part of the tab title is a title, and a line that is only the venue's name is never the
-  title unless the show's dates sit under it (AL-075). **To confirm:** she reverts to her 25 Oct close file,
-  re-imports the 9 Berlin links (all under Berlin Alte NG; its shop found at the first), re-applies two marks, and
-  re-imports the Brancusi link; her next Basel import shows its shop.
-
-#### 2.2.12 53–53.2 — UI adjustments, published; her next use confirms
-
-Recently labelled on the Sort line; footer "Clear search" and "Label" before it; no placeholder text in the search
-boxes; theme chips "Decorative – Hard / Soft"; chip "Jacquemart"; footer "v 53.2". **Buy next:** alone it is her
-dragged order; Period there reverses (first tap period order, second reverses, third back to hers); Date likewise
-(oldest to newest, reverse, back; Date and Period exclusive). **Owned beside Buy next shows both lists as an
-ordinary list** — Date order, the usual sorts, nothing draggable; Buy next with Wanted stays Buy next only (her
-decisions). **Occasional is two chips: Occ - US (Australia last) and Occ - Europe (UK included); no Occ - Other**
-(her decision). Europe's order: UK, Germany, Belgium, France, Switzerland, Italy, Spain, Netherlands.
-**Hard-coded:** the countries of venues that store none (`OCC_COUNTRY`); otherwise the stored country, then the
-address's country ending. Trimmed: the cloud line, "Last sweep:", sweep notes, card sentences, instruction lines;
-tables laid out in columns for mobile; the quarantine button says "Remove"; "Reset to Seed" unwired from her page
-(drawn only when a test sets `window.__catWatchTest`); "Import complete. Save it now." Tests PR-035, BP-004–014,
-OC-001–002, AL-010. A layout fix is checked by rendering the page at phone width, never by reading the code.
-
-#### 2.2.13 Dates and shop front pages — published at 53.3; her next links confirm
-
-Shared date rules (her decision: shared, the sweep too): a dotted range with a two-digit year on the closing side
-(MSK Ghent); an opening date over a "to …" line (Reina Sofía); a run the page says closed early closes that day,
-with a note (`closedEarly`, English only). The gallery path's front-page rule carried to museums (her decision):
-no books section, but the front page sells books → it is the shop, confirmable. Confirm on "Shop found, but not
-its books section" takes the shop shown. Tests AL-077–079, DS-007, CE-001; Ghent and Reina Sofía are on the proof
-list. **OPEN — Reina Sofía's shop missed:** its real shop is Shopify with "Publications > Catalogues"
-(`tienda.museoreinasofia.es/en/collections/publicaciones-catalogos`); live, the finder took the museum's "central
-bookshop" page. Belvedere offers its German shop front page (not the English — §5.4); its check's right answer
-("prints only") is stale: its English shop lists Catalogues.
-
-#### 2.2.14 53.7–53.10 — published; her next links confirm
-
-- A link to a quarantined show says "nothing to add — already in your quarantine" (AL-080); Chantilly's chip after
-  Jacquemart (AL-081); French "du … au …" dates, shared with the sweep (DS-008); a link with no year gets the
-  sweep's note (AL-082); Moretti: the place after " : " leaves the title, its capitals description read (AL-083).
-- Cini: the foundation, Le Stanze del Vetro and Le Stanze della Fotografia under one chip "Cini" after Capo, Claude's
-  names, Claude deciding the venue as for any venue (AL-084). Claude answers the Cini house only on first meeting
-  cini.it; a later Stanze show files under the foundation — her accepted outcome. To confirm: her Cini, Moretti and
-  two French Chantilly links (Claude Lorrain, Watteau).
-- "Dates cannot be seen — JS-rendering." on a link with no dates whose page holds a script's unfilled placeholder
-  (her wording; shared); Łazienki's title from its page title, Getty "Museum Collection" pages from their heading
-  (venue rules); HTML codes in a heading decoded. Getty's dates are drawn by script (data.getty.edu): links come in
-  undated; reading them from there is unbuilt, proposed. `docs/add_by_link.md`, "Venue link rules".
-
-#### 2.2.15 Dates in numbers and the Prado — published at 53.9; her Prado re-import confirms
-
-Her design: every date shape is read the same at every venue; only day first or month first is a fact per venue,
-in `DATE_ORDER` (`dates.js`), used when no number over 12 settles it. An unlisted venue whose numbers cannot settle
-it gets "Dates not yet read — confirm whether the venue's date format is day first or month first." (her wording)
-and a session adds it. The blanket "dots are day first" rule is gone — never hers. The Prado: month first, chip
-"Prado" after KHM, cards "Prado Madrid". `docs/scraper.md` §3; DS-004, DS-006, DS-009, AL-085. She reverts to a
-backup without her five Prado imports and re-imports them.
-
-#### 2.2.17 The Correr's archive — published at 53.11; her Guardi re-import confirms
-
-archivio-correr.visitmuve.it, by link and by page: the title is the heading after "Section menu" / "Menù di sezione"
-(that site only); titles typed in capitals recased either side of a full stop (her decision; `capsStops`);
-"September 29 th 2012 to January 6 th 2013" read (shared date shapes). DS-010, AL-089.
+Version-by-version text is in `docs/publishing.md` and git; what a later session still needs:
+- **OPEN — the re-ask sees the refused answer.** Her Memling link (Philadelphia) failed the 10-word cap on every ask: told only the
+  reason, Claude re-sent the same summary. Sonnet passed both asks, so the stand-in did not reproduce her Claude's failure — her
+  re-read confirms.
+- **Buy next (her decisions):** alone it is her dragged order; Period there switches to period order with dividers, no dragging, and
+  back (first tap period order, second reverses, third hers); Date likewise (oldest to newest, reverse, back; Date and Period
+  exclusive) (BP-004–014). **Owned beside Buy next shows both lists as an ordinary list** — Date order, the usual sorts, nothing
+  draggable; Buy next with Wanted stays Buy next only.
+- **Occasional is two chips: Occ - US (Australia last) and Occ - Europe (UK included); no Occ - Other** (her decision). Europe's order:
+  UK, Germany, Belgium, France, Switzerland, Italy, Spain, Netherlands. **Hard-coded:** the countries of venues that store none
+  (`OCC_COUNTRY`); otherwise the stored country, then the address's country ending (OC-001–002).
+- **Search is accent-blind** ("Bocklin" finds Böcklin); the When line reads Current, Past, Announced; "Berlin Alte NG" and "Berlin
+  Neue NG" sit under the Berlin chip, "Munich Sammlung Schack" cards (`docs/add_by_link.md`); Period is the last line of a new show's
+  approval card; a shop answer is stored only for a venue with a show going in (AL-009o2, AL-046f); Basel's shop is drawn by script
+  (BS-001–004). **To confirm:** she reverts to her 25 Oct close file, re-imports the 9 Berlin links (all under Berlin Alte NG; its
+  shop found at the first), re-applies two marks, and re-imports the Brancusi link; her next Basel import shows its shop.
+- **Layout fixes are checked by rendering the page at phone width, never by reading the code.** Footer "v 53.2"; "Reset to Seed"
+  unwired from her page (drawn only when a test sets `window.__catWatchTest`).
+- **Shared date rules** (her decision: shared, the sweep too): a dotted range with a two-digit year on the closing side (MSK Ghent);
+  an opening date over a "to …" line (Reina Sofía); a run the page says closed early closes that day, with a note (`closedEarly`,
+  English only). Tests AL-077–079, DS-007, CE-001. **The gallery path's front-page rule carried to museums** (her decision): no books
+  section but the front page sells books → the front page is the shop, confirmable; Confirm on "Shop found, but not its books
+  section" takes the shop shown.
+- **OPEN — Reina Sofía's shop missed:** its real shop is Shopify with "Publications > Catalogues"
+  (`tienda.museoreinasofia.es/en/collections/publicaciones-catalogos`); live, the finder took the museum's "central bookshop" page.
+  Belvedere offers its German shop front page (§5.4).
+- **Link venues and dates** (rules and tests in `docs/add_by_link.md`, "Venue link rules"; `docs/scraper.md` §3): Cini under one chip
+  after Capo, Claude deciding the venue as for any venue (a later Stanze show files under the foundation — her accepted outcome);
+  "Dates cannot be seen — JS-rendering." (her wording; shared); every date shape read the same at every venue, only day first or month
+  first a fact per venue in `DATE_ORDER` (`dates.js`) — an unlisted venue whose numbers cannot settle it gets "Dates not yet read —
+  confirm whether the venue's date format is day first or month first." (her wording) and a session adds it; the blanket "dots are day
+  first" rule is gone — never hers. Getty's dates are drawn by script (data.getty.edu): links come in undated; reading them from there
+  is unbuilt, proposed. **To confirm:** her Cini, Moretti and two French Chantilly links (Claude Lorrain, Watteau); her Prado
+  re-import (she reverts to a backup without her five Prado imports and re-imports them); her Guardi re-import (the Correr's archive).
 
 #### 2.2.18 Queued — her asks
 
-- **OPEN — merge Paste (Import → Paste, `claude/paste-import`, its own test page) into her app.** The branch stops at
-  50.x; main has moved on since (the reader's shared rules, dates, titles, the shop finder, the store-read lock, venue
-  rules up to 53.11). Confirm Paste runs the same reader and shop finder as Links and Pages — one copy, never a
-  copy behind them — and close what is left on pasting and its Clear buttons (the branch's own guide lists it). Its
-  rule filing a page under a swept venue by domain must not break the Ashmolean's Occasional filing (§5.4).
-- **OPEN — review the names of venues that came in by link or page** (Claude-named, in her store): her card and
-  short names, each rename written into `LINK_VENUES` as `docs/add_by_link.md`, "Renaming a link venue" says.
+- **OPEN — merge Paste (Import → Paste, `claude/paste-import`, its own test page) into her app.** The branch stops at 50.x; main has
+  moved on since (the reader's shared rules, dates, titles, the shop finder, the store-read lock, venue rules up to 53.11). Confirm
+  Paste runs the same reader and shop finder as Links and Pages — one copy, never a copy behind them — and close what is left on
+  pasting and its Clear buttons (the branch's own guide lists it). Its rule filing a page under a swept venue by domain must not break
+  the Ashmolean's Occasional filing (§5.4).
+- **OPEN — review the names of venues that came in by link or page** (Claude-named, in her store): her card and short names, each rename
+  written into `LINK_VENUES` as `docs/add_by_link.md`, "Renaming a link venue" says.
 
 #### 2.2.6 Tests that failed — recorded, not investigated
 
@@ -587,30 +524,17 @@ period, periodYear, periodResponse, periodArtist, themes, labelledAt, relabelled
 
 Ledger backup is JSON; the sweep pro forma is CSV.
 
-#### What is built and signed off — `docs/app.md`
+#### What is built and signed off, and the lookup's route — `docs/app.md`
 
-The summary of every behaviour she has signed off (loading and saving, refreshing, the
-all-cards-decided block and partial apply, quarantine, Buy next, sorting, the seed, titles and
-more) is in `docs/app.md`, "What is built and signed off". **Read it before changing any app
-behaviour she has signed off.**
-
-#### Catalogue lookup — the route
-
-**Design, rules and the case behind each: `docs/app.md` §1. Read it before changing the
-lookup.** Five phases (`lookupCatalogue`): the venue's shop; complete the record;
-which book (in code); the publisher's page, once; the row, once. Steps gather facts,
-code decides each, `composeRow` writes the row once.
-
-- **Every step after the first is conditional — do not make them unconditional, and do
-  not flip to searching wide first.**
-- **Search again means search again** (her decision): a whole fresh lookup from a blank
-  card. The old "keep what's on the card" rule is gone; do not bring it back.
-- **Which model — CLOSED, her decision.** The page asks the viewer's Claude through
-  `sample` at `modelTier: default`. Do not re-open without a real misread.
-- **Every reading runs on her allowance** (up to five searches and seven page opens);
-  her keyed connector is "Parallel Search Key" (`docs/app.md` §1, "The connector's
-  limits and cost").
-- **Shop addresses** are printed from `MUSEUMS` by `node scraper/shop_addresses.js`.
+Every behaviour she has signed off: `docs/app.md`, "What is built and signed off" — **read it before changing any**. The lookup
+(`lookupCatalogue`: the venue's shop; complete the record; which book, in code; the publisher's page, once; the row, once): `docs/app.md`
+§1 — **read it before changing the lookup.**
+- **Every step after the first is conditional — do not make them unconditional, and do not flip to searching wide first.**
+- **Search again means search again** (her decision): a whole fresh lookup from a blank card; the old "keep what's on the card" rule
+  is gone.
+- **Which model — CLOSED, her decision:** `sample` at `modelTier: default`; do not re-open without a real misread.
+- **Every reading runs on her allowance** (up to five searches and seven page opens); her keyed connector is "Parallel Search Key"
+  (`docs/app.md` §1, "The connector's limits and cost"). **Shop addresses** are printed by `node scraper/shop_addresses.js`.
 
 ### 5.2 Import csv
 
@@ -678,105 +602,79 @@ junk in summaries, failure handling, compression, the blocked venues — is in
 
 ### 5.4 Add by link
 
-Design, decisions, the store, the shelf rule and the venue link rules: `docs/add_by_link.md`;
-the live proof pages: `docs/link_proof_pages.json`.
+Design, decisions, the store, the shop finder, the shelf rule and the venue link rules: `docs/add_by_link.md`; the live proof pages:
+`docs/link_proof_pages.json`.
 
-**Status: stable** — signed off at 39.5 on her 10 links. **One weak spot: a link from a venue the app
-has never seen needs a fix about half the time** (exhibition info misread, shop not found).
+**Status: stable** — signed off at 39.5 on her 10 links. **One weak spot: a link from a venue the app has never seen needs a fix
+about half the time** (exhibition info misread, shop not found).
 
-**How it works** (39–39.5, her design): Import opens a small pop-up — CSV · Links, Cancel (Pages added at 48);
-**nothing added to the page itself**. Each link is read once by code (title, dates) and the model (prose,
-always English), then the same intake as a sweep; no lookback. New venues file under one "Occasional" chip
-(NG Washington, NG Scotland, Mia and Yale CBA have their own; the Ashmolean, a swept venue, files under
-Occasional — `underOcc`; chip and sort order is `VENUE_ORDER`, her decision); shop sections are confirmed on
-a screen after the review. **The date reader and summary rules are the scraper's own**, written into the JSX
-by `node build/sync_shared.js` — never edit between its SHARED markers.
+**How it works** (her design): Import opens a small pop-up — CSV · Links · Pages; **nothing added to the page itself**. Each link is
+read once by code (title, dates) and the model (prose, always English), then the same intake as a sweep; no lookback. New venues file
+under one "Occasional" chip (NG Washington, NG Scotland, Mia and Yale CBA have their own; the Ashmolean, a swept venue, files under
+Occasional — `underOcc`; chip and sort order is `VENUE_ORDER`, her decision); shop sections are confirmed on a screen after the
+review. **The date reader and summary rules are the scraper's own**, written into the JSX by `node build/sync_shared.js` — never edit
+between its SHARED markers.
 
 **Standing decisions**
-- **Venue link rules live in the APP**, on the venue's `MUSEUMS` entry, never in the scraper; a rule both use
-  (the date reader) stays in `dates.js`.
-- **Links and Pages follow the sweep's rules wherever the sweep has met the case and she has decided it**: the
-  same code where it can be shared, never a rule of their own (`docs/add_by_link.md`, "The general reader").
-- **A shop drawn by script:** prove the cause from the page's own code, then write in the shop's best section
-  with `shopUnseen: "script"` (hard-coded; lookups say "…cannot be seen — JS-rendering" and go to the web).
-  Steps: `docs/add_by_link.md`, "A shop drawn by script". Basel is the first; the Städel's section and its
-  "…- Parallel fault" are hard-coded the same way and stay until removed.
-- **A store read that fails is named on the page, never saved over.** Link venues, Links box, Pages list, sweep
-  log and quarantine say "STORE NOT READ — [what] couldn't be read from store, refresh to re-check. Current
-  incorrect information will not overwrite the store until the read corrects." (her wording) and their writes
-  refuse until the page is opened again. Tested on a stand-in store (SU-001–005); proved for real only when a
-  read really fails. `docs/app.md`, "A store read that fails".
-- **A show on someone else's page** (a blog, when the venue's page is gone) is a last resort: Claude names the
-  museum that held it and code files it there (`heldElsewhere`). `docs/add_by_link.md`, "Someone else's page".
+- **Venue link rules live in the APP**, on the venue's `MUSEUMS` entry, never in the scraper; a rule both use (the date reader) stays
+  in `dates.js`.
+- **Links and Pages follow the sweep's rules wherever the sweep has met the case and she has decided it**: the same code where it can
+  be shared, never a rule of their own (`docs/add_by_link.md`, "The general reader").
+- **A shop drawn by script:** prove the cause from the page's own code, then write in the shop's best section with
+  `shopUnseen: "script"` (hard-coded; lookups say "…cannot be seen — JS-rendering" and go to the web). Steps: `docs/add_by_link.md`,
+  "A shop drawn by script". Basel is the first; the Städel's section and its "…- Parallel fault" are hard-coded the same way.
+- **A store read that fails is named on the page, never saved over.** Link venues, Links box, Pages list, sweep log and quarantine say
+  "STORE NOT READ — [what] couldn't be read from store, refresh to re-check. Current incorrect information will not overwrite the
+  store until the read corrects." (her wording) and their writes refuse until the page is opened again. Tested on a stand-in store
+  (SU-001–005); proved for real only when a read really fails. `docs/app.md`, "A store read that fails".
+- **A show on someone else's page** (a blog, when the venue's page is gone) is a last resort: Claude names the museum that held it and
+  code files it there (`heldElsewhere`). `docs/add_by_link.md`, "Someone else's page".
 - **Renaming a venue Claude named is a session's job** (no editing in the app): `docs/add_by_link.md`, "Renaming a link venue".
-- **Her confirmed shops in her app are NOT changed** by a session (no hand edits to store or ledger); she asks
-  only if she imports more links there or a lookup misses a catalogue.
-- **Left as is:** two Stuttgart links still meet the site's bot check (she re-reads later or imports by Pages);
-  Soutine (Palazzo Reale) keeps its made-up first-to-last-day dates; a Borghese sweep may bring title Change
-  cards for a capital "E" — expected.
+- **Her confirmed shops in her app are NOT changed** by a session (no hand edits to store or ledger); she asks only if she imports
+  more links there or a lookup misses a catalogue.
+- **Left as is:** two Stuttgart links still meet the site's bot check (she re-reads later or imports by Pages); Soutine (Palazzo
+  Reale) keeps its made-up first-to-last-day dates; a Borghese sweep may bring title Change cards for a capital "E" — expected.
 - **The Paste-import session (`claude/paste-import`) holds its merge** (her instruction) — see §2.2.18.
 
-**Shop finder (her design; rebuilt, published at 50.3).** ONE right section: a search result is taken only if it
-names itself as the shop's exhibition catalogues; otherwise the shop is walked (front page, catalogue and books
-sections, four pages at most); only when none exists is the best section seen taken, and the screen says "Shop
-found, but not its catalogues section" (her wording; one line for every such case). An exhibition-catalogues
-section that also sells the shows' goods counts (Thyssen's "Exposiciones"). Where it can't see the sections:
-"Shop found, but not its books section". **A venue in a non-English country: its shop's English version** is
-searched first, the plain search only if that finds no shop; landed on a foreign shop, its English version
-through a language link or English addresses; the foreign section only when there is none. An English section
-it cannot read is offered beside the foreign one; her pick reads "The museum shop contents cannot be seen —
-unconfirmed page problem" (that scenario only). Design: `docs/add_by_link.md`, "The shop finder — her design",
-"The English version"; right answers `docs/shop_check.json`. Check runs **live only, no saved copies** (her
-decision); her key stays out of the environment; after a fix check only the museums it can reach, all once
-before publishing, say how long first (`docs/testing.md`).
-- **OPEN — Belvedere stays German** (lookup log L1792752998011063a): the English search found
-  `belvedere.at/en/museum-shop`, whose shop link points to the German `belvedere.at/shop`, and the app followed it;
-  the English-version step tried only English FRONT pages, never the English version of the shop page; Parallel
-  drops the language toggle; `/en/shop` redirects to the English home. The English shop's address is not known.
-  The check passed it because a venue whose right answer is "no books section" (`shop: null`) passes on ANY
-  non-books answer — those answers predate the English design. Fix both before more test links. Berlin's English
-  section is offered beside the German only when the search turns it up. The "not its catalogues section" line is
-  not yet seen on screen.
+**Shop finder (her design; rebuilt, published at 50.3):** `docs/add_by_link.md`, "The shop finder — her design" (ONE right section; the
+screen says "Shop found, but not its catalogues section" (her wording) or "Shop found, but not its books section"; a non-English venue's
+English shop first; her pick of an unreadable English section reads "The museum shop contents cannot be seen — unconfirmed page
+problem"). Right answers `docs/shop_check.json`. Check runs **live only, no saved copies** (her decision); her key stays out of the
+environment; after a fix check only the museums it can reach, all once before publishing, say how long first (`docs/testing.md`).
+- **OPEN — Belvedere stays German** (lookup log L1792752998011063a): the English search found `belvedere.at/en/museum-shop`, whose shop
+  link points to the German `belvedere.at/shop`, and the app followed it; the English-version step tried only English FRONT pages,
+  never the English version of the shop page; Parallel drops the language toggle; `/en/shop` redirects to the English home. The English
+  shop's address is not known. The check passed it because a venue whose right answer is "no books section" (`shop: null`) passes on
+  ANY non-books answer — those answers predate the English design; its English shop lists Catalogues. Fix both before more test links.
+  The "not its catalogues section" line is not yet seen on screen.
 - **OPEN — Louisiana's Tracey Emin page was never read** (Parallel 202, no cached copy, so the finder never ran);
   `louisiana.dk/en/exhibition/jorn-meets-jorn/` expected `butik.louisiana.dk/en-int/collections/udstillingskataloger`.
-- **OPEN, her go-ahead pending — the shorter date note:** `The venue's page shows only "September 2026" for this
-  exhibition's dates — no day.` (her wording; cut after "no day"). The sweep writes the same note
-  (`shownOnlyNote`, `dates.js`), so the sweep's cards change with it.
-- **OPEN — still to do, in this order (her decision, one at a time, report after each):** item 3 — write the
-  procedure for a new venue that imports badly into `docs/add_by_link.md`, a pointer here: a case other museums
-  will have → a shared rule, kept only if no proof page gets worse; no → an option on that venue's one entry; then
-  the checks it must pass. (Items 0–2 — passage rebuild, Claude's reads tested on 70 live pages, shop finder —
-  are published at 50–50.3; her links confirm. Pontormo's "first" is caught by the shared answer check,
+- **OPEN, her go-ahead pending — the shorter date note:** `The venue's page shows only "September 2026" for this exhibition's dates
+  — no day.` (her wording; cut after "no day"). The sweep writes the same note (`shownOnlyNote`, `dates.js`), so the sweep's cards
+  change with it.
+- **OPEN — still to do, in this order (her decision, one at a time, report after each):** item 3 — write the procedure for a new venue
+  that imports badly into `docs/add_by_link.md`, a pointer here: a case other museums will have → a shared rule, kept only if no proof
+  page gets worse; no → an option on that venue's one entry; then the checks it must pass. (Items 0–2 — passage rebuild, Claude's reads
+  tested on 70 live pages, shop finder — are published at 50–50.3. Pontormo's "first" is caught by the shared answer check,
   `scraper/answer_check.js`, `docs/compression.md` "Enforcement". Wallraf's page is a tour — she never adds tours.)
+- **OPEN — a link venue is looked up exactly as the 28 are (shelf AND whole-shop search).** Detroit files a show's book in the show's
+  own shop section. Her next lookups settle: O'Keeffe found at Detroit? The RA's search (`catalogsearch/result/?q=`) is stored at its
+  next lookup; Mauritshuis and Yale stay shelf-only.
 
-**Published, her links confirm** (details in `docs/add_by_link.md`)
-- **Gallery's shop, 52.1 — her Karsten Greve import confirms.** Her rule: the narrowest section that holds the
-  catalogues and can be read (52's widest list was Claude's invention against her design, replaced). Claude says on
-  each link whether the venue is a gallery; a gallery's shop path runs first (her decision: galleries apart from
-  museums), the museum path unchanged after it; a gallery's list of titles is read without prices. Right live on all
-  15 galleries (`scraper/gallery_shop_check.js`). "A gallery's shop".
-- **50.1–50.2 (Antwerp, Stuttgart, Borghese).** Both screens show the card name; Antwerp "Antwerp Fine Arts"; an
-  English title in capitals recased; no usable dates (none, months only, a season) → undated with the sweep's note;
-  "22.05.2008 | 14.08.2008" read; a 202 says "…Parallel fault. Import the full saved page."; Borghese titles as the
-  sweep writes them; a bot check is never a show (shared test).
-- **47.2–47.3, 49.2.** Berlin, Munich (two venues, her decision: Alte Pinakothek and der Moderne, filed by the house
-  line, shops CEDON's section searched in German), Sammlung Schack, Dresden (chip "Dresden", cards "Dresden
-  Gemäldegalerie"; No shop answered once), the Städel (chip "Frankfurt", cards "Frankfurt Städel"); dotted dates day
-  first (DS-004); Munich capitals recased (`capsTitleParts`). Her Berlin, Munich and Dresden links are imported; her
-  Frankfurt links and lookups confirm. "Munich", "Berlin", "Dresden", "Frankfurt"; AL-044, AL-049, FS-.
-- **49.3.** MoMA's pop-up reads "contents cannot be seen — JS-rendering" (does not hold live — §2.2.3); card lines
-  join phrases with an em dash; footer "Reset search" (RC-002). Her decision on MoMA: small fix only.
-- **49.4/50 — a show on someone else's page:** Claude now gets the address and a second question asks the museum's
-  site and full title; right on 3 of 3 test reads (the split not yet read live). Her re-read of the two Reynolds
-  links (Enfilade PDF, Meer) confirms.
-- **48 — Pages:** a show from a page she saved, for a site that refuses Parallel (her design; behaves as Links).
-  Proved on her two Palazzo Reale Milano pages; her other six confirm. Capitals recased there and at San Marco,
-  which titles its headline's first sentence (her decisions). "Saved pages".
-- **OPEN — a link venue is looked up exactly as the 28 are (shelf AND whole-shop search).** Detroit files a show's
-  book in the show's own shop section. Her next lookups settle: O'Keeffe found at Detroit? The RA's search
-  (`catalogsearch/result/?q=`) is stored at its next lookup; Mauritshuis and Yale stay shelf-only.
-
----
+**Published, her links confirm** (details in `docs/add_by_link.md`): **gallery's shop, 52.1** (her rule: the narrowest section that
+holds the catalogues and can be read; Claude says on each link whether the venue is a gallery; a gallery's shop path runs first — her
+decision: galleries apart from museums; her Karsten Greve import confirms); **50.1–50.2** (Antwerp, Stuttgart, Borghese: both screens
+show the card name, "Antwerp Fine Arts", an English title in capitals recased, no usable dates → undated with the sweep's note, "22.05.2008
+| 14.08.2008" read, a 202 says "…Parallel fault. Import the full saved page.", a bot check is never a show); **47.2–47.3, 49.2**
+(Berlin, Munich — two venues, her decision: Alte Pinakothek and der Moderne, filed by the house line, shops CEDON's section searched
+in German — Sammlung Schack, Dresden with chip "Dresden" and cards "Dresden Gemäldegalerie", No shop answered once, the Städel with
+chip "Frankfurt" and cards "Frankfurt Städel"; dotted dates day first; Munich capitals recased; her Frankfurt links and lookups
+confirm); **49.3** (MoMA's pop-up reads "contents cannot be seen — JS-rendering", which does not hold live — §2.2.3; card lines join
+phrases with an em dash; footer "Reset search" (RC-002); her decision on MoMA: small fix only); **49.4/50** (a show on someone else's
+page: Claude gets the address and a second question asks the museum's site and full title; her re-read of the two Reynolds links,
+Enfilade PDF and Meer, confirms); **48 — Pages** (a show from a page she saved, for a site that refuses Parallel — her design;
+behaves as Links; capitals recased there and at San Marco, her decisions; proved on her two Palazzo Reale Milano pages, her other six
+confirm).
 
 ## 6. Future considerations
 

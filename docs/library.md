@@ -94,7 +94,7 @@ She has ideas of her own; ask her before choosing.
 - Postage as its own field, or inside the price.
 - Paste an order-confirmation email → the model reads out price, date, seller,
   ISBN as plain strings; code writes the record; she confirms. Wanted or not.
-- In-app field editing is on the rejected list (§5.1, §4.2). That ruling was about
+- In-app field editing is on the rejected list (§5.1, §4.2). That decision was about
   exhibition data, which is fixed at the source; purchase data has no source
-  but her. Confirm with her that the ruling does not cover this.
+  but her. Confirm with her that the decision does not cover this.
 - Later, maybe: what the catalogue costs now on AbeBooks against what she paid.
