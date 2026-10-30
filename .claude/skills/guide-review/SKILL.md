@@ -56,15 +56,15 @@ index of side docs, guardrails, the app explainers, future considerations — an
 
 ## The review — do all of it
 
-**The gate — the reading and the nine steps below are enforced by code, in order.**
+**The gate — the reading and the ten steps below are enforced by code, in order.**
 `node scraper/guide_review_gate.js start` first (clean tree): it writes
 `.claude/guide_review_ledger.json` — a row per file, a row per §2.2 section —
 and names lines to copy out of each file. Then `node scraper/guide_review_gate.js
 step` after each step's work: a step a script owns (1 the mechanical check, 2
-facts against the repo, 9 nothing lost, and the duplicate and lost-lesson
+facts against the repo, 10 nothing lost, and the duplicate and lost-lesson
 tests) is run by the gate itself; a judgement step
-(the reading, 3 open work, 4 lessons, 5 the lean trunk, 6 diaries and overturned
-rules, 7 contradictions, 8 untraceable lines) needs its proof of work in the
+(the reading, 3 open work, 4 lessons, 5 the lean trunk, 6 the lean side docs,
+7 diaries and overturned rules, 8 contradictions, 9 untraceable lines) needs its proof of work in the
 ledger, which the gate checks. **A step cannot pass before the one before it,
 and a push is refused by a hook until all stand.** What the gate lists is work,
 not findings. `done` runs last and writes `.claude/guide_review_report.md`; if it
@@ -79,7 +79,9 @@ reason (`smellOk`). Calling a flagged file "clean" does not pass.
 
 Per file the ledger asks for: the lines copied out exactly, `diagnosis`
 (clean | diary | history | duplicate | misplaced | dense | mixed), `finding`
-(what is wrong, or why it is fine), `action`, `overturned`, `contradictions`.
+(what is wrong, or why it is fine), `action`, `overturned`, `contradictions`,
+and for a side doc `leanNote` (what the doc is for, and whether anything in it
+belongs elsewhere).
 A document is never fine because of its size: diagnose it and clean it.
 
 **First, before step 1 — read.** **Read `CLAUDE.md` in full, then every file under `docs/`, then the skill
@@ -106,16 +108,23 @@ A document is never fine because of its size: diagnose it and clean it.
    rules above: nothing standing in 2.2, no ideas nobody is working on.
 4. **"Do not re-break" (§4.1):** merge new entries into the lesson they
    illustrate; one lesson, one line where possible. Never drop a lesson.
-5. **Lean trunk.** `CLAUDE.md` holds only what every session needs before it
-   knows which area it is in (`docs/doc_rules.md`): house rules, lessons and
-   do-nots, open work with its backstory, pointers, and a few-sentence
-   schematic of each part. Read every trunk section and say which kind it is;
-   anything else — design rationale, per-feature decisions, evidence, cases,
-   ids, what was tried — moves to the area's side doc, compressed, with a
-   pointer left. No numbers: read what each section says. The gate flags
-   sections that mostly repeat a side doc, or a "schematic" holding test ids,
-   versions or chains of decisions, and checks every move happened.
-6. **The three tests, for every doc:**
+5. **Lean trunk** — `CLAUDE.md` only. It holds only what every session needs
+   before it knows which area it is in (`docs/doc_rules.md`): house rules,
+   lessons and do-nots, open work with its backstory, pointers, and a
+   few-sentence schematic of each part. Read every trunk section and say which
+   kind it is; anything else — design rationale, per-feature decisions,
+   evidence, cases, ids, what was tried — moves to the area's side doc,
+   compressed, with a pointer left. No numbers: read what each section says.
+   The gate flags sections that mostly repeat a side doc, or a "schematic"
+   holding test ids, versions or chains of decisions, and checks every move
+   happened.
+6. **Lean side docs.** Every side doc is held to the same test as the trunk:
+   what is it for (the §3 index says), is each section in the right doc, and
+   is it a dumping ground — duplication, long diaries, entries piled on entries?
+   Move a section that mostly repeats another doc to that doc (compressed) and
+   leave a pointer; say in the ledger what each doc is for. The gate flags the
+   sections that repeat another doc.
+7. **The three tests, for every doc:**
    - **Diaries** — events narrated in order ("first we tried…, then…"). Cut to
      the result, the decision and the lesson. If the evidence is worth keeping,
      compress it FIRST, then move it to the right doc; a side doc is never a
@@ -131,19 +140,19 @@ A document is never fine because of its size: diagnose it and clean it.
    - **Overturned rules** — a rule the code or a later decision no longer
      follows. The code wins over prose. Two prose decisions that disagree →
      ASK, don't pick.
-7. **Contradictions:** the same fact stated two ways (in the guide, between the
+8. **Contradictions:** the same fact stated two ways (in the guide, between the
    guide and a doc, between a doc and the code).
-8. **Anything you cannot trace** — a line whose origin, meaning or current
+9. **Anything you cannot trace** — a line whose origin, meaning or current
    truth you cannot establish from the repo and its history
    (`git log -S"<phrase>" -- CLAUDE.md docs/` is the tool) — gets
    investigated as far as the repo allows, then goes in the report as a
    question with what you found.
-9. **Nothing lost.** After the cutting, check each changed file against the
+10. **Nothing lost.** After the cutting, check each changed file against the
    original (`git diff`): every decision, judgement call, wording, name and
    number her old text marked is still somewhere in the guide or docs — in the
    new text or its new home. Put back anything missing; shortened is fine,
    gone is not. The gate does this check itself and lists what is gone.
-**Cleaning any document — all of steps 5 to 9.** Every document is read in
+**Cleaning any document — all of steps 5 to 10.** Every document is read in
 full, line by line, before you decide anything about it. Then:
 1. **Diagnose** it against how a guide is meant to be written (the shape above
    and `docs/doc_rules.md`): a diary or stream of consciousness, a version log,

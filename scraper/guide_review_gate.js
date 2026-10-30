@@ -2,13 +2,13 @@
 /*
  * GUIDE REVIEW GATE — her decision: the review's finish line is code, not a promise.
  *
- * The review has nine steps (.claude/skills/guide-review/SKILL.md) after one thing that must come first:
+ * The review has ten steps (.claude/skills/guide-review/SKILL.md) after one thing that must come first:
  * reading every file. Every step is a gate: a step a script owns is run by this script; a judgement step
  * leaves proof of work in the ledger, which the script checks. A step cannot be passed before the one before it,
  * and a Guide-review push is refused (.claude/hooks/guide-review-gate.js) until all stand.
  *
  * LINE BUDGETS ARE A SECRET FROM THE REVIEWER (her decision). No step, message or instruction names a budget, a
- * limit or a tolerance, so the only way through is the substantive work. When the nine steps pass, `done` measures
+ * limit or a tolerance, so the only way through is the substantive work. When the ten steps pass, `done` measures
  * every document against its budget, by code: a document more than 5% over is sent back ONCE with the words "go
  * through these again" — still no number. The second pass must change the file, or name the one passage it
  * checked and why it needs no further improvement. Whatever remains is printed to her in the report. Within 5% is printed, nothing more.
@@ -24,12 +24,12 @@
  *                                             a doc puts in backticks that exists in no code (fixed, or said where it lives)
  *   3 Open work – trunk §2.2  proof   a verdict and evidence per §2.2 section
  *   4 Lessons – trunk §4.1    script + proof  no §4.1 lesson lost (script); a note and a count
- *   5 Lean trunk              script + proof  every CLAUDE.md section is a kind a trunk holds, or moved; every side-doc
- *                                             section that mostly repeats another doc moved or justified
- *   6 Redundancies            script + proof  duplicates (script); diagnosis, finding, action and overturned rules per file
- *   7 Contradictions          proof   contradictions per file
- *   8 Untraceable lines       proof   each with the search made, or what was searched
- *   9 Nothing lost            script  every decision, wording and name her old text marked is still somewhere
+ *   5 Lean trunk              script + proof  every CLAUDE.md section is a kind a trunk holds, or moved to its side doc
+ *   6 Lean side docs          script + proof  each side doc says what it is for; a section that mostly repeats another doc is moved or justified
+ *   7 Redundancies            script + proof  duplicates (script); diagnosis, finding, action and overturned rules per file
+ *   8 Contradictions          proof   contradictions per file
+ *   9 Untraceable lines       proof   each with the search made, or what was searched
+ *  10 Nothing lost            script  every decision, wording and name her old text marked is still somewhere
  *
  * A step's "info" is what the report shows under Problems: empty when there is nothing to say (shown as a tick).
  */
@@ -47,9 +47,9 @@ const DIAGNOSES = ['clean', 'diary', 'history', 'duplicate', 'misplaced', 'dense
 const ACTIONS = ['none', 'compressed', 'moved', 'fixed'];
 const MARKS = /\b(her (decision|judge?ment|call|wording|design|count|choice|view|instruction|rule)|rejected|OPEN)\b/i;
 const STEP_NAMES = ['', 'Mechanical check – paths, pointers, index, section order', 'Facts against the repo – app version, branch table, run folders, names the docs mention',
-  'Open work – trunk, §2.2', 'Lessons – trunk, §4.1', 'Lean trunk', 'Redundancies – duplicates, diaries, overturned rules',
+  'Open work – trunk, §2.2', 'Lessons – trunk, §4.1', 'Lean trunk – CLAUDE.md', 'Lean side docs – each section in the right doc, no dumping ground', 'Redundancies – duplicates, diaries, overturned rules',
   'Contradictions', 'Untraceable lines', 'Nothing lost – decisions, wording and lessons kept'];
-const LAST = 9;
+const LAST = 10;
 const TRUNK_KINDS = ['rule', 'lesson', 'open', 'pointer', 'schematic', 'moved'];
 
 const git = (...a) => execFileSync('git', a, { cwd: ROOT, encoding: 'utf8', maxBuffer: 1 << 28, stdio: ['ignore', 'pipe', 'ignore'] });
@@ -236,10 +236,16 @@ function sLean(led) {
       moved.push(`§${key.split(' ')[0].replace(/\.$/, '')} → ${path.basename(to)}`);
     }
   }
-  // every other doc: a section that mostly repeats another doc belongs there, or is justified
+  return { bad, info: moved.length ? `${moved.length} moved: ${moved.join(', ')}` : '' };
+}
+
+// Step 6: every side doc is held to the same test — is each section where it belongs, and is the doc not a dumping ground
+function sLeanSide(led) {
+  const bad = [];
   for (const f of guideFiles()) {
     if (f === 'CLAUDE.md') continue;
     const row = (led.files || {})[f] || {};
+    if (norm(row.leanNote).length < 40) bad.push(`${f}: leanNote — what this doc is for, and whether anything in it belongs in another doc or is a dump (40+ characters).`);
     for (const [key, body] of Object.entries(trunkSections(nowText(f) || ''))) {
       const ov = overlapsSideDoc(body, f);
       if (!ov) continue;
@@ -248,7 +254,7 @@ function sLean(led) {
       bad.push(`${f} "${key}": most of what it names (${Math.round(ov.hit * 100)}%) is already in ${ov.f} — keep one copy there and point to it, or justify it in files["${f}"].placeOk["${key}"] = {quote: 40+ characters copied from the section, why: 30+ characters on why it must also live here}.`);
     }
   }
-  return { bad, info: moved.length ? `${moved.length} moved: ${moved.join(', ')}` : '' };
+  return { bad, info: '' };
 }
 
 // Part of step 2: a name the doc puts in backticks that exists in no code is stale, or lives on another branch — fix it or say so.
@@ -491,7 +497,7 @@ function sFactsAll(led) {
   const a = sFacts(), b = sCode(led);
   return { bad: [...a.bad, ...b.bad], info: '' };
 }
-const STEPS = [null, sMech, sFactsAll, sOpen, sLessons, sLean, sRedundant, sContra, sUntraced, sLost];
+const STEPS = [null, sMech, sFactsAll, sOpen, sLessons, sLean, sLeanSide, sRedundant, sContra, sUntraced, sLost];
 
 function runStep(led, n) { return STEPS[n](led); }
 
@@ -511,7 +517,7 @@ function stepCommand() {
     return;
   }
   const n = led.currentStep || 1;
-  if (n > LAST) { console.log('All nine steps passed. Run: node scraper/guide_review_gate.js done'); return; }
+  if (n > LAST) { console.log('All ten steps passed. Run: node scraper/guide_review_gate.js done'); return; }
   const r = runStep(led, n);
   if (r.bad.length) {
     console.log(`Step ${n} of ${LAST} — ${STEP_NAMES[n]} — not passed; ${n < LAST ? `steps ${n + 1}–${LAST} stay closed` : 'the review cannot close'}. ${r.bad.length} thing(s) left; do them, do not report them:`);
@@ -542,7 +548,7 @@ function check() {
   return { bad: finalProblems(led), infos };
 }
 
-// ---- measured last, by code, after the nine steps; the reviewer is never told these numbers ----
+// ---- measured last, by code, after the ten steps; the reviewer is never told these numbers ----
 const sha = (t) => require('crypto').createHash('sha256').update(String(t)).digest('hex');
 function measure() {
   const over = [], near = [];
@@ -579,7 +585,7 @@ function finalProblems(led) {
 
 // One table is the whole report. A tick where a step found nothing; a step's extra lines are rows of their own under it.
 function report(led, infos) {
-  const asks = (k) => guideFiles().filter((f) => norm((led.files[f] || {}).askHer)).filter((f) => (norm(led.files[f].overturned) !== 'none' ? 6 : 7) === k)
+  const asks = (k) => guideFiles().filter((f) => norm((led.files[f] || {}).askHer)).filter((f) => (norm(led.files[f].overturned) !== 'none' ? 7 : 8) === k)
     .map((f) => `${f} – ${norm(led.files[f].askHer)} – your call`);
   const stepRows = infos.flatMap((i, k) => {
     const [first, ...more] = String(i).split('<br>');
@@ -613,7 +619,7 @@ function done() {
   const c = check();
   const led0 = readLedger();
   if (led0 && c.bad.length === 1 && /run `node scraper\/guide_review_gate.js done`/.test(c.bad[0])) {
-    // all nine steps stand; measure by code and send back what is well over — once, with no number
+    // all ten steps stand; measure by code and send back what is well over — once, with no number
     led0.pass = 2;
     led0.sentBack = Object.fromEntries(measure().over.map((o) => [o.f, sha(nowText(o.f))]));
     writeLedger(led0);
@@ -639,7 +645,7 @@ if (require.main === module) {
       bad.forEach((b) => console.log('  ' + (b.startsWith('Step') ? '' : '- ') + b));
       process.exit(1);
     }
-    console.log(mode === 'done' ? 'Guide review gate: all nine steps passed. Report written to .claude/guide_review_report.md — send it as the report.' : 'Guide review gate: passed.');
+    console.log(mode === 'done' ? 'Guide review gate: all ten steps passed. Report written to .claude/guide_review_report.md — send it as the report.' : 'Guide review gate: passed.');
   } else { console.log('usage: guide_review_gate.js start | step | check | done'); process.exit(2); }
 }
 
