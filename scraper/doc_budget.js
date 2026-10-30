@@ -1,18 +1,14 @@
 #!/usr/bin/env node
 /*
- * DOC BUDGETS — her ruling, 30 Sep 2026.
+ * DOC BUDGETS — her decision.
  *
- * The guide grew from 1,392 to 1,621 lines in three days, almost all of it
- * run-by-run stories, and the side docs had grown to 4,400 lines of the same.
- * Each file here has a line budget. Over budget means a clean-up is due.
+ * Each file has a line budget. The numbers are measured by code only, AFTER the guide review's substantive steps:
+ * the reviewer is never told them (not in its instructions, the guide or the gate's messages), so there is no
+ * number to aim at — a document more than 5% over is sent back once with "go through these again", and whatever is
+ * still over is printed to her in the report (`scraper/guide_review_gate.js`). Nothing else reads them.
  *
- * It WARNS and never fails `npm test`, on purpose: her experience is that the
- * session that made a mess cleans it up badly, so the clean-up belongs to a
- * separate session run away from active work — not to whichever session
- * happens to trip the line mid-task. `--strict` exits 1 when over, for that
- * clean-up session to use as its finish line.
- *
- * A file not listed gets DEFAULT_BUDGET. Raising a budget is her call.
+ * It WARNS and never fails `npm test` (shown at its end); `--strict` exits 1 when over. A file not listed gets
+ * DEFAULT_BUDGET. Raising a budget is her call.
  */
 const fs = require('fs');
 const path = require('path');

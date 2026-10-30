@@ -61,33 +61,30 @@ index of side docs, guardrails, the app explainers, future considerations — an
 `.claude/guide_review_ledger.json` — a row per file, a row per §2.2 section —
 and names lines to copy out of each file. Then `node scraper/guide_review_gate.js
 step` after each step's work: a step a script owns (1 the mechanical check, 2
-facts against the repo, 9 nothing lost, and the duplicate and lost-lesson
-tests) is run by the gate itself; a judgement step (the reading, 3 open work,
-4 lessons, 5 the lean trunk, 6 diaries and overturned rules, 7
-contradictions, 8 untraceable lines, 10 budgets) needs its proof of work in the ledger, which the gate
-checks. **A step cannot pass before the one before it, and a push is refused
-by a hook until all stand.** What the gate lists is work, not findings.
-`done` writes `.claude/guide_review_report.md`.
+facts against the repo, 6 names that exist in no code, 10 nothing lost, and the
+duplicate and lost-lesson tests) is run by the gate itself; a judgement step
+(the reading, 3 open work, 4 lessons, 5 the lean trunk, 7 diaries and overturned
+rules, 8 contradictions, 9 untraceable lines) needs its proof of work in the
+ledger, which the gate checks. **A step cannot pass before the one before it,
+and a push is refused by a hook until all stand.** What the gate lists is work,
+not findings. `done` runs last and writes `.claude/guide_review_report.md`; if it
+sends documents back, go through them again — every step, the whole of each —
+then run `done` again.
 
-The gate also looks at every file itself, whatever its size and whatever you
-called it: a version-by-version log, events narrated in order, a run-on
-paragraph, a pile of test ids. Each such flag must be cut down — or, only for
-text that is truly already compressed, justified with a quote copied from the
-flagged lines and a reason (`smellOk`). Calling a flagged file "clean" does
-not pass.
+The gate also looks at every file itself, whatever you called it: a
+version-by-version log, events narrated in order, a run-on paragraph, a pile of
+test ids. Each such flag must be cut down — or, only for text that is truly
+already compressed, justified with a quote copied from the flagged lines and a
+reason (`smellOk`). Calling a flagged file "clean" does not pass.
 
 Per file the ledger asks for: the lines copied out exactly, `diagnosis`
 (clean | diary | history | duplicate | misplaced | dense | mixed), `finding`
-(what is wrong, or why it is fine), `action`, `remaining` ("nothing" unless a
-blocker), `overturned`, `contradictions`. A file is not fine because its line
-count is under budget: diagnose it and clean it whatever its size. A file may
-stay over only if it is already-compressed text more than 25% over, with a
-quoted blocker, its reason and the lines it would need — the gate then offers
-her a budget rounded to the next 50, never a bare "+1".
+(what is wrong, or why it is fine), `action`, `overturned`, `contradictions`.
+A document is never fine because of its size: diagnose it and clean it.
 
 **First, before step 1 — read.** **Read `CLAUDE.md` in full, then every file under `docs/`, then the skill
    files that cite the guide (`.claude/skills/*/SKILL.md`).** Run
-   `node scraper/doc_budget.js`, `node scraper/venue_status.js`,
+   `node scraper/venue_status.js`,
    `git log --since="16 days ago" --stat` and `git log --oneline -40`.
 
 1. **Run the mechanical check:** `node scraper/guide_check.js`. It
@@ -117,7 +114,10 @@ her a budget rounded to the next 50, never a bare "+1".
    pointer left. No numbers: read what each section says. The gate flags
    sections that mostly repeat a side doc, or a "schematic" holding test ids,
    versions or chains of decisions, and checks every move happened.
-6. **The three tests, for every doc:**
+6. **Code owns it.** A name a doc puts in backticks that exists in no code
+   is stale, or lives on another branch. Fix it or say where it lives; the gate
+   lists each.
+7. **The three tests, for every doc:**
    - **Diaries** — events narrated in order ("first we tried…, then…"). Cut to
      the result, the decision and the lesson. If the evidence is worth keeping,
      compress it FIRST, then move it to the right doc; a side doc is never a
@@ -133,45 +133,36 @@ her a budget rounded to the next 50, never a bare "+1".
    - **Overturned rules** — a rule the code or a later decision no longer
      follows. The code wins over prose. Two prose decisions that disagree →
      ASK, don't pick.
-7. **Contradictions:** the same fact stated two ways (in the guide, between the
+8. **Contradictions:** the same fact stated two ways (in the guide, between the
    guide and a doc, between a doc and the code).
-8. **Anything you cannot trace** — a line whose origin, meaning or current
+9. **Anything you cannot trace** — a line whose origin, meaning or current
    truth you cannot establish from the repo and its history
    (`git log -S"<phrase>" -- CLAUDE.md docs/` is the tool) — gets
    investigated as far as the repo allows, then goes in the report as a
    question with what you found.
-9. **Nothing lost.** After the cutting, check each changed file against the
+10. **Nothing lost.** After the cutting, check each changed file against the
    original (`git diff`): every decision, judgement call, wording, name and
    number her old text marked is still somewhere in the guide or docs — in the
    new text or its new home. Put back anything missing; shortened is fine,
    gone is not. The gate does this check itself and lists what is gone.
-10. **Budgets — measured last, after all the work above.** Every file within
-   `scraper/doc_budget.js` (a NEW doc's budget is its size rounded up to the
-   next 50), with about 5% over tolerated. **Reading comes first and is
-   not optional.** Every file you are asked to clean up is read in full, line
-   by line, before you decide anything about it. A line count is never a
-   basis for a decision. Then, for each file, largest overage first:
-   1. **Diagnose** against how a guide is meant to be written (the shape above
-      and `docs/doc_rules.md`): why is it over — a diary or stream of
-      consciousness, a version log, history, test lists, duplicated text,
-      content that belongs in another doc, or genuinely dense, considered
-      text?
-   2. **Compress.** Rambling and narrated history are easy and obvious: cut
-      them to judgements, decisions, lessons and open items, with enough
-      background that a cold session can continue. Do it. Dense text that is
-      already compressed is different: be surgical, and never shrink it
-      wholesale — cut only what is duplicated, stale or misplaced.
-   3. **Check against the original.** Read `git diff`; list what the old text
-      held (each decision, judgement call, lesson, open item, pointer, name,
-      number) and confirm each is still there or in its new home. Put back
-      anything missing. Commit that file on its own once it passes.
-   4. **Conclude.** Within tolerance → done. Still over → the only valid
-      reason is a specific decision or lesson that cannot be lost; name it.
-   **Never accepted as a reason:** the file is large, the work is big, the run
-   is unattended, it needs a supervised session, or it is risky. Time and size
-   are no limit — the run may take an hour or more. Doing the reading and
-   writing in the background is the job; none of it goes to her.
-   Raising a budget is hers.
+**Cleaning any document — all of steps 5 to 10.** Every document is read in
+full, line by line, before you decide anything about it. Then:
+1. **Diagnose** it against how a guide is meant to be written (the shape above
+   and `docs/doc_rules.md`): a diary or stream of consciousness, a version log,
+   history, test lists, duplicated text, content that belongs in another doc,
+   or genuinely dense, considered text.
+2. **Compress.** Rambling and narrated history are easy and obvious: cut them
+   to judgements, decisions, lessons and open items, with enough background
+   that a cold session can continue. Do it. Dense text that is already
+   compressed is different: be surgical — cut only what is duplicated, stale or
+   misplaced.
+3. **Check against the original.** Read `git diff`; list what the old text held
+   (each decision, judgement call, lesson, open item, pointer, name, number) and
+   confirm each is still there or in its new home. Put back anything missing.
+**Never accepted as a reason to leave something:** it is large, the work is
+big, the run is unattended, it needs a supervised session, or it is risky. Time
+is no limit — the run may take an hour or more. If there is truly nothing more
+to cut without harm, say which passage and why, in the ledger.
 
 ## You review the WRITING, never the project
 
@@ -194,13 +185,12 @@ a session DOES next, it is not your question.
 as `docs/doc_rules.md` says. Keep a date only where an open item's story needs
 the sequence, it names a run, or it is a deadline.
 
-**Fix it yourself** — the default. Compressing a diary, history or log,
-bringing a file within budget and cutting duplicates are fixes, not
-questions. When in doubt whether to fix or report, fix. Do it when the repo
+**Fix it yourself** — the default. Compressing a diary, history or log and
+cutting duplicates are fixes, not questions. When in doubt whether to fix or report, fix. Do it when the repo
 gives exactly one right answer: a stale
 count or version, a finished item still listed, a broken pointer, a story
 compressed to its result, a duplicated passage, an entry merged into its
-lesson, a file brought within budget.
+lesson.
 
 **Moving content:** into a brand-new doc, move it word for word. Into an
 existing doc, edit only where the two copies clearly duplicate. Never move a
@@ -224,8 +214,7 @@ remove a rule rather than restate it.
    nothing: the headline ("All N documents read and checked."), then ONE
    steps table — a tick where a step found nothing; otherwise the documents
    and what was done, with sizes; each decision for her is a row marked
-   "your call" under its step (a file still over budget, with the budget the
-   gate suggests; an untraceable line). No other tables or lists. Plain English,
+   "your call" under its step. No other tables or lists. Plain English,
    spoken TO her. It is short because the work was done, not because it was
    skipped. No "watch" items; no debrief of how the work went (the per-file
    review is in the ledger and the commit message). If you add a sentence of

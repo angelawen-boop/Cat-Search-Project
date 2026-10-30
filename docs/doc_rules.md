@@ -22,10 +22,6 @@ time. It once grew to 2,905 lines, mostly run-by-run stories. The rules:
 - **Moving text to `docs/` is not a way to keep it.** Compress it first, in
   place, then move it. A side doc holds evidence a future session will need,
   never a transcript.
-- **Every file has a line budget** — `node scraper/doc_budget.js` (her decision;
-  runs at the end of `npm test`). Over budget warns and never fails a
-  test: the clean-up is a separate session, away from active work — never the
-  session that tripped it, mid-task. Raising a budget is her call.
 - **The guide check** — `node scraper/guide_check.js` (runs at the end of `npm test`, warns, never
   fails): every `docs/` path named anywhere exists, every `§` pointer lands on a real heading,
   every side doc is in the §3 index, the guide's sections are present and in order. Run it after
@@ -64,8 +60,8 @@ BROKE, WHY or HER RULING; anything over about five lines; code that is gone
 **Where the history goes:** app decisions in `docs/app.md`, scraper decisions
 in `docs/scraper.md`, in the section for that code. Each as its conclusion: the
 rule, one sentence on why, the case, the functions it touches. One
-entry per decision — update an existing one, never add a second. Within budget
-and compressed first (above); the narrative stays in git.
+entry per decision — update an existing one, never add a second.
+Compressed first (above); the narrative stays in git.
 
 **Protect her decisions with tests, not prose.** When she decides how something
 behaves, add or update a fixture that fails if it is undone, named after the
