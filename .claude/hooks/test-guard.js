@@ -10,10 +10,13 @@
 //   - a run expected to take a minute or more → refused until the session has written to her, since the
 //     last such run, the exact line "Expected test run: …" — read from the session's own transcript;
 //   - a run longer than the Bash call's own time limit → refused unless it runs in the background, where
-//     the session is woken when it ends.
+//     the session is woken when it ends;
+//   - any run when everything changed since origin/main is guide, docs or skill text → refused: no suite
+//     reads them (her decision — guide reviews ran the whole app and scraper suite before every push).
 'use strict';
 const fs = require('fs');
 const path = require('path');
+const { execFileSync } = require('child_process');
 
 let input;
 try { input = JSON.parse(fs.readFileSync(0, 'utf8')); } catch { process.exit(0); }
@@ -40,6 +43,18 @@ if (direct) {
 
 const runs = W.runsIn(cmd);
 if (!runs.length) process.exit(0);
+
+// Text no suite reads. Not every .md: scraper/compress_prompt.md is code.
+const DOC = /^(CLAUDE\.md|docs\/.*\.md|\.claude\/skills\/.*|\.claude\/guide_review_(ledger\.json|report\.md))$/;
+let changed = null;
+try {
+  const git = args => execFileSync('git', args, { cwd: input.cwd || ROOT, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] });
+  changed = (git(['diff', '--name-only', 'origin/main']) + git(['ls-files', '--others', '--exclude-standard'])).split('\n').filter(Boolean);
+} catch { /* no git or no origin/main: nothing to judge by */ }
+if (changed && changed.length && changed.every(f => DOC.test(f))) {
+  deny('No test run: only guide, docs or skill text has changed since main, and no suite reads it. ' +
+    'The check for doc work is node scraper/guide_check.js.');
+}
 
 const held = W.heldBy();
 if (held) deny('Not started — ' + W.describeHolder(held));

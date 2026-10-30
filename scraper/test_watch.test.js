@@ -45,7 +45,8 @@ function hook(command, said, extra = {}) {
   if (said) lines.push({ type: 'assistant', message: { content: [{ type: 'text', text: said }] } });
   lines.push({ type: 'assistant', message: { content: [{ type: 'tool_use', id: 'T1', name: 'Bash', input: { command } }] } });
   fs.writeFileSync(tr, lines.map(l => JSON.stringify(l)).join('\n'));
-  const r = spawnSync('node', [HOOK], { input: JSON.stringify({ tool_use_id: 'T1', transcript_path: tr, tool_input: { command, ...extra } }), encoding: 'utf8', env: { ...process.env, CATWATCH_LOCK: path.join(dir, 'lock') } });
+  const { cwd = dir, ...ti } = extra; // not a git checkout by default, so the repo's own changes never decide
+  const r = spawnSync('node', [HOOK], { input: JSON.stringify({ tool_use_id: 'T1', transcript_path: tr, cwd, tool_input: { command, ...ti } }), encoding: 'utf8', env: { ...process.env, CLAUDE_PROJECT_DIR: path.join(__dirname, '..'), CATWATCH_LOCK: path.join(dir, 'lock') } });
   fs.rmSync(dir, { recursive: true, force: true });
   return r.stdout ? JSON.parse(r.stdout).hookSpecificOutput.permissionDecisionReason : 'allowed';
 }
@@ -72,4 +73,29 @@ test('TW-106: a long run in the foreground, or with &, is refused', () => {
 test('TW-107: commands that are not test runs pass untouched', () => {
   assert.strictEqual(hook('ls -la'), 'allowed');
   assert.strictEqual(hook("grep -n 'npm test' docs/testing.md"), 'allowed');
+});
+
+// A checkout whose origin/main is its first commit, then the files given changed on top.
+function checkout(files) {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'tw-git-'));
+  const git = (...a) => spawnSync('git', ['-c', 'user.name=t', '-c', 'user.email=t@t', ...a], { cwd: dir });
+  git('init', '-q');
+  fs.writeFileSync(path.join(dir, 'CLAUDE.md'), 'x');
+  git('add', '.'); git('commit', '-qm', 'base'); git('update-ref', 'refs/remotes/origin/main', 'HEAD');
+  for (const f of files) { fs.mkdirSync(path.dirname(path.join(dir, f)), { recursive: true }); fs.writeFileSync(path.join(dir, f), 'y'); }
+  git('add', 'CLAUDE.md');
+  return dir;
+}
+
+test('TW-108: no test run when only guide, docs or skill text has changed since main', () => {
+  const docs = checkout(['CLAUDE.md', 'docs/testing.md', '.claude/skills/guide-review/SKILL.md', '.claude/guide_review_ledger.json']);
+  assert.match(hook('npm run test:saving', null, { cwd: docs }), /No test run: only guide, docs or skill text/);
+  assert.match(hook('node scraper/shop_check.js kmska', null, { cwd: docs }), /No test run/);
+  const code = checkout(['docs/testing.md', 'scraper/dates.js']);
+  assert.doesNotMatch(hook('npm run test:saving', null, { cwd: code }), /No test run/);
+  const prompt = checkout(['scraper/compress_prompt.md']); // a prompt, read by the suites
+  assert.doesNotMatch(hook('npm run test:saving', null, { cwd: prompt }), /No test run/);
+  const none = checkout([]);
+  assert.doesNotMatch(hook('npm run test:saving', null, { cwd: none }), /No test run/); // nothing changed: not judged
+  for (const d of [docs, code, prompt, none]) fs.rmSync(d, { recursive: true, force: true });
 });

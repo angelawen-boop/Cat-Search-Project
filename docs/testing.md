@@ -25,8 +25,8 @@ expected time first, holds a lock so no second run or live check starts beside i
 its usual time (`stallLimit`, `scraper/test_watch.js`), then re-runs it alone — "STALLED with others running, then passed alone" is
 crowding, "STALLED TWICE" a real fault. Live shop checks stop after six minutes without an answer. Usual times:
 `scraper/test_times.json` (`--save-times`). The Bash hook (`.claude/hooks/test-guard.js`) refuses a direct suite run, a second run,
-`&`/`nohup`, a long foreground run, and a run of a minute or more until the session has written her the exact "Expected test run: …"
-line.
+`&`/`nohup`, a long foreground run, a run of a minute or more until the session has written her the exact "Expected test run: …"
+line, and any run when only guide, docs or skill text has changed since `main` (no suite reads it).
 
 ## When a test fails
 

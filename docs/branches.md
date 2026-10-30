@@ -28,7 +28,8 @@ Branches separate in-progress work from known-good work, never components.
 session must wait for another:
 - **The waiting session** commits locally, pushes nothing and does not ask about
   it. It waits for a message from the named session (cross-session
-  `send_message`), then pulls `main`, merges, runs `npm test` and pushes to `main`.
+  `send_message`), then pulls `main`, merges, runs the test group for the work it holds
+  (`docs/testing.md`; none for guide or docs alone) and pushes to `main`.
 - **The finishing session**, once its work is on `main`, messages the waiting
   session by the title she gave (`list_sessions` finds it) that it may push.
 - Unpushed work is lost if an idle container is reclaimed. Only if that is a
