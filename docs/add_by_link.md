@@ -39,9 +39,9 @@ The app handles unreadable links itself; no scraper-side reader. Why it exists: 
 - **A Wayback Machine copy files under the museum it copied** (her decision): the venue, its shop and the title's site name come from
   the address inside the copy; the copy is what is read and linked (`siteUrlOf`; AL-037).
 - **A new venue's shop** (her decision): the **exhibition-catalogues section**, else the museum's publications, else books — never
-  the front page, one book, a post, or a section mixing books with other goods; a mixed section is opened and a books-only section
-  inside it taken. Nothing found is stored until the import finishes.
-- **Her confirmed shops in her app are never hand-edited** (her decision); a session amends one only when she asks.
+  one book, a post, or a section mixing books with other goods (a mixed section is opened and a books-only section inside it
+  taken); the front page only when it sells books and there is no books section (the shop finder, rule 3). Nothing found is stored
+  until the import finishes.
 
 ## Per link — code first, model only for prose
 
@@ -51,8 +51,7 @@ The app handles unreadable links itself; no scraper-side reader. Why it exists: 
 3. **Dates:** the first range after the show's heading, by the scraper's own date reader (`dates.js`, shared, never copied).
 4. **Description by the model** (`modelTier: default`, her decision), the compression prompt shared not copied. **Any non-English
    page comes out in English; a non-English title gets its translation first** (`In English: "…".`, every language, her
-   decision), recased as the title is (`cardTitle`, AP-012b). Tested with Sonnet on 70 live pages (subtitle, English title,
-   country, summary rules right; Pontormo's unsupported "first" is now caught by the answer check).
+   decision), recased as the title is (`cardTitle`, AP-012b).
 5. **Claude's answer is checked as the compressor's** (`answerFaults`, shared `scraper/answer_check.js`): shape, and every claim
    word and number on the page. A refused answer is asked again with its reason, twice at most (`LINK_ASK_AGAIN`); one that
    never passes leaves the link unread: "Claude's description failed check and re-attempt multiple times (…)", faults in the
@@ -89,9 +88,8 @@ section links gives way to the shop's front page, never when it has sections (Ya
 Shop page pointing elsewhere is followed (`shopElsewhere`, AL-034); a Shop button vouches for that page, never the whole site;
 a book's address in a menu stands for its section (`menuLinks`). A shop on a shared site (Yale/Touchnet) is read on the exact
 page the museum links; a shop page that is one line is reopened once with `page=1` (`openShopPage`); a short page of several
-lines never (Louvre, LG-); menu labels read by their first six words. Words: the shared lists include German ("Ausstellungskataloge",
-"Bücher"), Danish ("udstillingskataloger"), Scandinavian and franc/crown prices (`SHELF_CATALOGUES`, `SHELF_BOOKS`, `BOOK_WORD`;
-AL-059). Ranking: an exhibitions' catalogues section first (`SHELF_EXHIBITIONS`, AL-070); "/products/" after a section word is a
+lines never (Louvre, LG-); menu labels read by their first six words. The shared word lists (`SHELF_CATALOGUES`, `SHELF_BOOKS`, `BOOK_WORD`) include German, Danish and Scandinavian
+words and franc/crown prices (AL-059). Ranking: an exhibitions' catalogues section first (`SHELF_EXHIBITIONS`, AL-070); "/products/" after a section word is a
 section; a shop on the museum's own sub-address is the shop. A section found on a later page is kept by its first (her decision;
 `firstPageOf`, AL-063).
 
@@ -113,10 +111,9 @@ call; the book found in the results by its title when its address differs — on
 the words proves nothing). `SEARCH_RULE`-less venues are proved at their next lookup. **Look again** skips only the pages she turned
 down, never the site. **No shop** → lookups go to the web. Venues found by the old finder and never confirmed are looked for again.
 
-**The finder runs in named steps** (`discoverShop`; each reads and writes `sf`): `shopFromRule`, `searchForShop` (one call, two
-queries: hers and "<venue> shop books publications"), `pickFromSearch`, `followShopElsewhere`, `shopifySectionList`
-(`collections.json`), `shopMenu`, `shopResult`; each candidate proved by `tryShelves`. Code ranks every result (museum's own shop
-site only; plural section words; "not Catalogues" and sale shelves last). **A site name the reader cannot match to the address
+**The finder runs in named steps** (`discoverShop` in code; one search call with two queries, hers and "<venue> shop books
+publications"). Code ranks every result (museum's own shop site only; plural section words; "not Catalogues" and sale shelves
+last). **A site name the reader cannot match to the address
 needs a venue rule naming it** (`LINK_VENUES` `name`; Mia). Fixes from Berlin: German joins its words; the shop page that shows
 the shop itself links one book first, so the book's site is taken.
 
@@ -180,8 +177,8 @@ decision). Before writing a reader rule, look for the sweep's. A general rule sh
   house line). **R11 Range over three lines** — date, "to"/dash, date.
 - **R12 Date forms** — an ordinal set apart by a space ("September 29 th 2012"); a month-first range with no comma before either
   year (DS-010); dotted dates with the year on the closing side only or two-digit (DS-005); a slashed range; an all-number date in
-  the order its numbers settle, else its venue's in `DATE_ORDER`, else the order-unknown note (`docs/scraper.md` §3; DS-006,
-  DS-009); "22.05.2008 | 14.08.2008" (AL-065).
+  the order its numbers settle, else its venue's in `DATE_ORDER`, else the order-unknown note; the blanket "dots are day first"
+  rule was never hers (`docs/scraper.md` §3; DS-006, DS-009); "22.05.2008 | 14.08.2008" (AL-065).
 - **R13 Dates around the heading** — an opening date over "Until …"/"to …" read together (AL-077b); a run the page says closed
   early ends that day (`DATES.closedEarly`, shared; AL-077); a paragraph's one-sided date waits six lines (AL-054); with none under
   any title line, the two lines above the heading (AL-055).
@@ -201,9 +198,8 @@ page's passage is signed off on the list (`--write-passages`). Venue rules (`fro
 layout is its own; junk at the end of a passage is tolerated (her decision).
 
 **Venue options** (`linkRead` on a `MUSEUMS` or `LINK_VENUES` entry; her decision: Parallel-only rules live in the app, never the
-scraper; read by `readShowPage`, `venueTitle`): `title`, `titleDrop`, `dateLine`, `from`/`until`, `skip`/`skipEntities`/`minLine`
-(`skip` lines are never a subtitle), `cleanLink`, `crumb`, `titleAfter`, `capsTitles`, `capsText`, `shortYear`, `credit`, `datesUntil`,
-`tabTitle`, `tabNotName`. Proof pages for every rule: `docs/link_proof_pages.json`.
+scraper; read by `readShowPage`, `venueTitle`; the options are listed where they are read). `skip` lines are never a subtitle.
+Proof pages for every rule: `docs/link_proof_pages.json`.
 
 ## Venue link rules
 
@@ -249,7 +245,8 @@ scraper; read by `readShowPage`, `venueTitle`): `title`, `titleDrop`, `dateLine`
   AL-081). **The Prado** (`occ-museodelprado-es`): chip "Prado" after KHM, cards "Prado Madrid", month first (`DATE_ORDER`; her
   decision; AL-085, DS-006); a touring show's other house on its date line still files here. **Cini** (her decision): three venues
   under one chip "Cini" after Capo — foundation (`occ-cini-it`), Le Stanze del Vetro, Le Stanze della Fotografia — Claude decides
-  the venue as for any new one (AL-084). **Moretti** (`occ-morettigallery-com`, her decision: a Moretti rule): the place after
+  the venue as for any new one, and answers the Cini house only on first meeting cini.it, so a later Stanze show files under the
+  foundation (her accepted outcome; AL-084). **Moretti** (`occ-morettigallery-com`, her decision: a Moretti rule): the place after
   " : " leaves the title, title recased, capitals description kept (`capsText`), passage ends at "Manage cookies" (AL-083).
 - **Frankfurt** (the Städel, `occ-staedelmuseum-de`): chip "Frankfurt" after Dresden, cards "Frankfurt Städel" (her decision;
   AL-049). Its shop (`liebieghaus.ticketfritz.de/Shop/Index/staedel-publikationen/43885`): Parallel's reading stops after the menu
@@ -259,11 +256,9 @@ scraper; read by `readShowPage`, `venueTitle`): `title`, `titleDrop`, `dateLine`
 - **A link to a quarantined show** reads "Read 1 link, but nothing to add — already in your quarantine." when every show read is
   quarantined (her wording; AL-080); otherwise "…your ledger already matches it". A
   page with no year gets the sweep's note (`unusableDateText`, shared; her decision; AL-082).
-- **Older options:** met — dates from the "on view" line (`dateLine`); frick — leading "Special Loan:" dropped; menil — "Collection
-  Close-Up:"; acq — description is the "Press Release" text (`from`), title `# name` + the `##` line unless it is a place, a `##`
-  "In collaboration with" is a credit (her decision; `linkRead.credit`); louvre — `##`+`###` joined; artic — passage between the
-  first "Share" and the closing one, credit and picture-description lines skipped (`noDescription`); cincinnati — breadcrumb
-  title (`crumb`), "Now–May 30, 2021" is a closing date only (her decision); brit — passage after the shop line or "Book tickets".
+- **The swept venues' link options** (met, frick, menil, acq, louvre, artic, cincinnati, brit) are on their `MUSEUMS` entries
+  (`linkRead`). Her decisions among them: acq's `##` "In collaboration with" is a credit, not part of the title; cincinnati's
+  "Now–May 30, 2021" is a closing date only.
 
 ## Saved pages — the Pages button
 
@@ -294,15 +289,11 @@ A last resort (her decision): a show so old its venue's page is gone, read off a
 
 ## Left as is, and what a session must not change (her decisions)
 
-- **Her confirmed shops in her app are NOT changed** by a session (no hand edits to store or ledger); she asks
-  only if she imports more links there or a lookup misses a catalogue.
+- **Her confirmed shops in her app are never hand-edited** (her decision: no edits to store or ledger); a session amends one
+  only when she asks — if she imports more links there or a lookup misses a catalogue.
 - Two Stuttgart links still meet the site's bot check (she re-reads later or imports them by Pages); Soutine
   (Palazzo Reale) keeps its made-up first-to-last-day dates; a Borghese sweep may bring title Change cards for a
   capital "E" — expected.
-- Cini: Claude answers the Cini house only on first meeting cini.it; a later Stanze show files under the
-  foundation — her accepted outcome.
-- A link venue's dates in numbers: only day first or month first is a fact per venue (`DATE_ORDER`); the blanket
-  "dots are day first" rule is gone — never hers.
 - Louisiana's Tracey Emin page was never read (Parallel 202, no cached copy, so the finder never ran);
   `louisiana.dk/en/exhibition/jorn-meets-jorn/` is expected to give
   `butik.louisiana.dk/en-int/collections/udstillingskataloger`.
@@ -311,9 +302,9 @@ A last resort (her decision): a show so old its venue's page is gone, read off a
 
 - **At a swept venue** a link is for shows before the 1 July 2024 lookback, or a venue she has stopped sweeping — never a show the
   scraper has or will have. **No exclusions apply to a link** (her decision): displays and collection shows are added too.
-- **The general reader works at 17 of the 28.** Still short: acq, rijks, borghese, louvre, uffizi, mam, mad, ashmolean, artic, brit,
-  dellav. **Her choice: only acq, louvre, artic and brit get work**; the others may never come into play. A page printing no year
-  still fails — blank dates are NOT approved, and "current year" would misdate archives.
+- **The general reader does not yet work at** acq, rijks, borghese, louvre, uffizi, mam, mad, ashmolean, artic, brit, dellav.
+  **Her choice: only acq, louvre, artic and brit get work**; the others may never come into play. A page printing no year still
+  fails — blank dates are NOT approved, and "current year" would misdate archives.
 - **A link from one of the 28 files under that venue**, known by its site (`VENUE_SITES`, written by `build/sync_shared.js`; the
   Tates by path). A new venue's shop is looked for once per Read, never once per link.
 - **Claude reads relevant passages, not the first N characters** (`pickPassages`); a link labelled "catalog" onto the venue's shop
