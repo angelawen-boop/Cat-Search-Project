@@ -47,7 +47,7 @@ const DIAGNOSES = ['clean', 'diary', 'history', 'duplicate', 'misplaced', 'dense
 const ACTIONS = ['none', 'compressed', 'moved', 'fixed'];
 const MARKS = /\b(her (decision|judge?ment|call|wording|design|count|choice|view|instruction|rule)|rejected|OPEN)\b/i;
 const STEP_NAMES = ['', 'Mechanical check – paths, pointers, index, section order', 'Facts against the repo – app version, branch table, run folders, names the docs mention',
-  'Open work – trunk, §2.2', 'Lessons – trunk, §4.1', 'Lean trunk – CLAUDE.md', 'Lean side docs – each section in the right doc, no dumping ground', 'Redundancies – duplicates, diaries, overturned rules',
+  'Open work – trunk, §2.2', 'Lessons – trunk, §4.1', 'Lean trunk', 'Lean side docs', 'Redundancies – duplicates, diaries, overturned rules',
   'Contradictions', 'Untraceable lines', 'Nothing lost – decisions, wording and lessons kept'];
 const LAST = 10;
 const TRUNK_KINDS = ['rule', 'lesson', 'open', 'pointer', 'schematic', 'moved'];
@@ -602,8 +602,8 @@ function report(led, infos) {
   const near = m.near.map((o) => `${o.f} ${o.lines}/${o.bud}`);
   const nearLine = near.length ? `${near.length} over budget but within the 5% tolerance: ${near.join(', ')}` : '';
   const budgetRows = m.over.length
-    ? [`| Budgets (measured after the review) | ${m.over.length} still over — your call: |`, ...m.over.map((o, i) => `| | ${i + 1}. ${o.f} – ${o.lines} against ${o.bud} – ${reasonOf(o.f) || 'no reason given'} – suggest ${roundUp50(o.lines)} |`), ...(nearLine ? [`| | ${nearLine} |`] : [])]
-    : [`| Budgets (measured after the review) | ${nearLine || '✓'} |`];
+    ? [`| ${LAST + 1}. Budgets | ${m.over.length} still over — your call: |`, ...m.over.map((o, i) => `| | ${i + 1}. ${o.f} – ${o.lines} against ${o.bud} – ${reasonOf(o.f) || 'no reason given'} – suggest ${roundUp50(o.lines)} |`), ...(nearLine ? [`| | ${nearLine} |`] : [])]
+    : [`| ${LAST + 1}. Budgets | ${nearLine || '✓'} |`];
   const fyi = (led.fyi || []).map((x) => `- ${norm(x)}`);
   const out = [
     '## Guide review', '',
