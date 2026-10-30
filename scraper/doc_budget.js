@@ -30,7 +30,7 @@ const BUDGETS = {
   'docs/doc_rules.md': 100,
   'docs/branches.md': 50,
   'docs/publishing.md': 50,
-  'docs/testing.md': 50,
+  'docs/testing.md': 100,
   'docs/compression.md': 150,
   'docs/library.md': 150,
   'docs/add_by_link.md': 300,
@@ -38,6 +38,7 @@ const BUDGETS = {
   'docs/import-repair-320.md': 80,
   'docs/scraper-verification-2026-09-12.md': 70,
   'docs/code-review.md': 60,
+  'docs/periods.md': 100,
   'docs/morgan_pages/README.md': 80,
 };
 
