@@ -78,6 +78,6 @@
 - **When labels are written:** Label (footer, beside Clear search) fills every show with no period or no themes, dismissed included,
   40 a question, and never relabels; failed batches wait 15 seconds then a minute (her decision; `LABEL_WAITS`, `labelWhy`; PS-015–016). An import labels each new show on its
   approval card ("Period: …"). Relabel, at the foot of a card's drawer, asks again about one show.
-- **Claude's reason** (her ask; PS-025): each label carries `why`, one sentence, kept only in the lookup log. **No hand corrections**
+- **Claude's reason** (her ask; PS-025): each label carries `why`, one sentence, kept only in the lookup log. **Every question to Claude is asked afresh, never a replayed answer** (her Metamorphoses Relabel; PR-037). **No hand corrections**
   (her decision): a wrong label is reported and fixed in the rules. **Every run is checked:** her line after Label says all labelled
   or how many were not and why; each Label, import labelling and Relabel is one lookup-log record.

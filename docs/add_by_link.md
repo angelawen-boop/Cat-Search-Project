@@ -9,7 +9,7 @@ The app handles unreadable links itself; no scraper-side reader. Why it exists: 
 - **Import opens ONE small pop-up, nothing added to the page** (her design): **CSV · Links** (and **Pages**, below), a small
   **Cancel**. Links = the box and **Read**, with a progress bar; links separated any way; a repeat read once. The review opens
   when reading ends; the pop-up waits under it if a link failed.
-- **Then the shop screen** (her design): with a card going in from a venue outside her 27 whose shop is unconfirmed, the
+- **Then the shop screen** (her design): with a card going in from a venue outside her 28 whose shop is unconfirmed, the
   review's last button is **Next** → one card per such venue: **Confirm · Look again · No shop**, always that order. Only a
   venue with a card going in is asked (her decision; `venuesGoingIn`, AL-046). **The ledger moves only when every one is
   answered.** Back returns to the review. Confirmed once, never asked again. An answer is stored only for a venue with a

@@ -1,4 +1,4 @@
-# Import CSV — the pro forma contract
+# Import CSV — the pro forma file
 
 The **only** file the app ingests. Columns exactly, in this order:
 

@@ -288,10 +288,8 @@ A venue over budget (default 10 min) is abandoned, writes no file, and
 `--continue` redoes it. Robots.txt waits, paced lanes and headed venues are
 slower and are not in these figures — work out pages × wait for those.
 
-**`archiveOldRuns` moves old runs to `output/archive/`, never deletes** — so
-`--continue` resumes the right run. Never moved: newest 10, anything with a
-compressed CSV (compression's memory), any run with 16+ venue files.
-**Runs are committed** (~500 KB per full run). A container dying mid-run loses
+**Old runs are archived, never deleted** (`archiveOldRuns`; which are never moved:
+`docs/sweep_operation.md`, "A run is a directory"). **Runs are committed** (~500 KB per full run). A container dying mid-run loses
 completed venues; git is not built into the scraper on purpose (credentials
 differ by machine).
 
@@ -441,7 +439,7 @@ visibly mangled and uses the app's URL button with Chrome's translation.
   carries the show's own address; five have no closing date, accepted.
 - **The summary must arrive in English** — the prompt now requires it
   (`compress_prompt.md`); the English translation of Italian titles opens the
-  description (`CLAUDE.md` §5.1).
+  description (`docs/app.md`, "What is built and signed off").
 
 ---
 

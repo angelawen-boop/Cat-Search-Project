@@ -28,7 +28,7 @@ Tate, bought in its American edition from Yale.
   on nothing. The card carries one line back: "Bought … · see in Library".
 - **The link is by the card's `id`, never its title** (titles change on a
   rename). An exhibition no longer in the ledger says so; no dead button.
-- **A book with no tracked exhibition** (a venue outside the 27, a show before
+- **A book with no tracked exhibition** (a venue outside the 28, a show before
   July 2024) sits on the shelf with no Exhibition button.
 
 ## The purchase record
@@ -46,7 +46,7 @@ Tate, bought in its American edition from Yale.
 ## Data safety
 
 - Purchases are hers and derivable from nothing — they live in the ledger
-  (her file and the cloud saves), per the three-container rule in §4.
+  (her file and the cloud saves), per the three containers (CLAUDE.md §5.1).
 - A sweep Import must never touch them.
 - The safety-snapshot comparison before Load / Reset must count them as a
   difference.
@@ -94,7 +94,7 @@ She has ideas of her own; ask her before choosing.
 - Postage as its own field, or inside the price.
 - Paste an order-confirmation email → the model reads out price, date, seller,
   ISBN as plain strings; code writes the record; she confirms. Wanted or not.
-- In-app field editing is on the rejected list (§5.1, §4.2). That decision was about
+- In-app field editing is on the rejected list (CLAUDE.md §4.2). That decision was about
   exhibition data, which is fixed at the source; purchase data has no source
   but her. Confirm with her that the decision does not cover this.
 - Later, maybe: what the catalogue costs now on AbeBooks against what she paid.

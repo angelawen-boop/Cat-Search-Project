@@ -120,8 +120,13 @@ back within days.
 — `docs/scraper-verification-2026-09-12.md`. Read it before touching a venue listed
 there. The nine venues added since were checked against her counts at intake.
 
+**The last import is 15 Oct** (`stitch_20261015_0920`, 536 rows): the container run passed her test, her home sweep
+(met, artic, mad only — she checks the headed four by eye and sweeps them only for new shows) was QC'd, both stitched and
+compressed as swept. 5 Oct was a test, not imported (`sweep_diff.js` works out each change's cause; the skill asks only
+for the UNEXPLAINED pile). The faults found are fixed in code (§2.2.2).
+
 No row carries a credit line, star rating, ticket price, funder list, opening
-hours, breadcrumb or cookie notice. Empty summaries: three Rijksmuseum rows whose
+hours, breadcrumb or cookie notice. Empty summaries: four Rijksmuseum rows whose
 pages return 404, plus occasional page timeouts — which say so on the row.
 
 ### 2.2 Open work
@@ -180,13 +185,6 @@ noting issues as she uses it, for a later debugging session.
   ISBN goes on to the facts round, a reply holding two answers takes Claude's last, and the English-edition and versions rebuild
   (`docs/app.md` §1, "The route").
 
-#### 2.2.4 The monthly sweep — 15 Oct imported
-
-**5 Oct was a test, not imported** (`sweep_diff.js` works out each change's cause; the skill asks only for the UNEXPLAINED pile).
-**15 Oct** — container re-run passed her test; her home sweep (met, artic, mad only — she checks the headed four by eye and sweeps
-them only for new shows) QC'd; stitched and compressed as swept (`stitch_20261015_0920`, 536 rows) and **imported**. Faults found are
-fixed in code (§2.2.2).
-
 #### 2.2.5 Queued next
 
 - **The ledger's size (1,003 exhibitions; 2,000 possible).** The faster list (49) and the quicker
@@ -234,6 +232,25 @@ rules, Cini, Prado, Correr): `docs/app.md`, `docs/add_by_link.md`.
   reverts to her 25 Oct close file, re-imports the 9 Berlin links (all under Berlin Alte NG; its shop found at the first),
   re-applies two marks and re-imports the Brancusi link; her next Basel import shows its shop.
 
+#### 2.2.11 Add by link — open items
+
+- **OPEN — Belvedere stays German** (lookup log L1792752998011063a): the English search found `belvedere.at/en/museum-shop`, whose
+  shop link points to the German `belvedere.at/shop`, and the app followed it; the English-version step tried only English FRONT
+  pages, never the English version of the shop page. Its English shop's address is not known. The shop check passed it because a
+  venue whose right answer is "no books section" (`shop: null`) passes on ANY non-books answer — fix both before more test links.
+- **OPEN, her go-ahead pending — the shorter date note:** `The venue's page shows only "September 2026" for this exhibition's
+  dates — no day.` (her wording; cut after "no day"). The sweep writes the same note (`shownOnlyNote`, `dates.js`), so the
+  sweep's cards change with it.
+- **OPEN — still to do (her decision, one at a time, report after each):** write the procedure for a new venue that imports badly
+  into `docs/add_by_link.md`, with a pointer here: a case other museums will have → a shared rule, kept only if no proof page gets
+  worse; no → an option on that venue's one entry; then the checks it must pass.
+- **OPEN — a link venue is looked up exactly as the 28 are (shelf AND whole-shop search).** Detroit files a show's book in the
+  show's own shop section. Her next lookups settle: O'Keeffe found at Detroit? The RA's search (`catalogsearch/result/?q=`) is
+  stored at its next lookup; Mauritshuis and Yale stay shelf-only.
+- **To confirm with her links:** the Karsten Greve import (gallery's shop, 52.1), her Frankfurt links and lookups (49.2), the two
+  Reynolds links (Enfilade PDF, Meer; 49.4), her other six Palazzo Reale Milano pages (Pages, 48). **The Paste-import session
+  (`claude/paste-import`) holds its merge** (her instruction) — §2.2.18.
+
 #### 2.2.18 Queued — her asks
 
 - **OPEN — merge Paste (Import → Paste, `claude/paste-import`, its own test page) into her app.** The branch stops at 50.x; main has
@@ -255,7 +272,7 @@ is a real fault, not crowding.
 
 **OPEN — the scraper's unit group (`node --test scraper/date.test.js …`, `pacing.test.js` in it) freezes now and then
 when other suites run beside it**; three times so far, each time passing in seconds alone. It recurred, so it needs
-investigation. The runner now stops it and re-runs it alone (below), so it costs about a minute, never her wait.
+investigation. The runner now stops it and re-runs it alone (`docs/testing.md`), so it costs about a minute, never her wait.
 
 ---
 
@@ -568,7 +585,7 @@ junk in summaries, failure handling, compression, the blocked venues — is in
 Design, decisions, the store, the shop finder, the shelf rule and the venue link rules: `docs/add_by_link.md`; the live proof
 pages: `docs/link_proof_pages.json`.
 
-**Status: stable** — signed off at 39.5 on her 10 links. **One weak spot: a link from a venue the app has never seen needs a
+**Status: stable** — signed off on her 10 links. **One weak spot: a link from a venue the app has never seen needs a
 fix about half the time** (exhibition info misread, shop not found).
 
 **How it works** (her design): Import opens a small pop-up — CSV · Links · Pages; **nothing added to the page itself**. Each link
@@ -578,23 +595,7 @@ rules are the scraper's own**, written into the JSX by `node build/sync_shared.j
 Venue link rules live in the APP, on the venue's `MUSEUMS` entry, never in the scraper. The shop is searched live only, no saved
 copies (her decision; `docs/testing.md`). The decisions, the shop finder's design and the cases are all in `docs/add_by_link.md`.
 
-**Open**
-- **OPEN — Belvedere stays German** (lookup log L1792752998011063a): the English search found `belvedere.at/en/museum-shop`, whose
-  shop link points to the German `belvedere.at/shop`, and the app followed it; the English-version step tried only English FRONT
-  pages, never the English version of the shop page. Its English shop's address is not known. The shop check passed it because a
-  venue whose right answer is "no books section" (`shop: null`) passes on ANY non-books answer — fix both before more test links.
-- **OPEN, her go-ahead pending — the shorter date note:** `The venue's page shows only "September 2026" for this exhibition's
-  dates — no day.` (her wording; cut after "no day"). The sweep writes the same note (`shownOnlyNote`, `dates.js`), so the
-  sweep's cards change with it.
-- **OPEN — still to do (her decision, one at a time, report after each):** write the procedure for a new venue that imports badly
-  into `docs/add_by_link.md`, with a pointer here: a case other museums will have → a shared rule, kept only if no proof page gets
-  worse; no → an option on that venue's one entry; then the checks it must pass.
-- **OPEN — a link venue is looked up exactly as the 28 are (shelf AND whole-shop search).** Detroit files a show's book in the
-  show's own shop section. Her next lookups settle: O'Keeffe found at Detroit? The RA's search (`catalogsearch/result/?q=`) is
-  stored at its next lookup; Mauritshuis and Yale stay shelf-only.
-- **To confirm with her links:** the Karsten Greve import (gallery's shop, 52.1), her Frankfurt links and lookups (49.2), the two
-  Reynolds links (Enfilade PDF, Meer; 49.4), her other six Palazzo Reale Milano pages (Pages, 48). **The Paste-import session
-  (`claude/paste-import`) holds its merge** (her instruction) — §2.2.18.
+Open items: §2.2.11.
 
 ## 6. Future considerations
 

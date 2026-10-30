@@ -34,8 +34,7 @@ Confirmed by her on real files, not only by fixtures. **Design and evidence:
   (mouse) and drags it; a swipe before the hold scrolls; buttons and links keep
   their taps. The order is `buyRank` on the row (highest first; a new dot goes on
   top; leaving Yes clears it), saved in her ledger; a drag is not an edit. That
-  view ignores the sort chips and dividers, except Period: a tap shows the same cards in period order
-  under dividers, with no dragging, and a second tap goes back to her order (her design; BP-); hidden cards keep their places
+  view ignores the sort chips and dividers, except Period and Date (§3, "Buy next (her decisions)"); hidden cards keep their places
   (`moveBuyNext`, `startDrag`; AD-011). Closing the search bar or Clear search (once "Reset cards") empties its box.
 - **Per-venue freshness**, two dates, from `swept_at`.
 - **The confirm box is the TOP layer** (`zIndex` 1200), above the refresh review
@@ -326,8 +325,7 @@ seeing the change. It is not a monitor.
   question to Claude about one page. Pre-order counts as in the shop; sold out /
   unavailable in any language counts as gone. **Sold out anywhere on the page
   outranks** "Add to cart", a price or a note to earlier pre-orderers (Morgan Tarot).
-- **Search again is a whole fresh lookup** (her decision) and, when it
-  finishes, replaces the card — shop status included. Re-check is unchanged.
+- Search again replaces the card, shop status included (above); Re-check is unchanged.
 - Tested: C-079 to C-099, `recheck_shop.js` R-001 to R-023. **Not yet seen: how
   a real shop words "sold out", or a real redirect.**
 

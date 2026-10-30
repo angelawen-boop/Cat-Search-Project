@@ -40,7 +40,7 @@ should reach the app.
 | `capo` | **Not count-verified and never will be** — see below |
 | `brera`, `borghese` | Their single extra row is a marker for a genuinely empty upcoming page |
 | `ashmolean` | **Not swept — added by link only** (her decision): `route: 'none'`, recipe kept, so naming it by hand still sweeps it; in the app its cards file under "Occasional", after the Royal Academy (her decision; `underOcc` on its `MUSEUMS` entry). When it was swept: **everything kept** — major, free and displays, past included. Her count: current 0 major + 4 free, upcoming 2 + 1, past 4 + 13. **Titles: the full name from the show's page header, ordinary capitals written by code** — the venue types capitals everywhere (`capsTitles`, `titleFromCaps`, `pageTitle`) |
-| `cincinnati` | Nothing excluded. Her count: current 2, upcoming 2, past 2026 **4**, 2025 **14**, 2024 **9** — 31. Pages saved by the container, her yes for this venue only. **Never swept yet** |
+| `cincinnati` | Nothing excluded. Her count: current 2, upcoming 2, past 2026 **4**, 2025 **14**, 2024 **9** — 31. Pages saved by the container, her yes for this venue only. Swept since (container, 15 Oct: 31 rows) |
 
 **Whether displays count is HERS, and varies by venue.** Two venues disagreeing
 is the expected state, not a contradiction.
@@ -174,7 +174,7 @@ is its only wait.
 - *Asian Pavilion* vanished 11 Sep because the venue pulled it (she checked). **A
   disappearing row must be proved, not assumed**: a serial re-run plus a look at
   the live page.
-- Three rows' pages return 404: kept, empty summary, noted.
+- Four rows' pages return 404: kept, empty summary, noted.
 
 ---
 
