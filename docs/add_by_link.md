@@ -75,6 +75,8 @@ The app handles unreadable links itself; no scraper-side reader. Why it exists: 
 4. **Where it cannot work it says so** ("Shop found, but not its books section"): a menu drawn by script, a page Parallel
    cannot fetch (bot check, 202, "301 Moved"). Else "No museum shop found." / "Search failed." — **a miss is a finder bug, fixed
    in code: she never pastes a shop link** (her decision).
+   For a venue in a non-English country, an English catalogues section the finder cannot read is offered beside the foreign one;
+   her pick reads **"The museum shop contents cannot be seen — unconfirmed page problem"** (her wording; that scenario only).
 
 Rules built in: **an exhibition-catalogues section that also sells the shows' goods counts** (her decision; Thyssen's
 "Exposiciones": two priced books suffice; every other section stays books-only). A pick is opened and must read as books with
@@ -289,6 +291,21 @@ A last resort (her decision): a show so old its venue's page is gone, read off a
   decision: test Claude first). Parallel answers 202 for most of its pages: "The page contents cannot be seen — Parallel fault.
   Import the full saved page." (`pageUnreadWhy`, AL-067) — those come in by Pages. Her way: the Borghese's own page first, the
   archive page by Pages only when the own page lacks what she needs.
+
+## Left as is, and what a session must not change (her decisions)
+
+- **Her confirmed shops in her app are NOT changed** by a session (no hand edits to store or ledger); she asks
+  only if she imports more links there or a lookup misses a catalogue.
+- Two Stuttgart links still meet the site's bot check (she re-reads later or imports them by Pages); Soutine
+  (Palazzo Reale) keeps its made-up first-to-last-day dates; a Borghese sweep may bring title Change cards for a
+  capital "E" — expected.
+- Cini: Claude answers the Cini house only on first meeting cini.it; a later Stanze show files under the
+  foundation — her accepted outcome.
+- A link venue's dates in numbers: only day first or month first is a fact per venue (`DATE_ORDER`); the blanket
+  "dots are day first" rule is gone — never hers.
+- Louisiana's Tracey Emin page was never read (Parallel 202, no cached copy, so the finder never ran);
+  `louisiana.dk/en/exhibition/jorn-meets-jorn/` is expected to give
+  `butik.louisiana.dk/en-int/collections/udstillingskataloger`.
 
 ## What links are for, and how far the reader reaches
 

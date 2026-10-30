@@ -89,6 +89,14 @@ description.
   committed. **She declined to re-run it just to save them — settled.** If it is
   ever run again, commit the answers.
 
+## "Probably not for you" — topic labels on new shows
+
+Compression labels a NEW show in a topic she always quarantines (Prompt D, `TOPICS` in `scraper/compress.js`).
+Asian art wins over any other label; the Met's rotations are never labelled (her decisions). Code writes
+"Topic: …" into the notes. On import those cards go in "Probably not for you · N", after Odd cases, pre-set to
+Never add; Add keeps one. `scraper/topic_eval.js` re-scores the labeller on her decisions. Tests TP-, TP-A,
+AD-009–010. Her next monthly import is the check (CLAUDE.md §2.2.7).
+
 ## Enforcement
 
 - **A script cannot bind a session** — the handoff is a request. **The output is

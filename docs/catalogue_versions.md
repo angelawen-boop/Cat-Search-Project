@@ -89,6 +89,17 @@ checked against them. ● = starts picked; a card with one version looks as it d
   (L1792314758291e049); the third kept the two right books (L1792315089744hdab). Every search used the press-release headline as
   the title.
 
+- **MoMA *Brancusi* still reads "not in the museum shop" (49.3) — her decision pending** (lookup log
+  L17924993786826e6v). **(1)** B-007's fix does not hold live: the shelf's whole page carries the "Become a
+  Member" pop-up's prices (Explore $200, Access $110, Annual Pass $75), so `readWhole` takes it for books;
+  B-007's fixture used the short excerpt. Proposed: prices inside a membership offer do not count as books
+  (general); refit B-007 on the real page. **(2)** The web search finds the book's own page
+  (`store.moma.org/products/brancusi-the-artist-and-his-studio-hardcover`, "In Stock", $60), but the for-sale
+  read rejects it for "Email When Available" and no Add to cart (likely drawn by script — a guess). Her choice:
+  **A** — "In Stock" counts as for sale unless sold out is also said (general; checked against her agreed cases
+  and the Morgan Tarot first); **B** — the same for store.moma.org only (a hard-coded venue rule); or leave it
+  for the redesign. (1) finishes her "small fix only" decision on MoMA; (2) goes past it.
+
 ## Search: every catalogue of the exhibition — OPEN, not built
 
 Her decision. Search logic, kept apart from the display work: it is built with the Stage 1/1b search on `parked`

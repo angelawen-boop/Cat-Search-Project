@@ -62,6 +62,8 @@ Top level, so `catalogue_route.js` runs it whole with the connector and Claude
 faked. Steps gather facts; code decides each fact in a set order of trust;
 `composeRow` writes the row once. No step writes card text.
 
+**Every step after the first is conditional — do not make them unconditional, and do not flip to searching wide first.**
+
 **The answer lands on the card as it is then** (`landOnCard`): a finished search, Re-check or Relabel
 writes only the fields it changed, so a star, a Yes or any card marked while it ran is kept — it once
 wrote back the whole ledger as it stood at the start (LC-001–005).
@@ -461,6 +463,16 @@ Quarantine adds a "you'd said never to add" term. **Every term stays.**
 - "Announced last" applies to the Wanted filter only. Acquiring filters: AND
   across axes, OR within one.
 - Urgency tiers are computed live (`tierFor`); nothing stored.
+- **Buy next (her decisions):** alone it is her dragged order; Period there switches to period order with
+  dividers, no dragging, and back (first tap period order, second reverses, third hers); Date likewise (oldest
+  to newest, reverse, back; Date and Period exclusive) (BP-004–014). **Owned beside Buy next shows both lists as
+  an ordinary list** — Date order, the usual sorts, nothing draggable; Buy next with Wanted stays Buy next only.
+- **Occasional is two chips: Occ - US (Australia last) and Occ - Europe (UK included); no Occ - Other** (her
+  decision). Europe's order: UK, Germany, Belgium, France, Switzerland, Italy, Spain, Netherlands.
+  **Hard-coded:** the countries of venues that store none (`OCC_COUNTRY`); otherwise the stored country, then the
+  address's country ending (OC-001–002).
+- Search ignores accents ("Bocklin" finds Böcklin); the When line reads Current, Past, Announced. "Reset to Seed"
+  is unwired from her page (drawn only when a test sets `window.__catWatchTest`).
 
 ### Screen decisions
 

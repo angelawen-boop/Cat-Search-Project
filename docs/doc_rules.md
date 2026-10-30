@@ -5,6 +5,11 @@
 Loaded in full at the start of every session, so every line costs something every
 time. It once grew to 2,905 lines, mostly run-by-run stories. The rules:
 
+- **The trunk (this guide) holds only what every session needs before it knows which area it is in:** house rules,
+  lessons and do-nots, open work with its backstory, pointers (the index, branches, versions), and a schematic of what
+  the app, the scraper, import, search and Add by link are — a few sentences each. Design rationale, per-feature
+  decisions, evidence, cases, test ids and what was tried and dropped go in the area's side doc, compressed, with a
+  pointer left here. No size limit per section — read what it says (the review's "Lean trunk" step checks it).
 - **Record the conclusion, not the journey.** Results, decisions and the lesson —
   never the order things happened in. When a finding is overturned, replace the
   passage; git is the archive.

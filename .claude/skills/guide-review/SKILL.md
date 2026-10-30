@@ -56,15 +56,15 @@ index of side docs, guardrails, the app explainers, future considerations — an
 
 ## The review — do all of it
 
-**The gate — the reading and the nine steps below are enforced by code, in order.**
+**The gate — the reading and the ten steps below are enforced by code, in order.**
 `node scraper/guide_review_gate.js start` first (clean tree): it writes
 `.claude/guide_review_ledger.json` — a row per file, a row per §2.2 section —
 and names lines to copy out of each file. Then `node scraper/guide_review_gate.js
 step` after each step's work: a step a script owns (1 the mechanical check, 2
-facts against the repo, 8 nothing lost, and the duplicate and lost-lesson
+facts against the repo, 9 nothing lost, and the duplicate and lost-lesson
 tests) is run by the gate itself; a judgement step (the reading, 3 open work,
-4 lessons, 5 diaries and overturned rules, 6 contradictions, 7
-untraceable lines, 9 budgets) needs its proof of work in the ledger, which the gate
+4 lessons, 5 the lean trunk, 6 diaries and overturned rules, 7
+contradictions, 8 untraceable lines, 10 budgets) needs its proof of work in the ledger, which the gate
 checks. **A step cannot pass before the one before it, and a push is refused
 by a hook until all stand.** What the gate lists is work, not findings.
 `done` writes `.claude/guide_review_report.md`.
@@ -108,7 +108,16 @@ her a budget rounded to the next 50, never a bare "+1".
    rules above: nothing standing in 2.2, no ideas nobody is working on.
 4. **"Do not re-break" (§4.1):** merge new entries into the lesson they
    illustrate; one lesson, one line where possible. Never drop a lesson.
-5. **The three tests, for every doc:**
+5. **Lean trunk.** `CLAUDE.md` holds only what every session needs before it
+   knows which area it is in (`docs/doc_rules.md`): house rules, lessons and
+   do-nots, open work with its backstory, pointers, and a few-sentence
+   schematic of each part. Read every trunk section and say which kind it is;
+   anything else — design rationale, per-feature decisions, evidence, cases,
+   ids, what was tried — moves to the area's side doc, compressed, with a
+   pointer left. No numbers: read what each section says. The gate flags
+   sections that mostly repeat a side doc, or a "schematic" holding test ids,
+   versions or chains of decisions, and checks every move happened.
+6. **The three tests, for every doc:**
    - **Diaries** — events narrated in order ("first we tried…, then…"). Cut to
      the result, the decision and the lesson. If the evidence is worth keeping,
      compress it FIRST, then move it to the right doc; a side doc is never a
@@ -124,19 +133,19 @@ her a budget rounded to the next 50, never a bare "+1".
    - **Overturned rules** — a rule the code or a later decision no longer
      follows. The code wins over prose. Two prose decisions that disagree →
      ASK, don't pick.
-6. **Contradictions:** the same fact stated two ways (in the guide, between the
+7. **Contradictions:** the same fact stated two ways (in the guide, between the
    guide and a doc, between a doc and the code).
-7. **Anything you cannot trace** — a line whose origin, meaning or current
+8. **Anything you cannot trace** — a line whose origin, meaning or current
    truth you cannot establish from the repo and its history
    (`git log -S"<phrase>" -- CLAUDE.md docs/` is the tool) — gets
    investigated as far as the repo allows, then goes in the report as a
    question with what you found.
-8. **Nothing lost.** After the cutting, check each changed file against the
+9. **Nothing lost.** After the cutting, check each changed file against the
    original (`git diff`): every decision, judgement call, wording, name and
    number her old text marked is still somewhere in the guide or docs — in the
    new text or its new home. Put back anything missing; shortened is fine,
    gone is not. The gate does this check itself and lists what is gone.
-9. **Budgets — measured last, after all the work above.** Every file within
+10. **Budgets — measured last, after all the work above.** Every file within
    `scraper/doc_budget.js` (a NEW doc's budget is its size rounded up to the
    next 50), with about 5% over tolerated. **Reading comes first and is
    not optional.** Every file you are asked to clean up is read in full, line

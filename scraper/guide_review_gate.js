@@ -2,7 +2,7 @@
 /*
  * GUIDE REVIEW GATE — her decision: the review's finish line is code, not a promise.
  *
- * The review has nine steps (.claude/skills/guide-review/SKILL.md) after one thing that must come first:
+ * The review has ten steps (.claude/skills/guide-review/SKILL.md) after one thing that must come first:
  * reading every file. Sessions skipped steps and reported the rest, so every step is a gate: a step a script
  * owns is run by this script; a judgement step must leave proof of work in the ledger, which the script
  * checks. A step cannot be passed before the one before it, and a Guide-review push is refused
@@ -18,11 +18,12 @@
  *   2 Facts against the repo  script  app version, branch table against origin, run folders named in open work
  *   3 Open work – trunk §2.2  proof   a verdict and evidence per §2.2 section
  *   4 Lessons – trunk §4.1    script + proof  no §4.1 lesson lost (script); a note and a count
- *   5 Redundancies            script + proof  duplicates (script); diagnosis, finding, action and overturned rules per file
- *   6 Contradictions          proof   contradictions per file
- *   7 Untraceable lines       proof   each with the search made, or what was searched
- *   8 Nothing lost            script  every decision, wording and name her old text marked is still somewhere
- *   9 Budgets                 script + proof  size against budget only; over means a quoted blocker and a one-line reason
+ *   5 Lean trunk              script + proof  every CLAUDE.md section is one of the kinds a trunk holds, or moved to its side doc
+ *   6 Redundancies            script + proof  duplicates (script); diagnosis, finding, action and overturned rules per file
+ *   7 Contradictions          proof   contradictions per file
+ *   8 Untraceable lines       proof   each with the search made, or what was searched
+ *   9 Nothing lost            script  every decision, wording and name her old text marked is still somewhere
+ *  10 Budgets                 script + proof  size against budget only; over means a quoted blocker and a one-line reason
  * A step's "info" is what the report shows under Problems: empty when there is nothing to say (shown as a tick).
  */
 'use strict';
@@ -40,9 +41,10 @@ const DIAGNOSES = ['clean', 'diary', 'history', 'duplicate', 'misplaced', 'dense
 const ACTIONS = ['none', 'compressed', 'moved', 'fixed'];
 const MARKS = /\b(her (decision|judge?ment|call|wording|design|count|choice|view|instruction|rule)|rejected|OPEN)\b/i;
 const STEP_NAMES = ['', 'Mechanical check – paths, pointers, index, section order', 'Facts against the repo – app version, branch table, run folders',
-  'Open work – trunk, §2.2', 'Lessons – trunk, §4.1', 'Redundancies – duplicates, diaries, overturned rules', 'Contradictions', 'Untraceable lines',
+  'Open work – trunk, §2.2', 'Lessons – trunk, §4.1', 'Lean trunk', 'Redundancies – duplicates, diaries, overturned rules', 'Contradictions', 'Untraceable lines',
   'Nothing lost – decisions, wording and lessons kept', 'Budgets'];
-const LAST = 9;
+const LAST = 10;
+const TRUNK_KINDS = ['rule', 'lesson', 'open', 'pointer', 'schematic', 'moved'];
 
 const git = (...a) => execFileSync('git', a, { cwd: ROOT, encoding: 'utf8', maxBuffer: 1 << 28, stdio: ['ignore', 'pipe', 'ignore'] });
 const norm = (s) => String(s || '').replace(/\s+/g, ' ').trim();
@@ -146,6 +148,91 @@ function smells(text) {
   return out;
 }
 
+// ---- lean trunk: the trunk holds only what every session needs; everything else is in a side doc ----
+function trunkSections(text) {
+  const L = text.split('\n');
+  const heads = [];
+  let fence = false;
+  L.forEach((l, i) => {
+    if (/^```/.test(l)) fence = !fence;
+    const m = !fence && /^(#{2,4})\s+(.*)/.exec(l);
+    if (m) heads.push({ at: i, key: norm(m[2]) });
+  });
+  const out = {};
+  heads.forEach((h, k) => {
+    const body = L.slice(h.at + 1, k + 1 < heads.length ? heads[k + 1].at : L.length).join('\n');
+    if (norm(body).length > 20) out[h.key] = body;
+  });
+  return out;
+}
+// What a section names that would show it was copied from a side doc: `code`, "quoted words", ids — never paths.
+let headingsCache = null;
+const isHeading = (x) => {
+  if (!headingsCache) headingsCache = guideFiles().flatMap((f) => (nowText(f) || '').split('\n').filter((l) => /^#{1,6}\s/.test(l)).map((l) => norm(l.replace(/^#+\s*/, '')).toLowerCase()));
+  const k = norm(x).toLowerCase().replace(/\*/g, '');
+  return headingsCache.some((h) => h.replace(/\*/g, '').includes(k));
+};
+function tokensOf(text) {
+  const t = new Set();
+  // a venue key, a branch or a heading named in a pointer is not a sign the text was copied
+  const generic = (x) => (/^[a-z0-9_-]{1,9}$/.test(x) && !/[A-Z]/.test(x)) || isHeading(x);
+  for (const m of text.matchAll(/`([^`\n]{4,60})`/g)) if (!/[\/]|\.(md|js|json|jsx)\b/.test(m[1]) && !generic(m[1])) t.add(norm(m[1]));
+  for (const m of text.matchAll(/"([^"\n]{8,70})"/g)) if (!isHeading(m[1])) t.add(norm(m[1]));
+  for (const m of text.matchAll(/\b[A-Z]{1,4}-\d{3}[a-z0-9]*\b/g)) t.add(m[0]);
+  for (const m of text.matchAll(/\bL\d{10,}\w*\b/g)) t.add(m[0]);
+  return [...t];
+}
+function overlapsSideDoc(text) {
+  const toks = tokensOf(text);
+  if (toks.length < 6) return null;
+  let best = null;
+  for (const f of guideFiles()) {
+    if (f === 'CLAUDE.md') continue;
+    const doc = norm(nowText(f) || '');
+    const hit = toks.filter((x) => doc.includes(x)).length / toks.length;
+    if (hit >= 0.4 && (!best || hit > best.hit)) best = { f, hit };
+  }
+  return best;
+}
+const SCHEMATIC_NO = [[/\b[A-Z]{1,4}-\d{3}[a-z0-9]*\b/, 'test ids'], [/\b\d{2}\.\d{1,2}\b/, 'version numbers'], [/\bL\d{10,}/, 'lookup-log ids'], [/(her decision[^.]*){3}/i, 'a chain of her decisions']];
+
+function sLean(led) {
+  const bad = [];
+  const cur = trunkSections(nowText('CLAUDE.md') || '');
+  const base = trunkSections(baseText(led.baseCommit, 'CLAUDE.md') || '');
+  const moved = [];
+  for (const [key, body] of Object.entries(cur)) {
+    const row = (led.trunk || {})[key];
+    const fail = (m) => bad.push(`CLAUDE.md "${key}": ${m}`);
+    if (!row) { fail('no row in the ledger trunk table — which kind is it (rule | lesson | open | pointer | schematic), or is it moved?'); continue; }
+    if (!TRUNK_KINDS.includes(row.kind)) { fail(`kind must be one of ${TRUNK_KINDS.join(' | ')}.`); continue; }
+    if (norm(row.reason).length < 15) fail('reason: say in a few words what it is and why every session needs it (15+ characters).');
+    if (row.kind === 'schematic') for (const [re, label] of SCHEMATIC_NO) if (re.test(body)) fail(`labelled schematic but it holds ${label} — that is detail or evidence for a side doc. Move it, or cut it to the schematic.`);
+    const ov = row.kind === 'moved' ? null : overlapsSideDoc(body);
+    // an open item that names the side doc holding its case, and little else, is the open item plus its pointer
+    if (ov && row.kind === 'open' && norm(body).includes(ov.f) && tokensOf(body).length < 12) { /* fine */ } else if (ov) {
+      const ok = row.keepOk || {};
+      if (!(norm(ok.quote).length >= 40 && norm(body).includes(norm(ok.quote)) && norm(ok.why).length >= 30)) fail(`most of what it names (${Math.round(ov.hit * 100)}%) is already in ${ov.f} — move it there (compressed) and leave a pointer, or justify keeping it in keepOk = {quote: 40+ characters copied from it, why: 30+ characters on why every session needs it}.`);
+    }
+    if (row.kind === 'moved') {
+      const to = row.to;
+      if (!guideFiles().includes(to) || to === 'CLAUDE.md') { fail('moved: "to" must be a side doc, e.g. "docs/add_by_link.md".'); continue; }
+      const before = base[key] || '';
+      const bt = tokensOf(before);
+      const doc = norm(nowText(to) || '');
+      if (!norm(body).includes(to)) fail(`moved to ${to} but the trunk section does not point there — leave a one-line pointer naming ${to}.`);
+      if (bt.length >= 3) {
+        const there = bt.filter((x) => doc.includes(x)).length / bt.length;
+        const left = bt.filter((x) => norm(body).includes(x)).length / bt.length;
+        if (there < 0.5) fail(`moved to ${to}, but only ${Math.round(there * 100)}% of what it named is there — move the substance (compressed), not just a pointer.`);
+        if (left > 0.4) fail(`marked moved but ${Math.round(left * 100)}% of what it named is still in the trunk section — cut it down to the pointer.`);
+      } else if (before && body.length > before.length * 0.6) fail('marked moved but the section has not shrunk — cut it down to the pointer.');
+      moved.push(`§${key.split(' ')[0].replace(/\.$/, '')} → ${path.basename(to)}`);
+    }
+  }
+  return { bad, info: moved.length ? `${moved.length} moved: ${moved.join(', ')}` : '' };
+}
+
 const readLedger = () => { try { return JSON.parse(fs.readFileSync(LEDGER, 'utf8')); } catch { return null; } };
 const writeLedger = (l) => fs.writeFileSync(LEDGER, JSON.stringify(l, null, 2) + '\n');
 
@@ -171,14 +258,16 @@ function start() {
     const t = baseText(base, f) ?? '';
     files[f] = { linesBefore: t ? lineCount(t) : 0, probes: probeLines(t), diagnosis: '', finding: '', action: '', remaining: '', overturned: '', contradictions: '' };
   }
+  const trunk = {};
+  for (const key of Object.keys(trunkSections(baseText(base, 'CLAUDE.md') || ''))) trunk[key] = { kind: '', reason: '' };
   const openWork = {};
   for (const s of openWorkSections()) openWork[s.id] = { verdict: '', evidence: '' };
-  writeLedger({ status: 'in_progress', baseCommit: base, startedAt: new Date().toISOString(), currentStep: 1, stamps: {}, files, openWork,
+  writeLedger({ status: 'in_progress', baseCommit: base, startedAt: new Date().toISOString(), currentStep: 1, stamps: {}, files, openWork, trunk,
     lessons: { note: '', merged: null }, untraceable: [], untraceableChecked: '', dupOk: {}, fyi: [] });
   console.log(`Review started at ${base.slice(0, 7)}: ${Object.keys(files).length} files, ${Object.keys(openWork).length} open-work sections. Fill .claude/guide_review_ledger.json as each step asks, then: node scraper/guide_review_gate.js step`);
 }
 
-// ---- the nine steps: each returns { bad: [...], info: 'one line for the report' } ----
+// ---- the steps: each returns { bad: [...], info: 'one line for the report' } ----
 
 function sMech() {
   const r = spawnSync('node', [path.join(__dirname, 'guide_check.js'), '--strict'], { cwd: ROOT, encoding: 'utf8' });
@@ -331,9 +420,9 @@ function sBudgets(led) {
     const after = lineCount(cur);
     const fail = (m) => bad.push(`${f}: ${m}`);
     if (after > limitOf(f)) {
-      if (row.diagnosis !== 'dense') fail(`${after} lines against ${budgetOf(f)} (tolerance ${limitOf(f)}), diagnosed "${row.diagnosis}" — only already-compressed ("dense") text may stay over. Go back to step 5 and compress it.`);
-      else if (before && after >= before) fail(`still over (${after}/${budgetOf(f)}) and not cut at all — back to step 5: cut what is duplicated, stale or misplaced first.`);
-      else if (after <= Math.ceil(budgetOf(f) * MODEST)) fail(`${after} lines against ${budgetOf(f)} is within reach — back to step 5 and keep cutting; no budget is asked for a small overage.`);
+      if (row.diagnosis !== 'dense') fail(`${after} lines against ${budgetOf(f)} (tolerance ${limitOf(f)}), diagnosed "${row.diagnosis}" — only already-compressed ("dense") text may stay over. Go back to step 6 and compress it.`);
+      else if (before && after >= before) fail(`still over (${after}/${budgetOf(f)}) and not cut at all — back to step 6: cut what is duplicated, stale or misplaced first.`);
+      else if (after <= Math.ceil(budgetOf(f) * MODEST)) fail(`${after} lines against ${budgetOf(f)} is within reach — back to step 6 and keep cutting; no budget is asked for a small overage.`);
       else {
         const b = row.blocker || {};
         const where = cur.split('\n')[(b.line || 0) - 1] || '';
@@ -344,7 +433,7 @@ function sBudgets(led) {
       }
     } else if (norm(row.remaining) !== 'nothing' && !row.askHer) fail('remaining: write "nothing" — within its budget there is nothing left to leave.');
   }
-  return { bad, info: over.length ? `${over.length} still over — your call:<br>` + over.map((o, i) => `${i + 1}. ${o.f} – ${o.after} against ${budgetOf(o.f)} – ${o.why} – suggest ${o.suggest}`).join('<br>') : '' };
+  return { bad, info: over.length ? `${over.length} still over after previous steps — your call:<br>` + over.map((o, i) => `${i + 1}. ${o.f} – ${o.after} against ${budgetOf(o.f)} – ${o.why} – suggest ${o.suggest}`).join('<br>') : '' };
 }
 
 // Step 8: whatever the earlier steps cut, nothing she decided is gone.
@@ -379,7 +468,7 @@ function sUntraced(led) {
   return { bad, info: live.length ? `${live.length} — your call:<br>` + live.map((u, i) => `${i + 1}. ${u.file} – "${norm(u.phrase)}" – ${norm(u.searched)}`).join('<br>') : '' };
 }
 
-const STEPS = [null, sMech, sFacts, sOpen, sLessons, sRedundant, sContra, sUntraced, sLost, sBudgets];
+const STEPS = [null, sMech, sFacts, sOpen, sLessons, sLean, sRedundant, sContra, sUntraced, sLost, sBudgets];
 
 function runStep(led, n) { return STEPS[n](led); }
 
@@ -399,7 +488,7 @@ function stepCommand() {
     return;
   }
   const n = led.currentStep || 1;
-  if (n > LAST) { console.log('All nine steps passed. Run: node scraper/guide_review_gate.js done'); return; }
+  if (n > LAST) { console.log('All ten steps passed. Run: node scraper/guide_review_gate.js done'); return; }
   const r = runStep(led, n);
   if (r.bad.length) {
     console.log(`Step ${n} of ${LAST} — ${STEP_NAMES[n]} — not passed; ${n < LAST ? `steps ${n + 1}–${LAST} stay closed` : 'the review cannot close'}. ${r.bad.length} thing(s) left; do them, do not report them:`);
@@ -433,7 +522,7 @@ function check() {
 
 // One table is the whole report. A tick where a step found nothing; a step's extra lines are rows of their own under it.
 function report(led, infos) {
-  const asks = (k) => guideFiles().filter((f) => norm((led.files[f] || {}).askHer)).filter((f) => (norm(led.files[f].overturned) !== 'none' ? 5 : 6) === k)
+  const asks = (k) => guideFiles().filter((f) => norm((led.files[f] || {}).askHer)).filter((f) => (norm(led.files[f].overturned) !== 'none' ? 6 : 7) === k)
     .map((f) => `${f} – ${norm(led.files[f].askHer)} – your call`);
   const stepRows = infos.flatMap((i, k) => {
     const [first, ...more] = String(i).split('<br>');
@@ -475,8 +564,8 @@ if (require.main === module) {
       bad.forEach((b) => console.log('  ' + (b.startsWith('Step') ? '' : '- ') + b));
       process.exit(1);
     }
-    console.log(mode === 'done' ? 'Guide review gate: all nine steps passed. Report written to .claude/guide_review_report.md — send it as the report.' : 'Guide review gate: passed.');
+    console.log(mode === 'done' ? 'Guide review gate: all ten steps passed. Report written to .claude/guide_review_report.md — send it as the report.' : 'Guide review gate: passed.');
   } else { console.log('usage: guide_review_gate.js start | step | check | done'); process.exit(2); }
 }
 
-module.exports = { smells, report, readLedger, check, anchorsOf, probeLines, guideFiles, limitOf, lostDecisions, duplicates, sFacts, openWorkSections };
+module.exports = { trunkSections, tokensOf, overlapsSideDoc, sLean, smells, report, readLedger, check, anchorsOf, probeLines, guideFiles, limitOf, lostDecisions, duplicates, sFacts, openWorkSections };
