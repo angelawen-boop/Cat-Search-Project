@@ -220,7 +220,7 @@ design and what is unproven: `docs/themes.md`. Read it before any Themes work.
 
 Every exhibition in art-period order (dividers, scrubber, theme chips; Label, Relabel, Recently labelled). Design, decisions and
 every rule: `docs/periods.md` — read it before any Period work. Her load of the test page's ledger into 51 confirms. Her view, kept
-for later: both Misc bins should ultimately go. **Live at 56.3, her use confirms — Do not regroup** (beside Relabel; `docs/periods.md`). Postwar Europe is told to Claude as a time-and-place period (56.4).
+for later: both Misc bins should ultimately go. Do not regroup, beside Relabel (56.3; `docs/periods.md`). Postwar Europe is told to Claude as a time-and-place period (56.4).
 
 #### 2.2.10 Published since 51 — her next links, lookups and use confirm
 
