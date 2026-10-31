@@ -113,6 +113,7 @@ Dal 16 aprile all'8 settembre 2026      Italian, "al" elided
 From 21/03/2024 to 28/04/2024           all numeric — see below
 10 set 2026 - 22 nov 2026               Italian three-letter months
 Du 2 mars au 19 mai 2024                French "du … au …", "1er" (Chantilly; DS-008)
+30. Juni 2024 – 5. Januar 2025          German months, the day's full stop, "Jänner" (Emil Schumacher Museum; DS-011)
 Saturday 23 May - Sunday 29 Nov 2026    weekday before each date
 Aug 1, 2026–Summer 2027              opens 1 Aug, no closing date, 2027 a bound
 Mar 8, 2025–ongoing                  still open
