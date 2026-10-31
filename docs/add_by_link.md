@@ -281,9 +281,7 @@ store-read lock. Each box becomes a page (`pastedPageReply`) and goes the saved 
 review; Cancel / rejected / undecided put boxes back. No rules invented for pasted text (her decision): a page like Ghent's
 (title read as its "closed" notice) goes by Pages. Titles stay as the record writes them; a pasted link's Change card she rejects
 herself. **Title:** a library record's "Title:" line, cut at " / ", " : " as ": "; else the first line. Proof: her three Tate
-library pastes, `docs/link_pages/pasted_tate_library.json`; tests PS-001–027 (`add_by_paste.js`). Test page:
-https://claude.ai/artifact/AspUYQTAto8Xa3k6wDSMce ("Cat Watch Paste Test", 54, with Parallel; the old 50.x page Q55Uks… is
-superseded).
+library pastes, `docs/link_pages/pasted_tate_library.json`; tests PS-001–027 (`add_by_paste.js`). Live in her app at 54; its old test pages are superseded.
 
 ## Another part of one of her museums' own site — all three ways in
 

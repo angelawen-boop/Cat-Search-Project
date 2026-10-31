@@ -21,9 +21,9 @@ the next goes through. Later ones go straight through.
 
 ## What is live now
 
-**Built, not yet in her app: 54** — Import → Paste; the own-site rule for Links, Pages and Paste; the Change card says "Link". On the Paste test page only (`docs/add_by_link.md`, "Pasted pages").
+**Live: 54 in her app**: Import → Paste; the own-site rule for Links, Pages and Paste; the Change card says "Link" (`docs/add_by_link.md`, "Pasted pages").
 
-**Live: 53.11 in her app**: the Correr's archive — title after its section menu, capitals recased, spaced ordinals and comma-less month-first ranges read (DS-010, AL-089).
+Before that 53.11: the Correr's archive — title after its section menu, capitals recased, spaced ordinals and comma-less month-first ranges read (DS-010, AL-089).
 
 Before that 53.10: a link with no dates whose page holds a script's unfilled placeholder says "Dates cannot be seen — JS-rendering." (AL-088); Łazienki's title from its page title, Getty's collection pages from their heading (AL-086–087).
 

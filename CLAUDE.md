@@ -253,8 +253,7 @@ rules, Cini, Prado, Correr): `docs/app.md`, `docs/add_by_link.md`.
 
 #### 2.2.18 Queued — her asks
 
-- **OPEN — Paste: rebuilt on `main` as 54, on its test page with Parallel; not yet in her app** (publish on her say). Her live
-  tries settle it; the shop finder for a pasted new venue is unproven in the app. **OPEN — "Tate Gallery"'s shop:** live, the finder
+- **OPEN — Paste: live in her app at 54.** Her live tries settle it; the shop finder for a pasted new venue is unproven there. **OPEN — "Tate Gallery"'s shop:** live, the finder
   took the Tate's Books shelf, not its exhibition-books section. **Next, her decision: the paste boxes and buttons** (talked through
   only after the rest). Her decisions and the own-site rule: `docs/add_by_link.md`, "Pasted pages" and the section after it.
 - **OPEN — review the names of venues that came in by link or page** (Claude-named, in her store): her card and short names, each rename
@@ -468,7 +467,7 @@ price, her decision).
 3. **Pages** — a link Parallel cannot fetch (bot-blocked) or brings back as junk or empty: she saves the whole page.
 4. **Paste** — mostly-text pages where saving each is slow (the Tate library's records): the text pasted beside its
    link. Also her last resort for manual entry — details from several sources typed in, under a link to any page
-   useful for that show. No link, no import. On `main` (54), not yet in her app (§2.2.18).
+   useful for that show. No link, no import. Live in her app at 54 (§2.2.18).
 
 Links, Pages and Paste are one road — the same reader, Claude read, shop finder and review; only how the text arrives
 differs. A third-party page (press, blog, library record) goes the same road: the venue is read from the text, never
@@ -487,7 +486,7 @@ bot-blocked, so Pages and Paste only) is a fact about that venue, never a limit 
 > restating `capabilities` must restate all four; omitting it carries them
 > forward. **Renaming the connector means restating them.**
 
-**Live: 53.11 in her app**, with the cloud ledger (merged at 46). What each recent version changed is in
+**Live: 54 in her app**, with the cloud ledger (merged at 46). What each recent version changed is in
 `docs/publishing.md`, "What is live now".
 
 #### The mental model, load-bearing
