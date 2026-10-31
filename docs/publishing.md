@@ -21,7 +21,10 @@ the next goes through. Later ones go straight through.
 
 ## What is live now
 
-**Live: 55 in her app**: Digital catalogue — her link to a PDF or online catalogue on any searched card (`docs/app.md`, DG-001–006).
+**Live: 56 in her app**: Paste read by Claude — title and date words from Claude, checked word for word against the text by code;
+any length of text; any year (`docs/add_by_link.md`, "Pasted pages"; PS-001–004b).
+
+Before that 55: Digital catalogue — her link to a PDF or online catalogue on any searched card (`docs/app.md`, DG-001–006).
 
 Before that 54.3: the shop screen's fourth button, **Add** — her own shop link (AL-080).
 

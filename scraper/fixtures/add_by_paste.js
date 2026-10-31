@@ -4,9 +4,10 @@
  * separate boxes, two to start and + for more. Also the own-site rule every way in shares
  * (ownMuseumNamed): a page on another part of one of her museums' site files under that museum.
  *
- * Her three pastes from the Tate library's catalogue are the proof (pasted by her, so no live
- * fetch exists to test against). Titles and dates are read by CODE, so those expectations are
- * hard; what Claude says is scripted.
+ * Her three pastes from the Tate library's catalogue and her Met paste are the proof (pasted by her,
+ * so no live fetch exists to test against). Claude gives the title and copies the date words (her
+ * decision: pasted text has no layout for the page reader); what Claude says is scripted, and the
+ * code's checks on it — word for word in the text, dates read with no year floor — are hard.
  *
  *   node scraper/fixtures/add_by_paste.js
  */
@@ -65,6 +66,12 @@ const runtime = () => ({
       return { payload: { results: (args.urls || []).includes(RESEARCH) ? [RESEARCH_PAGE] : [], errors: [] } }; } };
     if (name === 'sample') return { json: async prompt => {
       asked.push(prompt);
+      if (/pasted or typed by hand/.test(prompt)) {
+        const [title, dates] = /George Stubbs/.test(prompt) ? ['George Stubbs : a celebration.', '21 Aug. 2006 - 1 Jan. 2007']
+          : /Anthony Caro \/ edited/.test(prompt) ? ['Anthony Caro', '26 Jan. - 17 Apr. 2005'] : ['Turner and Venice', '9 Oct. 2003 - 11 Jan. 2004'];
+        return { summary: /Stubbs/.test(title) ? null : 'A summary of ' + title + '.', title, dates, english: '', englishSpeaking: true,
+          venue: 'Tate Britain', venueShort: 'Tate Britain', venueCity: 'London', venueCountry: 'United Kingdom', venueOwnPage: true };
+      }
       const t = JSON.parse((prompt.match(/EXHIBITION TITLE, as the page gives it: (".*")/) || [])[1] || '""');
       // Claude names the Tate library's museum as the record does: Tate Britain (London); the
       // research page names Tate Modern.
@@ -89,20 +96,32 @@ const runtime = () => ({
   console.error = (...a) => shouted.push(String(a[0]));
   const fn = name => new Function('React', 'window', 'document', 'localStorage', code + '\n;return ' + name + ';')(React, win, win.document, win.localStorage);
 
-  // ── PS-001–003: her pastes, read by the real reader ─────────────────────
+  // ── PS-001–004: her pastes; Claude's title and date words checked and read by code ─────
   {
-    const paste = fn('pastedPageReply'), read = fn('readShowPage');
-    const readVenue = fn('linkReadVenue');
-    const got = p => { const r = paste(p.url, p.text); return r.ok ? read(r.res, r.res.url, readVenue(r.res.url)) : r; };
-    const c = got(CARO), t = got(TURNER), s = got(STUBBS);
-    ok(c.ok && c.base === 'Anthony Caro' && c.start === '2005-01-26' && c.end === '2005-04-17' && /^Anthony Caro \(born 1924\)/.test(c.raw),
-      'PS-001: Caro: the title from the "Title:" line, cut at " / "; the dates from "Exhibition held:"; Claude handed the text under "Summary"', JSON.stringify([c.base, c.start, c.end, c.why]));
-    ok(t.ok && t.base === 'Turner and Venice' && t.start === '2003-10-09' && t.end === '2004-01-11',
-      'PS-002: Turner: Tate Britain\'s dates, not the Kimbell\'s, Correr\'s or Barcelona\'s below them', JSON.stringify([t.base, t.start, t.end]));
-    ok(s.ok && s.base === 'George Stubbs: a celebration' && s.start === '2006-08-21' && s.end === '2007-01-01' && !/Turner/.test(s.raw),
-      'PS-003: Stubbs: " : " read as ": "; Turner\'s summary left above it in the box is not taken as Stubbs\' text', JSON.stringify([s.base, s.start, s.end, s.raw]));
-    const plain = paste('https://example.org/show', 'Made Show\n3 March 2027 – 4 July 2027\n' + 'A made exhibition of drawings. '.repeat(10));
-    ok(plain.ok && /^# Made Show$/m.test(plain.res.full_content), 'PS-004: with no "Title:" line, the first line is the title', plain.ok && plain.res.full_content.slice(0, 40));
+    const paste = fn('pastedPageReply'), page = fn('pastedPage'), faults = fn('pasteFaults'), dates = fn('pasteDates'), tidy = fn('pasteTitle');
+    const read = (p, title, words) => { const r = paste(p.url, p.text); const pg = page(r.res.text, r.res.url);
+      return { faults: faults({ title, dates: words }, pg), page: dates({ ...pg, base: tidy(title) }, words, 'tate-britain') }; };
+    const c = read(CARO, 'Anthony Caro', '26 Jan. - 17 Apr. 2005');
+    ok(!c.faults.length && c.page.start === '2005-01-26' && c.page.end === '2005-04-17' && !c.page.noDates,
+      'PS-001: Caro: Claude\'s title and date words pass the word-for-word check; code reads the dates', JSON.stringify([c.faults, c.page.start, c.page.end]));
+    const t = read(TURNER, 'Turner and Venice', '9 Oct. 2003 - 11 Jan. 2004');
+    const bad = faults({ title: 'Turner in Venice', dates: '9 October 2003 - 11 January 2004' }, page(TURNER.text, TURNER.url));
+    ok(!t.faults.length && t.page.start === '2003-10-09' && t.page.end === '2004-01-11' && bad.length === 2,
+      'PS-002: Turner: a title or date words not in the text are faults, asked again — nothing made up passes', JSON.stringify([t.faults, bad]));
+    const s = read(STUBBS, 'George Stubbs : a celebration.', '21 Aug. 2006 - 1 Jan. 2007');
+    ok(!s.faults.length && s.page.base === 'George Stubbs: a celebration' && s.page.start === '2006-08-21',
+      'PS-003: Stubbs: " : " read as ": ", the closing full stop dropped', JSON.stringify([s.faults, s.page.base]));
+    const MET = 'The Age of Spirituality: Late Antique and Early Christian Art, Third to Seventh Century was a landmark exhibition held at The Metropolitan Museum of Art from November 19, 1977 to February 12, 1978.';
+    const m = read({ url: 'https://www.metmuseum.org/met-publications/age-of-spirituality-a-symposium', text: MET },
+      'The Age of Spirituality: Late Antique and Early\nChristian Art, Third to Seventh Century', 'November 19, 1977 to February 12, 1978');
+    ok(paste('https://www.metmuseum.org/x', MET).ok && !m.faults.length && m.page.start === '1977-11-19' && m.page.end === '1978-02-12'
+      && m.page.base === 'The Age of Spirituality: Late Antique and Early Christian Art, Third to Seventh Century',
+      'PS-004: her Met paste: one sentence is read (no "too little text"); the title from inside it; 1977 read (no year floor for Paste)', JSON.stringify([m.faults, m.page.start, m.page.end, m.page.base]));
+    const none = read(CARO, 'Anthony Caro', '');
+    ok(!none.faults.length && none.page.noDates && !none.page.start, 'PS-004a: no date words given: undated, with the sweep\'s note');
+    const D = fn('DATES');
+    ok(!D.findDateRange('November 19, 1977 to February 12, 1978', { looseSingles: false }).start,
+      'PS-004b: the sweep and the page reader keep the 1990 floor (a lifespan is never a run)');
     ok(!paste('', 'text').ok && !paste('not a link', 'text').ok && !paste('https://example.org/x', '  \n ').ok, 'PS-005: no link, a link box with no address, or no text: refused');
     ok(fn('ownMuseumNamed')({ venue: 'Tate Britain (London)' }, 'library.tate.org.uk') === 'tate-britain' && fn('ownMuseumNamed')({ venue: 'Tate Britain' }, 'example.org') === null,
       'PS-006: a page on another part of one of her museums\' own site files under the museum Claude names — only on that museum\'s site');
@@ -174,7 +193,8 @@ const runtime = () => ({
   const review = win.document.body.textContent.slice(win.document.body.textContent.indexOf('proposed changes found'));
   ok(/Tate Britain· 3· 3 to decide/.test(review) && !/library\.tate\.org\.uk·|Tate Library/i.test(review) && !buttons(/^Next$/).length,
     'PS-018: filed under Tate Britain, the museum Claude names, not a new venue for the library site (no shop screen)', review.slice(0, 400));
-  ok(!/Turner/.test(asked.find(q => /Stubbs/.test(q)) || 'x'), 'PS-019: Claude is not sent Turner\'s leftover text with Stubbs');
+  ok(asked.filter(q => /pasted or typed by hand/.test(q)).every(q => /"title":/.test(q) && /"dates":/.test(q)) && /THE MUSEUM THIS CARD IS FOR|PAGE ADDRESS/.test(asked.find(q => /pasted or typed/.test(q)) || ''),
+    'PS-019: Claude is handed the whole paste and asked for the title and the date words');
 
   // Cancel import: every box read goes back.
   await click(buttons(/^Cancel import$/)[0]);

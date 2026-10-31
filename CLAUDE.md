@@ -67,6 +67,10 @@ is why they live in one repo, on one branch.
   Compressing curatorial prose into a six-word teaser.
 - **Even then, Claude touches strings, never files.** A script owns the CSV and
   asks for a value; Claude never sees a comma or a column.
+- **Imports — four buckets** (her decision): a venue the app knows → code; a never-seen venue by Links or Pages →
+  code for now (her option: flip it to Claude if the fixes never end); someone else's page → Claude; Paste → Claude
+  for title and dates, code checking both are in the text. The reasoning: `docs/add_by_link.md`, "Code or Claude —
+  the four buckets".
 
 ### Procedures — in side docs
 
@@ -255,7 +259,8 @@ rules, Cini, Prado, Correr): `docs/app.md`, `docs/add_by_link.md`.
 
 #### 2.2.18 Queued — her asks
 
-- **OPEN — Paste: live in her app (54–54.2).** Her live tries settle it; the shop finder for a pasted new venue is unproven there.
+- **OPEN — Paste: Claude reads title and dates, live at 56** (her decision; `docs/add_by_link.md`, "Pasted pages"): any length,
+  any year. Her next pastes settle it — her Met *Age of Spirituality* first; the shop finder for a pasted new venue is unproven.
   **OPEN — a pasted page names its venue from the address alone** (pasted text carries no site name): Claude read
   `presidence.fr` as the French Presidency ("Présidence de la République", "Paris Élysée") and the finder took the Élysée
   Palace's shop (lookup log L17934138860630vq8); the same page by link was named Galerie de la Presidence from its tab.
@@ -479,10 +484,10 @@ price, her decision).
 3. **Pages** — a link Parallel cannot fetch (bot-blocked) or brings back as junk or empty: she saves the whole page.
 4. **Paste** — mostly-text pages where saving each is slow (the Tate library's records): the text pasted beside its
    link. Also her last resort for manual entry — details from several sources typed in, under a link to any page
-   useful for that show. No link, no import. Live in her app at 54 (§2.2.18).
+   useful for that show. No link, no import. Claude reads its title and dates, code checks them (56; §2.2.18).
 
-Links, Pages and Paste are one road — the same reader, Claude read, shop finder and review; only how the text arrives
-differs. A third-party page (press, blog, library record) goes the same road: the venue is read from the text, never
+Links, Pages and Paste are one road — the same Claude read, shop finder and review; Links and Pages share the page
+reader, Paste skips it (her decision). A third-party page (press, blog, library record) goes the same road: the venue is read from the text, never
 the source site. **A general rule applies to all three.** Where one venue's pages can be read (Tate library:
 bot-blocked, so Pages and Paste only) is a fact about that venue, never a limit on a rule.
 
@@ -498,7 +503,7 @@ bot-blocked, so Pages and Paste only) is a fact about that venue, never a limit 
 > restating `capabilities` must restate all four; omitting it carries them
 > forward. **Renaming the connector means restating them.**
 
-**Live: 55 in her app**, with the cloud ledger (merged at 46). What each recent version changed is in
+**Live: 56 in her app**, with the cloud ledger (merged at 46). What each recent version changed is in
 `docs/publishing.md`, "What is live now".
 
 #### The mental model, load-bearing

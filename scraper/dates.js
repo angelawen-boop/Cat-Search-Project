@@ -292,8 +292,13 @@ function dayText(iso) {
 // page text, where loose patterns are a lottery (a 1994 photo caption once became a 2024
 // show's opening date).
 // opts.venue: the venue's code, for the order of an all-number date (DATE_ORDER).
+// opts.anyYear: no year floor, for date words already cut out of the text (Paste: Claude
+// copies them, so a lifespan or a caption cannot be among them).
 function findDateRange(raw, opts = {}) {
-  return applyExtension(findDateRangeCore(raw, opts), raw, opts.venue);
+  if (!opts.anyYear) return applyExtension(findDateRangeCore(raw, opts), raw, opts.venue);
+  yearFloor = 1;
+  try { return applyExtension(findDateRangeCore(raw, opts), raw, opts.venue); }
+  finally { yearFloor = PLAUSIBLE_YEAR_MIN; }
 }
 
 function findDateRangeCore(raw, opts = {}) {
@@ -520,10 +525,11 @@ function findDateRangeCore(raw, opts = {}) {
 // enough that a lifespan ("Caravaggio (1571-1610)") never reads as a run.
 const PLAUSIBLE_YEAR_MIN = 1990;
 const PLAUSIBLE_YEAR_MAX = 2035;
+let yearFloor = PLAUSIBLE_YEAR_MIN;   // lowered only while findDateRange runs with anyYear
 
 function plausibleYear(y) {
   const n = parseInt(y, 10);
-  return n >= PLAUSIBLE_YEAR_MIN && n <= PLAUSIBLE_YEAR_MAX;
+  return n >= yearFloor && n <= PLAUSIBLE_YEAR_MAX;
 }
 
 // The note quotes each branch's own MATCH, capped (frag), never its input — a whole

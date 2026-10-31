@@ -4,6 +4,28 @@
 The app handles unreadable links itself; no scraper-side reader. Why it exists: some venues matter only now and then
 (~5 shows a year); a full venue costs a recipe, an archive and a monthly sweep, and ~27 of ~30 rows get dismissed.
 
+## Code or Claude — the four buckets (her decision)
+
+**Why code first.** The sweep went to a scraper, not a session told to go and fetch the shows, for two reasons: code is
+plainly right or plainly wrong, while Claude needs instructions, checking and can make things up; and many pages need a
+headless browser Claude cannot run. So code does the work, and Claude is the backup for what code cannot do. Never start by
+handing a job to Claude.
+
+**Where the line falls — what the text arrives as:**
+1. **A venue the app already knows** (the 28, or a link venue a session has already fixed): code, by the shared rules and that
+   venue's own. This bucket grows with every fix, so imports come in right more and more often.
+2. **A venue the app has never seen, by Links or Pages:** code, today. About half need a session's fix (title or dates
+   misread); each fix adds a shared or venue rule, so the reader covers more over time. **Her option to flip it:** if the fixes
+   never end or the code becomes a tangle, Claude reads the title and dates for every never-seen venue instead, with code
+   checking them as Paste does. Not built; hers to call.
+3. **Someone else's page** (a blog, a library, a magazine): Claude, built. The text is about a show held elsewhere, so code
+   would read it as the site's own — Claude names the venue and the title ("Someone else's page", below).
+4. **Paste: Claude for title and dates, always** (built at 56). Pasted text has no page layout for the reader to work with,
+   and a paste can be her own tidied copy or scraps from several sources dumped in — code cannot tell which, and does not know
+   when it has picked the wrong first line. Claude reads both kinds as easily. Code keeps the guard: Claude's title must be in
+   the text word for word, and Claude copies the date words, which code checks are there and reads into dates. No extra
+   call — the same one that writes the description.
+
 ## The design
 
 - **Import opens ONE small pop-up, nothing added to the page** (her design): **CSV · Links** (and **Pages**, **Paste**, below), a small
@@ -282,11 +304,15 @@ For mostly-text pages where saving each is slow (her idea; the Tate library's re
 entry: details from several sources typed in under a link to any page useful for that show. **No link, no import** (her decision).
 One box per page, the link and the text apart (her design), two to start, + for more; a faint "Link" in each link box, nothing in the
 text box; "Clear" in each box, "Clear all" centred in the row with + and Read (her design). Stored as she types, one document per box (`links_pastes/…`), under the
-store-read lock. Each box becomes a page (`pastedPageReply`) and goes the saved page's road — same reader, Claude, shop finder,
-review; Cancel / rejected / undecided put boxes back. No rules invented for pasted text (her decision): a page like Ghent's
-(title read as its "closed" notice) goes by Pages. Titles stay as the record writes them; a pasted link's Change card she rejects
-herself. **Title:** a library record's "Title:" line, cut at " / ", " : " as ": "; else the first line. Proof: her three Tate
-library pastes, `docs/link_pages/pasted_tate_library.json`; tests PS-001–027 (`add_by_paste.js`). Live in her app at 54; its old test pages are superseded.
+store-read lock. Cancel / rejected / undecided put boxes back. A pasted link's Change card she rejects herself.
+**Read by Claude, checked by code** (her decision, bucket 4 above; 56): the page reader never sees pasted text (`pastedPage`).
+Claude is handed the whole paste (the 2,000-character cut) and gives the description, the title and the date words; code
+refuses a title or date words not in the text word for word (capitals, punctuation and line breaks aside) and asks again
+(`pasteFaults`), then reads the dates by the shared reader **with no year floor** (`anyYear`: the words are already cut out, so
+no lifespan can be among them; the sweep and the page reader keep 1990). " : " becomes ": ", a closing full stop goes
+(`pasteTitle`). **Any length is read** — no "too little text" (her decision). Then the same venue rules, shop finder and review.
+Proof: her three Tate library pastes (`docs/link_pages/pasted_tate_library.json`) and her one-sentence Met paste (*The Age of
+Spirituality*, 1977); tests PS-001–029 (`add_by_paste.js`).
 
 ## Another part of one of her museums' own site — all three ways in
 

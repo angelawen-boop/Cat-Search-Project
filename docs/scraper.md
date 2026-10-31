@@ -158,7 +158,8 @@ September 29 th 2012 to January 6 th 2013  spaced ordinal (small letters only), 
 - **Two guards against art history:** a month NAME beside the number, and a year
   in 1990–2035. **A published opening year that fails the guard refuses the whole
   range** — never swapped for the closing year (Mimmo Jodice's lifespan was once
-  stored as his show's run).
+  stored as his show's run). `anyYear` lifts the floor for date words already cut out of
+  the text (Paste, where Claude copies them — `docs/add_by_link.md`, "Pasted pages").
 - **One `MONTH_PATTERN`, and the prose parser falls through to the listing
   parser** — two parsers drifted twice, losing dates.
 

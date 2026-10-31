@@ -3,7 +3,7 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 // The footer prints APP_VERSION and its date, so she can tell one build from the next.
 // Numbering, her decision: a whole number for a substantial change, a decimal for a
 // small one, one number per publish. Bump it with the change it describes.
-const APP_VERSION = "55";
+const APP_VERSION = "56";
 const APP_VERSION_DATE = "31 Oct 2026";
 
 // The venue order is VENUE_ORDER, below the list, which sorts MUSEUMS; drawer, chips,
@@ -392,8 +392,13 @@ function dayText(iso) {
 // page text, where loose patterns are a lottery (a 1994 photo caption once became a 2024
 // show's opening date).
 // opts.venue: the venue's code, for the order of an all-number date (DATE_ORDER).
+// opts.anyYear: no year floor, for date words already cut out of the text (Paste: Claude
+// copies them, so a lifespan or a caption cannot be among them).
 function findDateRange(raw, opts = {}) {
-  return applyExtension(findDateRangeCore(raw, opts), raw, opts.venue);
+  if (!opts.anyYear) return applyExtension(findDateRangeCore(raw, opts), raw, opts.venue);
+  yearFloor = 1;
+  try { return applyExtension(findDateRangeCore(raw, opts), raw, opts.venue); }
+  finally { yearFloor = PLAUSIBLE_YEAR_MIN; }
 }
 
 function findDateRangeCore(raw, opts = {}) {
@@ -620,10 +625,11 @@ function findDateRangeCore(raw, opts = {}) {
 // enough that a lifespan ("Caravaggio (1571-1610)") never reads as a run.
 const PLAUSIBLE_YEAR_MIN = 1990;
 const PLAUSIBLE_YEAR_MAX = 2035;
+let yearFloor = PLAUSIBLE_YEAR_MIN;   // lowered only while findDateRange runs with anyYear
 
 function plausibleYear(y) {
   const n = parseInt(y, 10);
-  return n >= PLAUSIBLE_YEAR_MIN && n <= PLAUSIBLE_YEAR_MAX;
+  return n >= yearFloor && n <= PLAUSIBLE_YEAR_MAX;
 }
 
 // The note quotes each branch's own MATCH, capped (frag), never its input — a whole
@@ -1878,18 +1884,24 @@ const SHORT_NAME_EXAMPLES=()=>Object.values(LINK_VENUES).map(v=>v.card||v.short)
 // Her renames of Claude's card names (`notCard`), each with the name Claude gave: so Claude learns her style.
 const SHORT_NAME_RENAMES=()=>Object.values(LINK_VENUES).filter(v=>v.notCard&&(v.card||v.short))
   .map(v=>"for "+JSON.stringify(v.name||v.lookupName||v.short)+": "+JSON.stringify(v.card||v.short)+", not "+JSON.stringify(v.notCard));
-function linkPrompt(page,askVenue,url){
+// A pasted box (page.pasted): the whole text, and Claude asked for the title and the date words too.
+function linkPrompt(page,askVenue,url,vc){
   const ex=SUMMARY_EXAMPLES.map(e=>"RAW: "+e.raw+"\nACCEPTED SUMMARY: "+e.summary).join("\n\n");
+  const museum=page.pasted&&!askVenue&&MU[vc]?MU[vc].name:"";
   return "You are reading one museum exhibition page for a personal art-catalogue tracker. Your ONLY output is one JSON object.\n\n"
     +(askVenue?"PAGE ADDRESS: "+url+"\n":"")
+    +(museum?"THE MUSEUM THIS CARD IS FOR: "+JSON.stringify(museum)+"\n":"")
     +(askVenue&&page.dateLine?"THE SHOWING THIS CARD IS FOR, as the page prints it: "+JSON.stringify(page.dateLine)+"\n":"")
-    +"EXHIBITION TITLE, as the page gives it: "+JSON.stringify(page.base)+"\n"
+    +(page.pasted?"RAW TEXT (pasted or typed by hand, from one source or several; its order and layout can be anything):\n\"\"\"\n"+page.raw+"\n\"\"\"\n\n"
+    :"EXHIBITION TITLE, as the page gives it: "+JSON.stringify(page.base)+"\n"
     +(page.between.length?"LINES BETWEEN THE TITLE AND THE DATES: "+JSON.stringify(page.between)+"\n":"")
-    +"RAW TEXT (the page under the title, dates taken out):\n\"\"\"\n"+page.raw+"\n\"\"\"\n\n"
+    +"RAW TEXT (the page under the title, dates taken out):\n\"\"\"\n"+page.raw+"\n\"\"\"\n\n")
     +"EXAMPLES of the required summary style — a venue's raw text, and the summary that was accepted:\n\n"+ex+"\n\n"
     +"RULES FOR THE SUMMARY:\n"+SUMMARY_RULES+"\n\n"
     +"Answer with exactly these keys:\n"
     +"\"summary\": the summary, following the rules above — or null if the raw text does not describe an exhibition.\n"
+    +(page.pasted?"\"title\": the exhibition's full name with its subtitle, copied exactly as the text writes it, word for word (a line break inside it may become a space). Only the name: never a sentence about the show, an author's or editor's name after it, a label (\"Title:\", \"Exhibition\"), a place or a date.\n"
+      +"\"dates\": the words that give the exhibition's opening and closing dates"+(museum||askVenue?" at "+(museum?"THE MUSEUM THIS CARD IS FOR":"the museum you give as venue"):"")+", copied exactly as the text writes them (\"November 19, 1977 to February 12, 1978\"). Never another venue's showing, a birth or death date, or a publication date. \"\" if the text gives none.\n":"")
     +(page.between.length?"\"subtitle\": if one of the LINES BETWEEN THE TITLE AND THE DATES is the second part of the exhibition's own name — the part a catalogue's title would carry after the main title — copy that line exactly as written. Otherwise \"\". Never a category (\"Special Exhibition\"), a sponsor, a place, a price or a date.\n":"")
     +"\"english\": the exhibition's title"+(page.between.length?" (with the subtitle you gave, if any)":"")+" in natural English if it is not in English; \"\" if it already is, names aside. Keep every name as written and the title's own full stops. Plain words: no \"In English\", no quotation marks.\n"
     +"\"englishSpeaking\": true if the museum is in an English-speaking country, false if not.\n"
@@ -1908,7 +1920,8 @@ function linkAnswer(a){
   const str=v=>typeof v==="string"?v.replace(/["“”]/g,"").replace(/\s+/g," ").trim():"";
   return{summary:typeof o.summary==="string"?o.summary.trim():"",subtitle:typeof o.subtitle==="string"?o.subtitle.trim():"",
     english:str(o.english).replace(/^In English:\s*/i,""),englishSpeaking:o.englishSpeaking!==false,gallery:o.gallery===true,
-    venue:str(o.venue),venueCity:str(o.venueCity),venueCountry:str(o.venueCountry),venueAlso:(Array.isArray(o.venueAlso)?o.venueAlso:[]).map(str).filter(Boolean).slice(0,4),venueShort:str(o.venueShort),venueOwnPage:o.venueOwnPage!==false};
+    venue:str(o.venue),venueCity:str(o.venueCity),venueCountry:str(o.venueCountry),venueAlso:(Array.isArray(o.venueAlso)?o.venueAlso:[]).map(str).filter(Boolean).slice(0,4),venueShort:str(o.venueShort),venueOwnPage:o.venueOwnPage!==false,
+    pasteTitle:typeof o.title==="string"?o.title.replace(/\s+/g," ").trim():"",pasteDates:typeof o.dates==="string"?o.dates.replace(/\s+/g," ").trim():""};
 }
 
 // Claude's answer, checked as the compressor checks its own (ANSWER_CHECK, one copy, shared): the
@@ -1932,6 +1945,7 @@ function answerFaults(raw,page){
   // The English title as linkAnswer reads it (not a string is none; quotation marks and an "In English:"
   // opening taken off, AL-006).
   { const e=ANSWER_CHECK.validateEnglish(linkAnswer(o).english); if(!e.ok)faults.push(e.reason); }
+  if(page.pasted)faults.push(...pasteFaults(o,page));
   return faults;
 }
 // Claude is shown the answer refused, to fix it rather than start afresh (her Memling link; AL-062c).
@@ -2212,18 +2226,40 @@ async function writePendingPages(list){
   }catch{ return false; }
 }
 // Paste: a page's text copied by hand, its link typed beside it (docs/add_by_link.md, "Pasted
-// pages"). Pasted text has no headings, so the title line is marked as one: a library record's
-// "Title:" line, cut at " / " (who wrote it) with " : " as ": "; else the first line.
+// pages"). Pasted text has no layout to read, so the page reader never sees it: Claude gives the
+// title and copies the date words, code checks both are in the text and reads the dates
+// (pastedPage, pasteFaults; her decision). Any length of text is read.
 function pastedPageReply(url,text){
   const u=String(url||"").trim();
   if(!/^https?:\/\/\S+$/i.test(u))return{ok:false,why:"The link box holds no web address."};
   const lines=String(text||"").replace(/\r/g,"").split("\n").map(l=>l.replace(/[ \t]+/g," ").trim());
   if(!lines.some(Boolean))return{ok:false,why:"The text box is empty."};
-  let t=lines.findIndex(l=>/^title\s*:\s*\S/i.test(l)), title;
-  if(t>=0)title=lines[t].replace(/^title\s*:\s*/i,"").split(/\s+\/\s+/)[0].replace(/\s+:\s+/g,": ").replace(/[\s.:;,]+$/,"");
-  else{ t=lines.findIndex(Boolean); title=lines[t]; }
-  lines[t]="# "+title;
-  return{ok:true,res:{url:withoutTracking(u),title,full_content:lines.join("\n")}};
+  return{ok:true,res:{url:withoutTracking(u),text:lines.join("\n").replace(/\n{3,}/g,"\n\n").trim()}};
+}
+// A pasted box as the rest of the road takes a page: Claude is handed the text (the description's
+// 2,000-character cut applies); title and dates are filled from Claude's answer (pasteDates).
+function pastedPage(text,url){
+  return{ok:true,pasted:true,text,base:"",between:[],under:"",afterDates:String(text).split("\n").filter(Boolean),start:"",end:"",
+    raw:String(text).slice(0,LINK_RAW_CHARS),site:hostOf(siteUrlOf(url)).replace(/^www\./,""),link:url,noDates:true,dateLine:""};
+}
+// Claude's copy is checked word for word against the text: capitals, punctuation and line breaks aside.
+const pasteWords=t=>" "+foldText(String(t||"")).replace(/[^\p{L}\p{N}]+/gu," ").trim()+" ";
+const inPasted=(part,text)=>pasteWords(part).trim()!==""&&pasteWords(text).includes(pasteWords(part));
+// A library record's " : " as ": ", and no closing full stop (George Stubbs : a celebration.).
+const pasteTitle=t=>String(t||"").replace(/\s+/g," ").trim().replace(/\s+:\s+/g,": ").replace(/[\s.:;,]+$/,"");
+function pasteFaults(o,page){
+  const a=linkAnswer(o), faults=[];
+  if(!a.pasteTitle)faults.push("no title given");
+  else if(!inPasted(a.pasteTitle,page.text))faults.push("the title is not copied exactly from the text");
+  if(a.pasteDates&&!inPasted(a.pasteDates,page.text))faults.push("the dates are not copied exactly from the text");
+  return faults;
+}
+// The dates from Claude's copied words, by the shared date reader with no year floor: the
+// words are already cut out of the text, so no lifespan can be among them.
+function pasteDates(page,words,vc){
+  const r=words?DATES.findDateRange(words,{looseSingles:true,slashes:true,anyYear:true,venue:vc}):{start:"",end:""};
+  if(r.start||r.end)return{...page,start:r.start||"",end:r.end||"",noDates:false,dateLine:words,dateNote:DATES.closedEarlyNote(r)};
+  return{...page,noDates:true,orderUnknown:!!r.orderUnknown,shown:r.shownText||"",shownWhy:r.shownWhy||"",dateLine:words||""};
 }
 // The Paste boxes waiting, kept in the page's store as she types, one document each like the
 // Pages list (the store caps a document). Only a box that changed is written again.
@@ -7614,7 +7650,7 @@ export default function App(){
     // Pasted boxes: each turned into a page now, then read as a saved page is; a box that
     // cannot be is a line, never read.
     const pasteBad=[];
-    const pasted=fromPasted?pastes.filter(filledBox).map(x=>{ const r=pastedPageReply(x.url,x.text); if(!r.ok){ pasteBad.push({url:x.url.trim(),why:r.why}); return null; } return{url:r.res.url,title:r.res.title,text:r.res.full_content,box:x}; }).filter(Boolean):[];
+    const pasted=fromPasted?pastes.filter(filledBox).map(x=>{ const r=pastedPageReply(x.url,x.text); if(!r.ok){ pasteBad.push({url:x.url.trim(),why:r.why}); return null; } return{url:r.res.url,text:r.res.text,box:x}; }).filter(Boolean):[];
     const items=fromPasted?pasted:fromPages?pages:linksIn(linkText).map(url=>({url}));
     const urls=items.map(x=>x.url);
     if(!urls.length){ setLinkFails(pasteBad.length?pasteBad:[{url:"",why:fromPasted?"Nothing pasted.":fromPages?"No pages chosen.":"No links found in the box."}]); return; }
@@ -7640,7 +7676,7 @@ export default function App(){
           fails.push({url,why:pageUnreadWhy(e)});
           continue;
         }
-        const page=readShowPage(res,url,linkReadVenue(url));
+        let page=fromPasted?pastedPage(item.text,url):readShowPage(res,url,linkReadVenue(url));
         seen.venue=knownVenueFor(url)||null; seen.page=page;
         if(!page.ok){ fails.push({url,why:page.why}); continue; }
         const lv=linkVenue(url,page);
@@ -7657,7 +7693,7 @@ export default function App(){
         const askFresh=isOcc(vc)&&needsFacts(venues[vc]), askVenue=askFresh||(isOcc(vc)&&!(linkEntry(vc)||{}).name&&nearMuseumSite(host));
         // An entry that only places the venue's chip leaves this as it was (Cini).
         const lk=linkEntry(vc), ownSite=vc===occVenueId(host)&&(!lk||Object.keys(lk).every(k=>k==="ownChip"||k==="chip"||k==="group"));
-        const prompt=linkPrompt(page,askVenue,url);
+        const prompt=linkPrompt(page,askVenue,url,vc);
         let ask=await readResults(prompt);
         let faults=ask.ok?answerFaults(ask.data,page):[];
         for(let again=0;faults.length&&again<LINK_ASK_AGAIN;again++){
@@ -7667,6 +7703,11 @@ export default function App(){
         }
         if(faults.length){ fails.push({url,why:"Claude\u2019s description failed check and re-attempt multiple times ("+faults.join("; ")+")"}); continue; }
         let a=linkAnswer(ask.ok?ask.data:null);
+        // A pasted box: no title, no box read (the title is Claude's, checked; her decision).
+        if(page.pasted){
+          if(!ask.ok){ fails.push({url,why:"Claude couldn\u2019t read the text ("+ask.detail.replace(/\s+\[.*$/,"")+")."}); continue; }
+          page=pasteDates({...page,base:pasteTitle(a.pasteTitle)},a.pasteDates,vc); seen.page=page;
+        }
         if(askFresh&&ownSite&&maybeElsewhere(a,host)){ const more=await readResults(elsewherePrompt(page,url,a)); if(more.ok)a={...a,...elsewhereAnswer(more.data)}; }
         const away=askFresh&&ownSite?heldElsewhere(a,host):null;
         if(away){ vc=away.id; host=away.host; seen.venue=vc; seen.heldElsewhere=away; }
@@ -7703,7 +7744,7 @@ export default function App(){
         // ending like a sentence is the text, not a subtitle.
         const own=(MU[vc]||{}).subtitleUnderHeading&&page.under&&page.under.length<=120&&!/[.!?]$/.test(page.under)?page.under:"";
         // A show held elsewhere takes the title Claude read (someone else's page title can be anything).
-        const lt=(away&&a.title)||nameInLines(page,vc)||linkTitle(page.base,own||a.subtitle,page.between);
+        const lt=page.pasted?page.base:(away&&a.title)||nameInLines(page,vc)||linkTitle(page.base,own||a.subtitle,page.between);
         const title=cardTitle(lt,vc);
         Object.assign(seen,{venue:vc,answer:a,subtitleUnderHeading:own||null,title});
         tape.row={title,museumId:vc,exUrl:url};
