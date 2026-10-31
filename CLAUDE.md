@@ -46,7 +46,10 @@ is why they live in one repo, on one branch.
 - **No instruction lines on any page** — no how-to sentences, no text inside a box, no line telling her
   what she already knows (her biggest peeve).
 - **Respect UI simplicity and specific UI instructions.** Build what she named, nothing added. "Add a copy icon" = an icon, not an icon plus the word "Copy". "Copy this line for case X and Y" = the same line with only the words naming X and Y swapped, never a new, longer line.
-- **Label a guess as exactly that** - say what is not proven and what would be settled by a check.
+- **DO NOT SPECULATE IF A LOG OR DIAGNOSTICS EXIST THAT PROVIDE THE ANSWER (her decision).** Read the log first (§1,
+  "The logs"), then answer. Never write "the log would settle it" or "her next lookup confirms" when the log can be
+  read now. Reading a log is not touching code, so the "answer only" rule never stops it. **If reviewing the logs cannot
+  settle it and the answer is only a guess, say so clearly.**
 - **Never hide a hard-coded answer.** If a fix writes the answer into the app (an address, a value, a
   venue rule) instead of making the feature work it out, say so plainly and up front, never as
   "fixed". If the app could reach the answer itself, tell her how, and discuss it with her before
@@ -57,6 +60,23 @@ is why they live in one repo, on one branch.
   **A fix she has had published and then closes is closed (her decision):** never record it as an open item or a
   "her use confirms" check — she closed it because it is finished.
 - ISBN-13 is always displayed `xxx-xxxxxxxxxx` (3 digits, hyphen, 10 digits).
+
+### The logs — read them before answering (her decision)
+
+Every question about what the app, Claude or a sweep did has a record. Read it; never guess.
+
+| Log | What it records | How to read it |
+|---|---|---|
+| **Lookup log** — her app's store, `lookups` (newest 50 only) | One record per Find catalogue, Search again, Re-check museum shop, Add by link / page / paste, Label import cards, Label periods, Relabel: every search, page open and Claude call, Claude's exact prompt and answer, the card before and after, the app version | ArtifactData `list`, collection `lookups`, `out_dir` (the index: action, time, title, venue, version); then `list` of `lookups/<id>/pieces` with the same `out_dir`; then `node build/lookup_log.js <dir> <id>` |
+| **Sweep log** — store, `sweeps/venues` | Per venue: when last tried, when it last brought rows (the freshness drawer) | ArtifactData `get`; rebuilt from disk by `node scraper/sweep_log.js` |
+| **Quarantine** — store, `quarantine/rows` | Shows set aside, and why | ArtifactData `get` |
+| **Link venues** — store, `venues/occasional` | Each Add-by-link venue: Claude's names for it, its shop, her confirmations | ArtifactData `get` |
+| **Pending links, pages, pastes** — store, `links/pending`, `links_pages`, `links_pastes` | What is waiting to be read | ArtifactData `get` / `list` |
+| **Cloud ledger** — store, `ledger/live`, `ledger/session`, `snapshots` | Her ledger as last saved, the open session, the safety copies | ArtifactData `get` / `list`; `docs/cloud_storage.md` |
+| **Sweep run** — `scraper/output/run_*/` | `log_<stamp>.txt` per invocation (refusals, reply labels, timeouts), one CSV per venue | Read the files; `node scraper/venue_status.js`, `node scraper/qc.js` |
+
+The store is her published app's: `https://claude.ai/artifact/E2WjpRgr4W5eSzYtxyfrt5` (§5.1). ArtifactData is a deferred
+tool: load it with ToolSearch. Reading is safe; never write to her store without her yes.
 
 ### Put it in code — her decision
 
@@ -188,8 +208,8 @@ noting issues as she uses it, for a later debugging session.
   `docs/catalogue_versions.md`, "MoMA *Brancusi*".
 - **OPEN — the publisher step's verdict is not stable.** *Metamorphoses* (Hannibal), two fresh lookups, same code: "Publisher's
   section", then "Publisher" (right). Cause unproven (a different candidate page, the page empty — `pageIsShell`, or the read judging a
-  page differently); its lookup-log record settles it.
-- **OPEN — 40.10's fixes, unchecked in the app.** Her next lookups settle: *Hammershøi* (Jacquemart-André) finds *Hammershøi : le
+  page differently); read its lookup-log record (gone once 50 newer lookups have run).
+- **OPEN — 40.10's fixes, unchecked in the app.** Read the lookup log for her lookups since: *Hammershøi* (Jacquemart-André) finds *Hammershøi : le
   maître de la peinture danoise*, ISBN 978-9462302495; *Watteau* no longer reads the shop as blocked; *Canaletto - Guardi*'s English
   line names the publisher's page; a MoMA lookup still reads its shop as blocked under the whole-page test.
 - **Diagnose a lookup from its record, never a pasted panel** (`docs/app.md` §1, "The lookup log").
@@ -262,7 +282,7 @@ rules, Cini, Prado, Correr): `docs/app.md`, `docs/add_by_link.md`.
   the floor stops a lifespan ("Caravaggio (1571–1610)") being read as a show's run, so lifting it for the page reader needs
   the live proof-page check, old reader beside new, first (`docs/add_by_link.md`, "Pasted pages"; `anyYear` in `dates.js`).
 - **OPEN — a link venue is looked up exactly as the 28 are (shelf AND whole-shop search).** Detroit files a show's book in the
-  show's own shop section. Her next lookups settle: O'Keeffe found at Detroit? The RA's search (`catalogsearch/result/?q=`) is
+  show's own shop section. Read the lookup log for her lookups since: O'Keeffe found at Detroit? The RA's search (`catalogsearch/result/?q=`) is
   stored at its next lookup; Mauritshuis and Yale stay shelf-only.
 
 #### 2.2.18 Queued — her asks
@@ -425,8 +445,8 @@ Each line came from a real failure. Details are in git history and `docs/`.
 - **Run only the live checks the change can reach, and do only what she asked** — work out which proof pages a rule
   can change before fetching (five pages, not the whole list); her Confirm ask was first answered with an unasked
   front-page rule and a shop dig she never requested, while the button stayed greyed.
-- **Read the lookup log before answering why Claude labelled, read or found something** — every Relabel and Label is a
-  record with Claude's exact answer and reason (`docs/app.md` §1); a session guessed from the prompt instead (Chagall, Postwar Europe).
+- **Read the log before answering anything about what the app, Claude or a sweep did** (§1, "The logs") — a session
+  guessed from the prompt instead (Chagall, Postwar Europe), and sessions kept writing "the log would settle it" without reading it.
 - **A stand-in Claude does not predict hers** — Sonnet said Baroque, her app's Claude Surveys (*Metamorphoses*); her
   own run's record decides. A repeat ask through `sample` is replayed unless `cache:false`.
 - **Capability on one machine is not on both** (pacing was laptop-only), and "the shared path is built" is not "every venue is ready" — say it per venue.
