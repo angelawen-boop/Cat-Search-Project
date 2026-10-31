@@ -207,9 +207,8 @@ noting issues as she uses it, for a later debugging session.
   Angelico, is her report, not yet agreed): Munich's CEDON shop sells German and English editions on ONE page with a language choice
   (*Venezia 500*, *Jacobus Vrel*), and junk text is written as the publisher (Vrel, Dresden's *Paradise on Earth*, Correggio).
 - **Shops tested by her in the app:** `brit`, `morgan`, `mad`, `orsay`, `louvre`, `moma`. `uffizi`'s shop sells no books — settled.
-- **Live at 56.6 — MoMA: a book page whose status line says "In Stock" is for sale** (her decision, a MoMA-only rule:
-  its Add to Cart is drawn by script). Her next MoMA lookups confirm *Labrouste* reads as in the museum shop. Unknown:
-  whether a sold-out MoMA book's status line ever still says In Stock. `docs/catalogue_versions.md`, "MoMA *Brancusi*".
+- **MoMA: a book page whose status line says "In Stock" is for sale** (56.6, a MoMA-only rule; *Labrouste* reads in the
+  museum shop live). `docs/catalogue_versions.md`, "MoMA *Brancusi*".
 - **OPEN — the publisher step's verdict is not stable.** *Metamorphoses* (Hannibal), two fresh lookups, same code: "Publisher's
   section", then "Publisher" (right). Cause unproven (a different candidate page, the page empty — `pageIsShell`, or the read judging a
   page differently); read its lookup-log record (gone once 50 newer lookups have run).

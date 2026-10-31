@@ -99,7 +99,8 @@ checked against them. ● = starts picked; a card with one version looks as it d
   and no Add to cart. Her saved *Labrouste* page shows Add to Cart, so the button is drawn by script and the fetched page
   lacks it. **Built at 56.6, her decision: a MoMA-only rule** — on `store.moma.org/products/…`, served at the address asked,
   the status line "Item# … In Stock" is for sale whatever Claude read (`inStock` on the MoMA entry, `inStockByRule`;
-  C-099a–e). Matisse is correctly not in the shop (her check).
+  C-099a–e). Live at 56.6: *Labrouste* reads in the museum shop (L1793460080983x8a1). Matisse is correctly not in
+  the shop (her check). Unknown: whether a sold-out MoMA book's status line ever still says In Stock.
 
 ## Search: every catalogue of the exhibition — OPEN, not built
 
