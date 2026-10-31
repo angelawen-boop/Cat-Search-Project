@@ -179,10 +179,13 @@ noting issues as she uses it, for a later debugging session.
   Angelico, is her report, not yet agreed): Munich's CEDON shop sells German and English editions on ONE page with a language choice
   (*Venezia 500*, *Jacobus Vrel*), and junk text is written as the publisher (Vrel, Dresden's *Paradise on Earth*, Correggio).
 - **Shops tested by her in the app:** `brit`, `morgan`, `mad`, `orsay`, `louvre`, `moma`. `uffizi`'s shop sells no books — settled.
-- **OPEN — MoMA *Brancusi* still reads "not in the museum shop" (49.3); two faults, her decision pending** (lookup log
-  L17924993786826e6v): the membership pop-up's prices are read as books, and the book's own `store.moma.org` page is
-  rejected as not for sale. Her choice A / B / leave for the redesign, and the proposed fix: `docs/catalogue_versions.md`,
-  "MoMA *Brancusi*".
+- **OPEN — MoMA: a book in stock reads "not in the museum shop"; her choice A, waiting for the lookup pause to lift**
+  (lookup logs L17924993786826e6v *Brancusi*, L1793455188219n9b2 *Labrouste*, 56.4). The shop is not blocked: its
+  shelf pages open, only its search page is refused (403). The book's own page says "In Stock", but the for-sale read
+  rejects it for "Email When Available" and no Add to cart (her saved page shows Add to Cart: drawn by script). Her
+  choice: **A**, "In Stock" counts as for sale unless sold out is also said (general; checked against her agreed cases
+  and the Morgan Tarot first). The membership pop-up fault was not seen in the latest lookups. Detail:
+  `docs/catalogue_versions.md`, "MoMA *Brancusi*".
 - **OPEN — the publisher step's verdict is not stable.** *Metamorphoses* (Hannibal), two fresh lookups, same code: "Publisher's
   section", then "Publisher" (right). Cause unproven (a different candidate page, the page empty — `pageIsShell`, or the read judging a
   page differently); its lookup-log record settles it.
