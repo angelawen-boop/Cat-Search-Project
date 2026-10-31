@@ -21,7 +21,9 @@ the next goes through. Later ones go straight through.
 
 ## What is live now
 
-**Live: 54.3 in her app**: the shop screen's fourth button, **Add** — her own shop link (AL-080).
+**Live: 55 in her app**: Digital catalogue — her link to a PDF or online catalogue on any searched card (`docs/app.md`, DG-001–006).
+
+Before that 54.3: the shop screen's fourth button, **Add** — her own shop link (AL-080).
 
 Before that 54.2: German dates read (DS-011); Galerie de la Présidence's " : Exhibition" leaves the title (AP-015).
 

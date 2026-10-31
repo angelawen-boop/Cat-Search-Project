@@ -389,6 +389,37 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
     ok(/Re-checked: not in the museum shop\./.test(t) && /No catalogue found/.test(t), 'R-019: nothing found says so, and the card is unchanged', t.slice(0, 200));
   }
 
+  // ── DG-001..DG-004: "Digital catalogue" — her link to a PDF or online catalogue (her design) ──
+  // The box takes focus, which this React watches through IE's attachEvent (S-001, below): a no-op stands in.
+  win.HTMLElement.prototype.attachEvent = function () {};
+  win.HTMLElement.prototype.detachEvent = function () {};
+  const typeIn = async (el, t, key) => { el.value = t; await act(async () => { el.dispatchEvent(new win.KeyboardEvent('keydown', { key, bubbles: true })); }); await settle(); };
+  const digital = el => el && [...el.querySelectorAll('a')].find(a => /^Digital catalogue/.test(a.textContent));
+  {
+    const acts = () => [...card(webRow.title).querySelectorAll('button')].map(b => b.textContent).filter(x => /Search again|Re-check|Digital/.test(x)).join('|');
+    ok(acts() === 'Search again|Re-check museum shop|Digital catalogue' && !digital(card(webRow.title)),
+      'DG-001: a card with a book has "Digital catalogue" after "Re-check museum shop", and no digital link yet', acts());
+    await click(button(card(webRow.title), /^Digital catalogue$/));
+    let box = card(webRow.title).querySelector('input');
+    ok(!!box && box.value === '' && !box.placeholder, 'DG-001a:  pressed, an empty box with no words of its own');
+    await typeIn(box, 'not a link', 'Enter');
+    ok(!!card(webRow.title).querySelector('input') && !digital(card(webRow.title)), 'DG-001b:  words that are not a link are not taken: the box stays open');
+    await typeIn(card(webRow.title).querySelector('input'), 'example.org/old.pdf', 'Enter');
+    const links = () => [...card(webRow.title).querySelectorAll('a')].map(a => a.textContent.replace(/\s*↗$/, '').trim()).filter(Boolean);
+    let d = digital(card(webRow.title));
+    ok(!card(webRow.title).querySelector('input') && d && d.getAttribute('href') === 'https://example.org/old.pdf' && links().slice(-2).join('|') === 'Booko|Digital catalogue',
+      'DG-002: her link taken on Enter ("https://" added): the box closes and "Digital catalogue" is the last button, after Booko', links().join('|'));
+    ok(d && d.style.background !== '' && d.style.background !== (shopLink(card(webRow.title)) || {}).style.background,
+      'DG-002a:  on a different ground from the shop buttons');
+    await click(button(card(webRow.title), /^Digital catalogue$/));
+    box = card(webRow.title).querySelector('input');
+    ok(!!box && box.value === '', 'DG-003: pressed again, the box opens empty');
+    await typeIn(box, 'https://example.org/new.pdf', 'Enter');
+    d = digital(card(webRow.title));
+    ok(d && d.getAttribute('href') === 'https://example.org/new.pdf' && [...card(webRow.title).querySelectorAll('a')].filter(a => /^Digital/.test(a.textContent)).length === 1,
+      'DG-003a:  and a new link replaces the old one', d && d.getAttribute('href'));
+  }
+
   // ── R-020..R-023: Search again is a whole fresh lookup. Finished, it
   // replaces the card; any step failing, the card stays as it was.
   {
@@ -411,6 +442,22 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
     ok(/978-0300000009/.test(t) && !/978-1857096972/.test(t) && t.includes('Test Show (bookseller)') && !t.includes('Hannibal Books'),
        'R-022: a Search again that finishes replaces the card with what it found', t.slice(0, 400));
     ok(/Not in the museum shop/.test(t) && !/Now in the museum shop\./.test(t), 'R-023:   the shop line too', t.slice(0, 400));
+    const d = digital(card(webRow.title));
+    ok(d && d.getAttribute('href') === 'https://example.org/new.pdf', 'DG-004: Search again keeps her digital link (her decision)');
+  }
+
+  // ── DG-005..DG-006: no printed catalogue, a digital one ──
+  {
+    ok(!digital(card(noCatRow.title)), 'DG-005: a no-catalogue card shows no digital link until she adds one');
+    await click(button(card(noCatRow.title), /^Digital catalogue$/));
+    await typeIn(card(noCatRow.title).querySelector('input'), 'https://example.org/scan.pdf', 'Enter');
+    const d = digital(card(noCatRow.title));
+    ok(d && d.getAttribute('href') === 'https://example.org/scan.pdf' && /No catalogue found for this exhibition\.Digital catalogue/.test(card(noCatRow.title).textContent),
+      'DG-005a:  added, its link sits under "No catalogue found"', card(noCatRow.title).textContent.slice(0, 300));
+    await click(button(card(noCatRow.title), /^Hide$/)); await click(button(card(webRow.title), /^Hide$/));
+    ok(!!button(card(noCatRow.title), /^✗ Catalogue — digital only$/) && !!button(card(webRow.title), /^✓ Catalogue$/),
+      'DG-006: closed, it reads "✗ Catalogue — digital only"; a card with both kinds still reads "✓ Catalogue"');
+    await click(button(card(noCatRow.title), /Catalogue/)); await click(button(card(webRow.title), /Catalogue/));
   }
 
 

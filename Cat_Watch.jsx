@@ -3,7 +3,7 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 // The footer prints APP_VERSION and its date, so she can tell one build from the next.
 // Numbering, her decision: a whole number for a substantial change, a decimal for a
 // small one, one number per publish. Bump it with the change it describes.
-const APP_VERSION = "54.3";
+const APP_VERSION = "55";
 const APP_VERSION_DATE = "31 Oct 2026";
 
 // The venue order is VENUE_ORDER, below the list, which sorts MUSEUMS; drawer, chips,
@@ -1196,6 +1196,12 @@ function siteUrlOf(u){
   try{ new URL(orig); return orig; }catch{ return u; }
 }
 function originOf(u){ try{ return new URL(u).origin+"/"; }catch{ return ""; } }
+// A link she typed or pasted, "https://" added when left off; null when it is not a web address.
+function typedLink(text){
+  const t=String(text||"").trim(); if(!t)return null;
+  let u=null; try{ u=new URL(/^https?:\/\//i.test(t)?t:"https://"+t); }catch{}
+  return u&&/^https?:$/.test(u.protocol)&&u.hostname.includes(".")?u.href:null;
+}
 // Accents dropped, and the letters that are not accented ones folded too: ø, æ, œ, ß, ł,
 // đ, ð, þ and dotless ı ("Hammershøi" matches "Hammershoi"). One fold for all matching.
 const LETTER_FOLD={"\u00f8":"o","\u00e6":"ae","\u0153":"oe","\u00df":"ss","\u0142":"l","\u0111":"d","\u00f0":"d","\u00fe":"th","\u0131":"i"};
@@ -6626,11 +6632,16 @@ function PeriodScrubber({groups,C,onJump}){
 const DRAW_STEP=200;
 // The card's link buttons (Museum shop, Publisher, the bookstores), in a palette's colours.
 const linkButton=C=>({fontSize:11,fontWeight:500,color:C.ink,background:C.card,border:"1px solid "+C.rule,borderRadius:3,padding:"4px 9px",textDecoration:"none",display:"inline-block",whiteSpace:"nowrap"});
+// Her digital catalogue (`digitalUrl`: a PDF or online catalogue she pasted in; her design): the link
+// button's shape on a green ground, last in the row. Kept through Search again, Re-check and Reset cards.
+function DigitalLink({r,C,lnk}){
+  return r.digitalUrl?<a href={r.digitalUrl} target="_blank" rel="noopener noreferrer" style={{...lnk,background:C.okBg,border:"1px solid "+C.okEdge,color:C.okInk}}>Digital catalogue {"\u2197"}</a>:null;
+}
 
 // ONE LEDGER CARD. Memoised: a mark redraws only the card it changed, so every prop
 // must keep its identity between renders (act, chip, pBtn, lnk, TH are held stable in App;
 // a venue's MU entry is replaced, never edited, so `mu` changes when its shop does).
-const LedgerCard=React.memo(function LedgerCard({r,mu,isOpen,isBusy,busy,rechecking,lookLabel,said,relabelling,C,TH,chip,pBtn,lnk,act}){
+const LedgerCard=React.memo(function LedgerCard({r,mu,isOpen,isBusy,busy,rechecking,lookLabel,said,relabelling,digitalOpen,C,TH,chip,pBtn,lnk,act}){
   const t=tierFor(r),tier=TH[t],mo=moSince(r.endDate),noCat=r.looked&&r.hasCatalogue==="no",isAcq=r.acquiring==="acquired",dismissed=!r.interested;
   const searchingLabel=lookLabel||"Searching\u2026";
   // Two buttons share one busy row; only the one pressed shows progress.
@@ -6639,6 +6650,11 @@ const LedgerCard=React.memo(function LedgerCard({r,mu,isOpen,isBusy,busy,recheck
   // No shop at all (Borghese, Capodimonte, the Accademia; her decision): no
   // Re-check button, and the line says only "Venue has no shop."
   const noShop=!(mu&&(mu.shopSearch||mu.shopHome));
+  // "Digital catalogue" (her design): an empty box every time; her link, taken on Enter or on leaving
+  // the box, replaces any before it. Escape closes it.
+  const digitalBox=digitalOpen&&<input autoFocus defaultValue="" onKeyDown={e=>{ if(e.key==="Enter")act("setDigital",r.id,e.target.value); else if(e.key==="Escape"){ e.target.value=""; act("closeDigital"); } }}
+    onBlur={e=>act("setDigital",r.id,e.target.value)}
+    style={{display:"block",width:"100%",boxSizing:"border-box",marginTop:6,padding:"5px 8px",fontSize:12.5,border:"1px solid "+C.rule,borderRadius:4,background:C.card,color:C.ink,fontFamily:"inherit"}}/>;
   // Her version blocks, on a card with two or more versions (versionBlocks); with
   // nothing picked (a card searched before her order) the card shows no book, no
   // status lines and only the shop button.
@@ -6692,7 +6708,7 @@ const LedgerCard=React.memo(function LedgerCard({r,mu,isOpen,isBusy,busy,recheck
           <button onClick={()=>act("setAcq",r.id,"no")} style={chip(r.acquiring==="no")}>No</button>
           <button onClick={()=>act("setAcq",r.id,"acquired")} style={chip(r.acquiring==="acquired")}>Acquired</button>
           <button onClick={()=>act("toggleOpen",r.id)} style={{marginLeft:"auto",background:"none",border:"none",color:C.action,fontSize:11,fontWeight:600,cursor:"pointer",padding:"3px 0"}}>
-            {isOpen?"Hide":(r.looked&&r.hasCatalogue==="yes")?"\u2713 Catalogue":(r.looked&&r.hasCatalogue==="no")?"\u2717 Catalogue":"Catalogue"}
+            {isOpen?"Hide":(r.looked&&r.hasCatalogue==="yes")?"\u2713 Catalogue":(r.looked&&r.hasCatalogue==="no")?(r.digitalUrl?"\u2717 Catalogue \u2014 digital only":"\u2717 Catalogue"):"Catalogue"}
           </button>
         </div>
       </div>
@@ -6709,7 +6725,9 @@ const LedgerCard=React.memo(function LedgerCard({r,mu,isOpen,isBusy,busy,recheck
               <div style={{display:"flex",flexWrap:"wrap",gap:14}}>
                 <button onClick={()=>act("findOneCat",r.id)} disabled={busy} style={{background:"none",border:"none",color:C.soft,fontSize:11,textDecoration:"underline",cursor:"pointer",padding:0}}>{againLabel}</button>
                 {!noShop&&<button onClick={()=>act("recheckShop",r.id)} disabled={busy} style={{background:"none",border:"none",color:C.soft,fontSize:11,textDecoration:"underline",cursor:"pointer",padding:0}}>{recheckLabel}</button>}
+                <button onClick={()=>act("openDigital",r.id)} style={{background:"none",border:"none",color:C.soft,fontSize:11,textDecoration:"underline",cursor:"pointer",padding:0}}>Digital catalogue</button>
               </div>
+              {digitalBox}
               {said&&<div style={{marginTop:6,fontSize:11,color:said.failed?TH.urgent.ink:C.soft,fontWeight:said.failed?700:400}}>{said.text}</div>}
               </>}/>
           ):(
@@ -6718,7 +6736,9 @@ const LedgerCard=React.memo(function LedgerCard({r,mu,isOpen,isBusy,busy,recheck
               <div style={{marginTop:8,display:"flex",flexWrap:"wrap",gap:14}}>
                 <button onClick={()=>act("findOneCat",r.id)} disabled={busy} style={{background:"none",border:"none",color:C.soft,fontSize:10.5,textDecoration:"underline",cursor:"pointer",padding:0}}>{againLabel}</button>
                 {!noShop&&<button onClick={()=>act("recheckShop",r.id)} disabled={busy} style={{background:"none",border:"none",color:C.soft,fontSize:10.5,textDecoration:"underline",cursor:"pointer",padding:0}}>{recheckLabel}</button>}
+                <button onClick={()=>act("openDigital",r.id)} style={{background:"none",border:"none",color:C.soft,fontSize:10.5,textDecoration:"underline",cursor:"pointer",padding:0}}>Digital catalogue</button>
               </div>
+              {digitalBox}
               {said&&<div style={{marginTop:6,fontSize:11,color:said.failed?TH.urgent.ink:C.soft,fontWeight:said.failed?700:400}}>{said.text}</div>}
               </>}/>
           )}
@@ -6807,9 +6827,10 @@ function CatalogueBox({r,mu,C,TH,lnk,isAcq,noShop,vl,picked,onPick,actions}){
               {r.publisherUrl&&<a href={r.publisherUrl} target="_blank" rel="noopener noreferrer" style={lnk}>{publisherLinkLabel(r.publisherResult)} {"\u2197"}</a>}
             </>
           ):buyLinks(r).map(l=><a key={l.name} href={l.href} target="_blank" rel="noopener noreferrer" style={lnk}>{l.name} {"\u2197"}</a>)}
+          <DigitalLink r={r} C={C} lnk={lnk}/>
         </div>
       </>):(<>
-        {shopButtonUrl(mu,r.title)&&<div style={{display:"flex",flexWrap:"wrap",gap:5}}><a href={shopButtonUrl(mu,r.title)} target="_blank" rel="noopener noreferrer" style={lnk}>Museum shop {"\u2197"}</a></div>}
+        {(shopButtonUrl(mu,r.title)||r.digitalUrl)&&<div style={{display:"flex",flexWrap:"wrap",gap:5}}>{shopButtonUrl(mu,r.title)&&<a href={shopButtonUrl(mu,r.title)} target="_blank" rel="noopener noreferrer" style={lnk}>Museum shop {"\u2197"}</a>}<DigitalLink r={r} C={C} lnk={lnk}/></div>}
       </>)}
       {actions}
     </div>
@@ -6826,9 +6847,15 @@ function CatalogueNone({r,mu,C,TH,lnk,actions}){
           <p style={{fontSize:12,color:C.soft,margin:"0 0 6px"}}><span style={{color:TH.lapsed.ink,fontWeight:700}}>{shopUnreadHead(r.shopState)}</span>{SHOP_BLOCKED_NONE_REST}</p>
           {/* "Search manually" needs somewhere to press: the shop's own
               search with the title in it, as on a found card. */}
-          {shopButtonUrl(mu,r.title)&&<a href={shopButtonUrl(mu,r.title)} target="_blank" rel="noopener noreferrer" style={lnk}>Museum shop {"\u2197"}</a>}
+          <div style={{display:"flex",flexWrap:"wrap",gap:5}}>
+            {shopButtonUrl(mu,r.title)&&<a href={shopButtonUrl(mu,r.title)} target="_blank" rel="noopener noreferrer" style={lnk}>Museum shop {"\u2197"}</a>}
+            <DigitalLink r={r} C={C} lnk={lnk}/>
+          </div>
         </div>
-      ):<p style={{fontSize:12,color:C.soft,margin:"0 0 8px"}}>No catalogue found for this exhibition.</p>}
+      ):<>
+        <p style={{fontSize:12,color:C.soft,margin:"0 0 8px"}}>No catalogue found for this exhibition.</p>
+        {r.digitalUrl&&<div style={{display:"flex",flexWrap:"wrap",gap:5,marginBottom:8}}><DigitalLink r={r} C={C} lnk={lnk}/></div>}
+      </>}
       {actions}
     </div>
   );
@@ -6846,6 +6873,7 @@ export default function App(){
   const[prog,setProg]=useState({done:0,total:0,label:""});
   const[labelSaid,setLabelSaid]=useState(null);   // the last Label run's line
   const[relabelId,setRelabelId]=useState(null);   // the card a Relabel is asking about
+  const[digitalBox,setDigitalBox]=useState(null);  // the card whose Digital catalogue box is open
   // Add by link: one pop-up for CSV and Links, nothing added to the page (her design).
   // importMode: null · "choose" · "links" (the box open below them) · "needLedger" (empty page).
   const[importMode,setImportMode]=useState(null);
@@ -7758,12 +7786,11 @@ export default function App(){
   // "Add": her own link taken as the section. Its search is worked out at the venue's first lookup (fillShopSearch).
   // Not a link → the box stays open.
   function addShopFor(id,text){
-    const v=occVenues[id], t=String(text||"").trim(); if(!v)return;
-    if(!t){ setShopAdding(null); return; }
-    let u=null; try{ u=new URL(/^https?:\/\//i.test(t)?t:"https://"+t); }catch{}
-    if(!u||!/^https?:$/.test(u.protocol)||!u.hostname.includes("."))return;
+    const v=occVenues[id]; if(!v)return;
+    if(!String(text||"").trim()){ setShopAdding(null); return; }
+    const href=typedLink(text); if(!href)return;
     setShopAdding(null);
-    holdVenues({...occVenues,[id]:{...v,beforeAnswer:v.beforeAnswer||foundShop(v),shop:"found",shopHome:originOf(u.href),shopCatalogues:u.href,shelfKind:null,shopSearch:null,searchRule:null,why:null,shopEnglishUnread:null,englishPicked:false,shopAdded:true,foundBy:"her link",confirmed:true}});
+    holdVenues({...occVenues,[id]:{...v,beforeAnswer:v.beforeAnswer||foundShop(v),shop:"found",shopHome:originOf(href),shopCatalogues:href,shelfKind:null,shopSearch:null,searchRule:null,why:null,shopEnglishUnread:null,englishPicked:false,shopAdded:true,foundBy:"her link",confirmed:true}});
   }
   // "Look again": a new search NOW, skipping only the pages she turned down, never the
   // whole site.
@@ -8079,7 +8106,12 @@ export default function App(){
   // A card's buttons, by name. One function for the life of the page (so LedgerCard can skip
   // redrawing) that calls this render's handler, which sees the current ledger.
   const cardActs=useRef(null);
-  cardActs.current={restore,toggleWatch,dismiss,setAcq,toggleBuyNext,setPick,findOneCat,recheckShop,relabel,
+  // Her digital catalogue link: an empty box leaves the card as it was; not a link → the box stays open.
+  const setDigital=(id,text)=>{ if(!String(text||"").trim()){ setDigitalBox(null); return; }
+    const href=typedLink(text); if(!href)return; setDigitalBox(null);
+    const r=rows.find(x=>x.id===id); if(r&&r.digitalUrl!==href)commit(rows.map(x=>x.id===id?{...x,digitalUrl:href,editedAt:new Date().toISOString()}:x)); };
+  cardActs.current={restore,toggleWatch,dismiss,setAcq,toggleBuyNext,setPick,findOneCat,recheckShop,relabel,setDigital,
+    openDigital:id=>setDigitalBox(id),closeDigital:()=>setDigitalBox(null),
     toggleOpen:id=>setOpenCards(o=>({...o,[id]:!o[id]}))};
   const cardAct=useCallback((name,...a)=>cardActs.current[name](...a),[]);
 
@@ -8624,7 +8656,7 @@ export default function App(){
           const lead=brk||header;
           const isBusy=busyId===r.id;
           const card=<LedgerCard r={r} mu={MU[r.museumId]} isOpen={!!openCards[r.id]} isBusy={isBusy} busy={busy} rechecking={isBusy&&rechecking} lookLabel={isBusy?lookLabel:null}
-              said={recheckSaid&&recheckSaid.id===r.id?recheckSaid:null} relabelling={relabelId===r.id} C={C} TH={TH} chip={chip} pBtn={pBtn} lnk={lnk} act={cardAct}/>;
+              said={recheckSaid&&recheckSaid.id===r.id?recheckSaid:null} relabelling={relabelId===r.id} digitalOpen={digitalBox===r.id} C={C} TH={TH} chip={chip} pBtn={pBtn} lnk={lnk} act={cardAct}/>;
           if(!dragOn||!isBuyNext(r))return <React.Fragment key={r.id}>{lead}{card}</React.Fragment>;
           // The lifted card follows the finger; the cards it passes slide aside by its height.
           let ds={userSelect:"none",WebkitUserSelect:"none",WebkitTouchCallout:"none",cursor:"grab"};
@@ -9067,7 +9099,7 @@ export default function App(){
                   </div>
                   {/* "Add": her link, taken on Enter or on leaving the box; Escape closes it. */}
                   {typing&&!looking&&<input autoFocus value={shopAdding.text} onChange={e=>setShopAdding({id,text:e.target.value})}
-                    onKeyDown={e=>{ if(e.key==="Enter")addShopFor(id,e.target.value); else if(e.key==="Escape")setShopAdding(null); }}
+                    onKeyDown={e=>{ if(e.key==="Enter")addShopFor(id,e.target.value); else if(e.key==="Escape"){ e.target.value=""; setShopAdding(null); } }}
                     onBlur={e=>addShopFor(id,e.target.value)}
                     style={{display:"block",width:"100%",boxSizing:"border-box",marginTop:6,padding:"5px 8px",fontSize:12.5,border:"1px solid "+C.rule,borderRadius:4,background:C.card,color:C.ink,fontFamily:"inherit"}}/>}
                   {/* Its English section, which the finder could not read: hers to confirm instead. */}

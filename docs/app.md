@@ -36,6 +36,11 @@ Confirmed by her on real files, not only by fixtures. **Design and evidence:
   top; leaving Yes clears it), saved in her ledger; a drag is not an edit. That
   view ignores the sort chips and dividers, except Period and Date (§3, "Buy next (her decisions)"); hidden cards keep their places
   (`moveBuyNext`, `startDrag`; AD-011). Closing the search bar or Clear search (once "Reset cards") empties its box.
+- **Digital catalogue** (her design, live at 55): after a search, beside Search again and Re-check, opens an empty box;
+  her link (a PDF or online catalogue), taken on Enter or on leaving the box, is `digitalUrl` on the row and a "Digital
+  catalogue" link button on a green ground — last in the row, after Booko, on Acquired cards too. A new link replaces
+  it; no way to remove one (her decision, for now). Kept through Search again, Re-check and Reset cards. No printed book
+  plus a digital one reads "✗ Catalogue — digital only"; both kinds, the button is unchanged. DG-001–006.
 - **Per-venue freshness**, two dates, from `swept_at`.
 - **The confirm box is the TOP layer** (`zIndex` 1200), above the refresh review
   at 1100. **Any new overlay goes BELOW 1200.** Fixture 18i.

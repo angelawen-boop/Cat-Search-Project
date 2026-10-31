@@ -496,7 +496,7 @@ bot-blocked, so Pages and Paste only) is a fact about that venue, never a limit 
 > restating `capabilities` must restate all four; omitting it carries them
 > forward. **Renaming the connector means restating them.**
 
-**Live: 54.3 in her app**, with the cloud ledger (merged at 46). What each recent version changed is in
+**Live: 55 in her app**, with the cloud ledger (merged at 46). What each recent version changed is in
 `docs/publishing.md`, "What is live now".
 
 #### The mental model, load-bearing
@@ -526,7 +526,7 @@ reopening, now live — `docs/cloud_storage.md`). Reasoning and the two rejected
 ```
 id, museumId, title, startDate, endDate, summary, exUrl, interested, watching,
 acquiring, buyNext, buyRank, looked, hasCatalogue, catalogueTitle, isbn13, publisher,
-publisherUrl, publisherResult, shopUrl, shopState, shopChange, englishCheck, originalEdition, otherVenueBook, alsoVersion, addedAt, editedAt,
+publisherUrl, publisherResult, shopUrl, shopState, shopChange, englishCheck, originalEdition, otherVenueBook, alsoVersion, digitalUrl, addedAt, editedAt,
 period, periodYear, periodResponse, periodArtist, themes, labelledAt, relabelledAt
 ```
 
