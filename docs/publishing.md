@@ -21,7 +21,9 @@ the next goes through. Later ones go straight through.
 
 ## What is live now
 
-**Live: 56.3 in her app**: "Do not regroup" next to Relabel, after a Relabel that regrouped a show with its artist's other shows (`docs/periods.md`).
+**Live: 56.4 in her app**: Postwar Europe described to Claude as a time-and-place period, not a movement (`docs/periods.md`).
+
+Before that 56.3: "Do not regroup" next to Relabel, after a Relabel that regrouped a show with its artist's other shows (`docs/periods.md`).
 
 Before that 56.2: her names for the link venues (`docs/add_by_link.md`, "Renaming a link venue"); Christie's press site files under Christie's.
 

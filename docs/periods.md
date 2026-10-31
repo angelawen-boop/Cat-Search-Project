@@ -36,7 +36,7 @@
   Claude's Misc answers stand (code splits them at 1900 only) (PS-009, PS-021). **Both Miscellaneous groups should ultimately be
   deleted (her view)**; bins for now.
 - **A show split evenly between neighbouring periods, with no one heart, goes to the earliest** (her decision; Ingres and Delacroix
-  → Neoclassicism). **Postwar Europe is Europe only**; American work of those years outside a movement is General 20th Century.
+  → Neoclassicism). **Postwar Europe is a time-and-place period, not a movement** (her wording in the prompt, 56.4; PS-027): European art of c. 1945–1980 whatever its style, unless a more specific group fits; the General 20th Century catch-all says so too. Claude had read it as a movement and sent late Chagall (Pompidou 1945–1970, Nice 1966–1985) to General 20th Century. American work of those years outside a movement is General 20th Century.
 - **Tudor / Stuart Britain** (her period), straight after Northern Renaissance by its 1485 start (her decision: the list sorts by
   start date; long periods overlap later ones), c. 1485–1714; Georgian Britain starts at 1714. A show about an artist's English
   years goes there and keeps it against the one-artist rule (code, PS-020); a general retrospective stays in the artist's home period.

@@ -3,7 +3,7 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 // The footer prints APP_VERSION and its date, so she can tell one build from the next.
 // Numbering, her decision: a whole number for a substantial change, a decimal for a
 // small one, one number per publish. Bump it with the change it describes.
-const APP_VERSION = "56.3";
+const APP_VERSION = "56.4";
 const APP_VERSION_DATE = "31 Oct 2026";
 
 // The venue order is VENUE_ORDER, below the list, which sorts MUSEUMS; drawer, chips,
@@ -3405,7 +3405,7 @@ const PERIODS=[
   {key:"interwarmod",name:"Interwar Modernism",span:"c. 1918–1945: every style of those years but Surrealism and Dada (Bauhaus, Art Deco, Constructivism, New Objectivity)"},
   {key:"americanmod",name:"American Modernism",span:"c. 1910–1945 (O’Keeffe, Hopper, the Harlem Renaissance)"},
   {key:"abex",name:"Abstract Expressionism",span:"c. 1943–1965"},
-  {key:"postwareu",name:"Postwar Europe",span:"Europe only, c. 1945–1980"},
+  {key:"postwareu",name:"Postwar Europe",span:"Postwar Europe is a time-and-place period, not a movement: art made in Europe from c. 1945 to 1980, whatever its style or movement. Use it for any show whose works mainly date from that span and place, unless a more specific category on the list fits better."},
   {key:"postwaram",name:"Postwar America",span:"America only, c. 1945–1980, outside Abstract Expressionism and Pop: realism, photography, figuration (Wyeth, Arbus, Neel, Sleigh)"},
   {key:"pop",name:"Pop Art and Minimalism",span:"c. 1955–1980"},
   {key:"general20",name:"General 20th Century",span:"c. 1900–1980: 20th-century art that is not about one of the movements above, self-taught and folk art included"},
@@ -3511,7 +3511,7 @@ function periodPrompt(shows){
     "- Ancient art from anywhere (Egypt, Greece, Rome, Mesopotamia): antiquity.",
     "- Art from outside the Western tradition that is not ancient (Asian, Islamic, African, Oceanic, Indigenous): nonwestern.",
     "- Fashion, jewellery, decorative arts, design, architecture, photography and books take a period like any other show: the period whose years and place hold the work, even when the show is not about that movement's artists.",
-    "- Other 20th-century art, self-taught and folk art included: general20 (to 1980), then contemporary.",
+    "- Other 20th-century art, self-taught and folk art included: general20 (to 1980), then contemporary — except European art of c. 1945–1980, which is postwareu.",
     "- Western work that fits none of the periods, not even general19 or general20: mischistoric before 1900, miscmodern from 1900.",
     "- A show about an artist's years in Britain or at the English court (Holbein at the Tudor court, Van Dyck in England): tudor. A general retrospective of such an artist stays in the artist's home period (Holbein: northern; Van Dyck: flemish).",
     "",
