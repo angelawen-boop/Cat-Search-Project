@@ -3,7 +3,7 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 // The footer prints APP_VERSION and its date, so she can tell one build from the next.
 // Numbering, her decision: a whole number for a substantial change, a decimal for a
 // small one, one number per publish. Bump it with the change it describes.
-const APP_VERSION = "56.4";
+const APP_VERSION = "56.5";
 const APP_VERSION_DATE = "31 Oct 2026";
 
 // The venue order is VENUE_ORDER, below the list, which sorts MUSEUMS; drawer, chips,
@@ -25,7 +25,7 @@ const MUSEUMS = [
     exBase:"https://www.rijksmuseum.nl/en/whats-on/exhibitions/", shopSearch:"https://www.rijksmuseumshop.nl/en/search?q=", shopCatalogues:"https://www.rijksmuseumshop.nl/en/books/exhibition-books", shopHome:"https://www.rijksmuseumshop.nl/en/", listUrl:"https://www.rijksmuseum.nl/en/whats-on/exhibitions/now-on-view" },
   { id:"ng", short:"NG UK", lookupName:"National Gallery", name:"The National Gallery", city:"London",
     exBase:"https://www.nationalgallery.org.uk/exhibitions/", shopSearch:"https://shop.nationalgallery.org.uk/catalogsearch/result/?q=", shopCatalogues:"https://shop.nationalgallery.org.uk/books/exhibition-catalogues.html", shopHome:"https://shop.nationalgallery.org.uk/", listUrl:"https://www.nationalgallery.org.uk/exhibitions" },
-  // linkRead: Add by link options for met, acq, frick, menil, louvre, artic, brit, cincinnati (docs/add_by_link.md, "Venue link rules").
+  // linkRead: Add by link options for met, acq, frick, menil, louvre, artic, brit, cincinnati, moma (docs/add_by_link.md, "Venue link rules").
   // No apostrophe or double quote inside a linkRead pattern (write \x27): compress.js seedMemory scans this list as text.
   { id:"acq", linkRead:{ title:"subtitle", places:["New York","Palm Beach"], credit:/^In collaboration with\b/i, dashAfterColon:true, from:/^Press Release$/, minLine:60, skip:/^Gallery Hours:|\bImage Courtesy\b/, skipEntities:true, cleanLink:true }, short:"Acquavella", name:"Acquavella Galleries", city:"New York",
     exBase:"https://www.acquavellagalleries.com/exhibitions/", shopSearch:"https://acquavellagalleries.myshopify.com/search?q=", shopCatalogues:"https://acquavellagalleries.myshopify.com/collections/all", shopHome:"https://acquavellagalleries.myshopify.com/", listUrl:"https://www.acquavellagalleries.com/exhibitions" },
@@ -63,7 +63,7 @@ const MUSEUMS = [
   { id:"capo", english:false, short:"Capo", card:"Capodimonte", lookupName:"Capodimonte", name:"Museo e Real Bosco di Capodimonte aka Museo Nazionale di Capodimonte", city:"Naples", exBase:null, shopSearch:null, shopHome:null, listUrl:null },
   { id:"morgan", short:"Morgan", name:"Morgan Library & Museum", city:"New York", exBase:null, shopSearch:"https://shop.themorgan.org/search?q=", shopCatalogues:"https://shop.themorgan.org/collections/exhibition-catalogs", shopHome:"https://shop.themorgan.org/", listUrl:null },
   { id:"brit", linkRead:{ from:/^(?:For the catalogue, homewares and gifts from the exhibition|Book tickets$)/ }, short:"British Museum", name:"The British Museum", city:"London", exBase:null, shopSearch:"https://www.britishmuseumshoponline.org/catalogsearch/result/?q=", shopCatalogues:"https://www.britishmuseumshoponline.org/books/exhibition-books.html", shopHome:"https://britishmuseumshoponline.org/", listUrl:null },
-  { id:"moma", short:"MoMA", name:"Museum of Modern Art", city:"New York", exBase:null, shopSearch:"https://store.moma.org/collections/shop?q=" /* her own search */, shopCatalogues:"https://store.moma.org/collections/exhibition-catalogues", shopHome:"https://store.moma.org/", listUrl:null },
+  { id:"moma", linkRead:{ spaceBeforeComma:true }, short:"MoMA", name:"Museum of Modern Art", city:"New York", exBase:null, shopSearch:"https://store.moma.org/collections/shop?q=" /* her own search */, shopCatalogues:"https://store.moma.org/collections/exhibition-catalogues", shopHome:"https://store.moma.org/", listUrl:null },
   { id:"tate-modern", short:"Tate Modern", name:"Tate Modern", city:"London", exBase:null, shopSearch:"https://shop.tate.org.uk/search?q=", shopCatalogues:"https://shop.tate.org.uk/books/exhibition-books?sz=96", shopHome:"https://shop.tate.org.uk/", listUrl:null },
   // The search is hers, query moved last so the title can follow. A Cloudflare check refuses
   // us, so the lookup reports it blocked; the address stays for her shop link.
@@ -1382,7 +1382,9 @@ const WORK_THEN_PICTURE=/^[^.]{3,120},\s+an?\s+(?:[\p{L}-]+\s+){0,5}(?:painting|
 function isCaption(t){
   const s=String(t||"").trim(), year=/\b1[0-9]{3}\b|\b20[0-9]{2}\b/.test(s), first=sentencesOf(s)[0]||s;
   const big=s.split(/\s+/).filter(w=>/^\p{L}{4,}/u.test(w)), caps=big.filter(w=>/^\p{Lu}/u.test(w)).length;
-  return /\(detail\)|^detail\b|\bdetail,|\bdetail of\b/i.test(s)||WORK_THEN_PICTURE.test(s)||big.length>=3&&s.split(/\s+/).length<=15&&caps/big.length>=0.75&&!CAPTION_VERB.test(s)||CAPTION_SIZE.test(s)||CAPTION_CREDIT.test(s)&&year||CAPTION.test(first.replace(/\.$/,""))
+  // "detail" marks a caption only outside a long paragraph of prose ("purged of descriptive detail, geometric…", MoMA's Matisse).
+  const prose=s.split(/\s+/).length>=40&&CAPTION_VERB.test(s);
+  return !prose&&/\(detail\)|^detail\b|\bdetail,|\bdetail of\b/i.test(s)||WORK_THEN_PICTURE.test(s)||big.length>=3&&s.split(/\s+/).length<=15&&caps/big.length>=0.75&&!CAPTION_VERB.test(s)||CAPTION_SIZE.test(s)||CAPTION_CREDIT.test(s)&&year||CAPTION.test(first.replace(/\.$/,""))
     ||CAPTION_MEDIUM.test(s)&&year&&!CAPTION_VERB.test(s)||PICTURE_OF.test(s)&&!/\b(?:is|are|was|were|has|have|had|will|would|can|could)\b/i.test(s)
     ||/^(?:\p{Lu}[\p{L}.'’-]*\s+){0,3}\p{Lu}[\p{L}.'’-]*,\s/u.test(s)&&sentencesOf(s).length===1&&s.split(/\s+/).length<=14&&!CAPTION_VERB.test(s);
 }
@@ -1480,7 +1482,10 @@ function pageToRead(res,url,vc,rules){
   // The venue an all-number date's order is looked up under (DATE_ORDER, dates.js): its own site's,
   // whether or not it has an entry here.
   const dateVenue=vc||occVenueId(hostOf(siteUrlOf(url)));
-  return{res,url,vc,rules,rule,lr,host,show,site,lines:text.split("\n"),dateText,dateVenue,broken:-1,after:-1,
+  // A venue that types a space before a comma (linkRead.spaceBeforeComma; MoMA's "Toyo Ito , SANAA"): dropped, so its
+  // heading matches the tab title and wins over the title repeated in its events list.
+  const lines=text.split("\n").map(l=>lr&&lr.spaceBeforeComma?l.replace(/(\S) +,/g,"$1,"):l);
+  return{res,url,vc,rules,rule,lr,host,show,site,lines,dateText,dateVenue,broken:-1,after:-1,
     words:l=>foldText(stripMd(l)).replace(/[^a-z0-9]+/g," ").trim(),
     // A show page's own date line: page text, so no loose single dates.
     rangeIn:l=>DATES.findDateRange(dateText(l),{looseSingles:false,slashes:true,venue:dateVenue})};

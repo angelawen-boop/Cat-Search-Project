@@ -222,7 +222,7 @@ decision). Before writing a reader rule, look for the sweep's. A general rule sh
 
 **The passage — what Claude is handed** (`takePassage`, AL-061; shared rules first, her decision). The page is read by structure:
 paragraphs joined (a line per few words; a sentence wrapped over paragraphs); never a list, quotation, table, non-prose paragraph
-(under eight words, no sentence end), caption (`isCaption`), the title again or a shouted line; junk sentences go one at a time
+(under eight words, no sentence end), caption (`isCaption`; "detail" marks one only outside a long paragraph of prose — MoMA's Matisse, AL-061k), the title again or a shouted line; junk sentences go one at a time
 (`scraper/boilerplate.js` `BOILERPLATE` and `LINK_JUNK`; `sentencesOf` ignores an initial's full stop). It ends at four paragraphs
 or 2,000 characters (her decision), or at a heading for other matter (`OTHER_MATTER`), or a box heading (`LINK_BOX`) after 600
 characters; "Related …" above the text is skipped; an online feature's section ("Online special") is passed over. Each proof
@@ -236,6 +236,9 @@ Proof pages for every rule: `docs/link_proof_pages.json`.
 ## Venue link rules
 
 **Occasional order and chips** are `VENUE_ORDER` (CLAUDE.md §5.4). **A venue's rule is that venue's** (her decision).
+
+- **MoMA** (`moma`): a space typed before a comma ("Toyo Ito , SANAA") is dropped, so the heading matches the tab title and wins
+  over the title repeated in the events list (her decision: MoMA only; `spaceBeforeComma`, AL-061l).
 
 - **Galerie de la Présidence** (`occ-presidence-fr`): " : Exhibition" leaves its show headings (her decision; `titleDrop`,
   AP-015). **Tate library** (`occ-library-tate-org-uk`): Claude is handed the record's Summary (`from`, `fromLast`; AP-014).
