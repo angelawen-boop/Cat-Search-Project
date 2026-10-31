@@ -21,7 +21,9 @@ the next goes through. Later ones go straight through.
 
 ## What is live now
 
-**Live: 54 in her app**: Import → Paste; the own-site rule for Links, Pages and Paste; the Change card says "Link" (`docs/add_by_link.md`, "Pasted pages").
+**Live: 54.1 in her app**: the Tate library's records hand Claude their Summary (`from`/`fromLast`, AP-014); card links wrap; the import pop-up fits a phone; Clear all in the row with + and Read, centred; the empty Pages list says nothing.
+
+Before that 54: Import → Paste; the own-site rule for Links, Pages and Paste; the Change card says "Link" (`docs/add_by_link.md`, "Pasted pages").
 
 Before that 53.11: the Correr's archive — title after its section menu, capitals recased, spaced ordinals and comma-less month-first ranges read (DS-010, AL-089).
 

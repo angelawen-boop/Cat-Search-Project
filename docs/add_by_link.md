@@ -276,7 +276,7 @@ her saved pages in `docs/link_pages/saved/` (live proof is impossible); tests AP
 For mostly-text pages where saving each is slow (her idea; the Tate library's records, bot-blocked), and her last resort for manual
 entry: details from several sources typed in under a link to any page useful for that show. **No link, no import** (her decision).
 One box per page, the link and the text apart (her design), two to start, + for more; a faint "Link" in each link box, nothing in the
-text box; "Clear" in each box, "Clear all" above. Stored as she types, one document per box (`links_pastes/…`), under the
+text box; "Clear" in each box, "Clear all" centred in the row with + and Read (her design). Stored as she types, one document per box (`links_pastes/…`), under the
 store-read lock. Each box becomes a page (`pastedPageReply`) and goes the saved page's road — same reader, Claude, shop finder,
 review; Cancel / rejected / undecided put boxes back. No rules invented for pasted text (her decision): a page like Ghent's
 (title read as its "closed" notice) goes by Pages. Titles stay as the record writes them; a pasted link's Change card she rejects
@@ -291,7 +291,8 @@ under the museum Claude names when that museum is on that site (`ownMuseumNamed`
 under its own museum (a Tate Modern record under Tate Modern). A sister site on a shared domain (cultura.gov.it) is not "under".
 **"Tate Gallery"** (pre-2000 records) names neither Tate, so it is its own venue (her decision); its shop must be the Tate's
 current shop — **OPEN:** live, the finder took `shop.tate.org.uk/books`, not its exhibition-books section, which the search did
-return. No listed proof page can reach the rule (every page on her museums' sites files by address first). Tests PS-006, PS-025.
+return. Its records' text for Claude is the one under their "Summary" heading, below the copies list (her saved Reynolds and
+Pre-Raphaelite pages; venue rule `from` with `fromLast`, AP-014). No listed proof page can reach the rule (every page on her museums' sites files by address first). Tests PS-006, PS-025.
 
 ## Someone else's page — a show held elsewhere
 

@@ -253,7 +253,7 @@ rules, Cini, Prado, Correr): `docs/app.md`, `docs/add_by_link.md`.
 
 #### 2.2.18 Queued — her asks
 
-- **OPEN — Paste: live in her app at 54.** Her live tries settle it; the shop finder for a pasted new venue is unproven there. **OPEN — "Tate Gallery"'s shop:** live, the finder
+- **OPEN — Paste: live in her app (54, 54.1).** Her live tries settle it; the shop finder for a pasted new venue is unproven there. **OPEN — "Tate Gallery"'s shop:** live, the finder
   took the Tate's Books shelf, not its exhibition-books section. **Next, her decision: the paste boxes and buttons** (talked through
   only after the rest). Her decisions and the own-site rule: `docs/add_by_link.md`, "Pasted pages" and the section after it.
 - **OPEN — review the names of venues that came in by link or page** (Claude-named, in her store): her card and short names, each rename
@@ -486,7 +486,7 @@ bot-blocked, so Pages and Paste only) is a fact about that venue, never a limit 
 > restating `capabilities` must restate all four; omitting it carries them
 > forward. **Renaming the connector means restating them.**
 
-**Live: 54 in her app**, with the cloud ledger (merged at 46). What each recent version changed is in
+**Live: 54.1 in her app**, with the cloud ledger (merged at 46). What each recent version changed is in
 `docs/publishing.md`, "What is live now".
 
 #### The mental model, load-bearing
