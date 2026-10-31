@@ -205,6 +205,9 @@ Proof pages for every rule: `docs/link_proof_pages.json`.
 
 **Occasional order and chips** are `VENUE_ORDER` (CLAUDE.md §5.4). **A venue's rule is that venue's** (her decision).
 
+- **Galerie de la Présidence** (`occ-presidence-fr`): " : Exhibition" leaves its show headings (her decision; `titleDrop`,
+  AP-015). **Tate library** (`occ-library-tate-org-uk`): Claude is handed the record's Summary (`from`, `fromLast`; AP-014).
+
 - **San Marco** (`occ-museitoscana-cultura-gov-it`): card "San Marco" (`short`), lookups search "Museo di San Marco" (`name`;
   AL-046d); titles are the press-release headline's first sentence, without "Mostra" and the quotation marks, capitals recased
   (her decision; `firstSentence`, `titleDrop`, `unquote`, `capsTitles`); shop: none (her answer).
