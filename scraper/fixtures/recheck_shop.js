@@ -455,9 +455,25 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
     ok(d && d.getAttribute('href') === 'https://example.org/scan.pdf' && /No catalogue found for this exhibition\.Digital catalogue/.test(card(noCatRow.title).textContent),
       'DG-005a:  added, its link sits under "No catalogue found"', card(noCatRow.title).textContent.slice(0, 300));
     await click(button(card(noCatRow.title), /^Hide$/)); await click(button(card(webRow.title), /^Hide$/));
-    ok(!!button(card(noCatRow.title), /^✗ Catalogue — digital only$/) && !!button(card(webRow.title), /^✓ Catalogue$/),
-      'DG-006: closed, it reads "✗ Catalogue — digital only"; a card with both kinds still reads "✓ Catalogue"');
+    ok(!!button(card(noCatRow.title), /^✗ Catalogue — digital only$/) && !!button(card(webRow.title), /^✓ Catalogue \+ digital$/),
+      'DG-006: closed, it reads "✗ Catalogue — digital only"; a card with both kinds reads "✓ Catalogue + digital" (her wording)');
     await click(button(card(noCatRow.title), /Catalogue/)); await click(button(card(webRow.title), /Catalogue/));
+  }
+
+  // ── DG-007: the Digital catalogue chip, last in Acquiring?, after Buy next moved to follow Owned (her design) ──
+  {
+    const chips = () => [...win.document.querySelectorAll('button')].filter(b => !b.closest('article'));
+    const names = chips().map(b => b.textContent.trim());
+    const at = n => names.indexOf(n);
+    ok(at('Buy next') === at('Owned') + 1 && at('Digital catalogue') === at('No catalogue') + 1 && at('Watched') > at('Digital catalogue'),
+      'DG-007: Acquiring? reads Wanted, Owned, Buy next, … No catalogue, Digital catalogue', names.slice(at('Wanted'), at('Digital catalogue') + 1).join(', '));
+    const dig = chips().find(b => b.textContent.trim() === 'Digital catalogue');
+    await click(dig);
+    ok(!!card(noCatRow.title) && !!card(webRow.title) && !card(lgdRow.title), 'DG-007a: Digital catalogue shows only cards with her digital link');
+    const no = chips().find(b => b.textContent.trim() === 'No catalogue');
+    await click(no);
+    ok(!!card(noCatRow.title) && !!card(webRow.title), 'DG-007b: with No catalogue too, they widen one another, as Has and No catalogue do');
+    await click(no); await click(dig);
   }
 
 
@@ -1189,7 +1205,8 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
     ok(!!d && !!star && /^(Watch|Unwatch)$/.test(star.title), 'BN-001: a card marked Yes has the dot, just left of the star', d && star && star.title);
     const acq = [...doc.querySelectorAll('span')].find(s => s.textContent === 'Acquiring?');
     const row = acq ? [...acq.parentElement.querySelectorAll('button')].map(b => b.textContent) : [];
-    ok(row.slice(-3).join('|') === 'Has catalogue|No catalogue|Buy next', 'BN-002: the Acquiring row ends Has catalogue, No catalogue, Buy next', row.join('|'));
+    ok(row.join('|') === 'Wanted|Owned|Buy next|3+ mos|6+ mos closing window|Has catalogue|No catalogue|Digital catalogue',
+      'BN-002: the Acquiring row is Wanted, Owned, Buy next, … Has catalogue, No catalogue, Digital catalogue (her order, 56.1)', row.join('|'));
     await click(d);
     ok(dotOf(webRow.title).title === 'Not buying next', 'BN-003: pressing the dot marks it');
     await click(chipNamed('Buy next'));

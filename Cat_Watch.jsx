@@ -3,7 +3,7 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 // The footer prints APP_VERSION and its date, so she can tell one build from the next.
 // Numbering, her decision: a whole number for a substantial change, a decimal for a
 // small one, one number per publish. Bump it with the change it describes.
-const APP_VERSION = "56";
+const APP_VERSION = "56.1";
 const APP_VERSION_DATE = "31 Oct 2026";
 
 // The venue order is VENUE_ORDER, below the list, which sorts MUSEUMS; drawer, chips,
@@ -1900,7 +1900,8 @@ function linkPrompt(page,askVenue,url,vc){
     +"RULES FOR THE SUMMARY:\n"+SUMMARY_RULES+"\n\n"
     +"Answer with exactly these keys:\n"
     +"\"summary\": the summary, following the rules above — or null if the raw text does not describe an exhibition.\n"
-    +(page.pasted?"\"title\": the exhibition's full name with its subtitle, copied exactly as the text writes it, word for word (a line break inside it may become a space). Only the name: never a sentence about the show, an author's or editor's name after it, a label (\"Title:\", \"Exhibition\"), a place or a date.\n"
+    +(page.pasted?"The summary is written from the rest of the text, once the title and the dates are taken out: what the exhibition showed, never the title reworded.\n"
+      +"\"title\": the exhibition's full name with its subtitle, copied exactly as the text writes it, word for word (a line break inside it may become a space). Only the name: never a sentence about the show, an author's or editor's name after it, a label (\"Title:\", \"Exhibition\"), a place or a date.\n"
       +"\"dates\": the words that give the exhibition's opening and closing dates"+(museum||askVenue?" at "+(museum?"THE MUSEUM THIS CARD IS FOR":"the museum you give as venue"):"")+", copied exactly as the text writes them (\"November 19, 1977 to February 12, 1978\"). Never another venue's showing, a birth or death date, or a publication date. \"\" if the text gives none.\n":"")
     +(page.between.length?"\"subtitle\": if one of the LINES BETWEEN THE TITLE AND THE DATES is the second part of the exhibition's own name — the part a catalogue's title would carry after the main title — copy that line exactly as written. Otherwise \"\". Never a category (\"Special Exhibition\"), a sponsor, a place, a price or a date.\n":"")
     +"\"english\": the exhibition's title"+(page.between.length?" (with the subtitle you gave, if any)":"")+" in natural English if it is not in English; \"\" if it already is, names aside. Keep every name as written and the title's own full stops. Plain words: no \"In English\", no quotation marks.\n"
@@ -1939,7 +1940,7 @@ function answerFaults(raw,page){
     if(!v.ok)faults.push("the summary: "+v.reason);
     else{
       faults.push(...ANSWER_CHECK.stringFaults(o.summary).map(f=>"the summary "+f));
-      faults.push(...ANSWER_CHECK.unsupportedClaims(o.summary,[page.base,...(page.between||[]),page.raw].join("\n")).map(f=>"in the summary, "+f));
+      faults.push(...ANSWER_CHECK.unsupportedClaims(o.summary,page.pasted?pasteRest(o,page):[page.base,...(page.between||[]),page.raw].join("\n")).map(f=>"in the summary, "+f));
     }
   }
   // The English title as linkAnswer reads it (not a string is none; quotation marks and an "In English:"
@@ -2252,7 +2253,20 @@ function pasteFaults(o,page){
   if(!a.pasteTitle)faults.push("no title given");
   else if(!inPasted(a.pasteTitle,page.text))faults.push("the title is not copied exactly from the text");
   if(a.pasteDates&&!inPasted(a.pasteDates,page.text))faults.push("the dates are not copied exactly from the text");
+  // A summary whose every word is the title's says nothing (her Met paste: "Late Antique and Early Christian art, third to seventh century.").
+  const said=pasteWords(a.summary).trim().split(" ").filter(w=>w.length>2&&!PASTE_SMALL_WORDS.has(w));
+  if(a.summary&&a.pasteTitle&&said.length&&said.every(w=>pasteWords(a.pasteTitle).includes(" "+w+" ")))
+    faults.push("the summary only rewords the title: describe the exhibition from the rest of the text");
   return faults;
+}
+const PASTE_SMALL_WORDS=new Set(["the","and","for","from","with","art","its","his","her","their"]);
+// The text the summary is checked against: the paste with the title and the date words taken out,
+// as Links and Pages hand Claude the page under its title, dates taken out.
+function pasteRest(o,page){
+  const a=linkAnswer(o);
+  let rest=pasteWords(page.text);
+  for(const part of [a.pasteTitle,a.pasteDates]) if(pasteWords(part).trim())rest=rest.split(pasteWords(part)).join(" ");
+  return rest;
 }
 // The dates from Claude's copied words, by the shared date reader with no year floor: the
 // words are already cut out of the text, so no lifespan can be among them.
@@ -6744,7 +6758,7 @@ const LedgerCard=React.memo(function LedgerCard({r,mu,isOpen,isBusy,busy,recheck
           <button onClick={()=>act("setAcq",r.id,"no")} style={chip(r.acquiring==="no")}>No</button>
           <button onClick={()=>act("setAcq",r.id,"acquired")} style={chip(r.acquiring==="acquired")}>Acquired</button>
           <button onClick={()=>act("toggleOpen",r.id)} style={{marginLeft:"auto",background:"none",border:"none",color:C.action,fontSize:11,fontWeight:600,cursor:"pointer",padding:"3px 0"}}>
-            {isOpen?"Hide":(r.looked&&r.hasCatalogue==="yes")?"\u2713 Catalogue":(r.looked&&r.hasCatalogue==="no")?(r.digitalUrl?"\u2717 Catalogue \u2014 digital only":"\u2717 Catalogue"):"Catalogue"}
+            {isOpen?"Hide":(r.looked&&r.hasCatalogue==="yes")?"\u2713 Catalogue"+(r.digitalUrl?" + digital":""):(r.looked&&r.hasCatalogue==="no")?(r.digitalUrl?"\u2717 Catalogue \u2014 digital only":"\u2717 Catalogue"):"Catalogue"}
           </button>
         </div>
       </div>
@@ -7035,6 +7049,7 @@ export default function App(){
   const[acq6mo,setAcq6mo]=useState(false);
   const[acqHasCat,setAcqHasCat]=useState(false);
   const[acqNoCat,setAcqNoCat]=useState(false);
+  const[acqDigital,setAcqDigital]=useState(false);
   const[acqBuyNext,setAcqBuyNext]=useState(false);
   const bnOnly=acqBuyNext&&!acqOwned;   // Buy next alone: her dragged order; with Owned it is an ordinary list
   const[drag,setDrag]=useState(null); // the card being dragged in the Buy next view
@@ -7344,7 +7359,7 @@ export default function App(){
   }
 
   const toggleSet=(setter,val)=>setter(prev=>{const n=new Set(prev);if(n.has(val))n.delete(val);else n.add(val);return n;});
-  const clearFilters=()=>{setVenueF(new Set());setThemeF(new Set());setTimeF(new Set());setAcqWanted(false);setAcqOwned(false);setAcq3mo(false);setAcq6mo(false);setAcqHasCat(false);setAcqNoCat(false);setAcqBuyNext(false);setBnPeriod(false);setBnDate(false);setShowAll(false);setDismissedOnly(false);setWatchedF(false);setLabelledF(false);setSearch("");setShowSearch(false);};
+  const clearFilters=()=>{setVenueF(new Set());setThemeF(new Set());setTimeF(new Set());setAcqWanted(false);setAcqOwned(false);setAcq3mo(false);setAcq6mo(false);setAcqHasCat(false);setAcqNoCat(false);setAcqDigital(false);setAcqBuyNext(false);setBnPeriod(false);setBnDate(false);setShowAll(false);setDismissedOnly(false);setWatchedF(false);setLabelledF(false);setSearch("");setShowSearch(false);};
 
   // WHAT A QUARANTINE REMEMBERS. The URL where there is one; venue + title where there
   // is not (a reused title could block the wrong row — bounded, and visible on screen).
@@ -7960,7 +7975,7 @@ export default function App(){
     setProposals(null); setDecisions({}); setSeenInFile(null); setRefreshDone({added,filled,changed,never:newlyIgnored.length,left:partial?leftUndecided:0});
     setRefreshTouched(touched); setPinTouched(touched.length>0); // float just-changed entries to the top, this session
     setVenueF(new Set()); setThemeF(new Set()); setTimeF(new Set()); setWatchedF(false); setLabelledF(false);
-    setAcqWanted(false); setAcqOwned(false); setAcq3mo(false); setAcq6mo(false); setAcqHasCat(false); setAcqNoCat(false); setAcqBuyNext(false); setBnPeriod(false); setBnDate(false);
+    setAcqWanted(false); setAcqOwned(false); setAcq3mo(false); setAcq6mo(false); setAcqHasCat(false); setAcqNoCat(false); setAcqDigital(false); setAcqBuyNext(false); setBnPeriod(false); setBnDate(false);
     setDismissedOnly(false); setShowAll(false); setSearch("");
   }
   // Cancel import after a Read puts every link (or page) it read back in the box (or list), stored (her decision).
@@ -8286,7 +8301,8 @@ export default function App(){
       // both lists, as two venues do (her decision); Buy next is the part of Wanted she has put in her order.
       if(acqWanted||acqOwned||acqBuyNext){if(!((acqOwned&&r.acquiring==="acquired")||(acqWanted&&r.acquiring==="yes"&&(!acqBuyNext||isBuyNext(r)))||(acqBuyNext&&!acqWanted&&isBuyNext(r))))return false;}
       if(acq3mo||acq6mo){if(!((acq3mo&&t==="closing")||(acq6mo&&(t==="urgent"||t==="lapsed"))))return false;}
-      if(acqHasCat||acqNoCat){if(!((acqHasCat&&r.looked&&r.hasCatalogue==="yes")||(acqNoCat&&r.looked&&r.hasCatalogue==="no")))return false;}
+      // Has, No and Digital catalogue widen one another: a card shows when it matches any one chosen.
+      if(acqHasCat||acqNoCat||acqDigital){if(!((acqHasCat&&r.looked&&r.hasCatalogue==="yes")||(acqNoCat&&r.looked&&r.hasCatalogue==="no")||(acqDigital&&r.digitalUrl)))return false;}
       return true;
     });
     out.sort((a,b)=>{
@@ -8312,12 +8328,12 @@ export default function App(){
       return flip*db.localeCompare(da);
     });
     return out;
-  },[rows,byArtist,sortBy,venueF,themeF,timeF,acqWanted,acqOwned,acq3mo,acq6mo,acqHasCat,acqNoCat,acqBuyNext,bnPeriod,bnDate,periodView,showAll,dismissedOnly,watchedF,labelledF,search,pinTouched,refreshTouched,dateReversed]);
+  },[rows,byArtist,sortBy,venueF,themeF,timeF,acqWanted,acqOwned,acq3mo,acq6mo,acqHasCat,acqNoCat,acqDigital,acqBuyNext,bnPeriod,bnDate,periodView,showAll,dismissedOnly,watchedF,labelledF,search,pinTouched,refreshTouched,dateReversed]);
 
   // DRAWN AS SHE SCROLLS: the first DRAW_STEP cards, then DRAW_STEP more each time the end
   // of the drawn list nears the screen. A new filter, sort or search starts again from the
   // top (viewToken). Jump to bottom draws the rest first. No IntersectionObserver → all.
-  const viewToken=useMemo(()=>({}),[sortBy,venueF,themeF,timeF,acqWanted,acqOwned,acq3mo,acq6mo,acqHasCat,acqNoCat,acqBuyNext,bnPeriod,bnDate,showAll,dismissedOnly,watchedF,labelledF,search,pinTouched,dateReversed]);
+  const viewToken=useMemo(()=>({}),[sortBy,venueF,themeF,timeF,acqWanted,acqOwned,acq3mo,acq6mo,acqHasCat,acqNoCat,acqDigital,acqBuyNext,bnPeriod,bnDate,showAll,dismissedOnly,watchedF,labelledF,search,pinTouched,dateReversed]);
   const[drawn,setDrawn]=useState({token:null,n:DRAW_STEP});
   const drawLimit=typeof IntersectionObserver==="undefined"?Infinity:drawn.token===viewToken?drawn.n:DRAW_STEP;
   const moreRef=useRef(null);
@@ -8655,11 +8671,12 @@ export default function App(){
           <span style={{fontSize:9,letterSpacing:"0.12em",textTransform:"uppercase",color:C.soft,marginRight:2}}>Acquiring?</span>
           <button onClick={()=>setAcqWanted(v=>!v)} style={chip(acqWanted)}>Wanted</button>
           <button onClick={()=>{setAcqOwned(v=>!v);if(acqBuyNext){setBnPeriod(false);setBnDate(false);setDateReversed(false);}}} style={chip(acqOwned)}>Owned</button>
+          <button onClick={()=>{setAcqBuyNext(v=>!v);setBnPeriod(false);setBnDate(false);}} style={chip(acqBuyNext)}>Buy next</button>
           <button onClick={()=>setAcq3mo(v=>!v)} style={chip(acq3mo)}>3+ mos</button>
           <button onClick={()=>setAcq6mo(v=>!v)} style={chip(acq6mo)}>6+ mos closing window</button>
           <button onClick={()=>setAcqHasCat(v=>!v)} style={chip(acqHasCat)}>Has catalogue</button>
           <button onClick={()=>setAcqNoCat(v=>!v)} style={chip(acqNoCat)}>No catalogue</button>
-          <button onClick={()=>{setAcqBuyNext(v=>!v);setBnPeriod(false);setBnDate(false);}} style={chip(acqBuyNext)}>Buy next</button>
+          <button onClick={()=>setAcqDigital(v=>!v)} style={chip(acqDigital)}>Digital catalogue</button>
         </div>
         <div style={{display:"flex",gap:4,flexWrap:"wrap",alignItems:"center"}}>
           <span style={{fontSize:9,letterSpacing:"0.12em",textTransform:"uppercase",color:C.soft,marginRight:2}}>Showing</span>

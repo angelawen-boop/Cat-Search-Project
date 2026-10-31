@@ -28,7 +28,7 @@ Confirmed by her on real files, not only by fixtures. **Design and evidence:
   coming back is correct.** Never propose remembering rejections.
 - **Buy next** (her design): on a Yes card, a dot left of the star, drawn
   to the star's measured size (`starInk`) — hollow off, red on. Leaving Yes clears
-  it. Acquiring row ends Has catalogue · No catalogue · Buy next. **No count
+  it. Acquiring row: Wanted · Owned · Buy next · 3+ mos · 6+ mos · Has catalogue · No catalogue · Digital catalogue (her order, 56.1). **No count
   anywhere.** **Her order** (her design): in the Buy next view she holds a card
   (touch ~0.45s, a buzz on Android where the page is allowed one) or presses it
   (mouse) and drags it; a swipe before the hold scrolls; buttons and links keep
@@ -40,7 +40,9 @@ Confirmed by her on real files, not only by fixtures. **Design and evidence:
   her link (a PDF or online catalogue), taken on Enter or on leaving the box, is `digitalUrl` on the row and a "Digital
   catalogue" link button on a green ground — last in the row, after Booko, on Acquired cards too. A new link replaces
   it; no way to remove one (her decision, for now). Kept through Search again, Re-check and Reset cards. No printed book
-  plus a digital one reads "✗ Catalogue — digital only"; both kinds, the button is unchanged. DG-001–006.
+  plus a digital one reads "✗ Catalogue — digital only"; both kinds read "✓ Catalogue + digital" (her wording, 56.1). The
+  **Digital catalogue** chip, last in Acquiring?, shows cards with her link; it widens with Has and No catalogue as they
+  widen each other (her design). DG-001–007.
 - **Per-venue freshness**, two dates, from `swept_at`.
 - **The confirm box is the TOP layer** (`zIndex` 1200), above the refresh review
   at 1100. **Any new overlay goes BELOW 1200.** Fixture 18i.

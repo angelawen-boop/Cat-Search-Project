@@ -310,9 +310,12 @@ Claude is handed the whole paste (the 2,000-character cut) and gives the descrip
 refuses a title or date words not in the text word for word (capitals, punctuation and line breaks aside) and asks again
 (`pasteFaults`), then reads the dates by the shared reader **with no year floor** (`anyYear`: the words are already cut out, so
 no lifespan can be among them; the sweep and the page reader keep 1990). " : " becomes ": ", a closing full stop goes
-(`pasteTitle`). **Any length is read** — no "too little text" (her decision). Then the same venue rules, shop finder and review.
+(`pasteTitle`). **The description comes from the rest of the text** (her decision, 56.1): Claude is told so, its claims are
+checked against the paste with the title and date words taken out (`pasteRest`), and one whose every word is the title's is
+refused and asked again (her Met paste gave "Late Antique and Early Christian art, third to seventh century."). **Any length
+is read** — no "too little text" (her decision). Then the same venue rules, shop finder and review.
 Proof: her three Tate library pastes (`docs/link_pages/pasted_tate_library.json`) and her one-sentence Met paste (*The Age of
-Spirituality*, 1977); tests PS-001–029 (`add_by_paste.js`).
+Spirituality*, 1977); tests PS-001–029, PS-004c (`add_by_paste.js`).
 
 ## Another part of one of her museums' own site — all three ways in
 

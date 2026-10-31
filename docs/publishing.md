@@ -21,7 +21,10 @@ the next goes through. Later ones go straight through.
 
 ## What is live now
 
-**Live: 56 in her app**: Paste read by Claude — title and date words from Claude, checked word for word against the text by code;
+**Live: 56.1 in her app**: Paste's description from the rest of the text, never the title reworded (PS-004c); Buy next after
+Owned, a Digital catalogue chip last in Acquiring?; "✓ Catalogue + digital" on a card with both (DG-006–007).
+
+Before that 56: Paste read by Claude — title and date words from Claude, checked word for word against the text by code;
 any length of text; any year (`docs/add_by_link.md`, "Pasted pages"; PS-001–004b).
 
 Before that 55: Digital catalogue — her link to a PDF or online catalogue on any searched card (`docs/app.md`, DG-001–006).

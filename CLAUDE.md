@@ -260,7 +260,8 @@ rules, Cini, Prado, Correr): `docs/app.md`, `docs/add_by_link.md`.
 #### 2.2.18 Queued — her asks
 
 - **OPEN — Paste: Claude reads title and dates, live at 56** (her decision; `docs/add_by_link.md`, "Pasted pages"): any length,
-  any year. Her next pastes settle it — her Met *Age of Spirituality* first; the shop finder for a pasted new venue is unproven.
+  any year; the description from the rest of the text (56.1). Her Met *Age of Spirituality* re-paste settles it; the shop
+  finder for a pasted new venue is unproven.
   **OPEN — a pasted page names its venue from the address alone** (pasted text carries no site name): Claude read
   `presidence.fr` as the French Presidency ("Présidence de la République", "Paris Élysée") and the finder took the Élysée
   Palace's shop (lookup log L17934138860630vq8); the same page by link was named Galerie de la Presidence from its tab.
@@ -503,7 +504,7 @@ bot-blocked, so Pages and Paste only) is a fact about that venue, never a limit 
 > restating `capabilities` must restate all four; omitting it carries them
 > forward. **Renaming the connector means restating them.**
 
-**Live: 56 in her app**, with the cloud ledger (merged at 46). What each recent version changed is in
+**Live: 56.1 in her app**, with the cloud ledger (merged at 46). What each recent version changed is in
 `docs/publishing.md`, "What is live now".
 
 #### The mental model, load-bearing

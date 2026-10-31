@@ -119,6 +119,11 @@ const runtime = () => ({
       'PS-004: her Met paste: one sentence is read (no "too little text"); the title from inside it; 1977 read (no year floor for Paste)', JSON.stringify([m.faults, m.page.start, m.page.end, m.page.base]));
     const none = read(CARO, 'Anthony Caro', '');
     ok(!none.faults.length && none.page.noDates && !none.page.start, 'PS-004a: no date words given: undated, with the sweep\'s note');
+    const metPage = page(MET, 'https://www.metmuseum.org/x'), T = 'The Age of Spirituality: Late Antique and Early Christian Art, Third to Seventh Century';
+    const reworded = faults({ title: T, dates: 'November 19, 1977 to February 12, 1978', summary: 'Late Antique and Early Christian art, third to seventh century.' }, metPage);
+    const fromRest = faults({ title: T, dates: 'November 19, 1977 to February 12, 1978', summary: 'Landmark Late Antique and Early Christian art at the Met.' }, metPage);
+    ok(reworded.some(f => /only rewords the title/.test(f)) && !fromRest.length,
+      'PS-004c: her Met paste: a summary that only rewords the title is refused and asked again; one with more passes', JSON.stringify([reworded, fromRest]));
     const D = fn('DATES');
     ok(!D.findDateRange('November 19, 1977 to February 12, 1978', { looseSingles: false }).start,
       'PS-004b: the sweep and the page reader keep the 1990 floor (a lifespan is never a run)');
