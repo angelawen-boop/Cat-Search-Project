@@ -78,6 +78,7 @@ const SUITES = [
   [[...BOTH, LINKS, LOOKUP], 'node build/sync_shared.js --check'],
   [[...BOTH, LINKS, LOOKUP], 'node scraper/fixtures/add_by_link.js'],
   [[APP, LINKS], 'node scraper/fixtures/add_by_page.js'],
+  [[APP, LINKS], 'node scraper/fixtures/add_by_paste.js'],
 ];
 
 

@@ -175,7 +175,7 @@ const runtime = () => ({
 
   await click(buttons(/^Import$/)[0]);
   const row = buttons(/^Links$/)[0].parentElement;
-  ok([...row.querySelectorAll('button')].map(b => b.textContent).join() === 'CSV,Links,Pages', 'AP-005: Import offers CSV · Links · Pages, Pages after Links (her design)');
+  ok([...row.querySelectorAll('button')].map(b => b.textContent).join() === 'CSV,Links,Pages,Paste', 'AP-005: Import offers CSV · Links · Pages · Paste, Pages after Links (her design)');
   await click(buttons(/^Pages$/)[0]);
   await choose(pagesInput(), [file(TITIAN, 'titian.mht'), file(SOUTINE, 'soutine.mht'), file(UNDATED, 'undated.html'), file(NO_ADDRESS, 'nowhere.html')]);
   ok(/Titian and the Image of Women/.test(listed()) && /Chaïm Soutine/.test(listed()) && /Undated/.test(listed()) && !/Somewhere/.test(listed()),

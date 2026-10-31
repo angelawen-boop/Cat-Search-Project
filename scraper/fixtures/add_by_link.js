@@ -685,8 +685,8 @@ function runtime() {
   ok(JSON.stringify(headerButtons()) === JSON.stringify(before), 'AL-001b:  and not one button is added to the page itself', headerButtons().join(' | '));
   const inside = () => [...dialog().querySelectorAll('button')].map(b => b.textContent.trim()).join('|');
   const inDialog = t => [...dialog().querySelectorAll('button')].find(b => b.textContent === t);
-  ok(inside() === 'CSV|Links|Pages|Cancel' && !dialog().querySelector('textarea'),
-    'AL-001c:  small: CSV, Links, Pages, and Cancel under them — no box yet', inside());
+  ok(inside() === 'CSV|Links|Pages|Paste|Cancel' && !dialog().querySelector('textarea'),
+    'AL-001c:  small: CSV, Links, Pages, Paste, and Cancel under them — no box yet', inside());
   {
     const csvInput = win.document.querySelector('input[type=file][accept=".csv,text/csv"]');
     let opened = false; csvInput.click = () => { opened = true; };
@@ -704,7 +704,7 @@ function runtime() {
     ok(linksB.style.background && linksB.style.background !== 'transparent' && csvB.style.background === 'transparent',
       'AL-002a:  the pressed one turns solid (Save\'s green), the other stays plain', linksB.style.background + ' / ' + csvB.style.background);
   }
-  ok(!!box && inside() === 'CSV|Links|Pages|Read|Cancel', 'AL-002: "Links" opens the box and Read on the same pop-up, Cancel still below', inside());
+  ok(!!box && inside() === 'CSV|Links|Pages|Paste|Read|Cancel', 'AL-002: "Links" opens the box and Read on the same pop-up, Cancel still below', inside());
 
   // ── AL-003: pasted carelessly — commas, spaces, lines, words, a repeat ─────
   const pasted = 'here you go: ' + WANT.slice(0, 4).map(w => urlOf(w[0])).join(', ') + ' ' + GRAND + '\n'

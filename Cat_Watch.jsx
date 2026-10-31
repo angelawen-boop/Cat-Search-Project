@@ -1959,6 +1959,18 @@ function heldElsewhere(a,pageHost){
   return{id:site?occVenueId(site):"occ-"+flatName(a.venue).replace(/ /g,"-"),name:a.venue,host:site};
 }
 
+// A page on another part of one of her museums' own website (Tate's library, library.tate.org.uk;
+// a section the address alone does not file): its host is the museum's, or under it.
+const onMuseumSite=(host,m)=>VENUE_SITES.some(v=>v.id===m&&(bareHost(host)===v.host||bareHost(host).endsWith("."+v.host)));
+const nearMuseumSite=host=>VENUE_SITES.some(v=>onMuseumSite(host,v.id));
+// Such a page files under the museum Claude names, when it is that museum's site → its id, or null.
+function ownMuseumNamed(a,pageHost){
+  const said=flatName(a&&a.venue||"");
+  if(!said)return null;
+  const m=Object.values(MU).find(m=>m&&!m.occasional&&[m.name,m.short].some(x=>x&&(said===flatName(x)||said.startsWith(flatName(x)+" "))));
+  return m&&onMuseumSite(pageHost,m.id)?m.id:null;
+}
+
 function occVenueId(host){
   return "occ-"+String(host||"").toLowerCase().replace(/^www\./,"").replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"");
 }
@@ -2077,6 +2089,7 @@ const STORE_UNREAD=new Set();
 let storeUnreadSeen=()=>{};   // the page's banner, told when a read fails
 function markUnread(what){ STORE_UNREAD.add(what); storeUnreadSeen([...STORE_UNREAD]); }
 const UNREAD_OCC="the link venues", UNREAD_LINKS="the links waiting in the Links box", UNREAD_PAGES="the pages waiting in the Pages list",
+  UNREAD_PASTES="the boxes waiting in Paste",
   UNREAD_SWEEPS="the sweep log", UNREAD_QUAR="the quarantine list";
 async function readOccasional(){
   const db=await useCap("db");
@@ -2176,6 +2189,56 @@ async function writePendingPages(list){
     return true;
   }catch{ return false; }
 }
+// Paste: a page's text copied by hand, its link typed beside it (docs/add_by_link.md, "Pasted
+// pages"). Pasted text has no headings, so the title line is marked as one: a library record's
+// "Title:" line, cut at " / " (who wrote it) with " : " as ": "; else the first line.
+function pastedPageReply(url,text){
+  const u=String(url||"").trim();
+  if(!/^https?:\/\/\S+$/i.test(u))return{ok:false,why:"The link box holds no web address."};
+  const lines=String(text||"").replace(/\r/g,"").split("\n").map(l=>l.replace(/[ \t]+/g," ").trim());
+  if(!lines.some(Boolean))return{ok:false,why:"The text box is empty."};
+  let t=lines.findIndex(l=>/^title\s*:\s*\S/i.test(l)), title;
+  if(t>=0)title=lines[t].replace(/^title\s*:\s*/i,"").split(/\s+\/\s+/)[0].replace(/\s+:\s+/g,": ").replace(/[\s.:;,]+$/,"");
+  else{ t=lines.findIndex(Boolean); title=lines[t]; }
+  lines[t]="# "+title;
+  return{ok:true,res:{url:withoutTracking(u),title,full_content:lines.join("\n")}};
+}
+// The Paste boxes waiting, kept in the page's store as she types, one document each like the
+// Pages list (the store caps a document). Only a box that changed is written again.
+const PASTES_COLL="links_pastes";
+let boxSeq=0;
+const filledBox=x=>!!(x.url.trim()||x.text.trim());
+let pastesWritten=new Map();   // box id → what the store holds for it
+async function readPendingPastes(){
+  const db=await useCap("db");
+  if(!db){ markUnread(UNREAD_PASTES); return[]; }
+  try{
+    const snap=await db.collection(PASTES_COLL).orderBy("at","asc").limit(1000).get();
+    const l=snap.docs.map(d=>({id:d.id,...(d.data()||{})})).map(x=>({id:x.id,at:+x.at||0,url:String(x.url||""),text:String(x.text||"")})).filter(filledBox);
+    pastesWritten=new Map(l.map(x=>[x.id,x.url+"\n"+x.text]));
+    return l;
+  }catch{ markUnread(UNREAD_PASTES); return []; }
+}
+async function writePendingPastes(items){
+  if(STORE_UNREAD.has(UNREAD_PASTES))return false;
+  const db=await useCap("db");
+  if(!db)return false;
+  try{
+    const keep=items.filter(filledBox), ids=new Set(keep.map(x=>x.id));
+    for(const id of [...pastesWritten.keys()]) if(!ids.has(id)){ await db.doc(PASTES_COLL+"/"+id).delete(); pastesWritten.delete(id); }
+    for(const x of keep){ const v=x.url+"\n"+x.text; if(pastesWritten.get(x.id)===v)continue;
+      await db.doc(PASTES_COLL+"/"+x.id).set({url:x.url,text:x.text,at:x.at}); pastesWritten.set(x.id,v); }
+    return true;
+  }catch{ return false; }
+}
+// Two boxes to start, one more each time she asks; boxes she filled are kept.
+const PASTE_BOXES=2;
+// A box's place in the list is when it was made, so a box typed in again keeps its place.
+const newBox=()=>{ const at=Date.now()*1000+(boxSeq++%1000); return{id:"b"+at.toString(36),at,url:"",text:""}; };
+const pasteBoxes=items=>{ const l=items.filter(filledBox); while(l.length<PASTE_BOXES)l.push(newBox()); return l; };
+// Boxes back from a Read join those left, once each, in the order they were made.
+const mergeBoxes=(had,back)=>pasteBoxes([...new Map([...had,...back].map(x=>[x.id,x])).values()].sort((a,b)=>a.at-b.at));
+
 // Pages in a list once each, by address; a later pick of the same page replaces it.
 function mergePages(had,add){
   const by=new Map();
@@ -6778,7 +6841,21 @@ export default function App(){
   const[linkNote,setLinkNote]=useState(null);
   const[linkText,setLinkText]=useState("");
   const[linkFails,setLinkFails]=useState([]);
+  // A Read's progress, its note and each line it could not read: one piece for Links, Pages and
+  // Paste; failAs(f) is how a line names what it could not read.
+  const readStatus=failAs=><>
+    {busy&&prog.total>0&&<div style={{marginTop:8}}>
+      <div style={{height:4,background:C.rule,borderRadius:2,overflow:"hidden"}}>
+        <div style={{height:"100%",width:Math.round(100*prog.done/prog.total)+"%",background:C.action}}/></div>
+      <div style={{marginTop:4,fontSize:11,color:C.soft}}>{prog.label}</div>
+    </div>}
+    {linkNote&&<div style={{marginTop:6,fontSize:11.5,color:C.soft,lineHeight:1.45}}>{linkNote}</div>}
+    {linkFails.map((f,i)=><div key={i} style={{marginTop:6,fontSize:11.5,color:TH.urgent.ink,lineHeight:1.4,overflowWrap:"anywhere"}}>
+      {f.url?failAs(f):""}{f.url?" \u2014 ":""}{f.why}
+    </div>)}
+  </>;
   const[pages,setPages]=useState([]);   // Pages: saved pages waiting, as text ({url,title,name,text})
+  const[pastes,setPastes]=useState(()=>pasteBoxes([]));   // Paste: {id,at,url,text} boxes, two to start
   const pagesFileRef=useRef(null);
   const linksAtRead=useRef(null);   // the links the open review was read from; Cancel import puts them back
   const linkRead=useRef({on:false,stop:false});   // a Read under way; Cancel mid-Read stops it after the link in hand
@@ -6969,7 +7046,12 @@ export default function App(){
     readOccasional().then(map=>{ occSaved.current=map; registerOccasional(map); setOccVenues(map); });
     readPendingLinks().then(t=>{ if(t)setLinkText(t); });
     readPendingPages().then(l=>{ if(l.length)setPages(l); });
+    readPendingPastes().then(l=>{ if(l.length)setPastes(pasteBoxes(l)); });
   },[]);
+
+  // Pasted boxes are stored as she types, a moment after the last key: copying on a phone
+  // means leaving the page, which can reload it.
+  useEffect(()=>{ if(importMode!=="paste")return; const t=setTimeout(()=>writePendingPastes(pastes),800); return()=>clearTimeout(t); },[pastes,importMode]);
 
   // Keep the "Last saved ... ago" text and its colour current.
   useEffect(()=>{const t=setInterval(()=>setTick(n=>n+1),30000);return()=>clearInterval(t);},[]);
@@ -7366,7 +7448,7 @@ export default function App(){
       consider("startDate","Start date",match.startDate,sd);
       consider("endDate","End date",match.endDate,ed);
       consider("summary","Description",match.summary,summary);
-      consider("exUrl","Exhibition link",match.exUrl,url);
+      consider("exUrl","Link",match.exUrl,url);
       if(!upd.length&&!choices){ silent++; continue; }  // identical — nothing to propose
       const hasChange=upd.some(u=>u.kind==="change");
       props.push({type:hasChange?"change":"fill",venueId:vc,venueShort:MU[vc].short,title,cand,matchId:match.id,upd,notes,line:p.line,choices,merged:!!p.mergedFrom});
@@ -7483,13 +7565,17 @@ export default function App(){
   // Pages (saved pages) take the same road, the page's text in place of the fetch;
   // what could not be read stays in the Pages list.
   async function readLinks(kind){
-    const fromPages=kind==="pages";
-    const items=fromPages?pages:linksIn(linkText).map(url=>({url}));
+    const fromPasted=kind==="paste", fromPages=kind==="pages"||fromPasted;
+    // Pasted boxes: each turned into a page now, then read as a saved page is; a box that
+    // cannot be is a line, never read.
+    const pasteBad=[];
+    const pasted=fromPasted?pastes.filter(filledBox).map(x=>{ const r=pastedPageReply(x.url,x.text); if(!r.ok){ pasteBad.push({url:x.url.trim(),why:r.why}); return null; } return{url:r.res.url,title:r.res.title,text:r.res.full_content,box:x}; }).filter(Boolean):[];
+    const items=fromPasted?pasted:fromPages?pages:linksIn(linkText).map(url=>({url}));
     const urls=items.map(x=>x.url);
-    if(!urls.length){ setLinkFails([{url:"",why:fromPages?"No pages chosen.":"No links found in the box."}]); return; }
+    if(!urls.length){ setLinkFails(pasteBad.length?pasteBad:[{url:"",why:fromPasted?"Nothing pasted.":fromPages?"No pages chosen.":"No links found in the box."}]); return; }
     setBusy(true); setLinkNote(null); setLinkFails([]);
     linkRead.current={on:true,stop:false};
-    const got=[], fails=[], met=new Set(), looked=new Set();
+    const got=[], fails=[...pasteBad], met=new Set(), looked=new Set();
     let venues={...occVenues}, venuesChanged=false;
     for(let n=0;n<urls.length;n++){
       if(linkRead.current.stop)break;
@@ -7498,7 +7584,7 @@ export default function App(){
       const item=items[n];
       // Each link's reading is one record in the lookup log: what code read off the
       // page, Claude's answer and the title made from them.
-      const tape=tapeStart(fromPages?"Add by page":"Add by link",{title:url,exUrl:url}), seen={url};
+      const tape=tapeStart(fromPasted?"Add by paste":fromPages?"Add by page":"Add by link",{title:url,exUrl:url}), seen={url};
       const failsBefore=fails.length;
       try{
         const f=fromPages?{ok:true,results:[{url,title:item.title,full_content:item.text}]}:await fetchPage(url,"The exhibition's title, dates and description.",null,{full:true});
@@ -7521,7 +7607,9 @@ export default function App(){
         // A venue not met before (or stored named only by its address): Claude names it (her
         // decision). On someone else's page, code files the show at the venue Claude names
         // (heldElsewhere; her decision, a last resort).
-        const askVenue=isOcc(vc)&&needsFacts(venues[vc]);
+        // A venue on another part of one of her museums' own site is asked every time, so each
+        // page there can file under the museum it names (ownMuseumNamed).
+        const askFresh=isOcc(vc)&&needsFacts(venues[vc]), askVenue=askFresh||(isOcc(vc)&&!linkEntry(vc)&&nearMuseumSite(host));
         // An entry that only places the venue's chip leaves this as it was (Cini).
         const lk=linkEntry(vc), ownSite=vc===occVenueId(host)&&(!lk||Object.keys(lk).every(k=>k==="ownChip"||k==="chip"||k==="group"));
         const prompt=linkPrompt(page,askVenue,url);
@@ -7534,10 +7622,12 @@ export default function App(){
         }
         if(faults.length){ fails.push({url,why:"Claude\u2019s description failed check and re-attempt multiple times ("+faults.join("; ")+")"}); continue; }
         let a=linkAnswer(ask.ok?ask.data:null);
-        if(askVenue&&ownSite&&maybeElsewhere(a,host)){ const more=await readResults(elsewherePrompt(page,url,a)); if(more.ok)a={...a,...elsewhereAnswer(more.data)}; }
-        const away=askVenue&&ownSite?heldElsewhere(a,host):null;
+        if(askFresh&&ownSite&&maybeElsewhere(a,host)){ const more=await readResults(elsewherePrompt(page,url,a)); if(more.ok)a={...a,...elsewhereAnswer(more.data)}; }
+        const away=askFresh&&ownSite?heldElsewhere(a,host):null;
         if(away){ vc=away.id; host=away.host; seen.venue=vc; seen.heldElsewhere=away; }
-        const named=askVenue&&a.venue?{name:a.venue,short:a.venueShort||a.venue,aka:a.venueAlso,city:a.venueCity,country:a.venueCountry}:null;
+        const ownMuseum=!away&&askVenue?ownMuseumNamed(a,host):null;
+        if(ownMuseum){ vc=ownMuseum; seen.venue=vc; seen.ownMuseum=ownMuseum; }
+        const named=askFresh&&!ownMuseum&&a.venue?{name:a.venue,short:a.venueShort||a.venue,aka:a.venueAlso,city:a.venueCity,country:a.venueCountry}:null;
         const fresh=!venues[vc];
         if(isOcc(vc)){
           met.add(vc);
@@ -7590,8 +7680,11 @@ export default function App(){
     setProg({done:0,total:0,label:""}); setBusy(false); setReadVenues([...met]);
     const failed=new Set(fails.map(x=>x.url));
     const left=fails.map(x=>x.url).join("\n"), leftPages=pages.filter(p=>failed.has(p.url));
+    // A pasted box stays when it was not read or failed.
+    const readBox=new Map(pasted.map(p=>[p.box,p.url]));
+    const leftPastes=pasteBoxes(pastes.filter(x=>filledBox(x)&&(!readBox.has(x)||failed.has(readBox.get(x)))));
     // The box (or list) is stored when the import finishes.
-    if(fromPages)setPages(leftPages); else setLinkText(left);
+    if(fromPasted)setPastes(leftPastes); else if(fromPages)setPages(leftPages); else setLinkText(left);
     setLinkFails(fails);
     linksAtRead.current=null;
     if(!got.length)return;
@@ -7599,14 +7692,14 @@ export default function App(){
     if(res.error){ setLinkNote(res.error); return; }
     if(!res.props.length){
       setTally(res.tally||null);
-      if(fromPages)writePendingPages(leftPages); else writePendingLinks(left);   // nothing to approve: this Read is finished
+      if(fromPasted)writePendingPastes(leftPastes); else if(fromPages)writePendingPages(leftPages); else writePendingLinks(left);   // nothing to approve: this Read is finished
       // Every one quarantined: it says so, not "your ledger already matches" (her wording).
       setLinkNote("Read "+got.length+(fromPages?" page":" link")+(got.length===1?"":"s")+", but "+(res.tally&&res.tally.blocked>=got.length?"nothing to add \u2014 already in your quarantine.":"nothing new to propose \u2014 your ledger already matches "+(got.length===1?"it":"them")+"."));
       return;
     }
     setProposals(res.props); setCoverage([]); setTally(res.tally||null); setSeenInFile(null); setDecisions(topicPresets(res.props));
     labelCards(res.props);
-    linksAtRead.current=fromPages?{pages:items}:urls;
+    linksAtRead.current=fromPasted?{pastes:pasted.map(p=>({...p.box,url:p.url}))}:fromPages?{pages:items}:urls;
     // Done with the pop-up — unless a link could not be read: then it stays
     // under the review, its lines waiting for her when the review closes.
     if(!fails.length)setImportMode(null);
@@ -7741,7 +7834,11 @@ export default function App(){
     if(seenInFile)recordSweep(seenInFile);
     else{
       const back=proposals.filter((p,i)=>/^(rejected|undecided)$/.test(cardOutcome(p,decisions[i]))).map(p=>(p.cand||{}).exUrl).filter(Boolean);
-      if(linksAtRead.current&&linksAtRead.current.pages){
+      if(linksAtRead.current&&linksAtRead.current.pastes){
+        const keys=new Set(back.map(u=>normalizeUrlKey(u)));
+        const list=mergeBoxes(pastes,linksAtRead.current.pastes.filter(p=>keys.has(normalizeUrlKey(p.url))));
+        setPastes(list); writePendingPastes(list);
+      }else if(linksAtRead.current&&linksAtRead.current.pages){
         const keys=new Set(back.map(u=>normalizeUrlKey(u)));
         const list=mergePages(pages,linksAtRead.current.pages.filter(p=>keys.has(normalizeUrlKey(p.url))));
         setPages(list); writePendingPages(list);
@@ -7773,7 +7870,10 @@ export default function App(){
   }
   // Cancel import after a Read puts every link (or page) it read back in the box (or list), stored (her decision).
   function cancelRefresh(){
-    if(linksAtRead.current&&linksAtRead.current.pages){
+    if(linksAtRead.current&&linksAtRead.current.pastes){
+      const list=mergeBoxes(pastes,linksAtRead.current.pastes);
+      setPastes(list); writePendingPastes(list); linksAtRead.current=null;
+    }else if(linksAtRead.current&&linksAtRead.current.pages){
       const list=mergePages(pages,linksAtRead.current.pages);
       setPages(list); writePendingPages(list); linksAtRead.current=null;
     }else if(linksAtRead.current){
@@ -8614,7 +8714,7 @@ export default function App(){
         <div role="dialog" style={{position:"fixed",inset:0,background:C.scrim,zIndex:1050,display:"flex",flexDirection:"column",justifyContent:"center",padding:16}}>
           {/* Sized to what it holds. CSV and Links match Load and Save; the one pressed
               turns green (her design). */}
-          <div style={{background:C.bg,borderRadius:8,...(importMode==="links"||importMode==="pages"?{maxWidth:820,width:"100%"}:{width:"fit-content"}),margin:"0 auto",display:"flex",flexDirection:"column",maxHeight:"100%",overflow:"auto",boxShadow:"0 8px 30px rgba(0,0,0,0.3)",padding:"14px 18px 10px"}}>
+          <div style={{background:C.bg,borderRadius:8,...(importMode==="links"||importMode==="pages"||importMode==="paste"?{maxWidth:820,width:"100%"}:{width:"fit-content"}),margin:"0 auto",display:"flex",flexDirection:"column",maxHeight:"100%",overflow:"auto",boxShadow:"0 8px 30px rgba(0,0,0,0.3)",padding:"14px 18px 10px"}}>
             {/* IMPORT NEEDS A LEDGER OPEN: on an empty page it offers only the ways to open
                 one (her design), so an import can never become the whole ledger. */}
             {importMode==="needLedger"&&<div style={{textAlign:"center"}}>
@@ -8628,6 +8728,31 @@ export default function App(){
               <button onClick={()=>{setImportMode(null);refreshFileRef.current?.click();}} disabled={busy} style={sBtn}>CSV</button>
               <button onClick={()=>{ if(importMode!=="links"){ setLinkFails([]); setLinkNote(null); } setImportMode("links"); }} disabled={busy} style={importMode==="links"?{...pBtn,opacity:1}:sBtn}>Links</button>
               <button onClick={()=>{ if(importMode!=="pages"){ setLinkFails([]); setLinkNote(null); } setImportMode("pages"); }} disabled={busy} style={importMode==="pages"?{...pBtn,opacity:1}:sBtn}>Pages</button>
+              <button onClick={()=>{ if(importMode!=="paste"){ setLinkFails([]); setLinkNote(null); } setImportMode("paste"); }} disabled={busy} style={importMode==="paste"?{...pBtn,opacity:1}:sBtn}>Paste</button>
+            </div>}
+            {importMode==="paste"&&<div style={{marginTop:14}}>
+              {/* Paste: one box per page, the link and the page's text in separate boxes, a faint "Link" in
+                  the link box (her design). "Clear" as the Links box has it: in the box, top right; "Clear all"
+                  the same, above the boxes. */}
+              {pastes.some(filledBox)&&<div style={{textAlign:"right",marginBottom:4}}>
+                <button onClick={()=>{ const l=pasteBoxes([]); setPastes(l); setLinkFails([]); setLinkNote(null); writePendingPastes(l); }} disabled={busy}
+                  style={{background:"none",border:"none",color:C.soft,fontSize:11,textDecoration:"underline",cursor:"pointer",padding:0}}>Clear all</button>
+              </div>}
+              {pastes.map((x,i)=>{
+                const set=(k,v)=>setPastes(l=>l.map(y=>y.id===x.id?{...y,[k]:v}:y));
+                const field={width:"100%",boxSizing:"border-box",fontSize:12.5,fontFamily:"inherit",padding:"6px 10px",border:"1px solid "+C.rule,borderRadius:4,background:C.card,color:C.ink,display:"block"};
+                return <div key={x.id} style={{marginBottom:10,position:"relative"}}>
+                  <input value={x.url} onChange={e=>set("url",e.target.value)} disabled={busy} placeholder="Link" aria-label="Link" inputMode="url" autoCapitalize="off" autoCorrect="off" spellCheck={false} style={{...field,paddingRight:52}}/>
+                  {filledBox(x)&&<button onClick={()=>{ const l=pastes.map(y=>y.id===x.id?newBox():y); setPastes(l); writePendingPastes(l); }} disabled={busy}
+                    style={{position:"absolute",top:7,right:8,background:"none",border:"none",color:C.soft,fontSize:11,textDecoration:"underline",cursor:"pointer",padding:0}}>Clear</button>}
+                  <textarea value={x.text} onChange={e=>set("text",e.target.value)} disabled={busy} aria-label="Text" rows={5} style={{...field,marginTop:4,resize:"vertical"}}/>
+                </div>;
+              })}
+              <div style={{display:"flex",justifyContent:"flex-end",gap:5}}>
+                <button onClick={()=>setPastes(l=>[...l,newBox()])} disabled={busy} aria-label="Add a box" style={sBtn}>+</button>
+                <button onClick={()=>readLinks("paste")} disabled={busy} style={pBtn}>Read</button>
+              </div>
+              {readStatus(f=>f.url)}
             </div>}
             {importMode==="pages"&&<div style={{marginTop:14}}>
               {/* Pages: saved show pages, read as a link is read. The list works as the Links
@@ -8643,15 +8768,7 @@ export default function App(){
                 <button onClick={()=>pagesFileRef.current?.click()} disabled={busy} style={sBtn}>Choose pages</button>
                 <button onClick={()=>readLinks("pages")} disabled={busy||!pages.length} style={pBtn}>Read</button>
               </div>
-              {busy&&prog.total>0&&<div style={{marginTop:8}}>
-                <div style={{height:4,background:C.rule,borderRadius:2,overflow:"hidden"}}>
-                  <div style={{height:"100%",width:Math.round(100*prog.done/prog.total)+"%",background:C.action}}/></div>
-                <div style={{marginTop:4,fontSize:11,color:C.soft}}>{prog.label}</div>
-              </div>}
-              {linkNote&&<div style={{marginTop:6,fontSize:11.5,color:C.soft,lineHeight:1.45}}>{linkNote}</div>}
-              {linkFails.map((f,i)=>{ const pg=pages.find(p=>p.url===f.url); return <div key={i} style={{marginTop:6,fontSize:11.5,color:TH.urgent.ink,lineHeight:1.4,overflowWrap:"anywhere"}}>
-                {f.url?(pg&&(pg.title||pg.name))||f.url:""}{f.url?" \u2014 ":""}{f.why}
-              </div>; })}
+              {readStatus(f=>{ const pg=pages.find(p=>p.url===f.url); return (pg&&(pg.title||pg.name))||f.url; })}
             </div>}
             {importMode==="links"&&<div style={{marginTop:14}}>
               {/* "Clear" sits inside the box, top right (her design): one press empties
@@ -8665,20 +8782,12 @@ export default function App(){
               <div style={{display:"flex",justifyContent:"flex-end",marginTop:8}}>
                 <button onClick={()=>readLinks("links")} disabled={busy} style={pBtn}>Read</button>
               </div>
-              {busy&&prog.total>0&&<div style={{marginTop:8}}>
-                <div style={{height:4,background:C.rule,borderRadius:2,overflow:"hidden"}}>
-                  <div style={{height:"100%",width:Math.round(100*prog.done/prog.total)+"%",background:C.action}}/></div>
-                <div style={{marginTop:4,fontSize:11,color:C.soft}}>{prog.label}</div>
-              </div>}
-              {linkNote&&<div style={{marginTop:6,fontSize:11.5,color:C.soft,lineHeight:1.45}}>{linkNote}</div>}
-              {linkFails.map((f,i)=><div key={i} style={{marginTop:6,fontSize:11.5,color:TH.urgent.ink,lineHeight:1.4,overflowWrap:"anywhere"}}>
-                {f.url&&<a href={f.url} target="_blank" rel="noopener noreferrer" style={{color:TH.urgent.ink}}>{f.url}</a>}{f.url?" \u2014 ":""}{f.why}
-              </div>)}
+              {readStatus(f=><a href={f.url} target="_blank" rel="noopener noreferrer" style={{color:TH.urgent.ink}}>{f.url}</a>)}
             </div>}
             {/* Cancel always answers: a catalogue search also sets busy, and once locked the
                 pop-up out until the search ended (her report). */}
             <div style={{textAlign:"center",marginTop:10}}>
-              <button onClick={()=>{ if(linkRead.current.on){ linkRead.current.stop=true; setProg(p=>({...p,label:"Stopping after this "+(importMode==="pages"?"page":"link")+"\u2026"})); return; } if(!proposals)dropHeldVenues(); setImportMode(null); }} style={{background:"none",border:"none",color:C.soft,fontSize:10,textDecoration:"underline",cursor:"pointer",padding:0}}>Cancel</button>
+              <button onClick={()=>{ if(linkRead.current.on){ linkRead.current.stop=true; setProg(p=>({...p,label:"Stopping after this "+(importMode==="pages"||importMode==="paste"?"page":"link")+"\u2026"})); return; } if(!proposals)dropHeldVenues(); setImportMode(null); }} style={{background:"none",border:"none",color:C.soft,fontSize:10,textDecoration:"underline",cursor:"pointer",padding:0}}>Cancel</button>
             </div>
           </div>
         </div>
