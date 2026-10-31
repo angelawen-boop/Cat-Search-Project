@@ -11,7 +11,7 @@ check('PS-001 Late Venetian after Rococo; Belle \u00c9poque before Symbolism; Ge
 check('PS-001 Italian before Flemish before Dutch', rank('baroque')<rank('flemish')&&rank('flemish')<rank('dutch'));
 check('PS-001 her reorder: Georgian between Late Venetian and Neoclassicism; Victorian Britain and 19th-century America stay after Symbolism', rank('latevenetian')+1===rank('georgian')&&rank('georgian')+1===rank('neoclassicism')&&rank('symbolism')+1===rank('victorian')&&rank('victorian')+1===rank('american19')&&rank('american19')+1===rank('general19'));
 check('PS-001 French periods before Britain and 19th-century America', ['classicism','rococo','neoclassicism','impressionism','postimp'].every(k=>rank(k)<rank('victorian')&&rank(k)<rank('american19')));
-check('PS-001 her reorder: Postwar Europe after Abstract Expressionism, then Postwar America, then Pop; Contemporary last of the periods', rank('abex')+1===rank('postwareu')&&rank('postwareu')+1===rank('postwaram')&&rank('postwaram')+1===rank('pop')&&rank('contemporary')===rank('surveys')-1);
+check('PS-001 her reorder: Postwar Europe just before Abstract Expressionism, then Postwar America, then Pop; Contemporary last of the periods', rank('postwareu')+1===rank('abex')&&rank('abex')+1===rank('postwaram')&&rank('postwaram')+1===rank('pop')&&rank('contemporary')===rank('surveys')-1);
 check('PS-001 Antiquity first', rank('antiquity')===0);
 
 // Period, then year, then her venue order (two Monet shows of the same year).

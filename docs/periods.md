@@ -27,9 +27,9 @@
 - **The list's order is her centre-of-gravity rule:** Italy first only where two periods compete (Northern Renaissance after Early,
   before High Renaissance), then the North (Flemish, then Dutch), France from Louis XIV to the 1940s, America after the war; a
   region's periods sit after the dominant region's of the same time (Late Venetian after Rococo). Her reorder: Georgian Britain
-  between Late Venetian and Neoclassicism; Belle Époque and Aestheticism before Symbolism and Art Nouveau; Postwar Europe after
-  Abstract Expressionism, before Pop; Postwar America (America only, c. 1945–1980, outside Abstract Expressionism and Pop) after
-  Postwar Europe, before Pop. Victorian Britain and 19th-century America stay after Symbolism (her decision). Names and dates are the
+  between Late Venetian and Neoclassicism; Belle Époque and Aestheticism before Symbolism and Art Nouveau; Postwar Europe just
+  before Abstract Expressionism, so the American run (Abstract Expressionism, Postwar America, Pop) is unbroken; Postwar America
+  (America only, c. 1945–1980, outside Abstract Expressionism and Pop) after Abstract Expressionism, before Pop. Victorian Britain and 19th-century America stay after Symbolism (her decision). Names and dates are the
   model's knowledge; she judges by eye.
 - **Groups after Contemporary, in her order:** Surveys, Miscellaneous Historic, Miscellaneous Modern, Non-Western Art. Miscellaneous stays as small as possible (her decision): General 19th Century and General 20th Century (after Pop, before
   Contemporary; c. 1900–1980, self-taught and folk art included) hold shows outside any movement. No kind of show is named as Misc;
