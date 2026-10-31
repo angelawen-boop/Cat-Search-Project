@@ -233,6 +233,12 @@ rules, Cini, Prado, Correr): `docs/app.md`, `docs/add_by_link.md`.
 
 #### 2.2.11 Add by link — open items
 
+- **OPEN — Links and Pages descriptions have turned flat** (her report: they went from competent, to rich but succinct,
+  to flat). The app's description step has not changed: same prompt, examples and answer check. The app names no model,
+  only `modelTier: "default"`, so the model the platform serves for that tier is the likely cause. This is a guess:
+  nothing records which model answered. Possible fix: ask for a higher tier (`complex`) for the description call only. That
+  reopens her decision to use the default tier for the app's Claude reads (`docs/app.md` §1, "Which model"), so agree it
+  with her before building.
 - **OPEN — Belvedere stays German** (lookup log L1792752998011063a): the English search found `belvedere.at/en/museum-shop`, whose
   shop link points to the German `belvedere.at/shop`, and the app followed it; the English-version step tried only English FRONT
   pages, never the English version of the shop page. Its English shop's address is not known. The shop check passed it because a
