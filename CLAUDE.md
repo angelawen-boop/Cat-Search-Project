@@ -260,6 +260,12 @@ rules, Cini, Prado, Correr): `docs/app.md`, `docs/add_by_link.md`.
   **Built, not yet published:** German dates (DS-011), Galerie de la Présidence's " : Exhibition" dropped (AP-015). **OPEN — "Tate Gallery"'s shop:** live, the finder
   took the Tate's Books shelf, not its exhibition-books section. **Next, her decision: the paste boxes and buttons** (talked through
   only after the rest). Her decisions and the own-site rule: `docs/add_by_link.md`, "Pasted pages" and the section after it.
+- **OPEN, known fault — the green "Import complete" bar mixes units.** "Added" and "left undecided" count shows;
+  "filled in" and "updated" count fields (`applyRefresh`), so one card filling start and end dates reads "2 filled in".
+  Low priority, her judgement call: she rarely reads that line. Counting each show once fails on a card that both fills
+  a blank and replaces a value — "updated wins" and "filled in wins" are both rejected (her decision). The only fix she
+  would consider: count each show once per heading, so a mixed card shows under both ("1 filled in, 1 updated") —
+  unless a cleverer answer turns up.
 - **OPEN — review the names of venues that came in by link or page** (Claude-named, in her store): her card and short names, each rename
   written into `LINK_VENUES` as `docs/add_by_link.md`, "Renaming a link venue" says.
 
