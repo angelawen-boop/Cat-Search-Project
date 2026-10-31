@@ -53,7 +53,7 @@ const b=H.periodAnswers({labels:[{i:0,period:'mischistoric',year:1950,themes:[]}
 check('PS-009 code sets the stragglers\' group by the 1900 cut-off; Claude\'s Misc answers stay in the bins', b.get(0).period==='miscmodern'&&b.get(1).period==='mischistoric');
 const PR=H.periodPrompt([]);
 check('PS-021 no kind of show is named as Misc; a split show with no heart goes to the earliest; Postwar Europe is Europe only',
-  !/folk art, say/.test(PR)&&PR.includes('not even general19 or general20')&&PR.includes('the EARLIEST of them')&&PR.includes('postwareu — Postwar Europe (Europe only, c. 1945–1980)'));
+  !/folk art, say/.test(PR)&&PR.includes('not even general19 or general20')&&PR.includes('the EARLIEST of them')&&PR.includes('postwareu — Postwar Europe (Postwar Europe is a time-and-place period, not a movement: art made in Europe from c. 1945 to 1980'));
 check('PS-020 Tudor / Stuart Britain straight after Northern Renaissance; General 20th Century after Pop, before Contemporary', rank('northern')+1===rank('tudor')&&rank('pop')+1===rank('general20')&&rank('general20')+1===rank('contemporary'));
 check('PS-020 Georgian Britain starts at 1714, where Tudor / Stuart ends', /^c\. 1714/.test(H.PERIODS.find(p=>p.key==='georgian').span)&&/1714/.test(H.PERIODS.find(p=>p.key==='tudor').span));
 const vd=[{period:'flemish',periodYear:1630,periodArtist:'Anthony van Dyck'},{period:'flemish',periodYear:1625,periodArtist:'Anthony van Dyck'},{period:'tudor',periodYear:1637,periodArtist:'Anthony van Dyck'}];
