@@ -3,7 +3,7 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 // The footer prints APP_VERSION and its date, so she can tell one build from the next.
 // Numbering, her decision: a whole number for a substantial change, a decimal for a
 // small one, one number per publish. Bump it with the change it describes.
-const APP_VERSION = "54.2";
+const APP_VERSION = "54.3";
 const APP_VERSION_DATE = "31 Oct 2026";
 
 // The venue order is VENUE_ORDER, below the list, which sorts MUSEUMS; drawer, chips,
@@ -3538,7 +3538,7 @@ function cardOutcome(p,dec){
   return Object.values(dec.fields||{}).some(v=>v==="accept")?"accepted":"rejected";
 }
 // What the shop finder found for a venue, before her answer on the shop screen.
-const SHOP_FIELDS=["shop","shopHome","shopCatalogues","shelfKind","shopSearch","why","shopEnglishUnread","englishPicked","confirmed"];
+const SHOP_FIELDS=["shop","shopHome","shopCatalogues","shelfKind","shopSearch","why","shopEnglishUnread","englishPicked","shopAdded","confirmed"];
 const foundShop=v=>Object.fromEntries(SHOP_FIELDS.filter(k=>v[k]!==undefined).map(k=>[k,v[k]]));
 // The venues as stored when the ledger moves: her shop answer kept only for a venue with a card going in
 // (her decision: a show not imported leaves its venue's shop unanswered, asked again at its first import).
@@ -6853,6 +6853,7 @@ export default function App(){
   // looked for again.
   const[shopScreen,setShopScreen]=useState(null);
   const[shopLooking,setShopLooking]=useState(null);
+  const[shopAdding,setShopAdding]=useState(null);   // {id, text}: the venue whose shop link she is typing
   const[readVenues,setReadVenues]=useState([]);   // the new venues the last Read met
   const[linkNote,setLinkNote]=useState(null);
   const[linkText,setLinkText]=useState("");
@@ -7751,9 +7752,19 @@ export default function App(){
   // dropped when the ledger moves (answeredOnly).
   // A shop with no books section seen ("Shop found, but not its books section"): her Confirm takes the shop shown as its section.
   function confirmShop(id,english){ const v=occVenues[id]; if(!v)return; const whole=v.shop==="noshelf"&&v.shopHome?{shop:"found",shopCatalogues:v.shopHome,shelfKind:"front"}:{};
-    holdVenues({...occVenues,[id]:{...v,beforeAnswer:v.beforeAnswer||foundShop(v),...whole,confirmed:true,englishPicked:!!english}}); }
+    holdVenues({...occVenues,[id]:{...v,beforeAnswer:v.beforeAnswer||foundShop(v),...whole,confirmed:true,englishPicked:!!english,shopAdded:false}}); }
   // "No shop": the lookup goes straight to the web, as at Capodimonte.
-  function noShopFor(id){ const v=occVenues[id]; if(v)holdVenues({...occVenues,[id]:{...v,beforeAnswer:v.beforeAnswer||foundShop(v),shop:"none",confirmed:true,shopHome:null,shopCatalogues:null,shelfKind:null,shopSearch:null,why:null,shopEnglishUnread:null,englishPicked:false}}); }
+  function noShopFor(id){ const v=occVenues[id]; if(v)holdVenues({...occVenues,[id]:{...v,beforeAnswer:v.beforeAnswer||foundShop(v),shop:"none",confirmed:true,shopHome:null,shopCatalogues:null,shelfKind:null,shopSearch:null,why:null,shopEnglishUnread:null,englishPicked:false,shopAdded:false}}); }
+  // "Add": her own link taken as the section. Its search is worked out at the venue's first lookup (fillShopSearch).
+  // Not a link → the box stays open.
+  function addShopFor(id,text){
+    const v=occVenues[id], t=String(text||"").trim(); if(!v)return;
+    if(!t){ setShopAdding(null); return; }
+    let u=null; try{ u=new URL(/^https?:\/\//i.test(t)?t:"https://"+t); }catch{}
+    if(!u||!/^https?:$/.test(u.protocol)||!u.hostname.includes("."))return;
+    setShopAdding(null);
+    holdVenues({...occVenues,[id]:{...v,beforeAnswer:v.beforeAnswer||foundShop(v),shop:"found",shopHome:originOf(u.href),shopCatalogues:u.href,shelfKind:null,shopSearch:null,searchRule:null,why:null,shopEnglishUnread:null,englishPicked:false,shopAdded:true,foundBy:"her link",confirmed:true}});
+  }
   // "Look again": a new search NOW, skipping only the pages she turned down, never the
   // whole site.
   async function lookAgain(id){
@@ -7766,7 +7777,7 @@ export default function App(){
     setShopLooking(null);
     setOccVenues(prev=>{
       const{beforeAnswer,...was}=prev[id];
-      const next={...prev,[id]:{...was,shopHome:null,shopCatalogues:null,shelfKind:null,shopSearch:null,why:null,shopEnglishUnread:null,englishPicked:false,...shop,confirmed:false,turnedDown}};
+      const next={...prev,[id]:{...was,shopHome:null,shopCatalogues:null,shelfKind:null,shopSearch:null,why:null,shopEnglishUnread:null,englishPicked:false,shopAdded:false,...shop,confirmed:false,turnedDown}};
       registerOccasional(next); return next; });
   }
   // The shop screen asks about a venue outside her list whose shop is unconfirmed (venuesGoingIn).
@@ -7877,7 +7888,7 @@ export default function App(){
     const leftUndecided=proposals.filter((p,i)=>isUndecidedCard(p,decisions[i])).length;
     commit(Array.from(byId.values()),new Date().toISOString());
     if(occVenues!==occSaved.current){ const kept=answeredOnly(occVenues,occSaved.current,venuesGoingIn(proposals,decisions)); writeOccasional(kept); occSaved.current=kept; registerOccasional(kept); setOccVenues(kept); }
-    setShopScreen(null); setReadVenues([]);
+    setShopScreen(null); setShopAdding(null); setReadVenues([]);
     setProposals(null); setDecisions({}); setSeenInFile(null); setRefreshDone({added,filled,changed,never:newlyIgnored.length,left:partial?leftUndecided:0});
     setRefreshTouched(touched); setPinTouched(touched.length>0); // float just-changed entries to the top, this session
     setVenueF(new Set()); setThemeF(new Set()); setTimeF(new Set()); setWatchedF(false); setLabelledF(false);
@@ -7896,7 +7907,7 @@ export default function App(){
       const box=[...new Set([...linksIn(linkText),...linksAtRead.current])].join("\n");
       setLinkText(box); writePendingLinks(box); linksAtRead.current=null;
     }
-    dropHeldVenues(); setShopScreen(null); setReadVenues([]); setProposals(null); setDecisions({}); setCoverage([]); setTally(null); setSeenInFile(null); }
+    dropHeldVenues(); setShopScreen(null); setShopAdding(null); setReadVenues([]); setProposals(null); setDecisions({}); setCoverage([]); setTally(null); setSeenInFile(null); }
   // A second tap on Date reverses it; a third goes back to the usual order.
   const pickSort=k=>{if(bnOnly){if(k==="period"||k==="date"){const cur=bnPeriod?"period":bnDate?"date":"";if(cur!==k){setBnPeriod(k==="period");setBnDate(k==="date");setDateReversed(false);}else if(!dateReversed)setDateReversed(true);else{setBnPeriod(false);setBnDate(false);setDateReversed(false);}}return;}setDateReversed((k==="date"||k==="period")&&sortBy===k&&!pinTouched&&!dateReversed);setSortBy(k);setPinTouched(false);}; // manual sort releases the pinned refresh group
 
@@ -9030,7 +9041,7 @@ export default function App(){
               <div style={{fontFamily:"'Fraunces',Georgia,serif",fontSize:20,fontWeight:500,color:C.ink}}>New Venue Shops</div>
             </div>
             <div style={{overflow:"auto",padding:"4px 18px 14px",flex:1}}>
-              {/* The review cards' buttons (decBtn), always the same three in the same
+              {/* The review cards' buttons (decBtn), always the same four in the same
                   places (her decision); Confirm greyed only with no shop to confirm. */}
               {shopScreen.ids.map(id=>{
                 const v=occVenues[id]||{}, link=v.shop==="found"?v.shopCatalogues:null, looking=shopLooking===id;
@@ -9040,7 +9051,8 @@ export default function App(){
                 // The finder found no catalogues section: one line, her wording, whatever it took instead.
                 const lesser=link&&v.shelfKind&&v.shelfKind!=="catalogues"?"Shop found, but not its catalogues section ":null;
                 const en=v.shop==="found"?v.shopEnglishUnread:null;
-                const yes=v.confirmed&&v.shop==="found"&&!v.englishPicked, yesEn=v.confirmed&&!!en&&!!v.englishPicked, none=v.confirmed&&v.shop==="none";
+                const yes=v.confirmed&&v.shop==="found"&&!v.englishPicked&&!v.shopAdded, yesEn=v.confirmed&&!!en&&!!v.englishPicked, none=v.confirmed&&v.shop==="none", added=v.confirmed&&!!v.shopAdded;
+                const typing=shopAdding&&shopAdding.id===id;
                 return <div key={id} style={{paddingTop:12,marginTop:10,borderTop:"1px solid "+C.rule,fontSize:12.5,color:C.ink,lineHeight:1.45}}>
                   <div style={{fontWeight:600}}>{(MU[id]&&(MU[id].card||MU[id].short))||v.short||v.name||id}</div>
                   {link?<div>{lesser&&<span style={{color:C.soft}}>{lesser}</span>}<a href={link} target="_blank" rel="noopener noreferrer" style={{color:C.action,overflowWrap:"anywhere"}}>{link}</a></div>
@@ -9050,15 +9062,21 @@ export default function App(){
                       <button onClick={()=>confirmShop(id)} disabled={!!shopLooking||!(link||home)} style={{...decBtn(yes,C.okEdge),...(!(link||home)?{opacity:0.4,cursor:"not-allowed"}:{})}}>{yes?"\u2713 ":""}Confirm</button>
                       <button onClick={()=>lookAgain(id)} disabled={!!shopLooking} style={decBtn(false,C.okEdge)}>Look again</button>
                       <button onClick={()=>noShopFor(id)} disabled={!!shopLooking} style={decBtn(none,C.rejectInk)}>{none?"\u2713 ":""}No shop</button>
+                      <button onClick={()=>setShopAdding(typing?null:{id,text:added?link:""})} disabled={!!shopLooking} style={decBtn(added,C.okEdge)}>{added?"\u2713 ":""}Add</button>
                     </>}
                   </div>
+                  {/* "Add": her link, taken on Enter or on leaving the box; Escape closes it. */}
+                  {typing&&!looking&&<input autoFocus value={shopAdding.text} onChange={e=>setShopAdding({id,text:e.target.value})}
+                    onKeyDown={e=>{ if(e.key==="Enter")addShopFor(id,e.target.value); else if(e.key==="Escape")setShopAdding(null); }}
+                    onBlur={e=>addShopFor(id,e.target.value)}
+                    style={{display:"block",width:"100%",boxSizing:"border-box",marginTop:6,padding:"5px 8px",fontSize:12.5,border:"1px solid "+C.rule,borderRadius:4,background:C.card,color:C.ink,fontFamily:"inherit"}}/>}
                   {/* Its English section, which the finder could not read: hers to confirm instead. */}
                   {en&&<><div style={{marginTop:6}}><a href={en} target="_blank" rel="noopener noreferrer" style={{color:C.action,overflowWrap:"anywhere"}}>{en}</a></div>
                     <div style={{display:"flex",gap:6,marginTop:6}}>{!looking&&<button onClick={()=>confirmShop(id,true)} disabled={!!shopLooking} style={decBtn(yesEn,C.okEdge)}>{yesEn?"\u2713 ":""}Confirm</button>}</div></>}
                 </div>;})}
             </div>
             <div style={{padding:"12px 18px",borderTop:"1px solid "+C.rule,display:"flex",gap:10,alignItems:"center"}}>
-              <button onClick={()=>setShopScreen(null)} disabled={!!shopLooking} style={sBtn}>Back</button>
+              <button onClick={()=>{setShopAdding(null);setShopScreen(null);}} disabled={!!shopLooking} style={sBtn}>Back</button>
               <button onClick={()=>applyRefresh(shopScreen.partial)} disabled={left>0}
                 style={{...pBtn,marginLeft:"auto",...(left>0?{background:C.muted,cursor:"not-allowed",opacity:1}:{})}}>
                 {left>0?left+" still to decide":"Go ahead and update the ledger"}</button>

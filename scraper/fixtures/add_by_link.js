@@ -1091,9 +1091,9 @@ function runtime() {
   {
     const order = name => [...shopCard(name).querySelectorAll('button')].map(b => b.textContent).join('|');
     const conf = [...shopCard('Royal Academy of Arts').querySelectorAll('button')].find(b => b.textContent === 'Confirm');
-    ok(shopCard('Royal Academy of Arts').textContent.includes('No museum shop found.') && order('Royal Academy of Arts') === 'Confirm|Look again|No shop'
-       && conf.disabled && order('Courtauld') === 'Confirm|Look again|No shop',
-      'AL-009d:  the same three buttons in the same places on every card; Confirm greyed where nothing was found', order('Royal Academy of Arts'));
+    ok(shopCard('Royal Academy of Arts').textContent.includes('No museum shop found.') && order('Royal Academy of Arts') === 'Confirm|Look again|No shop|Add'
+       && conf.disabled && order('Courtauld') === 'Confirm|Look again|No shop|Add',
+      'AL-009d:  the same four buttons in the same places on every card; Confirm greyed where nothing was found', order('Royal Academy of Arts'));
   }
   ok(shopCard('Detroit').textContent.includes('https://diashop.org/dia-publications'), 'AL-009e0:  DIA\'s section shown, to confirm');
   // DIA Publications turned down: "Books & Stationery" is mixed, so it is only
@@ -1118,6 +1118,26 @@ function runtime() {
   await click(buttons(/^Next$/)[0]);
   ok(/^✓ Confirm$/.test([...shopCard('Museo Nacional Thyssen-Bornemisza').querySelectorAll('button')][0].textContent) && footer() === '5 still to decide',
     'AL-009i2:  and the shop answers given before Back are still there', footer());
+  {
+    // ── AL-080: "Add" — her own shop link (her ask) ──
+    const box = () => shopCard('Royal Academy of Arts').querySelector('input');
+    const type = async (el, t, key) => { await act(async () => { Object.getOwnPropertyDescriptor(win.HTMLInputElement.prototype, 'value').set.call(el, t); el.dispatchEvent(new win.Event('input', { bubbles: true })); }); await settle();
+      await act(async () => { el.dispatchEvent(new win.KeyboardEvent('keydown', { key, bubbles: true })); }); await settle(); };
+    const was = footer();
+    await press('Royal Academy of Arts', 'Add');
+    ok(!!box() && box().value === '' && !box().placeholder && !/\S/.test(shopCard('Royal Academy of Arts').textContent.replace(/Royal Academy of Arts|No museum shop found\.|Confirm|Look again|No shop|Add/g, '')),
+      'AL-080:  Add opens an empty box beside the buttons, with no words of its own');
+    await type(box(), 'not a link', 'Enter');
+    ok(!!box() && footer() === was && !/✓/.test(shopCard('Royal Academy of Arts').textContent), 'AL-080a: words that are not a link are not taken: the box stays open, nothing answered');
+    await type(box(), 'not a link', 'Escape');
+    ok(!box() && footer() === was, 'AL-080b: Escape closes the box, nothing answered');
+    await press('Royal Academy of Arts', 'Add');
+    await type(box(), 'shop.royalacademy.org.uk/books', 'Enter');
+    const btns = () => [...shopCard('Royal Academy of Arts').querySelectorAll('button')].map(b => b.textContent).join('|');
+    ok(!box() && shopCard('Royal Academy of Arts').textContent.includes('https://shop.royalacademy.org.uk/books') && btns() === 'Confirm|Look again|No shop|✓ Add'
+       && footer() === String(Number(was.split(' ')[0]) - 1) + ' still to decide',
+      'AL-080c: a link typed without https:// is taken on Enter: shown as the shop, Add ticks, one fewer to decide', btns() + ' | ' + footer());
+  }
   await press('Royal Academy of Arts', 'No shop');
   ok(/^✓ No shop$/.test([...shopCard('Royal Academy of Arts').querySelectorAll('button')][2].textContent), 'AL-009j:  No shop is an answer');
   {
@@ -1130,7 +1150,14 @@ function runtime() {
       'AL-079:  a shop with no books section seen can be confirmed: Confirm ticks, the shop shown is taken as its section, one fewer to decide', shopCard('Detroit').textContent + ' | ' + footer());
   }
   await press('Detroit', 'No shop');
-  await press('Courtauld', 'Confirm'); await press('Cleveland Museum of Art', 'Confirm'); await press('Mauritshuis', 'Confirm');
+  await press('Courtauld', 'Confirm'); await press('Cleveland Museum of Art', 'Confirm');
+  // Mauritshuis answered by Add (AL-080d): the section typed in herself.
+  await press('Mauritshuis', 'Add');
+  {
+    const el = shopCard('Mauritshuis').querySelector('input');
+    await act(async () => { Object.getOwnPropertyDescriptor(win.HTMLInputElement.prototype, 'value').set.call(el, 'https://shop.mauritshuis.nl/product-categorie/boeken-catalogi'); el.dispatchEvent(new win.Event('input', { bubbles: true })); });
+    await act(async () => { el.dispatchEvent(new win.FocusEvent('focusout', { bubbles: true })); el.dispatchEvent(new win.FocusEvent('blur')); }); await settle();
+  }
   // The RA's card rejected again: off the screen; its answer is kept while the import is open (Back keeps
   // answers), but never stored: the RA has no show going in (her decision; AL-009m, AL-009o).
   await click([...shops().querySelectorAll('button')].find(b => b.textContent === 'Back'));
@@ -1150,6 +1177,9 @@ function runtime() {
        && v('occ-museothyssen-org').shelfKind === 'publications' && v('occ-mauritshuis-nl').shopCatalogues === 'https://shop.mauritshuis.nl/product-categorie/boeken-catalogi'
        && v('occ-mauritshuis-nl').turnedDown.includes('https://shop.mauritshuis.nl/product-categorie/boeken-catalogi/catalogi'),
       'AL-009n:  stored as answered: the section, its kind, the shop\'s search, the pages turned down', JSON.stringify([v('occ-courtauld-ac-uk'), v('occ-mauritshuis-nl')]));
+    ok(v('occ-mauritshuis-nl').shopAdded === true && v('occ-mauritshuis-nl').shop === 'found' && v('occ-mauritshuis-nl').shopHome === 'https://shop.mauritshuis.nl/'
+       && v('occ-mauritshuis-nl').shopSearch === null && v('occ-mauritshuis-nl').confirmed === true && v('occ-courtauld-ac-uk').shopAdded === false,
+      'AL-080d: her link, taken on leaving the box, stored as the confirmed section, its shop and search worked out at its first lookup', JSON.stringify(v('occ-mauritshuis-nl')));
     ok(v('occ-dia-org').shop === 'none' && v('occ-dia-org').confirmed === true, 'AL-009o:  No shop stored: its lookups go to the web');
     ok(v('occ-royalacademy-org-uk').confirmed === false, 'AL-009o2: the RA\'s No shop, given and then its show rejected, is not stored: asked again at its first import (her decision)', JSON.stringify(v('occ-royalacademy-org-uk')));
     ok(v('occ-museothyssen-org').english === false && v('occ-dia-org').english === true && v('occ-courtauld-ac-uk').name === 'Courtauld',

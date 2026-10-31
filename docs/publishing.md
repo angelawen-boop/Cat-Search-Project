@@ -21,7 +21,9 @@ the next goes through. Later ones go straight through.
 
 ## What is live now
 
-**Live: 54.2 in her app**: German dates read (DS-011); Galerie de la Présidence's " : Exhibition" leaves the title (AP-015).
+**Live: 54.3 in her app**: the shop screen's fourth button, **Add** — her own shop link (AL-080).
+
+Before that 54.2: German dates read (DS-011); Galerie de la Présidence's " : Exhibition" leaves the title (AP-015).
 
 Before that 54.1: the Tate library's records hand Claude their Summary (`from`/`fromLast`, AP-014); card links wrap; the import pop-up fits a phone; Clear all in the row with + and Read, centred; the empty Pages list says nothing.
 
