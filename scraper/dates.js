@@ -27,6 +27,9 @@ const MONTHS = { january:1,february:2,march:3,april:4,may:5,june:6,
   janvier:1, février:2, fevrier:2, mars:3, avril:4, mai:5, juin:6, juillet:7, août:8, aout:8,
   septembre:9, octobre:10, décembre:12, decembre:12, janv:1, févr:2, fevr:2, avr:4, juil:7, déc:12,
 
+  // German ("30. Juni 2024 – 5. Januar 2025", Emil Schumacher Museum), Austrian "Jänner" too.
+  januar:1, jänner:1, februar:2, märz:3, maerz:3, juni:6, juli:7, oktober:10, dezember:12, okt:10, dez:12,
+
   // A venue's own misspelling (Jacquemart-André, "Feburary").
   feburary:2 };
 
@@ -50,9 +53,14 @@ const MONTH_PATTERN =
   '(?:January|February|Feburary|March|April|May|June|July|August|September|October|November|December' +
   '|gennaio|febbraio|marzo|aprile|maggio|giugno|luglio|agosto|settembre|ottobre|novembre|dicembre'
   + '|janvier|février|fevrier|mars|avril|mai|juin|juillet|août|aout|septembre|octobre|décembre|decembre' +
+  '|januar|jänner|februar|märz|maerz|juni|juli|oktober|dezember' +
   '|Sept|Jan|Feb|Mar|Apr|Jun|Jul|Aug|Sep|Oct|Nov|Dec' +
   // Longest first within each language: sett before set, genn before gen, magg before mag.
-  '|genn|febbr|magg|giu|lug|ago|sett|ott|dic|set|gen|mag|janv|févr|fevr|avr|juil|déc)\\.?(?![A-Za-z])';
+  '|genn|febbr|magg|giu|lug|ago|sett|ott|dic|set|gen|mag|janv|févr|fevr|avr|juil|déc|okt|dez)\\.?(?![A-Za-z])';
+
+// A German day is written with a full stop ("30. Juni"): the stop leaves before a month name.
+const GERMAN_DAY_DOT = new RegExp('(?<![\\d.])(\\d{1,2})\\.\\s*(?=(?:januar|jänner|februar|märz|maerz|april|mai|juni|juli|august'
+  + '|september|oktober|november|dezember|okt|dez)\\.?(?![A-Za-zäöü]))', 'gi');
 
 // Month name to number, tolerating the trailing full stop the pattern allows.
 function monthNum(name) {
@@ -297,6 +305,7 @@ function findDateRangeCore(raw, opts = {}) {
     // Weekdays carry no date and break every range pattern (Wallace), so they go first.
     .replace(WEEKDAY_PREFIX, '')
     .replace(ORDINAL_SUFFIX, '$1')
+    .replace(GERMAN_DAY_DOT, '$1 ')
     .replace(/\s+/g, ' ').trim();
   const M = MONTH_PATTERN;
 
@@ -569,7 +578,7 @@ function findDateRangeInProse(text, hintYear, venue) {
 
 function findDateRangeInProseCore(text, hintYear, venue) {
   if (!text) return { start: '', end: '', raw: '' };
-  const s = String(text).replace(/[–—]/g, '-').replace(ORDINAL_SUFFIX, '$1').replace(/\s+/g, ' ');
+  const s = String(text).replace(/[–—]/g, '-').replace(ORDINAL_SUFFIX, '$1').replace(GERMAN_DAY_DOT, '$1 ').replace(/\s+/g, ' ');
   const M = MONTH_PATTERN;
   const SEP = '(?:\\s*(?:-|t/m|to|until|through|till)\\s*(?:running\\s+)?)';
 

@@ -165,6 +165,15 @@ const runtime = () => ({
       'AP-014: Tate library records (her saved Reynolds and Pre-Raphaelite pages): the passage is the record\'s Summary, not its copies list', JSON.stringify([r.raw && r.raw.slice(0, 80), p.raw && p.raw.slice(0, 80)]));
   }
 
+  // ── AP-015: Galerie de la Présidence's " : Exhibition" leaves the title ─
+  {
+    const read = fn('readShowPage'), readVenue = fn('linkReadVenue');
+    const u = 'https://www.presidence.fr/en/exhibitions/10-jean-fautrier-les-annees-20-exhibition/';
+    const r = read({ url: u, title: 'Jean Fautrier Les Années 20 | 15 September - 31 October 2023 | Galerie de la Presidence',
+      full_content: '# Jean Fautrier Les Années 20 : Exhibition\n\nOVER THE YEARS exhibition\n\n15 September - 31 October 2023\n\n' + 'Exhibitions devoted to Jean Fautrier are rare, and this one gathers his Dark Period. '.repeat(4) }, u, readVenue(u));
+    ok(r.ok && r.base === 'Jean Fautrier Les Années 20' && r.start === '2023-09-15', 'AP-015: Galerie de la Présidence: " : Exhibition" leaves the title (her decision)', JSON.stringify([r.base, r.start, r.why]));
+  }
+
   // ── AP-005 onward: the button, pressed ─────────────────────────────────
   let root = createRoot(win.document.getElementById('root'));
   const App = fn('App');
