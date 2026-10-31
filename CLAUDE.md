@@ -461,6 +461,21 @@ price, her decision).
 
 ## 5. The app
 
+**Four ways in, each for a job the one before cannot do (her design):**
+
+1. **Sweep (CSV)** — venues she follows closely and long term, keeping more shows than she dismisses. §5.2–5.3.
+2. **Links** — a handful of shows: cherry-picked from far back in a followed venue's archive (a sweep would be
+   wasteful), or ad hoc from a venue she does not track. Fetched through Parallel. §5.4.
+3. **Pages** — a link Parallel cannot fetch (bot-blocked) or brings back as junk or empty: she saves the whole page.
+4. **Paste** — mostly-text pages where saving each is slow (the Tate library's records): the text pasted beside its
+   link. Also her last resort for manual entry — details from several sources typed in, under a link to any page
+   useful for that show. No link, no import. Being brought into her app from `claude/paste-import` (§2.2.18).
+
+Links, Pages and Paste are one road — the same reader, Claude read, shop finder and review; only how the text arrives
+differs. A third-party page (press, blog, library record) goes the same road: the venue is read from the text, never
+the source site. **A general rule applies to all three.** Where one venue's pages can be read (Tate library:
+bot-blocked, so Pages and Paste only) is a fact about that venue, never a limit on a rule.
+
 ### 5.1 The app itself
 
 > ### https://claude.ai/artifact/E2WjpRgr4W5eSzYtxyfrt5
