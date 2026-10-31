@@ -52,6 +52,8 @@ is why they live in one repo, on one branch.
 - **Parallel:** a session's own calls use the free "Parallel Search". Her keyed "Parallel Search Key" needs her yes — ask up front, with the reason, when the work will clearly need it. Once she has said yes, switch to the key as soon as the free tier refuses - no need to hang the task hoping for the free tier to resume access. Later in the same session, after time has passed, try the free tier again first. A sub-agent cannot spend the key (permissions block it), so the main session does keyed fetches; a large reply is saved to a file — extract it by script, never retype.
 - **`/orch` runs only when she types it** (her decision). No session routes work through it, or follows its steps, unless she has typed `/orch` in that session.
 - **`/close` ends a session** (her design): guide update, clear up, a fixed four-part summary. Never archives the session. Runs only when she types it.
+  **A fix she has had published and then closes is closed (her decision):** never record it as an open item or a
+  "her use confirms" check — she closed it because it is finished.
 - ISBN-13 is always displayed `xxx-xxxxxxxxxx` (3 digits, hyphen, 10 digits).
 
 ### Put it in code — her decision
@@ -218,9 +220,7 @@ design and what is unproven: `docs/themes.md`. Read it before any Themes work.
 
 Every exhibition in art-period order (dividers, scrubber, theme chips; Label, Relabel, Recently labelled). Design, decisions and
 every rule: `docs/periods.md` — read it before any Period work. Her load of the test page's ledger into 51 confirms. Her view, kept
-for later: both Misc bins should ultimately go. **Live at 56.3, her use confirms — Do not regroup** (beside Relabel; `docs/periods.md`). **OPEN — live at 56.4, her
-Relabel confirms: Postwar Europe as a time-and-place period** — the Pompidou *Chagall à l'œuvre* (1945–1970) and Nice
-*Chagall 1966–1985* should come back Postwar Europe, not General 20th Century; each Relabel's reason in the lookup log settles it.
+for later: both Misc bins should ultimately go. **Live at 56.3, her use confirms — Do not regroup** (beside Relabel; `docs/periods.md`). Postwar Europe is told to Claude as a time-and-place period (56.4).
 
 #### 2.2.10 Published since 51 — her next links, lookups and use confirm
 
