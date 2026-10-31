@@ -59,6 +59,10 @@ check('PS-020 Georgian Britain starts at 1714, where Tudor / Stuart ends', /^c\.
 const vd=[{period:'flemish',periodYear:1630,periodArtist:'Anthony van Dyck'},{period:'flemish',periodYear:1625,periodArtist:'Anthony van Dyck'},{period:'tudor',periodYear:1637,periodArtist:'Anthony van Dyck'}];
 const vdBy=H.artistPeriods(vd);
 check('PS-020 Van Dyck in England keeps Tudor / Stuart; his retrospectives stay Flemish Baroque', H.periodOf(vd[2],vdBy)==='tudor'&&H.periodOf(vd[0],vdBy)==='flemish');
+const ch=[{period:'earlymodern',periodYear:1912,periodArtist:'Marc Chagall'},{period:'earlymodern',periodYear:1914,periodArtist:'Marc Chagall'},{period:'postwareu',periodYear:1958,periodArtist:'Marc Chagall',periodKeep:true},{period:'postwareu',periodYear:1960,periodArtist:'Marc Chagall'}];
+const chBy=H.artistPeriods(ch);
+check('PS-026 Do not regroup keeps Claude\'s answer (Chagall, Postwar Europe); his other straggler is still regrouped', H.periodOf(ch[2],chBy)==='postwareu'&&H.periodOf(ch[3],chBy)==='earlymodern');
+check('PS-026 a kept show still counts in its artist\'s tally', H.artistPeriods([...ch,{period:'postwareu',periodYear:1962,periodArtist:'Marc Chagall'}]).get('marc chagall')==='postwareu');
 check('PS-023 Books takes albums of drawings (Vasari\'s Book of Drawings)', H.periodPrompt([]).includes('albums: a collector\'s book of drawings or prints'));
 check('PS-024 a show responding to one older source takes the period where most of its works sit (Rijksmuseum Metamorphoses)', H.periodPrompt([]).includes("- A show of art responding to one older source (a text, a myth or a story): the period most of its works come from (its heart), with that period's year, and response true."));
 check('PS-025 Claude gives its reason with each label, kept only in the lookup log', H.periodPrompt([]).includes('why: one short sentence on what in the exhibition') && H.periodPrompt([]).includes('"why":') && !('why' in H.periodAnswers({labels:[{i:0,period:'baroque',year:1620,themes:[],why:'Bernini.'}]}).get(0)));

@@ -70,6 +70,11 @@
   them out of Miscellaneous). PS-012–014, PR-017–022.
 - **Code decides, not Claude:** a straggler's group by its year; one artist, one group — a show about one artist takes the group most
   of that artist's shows were given, a tie to the earlier (at sort time; her decision: no hard-coded artist). Ledger fields are in CLAUDE.md §5.1.
+- **Do not regroup** (her design, 56.3; PS-026, PR-038–040): the rule is for small stragglers (a late Titian read as Baroque); an
+  artist who genuinely spans periods is her call, case by case. When a Relabel's readout says "shown with … other shows", a "Do not
+  regroup" button sits next to Relabel and goes with the readout. A tap keeps Claude's answer (`periodKeep`) and the line becomes
+  "Relabelled: <label> — no regrouping." It holds until that card's next Relabel, which clears it (no memory). The kept show still
+  counts in its artist's tally. Remembering artists never to regroup is undecided (her decision: case by case for now).
 - **When labels are written:** Label (footer, beside Clear search) fills every show with no period or no themes, dismissed included,
   40 a question, and never relabels; failed batches wait 15 seconds then a minute (her decision; `LABEL_WAITS`, `labelWhy`; PS-015–016). An import labels each new show on its
   approval card ("Period: …"). Relabel, at the foot of a card's drawer, asks again about one show.

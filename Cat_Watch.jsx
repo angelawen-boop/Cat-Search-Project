@@ -3,7 +3,7 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 // The footer prints APP_VERSION and its date, so she can tell one build from the next.
 // Numbering, her decision: a whole number for a substantial change, a decimal for a
 // small one, one number per publish. Bump it with the change it describes.
-const APP_VERSION = "56.2";
+const APP_VERSION = "56.3";
 const APP_VERSION_DATE = "31 Oct 2026";
 
 // The venue order is VENUE_ORDER, below the list, which sorts MUSEUMS; drawer, chips,
@@ -3481,7 +3481,9 @@ function artistPeriods(rows){
   return out;
 }
 // An English-years show keeps Tudor / Stuart, whatever the artist's other shows (her decision).
-const periodOf=(r,byArtist)=>(!r.periodResponse&&periodKey(r.period)!=="tudor"&&byArtist&&byArtist.get(artistKey(r.periodArtist)))||periodKey(r.period);
+// "Do not regroup" (`periodKeep`) keeps Claude's answer until the next Relabel; the show still
+// counts in its artist's tally (docs/periods.md).
+const periodOf=(r,byArtist)=>(!r.periodResponse&&!r.periodKeep&&periodKey(r.period)!=="tudor"&&byArtist&&byArtist.get(artistKey(r.periodArtist)))||periodKey(r.period);
 // Period order; within a period, response shows last (her decision), then the year, then
 // her venue order (her tie rule).
 function periodCompare(a,b,byArtist){
@@ -6806,6 +6808,7 @@ const LedgerCard=React.memo(function LedgerCard({r,mu,isOpen,isBusy,busy,recheck
           {/* Relabel, on its own line at the foot of the drawer (her design; the Period trial). */}
           <div style={{marginTop:10}}>
             <button onClick={()=>act("relabel",r.id)} disabled={busy||relabelling} style={{background:"none",border:"none",color:C.soft,fontSize:10.5,textDecoration:"underline",cursor:"pointer",padding:0}}>{relabelling?"Relabelling\u2026":"Relabel"}</button>
+            {said&&said.regrouped&&<button onClick={()=>act("keepPeriod",r.id)} disabled={busy} style={{background:"none",border:"none",color:C.soft,fontSize:10.5,textDecoration:"underline",cursor:"pointer",padding:0,marginLeft:14}}>Do not regroup</button>}
           </div>
         </div>
       )}
@@ -7654,15 +7657,22 @@ export default function App(){
     let said;
     try{
       const {labels,batches}=await labelPeriods([periodShow(0,r)]);
-      const v=labels.get(0)&&{...labels.get(0),relabelledAt:new Date().toISOString()};
+      const v=labels.get(0)&&{...labels.get(0),periodKeep:false,relabelledAt:new Date().toISOString()};
       if(v){
         const next=landOnCard(cloudLatest.current.rows,id,r,{...r,...v});
         setRows(next); setDirty(true); setSaveNote(null);
         const nr={...r,...v}, shown=periodOf(nr,artistPeriods(next));
-        said={id,failed:false,text:"Relabelled: "+periodText(nr)+(shown!==nr.period?" \u2014 shown with "+nr.periodArtist+"\u2019s other shows, under "+PERIOD_NAME[shown]:"")+"."};
+        said={id,failed:false,regrouped:shown!==nr.period,text:"Relabelled: "+periodText(nr)+(shown!==nr.period?" \u2014 shown with "+nr.periodArtist+"\u2019s other shows, under "+PERIOD_NAME[shown]:"")+"."};
       }else said={id,failed:true,text:"Relabel didn\u2019t finish \u2014 "+(batches[0]&&batches[0].why||"no answer")+"."};
     }catch(e){ said={id,failed:true,text:"Relabel didn\u2019t finish \u2014 "+String((e&&e.message)||e)+"."}; }
     finally{ setRecheckSaid(said); saveLookupTape(tape,{ok:!said.failed,said:said.text}); setRelabelId(null); }
+  }
+
+  // Do not regroup: Claude's answer stands for this show until its next Relabel (her design).
+  function keepPeriod(id){
+    const r=rows.find(x=>x.id===id); if(!r||roStop())return;
+    commit(rows.map(x=>x.id===id?{...x,periodKeep:true,editedAt:new Date().toISOString()}:x));
+    setRecheckSaid({id,failed:false,text:"Relabelled: "+periodText(r)+" \u2014 no regrouping."});
   }
 
   // ── ADD BY LINK — the button's work ────────────────────────────────────────
@@ -8177,7 +8187,7 @@ export default function App(){
   const setDigital=(id,text)=>{ if(!String(text||"").trim()){ setDigitalBox(null); return; }
     const href=typedLink(text); if(!href)return; setDigitalBox(null);
     const r=rows.find(x=>x.id===id); if(r&&r.digitalUrl!==href)commit(rows.map(x=>x.id===id?{...x,digitalUrl:href,editedAt:new Date().toISOString()}:x)); };
-  cardActs.current={restore,toggleWatch,dismiss,setAcq,toggleBuyNext,setPick,findOneCat,recheckShop,relabel,setDigital,
+  cardActs.current={restore,toggleWatch,dismiss,setAcq,toggleBuyNext,setPick,findOneCat,recheckShop,relabel,keepPeriod,setDigital,
     openDigital:id=>setDigitalBox(id),closeDigital:()=>setDigitalBox(null),
     toggleOpen:id=>setOpenCards(o=>({...o,[id]:!o[id]}))};
   const cardAct=useCallback((name,...a)=>cardActs.current[name](...a),[]);

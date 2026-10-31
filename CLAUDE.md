@@ -218,7 +218,7 @@ design and what is unproven: `docs/themes.md`. Read it before any Themes work.
 
 Every exhibition in art-period order (dividers, scrubber, theme chips; Label, Relabel, Recently labelled). Design, decisions and
 every rule: `docs/periods.md` — read it before any Period work. Her load of the test page's ledger into 51 confirms. Her view, kept
-for later: both Misc bins should ultimately go.
+for later: both Misc bins should ultimately go. **Live at 56.3, her use confirms — Do not regroup** (beside Relabel; `docs/periods.md`).
 
 #### 2.2.10 Published since 51 — her next links, lookups and use confirm
 
@@ -483,7 +483,7 @@ bot-blocked, so Pages and Paste only) is a fact about that venue, never a limit 
 > restating `capabilities` must restate all four; omitting it carries them
 > forward. **Renaming the connector means restating them.**
 
-**Live: 56.2 in her app**, with the cloud ledger (merged at 46). What each recent version changed is in
+**Live: 56.3 in her app**, with the cloud ledger (merged at 46). What each recent version changed is in
 `docs/publishing.md`, "What is live now".
 
 #### The mental model, load-bearing
@@ -514,7 +514,7 @@ reopening, now live — `docs/cloud_storage.md`). Reasoning and the two rejected
 id, museumId, title, startDate, endDate, summary, exUrl, interested, watching,
 acquiring, buyNext, buyRank, looked, hasCatalogue, catalogueTitle, isbn13, publisher,
 publisherUrl, publisherResult, shopUrl, shopState, shopChange, englishCheck, originalEdition, otherVenueBook, alsoVersion, digitalUrl, addedAt, editedAt,
-period, periodYear, periodResponse, periodArtist, themes, labelledAt, relabelledAt
+period, periodYear, periodResponse, periodArtist, periodKeep, themes, labelledAt, relabelledAt
 ```
 
 Ledger backup is JSON; the sweep pro forma is CSV.

@@ -44,7 +44,9 @@ const label = { [ng1.id]: ['highren', 1510], [met1.id]: ['highren', 1510], [ng2.
   [met2.id]: ['impressionism', 1875], [metGone.id]: ['highren', 1500] };
 // Two of them on Buy next, her dragged order the opposite of period order (BP-).
 const buy = { [met1.id]: { acquiring: 'yes', buyNext: true, buyRank: 2 }, [ng2.id]: { acquiring: 'yes', buyNext: true, buyRank: 1 }, [met2.id]: { acquiring: 'acquired' } };
-const rows = hers.rows.map(r => label[r.id] ? { ...r, period: label[r.id][0], periodYear: label[r.id][1], themes: [], ...(buy[r.id] || {}) } : r);
+// Two shows by one artist, so a Relabel of a third can be regrouped with them (PR-038).
+const artist = { [ng1.id]: 'Marc Chagall', [met1.id]: 'Marc Chagall' };
+const rows = hers.rows.map(r => label[r.id] ? { ...r, period: label[r.id][0], periodYear: label[r.id][1], themes: [], ...(artist[r.id] ? { periodArtist: artist[r.id] } : {}), ...(buy[r.id] || {}) } : r);
 const FILE = JSON.stringify({ ...hers, rows });
 
 const settle = async (ms = 50) => { await new Promise(r => setTimeout(r, ms)); };
@@ -57,7 +59,7 @@ const until = async (fn, ms = 8000) => { const t = Date.now(); while (Date.now()
   const scrolls = []; win.scrollTo = o => { scrolls.push(o); };
   // Claude stands in: every show it is asked about is Baroque, 1650.
   // failNext: how many questions fail before answering (the retry and her line).
-  const asked = []; let failNext = 0, relabelNext = false, relabelHold = null;
+  const asked = []; let failNext = 0, relabelNext = false, relabelHold = null, relabelWith = null;
   const opts = [];
   win.claude = { use: async name => name !== 'sample' ? null : { json: async (prompt, o) => {
     opts.push(o || {});
@@ -65,7 +67,7 @@ const until = async (fn, ms = 8000) => { const t = Date.now(); while (Date.now()
     asked.push(shows.length);
     if (failNext > 0) { failNext--; throw { code: 'rate_limited', message: 'slow down' }; }
     // A question about one show is a Relabel: it comes back High Renaissance.
-    if (shows.length === 1 && relabelNext) { relabelNext = false; if (relabelHold) await relabelHold; return { labels: [{ i: shows[0].i, period: 'highren', year: 1505, themes: ['sculpture'] }] }; }
+    if (shows.length === 1 && relabelNext) { relabelNext = false; if (relabelHold) await relabelHold; return { labels: [{ i: shows[0].i, ...(relabelWith || { period: 'highren', year: 1505, themes: ['sculpture'] }) }] }; }
     return { labels: shows.map(x => ({ i: x.i, period: 'baroque', year: 1650, themes: [] })) };
   } } };
   const globals = ['window', 'document', 'navigator', 'localStorage', 'requestAnimationFrame',
@@ -191,6 +193,28 @@ const until = async (fn, ms = 8000) => { const t = Date.now(); while (Date.now()
     ok(doc.body.textContent.includes('Relabelled: High Renaissance \u00b7 c. 1505 \u00b7 Sculpture.'), 'PR-015: the drawer says the new label, its themes included');
     const hr = [...doc.querySelectorAll('span')].some(x => x.textContent === 'High Renaissance');
     ok(hr && [...doc.querySelectorAll('article h3')].some(h => h.textContent === firstTitle), 'PR-016: the show moves under its new divider', firstTitle);
+    // Do not regroup (her design): after a Relabel regroups a show with its artist's other shows, one tap keeps
+    // Claude's answer until that card's next Relabel.
+    const m2 = () => cards().find(c => has(c, met3));
+    const btn = (el, t) => el && [...el.querySelectorAll('button')].find(b => b.textContent === t);
+    const divider = t => [...doc.querySelectorAll('span')].some(x => x.textContent === t);
+    click(btn(m2(), 'Catalogue') || btn(m2(), 'Hide') || [...m2().querySelectorAll('button')].find(b => /Catalogue/.test(b.textContent)));
+    await until(() => !!btn(m2(), 'Relabel'));
+    relabelWith = { period: 'earlymodern', year: 1912, themes: [], artist: 'Marc Chagall' };
+    relabelNext = true; click(btn(m2(), 'Relabel'));
+    await until(() => /Relabelled: Early Modernism/.test(doc.body.textContent));
+    ok(doc.body.textContent.includes('Relabelled: Early Modernism \u00b7 c. 1912 \u2014 shown with Marc Chagall\u2019s other shows, under High Renaissance.') && !divider('Early Modernism'),
+      'PR-038: a Relabel that regroups says so, and the show sits with its artist\'s other shows', m2() && m2().textContent.slice(-200));
+    ok(!!btn(m2(), 'Do not regroup') && btn(m2(), 'Relabel').parentNode === btn(m2(), 'Do not regroup').parentNode, 'PR-038: Do not regroup sits next to Relabel');
+    ok(!btn(cards().find(c => c.querySelector('h3').textContent === firstTitle), 'Do not regroup'), 'PR-038: no Do not regroup on a Relabel that did not regroup');
+    click(btn(m2(), 'Do not regroup'));
+    await until(() => /no regrouping/.test(doc.body.textContent));
+    ok(doc.body.textContent.includes('Relabelled: Early Modernism \u00b7 c. 1912 \u2014 no regrouping.') && !btn(m2(), 'Do not regroup') && divider('Early Modernism'),
+      'PR-039: Do not regroup keeps Claude\'s answer: the line says "no regrouping." and the show goes under its own period', m2() && m2().textContent.slice(-200));
+    relabelNext = true; click(btn(m2(), 'Relabel'));
+    await until(() => /shown with Marc Chagall/.test(doc.body.textContent));
+    ok(!divider('Early Modernism') && !!btn(m2(), 'Do not regroup'), 'PR-040: the next Relabel remembers nothing: regrouped again, the button offered again');
+    relabelWith = null;
     // The Theme row filters; Ex-themes is every labelled show with no theme.
     const chipBtn = t => [...doc.querySelectorAll('button')].find(b => b.textContent === t);
     const allShown = cards().length;
