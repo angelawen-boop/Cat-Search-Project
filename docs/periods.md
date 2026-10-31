@@ -5,6 +5,9 @@
 
 ## Open
 
+- **OPEN — her Relabel of the two Chagall shows confirms 56.4** (Pompidou 1945–1970, Nice 1966–1985): both should come back
+  Postwar Europe. Before 56.4 every Relabel gave General 20th Century, reason "fits no named movement".
+
 - **OPEN — *Hidden Faces* (Met) should be Early Renaissance; no fix yet** that does not move other shows (tried: "Italian and Northern art of
   the same years: the Italian period" gave High Renaissance by date; "…of the 15th and 16th centuries: Early Renaissance" was right but
   tested beside other changes; "Early" for a show spanning Early and High with no heart was mostly Northern). Three shows she says were right drift under the current rules: *Zaragoza's

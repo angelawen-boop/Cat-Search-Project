@@ -218,7 +218,9 @@ design and what is unproven: `docs/themes.md`. Read it before any Themes work.
 
 Every exhibition in art-period order (dividers, scrubber, theme chips; Label, Relabel, Recently labelled). Design, decisions and
 every rule: `docs/periods.md` — read it before any Period work. Her load of the test page's ledger into 51 confirms. Her view, kept
-for later: both Misc bins should ultimately go. **Live at 56.3, her use confirms — Do not regroup** (beside Relabel; `docs/periods.md`).
+for later: both Misc bins should ultimately go. **Live at 56.3, her use confirms — Do not regroup** (beside Relabel; `docs/periods.md`). **OPEN — live at 56.4, her
+Relabel confirms: Postwar Europe as a time-and-place period** — the Pompidou *Chagall à l'œuvre* (1945–1970) and Nice
+*Chagall 1966–1985* should come back Postwar Europe, not General 20th Century; each Relabel's reason in the lookup log settles it.
 
 #### 2.2.10 Published since 51 — her next links, lookups and use confirm
 
@@ -406,6 +408,8 @@ Each line came from a real failure. Details are in git history and `docs/`.
 - **Run only the live checks the change can reach, and do only what she asked** — work out which proof pages a rule
   can change before fetching (five pages, not the whole list); her Confirm ask was first answered with an unasked
   front-page rule and a shop dig she never requested, while the button stayed greyed.
+- **Read the lookup log before answering why Claude labelled, read or found something** — every Relabel and Label is a
+  record with Claude's exact answer and reason (`docs/app.md` §1); a session guessed from the prompt instead (Chagall, Postwar Europe).
 - **A stand-in Claude does not predict hers** — Sonnet said Baroque, her app's Claude Surveys (*Metamorphoses*); her
   own run's record decides. A repeat ask through `sample` is replayed unless `cache:false`.
 - **Capability on one machine is not on both** (pacing was laptop-only), and "the shared path is built" is not "every venue is ready" — say it per venue.
