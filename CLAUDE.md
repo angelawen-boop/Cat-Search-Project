@@ -239,6 +239,9 @@ rules, Cini, Prado, Correr): `docs/app.md`, `docs/add_by_link.md`.
 - **OPEN — still to do (her decision, one at a time, report after each):** write the procedure for a new venue that imports badly
   into `docs/add_by_link.md`, with a pointer here: a case other museums will have → a shared rule, kept only if no proof page gets
   worse; no → an option on that venue's one entry; then the checks it must pass.
+- **OPEN — the year floor (1990) still holds for Links and Pages** (her ask was to remove year blockers; Paste is done, 56):
+  the floor stops a lifespan ("Caravaggio (1571–1610)") being read as a show's run, so lifting it for the page reader needs
+  the live proof-page check, old reader beside new, first (`docs/add_by_link.md`, "Pasted pages"; `anyYear` in `dates.js`).
 - **OPEN — a link venue is looked up exactly as the 28 are (shelf AND whole-shop search).** Detroit files a show's book in the
   show's own shop section. Her next lookups settle: O'Keeffe found at Detroit? The RA's search (`catalogsearch/result/?q=`) is
   stored at its next lookup; Mauritshuis and Yale stay shelf-only.
