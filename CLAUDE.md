@@ -228,6 +228,8 @@ rules, Cini, Prado, Correr): `docs/app.md`, `docs/add_by_link.md`.
   bookshop" page.
 - **OPEN — Getty's dates are drawn by script** (data.getty.edu): links come in undated; reading them from there is
   unbuilt, proposed.
+- **Live at 55, her use confirms — Digital catalogue** (her link to a PDF or online catalogue on a searched card;
+  `docs/app.md`). **Live at 54.3 — the shop screen's Add** (her own shop link; `docs/add_by_link.md`).
 - **To confirm:** her Cini, Moretti and two French Chantilly links (Claude Lorrain, Watteau); her Prado re-import (she
   reverts to a backup without her five Prado imports and re-imports them); her Guardi re-import (the Correr's archive); she
   reverts to her 25 Oct close file, re-imports the 9 Berlin links (all under Berlin Alte NG; its shop found at the first),
