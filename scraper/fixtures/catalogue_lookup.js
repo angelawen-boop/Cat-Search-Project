@@ -624,6 +624,25 @@ function runtime(answer, log) {
     const ce = new Error('x'); ce.code = 'rate_limited';
     r = await run(inShop, page, ce);
     eq(r.out.ok, false, 'C-099: Claude refusing is a failed check');
+
+    // C-099a-e: MoMA's store draws Add to Cart by script; its status line "Item# ... In Stock" is for sale (her Labrouste
+    // page, as Parallel returned it; her decision, a MoMA rule).
+    const mUrl = 'https://store.moma.org/products/henri-labrouste-structure-brought-to-light-hardcover';
+    const mPage = (status, url) => ({ payload: { results: [{ url: url || mUrl, excerpts: [
+      'Henri Labrouste: Structure Brought to Light $55 Non-Member $49.50 Member Default Title Item# 839-839 ' + status
+      + ' Close Special Order: Pickup in-store: Quantity: - 1 + Email When Available Description Details ' + 'Shipping and Returns. '.repeat(40)] }], errors: [] } });
+    const mRow = { ...isGone, shopUrl: mUrl };
+    const no = { forSale: false, why: 'Email When Available, no add to cart.' };
+    r = await run(mRow, mPage('In Stock'), no);
+    eq(r.out.row.shopState + '|' + r.out.row.shopChange, 'shop|back', 'C-099a: MoMA Labrouste - In Stock on its status line is for sale, whatever Claude read');
+    r = await run(mRow, mPage('Out of Stock'), no);
+    eq(r.out.row.shopState, 'gone', 'C-099b: MoMA - Out of Stock stays not for sale');
+    r = await run(mRow, mPage('In Stock', 'https://store.moma.org/collections/exhibition-catalogues'), no);
+    eq(r.out.row.shopState, 'gone', 'C-099c: MoMA - a page served somewhere else (a redirect) is not the book');
+    r = await run({ ...mRow, shopUrl: 'https://store.moma.org/collections/books' }, mPage('In Stock', 'https://store.moma.org/collections/books'), no);
+    eq(r.out.row.shopState, 'gone', 'C-099d: MoMA - only a product page counts');
+    r = await run({ ...isGone, shopUrl: 'https://shop.test/x' }, mPage('In Stock', 'https://shop.test/x'), no);
+    eq(r.out.row.shopState, 'gone', 'C-099e: another shop - In Stock is left to Claude');
   }
 
   // ── C-120 to C-129: one page read whole, and its ISBN read in code ─────

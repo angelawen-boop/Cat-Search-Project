@@ -21,7 +21,9 @@ the next goes through. Later ones go straight through.
 
 ## What is live now
 
-**Live: 56.5 in her app**: a long paragraph saying "detail," is no longer taken for a picture's caption (MoMA's Matisse; AL-061k); MoMA's space before a comma dropped, so its heading is the title, not the events list's repeat (`spaceBeforeComma`, AL-061l).
+**Live: 56.6 in her app**: MoMA's store — a book page whose status line says "In Stock" is for sale (its Add to Cart is drawn by script; `inStock` on the MoMA entry, a MoMA rule, her decision; C-099a–e).
+
+Before that 56.5: a long paragraph saying "detail," is no longer taken for a picture's caption (MoMA's Matisse; AL-061k); MoMA's space before a comma dropped, so its heading is the title, not the events list's repeat (`spaceBeforeComma`, AL-061l).
 
 Before that 56.4: Postwar Europe described to Claude as a time-and-place period, not a movement (`docs/periods.md`).
 

@@ -207,13 +207,9 @@ noting issues as she uses it, for a later debugging session.
   Angelico, is her report, not yet agreed): Munich's CEDON shop sells German and English editions on ONE page with a language choice
   (*Venezia 500*, *Jacobus Vrel*), and junk text is written as the publisher (Vrel, Dresden's *Paradise on Earth*, Correggio).
 - **Shops tested by her in the app:** `brit`, `morgan`, `mad`, `orsay`, `louvre`, `moma`. `uffizi`'s shop sells no books — settled.
-- **OPEN — MoMA: a book in stock reads "not in the museum shop"; her choice A, waiting for the lookup pause to lift**
-  (lookup logs L17924993786826e6v *Brancusi*, L1793455188219n9b2 *Labrouste*, 56.4). The shop is not blocked: its
-  shelf pages open, only its search page is refused (403). The book's own page says "In Stock", but the for-sale read
-  rejects it for "Email When Available" and no Add to cart (her saved page shows Add to Cart: drawn by script). Her
-  choice: **A**, "In Stock" counts as for sale unless sold out is also said (general; checked against her agreed cases
-  and the Morgan Tarot first). The membership pop-up fault was not seen in the latest lookups. Detail:
-  `docs/catalogue_versions.md`, "MoMA *Brancusi*".
+- **Live at 56.6 — MoMA: a book page whose status line says "In Stock" is for sale** (her decision, a MoMA-only rule:
+  its Add to Cart is drawn by script). Her next MoMA lookups confirm *Labrouste* reads as in the museum shop. Unknown:
+  whether a sold-out MoMA book's status line ever still says In Stock. `docs/catalogue_versions.md`, "MoMA *Brancusi*".
 - **OPEN — the publisher step's verdict is not stable.** *Metamorphoses* (Hannibal), two fresh lookups, same code: "Publisher's
   section", then "Publisher" (right). Cause unproven (a different candidate page, the page empty — `pageIsShell`, or the read judging a
   page differently); read its lookup-log record (gone once 50 newer lookups have run).
@@ -532,7 +528,7 @@ bot-blocked, so Pages and Paste only) is a fact about that venue, never a limit 
 > restating `capabilities` must restate all four; omitting it carries them
 > forward. **Renaming the connector means restating them.**
 
-**Live: 56.5 in her app**, with the cloud ledger (merged at 46). What each recent version changed is in
+**Live: 56.6 in her app**, with the cloud ledger (merged at 46). What each recent version changed is in
 `docs/publishing.md`, "What is live now".
 
 #### The mental model, load-bearing

@@ -90,16 +90,16 @@ checked against them. ● = starts picked; a card with one version looks as it d
   (L1792314758291e049); the third kept the two right books (L1792315089744hdab). Every search used the press-release headline as
   the title.
 
-- **MoMA *Brancusi*: a book in stock reads "not in the museum shop" (49.3; *Labrouste* again at 56.4) — her choice A,
-  not built while lookup patches are paused** (lookup logs L17924993786826e6v, L1793455188219n9b2). The shop is not
+- **MoMA *Brancusi*: a book in stock reads "not in the museum shop" (49.3; *Labrouste* again at 56.4) — fixed at 56.6** (lookup logs L17924993786826e6v, L1793455188219n9b2). The shop is not
   blocked: the shelf's five pages open; only the search page answers 403. **(1)** On *Brancusi* the shelf's whole page
   carried the "Become a Member" pop-up's prices (Explore $200, Access $110, Annual Pass $75), so `readWhole` took it for
   books; B-007's fixture used the short excerpt. Proposed: prices inside a membership offer do not count as books
   (general); refit B-007 on the real page. Not seen on *Labrouste* or *Matisse* (the shelf held real books). **(2)** The
   web search finds the book's own page ("In Stock", a price), but the for-sale read rejects it for "Email When Available"
   and no Add to cart. Her saved *Labrouste* page shows Add to Cart, so the button is drawn by script and the fetched page
-  lacks it. **Her choice: A** — "In Stock" counts as for sale unless sold out is also said (general; checked against her
-  agreed cases and the Morgan Tarot first).
+  lacks it. **Built at 56.6, her decision: a MoMA-only rule** — on `store.moma.org/products/…`, served at the address asked,
+  the status line "Item# … In Stock" is for sale whatever Claude read (`inStock` on the MoMA entry, `inStockByRule`;
+  C-099a–e). Matisse is correctly not in the shop (her check).
 
 ## Search: every catalogue of the exhibition — OPEN, not built
 

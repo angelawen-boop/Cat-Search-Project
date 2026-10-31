@@ -3,7 +3,7 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 // The footer prints APP_VERSION and its date, so she can tell one build from the next.
 // Numbering, her decision: a whole number for a substantial change, a decimal for a
 // small one, one number per publish. Bump it with the change it describes.
-const APP_VERSION = "56.5";
+const APP_VERSION = "56.6";
 const APP_VERSION_DATE = "31 Oct 2026";
 
 // The venue order is VENUE_ORDER, below the list, which sorts MUSEUMS; drawer, chips,
@@ -63,7 +63,9 @@ const MUSEUMS = [
   { id:"capo", english:false, short:"Capo", card:"Capodimonte", lookupName:"Capodimonte", name:"Museo e Real Bosco di Capodimonte aka Museo Nazionale di Capodimonte", city:"Naples", exBase:null, shopSearch:null, shopHome:null, listUrl:null },
   { id:"morgan", short:"Morgan", name:"Morgan Library & Museum", city:"New York", exBase:null, shopSearch:"https://shop.themorgan.org/search?q=", shopCatalogues:"https://shop.themorgan.org/collections/exhibition-catalogs", shopHome:"https://shop.themorgan.org/", listUrl:null },
   { id:"brit", linkRead:{ from:/^(?:For the catalogue, homewares and gifts from the exhibition|Book tickets$)/ }, short:"British Museum", name:"The British Museum", city:"London", exBase:null, shopSearch:"https://www.britishmuseumshoponline.org/catalogsearch/result/?q=", shopCatalogues:"https://www.britishmuseumshoponline.org/books/exhibition-books.html", shopHome:"https://britishmuseumshoponline.org/", listUrl:null },
-  { id:"moma", linkRead:{ spaceBeforeComma:true }, short:"MoMA", name:"Museum of Modern Art", city:"New York", exBase:null, shopSearch:"https://store.moma.org/collections/shop?q=" /* her own search */, shopCatalogues:"https://store.moma.org/collections/exhibition-catalogues", shopHome:"https://store.moma.org/", listUrl:null },
+  // inStock: a book page there whose own status line says "In Stock" is for sale; its Add to Cart is drawn by script, so the
+  // page as read lacks it (Labrouste; her decision, a MoMA rule; docs/catalogue_versions.md, "MoMA *Brancusi*").
+  { id:"moma", linkRead:{ spaceBeforeComma:true }, inStock:{ path:/^\/products\//, line:/\bItem#\s*\S+\s+In Stock\b/ }, short:"MoMA", name:"Museum of Modern Art", city:"New York", exBase:null, shopSearch:"https://store.moma.org/collections/shop?q=" /* her own search */, shopCatalogues:"https://store.moma.org/collections/exhibition-catalogues", shopHome:"https://store.moma.org/", listUrl:null },
   { id:"tate-modern", short:"Tate Modern", name:"Tate Modern", city:"London", exBase:null, shopSearch:"https://shop.tate.org.uk/search?q=", shopCatalogues:"https://shop.tate.org.uk/books/exhibition-books?sz=96", shopHome:"https://shop.tate.org.uk/", listUrl:null },
   // The search is hers, query moved last so the title can follow. A Cloudflare check refuses
   // us, so the lookup reports it blocked; the address stays for her shop link.
@@ -5056,6 +5058,17 @@ const GONE_HTTP=new Set([404,410]);
 //   "noread"     Claude could not be asked; `why`
 //   "badanswer"  Claude's answer was not a yes or no
 //   "read"       `forSale` true or false, `why` Claude's reason, `results` the page
+// A venue whose shop draws its order button by script (MUSEUMS `inStock`): the book's own page, served at the address
+// asked, with the status line saying In Stock, is for sale whatever Claude read.
+function inStockByRule(url,results){
+  const host=hostOf(url), mu=MUSEUMS.find(m=>m.inStock&&hostOf(m.shopHome||"")===host);
+  if(!mu)return false;
+  const path=u=>{ try{ return new URL(u).pathname.replace(/\/+$/,""); }catch{ return ""; } };
+  if(!mu.inStock.path.test(path(url)))return false;
+  const served=(results||[]).map(r=>String((r&&r.url)||"")).filter(Boolean);
+  if(served.some(u=>hostOf(u)!==host||path(u)!==path(url)))return false;
+  return mu.inStock.line.test(pageTextOf(results));
+}
 async function readShopPage(book,url,io,opened){
   const f=opened||await openShopPage(io?io.fetch:fetchPage,url,
     "Whether the book “"+book+"” can be bought on this page now: its product page, price, "
@@ -5094,6 +5107,10 @@ async function readShopPage(book,url,io,opened){
   const d=rd.data||{};
   if(typeof d.forSale!=="boolean")return{kind:"badanswer",detail:f.detail+"\n"+JSON.stringify(d)};
   const why=String(d.why||"").trim();
+  if(!d.forSale&&inStockByRule(url,f.results)){
+    const said="The page\u2019s own status line says In Stock (this shop draws its Add to Cart by script).";
+    return{kind:"read",forSale:true,why:said,results:f.results,detail:f.detail+"\n"+rd.detail+(why?"\n"+why:"")+"\n"+said};
+  }
   return{kind:"read",forSale:d.forSale,why,results:f.results,detail:f.detail+"\n"+rd.detail+(why?"\n"+why:"")};
 }
 
