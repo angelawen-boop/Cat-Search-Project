@@ -324,8 +324,7 @@ under the museum Claude names when that museum is on that site (`ownMuseumNamed`
 (her decision: a general rule, for Links, Pages and Paste). Such a site is asked the venue on every page, so each record files
 under its own museum (a Tate Modern record under Tate Modern). A sister site on a shared domain (cultura.gov.it) is not "under".
 **"Tate Gallery"** (pre-2000 records) names neither Tate, so it is its own venue (her decision); its shop must be the Tate's
-current shop — **OPEN:** live, the finder took `shop.tate.org.uk/books`, not its exhibition-books section, which the search did
-return. Its records' text for Claude is the one under their "Summary" heading, below the copies list (her saved Reynolds and
+current shop. Its records' text for Claude is the one under their "Summary" heading, below the copies list (her saved Reynolds and
 Pre-Raphaelite pages; venue rule `from` with `fromLast`, AP-014). No listed proof page can reach the rule (every page on her museums' sites files by address first). Tests PS-006, PS-025.
 
 ## Someone else's page — a show held elsewhere

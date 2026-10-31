@@ -218,26 +218,14 @@ design and what is unproven: `docs/themes.md`. Read it before any Themes work.
 
 Every exhibition in art-period order (dividers, scrubber, theme chips; Label, Relabel, Recently labelled). Design, decisions and
 every rule: `docs/periods.md` — read it before any Period work. Her load of the test page's ledger into 51 confirms. Her view, kept
-for later: both Misc bins should ultimately go. **OPEN — Rijksmuseum *Metamorphoses*** (proposal not agreed): `docs/periods.md`, "Open".
+for later: both Misc bins should ultimately go.
 
 #### 2.2.10 Published since 51 — her next links, lookups and use confirm
 
 What each version changed: `docs/publishing.md`; the behaviours decided since (Buy next, Occasional chips, shared date
 rules, Cini, Prado, Correr): `docs/app.md`, `docs/add_by_link.md`.
-- **OPEN — the re-ask sees the refused answer.** Her Memling link (Philadelphia) failed the 10-word cap on every ask: told
-  only the reason, Claude re-sent the same summary. Sonnet passed both asks, so the stand-in did not reproduce her Claude's
-  failure — her re-read confirms.
-- **OPEN — Reina Sofía's shop missed:** its real shop is Shopify with "Publications > Catalogues"
-  (`tienda.museoreinasofia.es/en/collections/publicaciones-catalogos`); live, the finder took the museum's "central
-  bookshop" page.
-- **OPEN — Getty's dates are drawn by script** (data.getty.edu): links come in undated; reading them from there is
-  unbuilt, proposed.
 - **Live at 55, her use confirms — Digital catalogue** (her link to a PDF or online catalogue on a searched card;
   `docs/app.md`). **Live at 54.3 — the shop screen's Add** (her own shop link; `docs/add_by_link.md`).
-- **To confirm:** her Cini, Moretti and two French Chantilly links (Claude Lorrain, Watteau); her Prado re-import (she
-  reverts to a backup without her five Prado imports and re-imports them); her Guardi re-import (the Correr's archive); she
-  reverts to her 25 Oct close file, re-imports the 9 Berlin links (all under Berlin Alte NG; its shop found at the first),
-  re-applies two marks and re-imports the Brancusi link; her next Basel import shows its shop.
 
 #### 2.2.11 Add by link — open items
 
@@ -254,21 +242,11 @@ rules, Cini, Prado, Correr): `docs/app.md`, `docs/add_by_link.md`.
 - **OPEN — a link venue is looked up exactly as the 28 are (shelf AND whole-shop search).** Detroit files a show's book in the
   show's own shop section. Her next lookups settle: O'Keeffe found at Detroit? The RA's search (`catalogsearch/result/?q=`) is
   stored at its next lookup; Mauritshuis and Yale stay shelf-only.
-- **To confirm with her links:** the Karsten Greve import (gallery's shop, 52.1), her Frankfurt links and lookups (49.2), the two
-  Reynolds links (Enfilade PDF, Meer; 49.4), her other six Palazzo Reale Milano pages (Pages, 48).
 
 #### 2.2.18 Queued — her asks
 
-- **OPEN — Paste: Claude reads title and dates, live at 56** (her decision; `docs/add_by_link.md`, "Pasted pages"): any length,
-  any year; the description from the rest of the text (56.1). Her Met *Age of Spirituality* re-paste settles it; the shop
-  finder for a pasted new venue is unproven.
-  **OPEN — a pasted page names its venue from the address alone** (pasted text carries no site name): Claude read
-  `presidence.fr` as the French Presidency ("Présidence de la République", "Paris Élysée") and the finder took the Élysée
-  Palace's shop (lookup log L17934138860630vq8); the same page by link was named Galerie de la Presidence from its tab.
-  **Live at 54.2, her use confirms:** German dates (DS-011), Galerie de la Présidence's " : Exhibition" dropped (AP-015). **OPEN — "Tate Gallery"'s shop:** live, the finder
-  took the Tate's Books shelf, not its exhibition-books section. **Next, her decision: the paste boxes and buttons** (talked through
-  only after the rest). Her decisions and the own-site rule: `docs/add_by_link.md`, "Pasted pages" and the section after it.
-- **OPEN, known fault — the green "Import complete" bar mixes units.** "Added" and "left undecided" count shows;
+- **Live at 54.2, her use confirms:** German dates (DS-011), Galerie de la Présidence's " : Exhibition" dropped (AP-015).
+- **OPEN, known fault — the green "Import complete" bar mixes units, on every way in** (CSV, Links, Pages, Paste). "Added" and "left undecided" count shows;
   "filled in" and "updated" count fields (`applyRefresh`), so one card filling start and end dates reads "2 filled in".
   Low priority, her judgement call: she rarely reads that line. Counting each show once fails on a card that both fills
   a blank and replaces a value — "updated wins" and "filled in wins" are both rejected (her decision). The only fix she

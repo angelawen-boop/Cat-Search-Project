@@ -5,11 +5,6 @@
 
 ## Open
 
-- **OPEN — Rijksmuseum *Metamorphoses*:** her Claude said Surveys (the card's one line names Bernini to Bourgeois: no visible
-  heart); after her re-import by link rewrote the description, Relabel gave Baroque. The Borghese copy of the show is Baroque (a
-  guess). Proposed to her, not agreed: two shows with the same catalogue sort as one, in one period (code at sort time, tie to the
-  earlier group, like one artist, one group); no heart → the earliest period of its works; reading the show's page for hard cases
-  (parked, never built).
 - **OPEN — *Hidden Faces* (Met) should be Early Renaissance; no fix yet** that does not move other shows (tried: "Italian and Northern art of
   the same years: the Italian period" gave High Renaissance by date; "…of the 15th and 16th centuries: Early Renaissance" was right but
   tested beside other changes; "Early" for a show spanning Early and High with no heart was mostly Northern). Three shows she says were right drift under the current rules: *Zaragoza's
