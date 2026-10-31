@@ -58,8 +58,16 @@ handing a job to Claude.
 - **The card name shows on both screens** (her decision): `card`, else `short`, never the long search name. **Search name long,
   card name short** (her decision): the shop search uses full name, other names, city, country (`venueSearchName`).
 - **Renaming a link venue Claude named — a session's job, and Claude learns from it** (her decision: no editing in the app).
-  Write its `LINK_VENUES` entry: `name` (Claude's full name), her `card` (or `short`, for Occasional) and `notCard` (what Claude
-  gave). Renames go into Claude's question as "for <full name>: <her name>, not <Claude's>" (`SHORT_NAME_RENAMES`, AL-066).
+  Write its `LINK_VENUES` entry: her `card` and `notCard` (what Claude gave); `short` and `name` stay as they are, so chips
+  and shop searches do not move. Renames go into Claude's question as "for <full name>: <her name>, not <Claude's>", the
+  full name from the entry or the store (`SHORT_NAME_RENAMES`, AL-066). **Her style** (her review of every link venue, 56.2):
+  the venue's own name first, then its city ("Städel Frankfurt", "Reina Sofía Madrid"), never a comma, every accent the venue
+  uses. To review again: a page listing each venue (card, full names, city, a box for hers) — her rename page,
+  `https://claude.ai/artifact/RmSC86pu1rkBxsZDtfdA1J`, its store `renames`.
+- **Christie's press site is Christie's** (her decision, 56.2): `press.christies.com` links file under `occ-christies-com`
+  (`sites`); rows already in stay under the press venue (her decision: no ledger move). AL-066b.
+- **The Royal Collection's venue (`rct.uk`) holds every Queen's Gallery**: her name "Queen's Gallery Edinburgh" heads its
+  London shows too (AL-052d).
 - **A Wayback Machine copy files under the museum it copied** (her decision): the venue, its shop and the title's site name come from
   the address inside the copy; the copy is what is read and linked (`siteUrlOf`; AL-037).
 - **A new venue's shop** (her decision): the **exhibition-catalogues section**, else the museum's publications, else books — never
@@ -232,7 +240,7 @@ Proof pages for every rule: `docs/link_proof_pages.json`.
 - **Galerie de la Présidence** (`occ-presidence-fr`): " : Exhibition" leaves its show headings (her decision; `titleDrop`,
   AP-015). **Tate library** (`occ-library-tate-org-uk`): Claude is handed the record's Summary (`from`, `fromLast`; AP-014).
 
-- **San Marco** (`occ-museitoscana-cultura-gov-it`): card "San Marco" (`short`), lookups search "Museo di San Marco" (`name`;
+- **San Marco** (`occ-museitoscana-cultura-gov-it`): card "San Marco Florence" (`card`), lookups search "Museo di San Marco" (`name`;
   AL-046d); titles are the press-release headline's first sentence, without "Mostra" and the quotation marks, capitals recased
   (her decision; `firstSentence`, `titleDrop`, `unquote`, `capsTitles`); shop: none (her answer).
 - **Palazzo Ducale Genova** (`occ-palazzoducale-genova-it`), **Palazzo Reale Milano** (`occ-palazzorealemilano-it`): her names
@@ -275,7 +283,7 @@ Proof pages for every rule: `docs/link_proof_pages.json`.
   the venue as for any new one, and answers the Cini house only on first meeting cini.it, so a later Stanze show files under the
   foundation (her accepted outcome; AL-084). **Moretti** (`occ-morettigallery-com`, her decision: a Moretti rule): the place after
   " : " leaves the title, title recased, capitals description kept (`capsText`), passage ends at "Manage cookies" (AL-083).
-- **Frankfurt** (the Städel, `occ-staedelmuseum-de`): chip "Frankfurt" after Dresden, cards "Frankfurt Städel" (her decision;
+- **Frankfurt** (the Städel, `occ-staedelmuseum-de`): chip "Frankfurt" after Dresden, cards "Städel Frankfurt" (her decision;
   AL-049). Its shop (`liebieghaus.ticketfritz.de/Shop/Index/staedel-publikationen/43885`): Parallel's reading stops after the menu
   (neither JS-rendered nor blocked). **Two facts written in, her decision:** the section (`shopCatalogues`, AL-049a) and
   `shopUnseen: "parallel"` — a shop page with no priced line says "The museum shop contents cannot be seen — Parallel fault"

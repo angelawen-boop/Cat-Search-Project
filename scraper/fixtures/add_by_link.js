@@ -271,7 +271,7 @@ function runtime() {
         if (/Hammersh/.test(title)) return { summary: 'First Spanish retrospective of Hammershøi.', english: '', englishSpeaking: false };
         if (/Grand Tour/.test(title)) return { summary: GRAND_SUMMARY, english: '', englishSpeaking: false };
         if (/venueOwnPage/.test(prompt) && /Magritte|Folly Beyond Words/.test(title))
-          return { summary: 'Magritte retold.', english: '', englishSpeaking: false, venue: 'Royal Museum of Fine Arts', venueAlso: ['KMSKA', 'Koninklijk Museum voor Schone Kunsten Antwerpen'], venueCity: 'Antwerp', venueCountry: 'Belgium', venueShort: 'Antwerp KMSKA', venueOwnPage: true };
+          return { summary: 'Magritte retold.', english: '', englishSpeaking: false, venue: 'Royal Museum of Fine Arts', venueAlso: ['KMSKA', 'Koninklijk Museum voor Schone Kunsten Antwerpen'], venueCity: 'Antwerp', venueCountry: 'Belgium', venueShort: 'KMSKA Belgium', venueOwnPage: true };
         if (/published by someone other than the museum/.test(prompt) && /Canaletto and the Art of Venice/.test(title))
           return { venueSite: 'rct.uk', title: 'Canaletto and the Art of Venice' };
         if (/venueOwnPage/.test(prompt) && /Canaletto and the Art of Venice/.test(title))
@@ -989,15 +989,15 @@ function runtime() {
       && order.indexOf('khm') + 1 === order.indexOf(P),
       'AL-085:  the Prado: chip "Prado" right after KHM, cards "Prado Madrid" (her decision)', JSON.stringify([prado.chip, prado.short]));
     const F = 'occ-staedelmuseum-de';
-    ok(fn('occVenueId')('www.staedelmuseum.de') === F && own[F].short === 'Frankfurt' && card(F) === 'Frankfurt Städel' && order.indexOf(D) + 1 === order.indexOf(F),
-      'AL-049:  the Städel: chip "Frankfurt" right after Dresden, cards "Frankfurt Städel" (her decision)');
+    ok(fn('occVenueId')('www.staedelmuseum.de') === F && own[F].short === 'Frankfurt' && card(F) === 'Städel Frankfurt' && order.indexOf(D) + 1 === order.indexOf(F),
+      'AL-049:  the Städel: chip "Frankfurt" right after Dresden, cards "Städel Frankfurt" (her decision)');
     const C = 'occ-chateaudechantilly-fr', chip = fn('occVenue')(C, { short: 'Chantilly Musée Condé', name: 'Musée Condé, Château de Chantilly' });
     ok(own[C].ownChip && chip.chip === 'Chantilly' && chip.short === 'Chantilly Musée Condé' && order.indexOf('jacquemart') + 1 === order.indexOf(C),
       'AL-081:  Chantilly: chip "Chantilly" right after Jacquemart, cards keep the store\'s "Chantilly Musée Condé" (her decision)', JSON.stringify([chip.chip, chip.short]));
     const CI = 'occ-cini-it', GV = 'occ-lestanzedelvetro-org', PH = 'occ-lestanzedellafotografia-it', ck = fn('chipKey');
-    ok([CI, GV, PH].every(id => own[id].ownChip && own[id].chip === 'Cini' && ck(id) === 'cini' && !own[id].short && !own[id].card) && !own[CI].askElsewhere
+    ok([CI, GV, PH].every(id => own[id].ownChip && own[id].chip === 'Cini' && ck(id) === 'cini' && !own[id].short) && own[CI].card === 'Fondazione Cini' && own[PH].card === 'Stanze della Fotografia Venice' && !own[GV].card && !own[CI].askElsewhere
       && order.indexOf('capo') + 1 === order.indexOf(CI) && order.indexOf(CI) + 1 === order.indexOf(GV) && order.indexOf(GV) + 1 === order.indexOf(PH),
-      'AL-084:  Cini: the foundation, the glass and the photography houses, Claude\'s names, under one chip "Cini" after Capo, in that order (her decision)');
+      'AL-084:  Cini: the foundation, the glass and the photography houses under one chip "Cini" after Capo, in that order; her card names for two, Claude\'s for the glass (her decision)');
     {
       const before = calls.length, r = await discoverShop('', 'www.staedelmuseum.de', 'Städel Museum', [], F);
       ok(r.shop === 'found' && r.shopCatalogues === 'https://liebieghaus.ticketfritz.de/Shop/Index/staedel-publikationen/43885'
@@ -1384,8 +1384,8 @@ function runtime() {
       'AL-052c: a site never seen: Claude is asked which venue held the show, given the date line read');
     ok(samples.length === 2 && /published by someone other than the museum/.test(samples[1].prompt), 'AL-052c2: told it is someone else\'s page, Claude is asked once more (site and title)', samples.length);
     const text = win.document.body.textContent;
-    ok(/The Queen\u2019s Gallery, Buckingham Palace/.test(text) && !/Enfilade/.test(text.replace(/enfilade18thc/g, '')),
-      'AL-052d:  the card files under "The Queen\u2019s Gallery, Buckingham Palace", never "Enfilade"');
+    ok(/Queen's Gallery Edinburgh/.test(text) && !/Enfilade/.test(text.replace(/enfilade18thc/g, '')),
+      'AL-052d:  the card files under the Royal Collection\'s venue (rct.uk, her name "Queen\'s Gallery Edinburgh"), never "Enfilade"');
     ok([...win.document.querySelectorAll('div')].some(d => d.textContent === 'Canaletto and the Art of Venice') && !/utm_source/.test(text),
       'AL-052e:  titled "Canaletto and the Art of Venice"; the link without its tracking tail');
     const shopAsk = calls.filter(c => c.kind === 'mcp' && c.tool === 'web_search').map(c => c.args.search_queries.join(' '));
@@ -1411,9 +1411,9 @@ function runtime() {
     const asked = calls.filter(c => c.kind === 'sample' && !/name the art period/.test(c.prompt || '')).map(c => /"venueShort"/.test(c.prompt));
     ok(asked.length === 2 && asked[0] && !asked[1], 'AL-053:  a museum never met: Claude is asked its name on the first link only; its own page asks nothing more', JSON.stringify(asked));
     const first = calls.find(c => c.kind === 'sample');
-    ok(first && /"Boston MFA"/.test(first.prompt) && /"Frankfurt St\u00e4del"/.test(first.prompt), 'AL-053a:  her names for venues are the style for the short name');
+    ok(first && /"Boston MFA"/.test(first.prompt) && /"St\u00e4del Frankfurt"/.test(first.prompt), 'AL-053a:  her names for venues are the style for the short name');
     const text = win.document.body.textContent;
-    ok(/Antwerp Fine Arts/.test(text) && !/Antwerp KMSKA/.test(text) && !/kmska\.be\s*\u00b7/.test(text), 'AL-053b:  its cards are headed by her name, "Antwerp Fine Arts", over Claude\'s "Antwerp KMSKA" — never its address', text.slice(text.indexOf('KMSKA') - 60, text.indexOf('KMSKA') + 20));
+    ok(/Antwerp KMSKA/.test(text) && !/KMSKA Belgium/.test(text) && !/kmska\.be\s*\u00b7/.test(text), 'AL-053b:  its cards are headed by her name, "Antwerp KMSKA", over Claude\'s "KMSKA Belgium" — never its address', text.slice(text.indexOf('KMSKA') - 60, text.indexOf('KMSKA') + 20));
     const shopAsk = calls.filter(c => c.kind === 'mcp' && c.tool === 'web_search').map(c => c.args.search_queries.join(' '));
     ok(shopAsk.length >= 2 && /^Koninklijk Museum voor Schone Kunsten Antwerpen KMSKA Belgium English language shop/.test(shopAsk[0]) && /^Koninklijk Museum voor Schone Kunsten Antwerpen KMSKA Belgium shop/.test(shopAsk[1]),
       'AL-053c:  its shop is searched under its full name (her entry\'s), other names, city and country (her decision; proved live) — in a country that does not speak English, its English shop first', JSON.stringify(shopAsk));
@@ -1537,8 +1537,11 @@ function runtime() {
       const box = new Function('React', 'window', 'document', 'localStorage', code + '\n;return {LINK_VENUES,linkPrompt};')(React, win, win.document, win.localStorage);
       const pg = { base: 'Folly Beyond Words', between: [], raw: 'A show about Bruegel and proverbs.', dateLine: '' };
       const before = box.linkPrompt(pg, true, 'https://kmska.be/en/folly');
-      ok(before.includes('for "Koninklijk Museum voor Schone Kunsten Antwerpen": "Antwerp Fine Arts", not "KMSKA Antwerp"') && before.includes('"Antwerp Fine Arts"'),
+      ok(before.includes('for "Koninklijk Museum voor Schone Kunsten Antwerpen": "Antwerp KMSKA", not "KMSKA Antwerp"') && before.includes('"Antwerp KMSKA"'),
         'AL-066: a venue she renamed (Antwerp) tells Claude her name and the one it gave', before.slice(before.indexOf('venueShort'), before.indexOf('venueShort') + 600));
+      const ad = new Function('React', 'window', 'document', 'localStorage', code + '\n;return addressVenue;')(React, win, win.document, win.localStorage);
+      ok(ad('https://press.christies.com/a-sale') === 'occ-christies-com' && ad('https://www.christies.com/en/x') === null,
+        'AL-066b: Christie\'s press site files under Christie\'s own venue (her decision, links from now on)');
       for (const v of Object.values(box.LINK_VENUES)) delete v.notCard;
       ok(!/renamed/.test(box.linkPrompt(pg, true, 'https://kmska.be/en/folly')), 'AL-066a:  none renamed, the question says nothing of renames');
     }

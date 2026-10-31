@@ -21,7 +21,9 @@ the next goes through. Later ones go straight through.
 
 ## What is live now
 
-**Live: 56.1 in her app**: Paste's description from the rest of the text, never the title reworded (PS-004c); Buy next after
+**Live: 56.2 in her app**: her names for the link venues (`docs/add_by_link.md`, "Renaming a link venue"); Christie's press site files under Christie's.
+
+Before that 56.1: Paste's description from the rest of the text, never the title reworded (PS-004c); Buy next after
 Owned, a Digital catalogue chip last in Acquiring?; "✓ Catalogue + digital" on a card with both (DG-006–007).
 
 Before that 56: Paste read by Claude — title and date words from Claude, checked word for word against the text by code;

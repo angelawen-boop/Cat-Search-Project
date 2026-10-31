@@ -252,8 +252,6 @@ rules, Cini, Prado, Correr): `docs/app.md`, `docs/add_by_link.md`.
   a blank and replaces a value — "updated wins" and "filled in wins" are both rejected (her decision). The only fix she
   would consider: count each show once per heading, so a mixed card shows under both ("1 filled in, 1 updated") —
   unless a cleverer answer turns up.
-- **OPEN — review the names of venues that came in by link or page** (Claude-named, in her store): her card and short names, each rename
-  written into `LINK_VENUES` as `docs/add_by_link.md`, "Renaming a link venue" says.
 
 #### 2.2.6 Tests that failed — recorded, not investigated
 
@@ -482,7 +480,7 @@ bot-blocked, so Pages and Paste only) is a fact about that venue, never a limit 
 > restating `capabilities` must restate all four; omitting it carries them
 > forward. **Renaming the connector means restating them.**
 
-**Live: 56.1 in her app**, with the cloud ledger (merged at 46). What each recent version changed is in
+**Live: 56.2 in her app**, with the cloud ledger (merged at 46). What each recent version changed is in
 `docs/publishing.md`, "What is live now".
 
 #### The mental model, load-bearing

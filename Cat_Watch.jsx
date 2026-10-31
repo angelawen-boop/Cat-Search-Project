@@ -3,7 +3,7 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 // The footer prints APP_VERSION and its date, so she can tell one build from the next.
 // Numbering, her decision: a whole number for a substantial change, a decimal for a
 // small one, one number per publish. Bump it with the change it describes.
-const APP_VERSION = "56.1";
+const APP_VERSION = "56.2";
 const APP_VERSION_DATE = "31 Oct 2026";
 
 // The venue order is VENUE_ORDER, below the list, which sorts MUSEUMS; drawer, chips,
@@ -1068,7 +1068,7 @@ const LINK_VENUES={
   // summary sits under its own "Summary" heading, below the copies list and after a tab of that name.
   "occ-library-tate-org-uk":{linkRead:{from:/^Summary$/,fromLast:true}},
   // Galerie de la Présidence ends its show headings " : Exhibition".
-  "occ-presidence-fr":{linkRead:{titleDrop:/\s*:\s*Exhibition$/i}},
+  "occ-presidence-fr":{card:"Galerie de la Pr\u00e9sidence Paris",notCard:"Paris Pr\u00e9sidence",linkRead:{titleDrop:/\s*:\s*Exhibition$/i}},
   "occ-nga-gov":{ownChip:true,short:"NG Washington",lookupName:"NGA"},
   "occ-nationalgalleries-org":{ownChip:true,short:"NG Scotland"},
   // Mia's page titles end "–– Minneapolis Institute of Art".
@@ -1111,12 +1111,12 @@ const LINK_VENUES={
   // Written in, her decision: its shop's books section (the finder cannot see its books), and
   // `shopUnseen` — its books are in the page's HTML but Parallel drops them, so a shop page
   // with no priced line reads "Parallel fault" (docs/add_by_link.md, "Frankfurt").
-  "occ-staedelmuseum-de":{ownChip:true,short:"Frankfurt",card:"Frankfurt St\u00e4del",lookupName:"St\u00e4del Museum",name:"St\u00e4del Museum",
+  "occ-staedelmuseum-de":{card:"St\u00e4del Frankfurt",ownChip:true,short:"Frankfurt",lookupName:"St\u00e4del Museum",name:"St\u00e4del Museum",
     shopHome:"https://liebieghaus.ticketfritz.de/",shopCatalogues:"https://liebieghaus.ticketfritz.de/Shop/Index/staedel-publikationen/43885",shopUnseen:"parallel"},
   // Written in, her decision: a shop drawn by script (its page's code holds no books, only a frame and a
   // script) gets its best section written in and `shopUnseen` "script": a lookup there reads "contents
   // cannot be seen — JS-rendering" and goes to the web (docs/add_by_link.md, "A shop drawn by script").
-  "occ-kunstmuseumbasel-ch":{shopHome:"https://shop.kunstmuseumbasel.ch/en/",shopCatalogues:"https://shop.kunstmuseumbasel.ch/en/merchandise?category=Exhibition+Catalogues",shopUnseen:"script"},
+  "occ-kunstmuseumbasel-ch":{card:"Kunstmuseum Basel",notCard:"Basel Kunstmuseum",shopHome:"https://shop.kunstmuseumbasel.ch/en/",shopCatalogues:"https://shop.kunstmuseumbasel.ch/en/merchandise?category=Exhibition+Catalogues",shopUnseen:"script"},
   // The Prado: chip "Prado" right after KHM, cards "Prado Madrid" (her decision). Its dates are month first
   // (DATE_ORDER, dates.js).
   "occ-museodelprado-es":{ownChip:true,chip:"Prado",short:"Prado Madrid",name:"Museo Nacional del Prado"},
@@ -1124,34 +1124,34 @@ const LINK_VENUES={
   "occ-chateaudechantilly-fr":{ownChip:true,chip:"Chantilly"},
   // The Cini Foundation and its island's two houses: three venues, Claude's names, under one chip "Cini" after
   // Capodimonte (her decision).
-  "occ-cini-it":{ownChip:true,chip:"Cini",group:"cini"},
+  "occ-cini-it":{card:"Fondazione Cini",notCard:"Venice Cini",ownChip:true,chip:"Cini",group:"cini"},
   "occ-lestanzedelvetro-org":{ownChip:true,chip:"Cini",group:"cini"},
-  "occ-lestanzedellafotografia-it":{ownChip:true,chip:"Cini",group:"cini"},
+  "occ-lestanzedellafotografia-it":{card:"Stanze della Fotografia Venice",notCard:"Venice Stanze della Fotografia",ownChip:true,chip:"Cini",group:"cini"},
   // Moretti (her decision, Moretti only): the place after " : " leaves the title ("… : Monaco", "… : New York,
   // Sotheby's"); its description is typed in capitals (capsText); the cookie panel ends the passage.
   "occ-morettigallery-com":{linkRead:{titleDrop:/\s+:\s+[^:]+$/,capsText:true,until:/^Manage cookies$/}},
   // Łazienki (her decision, Łazienki only): its heading runs on into the show's opening paragraph; the
   // page title is the show's name and its section ("The Nabis. Prophets of a New Art - Events"): the name is the title.
-  "occ-lazienki-krolewskie-pl":{linkRead:{tabTitle:/\s+[-–—]\s+[^-–—]+$/}},
+  "occ-lazienki-krolewskie-pl":{card:"Royal \u0141azienki Warsaw",notCard:"Warsaw \u0141azienki",linkRead:{tabTitle:/\s+[-–—]\s+[^-–—]+$/}},
   // The Getty (her decision, Getty only): its collection database's exhibition pages are titled
   // "Museum Collection", so their heading is the show's name.
   "occ-getty-edu":{linkRead:{tabNotName:/^Museum Collection$/}},
   // The Correr's archive site (that site only): each show has several pages, its tab title the
   // page's own name ("Project", "Mostra"); the show's name is the heading after "Section menu" ("Menù di sezione").
   // Titles typed in capitals are recased (her decision), each part either side of a full stop.
-  "occ-archivio-correr-visitmuve-it":{linkRead:{titleAfter:/^(?:Section menu|Men\u00f9 di sezione)$/,capsTitles:true,capsStops:true}},
+  "occ-archivio-correr-visitmuve-it":{card:"Correr Venice",notCard:"Venice Correr",linkRead:{titleAfter:/^(?:Section menu|Men\u00f9 di sezione)$/,capsTitles:true,capsStops:true}},
   // Under "Occasional". Boston MFA prints the dates on the line above the show's title.
   "occ-mfa-org":{short:"Boston",card:"Boston MFA"},
   "occ-archive-worcesterart-org":{short:"Worcester"},
   // NGV writes two-digit years ("4 Sep 26 – 31 Jan 27").
   "occ-ngv-vic-gov-au":{card:"National Gallery Victoria",linkRead:{shortYear:true}},
   // Her name, not Claude's "KMSKA Antwerp" (notCard: Claude learns her style from it).
-  "occ-kmska-be":{short:"Antwerp Fine Arts",notCard:"KMSKA Antwerp",name:"Koninklijk Museum voor Schone Kunsten Antwerpen"},
+  "occ-kmska-be":{card:"Antwerp KMSKA",short:"Antwerp Fine Arts",notCard:"KMSKA Antwerp",name:"Koninklijk Museum voor Schone Kunsten Antwerpen"},
   // The Tuscan state museums' site names itself "Direzione regionale Musei nazionali Toscana";
   // its cards show "San Marco" and the lookup searches as "Museo di San Marco" (her decision).
   // Its pages are press releases: the title is the headline's first sentence, without "Mostra"
   // (exhibition) or the quotation marks round the name; capitals recased (her decision).
-  "occ-museitoscana-cultura-gov-it":{short:"San Marco",name:"Museo di San Marco",linkRead:{firstSentence:true,unquote:true,capsTitles:true}},
+  "occ-museitoscana-cultura-gov-it":{card:"San Marco Florence",short:"San Marco",name:"Museo di San Marco",linkRead:{firstSentence:true,unquote:true,capsTitles:true}},
   // Genoa's page titles give no name, Milan's name the city council (her names, both written in).
   "occ-palazzoducale-genova-it":{short:"Palazzo Ducale Genova",name:"Palazzo Ducale Genova"},
   // Palazzo Reale Milano's pages also sit on the city council's site, saved by her because that
@@ -1159,6 +1159,16 @@ const LINK_VENUES={
   "occ-palazzorealemilano-it":{short:"Palazzo Reale Milano",name:"Palazzo Reale Milano",
     sites:[{host:"www2.comune.milano.it",path:/^\/(?:en|it)\/web\/palazzo-reale-milano\//}],
     linkRead:{titleHeading:PRM_TAIL,titleDrop:PRM_TAIL,nameInLines:true,until:PRM_BOX,datesUntil:PRM_BOX,capsTitles:true,asOfTo:true}},
+  // Her names for venues Claude named (her review of link venues); notCard is the name Claude gave.
+  "occ-centrepompidou-fr":{card:"Centre Pompidou",notCard:"Pompidou Paris"},
+  "occ-esmh-de":{card:"Emil Schumacher Hagen",notCard:"Hagen Emil Schumacher"},
+  "occ-musees-nationaux-alpesmaritimes-fr":{card:"Chagall Museum Nice",notCard:"Nice Chagall"},
+  "occ-museoreinasofia-es":{card:"Reina Sof\u00eda Madrid",notCard:"Madrid Reina Sof\u00eda"},
+  "occ-museumhetvalkhof-nl":{card:"Valkhof Nijmegen",notCard:"Nijmegen Valkhof"},
+  "occ-rct-uk":{card:"Queen's Gallery Edinburgh",notCard:"The Queen\u2019s Gallery, Palace of Holyroodhouse"},
+  "occ-wallach-columbia-edu":{card:"Wallach Gallery Columbia",notCard:"Columbia Wallach"},
+  // Christie's press site is the same venue as christies.com (her decision; links from now on, rows already in left as they are).
+  "occ-christies-com":{sites:[{host:"press.christies.com"}]},
 };
 const linkEntry=id=>Object.prototype.hasOwnProperty.call(LINK_VENUES,id)?LINK_VENUES[id]:null;
 const ownChip=id=>!!(linkEntry(id)||{}).ownChip;
@@ -1882,8 +1892,9 @@ function nameInLines(page,vc){
 // Her names for venues, as the style for a new venue's short name.
 const SHORT_NAME_EXAMPLES=()=>Object.values(LINK_VENUES).map(v=>v.card||v.short).filter(Boolean);
 // Her renames of Claude's card names (`notCard`), each with the name Claude gave: so Claude learns her style.
-const SHORT_NAME_RENAMES=()=>Object.values(LINK_VENUES).filter(v=>v.notCard&&(v.card||v.short))
-  .map(v=>"for "+JSON.stringify(v.name||v.lookupName||v.short)+": "+JSON.stringify(v.card||v.short)+", not "+JSON.stringify(v.notCard));
+// The full name is the entry's, else the one Claude gave, as the store holds it (MU).
+const SHORT_NAME_RENAMES=()=>Object.entries(LINK_VENUES).filter(([,v])=>v.notCard&&(v.card||v.short))
+  .map(([id,v])=>"for "+JSON.stringify(v.name||(MU[id]&&MU[id].name)||v.lookupName||v.short)+": "+JSON.stringify(v.card||v.short)+", not "+JSON.stringify(v.notCard));
 // A pasted box (page.pasted): the whole text, and Claude asked for the title and the date words too.
 function linkPrompt(page,askVenue,url,vc){
   const ex=SUMMARY_EXAMPLES.map(e=>"RAW: "+e.raw+"\nACCEPTED SUMMARY: "+e.summary).join("\n\n");
