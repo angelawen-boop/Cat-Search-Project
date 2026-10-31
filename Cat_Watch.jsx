@@ -3,7 +3,7 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 // The footer prints APP_VERSION and its date, so she can tell one build from the next.
 // Numbering, her decision: a whole number for a substantial change, a decimal for a
 // small one, one number per publish. Bump it with the change it describes.
-const APP_VERSION = "54";
+const APP_VERSION = "54.1";
 const APP_VERSION_DATE = "31 Oct 2026";
 
 // The venue order is VENUE_ORDER, below the list, which sorts MUSEUMS; drawer, chips,
@@ -1049,6 +1049,9 @@ const PRM_BOX=/^(?:Current|Upcoming|Past) Exhibitions$|^Mostre (?:in corso|futur
 //   linkRead     how its pages are read (as on a MUSEUMS entry)
 //   shopHome, shopCatalogues, shopUnseen, shopQueries, shopNamed, rankAsOwn — its shop (below)
 const LINK_VENUES={
+  // The Tate library's records file under the Tate Claude names (ownMuseumNamed); the record's
+  // summary sits under its own "Summary" heading, below the copies list and after a tab of that name.
+  "occ-library-tate-org-uk":{linkRead:{from:/^Summary$/,fromLast:true}},
   "occ-nga-gov":{ownChip:true,short:"NG Washington",lookupName:"NGA"},
   "occ-nationalgalleries-org":{ownChip:true,short:"NG Scotland"},
   // Mia's page titles end "–– Minneapolis Institute of Art".
@@ -1721,8 +1724,10 @@ function takePassage(pg){
   if(keepDateLine)rule("date-line-kept");
   const headingText=decodeEntities(heading).replace(/\s+/g," ").trim();
   let from=h+1;
+  // fromLast: the last such line, where a menu names the section above it (the Tate library).
   if(lr&&lr.from){
-    for(let k=h+1;k<lines.length;k++){ if(lr.from.test(stripMd(lines[k]))){ from=k+1; rule("from"); break; } }
+    for(let k=h+1;k<lines.length;k++){ if(lr.from.test(stripMd(lines[k]))){ from=k+1; if(!lr.fromLast)break; } }
+    if(from>h+1)rule("from");
   }
   // The page under the title in blocks: a heading; a list, quotation or table; or a paragraph, its
   // lines joined. A blank line, a heading or a change of kind starts a new block.
@@ -7609,7 +7614,7 @@ export default function App(){
         // (heldElsewhere; her decision, a last resort).
         // A venue on another part of one of her museums' own site is asked every time, so each
         // page there can file under the museum it names (ownMuseumNamed).
-        const askFresh=isOcc(vc)&&needsFacts(venues[vc]), askVenue=askFresh||(isOcc(vc)&&!linkEntry(vc)&&nearMuseumSite(host));
+        const askFresh=isOcc(vc)&&needsFacts(venues[vc]), askVenue=askFresh||(isOcc(vc)&&!(linkEntry(vc)||{}).name&&nearMuseumSite(host));
         // An entry that only places the venue's chip leaves this as it was (Cini).
         const lk=linkEntry(vc), ownSite=vc===occVenueId(host)&&(!lk||Object.keys(lk).every(k=>k==="ownChip"||k==="chip"||k==="group"));
         const prompt=linkPrompt(page,askVenue,url);
@@ -8269,7 +8274,7 @@ export default function App(){
 
   const renderProposalCard=(p,i)=>{
     const dec=decisions[i]||{};
-    const infoRow=(label,val)=><div style={{marginBottom:2}}><b style={{color:C.ink}}>{label}:</b> {val&&String(val).trim()?val:<span style={{color:C.muted}}>{"\u2014"}</span>}</div>;
+    const infoRow=(label,val)=><div style={{marginBottom:2,overflowWrap:"anywhere"}}><b style={{color:C.ink}}>{label}:</b> {val&&String(val).trim()?val:<span style={{color:C.muted}}>{"\u2014"}</span>}</div>;
     return(
       <div key={i} id={"prop-"+i} style={{border:"1px solid "+C.rule,borderRadius:6,background:C.card,padding:"10px 12px",marginBottom:8}}>
         <div style={{fontSize:13,fontWeight:600,color:C.ink,marginBottom:4}}>{p.title}</div>
@@ -8289,7 +8294,7 @@ export default function App(){
             ? <div style={{fontStyle:"italic",color:C.action}}>Will be added as a separate new entry instead of changing the existing one.</div>
             : p.upd.map((u,j)=>{const fd=(dec.fields||{})[j];return(
                 <div key={j} style={{display:"flex",gap:8,alignItems:"flex-start",marginBottom:5}}>
-                  <div style={{flex:1,lineHeight:1.4}}><b style={{color:C.ink}}>{u.label}:</b> <span style={{color:C.soft}}>{u.kind==="fill"?("add \u201c"+u.newVal+"\u201d"):("\u201c"+u.oldVal+"\u201d \u2192 \u201c"+u.newVal+"\u201d")}</span></div>
+                  <div style={{flex:1,minWidth:0,lineHeight:1.4,overflowWrap:"anywhere"}}><b style={{color:C.ink}}>{u.label}:</b> <span style={{color:C.soft}}>{u.kind==="fill"?("add \u201c"+u.newVal+"\u201d"):("\u201c"+u.oldVal+"\u201d \u2192 \u201c"+u.newVal+"\u201d")}</span></div>
                   <button onClick={()=>setFieldDec(i,j,"accept")} style={decBtn(fd==="accept",C.okEdge)}>{fd==="accept"?"\u2713 ":""}Accept edit</button>
                   <button onClick={()=>setFieldDec(i,j,"reject")} style={decBtn(fd==="reject",C.rejectInk)}>Reject</button>
                 </div>
@@ -8714,7 +8719,7 @@ export default function App(){
         <div role="dialog" style={{position:"fixed",inset:0,background:C.scrim,zIndex:1050,display:"flex",flexDirection:"column",justifyContent:"center",padding:16}}>
           {/* Sized to what it holds. CSV and Links match Load and Save; the one pressed
               turns green (her design). */}
-          <div style={{background:C.bg,borderRadius:8,...(importMode==="links"||importMode==="pages"||importMode==="paste"?{maxWidth:820,width:"100%"}:{width:"fit-content"}),margin:"0 auto",display:"flex",flexDirection:"column",maxHeight:"100%",overflow:"auto",boxShadow:"0 8px 30px rgba(0,0,0,0.3)",padding:"14px 18px 10px"}}>
+          <div style={{background:C.bg,borderRadius:8,...(importMode==="links"||importMode==="pages"||importMode==="paste"?{maxWidth:820,width:"100%"}:{width:"fit-content"}),boxSizing:"border-box",margin:"0 auto",display:"flex",flexDirection:"column",maxHeight:"100%",overflow:"auto",boxShadow:"0 8px 30px rgba(0,0,0,0.3)",padding:"14px 18px 10px"}}>
             {/* IMPORT NEEDS A LEDGER OPEN: on an empty page it offers only the ways to open
                 one (her design), so an import can never become the whole ledger. */}
             {importMode==="needLedger"&&<div style={{textAlign:"center"}}>
@@ -8734,10 +8739,6 @@ export default function App(){
               {/* Paste: one box per page, the link and the page's text in separate boxes, a faint "Link" in
                   the link box (her design). "Clear" as the Links box has it: in the box, top right; "Clear all"
                   the same, above the boxes. */}
-              {pastes.some(filledBox)&&<div style={{textAlign:"right",marginBottom:4}}>
-                <button onClick={()=>{ const l=pasteBoxes([]); setPastes(l); setLinkFails([]); setLinkNote(null); writePendingPastes(l); }} disabled={busy}
-                  style={{background:"none",border:"none",color:C.soft,fontSize:11,textDecoration:"underline",cursor:"pointer",padding:0}}>Clear all</button>
-              </div>}
               {pastes.map((x,i)=>{
                 const set=(k,v)=>setPastes(l=>l.map(y=>y.id===x.id?{...y,[k]:v}:y));
                 const field={width:"100%",boxSizing:"border-box",fontSize:12.5,fontFamily:"inherit",padding:"6px 10px",border:"1px solid "+C.rule,borderRadius:4,background:C.card,color:C.ink,display:"block"};
@@ -8748,9 +8749,15 @@ export default function App(){
                   <textarea value={x.text} onChange={e=>set("text",e.target.value)} disabled={busy} aria-label="Text" rows={5} style={{...field,marginTop:4,resize:"vertical"}}/>
                 </div>;
               })}
-              <div style={{display:"flex",justifyContent:"flex-end",gap:5}}>
+              {/* "Clear all" in the row with + and Read, centred as Cancel is (her design). */}
+              <div style={{display:"grid",gridTemplateColumns:"1fr auto 1fr",alignItems:"center"}}>
+                <span/>
+                <span>{pastes.some(filledBox)&&<button onClick={()=>{ const l=pasteBoxes([]); setPastes(l); setLinkFails([]); setLinkNote(null); writePendingPastes(l); }} disabled={busy}
+                  style={{background:"none",border:"none",color:C.soft,fontSize:11,textDecoration:"underline",cursor:"pointer",padding:0}}>Clear all</button>}</span>
+                <div style={{display:"flex",justifyContent:"flex-end",gap:5}}>
                 <button onClick={()=>setPastes(l=>[...l,newBox()])} disabled={busy} aria-label="Add a box" style={sBtn}>+</button>
                 <button onClick={()=>readLinks("paste")} disabled={busy} style={pBtn}>Read</button>
+                </div>
               </div>
               {readStatus(f=>f.url)}
             </div>}
@@ -8760,7 +8767,7 @@ export default function App(){
               <input ref={pagesFileRef} type="file" multiple accept=".mht,.mhtml,.html,.htm,multipart/related,message/rfc822,text/html" onChange={pickPages} style={{display:"none"}}/>
               <div style={{position:"relative",border:"1px solid "+C.rule,borderRadius:4,background:C.card,padding:"8px 52px 8px 10px",minHeight:60,fontSize:12.5,color:C.ink}}>
                 {pages.length?pages.map(p=><div key={p.url} style={{overflowWrap:"anywhere",lineHeight:1.5}}>{p.title||p.name||p.url}</div>)
-                  :<div style={{color:C.soft}}>No pages chosen.</div>}
+                  :null}
                 {pages.length>0&&<button onClick={()=>{ setPages([]); setLinkFails([]); setLinkNote(null); writePendingPages([]); }} disabled={busy}
                   style={{position:"absolute",top:6,right:8,background:"none",border:"none",color:C.soft,fontSize:11,textDecoration:"underline",cursor:"pointer",padding:0}}>Clear</button>}
               </div>

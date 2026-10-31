@@ -43,3 +43,7 @@ Neue Nationalgalerie", and the house line "Neue Nationalgalerie" under the dates
 `ghent_van_eyck_live.json` and `reina_wols_live.json` (27 Oct) are the free Parallel server's answers byte for byte:
 MSK Ghent's "01.02 – 30.04.20" with its Covid early closing in the text, and Reina Sofía's "Held on 14 feb 2014" over
 "to 26 may 2014" (AL-077).
+
+`saved/tate_library_reynolds.json`, `saved/tate_library_preraphaelite.json`: HER two saved Tate library records (Reynolds, Pre-Raphaelite
+vision), kept as the app's reading of the saved file (`savedPageReply`), cut to the page's text — the proof that Claude is handed the
+record's Summary (`from`/`fromLast`, AP-013).

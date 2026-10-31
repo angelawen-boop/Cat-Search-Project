@@ -154,6 +154,17 @@ const runtime = () => ({
       'AP-012: Palazzo Reale Milano recases a title typed in capitals (CASORATI → Casorati); a mixed one stays as typed (her decision)');
   }
 
+  // ── AP-014: the Tate library's saved records — Claude is handed the record's Summary ─
+  {
+    const read = fn('readShowPage'), readVenue = fn('linkReadVenue');
+    const lib = n => JSON.parse(fs.readFileSync(path.join(SAVED, 'tate_library_' + n + '.json'), 'utf8'));
+    const rey = lib('reynolds'), pre = lib('preraphaelite');
+    const r = read(rey, rey.url, readVenue(rey.url)), p = read(pre, pre.url, readVenue(pre.url));
+    ok(r.ok && /^Joshua Reynolds: The Creation of Celebrity examines the artist/.test(r.raw) && !/Call number|Library holds/.test(r.raw)
+      && p.ok && /^This authoritative and lavishly illustrated book/.test(p.raw) && !/SD_ILS|Call number/.test(p.raw),
+      'AP-014: Tate library records (her saved Reynolds and Pre-Raphaelite pages): the passage is the record\'s Summary, not its copies list', JSON.stringify([r.raw && r.raw.slice(0, 80), p.raw && p.raw.slice(0, 80)]));
+  }
+
   // ── AP-005 onward: the button, pressed ─────────────────────────────────
   let root = createRoot(win.document.getElementById('root'));
   const App = fn('App');
@@ -231,7 +242,7 @@ const runtime = () => ({
 
   // Clear empties the list and the store.
   await click(buttons(/^Clear$/)[0]);
-  ok(/No pages chosen/.test(listed()) && stored().length === 0, 'AP-010: Clear empties the list and the store', JSON.stringify(stored()));
+  ok(!/\S/.test(listed()) && stored().length === 0, 'AP-010: Clear empties the list and the store; the empty list says nothing (her decision)', JSON.stringify([listed(), stored()]));
 
   if (shouted.some(s => /Warning: Each child|Cannot update|Maximum update/.test(s))) { ok(false, 'React complained', shouted.find(s => /Warning/.test(s))); }
   console.log(failures ? '\n' + failures + ' FAILED' : '\nadd_by_page: all passed');

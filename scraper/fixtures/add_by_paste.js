@@ -92,10 +92,11 @@ const runtime = () => ({
   // ── PS-001–003: her pastes, read by the real reader ─────────────────────
   {
     const paste = fn('pastedPageReply'), read = fn('readShowPage');
-    const got = p => { const r = paste(p.url, p.text); return r.ok ? read(r.res, r.res.url, null) : r; };
+    const readVenue = fn('linkReadVenue');
+    const got = p => { const r = paste(p.url, p.text); return r.ok ? read(r.res, r.res.url, readVenue(r.res.url)) : r; };
     const c = got(CARO), t = got(TURNER), s = got(STUBBS);
-    ok(c.ok && c.base === 'Anthony Caro' && c.start === '2005-01-26' && c.end === '2005-04-17' && /^Summary\s+Anthony Caro \(born 1924\)/.test(c.raw),
-      'PS-001: Caro: the title from the "Title:" line, cut at " / "; the dates from "Exhibition held:"; the summary handed to Claude', JSON.stringify([c.base, c.start, c.end, c.why]));
+    ok(c.ok && c.base === 'Anthony Caro' && c.start === '2005-01-26' && c.end === '2005-04-17' && /^Anthony Caro \(born 1924\)/.test(c.raw),
+      'PS-001: Caro: the title from the "Title:" line, cut at " / "; the dates from "Exhibition held:"; Claude handed the text under "Summary"', JSON.stringify([c.base, c.start, c.end, c.why]));
     ok(t.ok && t.base === 'Turner and Venice' && t.start === '2003-10-09' && t.end === '2004-01-11',
       'PS-002: Turner: Tate Britain\'s dates, not the Kimbell\'s, Correr\'s or Barcelona\'s below them', JSON.stringify([t.base, t.start, t.end]));
     ok(s.ok && s.base === 'George Stubbs: a celebration' && s.start === '2006-08-21' && s.end === '2007-01-01' && !/Turner/.test(s.raw),
@@ -163,6 +164,10 @@ const runtime = () => ({
 
   // Read: three Tate Britain cards; nothing fetched.
   await click(buttons(/^Read$/).pop());
+  {
+    const linkRow = [...win.document.querySelectorAll('b')].find(b => b.textContent === 'Link:');
+    ok(linkRow && linkRow.parentElement.style.overflowWrap === 'anywhere', 'PS-029: a card\'s Link line wraps anywhere, so a long address stays inside the card');
+  }
   ok(cardTitle('Anthony Caro') && cardTitle('Turner and Venice') && cardTitle('George Stubbs: a celebration'), 'PS-016: Read: the three come to cards');
   ok(!fetched.length, 'PS-017: nothing fetched — no Parallel, no network', fetched.length);
   const cardOf = b => { let el = b.parentElement; while (el.parentElement && el.parentElement.querySelectorAll('button').length <= 3) el = el.parentElement; return el; };
@@ -188,6 +193,11 @@ const runtime = () => ({
   ok(/The link box holds no web address\./.test(win.document.body.textContent), 'PS-021: a box with no link is a line saying why, never read');
   await click(buttons(/^Cancel import$/)[0]);
   if (!links().length) { await click(buttons(/^Import$/)[0]); await click(buttons(/^Paste$/)[0]); }
+  {
+    const ca = buttons(/^Clear all$/).pop(), row = ca && ca.closest('div[style*="grid"]');
+    ok(row && buttons(/^\+$/).some(b => row.contains(b)) && buttons(/^Read$/).some(b => row.contains(b)) && row.style.gridTemplateColumns === '1fr auto 1fr',
+      'PS-028: "Clear all" sits in the row with + and Read, in its centre column (her design)');
+  }
   await click(buttons(/^Clear all$/).pop());
   ok(links().length === 2 && links().every(l => !l.value) && texts().every(t => !t.value) && stored().length === 0 && ![...win.document.querySelectorAll('[role=dialog] button')].some(b => /^Clear( all)?$/.test(b.textContent.trim())),
     'PS-023: Clear all empties every box and the store, two boxes left; no Clear shows on empty boxes', links().length + '/' + stored().length);
