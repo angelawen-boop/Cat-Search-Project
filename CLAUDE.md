@@ -253,11 +253,11 @@ rules, Cini, Prado, Correr): `docs/app.md`, `docs/add_by_link.md`.
 
 #### 2.2.18 Queued — her asks
 
-- **OPEN — Paste: live in her app (54, 54.1).** Her live tries settle it; the shop finder for a pasted new venue is unproven there.
+- **OPEN — Paste: live in her app (54–54.2).** Her live tries settle it; the shop finder for a pasted new venue is unproven there.
   **OPEN — a pasted page names its venue from the address alone** (pasted text carries no site name): Claude read
   `presidence.fr` as the French Presidency ("Présidence de la République", "Paris Élysée") and the finder took the Élysée
   Palace's shop (lookup log L17934138860630vq8); the same page by link was named Galerie de la Presidence from its tab.
-  **Built, not yet published:** German dates (DS-011), Galerie de la Présidence's " : Exhibition" dropped (AP-015). **OPEN — "Tate Gallery"'s shop:** live, the finder
+  **Live at 54.2, her use confirms:** German dates (DS-011), Galerie de la Présidence's " : Exhibition" dropped (AP-015). **OPEN — "Tate Gallery"'s shop:** live, the finder
   took the Tate's Books shelf, not its exhibition-books section. **Next, her decision: the paste boxes and buttons** (talked through
   only after the rest). Her decisions and the own-site rule: `docs/add_by_link.md`, "Pasted pages" and the section after it.
 - **OPEN, known fault — the green "Import complete" bar mixes units.** "Added" and "left undecided" count shows;
@@ -496,7 +496,7 @@ bot-blocked, so Pages and Paste only) is a fact about that venue, never a limit 
 > restating `capabilities` must restate all four; omitting it carries them
 > forward. **Renaming the connector means restating them.**
 
-**Live: 54.1 in her app**, with the cloud ledger (merged at 46). What each recent version changed is in
+**Live: 54.2 in her app**, with the cloud ledger (merged at 46). What each recent version changed is in
 `docs/publishing.md`, "What is live now".
 
 #### The mental model, load-bearing
