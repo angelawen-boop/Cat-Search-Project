@@ -6,7 +6,7 @@ The app handles unreadable links itself; no scraper-side reader. Why it exists: 
 
 ## The design
 
-- **Import opens ONE small pop-up, nothing added to the page** (her design): **CSV · Links** (and **Pages**, below), a small
+- **Import opens ONE small pop-up, nothing added to the page** (her design): **CSV · Links** (and **Pages**, **Paste**, below), a small
   **Cancel**. Links = the box and **Read**, with a progress bar; links separated any way; a repeat read once. The review opens
   when reading ends; the pop-up waits under it if a link failed.
 - **Then the shop screen** (her design): with a card going in from a venue outside her 28 whose shop is unconfirmed, the
@@ -270,6 +270,30 @@ text (`links_pages/…`), Cancel / rejected / undecided put pages back, Clear em
 by path (`sites`) with options `titleHeading`, `titleDrop`, `datesUntil`, `until`, `asOfTo`. **Months only → undated** with the
 sweep's note (her decision: the old first-to-last-day rule is gone); capitals recased there (`capsTitles`, her decision). Proof:
 her saved pages in `docs/link_pages/saved/` (live proof is impossible); tests AP-001–010 (`add_by_page.js`).
+
+## Pasted pages — the Paste button
+
+For mostly-text pages where saving each is slow (her idea; the Tate library's records, bot-blocked), and her last resort for manual
+entry: details from several sources typed in under a link to any page useful for that show. **No link, no import** (her decision).
+One box per page, the link and the text apart (her design), two to start, + for more; a faint "Link" in each link box, nothing in the
+text box; "Clear" in each box, "Clear all" above. Stored as she types, one document per box (`links_pastes/…`), under the
+store-read lock. Each box becomes a page (`pastedPageReply`) and goes the saved page's road — same reader, Claude, shop finder,
+review; Cancel / rejected / undecided put boxes back. No rules invented for pasted text (her decision): a page like Ghent's
+(title read as its "closed" notice) goes by Pages. Titles stay as the record writes them; a pasted link's Change card she rejects
+herself. **Title:** a library record's "Title:" line, cut at " / ", " : " as ": "; else the first line. Proof: her three Tate
+library pastes, `docs/link_pages/pasted_tate_library.json`; tests PS-001–027 (`add_by_paste.js`). Test page:
+https://claude.ai/artifact/AspUYQTAto8Xa3k6wDSMce ("Cat Watch Paste Test", 54, with Parallel; the old 50.x page Q55Uks… is
+superseded).
+
+## Another part of one of her museums' own site — all three ways in
+
+A page whose address is one of her museums' site, or under it (`library.tate.org.uk`), that the address alone does not file, goes
+under the museum Claude names when that museum is on that site (`ownMuseumNamed`, `nearMuseumSite`) — no new venue, no shop asked
+(her decision: a general rule, for Links, Pages and Paste). Such a site is asked the venue on every page, so each record files
+under its own museum (a Tate Modern record under Tate Modern). A sister site on a shared domain (cultura.gov.it) is not "under".
+**"Tate Gallery"** (pre-2000 records) names neither Tate, so it is its own venue (her decision); its shop must be the Tate's
+current shop — **OPEN:** live, the finder took `shop.tate.org.uk/books`, not its exhibition-books section, which the search did
+return. No listed proof page can reach the rule (every page on her museums' sites files by address first). Tests PS-006, PS-025.
 
 ## Someone else's page — a show held elsewhere
 

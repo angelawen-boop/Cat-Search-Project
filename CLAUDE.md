@@ -36,6 +36,7 @@ is why they live in one repo, on one branch.
 - **Applying to the scraper and scraper-related work only — test conservatively.** Every page a sweep fetches counts towards the venue's rate limit. Use saved pages first, with no network. Never a blanket re-sweep.
 - **For work not relating to the scraper and which uses Parallel's features — testing is always against the live internet**, ie. pages fetched live through Parallel, never saved or invented pages. How, and what never to re-fetch: `docs/testing.md`.
 - **Raise a past decision by describing the context, not by reference to a date.** She keeps no log and a date tells her nothing. Say it as: "Because of X, you decided Y. Would you like to reconsider? / If this changes your decision, we can do Z." Call it her decision or her judgement call — never a "ruling" or a "rule".
+- **Never end a response fishing for a go or prompting the next step** (her decision). She decides what is finished.
 - **A question gets an answer first.** "Talk to me about X" means discuss; nothing is built until she says.
 - **Any question or challenge in her message means answer only (her decision).** If any part of a message
   holds a question or a challenge, do not write, edit or touch any code — answer the questions. A "yes" or
@@ -248,16 +249,14 @@ rules, Cini, Prado, Correr): `docs/app.md`, `docs/add_by_link.md`.
   show's own shop section. Her next lookups settle: O'Keeffe found at Detroit? The RA's search (`catalogsearch/result/?q=`) is
   stored at its next lookup; Mauritshuis and Yale stay shelf-only.
 - **To confirm with her links:** the Karsten Greve import (gallery's shop, 52.1), her Frankfurt links and lookups (49.2), the two
-  Reynolds links (Enfilade PDF, Meer; 49.4), her other six Palazzo Reale Milano pages (Pages, 48). **The Paste-import session
-  (`claude/paste-import`) holds its merge** (her instruction) — §2.2.18.
+  Reynolds links (Enfilade PDF, Meer; 49.4), her other six Palazzo Reale Milano pages (Pages, 48).
 
 #### 2.2.18 Queued — her asks
 
-- **OPEN — merge Paste (Import → Paste, `claude/paste-import`, its own test page) into her app.** The branch stops at 50.x; main has
-  moved on since (the reader's shared rules, dates, titles, the shop finder, the store-read lock, venue rules up to 53.11). Confirm
-  Paste runs the same reader and shop finder as Links and Pages — one copy, never a copy behind them — and close what is left on
-  pasting and its Clear buttons (the branch's own guide lists it). Its rule filing a page under a swept venue by domain must not break
-  the Ashmolean's Occasional filing (§5.4).
+- **OPEN — Paste: rebuilt on `main` as 54, on its test page with Parallel; not yet in her app** (publish on her say). Her live
+  tries settle it; the shop finder for a pasted new venue is unproven in the app. **OPEN — "Tate Gallery"'s shop:** live, the finder
+  took the Tate's Books shelf, not its exhibition-books section. **Next, her decision: the paste boxes and buttons** (talked through
+  only after the rest). Her decisions and the own-site rule: `docs/add_by_link.md`, "Pasted pages" and the section after it.
 - **OPEN — review the names of venues that came in by link or page** (Claude-named, in her store): her card and short names, each rename
   written into `LINK_VENUES` as `docs/add_by_link.md`, "Renaming a link venue" says.
 
@@ -469,7 +468,7 @@ price, her decision).
 3. **Pages** — a link Parallel cannot fetch (bot-blocked) or brings back as junk or empty: she saves the whole page.
 4. **Paste** — mostly-text pages where saving each is slow (the Tate library's records): the text pasted beside its
    link. Also her last resort for manual entry — details from several sources typed in, under a link to any page
-   useful for that show. No link, no import. Being brought into her app from `claude/paste-import` (§2.2.18).
+   useful for that show. No link, no import. On `main` (54), not yet in her app (§2.2.18).
 
 Links, Pages and Paste are one road — the same reader, Claude read, shop finder and review; only how the text arrives
 differs. A third-party page (press, blog, library record) goes the same road: the venue is read from the text, never
@@ -603,7 +602,7 @@ pages: `docs/link_proof_pages.json`.
 **Status: stable** — signed off on her 10 links. **One weak spot: a link from a venue the app has never seen needs a
 fix about half the time** (exhibition info misread, shop not found).
 
-**How it works** (her design): Import opens a small pop-up — CSV · Links · Pages; **nothing added to the page itself**. Each link
+**How it works** (her design): Import opens a small pop-up — CSV · Links · Pages · Paste; **nothing added to the page itself**. Each link
 is read once by code (title, dates) and the model (prose, always English), then the same intake as a sweep; no lookback. New
 venues file under an "Occasional" chip; shop sections are confirmed on a screen after the review. **The date reader and summary
 rules are the scraper's own**, written into the JSX by `node build/sync_shared.js` — never edit between its SHARED markers.
