@@ -42,7 +42,8 @@ is why they live in one repo, on one branch.
 - **A question gets an answer first.** "Talk to me about X" means discuss; nothing is built until she says.
 - **Any question or challenge in her message means answer only (her decision).** If any part of a message
   holds a question or a challenge, do not write, edit or touch any code — answer the questions. A "yes" or
-  "ok" elsewhere in the same message is not a go-ahead.
+  "ok" elsewhere in the same message is not a go-ahead. **This rule never stops reading, searching or checking
+  logs:** investigate first, then answer.
 - **No instruction lines on any page** — no how-to sentences, no text inside a box, no line telling her
   what she already knows (her biggest peeve).
 - **Respect UI simplicity and specific UI instructions.** Build what she named, nothing added. "Add a copy icon" = an icon, not an icon plus the word "Copy". "Copy this line for case X and Y" = the same line with only the words naming X and Y swapped, never a new, longer line.
@@ -67,13 +68,20 @@ Every question about what the app, Claude or a sweep did has a record. Read it; 
 
 | Log | What it records | How to read it |
 |---|---|---|
-| **Lookup log** — her app's store, `lookups` (newest 50 only) | One record per Find catalogue, Search again, Re-check museum shop, Add by link / page / paste, Label import cards, Label periods, Relabel: every search, page open and Claude call, Claude's exact prompt and answer, the card before and after, the app version | ArtifactData `list`, collection `lookups`, `out_dir` (the index: action, time, title, venue, version); then `list` of `lookups/<id>/pieces` with the same `out_dir`; then `node build/lookup_log.js <dir> <id>` |
+| **Lookup log** — her app's store, `lookups` (newest 50 only) | One record per Find catalogue, Search again, Re-check museum shop, Add by link / page / paste, Label import cards, Label periods, Relabel: every search, page open and Claude call, Claude's exact prompt and answer, the card before and after, the app version | The three steps below |
 | **Sweep log** — store, `sweeps/venues` | Per venue: when last tried, when it last brought rows (the freshness drawer) | ArtifactData `get`; rebuilt from disk by `node scraper/sweep_log.js` |
 | **Quarantine** — store, `quarantine/rows` | Shows set aside, and why | ArtifactData `get` |
 | **Link venues** — store, `venues/occasional` | Each Add-by-link venue: Claude's names for it, its shop, her confirmations | ArtifactData `get` |
 | **Pending links, pages, pastes** — store, `links/pending`, `links_pages`, `links_pastes` | What is waiting to be read | ArtifactData `get` / `list` |
 | **Cloud ledger** — store, `ledger/live`, `ledger/session`, `snapshots` | Her ledger as last saved, the open session, the safety copies | ArtifactData `get` / `list`; `docs/cloud_storage.md` |
 | **Sweep run** — `scraper/output/run_*/` | `log_<stamp>.txt` per invocation (refusals, reply labels, timeouts), one CSV per venue | Read the files; `node scraper/venue_status.js`, `node scraper/qc.js` |
+
+**Reading the lookup log — three steps** (`<dir>` is a folder in the scratchpad):
+1. ArtifactData `list`, collection `lookups`, `out_dir` `<dir>`: the index, one file per record (action, time, title,
+   venue, version). Find the record by its title and time.
+2. ArtifactData `list`, collection `lookups/<id>/pieces`, the same `out_dir`: that record's contents.
+3. `node build/lookup_log.js <dir> <id>`: the whole lookup written out — every call, Claude's prompt and answer, the card
+   before and after.
 
 The store is her published app's: `https://claude.ai/artifact/E2WjpRgr4W5eSzYtxyfrt5` (§5.1). ArtifactData is a deferred
 tool: load it with ToolSearch. Reading is safe; never write to her store without her yes.
@@ -213,7 +221,7 @@ noting issues as she uses it, for a later debugging session.
   maître de la peinture danoise*, ISBN 978-9462302495; *Watteau* no longer reads the shop as blocked; *Canaletto - Guardi*'s English
   line names the publisher's page; a MoMA lookup still reads its shop as blocked under the whole-page test.
 - **Diagnose a lookup from its record, never a pasted panel** (`docs/app.md` §1, "The lookup log").
-- **OPEN — 42.6–42.9 fixes (Hubert Robert at NGA and the Louvre, Vasari), her re-run confirms:** a catalogue found with no title or
+- **OPEN — 42.6–42.9 fixes (Hubert Robert at NGA and the Louvre, Vasari) — read the lookup log for her re-runs:** a catalogue found with no title or
   ISBN goes on to the facts round, a reply holding two answers takes Claude's last, and the English-edition and versions rebuild
   (`docs/app.md` §1, "The route").
 

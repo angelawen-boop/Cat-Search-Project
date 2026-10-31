@@ -71,7 +71,8 @@ checked against them. ● = starts picked; a card with one version looks as it d
   language of the page it was found on; a shop page with a language choice holds both editions, each looked for.
 - **11. Jacobus Vrel — Munich Alte Pinakothek 2025.** English 978-3777435879 and German 978-3777435862, one CEDON page. Today
   (L1792302083097mica): both versions found, but (1) English says "not in the museum shop" — phase 4b (`bookOnShelfAfterWeb`) did
-  not match it to the German-tied shop page (which match failed is a guess, settled by replaying the record); (2) publisher "s,
+  not match it to the German-tied shop page (which match failed is unproven: its record has left the log, which keeps the newest 50, so read the record of
+  a fresh Vrel lookup before fixing it); (2) publisher "s,
   Munich": `PUBLISHER_LABEL` has no word end after "publisher", so "Hirmer Publishers, Munich" gives "s, Munich", and two results
   outvote Claude's correct name in `publisherOnIsbnResults`. **Must fix:** a language-choice shop page counts as in the shop for
   every edition it offers; `PUBLISHER_LABEL` must not match inside "Publishers"/"Verlagshaus".
