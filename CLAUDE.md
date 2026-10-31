@@ -24,8 +24,10 @@ is why they live in one repo, on one branch.
 
 - **Plain English, ELI5.**
 - **Short and concise.**
-- **Report style (her decision):** tell her what matters, in plain words — what changed, what is left and why it is
-  needed — then the next step in one line. Never a tally of right and wrong, no counts, no method, no file paths.
+- **Reporting style — after a task is completed (her decision):** tell her what matters, in plain words, short — what
+  got done / what changed, what is left. Never a re-itemization, no counts, no method, no file paths.
+- **Reporting style — when a matter is being investigated (her decision):** tell her what matters, short, use
+  abstraction — what's the cause, what's the fix. No code, no file paths, no weeds.
 - **Work quietly (her decision):** no interim output. Report only at the end, or when you must stop to ask her a question.
 - **Destructive actions need a confirmed backup or an explicit yes.**
 - **Publishing — her go-ahead is the safety check.** When she says to publish ("u can publish", "publish",
@@ -36,7 +38,7 @@ is why they live in one repo, on one branch.
 - **Applying to the scraper and scraper-related work only — test conservatively.** Every page a sweep fetches counts towards the venue's rate limit. Use saved pages first, with no network. Never a blanket re-sweep.
 - **For work not relating to the scraper and which uses Parallel's features — testing is always against the live internet**, ie. pages fetched live through Parallel, never saved or invented pages. How, and what never to re-fetch: `docs/testing.md`.
 - **Raise a past decision by describing the context, not by reference to a date.** She keeps no log and a date tells her nothing. Say it as: "Because of X, you decided Y. Would you like to reconsider? / If this changes your decision, we can do Z." Call it her decision or her judgement call — never a "ruling" or a "rule".
-- **Never end a response fishing for a go or prompting the next step** (her decision). She decides what is finished.
+- **Never end a response fishing for a go** (her decision).
 - **A question gets an answer first.** "Talk to me about X" means discuss; nothing is built until she says.
 - **Any question or challenge in her message means answer only (her decision).** If any part of a message
   holds a question or a challenge, do not write, edit or touch any code — answer the questions. A "yes" or
