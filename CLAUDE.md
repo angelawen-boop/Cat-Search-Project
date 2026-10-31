@@ -249,8 +249,8 @@ design and what is unproven: `docs/themes.md`. Read it before any Themes work.
 
 Every exhibition in art-period order (dividers, scrubber, theme chips; Label, Relabel, Recently labelled). Design, decisions and
 every rule: `docs/periods.md` — read it before any Period work. Her load of the test page's ledger into 51 confirms. Her view, kept
-for later: both Misc bins should ultimately go. Do not regroup, beside Relabel (56.3; `docs/periods.md`). Postwar Europe is told to Claude as a time-and-place period (56.4). **In code, not yet published (her
-decision):** Postwar Europe moved to just before Abstract Expressionism; it goes out with the next publish.
+for later: both Misc bins should ultimately go. Do not regroup, beside Relabel (56.3; `docs/periods.md`). Postwar Europe is told to Claude as a time-and-place period (56.4). Postwar Europe sits just before Abstract Expressionism, and
+Postwar America's description names assemblage, collage and film (56.7; Bruce Conner had gone to Pop).
 
 #### 2.2.10 Published since 51 — her next links, lookups and use confirm
 
@@ -529,7 +529,7 @@ bot-blocked, so Pages and Paste only) is a fact about that venue, never a limit 
 > restating `capabilities` must restate all four; omitting it carries them
 > forward. **Renaming the connector means restating them.**
 
-**Live: 56.6 in her app**, with the cloud ledger (merged at 46). What each recent version changed is in
+**Live: 56.7 in her app**, with the cloud ledger (merged at 46). What each recent version changed is in
 `docs/publishing.md`, "What is live now".
 
 #### The mental model, load-bearing

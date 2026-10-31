@@ -3,7 +3,7 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 // The footer prints APP_VERSION and its date, so she can tell one build from the next.
 // Numbering, her decision: a whole number for a substantial change, a decimal for a
 // small one, one number per publish. Bump it with the change it describes.
-const APP_VERSION = "56.6";
+const APP_VERSION = "56.7";
 const APP_VERSION_DATE = "31 Oct 2026";
 
 // The venue order is VENUE_ORDER, below the list, which sorts MUSEUMS; drawer, chips,
@@ -3413,7 +3413,7 @@ const PERIODS=[
   {key:"americanmod",name:"American Modernism",span:"c. 1910–1945 (O’Keeffe, Hopper, the Harlem Renaissance)"},
   {key:"postwareu",name:"Postwar Europe",span:"Postwar Europe is a time-and-place period, not a movement: art made in Europe from c. 1945 to 1980, whatever its style or movement. Use it for any show whose works mainly date from that span and place, unless a more specific category on the list fits better."},
   {key:"abex",name:"Abstract Expressionism",span:"c. 1943–1965"},
-  {key:"postwaram",name:"Postwar America",span:"America only, c. 1945–1980, outside Abstract Expressionism and Pop: realism, photography, figuration (Wyeth, Arbus, Neel, Sleigh)"},
+  {key:"postwaram",name:"Postwar America",span:"America only, c. 1945–1980, outside Abstract Expressionism and Pop: realism, photography, figuration, assemblage, collage and film (Wyeth, Arbus, Neel, Sleigh)"},
   {key:"pop",name:"Pop Art and Minimalism",span:"c. 1955–1980"},
   {key:"general20",name:"General 20th Century",span:"c. 1900–1980: 20th-century art that is not about one of the movements above, self-taught and folk art included"},
   {key:"contemporary",name:"Contemporary",span:"c. 1980 to now"},
