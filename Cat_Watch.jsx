@@ -7148,8 +7148,8 @@ export default function App(){
       document.body.style.color=theme==="dark"?"#EDE8E0":"#1E1B18";
     }catch{}
   },[theme]);
-  // Follows the selection (never in a box she types in), placed under the words
-  // (below Android's handles); hidden a moment after the selection goes, so a tap on it still lands.
+  // Follows the selection (never in a box she types in), placed under the words;
+  // hidden a moment after the selection goes, so a tap on it still lands.
   useEffect(()=>{
     let hide=null;
     const place=()=>{
@@ -7160,7 +7160,10 @@ export default function App(){
       if(hide){clearTimeout(hide);hide=null;}
       const rc=sel.getRangeAt(0).getBoundingClientRect(), vw=window.innerWidth, vh=window.innerHeight;
       const x=Math.min(Math.max(rc.left+rc.width/2,16+100),vw-16-100);
-      const y=rc.bottom+34+40<vh?rc.bottom+34:Math.max(8,rc.top-44);
+      // As close as Android's own menu sits above (her ask): 9px under the words. Android's handles
+      // hang about 20px below each end, so under a selection narrower than the button it drops below them.
+      const gap=rc.width>=72?9:29;
+      const y=rc.bottom+gap+40<vh?rc.bottom+gap:Math.max(8,rc.top-44);
       setSelPick({text,x,y});
     };
     document.addEventListener("selectionchange",place);
