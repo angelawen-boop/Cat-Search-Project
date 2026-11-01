@@ -3656,6 +3656,8 @@ function answeredOnly(venues,saved,going){
 }
 // The venues outside her list with at least one card going in. A venue whose every card is
 // rejected, undecided or quarantined is not asked about its shop (her decision; AL-046).
+// A venue whose shop section is written into its LINK_VENUES entry (`shopCatalogues`, Basel, the Städel).
+const shopWrittenIn=id=>!!(linkEntry(id)||{}).shopCatalogues;
 function venuesGoingIn(proposals,decisions){
   const ids=new Set();
   (proposals||[]).forEach((p,i)=>{ const id=(p.cand||{}).museumId; if(isOcc(id)&&cardOutcome(p,(decisions||{})[i])==="accepted")ids.add(id); });
@@ -7974,7 +7976,8 @@ export default function App(){
     const ids=venuesGoingIn(proposals,decisions);
     // Confirmed in a FINISHED import only: an answer held in this one stays on
     // the screen after Back, to be changed.
-    for(const id of [...ids]) if(!occVenues[id]||(occSaved.current[id]||{}).confirmed)ids.delete(id);
+    // A shop written into the venue's entry (Basel) is already her answer: never asked again.
+    for(const id of [...ids]) if(!occVenues[id]||(occSaved.current[id]||{}).confirmed||shopWrittenIn(id))ids.delete(id);
     return [...ids].sort((a,b)=>String(occVenues[a].name).localeCompare(String(occVenues[b].name)));
   }
   // THE REVIEW'S LAST BUTTON. With a shop to confirm it is "Next" and opens

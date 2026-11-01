@@ -1558,6 +1558,12 @@ function runtime() {
       for (const v of Object.values(box.LINK_VENUES)) delete v.notCard;
       ok(!/renamed/.test(box.linkPrompt(pg, true, 'https://kmska.be/en/folly')), 'AL-066a:  none renamed, the question says nothing of renames');
     }
+    // ── AL-092: a shop written into the venue's entry (Basel) is her answer: the shop screen never asks it ─
+    {
+      const sw = new Function('React', 'window', 'document', 'localStorage', code + '\n;return shopWrittenIn;')(React, win, win.document, win.localStorage);
+      ok(sw('occ-kunstmuseumbasel-ch') && sw('occ-staedelmuseum-de') && !sw('occ-mauritshuis-nl') && !sw('occ-royalacademy-org-uk'),
+        'AL-092:  Basel and the Städel, their sections written in, are never asked on the shop screen; venues found by the finder still are');
+    }
     // ── AL-060: the passage's shared rules, on lines copied from live replies ─
     const ps = new Function('React', 'window', 'document', 'localStorage', code + '\n;return {readShowPage,isFurniture,withoutBoilerplate};')(React, win, win.document, win.localStorage);
     ok(['Buy Tickets', 'Adults CHF 31.– / Concessions CHF 22.–* incl. Collection & small exhibitions.', 'MoMA, Floor 3, 3 East The Robert B. Menschel Galleries',
