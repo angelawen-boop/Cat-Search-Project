@@ -21,7 +21,9 @@ the next goes through. Later ones go straight through.
 
 ## What is live now
 
-**Live: 57 in her app**: words selected anywhere on the page (never in a box she types in) get a **Search** button 9px under them (lower under a selection narrower than the button, clear of Android's handles), filled as the "Recently opened" tag and edged in the action green, both themes; a tap searches them exactly as typed and lands at the start of the cards. The app renamed **Art Watch** (page title, small header line, footer, read-only line); the big line stays "Before it goes out of print" (her decision, for now).
+**Live: 57.1 in her app**: the Search button sits 32px under the LAST line of the selection, below Android's handles — a handle over the button took her tap, so nothing happened (her report). Not proven from a log: nothing records taps on it.
+
+Before that 57: words selected anywhere on the page (never in a box she types in) get a **Search** button under them, filled as the "Recently opened" tag and edged in the action green, both themes; a tap searches them exactly as typed and lands at the start of the cards. The app renamed **Art Watch** (page title, small header line, footer, read-only line); the big line stays "Before it goes out of print" (her decision, for now).
 
 Before that 56.7: Postwar America's description names assemblage, collage and film (Bruce Conner had gone to Pop); Postwar Europe moved to just before Abstract Expressionism.
 

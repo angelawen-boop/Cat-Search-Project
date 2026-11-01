@@ -3,7 +3,7 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 // The footer prints APP_VERSION and its date, so she can tell one build from the next.
 // Numbering, her decision: a whole number for a substantial change, a decimal for a
 // small one, one number per publish. Bump it with the change it describes.
-const APP_VERSION = "57";
+const APP_VERSION = "57.1";
 const APP_VERSION_DATE = "1 Nov 2026";
 
 // The venue order is VENUE_ORDER, below the list, which sorts MUSEUMS; drawer, chips,
@@ -7148,7 +7148,7 @@ export default function App(){
       document.body.style.color=theme==="dark"?"#EDE8E0":"#1E1B18";
     }catch{}
   },[theme]);
-  // Follows the selection (never in a box she types in), placed under the words;
+  // Follows the selection (never in a box she types in);
   // hidden a moment after the selection goes, so a tap on it still lands.
   useEffect(()=>{
     let hide=null;
@@ -7158,12 +7158,14 @@ export default function App(){
       const text=sel&&!typing&&!sel.isCollapsed&&sel.rangeCount?sel.toString().replace(/\u2197/g," ").replace(/\s+/g," ").trim():"";
       if(!text){ if(!hide)hide=setTimeout(()=>{hide=null;setSelPick(null);},400); return; }
       if(hide){clearTimeout(hide);hide=null;}
-      const rc=sel.getRangeAt(0).getBoundingClientRect(), vw=window.innerWidth, vh=window.innerHeight;
+      // Under the LAST line of the selection, and below Android's handles (they hang about 20px
+      // under each end and take a tap meant for anything beneath them — her report), so it can always be tapped.
+      const range=sel.getRangeAt(0), lines=[...range.getClientRects()].filter(r=>r.width>0&&r.height>0);
+      const rc=lines.length?lines.reduce((a,r)=>r.bottom>a.bottom+1?r:a):range.getBoundingClientRect(), vw=window.innerWidth, vh=window.innerHeight;
       const x=Math.min(Math.max(rc.left+rc.width/2,16+100),vw-16-100);
-      // As close as Android's own menu sits above (her ask): 9px under the words. Android's handles
-      // hang about 20px below each end, so under a selection narrower than the button it drops below them.
-      const gap=rc.width>=72?9:29;
-      const y=rc.bottom+gap+40<vh?rc.bottom+gap:Math.max(8,rc.top-44);
+      const gap=32;
+      const top=lines.length?Math.min(...lines.map(r=>r.top)):rc.top;
+      const y=rc.bottom+gap+40<vh?rc.bottom+gap:Math.max(8,top-44);
       setSelPick({text,x,y});
     };
     document.addEventListener("selectionchange",place);
