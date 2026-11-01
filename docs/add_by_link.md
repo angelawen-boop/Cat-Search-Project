@@ -175,7 +175,8 @@ the shop page's own code (empty frame and a script → by script; books in the c
 hard-coded answer, say so to her; (3) its lookups read "The museum shop contents cannot be seen — JS-rendering", search the web,
 and the card's "Museum shop" link is the written-in section (`shopLink`, `shopButtonUrl`; BS-004), Re-check the same; (4) if she
 already answered No shop, reset the store's record with her yes (`shop: "found"`, the section, `foundBy: "the venue's rule"`,
-unconfirmed). **Basel** (`occ-kunstmuseumbasel-ch`) is the first: section `shop.kunstmuseumbasel.ch/en/merchandise?category=Exhibition+Catalogues`
+unconfirmed); a written-in section is never asked on the shop screen (`shopWrittenIn`, AL-092; Basel was asked again before it).
+Her own link by **Add** is stored confirmed, so it is never asked again either (AL-080d). **Basel** (`occ-kunstmuseumbasel-ch`) is the first: section `shop.kunstmuseumbasel.ch/en/merchandise?category=Exhibition+Catalogues`
 (BS-001–003).
 
 ## The general reader — shared rules, venue rules only where needed
