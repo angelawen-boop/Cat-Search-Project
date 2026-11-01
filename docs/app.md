@@ -9,6 +9,10 @@ screen, quarantine, the sweep log or saving.** The full history is in git. The a
 Confirmed by her on real files, not only by fixtures. **Design and evidence:
 `docs/app.md`.**
 
+- **Search selected words** (her design, live at 57): select any words on the page and a "Search" button under them
+  puts them in the search bar exactly as typed (not artist-aware — her decision), then lands at the start of the cards.
+  A web page cannot add to Android's own text menu, so the button is the app's own (`selPick`, `searchPick`).
+
 - **Loading and saving, refreshing, reading a stitched file:** §2 and §3 below. **Never put back a click-triggered green tick**
   (§2).
 - **The ledger will not move until every card is decided** — a hard block.
