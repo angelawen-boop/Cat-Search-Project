@@ -7171,7 +7171,8 @@ export default function App(){
     if(!selPick)return;
     setSearch(selPick.text); setShowSearch(true); setSelPick(null);
     try{window.getSelection().removeAllRanges();}catch{}
-    window.scrollTo({top:0});
+    // Lands at the start of the cards (her ask), once the list has redrawn.
+    setTimeout(()=>{const el=document.querySelector("[data-card-list]");window.scrollTo({top:el?el.getBoundingClientRect().top+window.scrollY-8:0});},60);
   };
   useEffect(()=>{const onScroll=()=>setShowTop(window.scrollY>400);window.addEventListener("scroll",onScroll,{passive:true});onScroll();return()=>window.removeEventListener("scroll",onScroll);},[]);
 
@@ -8758,7 +8759,7 @@ export default function App(){
         </div>
       </div>
 
-      <div style={{maxWidth:760,margin:"0 auto",display:"flex",flexDirection:"column",gap:10}}>
+      <div data-card-list="1" style={{maxWidth:760,margin:"0 auto",display:"flex",flexDirection:"column",gap:10}}>
         {view.length===0&&<div style={{background:C.card,border:"1px solid "+C.rule,borderRadius:5,padding:18,fontSize:12.5,color:C.soft}}>Nothing matches those filters.</div>}
         {(()=>{
           const pinnedCount=pinTouched&&!bnOnly?view.filter(x=>refreshTouched.includes(x.id)).length:0;
@@ -8797,7 +8798,7 @@ export default function App(){
       {scrubGroups.length>0&&<PeriodScrubber groups={scrubGroups} C={C} onJump={jumpToPeriod}/>}
       {/* Top on the left, bottom on the right (her layout), shown once she has scrolled down. */}
       {selPick&&<button onMouseDown={e=>e.preventDefault()} onClick={searchPick}
-        style={{position:"fixed",top:selPick.y,left:selPick.x,transform:"translateX(-50%)",zIndex:1000,background:C.card,border:"1px solid "+C.action,borderRadius:4,color:C.action,fontSize:12,fontWeight:500,cursor:"pointer",padding:"6px 12px",whiteSpace:"nowrap",boxShadow:"0 2px 8px rgba(0,0,0,0.18)"}}>See all for this artist</button>}
+        style={{position:"fixed",top:selPick.y,left:selPick.x,transform:"translateX(-50%)",zIndex:1000,background:C.card,border:"1px solid "+C.action,borderRadius:4,color:C.action,fontSize:12,fontWeight:500,cursor:"pointer",padding:"6px 12px",whiteSpace:"nowrap",boxShadow:"0 2px 8px rgba(0,0,0,0.18)"}}>Search</button>}
       {showTop&&(<>
         <button onClick={()=>window.scrollTo({top:0,behavior:"smooth"})} aria-label="Return to top"
           style={{position:"fixed",bottom:undo?64:20,left:"50%",transform:"translateX(calc(-100% - 5px))",zIndex:998,width:38,height:38,borderRadius:"50%",background:C.card,border:"1px solid "+C.rule,color:C.ink,fontSize:16,lineHeight:1,cursor:"pointer",boxShadow:"0 2px 8px rgba(0,0,0,0.18)"}}>{"\u2191"}</button>
