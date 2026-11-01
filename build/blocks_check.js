@@ -81,7 +81,7 @@ if (!fs.existsSync(built)) die('the page did not transpile');
 const js = fs.readFileSync(built, 'utf8').replace(/\n*$/, '\n');
 try { new Function(js); } catch (e) { die('the page does not parse — ' + e.message); }
 if (!/function BlocksCheck\(/.test(js) || !/function CatalogueNone\(/.test(js)) die('BlocksCheck or CatalogueNone missing');
-const head = fs.readFileSync(path.join(__dirname, 'shell_head.html'), 'utf8').replace('<title>Cat Watch</title>', '<title>Catalogue Blocks Check</title>');
+const head = fs.readFileSync(path.join(__dirname, 'shell_head.html'), 'utf8').replace('<title>Art Watch</title>', '<title>Catalogue Blocks Check</title>');
 fs.mkdirSync(path.dirname(OUT), { recursive: true });
 fs.writeFileSync(OUT, head + js + MOUNT + '\n' + fs.readFileSync(path.join(__dirname, 'shell_tail.html'), 'utf8'));
 console.log('built ' + path.relative(ROOT, OUT) + ' — ' + build.branch + ' ' + build.commit + ', '

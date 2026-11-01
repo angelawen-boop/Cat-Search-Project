@@ -73,7 +73,7 @@ const until = async (fn, ms = 8000) => { const t = Date.now(); while (Date.now()
   }
   const liveSaved = () => (store.docs.has('ledger/live') ? JSON.parse(store.docs.get('ledger/live')).savedAt : null);
   const session = () => (store.docs.has('ledger/session') ? JSON.parse(store.docs.get('ledger/session')) : null);
-  const RO = /Read only — Cat Watch is open in another tab or device/;
+  const RO = /Read only — Art Watch is open in another tab or device/;
 
   try {
     // A: the first copy. It loads her ledger and saves it.
