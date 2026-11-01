@@ -260,8 +260,10 @@ rules, Cini, Prado, Correr): `docs/app.md`, `docs/add_by_link.md`.
 
 #### 2.2.11 Add by link — open items
 
-- **Done — Links, Pages and Paste descriptions:** their one Claude read asks the `complex` tier since 57.2 (her decision);
-  her verdict: much better (`docs/app.md` §1, "Which model").
+- **OPEN — Links, Pages and Paste descriptions: better, not necessarily good.** Their one Claude read asks the `complex` tier
+  since 57.2 (her decision; `docs/app.md` §1, "Which model"). Her verdict: they try harder, but extra detail is not richness —
+  some now say things no one would go to a show for. Her test: would you go to see the exhibition on that byline? Her case
+  (Louisiana): *Louise Bourgeois* → "Bourgeois's Cells, begun when she was almost eighty." Agree any change with her first.
 - **OPEN — Belvedere stays German** (lookup log L1792752998011063a): the English search found `belvedere.at/en/museum-shop`, whose
   shop link points to the German `belvedere.at/shop`, and the app followed it; the English-version step tried only English FRONT
   pages, never the English version of the shop page. Its English shop's address is not known. The shop check passed it because a
@@ -518,7 +520,7 @@ bot-blocked, so Pages and Paste only) is a fact about that venue, never a limit 
 > restating `capabilities` must restate all four; omitting it carries them
 > forward. **Renaming the connector means restating them.**
 
-**Live: 57.2 in her app** (the app is named **Art Watch** on screen since 57; the header's big line is unchanged), with the cloud ledger (merged at 46). What each recent version changed is in
+**Live: 57.3 in her app** (the app is named **Art Watch** on screen since 57; the header's big line is unchanged), with the cloud ledger (merged at 46). What each recent version changed is in
 `docs/publishing.md`, "What is live now".
 
 #### The mental model, load-bearing

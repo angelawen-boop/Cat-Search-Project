@@ -237,9 +237,14 @@ Proof pages for every rule: `docs/link_proof_pages.json`.
 
 **Occasional order and chips** are `VENUE_ORDER` (CLAUDE.md §5.4). **A venue's rule is that venue's** (her decision).
 
-- **Moderna Museet** (`occ-modernamuseet-se`): cards and chip "Stockholm Moderna Museet" (her name, city first); dates
+- **Moderna Museet** (`occ-modernamuseet-se`): cards and chip "Stockholm Moderna" (her name, city first); dates
   day.month with the year after a space ("16.2–26.5 2013", "8.10 2011–15.1 2012"), read at this venue only
   (`SPACED_YEAR_VENUES`, `dates.js`; DS-012). Its Malmö pages share the site, so they file here too (unbuilt).
+
+- **Louisiana** (`occ-louisiana-dk`): cards and chip "Denmark Louisiana" (her name, country first). A retired show's address
+  opens the "Past Exhibitions" list (Louise Bourgeois, 2016): refused with the Parallel fault line, as a 202 is — she saves the
+  page (`listingPage`, AL-091a). A heading line ending in a comma runs on to the next, no colon ("Diane Arbus Photographs, 1956-1971";
+  `headingCommaJoin`, AL-091). Day first (`DATE_ORDER`).
 
 - **MoMA** (`moma`): a space typed before a comma ("Toyo Ito , SANAA") is dropped, so the heading matches the tab title and wins
   over the title repeated in the events list (her decision: MoMA only; `spaceBeforeComma`, AL-061l).

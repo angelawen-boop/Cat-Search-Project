@@ -571,6 +571,16 @@ function runtime() {
     const ct = cardT(ri.base, 'occ-archivio-correr-visitmuve-it');
     ok(ct === 'Canova e Venezia 1822-2022. Fotografie di Fabio Zonta',
       'AL-089b: the Correr\'s archive: titles typed in capitals recased (her decision)', JSON.stringify(ct));
+    // AL-091: Louisiana (that venue only): a heading line ending in a comma runs on to the next ("Diane Arbus Photographs,"
+    // over "1956-1971"); a retired show's address that opens the "Past Exhibitions" list is refused as Parallel's fault. Read live (1 Nov).
+    const la = live('louisiana_arbus'), rla = read(la, la.url, 'occ-louisiana-dk');
+    ok(rla.ok && rla.base === 'Diane Arbus Photographs, 1956-1971' && rla.start === '2022-03-24',
+      'AL-091:  Louisiana: a heading line ending in a comma runs on, no colon after it', JSON.stringify([rla.base, rla.start]));
+    const lb = live('louisiana_bourgeois'), rlb = read(lb, lb.url, 'occ-louisiana-dk');
+    ok(!rlb.ok && rlb.why === 'The page contents cannot be seen \u2014 Parallel fault. Import the full saved page.',
+      'AL-091a: Louisiana: a link that opens the Past Exhibitions list is no show — the Parallel fault line', JSON.stringify(rlb));
+    const lbElse = read(lb, 'https://example.org/past', null);
+    ok(lbElse.ok !== false || !/Parallel fault/.test(lbElse.why || ''), 'AL-091b: the list refusal is Louisiana\'s rule, not read elsewhere', JSON.stringify(lbElse.why || lbElse.base));
     ok(rt.ok && rt.noDates && rt.scriptDates && !rg.scriptDates,
       'AL-088:  no dates and a script placeholder left on the page ("{{daysLeft(exhibition.end)}}"): "Dates cannot be seen — JS-rendering." (her wording); no placeholder, the usual note', JSON.stringify([rt.scriptDates, rg.scriptDates]));
     const note = new Function('React', 'window', 'document', 'localStorage', code + '\n;return SCRIPT_DATES_NOTE;')(React, win, win.document, win.localStorage);

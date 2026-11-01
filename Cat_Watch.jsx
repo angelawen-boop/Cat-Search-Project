@@ -3,7 +3,7 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 // The footer prints APP_VERSION and its date, so she can tell one build from the next.
 // Numbering, her decision: a whole number for a substantial change, a decimal for a
 // small one, one number per publish. Bump it with the change it describes.
-const APP_VERSION = "57.2";
+const APP_VERSION = "57.3";
 const APP_VERSION_DATE = "1 Nov 2026";
 
 // The venue order is VENUE_ORDER, below the list, which sorts MUSEUMS; drawer, chips,
@@ -1186,7 +1186,12 @@ const LINK_VENUES={
   "occ-rct-uk":{card:"Queen's Gallery Edinburgh",notCard:"The Queen\u2019s Gallery, Palace of Holyroodhouse"},
   "occ-wallach-columbia-edu":{card:"Wallach Gallery Columbia",notCard:"Columbia Wallach"},
   // Her name, the city first (her decision, as Antwerp KMSKA).
-  "occ-modernamuseet-se":{card:"Stockholm Moderna Museet",short:"Stockholm Moderna Museet",notCard:"Moderna Museet Stockholm",name:"Moderna Museet"},
+  "occ-modernamuseet-se":{card:"Stockholm Moderna",short:"Stockholm Moderna",notCard:"Moderna Museet Stockholm",name:"Moderna Museet"},
+  // Her name, the country first. A retired show's address opens the "Past Exhibitions" list (Louise
+  // Bourgeois), which is never a show (listingPage); a heading line ending in a comma runs on to the
+  // next line (headingCommaJoin; "Diane Arbus Photographs," over "1956-1971").
+  "occ-louisiana-dk":{card:"Denmark Louisiana",short:"Denmark Louisiana",notCard:"Louisiana Humleb\u00e6k",name:"Louisiana Museum of Modern Art",
+    linkRead:{listingPage:/^Past exhibitions$/i,headingCommaJoin:true}},
   // Christie's press site is the same venue as christies.com (her decision; links from now on, rows already in left as they are).
   "occ-christies-com":{sites:[{host:"press.christies.com"}]},
 };
@@ -1494,6 +1499,9 @@ function pageToRead(res,url,vc,rules){
   // A venue whose page title on some pages is a section's name, never the show's (linkRead.tabNotName;
   // Getty's collection pages, "Museum Collection | Museum Collection | Getty"): the heading names the show.
   if(lr&&lr.tabNotName&&lr.tabNotName.test(show)){ show=""; rule("tabNotName"); }
+  // A venue whose retired show addresses open a list of shows (linkRead.listingPage; Louisiana's "Past
+  // Exhibitions"): Parallel was sent the list, not the page she sees, so it is Parallel's fault, said as 202 is.
+  if(lr&&lr.listingPage&&(lr.listingPage.test(String(show||"").trim())||lr.listingPage.test(stripMd(head).trim()))){ rule("fail:listing-page"); return{fail:{ok:false,why:pageUnreadWhy({http_status_code:202})}}; }
   if(site)rule(String(res.title).includes(" | ")?"tab:bars":"tab:site-after-dash");
   if(TITLE_LABEL.test(decodeEntities(stripMd(res&&res.title)).split(" | ")[0].trim()))rule("tab:label");
   // A venue's own date forms rewritten before reading: two-digit years (shortYear, NGV), "as of" for
@@ -1526,7 +1534,9 @@ function joinHeadingOverTwoLines(pg){
     if(nd.start||nd.end){ rule("heading:date-line-not-joined"); continue; }
     const name=stripMd(hm[2]),lo=String(show||"").toLowerCase();
     const sep=lo.startsWith(name.toLowerCase())&&lo.endsWith(next.toLowerCase())?show.slice(name.length,show.length-next.length):"";
-    lines[i]=hm[1]+(sep&&sep.length<=3?name+sep+next:joinTitle(name,next,true));
+    // A first line ending in a comma runs on (linkRead.headingCommaJoin; Louisiana's Arbus).
+    const runOn=pg.lr&&pg.lr.headingCommaJoin&&/,$/.test(name);
+    lines[i]=hm[1]+(runOn?name+" "+next:sep&&sep.length<=3?name+sep+next:joinTitle(name,next,true));
     lines[i+1]="";
     pg.broken=i;
     rule(sep&&sep.length<=3?"heading:two-lines-tab-mark":"heading:two-lines");

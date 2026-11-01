@@ -21,7 +21,9 @@ the next goes through. Later ones go straight through.
 
 ## What is live now
 
-**Live: 57.2 in her app**: the Links, Pages and Paste read (one Claude call: description, subtitle, English title, venue; Paste's title and dates) asks the `complex` tier, every other read stays on `default` (her decision; AL-090); Moderna Museet's "16.2–26.5 2013" and "8.10 2011–15.1 2012" dates read (a Moderna Museet rule, `SPACED_YEAR_VENUES`; DS-012); its cards say "Stockholm Moderna Museet" (her name).
+**Live: 57.3 in her app**: Louisiana — a link that opens its Past Exhibitions list says "The page contents cannot be seen — Parallel fault. Import the full saved page." (AL-091a); its two-line heading ending in a comma runs on (Arbus, AL-091); cards "Denmark Louisiana"; Moderna Museet's cards "Stockholm Moderna".
+
+Before that 57.2: the Links, Pages and Paste read (one Claude call: description, subtitle, English title, venue; Paste's title and dates) asks the `complex` tier, every other read stays on `default` (her decision; AL-090); Moderna Museet's "16.2–26.5 2013" and "8.10 2011–15.1 2012" dates read (a Moderna Museet rule, `SPACED_YEAR_VENUES`; DS-012); its cards say "Stockholm Moderna Museet" (her name).
 
 Before that 57.1: the Search button sits 32px under the LAST line of the selection, below Android's handles — a handle over the button took her tap, so nothing happened (her report). Not proven from a log: nothing records taps on it.
 
