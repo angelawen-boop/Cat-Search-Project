@@ -260,11 +260,8 @@ rules, Cini, Prado, Correr): `docs/app.md`, `docs/add_by_link.md`.
 
 #### 2.2.11 Add by link — open items
 
-- **OPEN — Links, Pages and Paste descriptions had turned flat; their read now asks the `complex` tier (57.2, her decision;
-  `docs/app.md` §1, "Which model").** Claude was getting the whole blurb; nothing records which model answered. Her next links
-  confirm. Her bad cases (MoMA): *A Japanese Constellation*, *Matisse: Radical Invention*; Stockholm: *Hilma af Klint: A Pioneer
-  of Abstraction*, *Turner, Monet, Twombly*. If still flat, the other option stands: extend Paste's reworded-title check
-  (`pasteFaults`) to Links and Pages, only if no live proof page gets worse.
+- **Done — Links, Pages and Paste descriptions:** their one Claude read asks the `complex` tier since 57.2 (her decision);
+  her verdict: much better (`docs/app.md` §1, "Which model").
 - **OPEN — Belvedere stays German** (lookup log L1792752998011063a): the English search found `belvedere.at/en/museum-shop`, whose
   shop link points to the German `belvedere.at/shop`, and the app followed it; the English-version step tried only English FRONT
   pages, never the English version of the shop page. Its English shop's address is not known. The shop check passed it because a

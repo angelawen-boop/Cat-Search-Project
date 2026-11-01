@@ -374,7 +374,8 @@ has no shelf).
 
 The app names no model. It asks the viewer's Claude through `sample`; every
 lookup read passes `modelTier: default`. **The one exception: the Links, Pages and Paste read asks `complex`**
-(her decision, after its descriptions turned flat; `LINK_READ_TIER`, AL-090) — it is one call, so no call is added. `quick` risks exactly the misreadings
+(her decision, after its descriptions turned flat on `default`; `LINK_READ_TIER`, AL-090) — it is one call, so no call
+is added. Her verdict on 57.2: descriptions much better. `quick` risks exactly the misreadings
 this route was rebuilt to fix; `complex` costs more; nothing has misread, so
 there is nothing to tune against. Only one `.jsx` has ever existed in this repo
 — the "Sonnet copy" was a Chat artifact.
