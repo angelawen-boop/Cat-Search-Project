@@ -3,7 +3,7 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 // The footer prints APP_VERSION and its date, so she can tell one build from the next.
 // Numbering, her decision: a whole number for a substantial change, a decimal for a
 // small one, one number per publish. Bump it with the change it describes.
-const APP_VERSION = "57.1";
+const APP_VERSION = "57.2";
 const APP_VERSION_DATE = "1 Nov 2026";
 
 // The venue order is VENUE_ORDER, below the list, which sorts MUSEUMS; drawer, chips,
@@ -231,7 +231,12 @@ const DATE_ORDER = {
   'occ-louisiana-dk': 'day',                    // "11.10.24 - 27.4.25"
   'occ-mskgent-be': 'day',                      // "01.02 – 30.04.20"
   'occ-approfondimentimostre-com': 'day',       // "22.05.2008 | 14.08.2008"
+  'occ-modernamuseet-se': 'day',                // "16.2–26.5 2013", "8.10 2011–15.1 2012"
 };
+// Venues that write day.month with the year after a space, on the closing side or both
+// ("16.2–26.5 2013", "8.10 2011–15.1 2012" — Moderna Museet). A venue rule (her decision: a
+// venue's fault gets that venue's rule), so it reads nowhere else. DS-012.
+const SPACED_YEAR_VENUES = new Set(['occ-modernamuseet-se']);
 const ORDER_UNKNOWN_NOTE = "Dates not yet read \u2014 confirm whether the venue's date format is day first or month first.";
 
 /**
@@ -429,6 +434,14 @@ function findDateRangeCore(raw, opts = {}) {
     const r = sane(ymd(startYr, a.mon, a.day), ymd(eYr, b.mon, b.day), frag(m));
     return r.start || r.end ? r : null;
   };
+  // Day.month, the year after a space (SPACED_YEAR_VENUES).
+  const spaced = SPACED_YEAR_VENUES.has(opts.venue) && s.match(new RegExp(
+    `\\b(\\d{1,2})\\.(\\d{1,2})(?:\\s+(\\d{4}))?${RANGE_SEP}(\\d{1,2})\\.(\\d{1,2})\\s+(\\d{4})\\b`));
+  if (spaced && plausibleYear(+spaced[6]) && (!spaced[3] || plausibleYear(+spaced[3]))) {
+    const [a1, b1, a2, b2] = [1,2,4,5].map(i => Number(spaced[i]));
+    const r = numRange(spaced, a1, b1, a2, b2, spaced[3] ? +spaced[3] : 0, +spaced[6]);
+    if (r) return r;
+  }
   // Two-digit years on both sides ("11.10.24 - 27.4.25", Louisiana).
   const dotted2 = s.match(new RegExp(
     `\\b(\\d{1,2})\\.(\\d{1,2})\\.(\\d{2})${RANGE_SEP}(\\d{1,2})\\.(\\d{1,2})\\.(\\d{2})(?![\\d.:])`));
@@ -1038,6 +1051,9 @@ const SUMMARY_EXAMPLES=[{"title":"German Expressionism","raw":"Across Germany’
 
 const OCC_DOC="venues/occasional";
 const LINKS_DOC="links/pending";
+// The model tier for the Links, Pages and Paste read: one call that writes the description and reads the
+// subtitle, English title and venue (Paste: title and dates too). Not an extra call (her decision).
+const LINK_READ_TIER="complex";
 const isOcc=id=>String(id||"").startsWith("occ-");
 // Palazzo Reale Milano's heading is the short name plus " - Palazzo Reale Milano", the full
 // name on a line below it (nameInLines: the longest line between title and dates that starts
@@ -1169,6 +1185,8 @@ const LINK_VENUES={
   "occ-museumhetvalkhof-nl":{card:"Valkhof Nijmegen",notCard:"Nijmegen Valkhof"},
   "occ-rct-uk":{card:"Queen's Gallery Edinburgh",notCard:"The Queen\u2019s Gallery, Palace of Holyroodhouse"},
   "occ-wallach-columbia-edu":{card:"Wallach Gallery Columbia",notCard:"Columbia Wallach"},
+  // Her name, the city first (her decision, as Antwerp KMSKA).
+  "occ-modernamuseet-se":{card:"Stockholm Moderna Museet",short:"Stockholm Moderna Museet",notCard:"Moderna Museet Stockholm",name:"Moderna Museet"},
   // Christie's press site is the same venue as christies.com (her decision; links from now on, rows already in left as they are).
   "occ-christies-com":{sites:[{host:"press.christies.com"}]},
 };
@@ -4092,18 +4110,20 @@ function shopPagesFor(mu,title){
 // Hand the search results to Claude and ask it to read the catalogue off them.
 // It sees ONLY these excerpts, so it cannot report a shop page that was not
 // found. Returns {ok, data, detail}.
-async function readResults(prompt){
-  const t0=Date.now(), out=await readResultsCall(prompt);
+// tier: the model tier asked for — "default", or "complex" for the Links, Pages and Paste read,
+// which writes the description (her decision: flat descriptions on the default tier).
+async function readResults(prompt,tier="default"){
+  const t0=Date.now(), out=await readResultsCall(prompt,tier);
   tapeCall("claude",{prompt},out,t0);
   return out;
 }
-async function readResultsCall(prompt){
+async function readResultsCall(prompt,tier){
   const sample=await useCap("sample");
   if(!sample)return{ok:false,data:null,code:"unavailable",detail:"Claude isn\u2019t available to this page in this viewer."};
   try{
     // Never a replayed answer: the platform replays an identical question asked within five minutes,
     // so Relabel, Search again and Re-check would not ask again (her Metamorphoses Relabel).
-    const data=await sample.json(prompt,{modelTier:"default",cache:false});
+    const data=await sample.json(prompt,{modelTier:tier||"default",cache:false});
     return{ok:true,data,detail:"read the results"};
   }catch(e){
     const code=String((e&&e.code)||"");
@@ -7785,11 +7805,11 @@ export default function App(){
         // An entry that only places the venue's chip leaves this as it was (Cini).
         const lk=linkEntry(vc), ownSite=vc===occVenueId(host)&&(!lk||Object.keys(lk).every(k=>k==="ownChip"||k==="chip"||k==="group"));
         const prompt=linkPrompt(page,askVenue,url,vc);
-        let ask=await readResults(prompt);
+        let ask=await readResults(prompt,LINK_READ_TIER);
         let faults=ask.ok?answerFaults(ask.data,page):[];
         for(let again=0;faults.length&&again<LINK_ASK_AGAIN;again++){
           seen.refused=[...(seen.refused||[]),{answer:ask.data,faults}];
-          ask=await readResults(askAgainPrompt(prompt,faults,ask.data));
+          ask=await readResults(askAgainPrompt(prompt,faults,ask.data),LINK_READ_TIER);
           faults=ask.ok?answerFaults(ask.data,page):[];
         }
         if(faults.length){ fails.push({url,why:"Claude\u2019s description failed check and re-attempt multiple times ("+faults.join("; ")+")"}); continue; }

@@ -261,8 +261,8 @@ function runtime() {
         if (SHOPS[u] !== undefined) return { payload: { results: [{ url: u, title: 'Shop', full_content: SHOPS[u] }], errors: [] } };
         return { payload: { results: [{ url: u, title: '', full_content: '' }], errors: [] } };
       } };
-      if (name === 'sample') return { json: async prompt => {
-        calls.push({ kind: 'sample', prompt });
+      if (name === 'sample') return { json: async (prompt, opts) => {
+        calls.push({ kind: 'sample', prompt, tier: opts && opts.modelTier });
         const t = (prompt.match(/EXHIBITION TITLE, as the page gives it: (".*")/) || [])[1];
         const title = t ? JSON.parse(t) : '';
         if (/Peggy/.test(title)) return { summary: 'Guggenheim Jeune, her radical London gallery, revisited.', subtitle: 'The Making of a Collector', english: '', englishSpeaking: true };
@@ -723,6 +723,9 @@ function runtime() {
   // The Period trial's labelling question about the new cards is not a page read.
   const reads = calls.filter(c => c.kind === 'sample' && !/name the art period/.test(c.prompt || ''));
   ok(reads.length === 10, 'AL-003a:  and one Claude call per page that read, ten', reads.length);
+  const labels = calls.filter(c => c.kind === 'sample' && /name the art period/.test(c.prompt || ''));
+  ok(reads.every(c => c.tier === 'complex') && labels.length && labels.every(c => c.tier === 'default'),
+    'AL-090: the link read, which writes the description, asks the complex tier; the period labels stay on default (her decision)', [...new Set(reads.map(c => c.tier))].join(',') + ' / ' + [...new Set(labels.map(c => c.tier))].join(','));
 
   // ── AL-004: each card's title and dates — read by code ────────────────────
   const adds = buttons(/Add new entry$/);

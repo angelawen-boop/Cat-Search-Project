@@ -2191,6 +2191,16 @@ test('DS-008: French dates, "du … au …" (Chantilly, "Du 2 mars au 19 mai 202
   assert.strictEqual(unusableDateText('Du 8 mars au 15 juin'), '8 mars au 15 juin');
 });
 
+test('DS-012: day.month with the year after a space, Moderna Museet only ("16.2–26.5 2013", "8.10 2011–15.1 2012")', () => {
+  const mm = t => { const r = findDateRange(t, { looseSingles: false, venue: 'occ-modernamuseet-se' }); return [r.start, r.end]; };
+  assert.deepStrictEqual(mm('16.2–26.5 2013'), ['2013-02-16', '2013-05-26']);
+  assert.deepStrictEqual(mm('8.10 2011–15.1 2012'), ['2011-10-08', '2012-01-15']);
+  assert.deepStrictEqual(mm('22.9 2022–8.1 2023'), ['2022-09-22', '2023-01-08']);
+  assert.deepStrictEqual(mm('20.2–9.5 2027'), ['2027-02-20', '2027-05-09']);
+  // Another venue: not read (a venue rule).
+  assert.deepStrictEqual(range('16.2–26.5 2013'), ['', '']);
+});
+
 test('DS-011: German dates, the day with a full stop ("30. Juni 2024 – 5. Januar 2025", Emil Schumacher Museum)', () => {
   assert.deepStrictEqual(range('30. JUNI 2024 –\n5. JANUAR 2025'), ['2024-06-30', '2025-01-05']);
   assert.deepStrictEqual(range('30. Juni – 5. Januar 2025'), ['2024-06-30', '2025-01-05']);

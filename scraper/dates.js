@@ -129,7 +129,12 @@ const DATE_ORDER = {
   'occ-louisiana-dk': 'day',                    // "11.10.24 - 27.4.25"
   'occ-mskgent-be': 'day',                      // "01.02 – 30.04.20"
   'occ-approfondimentimostre-com': 'day',       // "22.05.2008 | 14.08.2008"
+  'occ-modernamuseet-se': 'day',                // "16.2–26.5 2013", "8.10 2011–15.1 2012"
 };
+// Venues that write day.month with the year after a space, on the closing side or both
+// ("16.2–26.5 2013", "8.10 2011–15.1 2012" — Moderna Museet). A venue rule (her decision: a
+// venue's fault gets that venue's rule), so it reads nowhere else. DS-012.
+const SPACED_YEAR_VENUES = new Set(['occ-modernamuseet-se']);
 const ORDER_UNKNOWN_NOTE = "Dates not yet read \u2014 confirm whether the venue's date format is day first or month first.";
 
 /**
@@ -327,6 +332,14 @@ function findDateRangeCore(raw, opts = {}) {
     const r = sane(ymd(startYr, a.mon, a.day), ymd(eYr, b.mon, b.day), frag(m));
     return r.start || r.end ? r : null;
   };
+  // Day.month, the year after a space (SPACED_YEAR_VENUES).
+  const spaced = SPACED_YEAR_VENUES.has(opts.venue) && s.match(new RegExp(
+    `\\b(\\d{1,2})\\.(\\d{1,2})(?:\\s+(\\d{4}))?${RANGE_SEP}(\\d{1,2})\\.(\\d{1,2})\\s+(\\d{4})\\b`));
+  if (spaced && plausibleYear(+spaced[6]) && (!spaced[3] || plausibleYear(+spaced[3]))) {
+    const [a1, b1, a2, b2] = [1,2,4,5].map(i => Number(spaced[i]));
+    const r = numRange(spaced, a1, b1, a2, b2, spaced[3] ? +spaced[3] : 0, +spaced[6]);
+    if (r) return r;
+  }
   // Two-digit years on both sides ("11.10.24 - 27.4.25", Louisiana).
   const dotted2 = s.match(new RegExp(
     `\\b(\\d{1,2})\\.(\\d{1,2})\\.(\\d{2})${RANGE_SEP}(\\d{1,2})\\.(\\d{1,2})\\.(\\d{2})(?![\\d.:])`));
@@ -786,6 +799,7 @@ function shownOnlyNote(shown, why) {
 module.exports = {
   NO_DATES_NOTE,
   DATE_ORDER,
+  SPACED_YEAR_VENUES,
   ORDER_UNKNOWN_NOTE,
   numberOrder,
   SWEPT_CAPS_TITLES,
