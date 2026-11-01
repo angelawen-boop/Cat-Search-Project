@@ -4425,7 +4425,7 @@ function cloudTrouble(e,verb){
 // SESSION_BEAT_MS; a record older than SESSION_STALE_MS is a closed copy, taken over.
 // Every save checks the record first, so a copy waking from sleep never overwrites it.
 const CLOUD_SESSION_DOC="ledger/session";
-const RO_LINE="Read only — Cat Watch is open in another tab or device. Close it there, then reload this one.";
+const RO_LINE="Read only — Art Watch is open in another tab or device. Close it there, then reload this one.";
 const SESSION_BEAT_MS=20000;
 const SESSION_STALE_MS=60000;
 const CLOUD_SESSION_ID=cloudNewId("t");
@@ -7104,6 +7104,8 @@ export default function App(){
   const fileRef=useRef(null);
   const refreshFileRef=useRef(null);
   const searchRef=useRef(null);
+  // Words selected anywhere on the page (her design): a button beside them searches them, exactly as typed.
+  const[selPick,setSelPick]=useState(null);
   const[proposals,setProposals]=useState(null); // null = not in refresh review; array = reviewing
   // Listing pages the sweep could not read. NOT proposals — see isMarkerRow().
   const[coverage,setCoverage]=useState([]);
@@ -7146,6 +7148,31 @@ export default function App(){
       document.body.style.color=theme==="dark"?"#EDE8E0":"#1E1B18";
     }catch{}
   },[theme]);
+  // Follows the selection (never in a box she types in), placed under the words
+  // (below Android's handles); hidden a moment after the selection goes, so a tap on it still lands.
+  useEffect(()=>{
+    let hide=null;
+    const place=()=>{
+      const sel=window.getSelection&&window.getSelection();
+      const typing=/^(INPUT|TEXTAREA)$/.test(document.activeElement?.tagName||"");
+      const text=sel&&!typing&&!sel.isCollapsed&&sel.rangeCount?sel.toString().replace(/\u2197/g," ").replace(/\s+/g," ").trim():"";
+      if(!text){ if(!hide)hide=setTimeout(()=>{hide=null;setSelPick(null);},400); return; }
+      if(hide){clearTimeout(hide);hide=null;}
+      const rc=sel.getRangeAt(0).getBoundingClientRect(), vw=window.innerWidth, vh=window.innerHeight;
+      const x=Math.min(Math.max(rc.left+rc.width/2,16+100),vw-16-100);
+      const y=rc.bottom+34+40<vh?rc.bottom+34:Math.max(8,rc.top-44);
+      setSelPick({text,x,y});
+    };
+    document.addEventListener("selectionchange",place);
+    window.addEventListener("scroll",place,{passive:true});
+    return()=>{document.removeEventListener("selectionchange",place);window.removeEventListener("scroll",place);if(hide)clearTimeout(hide);};
+  },[]);
+  const searchPick=()=>{
+    if(!selPick)return;
+    setSearch(selPick.text); setShowSearch(true); setSelPick(null);
+    try{window.getSelection().removeAllRanges();}catch{}
+    window.scrollTo({top:0});
+  };
   useEffect(()=>{const onScroll=()=>setShowTop(window.scrollY>400);window.addEventListener("scroll",onScroll,{passive:true});onScroll();return()=>window.removeEventListener("scroll",onScroll);},[]);
 
   useEffect(()=>{
@@ -8521,8 +8548,8 @@ export default function App(){
     <div style={{fontFamily:"'Inter',system-ui,sans-serif",background:C.bg,color:C.ink,minHeight:"100vh",padding:"20px 16px 60px"}}>
       <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
       <header style={{maxWidth:760,margin:"0 auto 14px"}}>
-        <div style={{fontSize:10,letterSpacing:"0.18em",textTransform:"uppercase",color:C.soft,marginBottom:4}}>Exhibition catalogues</div>
-        <h1 style={{fontFamily:"'Fraunces',Georgia,serif",fontSize:36,lineHeight:1,fontWeight:500,margin:0,letterSpacing:"-0.02em"}}>Before it goes<span style={{color:C.accent}}> out of print</span></h1>
+        <div style={{fontSize:10,letterSpacing:"0.18em",textTransform:"uppercase",color:C.soft,marginBottom:4}}>Art Watch</div>
+        <h1 style={{fontFamily:"'Fraunces',Georgia,serif",fontSize:36,lineHeight:1,fontWeight:500,margin:0,letterSpacing:"-0.02em"}}>Art and Art Catalogues</h1>
         <div style={{marginTop:14,display:"flex",flexWrap:"wrap",gap:5,alignItems:"center"}}>
           {/* Load and Import (her decision): Load opens a ledger file; Import brings in a
               sweep CSV as cards. */}
@@ -8769,6 +8796,8 @@ export default function App(){
       </div>
       {scrubGroups.length>0&&<PeriodScrubber groups={scrubGroups} C={C} onJump={jumpToPeriod}/>}
       {/* Top on the left, bottom on the right (her layout), shown once she has scrolled down. */}
+      {selPick&&<button onMouseDown={e=>e.preventDefault()} onClick={searchPick}
+        style={{position:"fixed",top:selPick.y,left:selPick.x,transform:"translateX(-50%)",zIndex:1000,background:C.card,border:"1px solid "+C.action,borderRadius:4,color:C.action,fontSize:12,fontWeight:500,cursor:"pointer",padding:"6px 12px",whiteSpace:"nowrap",boxShadow:"0 2px 8px rgba(0,0,0,0.18)"}}>See all for this artist</button>}
       {showTop&&(<>
         <button onClick={()=>window.scrollTo({top:0,behavior:"smooth"})} aria-label="Return to top"
           style={{position:"fixed",bottom:undo?64:20,left:"50%",transform:"translateX(calc(-100% - 5px))",zIndex:998,width:38,height:38,borderRadius:"50%",background:C.card,border:"1px solid "+C.rule,color:C.ink,fontSize:16,lineHeight:1,cursor:"pointer",boxShadow:"0 2px 8px rgba(0,0,0,0.18)"}}>{"\u2191"}</button>
@@ -9235,7 +9264,7 @@ export default function App(){
       {/* The version, small and grey: something she checks, not acts on. Reads
           APP_VERSION, so there is one copy of the number. */}
       <footer style={{maxWidth:760,margin:"28px auto 0",fontSize:10.5,color:C.soft,textAlign:"center"}}>
-        Cat Watch {"·"} v {APP_VERSION} {"·"} {APP_VERSION_DATE}
+        Art Watch {"·"} v {APP_VERSION} {"·"} {APP_VERSION_DATE}
       </footer>
     </div>
   );
