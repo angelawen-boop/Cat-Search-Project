@@ -3,8 +3,8 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 // The footer prints APP_VERSION and its date, so she can tell one build from the next.
 // Numbering, her decision: a whole number for a substantial change, a decimal for a
 // small one, one number per publish. Bump it with the change it describes.
-const APP_VERSION = "56.7";
-const APP_VERSION_DATE = "31 Oct 2026";
+const APP_VERSION = "57";
+const APP_VERSION_DATE = "1 Nov 2026";
 
 // The venue order is VENUE_ORDER, below the list, which sorts MUSEUMS; drawer, chips,
 // Sort by Venue and refresh headings all follow it.
@@ -8553,7 +8553,7 @@ export default function App(){
       <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
       <header style={{maxWidth:760,margin:"0 auto 14px"}}>
         <div style={{fontSize:10,letterSpacing:"0.18em",textTransform:"uppercase",color:C.soft,marginBottom:4}}>Art Watch</div>
-        <h1 style={{fontFamily:"'Fraunces',Georgia,serif",fontSize:36,lineHeight:1,fontWeight:500,margin:0,letterSpacing:"-0.02em"}}>Art and Art Catalogues</h1>
+        <h1 style={{fontFamily:"'Fraunces',Georgia,serif",fontSize:36,lineHeight:1,fontWeight:500,margin:0,letterSpacing:"-0.02em"}}>Before it goes<span style={{color:C.accent}}> out of print</span></h1>
         <div style={{marginTop:14,display:"flex",flexWrap:"wrap",gap:5,alignItems:"center"}}>
           {/* Load and Import (her decision): Load opens a ledger file; Import brings in a
               sweep CSV as cards. */}
@@ -8800,9 +8800,9 @@ export default function App(){
       </div>
       {scrubGroups.length>0&&<PeriodScrubber groups={scrubGroups} C={C} onJump={jumpToPeriod}/>}
       {/* Top on the left, bottom on the right (her layout), shown once she has scrolled down. */}
-      {/* Coloured as the "Recently opened" tag (her choice), in both themes. */}
+      {/* Filled as the "Recently opened" tag, edged in the action green (her choice), in both themes. */}
       {selPick&&<button onMouseDown={e=>e.preventDefault()} onClick={searchPick}
-        style={{position:"fixed",top:selPick.y,left:selPick.x,transform:"translateX(-50%)",zIndex:1000,background:TH.recent.wash,border:"1px solid "+TH.recent.wash,borderRadius:4,color:TH.recent.ink,fontSize:12,fontWeight:500,cursor:"pointer",padding:"6px 12px",whiteSpace:"nowrap",boxShadow:"0 2px 8px rgba(0,0,0,0.18)"}}>Search</button>}
+        style={{position:"fixed",top:selPick.y,left:selPick.x,transform:"translateX(-50%)",zIndex:1000,background:TH.recent.wash,border:"1px solid "+C.action,borderRadius:4,color:TH.recent.ink,fontSize:12,fontWeight:500,cursor:"pointer",padding:"6px 12px",whiteSpace:"nowrap",boxShadow:"0 2px 8px rgba(0,0,0,0.18)"}}>Search</button>}
       {showTop&&(<>
         <button onClick={()=>window.scrollTo({top:0,behavior:"smooth"})} aria-label="Return to top"
           style={{position:"fixed",bottom:undo?64:20,left:"50%",transform:"translateX(calc(-100% - 5px))",zIndex:998,width:38,height:38,borderRadius:"50%",background:C.card,border:"1px solid "+C.rule,color:C.ink,fontSize:16,lineHeight:1,cursor:"pointer",boxShadow:"0 2px 8px rgba(0,0,0,0.18)"}}>{"\u2191"}</button>

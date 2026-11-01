@@ -140,8 +140,8 @@ const PERIOD_BRANCH = 'claude/period-sort';
 const forTest = branch === TEST_BRANCH, forPeriod = branch === PERIOD_BRANCH;
 const target = branch === 'main' ? HER_APP : forTest ? TEST_PAGE : forPeriod ? PERIOD_PAGE : null;
 let head = fs.readFileSync(HEAD, 'utf8');
-if (forTest) head = head.replace('<title>Cat Watch</title>', '<title>Cat Watch Cloud Test</title>');
-if (forPeriod) head = head.replace('<title>Cat Watch</title>', '<title>Cat Watch Period Test</title>');
+if (forTest) head = head.replace('<title>Art Watch</title>', '<title>Cat Watch Cloud Test</title>');
+if (forPeriod) head = head.replace('<title>Art Watch</title>', '<title>Cat Watch Period Test</title>');
 
 fs.mkdirSync(OUT_DIR, { recursive: true });
 fs.writeFileSync(OUT, head + js + fs.readFileSync(TAIL, 'utf8'));
