@@ -260,18 +260,11 @@ rules, Cini, Prado, Correr): `docs/app.md`, `docs/add_by_link.md`.
 
 #### 2.2.11 Add by link — open items
 
-- **OPEN — Links and Pages descriptions have turned flat** (her report: they went from competent, to rich but succinct,
-  to flat). The app's description step has not changed: same prompt, examples and answer check. The app names no model,
-  only `modelTier: "default"`, so the model the platform serves for that tier is the likely cause. This is a guess:
-  nothing records which model answered. Possible fix: ask for a higher tier (`complex`) for the description call only. That
-  reopens her decision to use the default tier for the app's Claude reads (`docs/app.md` §1, "Which model"), so agree it
-  with her before building. Second option, a safety net whatever the model: Paste's check that refuses a description
-  which only rewords the title (`pasteFaults`), extended to Links and Pages. That is a general rule, so it ships only if
-  no live proof page gets worse. Her bad cases (MoMA): *A Japanese Constellation* → "Toyo Ito, SANAA and their network of
-  architects."; *Matisse: Radical Invention* → "Matisse's radical, abstracted works of 1913–1917." Her good cases, each
-  with a fact the title lacks: Getty *Illuminating the Renaissance* → "…from Marmion to Bening."; Morgan *Painted
-  Prayers* → "Fifty-eight Books of Hours, the late Middle Ages' bestseller."; Prado *Ingres* → "Ingres, heir to Raphael
-  and Poussin, and his portraiture."
+- **OPEN — Links, Pages and Paste descriptions had turned flat; their read now asks the `complex` tier (57.2, her decision;
+  `docs/app.md` §1, "Which model").** Claude was getting the whole blurb; nothing records which model answered. Her next links
+  confirm. Her bad cases (MoMA): *A Japanese Constellation*, *Matisse: Radical Invention*; Stockholm: *Hilma af Klint: A Pioneer
+  of Abstraction*, *Turner, Monet, Twombly*. If still flat, the other option stands: extend Paste's reworded-title check
+  (`pasteFaults`) to Links and Pages, only if no live proof page gets worse.
 - **OPEN — Belvedere stays German** (lookup log L1792752998011063a): the English search found `belvedere.at/en/museum-shop`, whose
   shop link points to the German `belvedere.at/shop`, and the app followed it; the English-version step tried only English FRONT
   pages, never the English version of the shop page. Its English shop's address is not known. The shop check passed it because a
@@ -528,7 +521,7 @@ bot-blocked, so Pages and Paste only) is a fact about that venue, never a limit 
 > restating `capabilities` must restate all four; omitting it carries them
 > forward. **Renaming the connector means restating them.**
 
-**Live: 57.1 in her app** (the app is named **Art Watch** on screen since 57; the header's big line is unchanged), with the cloud ledger (merged at 46). What each recent version changed is in
+**Live: 57.2 in her app** (the app is named **Art Watch** on screen since 57; the header's big line is unchanged), with the cloud ledger (merged at 46). What each recent version changed is in
 `docs/publishing.md`, "What is live now".
 
 #### The mental model, load-bearing
