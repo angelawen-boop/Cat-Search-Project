@@ -47,8 +47,7 @@ async function gzipBase64(text){
 async function saveLookupTape(tape,out){
   if(lookupTape===tape)lookupTape=null;
   try{
-    const db=await useCap("db");
-    if(!db||!tape)return false;
+    if(!await storeReached()||!tape)return false;
     const row=tape.row||{}, mu=MU[row.museumId];
     const at=new Date(tape.t0).toISOString();
     const body=JSON.stringify({
@@ -63,22 +62,22 @@ async function saveLookupTape(tape,out){
     const pieces=[];
     for(let i=0;i<text.length;i+=LOOKUP_PIECE)pieces.push(text.slice(i,i+LOOKUP_PIECE));
     const id="L"+tape.t0+Math.random().toString(36).slice(2,6);
-    const rec=db.doc(LOOKUP_LOG+"/"+id);
-    await rec.set({at,action:tape.action,title:row.title||null,venue:mu?mu.name:null,museumId:row.museumId||null,
+    const rec=LOOKUP_LOG+"/"+id;
+    await storeWrite(rec,{at,action:tape.action,title:row.title||null,venue:mu?mu.name:null,museumId:row.museumId||null,
       version:APP_VERSION,calls:tape.calls.length,enc,pieces:pieces.length,complete:false});
-    for(let i=0;i<pieces.length;i++)await rec.collection("pieces").doc(String(i)).set({text:pieces[i]});
-    await rec.update({complete:true});
-    await pruneLookupLog(db);
+    for(let i=0;i<pieces.length;i++)await storeWrite(rec+"/pieces/"+i,{text:pieces[i]});
+    await storeWrite(rec,{complete:true},{merge:true});
+    await pruneLookupLog();
     return true;
   }catch{ return false; }
 }
 //@piece pruneLookupLog
 
-async function pruneLookupLog(db){
-  const snap=await db.collection(LOOKUP_LOG).orderBy("at","desc").limit(1000).get();
-  for(const d of snap.docs.slice(LOOKUP_KEEP)){
-    const n=Number((d.data()||{}).pieces)||0, rec=db.doc(LOOKUP_LOG+"/"+d.id);
-    for(let i=0;i<n;i++)await rec.collection("pieces").doc(String(i)).delete();
-    await rec.delete();
+async function pruneLookupLog(){
+  const list=await storeList(LOOKUP_LOG,{by:"at",dir:"desc",limit:1000});
+  for(const d of list.slice(LOOKUP_KEEP)){
+    const n=Number((d.data||{}).pieces)||0, rec=LOOKUP_LOG+"/"+d.id;
+    for(let i=0;i<n;i++)await storeDelete(rec+"/pieces/"+i);
+    await storeDelete(rec);
   }
 }

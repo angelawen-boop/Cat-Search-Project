@@ -371,15 +371,10 @@ function registerUnseenOccasional(rows){
 //@piece readOccasional
 
 async function readOccasional(){
-  const db=await useCap("db");
-  if(!db){ markUnread(UNREAD_OCC); return{}; }
-  try{ const s=await db.doc(OCC_DOC).get(); return s.exists?((s.data()||{}).venues||{}):{}; }catch{ markUnread(UNREAD_OCC); return {}; }
+  try{ const s=await storeRead(OCC_DOC,{part:UNREAD_OCC}); return s.exists?((s.data||{}).venues||{}):{}; }catch{ return {}; }
 }
 //@piece writeOccasional
 
 async function writeOccasional(map){
-  if(STORE_UNREAD.has(UNREAD_OCC))return false;
-  const db=await useCap("db");
-  if(!db)return false;
-  try{ await db.doc(OCC_DOC).set({venues:map,updatedAt:new Date().toISOString()}); return true; }catch{ return false; }
+  try{ await storeWrite(OCC_DOC,{venues:map,updatedAt:new Date().toISOString()},{part:UNREAD_OCC}); return true; }catch{ return false; }
 }

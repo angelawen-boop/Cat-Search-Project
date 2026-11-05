@@ -17,7 +17,7 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 const { execFileSync } = require('child_process');
-const { fakeStore } = require('./fake_store.js');
+const { fakeStore, onStore } = require('./fake_store.js');
 
 const ROOT = path.join(__dirname, '..', '..');
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'cw-cloud-'));
@@ -52,7 +52,8 @@ const hers = JSON.parse(HERS_TEXT);
 // what the page wrote.
 const src = fs.readFileSync(path.join(ROOT, 'Cat_Watch.jsx'), 'utf8');
 const sec = src.slice(src.indexOf('// ── THE CLOUD LEDGER — storage'), src.indexOf('// ── END OF THE CLOUD LEDGER'));
-const C = new Function(sec + '\nreturn {cloudReadLive,cloudListSnapshots,cloudReadSnapshot,ledgerFingerprintText};')();
+const C = onStore(useCap => new Function('useCap', sec + '\nreturn {cloudReadLive,cloudListSnapshots,cloudReadSnapshot,ledgerFingerprintText};')(useCap),
+  ['cloudReadLive', 'cloudListSnapshots', 'cloudReadSnapshot']);
 
 const settle = async (ms = 50) => { await new Promise(r => setTimeout(r, ms)); };
 // WAIT FOR THE OUTCOME, NEVER A FIXED PAUSE (guide §4.1: a fixed pause answers

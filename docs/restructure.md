@@ -245,12 +245,18 @@ the first of them:
 
 ## Handover record — updated after every step
 
-**Where we are:** layers 0–5a moved; the side-by-side check widened (merged); 1A done. Next: 1B.
+**Where we are:** layers 0–5a moved; the side-by-side check widened (merged); 1A and 1B done. Next: 2a–2c and the guard.
 
 **Work items done:** the wider check (Opus; proved on every screen, a mixed review added by the
 coordinator). 1A (Sonnet): the parts hold no copy of the scraper's rules, the join writes them; only
 the summary examples are stored; gates re-run by the coordinator, side by side identical; 22 of 22
 suites (the old copy check folded into the join check).
+1B (Opus): `connections/store.jsx` is the only door (read, write, delete, list; the unread, read-only
+and claim rules inside it); no other part reaches the store; gates re-run, side by side identical; 22 of
+22. One difference, accepted as closer to her one-copy rule: the read-only check now runs at each write,
+so a save under way when another copy takes over stops before the switch instead of finishing (its
+new parts are left unused in the store). The two check pages under `build/` still reach the store
+themselves; they are not part of the app.
 
 **Done and proven:** the moving script, the join, the gates and side-by-side check; the proof passes
 (every layer moves with the page identical; all eight breaks caught; the moving script refuses a
