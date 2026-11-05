@@ -33,7 +33,7 @@ feature parts, each small enough for a session to read whole.
 
 | Layer | What moves | Branch | State |
 |---|---|---|---|
-| 0 | Set-up: every piece into `app/unsorted.jsx`; build, tests and `sync_shared.js` wired to the parts; the docs that say "edit Cat_Watch.jsx" corrected | `claude/restructure-L0` | not started |
+| 0 | Set-up: every piece into `app/unsorted.jsx`; build, tests and `sync_shared.js` wired to the parts; the docs that say "edit Cat_Watch.jsx" corrected | `claude/restructure-L0` | **done** — page identical, 23 of 23 suites |
 | 1 | Foundations: version, venues, the shared date/summary block, text tools, ISBN, date display | `claude/restructure-L1` | not started |
 | 2 | Connections: the web service, Claude, the store | `claude/restructure-L2` | not started |
 | 3 | Saving and logs: file, seed, cloud ledger, lookup log, sweep log, quarantine | `claude/restructure-L3` | not started |
@@ -104,7 +104,8 @@ the cloud copies drawer. She says "same", or what looks or behaves differently.
 > pieces not in the placement list, add each to `docs/restructure/placement.json` in the part where it
 > is used, and run the move again. Never edit `Cat_Watch.jsx` or retype code. Then run
 > `node build/restructure_gates.js --base main --layer <id>` and, through the watched runner,
-> `npm run test:app` (write the "Expected test run" line first). Commit on the branch with a clear
+> `npm run test:app` (write the "Expected test run" line first; if the hook refuses it, say so and leave
+it to the coordinator). Commit on the branch with a clear
 > message. Report: the gates' last lines, the test run's result line, every file you changed outside
 > `app/`, and anything you could not do. Do not merge, push to `main` or publish.
 > (Layer 0 also: wire `build/build_app.js`, `scraper/run_tests.js` and `build/sync_shared.js` to the
@@ -125,22 +126,26 @@ the cloud copies drawer. She says "same", or what looks or behaves differently.
 
 ## Start here — the next session's job
 
-Layer 0 has not started. Phase 0 (this file, the placement list, the moving script, the gates and their
-proof) is on `main`. Next: layer 0, per "Per layer — who does what".
+Layer 0 is merged: every piece is in `app/unsorted.jsx`, and the build, the test runner and
+`sync_shared.js` work on the parts. Next: layer 1, per "Per layer — who does what".
 
 ## Handover record — updated after every step
 
-**Where we are:** Phase 0 done; layer 0 next.
+**Where we are:** layer 0 merged; layer 1 next.
 
 **Done and proven:** the moving script, the join, the gates and side-by-side check; the proof passes
 (every layer moves with the page identical; all eight breaks caught; the moving script refuses a
 hand-edited page). Side by side, the app against itself: 602 of 602 values and every screen identical.
+Layer 0: gates 1 and 3 passed (re-run by the coordinator), PAGE IDENTICAL; `npm run test:app` 23 of 23;
+`build_app.js` and `run_tests.js` each refuse a hand-edited `Cat_Watch.jsx` (both proven); `sync_shared.js`
+write and `--check` leave the parts unchanged.
 
 **Decisions:** bottom-up order (her decision); a sub-agent does each layer's moving and testing, the
 coordinator sets up, re-checks and records (her decision); her test only where the page changes
 (page identical → nothing for her to see); placement is the coordinator's call, not hers.
 
-**Open problems:** none.
+**Open problems:** a sub-agent cannot start the watched test run — the test hook reads the
+coordinator's transcript for the "Expected test run" line — so the coordinator runs gate 2 itself.
 
 **Her reports:** none yet.
 
