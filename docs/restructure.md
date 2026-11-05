@@ -27,20 +27,30 @@ recorded as "done" while the promises the layers were sold on were not kept. The
 - **1B — one way to use the page's store.** Today about eight parts (the logs, Links/Pages/Paste, link
   venues, the cloud saving inside the main screen) each fetch the store and read and write it
   themselves; `connections/store.jsx` only hands it out. Promised in layer 2, quietly dropped.
-- **2 — foundations and connections depend on nothing above them.** Three links run the wrong way:
-  the venue list uses the Links venue rules (`hasNoChip` → `ownChip`, `isOcc`, `LINK_VENUES`); the ISBN
-  check reads web-search results (`resultText`); the web and Claude connections write to the lookup
-  log (`tapeCall`). Each to be rewired so the lower part no longer reaches up.
-- **3 — the feature rules out of the main screen, then the screen split.** The main screen holds
-  feature work, not only what she sees: the CSV import engine (matching rows to shows, folding a show
-  swept twice, building and applying the cards, the "Import complete" counts), the Links/Pages/Paste
-  read flow, Save now and the cloud save, Reset. First each goes to its feature's part, taking inputs
-  and giving results; then what is left — the list, cards, buttons, filters, sorting, the pop-ups —
-  is split into screens. The old layer 5b plan split by screen only and would have left these rules
-  inside a screen.
-- **4 — the Getty "The page came back empty." case**, the fault that started the restructure.
+- **2 — foundations and connections depend on nothing above them.** Three links run the wrong way, one
+  item each, each rewired so the lower part no longer reaches up:
+  - **2a** — the venue list uses the Links venue rules (`hasNoChip` → `ownChip`, `isOcc`, `LINK_VENUES`)
+    to decide an occasional venue's chip.
+  - **2b** — the ISBN check reads web-search results itself (`resultText`); it should take plain text.
+  - **2c** — the web and Claude connections write to the lookup log (`tapeCall`); they should report
+    each call and the log record it.
+- **3 — the machinery out of the main screen, each to its feature.** The main screen holds working
+  machinery, not only what she sees. Each moves to its feature's part, taking inputs and giving
+  results, never touching the screen:
+  - **3a** — the CSV import engine: matching sweep rows to her shows, merging a show swept twice,
+    building and applying the cards, the "Import complete" counts.
+  - **3b** — the job behind the Read button for Links, Pages and Paste.
+  - **3c** — Save now and the cloud save.
+  - **3d** — Reset.
+- **4 — the UI (her word: the user interface).** What is left once 3a–3d are out — the screens,
+  buttons, layout and design — split into its separate screens. The old layer 5b plan split by screen
+  only and would have left the machinery inside a screen.
 
-Items 1A–4 change code, so the gates run with `--changes-allowed` and her checklist applies.
+**Not part of this work (her decision):** any fault in what the app does (e.g. the Getty "The page came
+back empty." case). The restructure reorganizes and cleans up the code without changing what it does;
+faults are tackled after it.
+
+Items 1A–4 change code text (not what the app does), so the gates run with `--changes-allowed` and her checklist applies.
 
 ## How it works
 
@@ -80,7 +90,7 @@ Layers 0–5a only move pieces: the page stays the same file, character for char
 the main screen into separate components, so it changes code text; it is done one screen at a time.
 
 **After the move (not part of this project until she says):** the "words" list per feature — every
-sentence a feature shows her, in one place. (The Getty empty-page fix is now work item 4.)
+sentence a feature shows her, in one place.
 
 ## The gates — per layer, in this order
 
@@ -160,16 +170,16 @@ it to the coordinator). Commit on the branch with a clear
 Layers 0–5a are merged as a move only: every piece is in its feature part and `app/unsorted.jsx` is
 gone, the page still the same file, character for character. Nothing has been reorganized yet.
 
-**Next: the work items ("Work items now"), 1A first, then 1B, 2, 3, 4.** Each changes code, so before
+**Next: the work items ("Work items now"), in order: 1A, 1B, 2a–2c, 3a–3d, 4.** Each changes code, so before
 the first of them:
 1. **First, widen the side-by-side check** (`build/side_by_side.js`) to every screen the work items
    touch, by clicking through them in the stand-in browser: the Import pop-up and each of its four tabs,
    a card opened, the venue and theme chips, the Period sort, the cloud copies drawer, Save. Prove each
    new screen check fails on a deliberate one-word change, as the existing ones were proved.
-2. **Then write each item's design into this file before its code:** for item 3, which rules leave the
-   main screen for which part, then which screens become their own components, what state each owns,
+2. **Then write each item's design into this file before its code:** for 3a–3d, which machinery leaves the
+   main screen for which part; for 4, which screens become their own components, what state each owns,
    what passes between them. The coordinator decides; she is not asked.
-3. **One item (for item 3, one feature or screen) per step**, each by a sub-agent on its own branch: gates with
+3. **One item (for 4, one screen) per step**, each by a sub-agent on its own branch: gates with
    `--changes-allowed` (side by side must still be identical), then the test run. The coordinator
    re-runs both after every step.
 4. **When the branch is complete:** build, publish to a test page (never her app), give her the
@@ -177,7 +187,7 @@ the first of them:
 
 ## Handover record — updated after every step
 
-**Where we are:** layers 0–5a moved and merged, page identical; nothing reorganized yet. Next: the work items, 1A first (see "Work items now").
+**Where we are:** layers 0–5a moved and merged, page identical; nothing reorganized yet. Next: the work items in order, 1A first (see "Work items now").
 
 **Done and proven:** the moving script, the join, the gates and side-by-side check; the proof passes
 (every layer moves with the page identical; all eight breaks caught; the moving script refuses a
