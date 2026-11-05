@@ -228,3 +228,9 @@ async function readPendingLinks(){
 async function writePendingLinks(text){
   try{ await storeWrite(LINKS_DOC,{text:String(text||""),updatedAt:new Date().toISOString()},{part:UNREAD_LINKS}); return true; }catch{ return false; }
 }
+//@piece writePending
+
+// The waiting box, list or boxes stored, by kind ("links", "pages", "paste").
+function writePending(kind,value){
+  return kind==="paste"?writePendingPastes(value):kind==="pages"?writePendingPages(value):writePendingLinks(value);
+}
