@@ -389,6 +389,7 @@ async function run(oldFile, newFile, { changesAllowed, live }) {
       console.log('FAIL  live: the free Parallel server did not give the pages, so the Links read was not compared — ' + (e && e.message || e));
     }
   }
+  if (!live) console.log('note  the Links read is compared only with --live (it needs pages fetched live)');
   // Both versions run at once; each in its own process, so neither sees the other's clock or store.
   const runOne = (f, k) => new Promise(resolve => {
     const out = path.join(tmp, k + '.json');
@@ -407,8 +408,15 @@ async function run(oldFile, newFile, { changesAllowed, live }) {
       resolve(JSON.parse(fs.readFileSync(out, 'utf8')));
     });
   });
-  const snaps = await Promise.all([runOne(oldFile, 0), runOne(newFile, 1)]);
-  const [o, n] = snaps;
+  const [o, n] = await Promise.all([runOne(oldFile, 0), runOne(newFile, 1)]);
+  diffs += compare(o, n, changesAllowed);
+  console.log(diffs ? `SIDE BY SIDE: ${diffs} difference(s).` : 'SIDE BY SIDE: identical.');
+  process.exit(diffs ? 1 : 0);
+}
+
+// Old against new, two snapshots; prints each value and screen, returns the number of differences.
+function compare(o, n, changesAllowed) {
+  let diffs = 0;
   const names = [...new Set([...Object.keys(o.values), ...Object.keys(n.values)])];
   let compared = 0, fnSkipped = 0;
   for (const k of names) {
@@ -434,7 +442,6 @@ async function run(oldFile, newFile, { changesAllowed, live }) {
     else if (!inN) console.log(`DIFF  value ${k}: only in the old version`);
     else { const d = firstDifference(o.values[k], n.values[k]); console.log(`DIFF  value ${k}:\n   old …${d.old}…\n   new …${d.now}…`); }
   }
-  const valueDiffs = diffs;
   console.log(changesAllowed
     ? `values: ${compared} compared, functions' text set aside (${fnSkipped} changed), every other value checked`
     : `${names.length - diffs} of ${names.length} top-level values identical`);
@@ -447,15 +454,18 @@ async function run(oldFile, newFile, { changesAllowed, live }) {
     console.log(`DIFF  screen: ${s}, at character ${d.at}:\n   old …${d.old}…\n   new …${d.now}…`);
   }
   if (!/proposed change/.test(o.screens.review || '')) { diffs++; console.log('FAIL  the review screen never opened — the check did not run'); }
-  console.log(diffs ? `SIDE BY SIDE: ${diffs} difference(s)${valueDiffs ? ` (${valueDiffs} in values)` : ''}.` : 'SIDE BY SIDE: identical.');
-  process.exit(diffs ? 1 : 0);
+  return diffs;
 }
 
 const args = process.argv.slice(2);
 const flags = { changesAllowed: args.includes('--changes-allowed'), live: args.includes('--live') };
 const rest = args.filter(a => a !== '--changes-allowed' && a !== '--live');
 if (rest[0] === '--fetch-live') fetchLive(rest[1]).then(() => process.exit(0), e => { console.log(String(e && e.message || e)); process.exit(1); });
-else if (rest[0] === '--snapshot') snapshot(rest[1], rest[2], rest[3]).catch(e => { console.log(String(e && e.stack || e)); process.exit(1); });
+else if (rest[0] === '--compare') {   // two snapshots already taken (build/side_by_side_proof.js)
+  const d = compare(...[rest[1], rest[2]].map(f => JSON.parse(fs.readFileSync(f, 'utf8'))), flags.changesAllowed);
+  console.log(d ? `SIDE BY SIDE: ${d} difference(s).` : 'SIDE BY SIDE: identical.');
+  process.exit(d ? 1 : 0);
+} else if (rest[0] === '--snapshot') snapshot(rest[1], rest[2], rest[3]).catch(e => { console.log(String(e && e.stack || e)); process.exit(1); });
 else if (rest[0] === '--base') {
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'cw-sbs-'));
   const old = path.join(tmp, 'old.jsx');
