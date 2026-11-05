@@ -179,7 +179,18 @@ must refuse a hand-edited page. Run it again after any change to the tools.
 Claude's recorded replies were named as an input when this was planned; they are not needed for
 layers 0–4f, because the gates prove every piece of the lookup is unchanged letter for letter.
 
-## Her checklist (layer 5b and anything else that changes the page)
+## Her tests — three rounds (her decision)
+
+The side-by-side check runs a stand-in browser with a fake store and a stand-in Claude; it cannot reach
+her real store, her real Claude or a real Find catalogue. So she tests on a test page (never her app)
+three times, each before the next stage starts:
+1. **After 1A–2c** — they rewired every save to the store (1B) and how every web and Claude call is
+   logged (2c). Her checklist, with one Find catalogue and one Save now then the cloud copies drawer.
+2. **After 3a–3d** — the import engine, the Read job, Save and Reset moved.
+3. **After 4** — the screen split.
+A round's faults are fixed before the next stage starts. Her app is published only when she says.
+
+## Her checklist (every test round)
 
 On the test page: load her ledger export; scroll the list and open a few cards; star and unstar one;
 use the venue and theme chips and the Period sort; Import → CSV with a sweep file, look through the
@@ -241,12 +252,13 @@ the first of them:
 3. **One item (for 4, one screen) per step**, each by a sub-agent on its own branch: gates with
    `--changes-allowed` (side by side must still be identical), then the test run. The coordinator
    re-runs both after every step.
-4. **When the branch is complete:** build, publish to a test page (never her app), give her the
-   checklist below, wait for "same" or what differs. Merge only then; publish to her app when she says.
+4. **At each test round ("Her tests — three rounds"):** build from `main`, publish to the
+   restructure test page (never her app), give her the checklist, wait for "same" or what differs.
+   Publish to her app only when she says.
 
 ## Handover record — updated after every step
 
-**Where we are:** layers 0–5a moved; the side-by-side check widened (merged); 1A, 1B, 2a–2c and the guard done. Next: 3a.
+**Where we are:** layers 0–5a moved; the side-by-side check widened (merged); 1A, 1B, 2a–2c and the guard done. Next: her test round 1, then 3a.
 
 **Work items done:** the wider check (Opus; proved on every screen, a mixed review added by the
 coordinator). 1A (Sonnet): the parts hold no copy of the scraper's rules, the join writes them; only
