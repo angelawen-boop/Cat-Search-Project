@@ -315,6 +315,42 @@ async function snapshot(jsxFile, outFile, liveFile) {
   const reviewed = await until(() => /proposed change/.test(text()) && !!button(/^Cancel import$/));
   await steady();
   capture('review', reviewed, screen);
+  // A mixed review first: cards decided in turn add, reject, never add, left undecided; field edits
+  // accepted and rejected in turn; then the partial apply. Every outcome the apply counts is reached.
+  await step('appliedMixed', async () => {
+    if (!reviewed) throw new Error('no review to apply');
+    const expand = button(/^Expand all venues$/); if (expand) { click(expand); await steady(); }
+    const cardBtns = buttons(/^(\u2713 )?Add new entry$/);
+    const fieldBtns = buttons(/^(\u2713 )?Accept edit$/);
+    if (cardBtns.length < 4) throw new Error('fewer than four new-entry cards to mix');
+    cardBtns.forEach((b, k) => {
+      const row = b.parentElement, pick = k % 4;
+      if (pick === 3) return;
+      const want = pick === 0 ? /Add new entry$/ : pick === 1 ? /Reject$/ : /Never add this$/;
+      const t = [...row.querySelectorAll('button')].find(x => want.test(x.textContent.trim()));
+      if (t) click(t);
+    });
+    fieldBtns.forEach((b, k) => {
+      if (k % 2 === 0) { click(b); return; }
+      const t = [...b.parentElement.querySelectorAll('button')].find(x => /^Reject$/.test(x.textContent.trim()));
+      if (t) click(t);
+    });
+    await steady();
+    capture('reviewMixed', true, screen);
+    const partial = button(/^Update with the \d+ I.ve decided$/);
+    if (!partial) throw new Error('no partial apply offered');
+    click(partial);
+    await until(() => !!button(/^Continue$/));
+    click(button(/^Continue$/));
+    const ok = await until(() => /Import complete/.test(text()) && !button(/^Cancel import$/));
+    await steady();
+    capture('appliedMixed', ok, screen);
+    capture('appliedMixed-store', ok, storeText);
+    // The same sweep file again, for the all-accept apply below.
+    give('input[type=file][accept=".csv,text/csv"]', [new win.File([fs.readFileSync(SWEEP, 'utf8')], 'sweep.csv', { type: 'text/csv' })]);
+    await until(() => /proposed change/.test(text()) && !!button(/^Cancel import$/));
+    await steady();
+  });
   await step('applied', async () => {
     if (!reviewed) throw new Error('no review to apply');
     const expand = button(/^Expand all venues$/); if (expand) { click(expand); await steady(); }

@@ -108,7 +108,9 @@ drawer; reading her 15 Oct sweep file, accepting every card and applying (screen
 complete" line); Reset. The Read job for Links, Pages and Paste runs on the same inputs in both: a
 page fetched live once per run through Parallel and her saved pages, Claude's reply the same fixed reply
 to both — this proves old and new do the same with the same reply, not that the reading is good.
-Each check was shown to fail on a deliberate one-word change.
+Each check was shown to fail on a deliberate one-word change. A mixed review (cards added, rejected,
+never added and left undecided; field edits accepted and rejected; the partial apply) runs before the
+all-accept one. Her test ledger has no periods, so every ninth row is given one for the Period sort.
 
 ## How it works
 
@@ -168,7 +170,7 @@ sentence a feature shows her, in one place.
 A layer that fails a gate is not merged. **The coordinator re-runs gates 1–3 itself** and reads the
 sub-agent's change; a sub-agent's "passed" is never taken as the result.
 
-**The gates are proven:** `node build/restructure_gates_proof.js` (about four minutes, no network) moves
+**The gates are proven:** `node build/restructure_gates_proof.js` (about fifteen minutes; `build/side_by_side_proof.js`, about eleven, proves each screen check) moves
 every layer on a copy with the gates passing and the page identical, then makes eight breaks one at a
 time (a piece deleted, doubled, changed by one character, moved to the wrong part, reordered, stray
 text, an unplaced new piece, `Cat_Watch.jsx` edited by hand) — each must fail, and the moving script
@@ -267,7 +269,9 @@ proven identical on its own.
 
 **Decisions:** bottom-up order (her decision); a sub-agent does each layer's moving and testing, the
 coordinator sets up, re-checks and records (her decision); one sub-agent at a time, no higher than
-Opus at medium effort (her decision); her test only where the page changes
+Opus at medium effort (her decision); the coordinator picks the model for each task by the judgement
+it needs — Sonnet for contained, easily checked work, Opus where behaviour is subtle — never the highest
+by default, and names it in the end report (her decision); her test only where the page changes
 (page identical → nothing for her to see); placement is the coordinator's call, not hers.
 
 **Open problems:** a sub-agent cannot start the watched test run — the test hook reads the
