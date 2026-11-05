@@ -4108,11 +4108,14 @@ function mcpTrouble(e){
   if(code==="cancelled")          return "Search stopped.";
   return "Search failed ("+(code||"unknown")+").";
 }
+// Who is told of each search, page open and Claude call: a part registers with onCall; the connections never name it.
+function onCall(fn){ (onCall.listeners=onCall.listeners||[]).push(fn); }
+function announceCall(kind,input,output,t0){ for(const fn of onCall.listeners||[])fn(kind,input,output,t0); }
 
 // Ask the connector. Returns {ok, results, detail} — never throws.
 async function searchWeb(objective,queries){
   const t0=Date.now(), out=await searchWebCall(objective,queries);
-  tapeCall("search",{objective,queries},out,t0);
+  announceCall("search",{objective,queries},out,t0);
   return out;
 }
 async function searchWebCall(objective,queries){
@@ -4140,7 +4143,7 @@ async function searchWebCall(objective,queries){
 // Cassatt's EAN. The shelf stays excerpts — a call is capped at ~25,000 characters.
 async function fetchPage(url,objective,queries,opts){
   const t0=Date.now(), out=await fetchPageCall(url,objective,queries,opts);
-  tapeCall("open",{urls:Array.isArray(url)?url:[url],objective,queries,full:!!(opts&&opts.full)},out,t0);
+  announceCall("open",{urls:Array.isArray(url)?url:[url],objective,queries,full:!!(opts&&opts.full)},out,t0);
   return out;
 }
 async function fetchPageCall(url,objective,queries,opts){
@@ -4204,7 +4207,7 @@ function shopPagesFor(mu,title){
 // which writes the description (her decision: flat descriptions on the default tier).
 async function readResults(prompt,tier="default"){
   const t0=Date.now(), out=await readResultsCall(prompt,tier);
-  tapeCall("claude",{prompt},out,t0);
+  announceCall("claude",{prompt},out,t0);
   return out;
 }
 async function readResultsCall(prompt,tier){
@@ -4268,6 +4271,7 @@ function tapeCall(kind,input,output,t0){
   const t=lookupTape;
   if(t)t.calls.push({n:t.calls.length+1,kind,at:t0-t.t0,ms:Date.now()-t0,input,output});
 }
+onCall(tapeCall);
 const cardFields=r=>Object.fromEntries(CARD_FIELDS.map(k=>[k,r?(r[k]===undefined?null:r[k]):null]));
 async function gzipBase64(text){
   if(typeof CompressionStream==="undefined")return null;

@@ -9,7 +9,7 @@
 // which writes the description (her decision: flat descriptions on the default tier).
 async function readResults(prompt,tier="default"){
   const t0=Date.now(), out=await readResultsCall(prompt,tier);
-  tapeCall("claude",{prompt},out,t0);
+  announceCall("claude",{prompt},out,t0);
   return out;
 }
 //@piece readResultsCall
