@@ -264,7 +264,7 @@ change code" and "Her tests".
 
 ## Handover record — updated after every step
 
-**Where we are:** 1A, 1B, 2a–2c and the guard done; her test round 1 passed (her checklist, on the test page set up from her app's store). 3a, 3b and 3c done. Next: 3d.
+**Where we are:** 1A, 1B, 2a–2c and the guard done; her test round 1 passed (her checklist, on the test page set up from her app's store). 3a–3d done. Next: her test round 2.
 
 **Work items done:** the wider check (Opus; proved on every screen, a mixed review added by the
 coordinator). 1A (Sonnet): the parts hold no copy of the scraper's rules, the join writes them; only
@@ -300,6 +300,10 @@ a new part, `saving/cloud_jobs.jsx`, handing back their sentences; the screen ke
 and the timers that trigger them. The cloud suites' counts unchanged (20, 54, 12, 14). Gates re-run by
 the coordinator, side by side identical; 22 of 22. Noted, not fixed: the Save panel's "File name:"
 preview is still worked out on the screen, without the trim and 80-character cut the save applies.
+3d (Sonnet): Reset and Load — the starter set and its sentences, reading a ledger file and its error and
+loaded sentences, the Load and Reset confirm questions — are functions in the saving parts; resetting one
+searched card is a function beside `resetCard` in the lookup part. Gates re-run by the coordinator, side
+by side identical; 22 of 22.
 
 **Done and proven:** the moving script, the join, the gates and side-by-side check; the proof passes
 (every layer moves with the page identical; all eight breaks caught; the moving script refuses a
