@@ -60,6 +60,56 @@ faults are tackled after it.
 
 Items 1A–4 change code text (not what the app does), so the gates run with `--changes-allowed` and her checklist applies.
 
+## The design of each item (the coordinator's, written before any code)
+
+**Every item keeps what the app does exactly as it is** — same screens, same store contents, same
+sentences, same results. Only where code sits and how it is wired changes. The side-by-side check
+proves it (below).
+
+- **1A.** The parts hold no copy of the scraper's rules. The SHARED piece becomes one line that tells
+  the join to take the rules from the scraper's own files (`dates.js`, `compress_prompt.md`,
+  `compress.js`, `boilerplate.js`, `bot_check.js`, `answer_check.js`, the scraper's VENUES) each time
+  it joins; the builders move out of `sync_shared.js` into one module the join uses.
+  `Cat_Watch.jsx` is the built page, so it still holds the text, as any built file does. **The one
+  exception, said plainly:** the summary examples are not rules but pairs taken from the sweeps on disk,
+  re-taken at every build; they stay stored in the part, refreshed by `sync_shared.js --examples`.
+  `app_join.js --check` fails when the scraper's rules changed and the page was not joined again.
+- **1B.** `connections/store.jsx` is the only door to the store: read one record, write one, delete one,
+  list a collection. It owns the rules every caller repeats today: no store reached, the read-only copy
+  (writes refused; the one-tab claim alone may write), and the unread rule (a failed read marks that
+  part unread and its writes refuse). No other part asks for the store, holds it, or reads or writes a
+  record itself. Each feature keeps its own sentences.
+- **2a.** Everything the venue list does with occasional and link venues (the chip a venue files under,
+  and what that needs) moves to the link-venue part; the venue list knows only its venues.
+- **2b.** The ISBN check takes plain text; the lookup turns search results into text before asking it.
+- **2c.** The web and Claude connections announce each call; the lookup log listens and records it.
+  The connections never name the log.
+- **The guard, from 2 on:** `build/structure_check.js`, run by the test runner and the gates, fails
+  when a part names anything from a part above it (foundations, then connections, then saving and logs,
+  then the features, then the screens), or when any part but the store's door reaches the store; from
+  item 3 on, also when a part outside the screens uses anything of the screen's (state, drawing).
+- **3a–3d.** Each piece of machinery leaves the main screen for its feature as functions that take
+  what they need and hand back a result (and, for a long job, report progress as they go). They decide
+  what happens and what is said; the screen calls them and shows what comes back. 3a → the CSV part
+  (matching, folding, building the cards, applying them, the counts, recording the sweep); 3b → the
+  Links/Pages/Paste parts (the Read job, its progress reports, the pending lists); 3c → the cloud part
+  (Save now, the automatic save, the safety copies, the one-tab claim and heartbeat); 3d → the saving
+  part (Reset and what it loads and writes).
+- **4.** Written here once 3a–3d are done, from what is left: which screens become their own
+  components, what each holds, what passes between them.
+
+## The side-by-side check for items that change code
+
+Run by the gates with `--changes-allowed`: a function's text may differ, nothing else may. Every table
+and list the page defines, every screen and every record written to the store must be identical, old
+and new, through: opening; loading her test ledger; the Import pop-up and each of its four tabs; the
+venue and theme chips; the Period sort; a card opened; Save now (store and download); the cloud copies
+drawer; reading her 15 Oct sweep file, accepting every card and applying (screen, store, the "Import
+complete" line); Reset. The Read job for Links, Pages and Paste runs on the same inputs in both: a
+page fetched live once per run through Parallel and her saved pages, Claude's reply the same fixed reply
+to both — this proves old and new do the same with the same reply, not that the reading is good.
+Each check was shown to fail on a deliberate one-word change.
+
 ## How it works
 
 - **`app/` holds the parts; they are what gets edited.** Each part is a list of pieces, each opened by a
@@ -180,13 +230,10 @@ gone, the page still the same file, character for character. Nothing has been re
 
 **Next: the work items ("Work items now"), in order: 1A, 1B, 2a–2c, 3a–3d, 4.** Each changes code, so before
 the first of them:
-1. **First, widen the side-by-side check** (`build/side_by_side.js`) to every screen the work items
-   touch, by clicking through them in the stand-in browser: the Import pop-up and each of its four tabs,
-   a card opened, the venue and theme chips, the Period sort, the cloud copies drawer, Save. Prove each
-   new screen check fails on a deliberate one-word change, as the existing ones were proved.
-2. **Then write each item's design into this file before its code:** for 3a–3d, which machinery leaves the
-   main screen for which part; for 4, which screens become their own components, what state each owns,
-   what passes between them. The coordinator decides; she is not asked.
+1. **First, widen the side-by-side check** as "The side-by-side check for items that change code"
+   says, and prove each new check fails on a deliberate one-word change.
+2. **Each item's design is in "The design of each item"**; item 4's is written there once 3a–3d are
+   done. The coordinator decides; she is not asked.
 3. **One item (for 4, one screen) per step**, each by a sub-agent on its own branch: gates with
    `--changes-allowed` (side by side must still be identical), then the test run. The coordinator
    re-runs both after every step.

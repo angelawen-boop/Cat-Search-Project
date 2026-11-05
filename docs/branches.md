@@ -24,7 +24,7 @@ Branches separate in-progress work from known-good work, never components.
 | `claude/artist-filtering-show-titles-v9kb5u` | Search for selected words and the Art Watch name — merged into `main` at 57; kept as history. Its test page: https://claude.ai/artifact/NykJqYtkYaixcM2qr47Hbp |
 | `claude/met-connection-experiments` | Abandoned — do not merge |
 | `claude/playwright-scraper-prototype-z68iko` | Abandoned — merging it would undo the current scraper |
-| `claude/restructure-L0`, `-L1` … `-L5` | One per restructure layer (docs/restructure.md): opened from `main`, merged back once its gates pass; kept as history |
+| `claude/restructure-L0`, `-L1` … `-L5a`, then `claude/restructure-1A`, `-1B`, `-2`, `-3a` … `-3d`, `-4`, `claude/restructure-check` | One per restructure layer or work item (docs/restructure.md): opened from `main`, merged back once its gates pass; kept as history |
 
 **Holding a push for another session — her decision.** When she says a
 session must wait for another:
