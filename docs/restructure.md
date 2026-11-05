@@ -265,7 +265,7 @@ the first of them:
 
 ## Handover record — updated after every step
 
-**Where we are:** layers 0–5a moved; the side-by-side check widened (merged); 1A, 1B, 2a–2c and the guard done. Her test round 1 is on the test page; waiting for her answer, then 3a.
+**Where we are:** 1A, 1B, 2a–2c and the guard done; her test round 1 passed (her checklist, on the test page set up from her app's store). Next: 3a.
 
 **Work items done:** the wider check (Opus; proved on every screen, a mixed review added by the
 coordinator). 1A (Sonnet): the parts hold no copy of the scraper's rules, the join writes them; only
