@@ -269,7 +269,7 @@ function printingsOf(cands,card,results,museumId){
   const out=[];
   for(const c of (Array.isArray(cands)?cands:[])){
     if(!c||!c.title)continue;
-    const isbn=toIsbn13(c.isbn13,results);
+    const isbn=toIsbn13(c.isbn13,resultsText(results));
     if(!isbn||isbn===card.isbn||out.some(v=>v.isbn13===isbn))continue;
     if(c.language&&card.lang&&!sameLang(c.language,card.lang))continue;
     const titles=[card.title,...(card.titles||[])].filter(Boolean);
@@ -303,7 +303,7 @@ function editionsOf(editions,orig,results,museumId,log){
   const out=[];
   for(const ed of (Array.isArray(editions)?editions:[])){
     if(!ed||!ed.title||!ed.language||(orig.lang&&sameLang(ed.language,orig.lang)))continue;
-    const isbn=toIsbn13(ed.isbn13,results||[]);
+    const isbn=toIsbn13(ed.isbn13,resultsText(results||[]));
     if(!isbn||isbn===orig.isbn13||out.some(v=>v.isbn13===isbn))continue;
     const onV=onIsbn(results,isbn);
     const coded=publisherOnIsbnResults(onV,isbn);

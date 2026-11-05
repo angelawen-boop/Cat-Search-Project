@@ -147,7 +147,7 @@ async function lookupCatalogue(row,hooks){
     log.push(s1.detail);
     if(!s1.ok)return done({row,ok:false});
     blocked=s1.blocked||false;
-    if(s1.data){ hit=settle(row,s1.data,dom,"",true,false,s1.results); fromShop=!!hit; }
+    if(s1.data){ hit=settle(row,s1.data,dom,"",true,false,resultsText(s1.results)); fromShop=!!hit; }
   }
   if(!hit){
     io.phase("web");
@@ -190,7 +190,7 @@ async function lookupCatalogue(row,hooks){
         catalogueTitle:null,isbn13:null,publisher:d2.publisher||null,
         publisherUrl:publisherLinkOf(d2.publisherUrl,d2.publisher,dom,row.museumId),publisherResult:null,shopUrl:null}};
     }else{
-      hit=await confirmShopLink(settle(row,d2,dom,"",false,blocked,s2.results),io);
+      hit=await confirmShopLink(settle(row,d2,dom,"",false,blocked,resultsText(s2.results)),io);
       if(hit&&hit.detail)log.push(hit.detail.trim());
       if(!hit||!hit.row||hit.row.hasCatalogue!=="yes")return done({ok:true,row:composeRow(row,{found:false,blocked})});
     }
@@ -248,7 +248,7 @@ async function lookupCatalogue(row,hooks){
         if(!rd.ok)fault(rd.detail);
         else{
           const d=rd.data||{};
-          if(!F.isbn){ const c=toIsbn13(d.isbn13,res); if(c){ F.isbn=c; log.push("ISBN read off the book’s page: "+c); } }
+          if(!F.isbn){ const c=toIsbn13(d.isbn13,resultsText(res)); if(c){ F.isbn=c; log.push("ISBN read off the book’s page: "+c); } }
           offerPublisher(d.publisher,"the book’s page");
           if(!F.publisherUrl)F.publisherUrl=publisherLinkOf(d.publisherUrl,F.publisher,dom,row.museumId);
         }
@@ -302,7 +302,7 @@ async function lookupCatalogue(row,hooks){
     // Matched on the book's title once it is known, never the show's (Hubert Robert: the
     // show's dates matched only a French bookseller's listing).
     if(!F.isbn){ const c=isbnInResults(factsRes,F.title||book); if(c){ F.isbn=c; log.push("ISBN read off the search results in code: "+c); } }
-    if(!F.isbn&&read){ const c=toIsbn13(read.isbn13,given); if(c){ F.isbn=c; log.push("ISBN from the read, printed in the results: "+c); } }
+    if(!F.isbn&&read){ const c=toIsbn13(read.isbn13,resultsText(given)); if(c){ F.isbn=c; log.push("ISBN from the read, printed in the results: "+c); } }
     if(read)notABooklet(F,given,pagesPrinted(read.pages,given),log);
     // The publisher, in order of trust (her decision, Botticelli).
     const onIsbn=F.isbn?publisherOnIsbnResults(given,F.isbn):null;

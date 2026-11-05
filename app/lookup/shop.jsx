@@ -409,7 +409,7 @@ async function shopStep(row,io){
   }
   const data={...(r1.data||{})};
   // An ISBN the read gave is taken only if the shop's pages print it (toIsbn13).
-  data.isbn13=toIsbn13(data.isbn13,shop.results);
+  data.isbn13=toIsbn13(data.isbn13,resultsText(shop.results));
   // The title as the shop's pages print it — titleAsPrinted.
   if(data.found&&data.catalogueTitle){
     const tp=titleAsPrinted(data.catalogueTitle,shop.results);
@@ -487,10 +487,10 @@ async function readBookPage(hit,venue,dom,io){
   detail=detail+"\n"+rd.detail;
   if(!rd.ok){
     if(!coded)return{...hit,detail,trouble:rd.detail};
-    return{...hit,detail,trouble:rd.detail,row:applyIsbnFill(r,{isbn13:coded},dom,f.results)};
+    return{...hit,detail,trouble:rd.detail,row:applyIsbnFill(r,{isbn13:coded},dom,resultsText(f.results))};
   }
   const o={...(rd.data||{}),...(coded?{isbn13:coded}:{})};
-  const filled=applyIsbnFill(r,o,dom,f.results);
+  const filled=applyIsbnFill(r,o,dom,resultsText(f.results));
   detail=detail+(filled.isbn13?"\nISBN read off the page: "+filled.isbn13
                               :"\nNo ISBN on that page either.");
   return{...hit,detail,row:filled};

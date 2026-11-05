@@ -71,7 +71,7 @@ function lift(script, calls) {
     return null;
   } } };
   return new Function('React', 'window', 'document', 'localStorage',
-    code + '\n;return { readResults, lastJsonObject, lookupCatalogue, settle, toIsbn13, isbnInText, titleAsPrinted, resultsCarrying, titleKey, foldText, editionsOf, printingsOf, foldCoEditions, versionOrder, venueFirst, storedVersion, cityOf, yearOf, versionBlocks, pickRow, englishLine, publisherNote, shopHeadline, bookLinkOnShelf, sameCatalogue, publisherDomainFrom, publisherLinkOf, lookupIo, MU, SHOP_BLOCKED_FOUND_REST, SHOP_BLOCKED_NONE_REST, pagesPrinted, differentBook, oneBook, isbnInResults, pagesOfIsbn, notABooklet, alsoLine, bindingOfIsbn, museumImprintOnly, registerOccasional, recheckShopRow, sameBookOnPage };')(
+    code + '\n;return { readResults, lastJsonObject, lookupCatalogue, settle, toIsbn13, resultsText, isbnInText, titleAsPrinted, resultsCarrying, titleKey, foldText, editionsOf, printingsOf, foldCoEditions, versionOrder, venueFirst, storedVersion, cityOf, yearOf, versionBlocks, pickRow, englishLine, publisherNote, shopHeadline, bookLinkOnShelf, sameCatalogue, publisherDomainFrom, publisherLinkOf, lookupIo, MU, SHOP_BLOCKED_FOUND_REST, SHOP_BLOCKED_NONE_REST, pagesPrinted, differentBook, oneBook, isbnInResults, pagesOfIsbn, notABooklet, alsoLine, bindingOfIsbn, museumImprintOnly, registerOccasional, recheckShopRow, sameBookOnPage };')(
     React, win, win.document, win.localStorage);
 }
 const api = lift({ mcp: () => ({ payload: { results: [] } }), sample: () => ({}) }, []);
@@ -120,11 +120,11 @@ const searches = calls => calls.filter(c => c.tool === 'web_search').map(c => c.
   {
     const dom = 'boutique.louvre.fr';
     const r0 = row('louvre', 'Test Show');
-    let h = api.settle(r0, { found: true, catalogueTitle: 'Test Book', shopUrl: null }, dom, '', true, false, []);
+    let h = api.settle(r0, { found: true, catalogueTitle: 'Test Book', shopUrl: null }, dom, '', true, false, '');
     eq([h.row.shopState, h.row.shopUrl], ['shop', null], 'BA-001: found by the shop step with no link — in the shop, no link of its own');
-    h = api.settle(r0, { found: true, catalogueTitle: 'Test Book', shopUrl: 'https://publisher.test/book' }, dom, '', true, false, []);
+    h = api.settle(r0, { found: true, catalogueTitle: 'Test Book', shopUrl: 'https://publisher.test/book' }, dom, '', true, false, '');
     eq([h.row.shopState, h.row.shopUrl], ['shop', null], 'BA-002: a link off the shop is not filed as the shop link, and the book stays in the shop');
-    h = api.settle(r0, { found: true, catalogueTitle: 'Test Book', shopUrl: 'https://boutique.louvre.fr/en/product/1-test-book.html' }, dom, '', true, false, []);
+    h = api.settle(r0, { found: true, catalogueTitle: 'Test Book', shopUrl: 'https://boutique.louvre.fr/en/product/1-test-book.html' }, dom, '', true, false, '');
     eq([h.row.shopState, h.row.shopUrl], ['shop', 'https://boutique.louvre.fr/en/product/1-test-book.html'], 'BA-003: a link on the shop is kept');
   }
 
@@ -133,7 +133,7 @@ const searches = calls => calls.filter(c => c.tool === 'web_search').map(c => c.
     eq(api.toIsbn13('9781588398131'), null, 'IG-001: a wrong check digit is refused');
     eq(api.toIsbn13('9781588398130', 'A page about another book. ISBN 9782754117425'), null, 'IG-002: an ISBN the fetched text does not print is refused');
     eq(api.toIsbn13('9781588398130', 'ISBN: 978-1-58839-813-0'), '9781588398130', 'IG-003: printed with hyphens, it is taken');
-    eq(api.toIsbn13('9780847899289', [TUM]), '9780847899289', 'IG-004: printed in a fetched result, it is taken');
+    eq(api.toIsbn13('9780847899289', api.resultsText([TUM])), '9780847899289', 'IG-004: printed in a fetched result, it is taken');
     eq(api.toIsbn13('9780847899289', 'ISBN 0847899284'), '9780847899289', 'IG-005: printed as its 10-digit form, it is taken');
     eq(api.isbnInText('9781588398130', 'Order 19781588398130'), false, 'IG-006: never as part of a longer number');
   }

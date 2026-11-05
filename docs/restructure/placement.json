@@ -432,6 +432,7 @@
   "readPendingLinks": "import/pages_paste.jsx",
   "writePendingLinks": "import/pages_paste.jsx",
   "needsPageRead": "lookup/find.jsx",
+  "resultsText": "lookup/find.jsx",
   "applyIsbnFill": "lookup/find.jsx",
   "titleKey": "lookup/find.jsx",
   "titleAsPrinted": "lookup/find.jsx",

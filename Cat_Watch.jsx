@@ -4032,14 +4032,14 @@ function isbn10to13(v){
 }
 
 // Every ISBN entering the app goes through toIsbn13: a 13 whose check digit holds, or a
-// converted valid 10, else nothing. With `seen` (the text or results the app fetched)
+// converted valid 10, else nothing. With `seen` (the plain text the app fetched)
 // it is taken only if its digits, 13 or 10, are printed there — a read cannot invent
 // one. cleanIsbn stays as it is: it also shows ISBNs already in her ledger.
 const toIsbn13=(v,seen)=>{
   const d=String(v||"").replace(/[^0-9]/g,"");
   const isbn=d.length===13?(isbn13Checks(d)?d:null):isbn10to13(v);
   if(!isbn||seen===undefined)return isbn;
-  return isbnInText(isbn,Array.isArray(seen)?seen.map(resultText).join("\n"):seen)?isbn:null;
+  return isbnInText(isbn,seen)?isbn:null;
 };
 function isbn13to10(d){
   if(!/^978\d{10}$/.test(d))return null;
@@ -4613,9 +4613,11 @@ function needsPageRead(hit){
   return !!(hit&&hit.ok&&hit.pageUrl&&hit.row&&hit.row.hasCatalogue==="yes"
             &&(!hit.row.isbn13||!hit.row.publisher));
 }
+// The plain text of a list of search results (a text or nothing passes through): what toIsbn13 checks an ISBN against.
+function resultsText(rs){ return Array.isArray(rs)?rs.map(resultText).join("\n"):rs; }
 
 // Fills blanks only (docs/app.md §1 "The ISBN"): a value already on the row stands;
-// anything not a real ISBN, or not printed in `seen`, is refused; a page yielding
+// anything not a real ISBN, or not printed in `seen` (plain text), is refused; a page yielding
 // nothing leaves the row as it was.
 function applyIsbnFill(row,o,dom,seen){
   const isbn=toIsbn13(o&&o.isbn13,seen);
@@ -5630,7 +5632,7 @@ async function shopStep(row,io){
   }
   const data={...(r1.data||{})};
   // An ISBN the read gave is taken only if the shop's pages print it (toIsbn13).
-  data.isbn13=toIsbn13(data.isbn13,shop.results);
+  data.isbn13=toIsbn13(data.isbn13,resultsText(shop.results));
   // The title as the shop's pages print it — titleAsPrinted.
   if(data.found&&data.catalogueTitle){
     const tp=titleAsPrinted(data.catalogueTitle,shop.results);
@@ -5704,10 +5706,10 @@ async function readBookPage(hit,venue,dom,io){
   detail=detail+"\n"+rd.detail;
   if(!rd.ok){
     if(!coded)return{...hit,detail,trouble:rd.detail};
-    return{...hit,detail,trouble:rd.detail,row:applyIsbnFill(r,{isbn13:coded},dom,f.results)};
+    return{...hit,detail,trouble:rd.detail,row:applyIsbnFill(r,{isbn13:coded},dom,resultsText(f.results))};
   }
   const o={...(rd.data||{}),...(coded?{isbn13:coded}:{})};
-  const filled=applyIsbnFill(r,o,dom,f.results);
+  const filled=applyIsbnFill(r,o,dom,resultsText(f.results));
   detail=detail+(filled.isbn13?"\nISBN read off the page: "+filled.isbn13
                               :"\nNo ISBN on that page either.");
   return{...hit,detail,row:filled};
@@ -5912,7 +5914,7 @@ function printingsOf(cands,card,results,museumId){
   const out=[];
   for(const c of (Array.isArray(cands)?cands:[])){
     if(!c||!c.title)continue;
-    const isbn=toIsbn13(c.isbn13,results);
+    const isbn=toIsbn13(c.isbn13,resultsText(results));
     if(!isbn||isbn===card.isbn||out.some(v=>v.isbn13===isbn))continue;
     if(c.language&&card.lang&&!sameLang(c.language,card.lang))continue;
     const titles=[card.title,...(card.titles||[])].filter(Boolean);
@@ -5949,7 +5951,7 @@ function editionsOf(editions,orig,results,museumId,log){
   const out=[];
   for(const ed of (Array.isArray(editions)?editions:[])){
     if(!ed||!ed.title||!ed.language||(orig.lang&&sameLang(ed.language,orig.lang)))continue;
-    const isbn=toIsbn13(ed.isbn13,results||[]);
+    const isbn=toIsbn13(ed.isbn13,resultsText(results||[]));
     if(!isbn||isbn===orig.isbn13||out.some(v=>v.isbn13===isbn))continue;
     const onV=onIsbn(results,isbn);
     const coded=publisherOnIsbnResults(onV,isbn);
@@ -6146,7 +6148,7 @@ function alsoLine(v){
 function editionOnPublisherPage(editions,pageResults,origIsbn){
   for(const ed of (Array.isArray(editions)?editions:[])){
     if(!ed||!ed.title||!isEnglishLang(ed.language))continue;
-    const en=toIsbn13(ed.isbn13,pageResults||[]);
+    const en=toIsbn13(ed.isbn13,resultsText(pageResults||[]));
     if(!en||en===origIsbn)continue;
     return{title:String(ed.title).trim(),isbn13:en,url:ed.url||null};
   }
@@ -6439,7 +6441,7 @@ async function lookupCatalogue(row,hooks){
     log.push(s1.detail);
     if(!s1.ok)return done({row,ok:false});
     blocked=s1.blocked||false;
-    if(s1.data){ hit=settle(row,s1.data,dom,"",true,false,s1.results); fromShop=!!hit; }
+    if(s1.data){ hit=settle(row,s1.data,dom,"",true,false,resultsText(s1.results)); fromShop=!!hit; }
   }
   if(!hit){
     io.phase("web");
@@ -6482,7 +6484,7 @@ async function lookupCatalogue(row,hooks){
         catalogueTitle:null,isbn13:null,publisher:d2.publisher||null,
         publisherUrl:publisherLinkOf(d2.publisherUrl,d2.publisher,dom,row.museumId),publisherResult:null,shopUrl:null}};
     }else{
-      hit=await confirmShopLink(settle(row,d2,dom,"",false,blocked,s2.results),io);
+      hit=await confirmShopLink(settle(row,d2,dom,"",false,blocked,resultsText(s2.results)),io);
       if(hit&&hit.detail)log.push(hit.detail.trim());
       if(!hit||!hit.row||hit.row.hasCatalogue!=="yes")return done({ok:true,row:composeRow(row,{found:false,blocked})});
     }
@@ -6540,7 +6542,7 @@ async function lookupCatalogue(row,hooks){
         if(!rd.ok)fault(rd.detail);
         else{
           const d=rd.data||{};
-          if(!F.isbn){ const c=toIsbn13(d.isbn13,res); if(c){ F.isbn=c; log.push("ISBN read off the book’s page: "+c); } }
+          if(!F.isbn){ const c=toIsbn13(d.isbn13,resultsText(res)); if(c){ F.isbn=c; log.push("ISBN read off the book’s page: "+c); } }
           offerPublisher(d.publisher,"the book’s page");
           if(!F.publisherUrl)F.publisherUrl=publisherLinkOf(d.publisherUrl,F.publisher,dom,row.museumId);
         }
@@ -6594,7 +6596,7 @@ async function lookupCatalogue(row,hooks){
     // Matched on the book's title once it is known, never the show's (Hubert Robert: the
     // show's dates matched only a French bookseller's listing).
     if(!F.isbn){ const c=isbnInResults(factsRes,F.title||book); if(c){ F.isbn=c; log.push("ISBN read off the search results in code: "+c); } }
-    if(!F.isbn&&read){ const c=toIsbn13(read.isbn13,given); if(c){ F.isbn=c; log.push("ISBN from the read, printed in the results: "+c); } }
+    if(!F.isbn&&read){ const c=toIsbn13(read.isbn13,resultsText(given)); if(c){ F.isbn=c; log.push("ISBN from the read, printed in the results: "+c); } }
     if(read)notABooklet(F,given,pagesPrinted(read.pages,given),log);
     // The publisher, in order of trust (her decision, Botticelli).
     const onIsbn=F.isbn?publisherOnIsbnResults(given,F.isbn):null;
