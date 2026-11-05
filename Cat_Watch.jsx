@@ -5121,6 +5121,286 @@ async function cloudSessionClaim(now){
   await storeWrite(CLOUD_SESSION_DOC,{id:CLOUD_SESSION_ID,beat:new Date(t).toISOString()},{claim:true});
   return "mine";
 }
+
+// THE CLOUD LEDGER'S JOBS. Each takes what it needs and hands back what happened and the
+// sentence to show (or tells its progress through a callback); the screen puts it on screen.
+// What this page knows of the live ledger, kept for the page load and handed to every job: the
+// live record this page last wrote or read (prev), the fingerprint of what that record holds (fp),
+// and the save under way — one at a time (busy) — and a change during one, which queues another (again).
+function cloudTracker(){ return {prev:null,fp:null,busy:false,again:false}; }
+// This copy is read only for the rest of the page load: the store's door refuses its writes.
+function cloudGoReadOnly(){ cloudReadOnly=true; }
+// The one-tab claim, on open, at every beat and before every save: true when another copy is
+// editing (this copy is then read only). A claim that fails decides nothing.
+async function cloudOtherEditing(){
+  try{ if(await cloudSessionClaim()==="other"){ cloudGoReadOnly(); return true; } }catch{}
+  return false;
+}
+// THE HEARTBEAT: the editing copy claims again every SESSION_BEAT_MS. True when another copy
+// has taken over.
+async function cloudHeartbeat(){
+  if(cloudReadOnly)return false;
+  return cloudOtherEditing();
+}
+// Letting go on the way out (best effort — a closing page
+// may not finish it; the record then goes stale in SESSION_STALE_MS).
+async function cloudLetGo(){
+  if(cloudReadOnly)return;
+  try{ const snap=await storeRead(CLOUD_SESSION_DOC); if(snap.exists&&(snap.data||{}).id===CLOUD_SESSION_ID)await storeDelete(CLOUD_SESSION_DOC,{claim:true}); }catch{}
+}
+// The cloud copy, read on open. Hands back `live` for the readout ({rec,data} / {rec:null} /
+// {why}); `off`, why nothing is being saved; `open` when the page opens it by itself (CLOUD_OPENS).
+async function cloudOpenRead(tr){
+  if(!await storeReached())return {live:{why:"This viewer can’t reach the page’s store."},off:"This viewer can’t reach the page’s store, so nothing is being saved to the cloud copy."};
+  try{
+    const {rec,text}=await cloudReadLive();
+    if(!rec)return {live:{rec:null}};
+    const data=JSON.parse(text);
+    tr.prev=rec; tr.fp=ledgerFingerprintText(data);
+    // A read-only copy opens nothing by itself (her decision); "Open it" shows the
+    // cloud copy on request.
+    return {live:{rec,data},rec,data,open:CLOUD_OPENS&&!cloudReadOnly};
+  }catch(e){ return {live:{why:cloudTrouble(e,"read")}}; }
+}
+// The save: one at a time; a change mid-save queues one more, which reads the newest
+// ledger. Nothing is written when nothing changed. One retry after a short pause; a
+// second failure is reported, never swallowed.
+// `latest()` is the ledger as it stands ({rows,ignored,lastRun}); `tell` hears "saving", then
+// {saved:rec} for each record written. Hands back null, or {readOnly} (another copy took over),
+// {off} or {failed} with the sentence why.
+async function cloudSaveLatest(tr,latest,tell){
+  if(cloudReadOnly)return null;
+  if(tr.busy){ tr.again=true; return null; }
+  // Another copy took over while this one slept? Then nothing is written.
+  if(await cloudOtherEditing())return {readOnly:true};
+  if(!await storeReached())return {off:"This viewer can’t reach the page’s store, so nothing is being saved to the cloud copy."};
+  tr.busy=true;
+  try{
+    do{
+      tr.again=false;
+      const d=latest();
+      const fp=ledgerFingerprintText(d);
+      if(fp===tr.fp)continue;
+      tell("saving");
+      const text=JSON.stringify({rows:d.rows,ignored:d.ignored,lastRun:d.lastRun,savedAt:new Date().toISOString()});
+      const info={rows:d.rows.length,quarantined:d.ignored.length};
+      let rec;
+      try{ rec=await cloudSaveLive(text,info,tr.prev); }
+      catch(e){
+        if(e&&["invalid_argument","quota_exceeded","not_granted","revoked"].includes(e.code))throw e;
+        await new Promise(r=>setTimeout(r,800+Math.random()*700));
+        rec=await cloudSaveLive(text,info,tr.prev);
+      }
+      tr.prev=rec; tr.fp=fp;
+      tell({saved:rec});
+    }while(tr.again);
+  }catch(e){ return {failed:cloudTrouble(e,"save")}; }
+  finally{ tr.busy=false; }
+  return null;
+}
+// Before a whole ledger replaces the cloud copy (Load, Reset): the same → said so (the
+// trial's check); different → the cloud copy is kept as a safety snapshot first, and if
+// that fails nothing is replaced. `incoming` is {rows,ignored}; `reason` "import" or "reset";
+// `noted` hears the breakdown for the diagnostic before the snapshot is taken. Hands back `check`,
+// the line to show (null for none); `said`, true when that line says what was loaded (then
+// "Loaded N exhibitions" is not shown — her decision); `snapped` when a safety copy was taken;
+// `failed` when it could not be (the caller stops).
+async function cloudCheckBeforeReplace(tr,incoming,reason,noted){
+  if(!await storeReached())return {check:null,said:false};
+  let live;
+  try{ live=await cloudReadLive(); }
+  catch(e){ const check="The cloud copy couldn’t be read ("+cloudTrouble(e,"read")+"). It was left in the store untouched; this ledger is saved as the new cloud copy."; tr.prev=null; tr.fp=null; return {check,said:true}; }
+  if(!live.rec)return {check:"No cloud copy existed yet — this ledger is now the first one.",said:true};
+  const data=JSON.parse(live.text);
+  tr.prev=live.rec; tr.fp=ledgerFingerprintText(data);
+  const when=localReadable(live.rec.savedAt);
+  const diff=ledgerDifference(data,incoming);
+  if(!diff)return {check:"✓ The file you just loaded is identical to the last cloud save ("+when+"). No snapshot of the last cloud state was needed before loading your file.",said:true};
+  // Her format: one count of differences, the cloud save's time, and what was done;
+  // the breakdown goes to the diagnostic.
+  const bits=[];
+  if(diff.onlyA)bits.push(diff.onlyA+" exhibition"+(diff.onlyA===1?"":"s")+" only in the cloud copy");
+  if(diff.onlyB)bits.push(diff.onlyB+" only in "+(reason==="reset"?"the starter set":"this file"));
+  if(diff.changed)bits.push(diff.changed+" different in some field");
+  if(diff.quarantineDiffers)bits.push(diff.qDiff+" quarantine entr"+(diff.qDiff===1?"y":"ies")+" different ("+diff.qa+" in the cloud copy, "+diff.qb+" here)");
+  // Never "0 differences" beside a ledger that does differ.
+  const n=Math.max(1,diff.onlyA+diff.onlyB+diff.changed+(diff.quarantineDiffers?diff.qDiff:0));
+  const what=reason==="reset"?"The starter set":"The file you just loaded";
+  const head=what+" differs from the last cloud save ("+when+"): "+n+" difference"+(n===1?"":"s")+".";
+  noted("Compared with the last cloud save ("+when+"): "+bits.join(", ")+".");
+  try{
+    await cloudTakeSnapshot(live.text,{label:"Safety snapshot before "+(reason==="reset"?"Reset":"Load"),kind:"safety",rows:data.rows.length,quarantined:(data.ignored||[]).length});
+    return {check:head+" A snapshot of the last cloud state was taken before loading "+(reason==="reset"?"it":"your file")+".",said:true,snapped:true};
+  }catch(e){
+    return {check:head+" A snapshot of the last cloud state could NOT be taken ("+cloudTrouble(e,"save")+"), so "+(reason==="reset"?"it":"your file")+" was not loaded.",said:false,failed:e};
+  }
+}
+// OPEN THE CLOUD COPY: the ledger it holds, as the screen opens it, and the line to show.
+function cloudOpening(tr,rec,data){
+  const out={rows:(data.rows||[]).map(r=>({...r,watching:r.watching||false})),lastRun:data.lastRun||null,
+    info:"Opened the cloud copy saved "+localReadable(rec.savedAt)+" — "+(data.rows||[]).length+" exhibitions.",
+    ignored:Array.isArray(data.ignored)?data.ignored:[]};
+  tr.prev=rec; tr.fp=ledgerFingerprintText(data);
+  return out;
+}
+// "Open it" asks first while unsaved work shows and the cloud copy is not saving.
+function cloudOpenQuestion(){ return "Opening the cloud copy replaces everything on screen. The cloud copy is NOT saving, so your changes since your last Save are on screen only and will be lost. Continue?"; }
+// "Open it": the cloud copy read and handed to `open(rec,data)`. Hands back the line to show
+// when it cannot be, or null. Allowed in a read-only copy (her decision): it shows the cloud
+// copy, writes nothing.
+async function cloudReadToOpen(open){
+  if(!await storeReached())return null;
+  try{
+    const {rec,text}=await cloudReadLive();
+    if(!rec)return "There is no cloud copy yet.";
+    open(rec,JSON.parse(text));
+    return null;
+  }catch(e){ return "The cloud copy couldn’t be opened: "+cloudTrouble(e,"read"); }
+}
+// SNAPSHOTS. Cloud Saves' list, newest first, and why it is empty when it could not be read.
+async function cloudSavesRead(){
+  if(!await storeReached())return {snaps:[],why:"This viewer can’t reach the page’s store."};
+  try{ return {snaps:await cloudListSnapshots(),why:null}; }
+  catch(e){ return {snaps:[],why:"Couldn’t read the cloud saves ("+cloudTrouble(e,"read")+")."}; }
+}
+// Roll back's question, for Cloud Save `s` among `all`.
+function cloudRollbackQuestion(s,all){
+  return {title:"Roll back to this cloud save?",
+    text:"The ledger becomes the cloud save “"+snapTitle(s,all)+"” from "+localReadable(s.at)+" ("+s.rows+" exhibitions). What you have now is kept in Cloud Saves first, so this can be undone."};
+}
+// Roll back: the ledger it replaces is kept first as a safety snapshot (her decision),
+// so a roll-back can be undone; no safety copy, no roll-back.
+// `current()` is the ledger open on screen, or null when none is (then the live cloud copy is the
+// one kept); `started()` is told once the store is reached and the work begins. Hands back null
+// when the store is not reached, {why} when nothing was replaced, or the ledger to open and its line.
+async function cloudRollback(tr,s,all,{current,started}){
+  if(!await storeReached())return null;
+  started();
+  try{
+    let curText=null,curRows=0,curQ=0;
+    const d=current();
+    if(d){ curText=JSON.stringify({rows:d.rows,ignored:d.ignored,lastRun:d.lastRun,savedAt:new Date().toISOString()}); curRows=d.rows.length; curQ=d.ignored.length; }
+    else{ const live=await cloudReadLive(); if(live.rec){ curText=live.text; const cd=JSON.parse(live.text); curRows=cd.rows.length; curQ=(cd.ignored||[]).length; tr.prev=live.rec; } }
+    if(curText)await cloudTakeSnapshot(curText,{label:"Safety snapshot before roll-back to snapshot of "+localReadable(s.at),kind:"safety",rows:curRows,quarantined:curQ});
+    const data=JSON.parse(await cloudReadSnapshot(s));
+    return {rows:(data.rows||[]).map(r=>({...r,watching:r.watching||false})),lastRun:data.lastRun||null,
+      info:"Rolled back to the cloud save “"+snapTitle(s,all)+"” from "+localReadable(s.at)+" — "+(data.rows||[]).length+" exhibitions.",
+      ignored:Array.isArray(data.ignored)?data.ignored:[]};
+  }catch(e){ return {why:cloudRollbackNotDone(e)}; }
+}
+function cloudRollbackNotDone(e){ return "Rollback NOT done — "+cloudTrouble(e,"read")+" Nothing was replaced."; }
+// Cloud Saves' Download: the copy handed over as a file. Hands back the line to show, or null
+// when the store is not reached.
+async function cloudSaveDownload(s){
+  if(!await storeReached())return null;
+  try{
+    const text=await cloudReadSnapshot(s);
+    // A copy made by Save comes back under the name its offline twin has.
+    // Older copies, and the automatic ones, are named as before.
+    const slug=labelSlug(s.label);
+    const filename=s.filename||("art-watch-snapshot-"+localStamp(s.at)+(slug?"-"+slug:"")+".json");
+    const route=await offerFile(filename,JSON.stringify(JSON.parse(text),null,2));
+    return route==="runtime"?"Saved "+filename+".":"A download of "+filename+" was started — this viewer can’t confirm it arrived; check your downloads folder.";
+  }catch(e){
+    const why=e&&e.route==="browser"?"the download couldn’t start"
+      :e&&["missing_part","fingerprint"].includes(e.code)?String(e.message)
+      :"the save was refused or cancelled ("+String((e&&(e.code||e.message))||e)+")";
+    return "Download NOT done — "+why+".";
+  }
+}
+// SAVE ASKS BEFORE IT SHRINKS THE LEDGER: fewer exhibitions on screen than the
+// cloud copy or the newest Cloud Save holds (her ledger lost to an import onto an
+// empty page; docs/app.md §9). A store that cannot be read never blocks a Save.
+// Hands back the question for saving `count` exhibitions ({title,text,yes}), or null.
+async function saveShrinkQuestion(count){
+  let most=0;
+  // The live record alone carries the count; its parts (the whole ledger) are not read.
+  if(!cloudReadOnly){ try{ const ls=await storeRead(CLOUD_LIVE_DOC); const live=ls.exists?ls.data:null; const snap=(await cloudListSnapshots(1))[0];
+      most=Math.max(live?live.rows||0:0,snap?snap.rows||0:0); }catch{} }
+  if(count<most)return {title:"Save a smaller ledger?",text:"You’re saving "+count+" exhibition"+(count===1?"":"s")+"; your last cloud save has "+most+". Save anyway?",yes:"Save anyway"};
+  return null;
+}
+// Save (her design; docs/app.md §2): the offline file AND, when ticked, the same file in
+// Cloud Saves — same name and content. The cloud copy is written while the file question
+// is open, so a cancelled file cannot take it with it. Each half reports itself; a plain browser download never
+// clears the unsaved state. Never a click-triggered "Saved" tick.
+// The file: its moment, description, name and text, from the ledger and the description typed.
+// {note} when it cannot be built.
+function saveFile({rows,ignored,lastRun,typed}){
+  const at=new Date().toISOString();
+  const label=typed.trim().slice(0,80);
+  const slug=labelSlug(label);
+  const filename=LEDGER_PREFIX+localStamp(at)+(slug?"-"+slug:"")+".json";
+  let data;
+  try{
+    data=JSON.stringify({rows,ignored,lastRun,exportedAt:at,exportedLocal:localReadable(at),...(label?{label}:{})},null,2);
+  }catch(e){ return {note:{ok:false,text:"NOT SAVED — the file couldn’t be built: "+String(e?.message||e)}}; }
+  return {rows,ignored,at,label,filename,data};
+}
+// Save now: the file from saveFile offered and, when `toCloud`, the same file kept in Cloud
+// Saves. `kept()` is told once the cloud copy is kept; `refused(line)` once the file is refused,
+// with the diagnostic. Hands back the line to show ({ok,text}), `file` ("saved", "browser" or why
+// not), `cloud` (null, true or why not) and `debug`, the diagnostic line.
+async function saveLedger(f,toCloud,{kept,refused}){
+  const {rows,ignored,at,label,filename,data}=f;
+  // cloud: null = not asked for; true = kept; a string = why not. Started, not
+  // awaited: the file question opens while the copy is written (her decision).
+  const cloudDone=(async()=>{
+    if(!toCloud||cloudReadOnly)return null;
+    if(!await storeReached())return "this viewer can’t reach the page’s store";
+    try{
+      await cloudTakeSnapshot(data,{label,kind:"manual",rows:rows.length,quarantined:ignored.length,filename,at});
+      kept();
+      return true;
+    }catch(e){ return cloudTrouble(e,"save"); }
+  })();
+  // file: "saved" (the viewer confirmed), "browser" (started, cannot be
+  // confirmed), or a string saying why it was not saved.
+  // Both routes live in offerFile, shared with Cloud Saves' Download.
+  let file;
+  try{ file=(await offerFile(filename,data))==="runtime"?"saved":"browser"; }
+  catch(e){
+    file=e&&e.route==="browser"?"the download couldn’t start"
+      :e&&e.code==="declined"?"cancelled"
+      :"refused ("+String(e?.code||e?.message||e)+")";
+    refused("Save: the file was not saved — "+String(e?.code||"")+" "+String(e?.message||e));
+  }
+  const cloud=await cloudDone;
+  const cloudBit=cloud===true?null:cloud===null?"":"Cloud copy NOT kept — "+cloud+".";
+  let text,ok;
+  if(file==="saved"){
+    ok=cloud!==null&&cloud!==true?false:true;
+    text=cloud===true?"Local file saved. Extra copy also sent to the cloud."
+      :cloud===null?"Local file saved."
+      :"Local file saved. "+cloudBit;
+  }else if(file==="browser"){
+    ok=false;
+    text=(cloud===true?"Extra copy sent to the cloud. ":cloud===null?"":cloudBit+" ")
+      +"A download of the local file was started — this viewer can’t confirm it arrived; check your downloads folder.";
+  }else{
+    ok=false;
+    text=cloud===true?"Cloud copy kept. Local file not saved - "+file+"."
+      :cloud===null?"Local file not saved - "+file+"."
+      :"NOTHING SAVED — local file not saved - "+file+". "+cloudBit;
+  }
+  return {ok,text,file,cloud,
+    debug:"Save "+filename+" ("+localReadable(at)+"): file "+(file==="saved"?"confirmed by the viewer":file)+"; cloud "+(cloud===true?"kept":cloud===null?"not asked for":cloud)+"."};
+}
+// The cloud readout, never silent (her ask): `trouble` when the cloud copy is not saving —
+// then the line says when it last worked (her ask): how far back the cloud copy stands.
+function cloudStatusLine({saveState,saveErr,lastSaved,cloudLive,hasLedger}){
+  if(saveState==="failed"||saveState==="off")
+    return {trouble:true,text:"CLOUD COPY NOT SAVING — "+(saveErr||"reason unknown.")
+      +(lastSaved&&lastSaved.savedAt?" Last cloud save: "+localReadable(lastSaved.savedAt)+" ("+relTime(lastSaved.savedAt)+")."
+        :" Nothing has been saved to the cloud yet.")
+      +(hasLedger?" Changes since then are on screen only — tap Save to keep them in a file.":"")};
+  return {trouble:false,text:
+    saveState==="saving"?"Saving to the cloud copy…"
+    :lastSaved?("Last cloud save: "+localReadable(lastSaved.savedAt)+" ("+relTime(lastSaved.savedAt)+") · "+lastSaved.rows+" exhibitions")
+    :cloudLive&&cloudLive.why?("Cloud copy: "+cloudLive.why)
+    :cloudLive&&cloudLive.rec===null?"No cloud copy yet — it starts when you open your ledger."
+    :"Checking the cloud copy…"};
+}
 // ── END OF THE CLOUD LEDGER ──────────────────────────────────────────────────
 
 const today=()=>new Date().toISOString().slice(0,10);
@@ -7699,13 +7979,10 @@ export default function App(){
   // ONE COPY EDITS AT A TIME — see cloudSessionClaim. True for the rest of
   // this page load once another copy is found editing.
   const[readOnly,setReadOnly]=useState(false);
-  const goReadOnly=useCallback(()=>{ cloudReadOnly=true; setReadOnly(true); },[]);
+  const goReadOnly=useCallback(()=>{ setReadOnly(true); },[]);
   // Every action that would change the ledger asks this first.
   const roStop=()=>{ if(!cloudReadOnly)return false; setError(RO_LINE); return true; };
-  const cloudPrev=useRef(null);   // the live record this page last wrote or read
-  const cloudFp=useRef(null);     // the fingerprint of what that record holds
-  const cloudBusy=useRef(false);  // one save at a time …
-  const cloudAgain=useRef(false); // … and a change during one queues another
+  const[cloudT]=useState(cloudTracker); // what this page knows of the live ledger (cloudTracker)
   const cloudLatest=useRef(null); // the ledger as it stands, for the save to read
   const[snaps,setSnaps]=useState(null);       // null = not read yet
   const[snapWhy,setSnapWhy]=useState(null);
@@ -7863,18 +8140,11 @@ export default function App(){
     readQuarantine().then(({map,why})=>{ setQuarantine(map); setQuarWhy(why); });
     // The cloud copy is read on open; during the trial it is only read (CLOUD_OPENS).
     (async()=>{
-      try{ if(await cloudSessionClaim()==="other")goReadOnly(); }catch{}
-      if(!await storeReached()){ setCloudLive({why:"This viewer can’t reach the page’s store."}); setSaveState("off"); setSaveErr("This viewer can’t reach the page’s store, so nothing is being saved to the cloud copy."); return; }
-      try{
-        const {rec,text}=await cloudReadLive();
-        if(!rec){ setCloudLive({rec:null}); return; }
-        const data=JSON.parse(text);
-        cloudPrev.current=rec; cloudFp.current=ledgerFingerprintText(data);
-        setCloudLive({rec,data}); setLastSaved(rec);
-        // A read-only copy opens nothing by itself (her decision); "Open it" shows the
-        // cloud copy on request.
-        if(CLOUD_OPENS&&!cloudReadOnly)openCloudData(rec,data);
-      }catch(e){ setCloudLive({why:cloudTrouble(e,"read")}); }
+      if(await cloudOtherEditing())goReadOnly();
+      const o=await cloudOpenRead(cloudT);
+      setCloudLive(o.live);
+      if(o.off){ setSaveState("off"); setSaveErr(o.off); }
+      if(o.rec){ setLastSaved(o.rec); if(o.open)openCloudData(o.rec,o.data); }
     })();
     // Add by link: the venues it has met, and links still waiting in the box.
     readOccasional().then(map=>{ occSaved.current=map; registerOccasional(map); setOccVenues(map); });
@@ -7890,16 +8160,12 @@ export default function App(){
   // Keep the "Last saved ... ago" text and its colour current.
   useEffect(()=>{const t=setInterval(()=>setTick(n=>n+1),30000);return()=>clearInterval(t);},[]);
 
-  // THE HEARTBEAT, and letting go on the way out (best effort — a closing page
-  // may not finish it; the record then goes stale in SESSION_STALE_MS).
+  // THE HEARTBEAT (cloudHeartbeat), and letting go on the way out (cloudLetGo).
   useEffect(()=>{
-    const beat=async()=>{ if(cloudReadOnly)return;
-      try{ if(await cloudSessionClaim()==="other")goReadOnly(); }catch{} };
+    const beat=async()=>{ if(await cloudHeartbeat())goReadOnly(); };
     const t=setInterval(beat,SESSION_BEAT_MS);
-    const bye=async()=>{ if(cloudReadOnly)return;
-      try{ const snap=await storeRead(CLOUD_SESSION_DOC); if(snap.exists&&(snap.data||{}).id===CLOUD_SESSION_ID)await storeDelete(CLOUD_SESSION_DOC,{claim:true}); }catch{} };
-    window.addEventListener("pagehide",bye);
-    return()=>{ clearInterval(t); window.removeEventListener("pagehide",bye); };
+    window.addEventListener("pagehide",cloudLetGo);
+    return()=>{ clearInterval(t); window.removeEventListener("pagehide",cloudLetGo); };
   },[goReadOnly]);
 
   // EDITS mark the ledger dirty: changed since the last offline Save. The
@@ -7942,37 +8208,14 @@ export default function App(){
   // file holds.
   cloudLatest.current={rows,ignored,lastRun};
 
-  // The save: one at a time; a change mid-save queues one more, which reads the newest
-  // ledger. Nothing is written when nothing changed. One retry after a short pause; a
-  // second failure is reported, never swallowed.
+  // The save (cloudSaveLatest): what it says goes on screen.
   const cloudSaveNow=useCallback(async()=>{
-    if(cloudReadOnly)return;
-    if(cloudBusy.current){ cloudAgain.current=true; return; }
-    // Another copy took over while this one slept? Then nothing is written.
-    try{ if(await cloudSessionClaim()==="other"){ goReadOnly(); setError(RO_LINE); return; } }catch{}
-    if(!await storeReached()){ setSaveState("off"); setSaveErr("This viewer can’t reach the page’s store, so nothing is being saved to the cloud copy."); return; }
-    cloudBusy.current=true;
-    try{
-      do{
-        cloudAgain.current=false;
-        const d=cloudLatest.current;
-        const fp=ledgerFingerprintText(d);
-        if(fp===cloudFp.current)continue;
-        setSaveState("saving");
-        const text=JSON.stringify({rows:d.rows,ignored:d.ignored,lastRun:d.lastRun,savedAt:new Date().toISOString()});
-        const info={rows:d.rows.length,quarantined:d.ignored.length};
-        let rec;
-        try{ rec=await cloudSaveLive(text,info,cloudPrev.current); }
-        catch(e){
-          if(e&&["invalid_argument","quota_exceeded","not_granted","revoked"].includes(e.code))throw e;
-          await new Promise(r=>setTimeout(r,800+Math.random()*700));
-          rec=await cloudSaveLive(text,info,cloudPrev.current);
-        }
-        cloudPrev.current=rec; cloudFp.current=fp;
-        setLastSaved(rec); setSaveErr(null); setSaveState("saved");
-      }while(cloudAgain.current);
-    }catch(e){ setSaveState("failed"); setSaveErr(cloudTrouble(e,"save")); }
-    finally{ cloudBusy.current=false; }
+    const r=await cloudSaveLatest(cloudT,()=>cloudLatest.current,
+      s=>{ if(s==="saving")setSaveState("saving"); else{ setLastSaved(s.saved); setSaveErr(null); setSaveState("saved"); } });
+    if(!r)return;
+    if(r.readOnly){ goReadOnly(); setError(RO_LINE); }
+    else if(r.off){ setSaveState("off"); setSaveErr(r.off); }
+    else{ setSaveState("failed"); setSaveErr(r.failed); }
   },[goReadOnly]);
   // INSTANT SAVE: shortly after every change, once a ledger is open.
   useEffect(()=>{
@@ -7981,115 +8224,55 @@ export default function App(){
     return()=>clearTimeout(t);
   },[rows,ignored,lastRun,cloudSaveNow]);
 
-  // Before a whole ledger replaces the cloud copy (Load, Reset): the same → said so (the
-  // trial's check); different → the cloud copy is kept as a safety snapshot first, and if
-  // that fails nothing is replaced. Returns true when it put a line on screen about what
-  // was loaded (then "Loaded N exhibitions" is not shown — her decision).
+  // Before a whole ledger replaces the cloud copy (Load, Reset): cloudCheckBeforeReplace. Returns
+  // true when it put a line on screen about what was loaded; throws when the safety copy could not be
+  // taken.
   async function guardCloudBeforeReplace(incoming,reason){
-    if(!await storeReached()){ setCloudCheck(null); return false; }
-    let live;
-    try{ live=await cloudReadLive(); }
-    catch(e){ setCloudCheck("The cloud copy couldn’t be read ("+cloudTrouble(e,"read")+"). It was left in the store untouched; this ledger is saved as the new cloud copy."); cloudPrev.current=null; cloudFp.current=null; return true; }
-    if(!live.rec){ setCloudCheck("No cloud copy existed yet — this ledger is now the first one."); return true; }
-    const data=JSON.parse(live.text);
-    cloudPrev.current=live.rec; cloudFp.current=ledgerFingerprintText(data);
-    const when=localReadable(live.rec.savedAt);
-    const diff=ledgerDifference(data,incoming);
-    if(!diff){ setCloudCheck("✓ The file you just loaded is identical to the last cloud save ("+when+"). No snapshot of the last cloud state was needed before loading your file."); return true; }
-    // Her format: one count of differences, the cloud save's time, and what was done;
-    // the breakdown goes to the diagnostic.
-    const bits=[];
-    if(diff.onlyA)bits.push(diff.onlyA+" exhibition"+(diff.onlyA===1?"":"s")+" only in the cloud copy");
-    if(diff.onlyB)bits.push(diff.onlyB+" only in "+(reason==="reset"?"the starter set":"this file"));
-    if(diff.changed)bits.push(diff.changed+" different in some field");
-    if(diff.quarantineDiffers)bits.push(diff.qDiff+" quarantine entr"+(diff.qDiff===1?"y":"ies")+" different ("+diff.qa+" in the cloud copy, "+diff.qb+" here)");
-    // Never "0 differences" beside a ledger that does differ.
-    const n=Math.max(1,diff.onlyA+diff.onlyB+diff.changed+(diff.quarantineDiffers?diff.qDiff:0));
-    const what=reason==="reset"?"The starter set":"The file you just loaded";
-    const head=what+" differs from the last cloud save ("+when+"): "+n+" difference"+(n===1?"":"s")+".";
-    setDebug("Compared with the last cloud save ("+when+"): "+bits.join(", ")+".");
-    try{
-      await cloudTakeSnapshot(live.text,{label:"Safety snapshot before "+(reason==="reset"?"Reset":"Load"),kind:"safety",rows:data.rows.length,quarantined:(data.ignored||[]).length});
-      loadSnaps();   // an open drawer shows it straight away
-      setCloudCheck(head+" A snapshot of the last cloud state was taken before loading "+(reason==="reset"?"it":"your file")+".");
-      return true;
-    }catch(e){
-      setCloudCheck(head+" A snapshot of the last cloud state could NOT be taken ("+cloudTrouble(e,"save")+"), so "+(reason==="reset"?"it":"your file")+" was not loaded.");
-      throw e;   // the caller stops: nothing is armed, nothing overwritten
-    }
+    const g=await cloudCheckBeforeReplace(cloudT,incoming,reason,setDebug);
+    if(g.snapped)loadSnaps();   // an open drawer shows it straight away
+    setCloudCheck(g.check);
+    if(g.failed)throw g.failed;   // the caller stops: nothing is armed, nothing overwritten
+    return g.said;
   }
 
   // OPEN THE CLOUD COPY. During the trial, by her button; afterwards, on open.
   function openCloudData(rec,data){
-    loadLedger((data.rows||[]).map(r=>({...r,watching:r.watching||false})),data.lastRun||null,
-      "Opened the cloud copy saved "+localReadable(rec.savedAt)+" — "+(data.rows||[]).length+" exhibitions.",
-      {ignored:Array.isArray(data.ignored)?data.ignored:[]},cloudReadOnly);
-    cloudPrev.current=rec; cloudFp.current=ledgerFingerprintText(data);
+    const o=cloudOpening(cloudT,rec,data);
+    loadLedger(o.rows,o.lastRun,o.info,{ignored:o.ignored},cloudReadOnly);
     setLastSaved(rec); setSaveState("saved"); setSaveErr(null); setCloudCheck(null);
     cloudArmed.current=true;
   }
-  // Allowed in a read-only copy (her decision): it shows the cloud copy, writes nothing.
   async function requestOpenCloud(){
-    const go=async()=>{
-      if(!await storeReached())return;
-      try{
-        const {rec,text}=await cloudReadLive();
-        if(!rec){ setError("There is no cloud copy yet."); return; }
-        openCloudData(rec,JSON.parse(text));
-      }catch(e){ setError("The cloud copy couldn’t be opened: "+cloudTrouble(e,"read")); }
-    };
-    if(rows.length>0&&dirty&&cloudNotSaving)setConfirmBox({text:"Opening the cloud copy replaces everything on screen. The cloud copy is NOT saving, so your changes since your last Save are on screen only and will be lost. Continue?",act:go});
+    const go=async()=>{ const why=await cloudReadToOpen(openCloudData); if(why)setError(why); };
+    if(rows.length>0&&dirty&&cloudNotSaving)setConfirmBox({text:cloudOpenQuestion(),act:go});
     else go();
   }
 
   // SNAPSHOTS.
   async function loadSnaps(){
-    if(!await storeReached()){ setSnaps([]); setSnapWhy("This viewer can’t reach the page’s store."); return; }
-    try{ setSnaps(await cloudListSnapshots()); setSnapWhy(null); }
-    catch(e){ setSnaps([]); setSnapWhy("Couldn’t read the cloud saves ("+cloudTrouble(e,"read")+")."); }
+    const r=await cloudSavesRead();
+    setSnaps(r.snaps); setSnapWhy(r.why);
   }
-  // Roll back: the ledger it replaces is kept first as a safety snapshot (her decision),
-  // so a roll-back can be undone; no safety copy, no roll-back.
   function requestRollback(s){
     if(roStop())return;
-    setConfirmBox({title:"Roll back to this cloud save?",
-      text:"The ledger becomes the cloud save “"+snapTitle(s,snaps)+"” from "+localReadable(s.at)+" ("+s.rows+" exhibitions). What you have now is kept in Cloud Saves first, so this can be undone.",
+    setConfirmBox({...cloudRollbackQuestion(s,snaps),
       act:async()=>{
-        if(!await storeReached())return;
-        setSnapBusy(true);
+        const r=await cloudRollback(cloudT,s,snaps,{current:()=>rows.length?cloudLatest.current:null,started:()=>setSnapBusy(true)});
+        if(!r)return;
         try{
-          let curText=null,curRows=0,curQ=0;
-          if(rows.length){ const d=cloudLatest.current; curText=JSON.stringify({rows:d.rows,ignored:d.ignored,lastRun:d.lastRun,savedAt:new Date().toISOString()}); curRows=d.rows.length; curQ=d.ignored.length; }
-          else{ const live=await cloudReadLive(); if(live.rec){ curText=live.text; const cd=JSON.parse(live.text); curRows=cd.rows.length; curQ=(cd.ignored||[]).length; cloudPrev.current=live.rec; } }
-          if(curText)await cloudTakeSnapshot(curText,{label:"Safety snapshot before roll-back to snapshot of "+localReadable(s.at),kind:"safety",rows:curRows,quarantined:curQ});
-          const data=JSON.parse(await cloudReadSnapshot(s));
-          loadLedger((data.rows||[]).map(r=>({...r,watching:r.watching||false})),data.lastRun||null,
-            "Rolled back to the cloud save “"+snapTitle(s,snaps)+"” from "+localReadable(s.at)+" — "+(data.rows||[]).length+" exhibitions.",
-            {ignored:Array.isArray(data.ignored)?data.ignored:[]});
+          if(r.why){ setSnapWhy(r.why); return; }
+          loadLedger(r.rows,r.lastRun,r.info,{ignored:r.ignored});
           setDirty(true);          // it is in no file yet
           setCloudCheck(null);
           cloudArmed.current=true; // the save that follows makes it the live copy
           await loadSnaps();
-        }catch(e){ setSnapWhy("Rollback NOT done — "+cloudTrouble(e,"read")+" Nothing was replaced."); }
+        }catch(e){ setSnapWhy(cloudRollbackNotDone(e)); }
         finally{ setSnapBusy(false); }
       }});
   }
   async function downloadSnapshot(s){
-    if(!await storeReached())return;
-    try{
-      const text=await cloudReadSnapshot(s);
-      // A copy made by Save comes back under the name its offline twin has.
-      // Older copies, and the automatic ones, are named as before.
-      const slug=labelSlug(s.label);
-      const filename=s.filename||("art-watch-snapshot-"+localStamp(s.at)+(slug?"-"+slug:"")+".json");
-      const route=await offerFile(filename,JSON.stringify(JSON.parse(text),null,2));
-      setSnapWhy(route==="runtime"?"Saved "+filename+".":"A download of "+filename+" was started — this viewer can’t confirm it arrived; check your downloads folder.");
-    }catch(e){
-      const why=e&&e.route==="browser"?"the download couldn’t start"
-        :e&&["missing_part","fingerprint"].includes(e.code)?String(e.message)
-        :"the save was refused or cancelled ("+String((e&&(e.code||e.message))||e)+")";
-      setSnapWhy("Download NOT done — "+why+".");
-    }
+    const line=await cloudSaveDownload(s);
+    if(line!==null)setSnapWhy(line);
   }
 
   const toggleSet=(setter,val)=>setter(prev=>{const n=new Set(prev);if(n.has(val))n.delete(val);else n.add(val);return n;});
@@ -8531,82 +8714,28 @@ export default function App(){
     else doReset();
   }
 
-  // Save (her design; docs/app.md §2): the offline file AND, when ticked, the same file in
-  // Cloud Saves — same name and content. The cloud copy is written while the file question
-  // is open, so a cancelled file cannot take it with it. Each half reports itself; a plain browser download never
-  // clears the unsaved state. Never a click-triggered "Saved" tick.
-  // SAVE ASKS BEFORE IT SHRINKS THE LEDGER: fewer exhibitions on screen than the
-  // cloud copy or the newest Cloud Save holds (her ledger lost to an import onto an
-  // empty page; docs/app.md §9). A store that cannot be read never blocks a Save.
+  // Save: saveShrinkQuestion asks first when it would shrink the ledger; saveFile and saveLedger do the work.
   async function handleSave(){
     if(saveBusy||!rows.length)return;
-    let most=0;
-    // The live record alone carries the count; its parts (the whole ledger) are not read.
-    if(!cloudReadOnly){ try{ const ls=await storeRead(CLOUD_LIVE_DOC); const live=ls.exists?ls.data:null; const snap=(await cloudListSnapshots(1))[0];
-        most=Math.max(live?live.rows||0:0,snap?snap.rows||0:0); }catch{} }
-    if(rows.length<most){ setConfirmBox({title:"Save a smaller ledger?",text:"You\u2019re saving "+rows.length+" exhibition"+(rows.length===1?"":"s")+"; your last cloud save has "+most+". Save anyway?",yes:"Save anyway",act:saveNow}); return; }
+    const ask=await saveShrinkQuestion(rows.length);
+    if(ask){ setConfirmBox({...ask,act:saveNow}); return; }
     saveNow();
   }
   async function saveNow(){
     if(saveBusy||!rows.length)return;
-    const at=new Date().toISOString();
-    const label=saveLabel.trim().slice(0,80);
-    const slug=labelSlug(label);
-    const filename=LEDGER_PREFIX+localStamp(at)+(slug?"-"+slug:"")+".json";
-    let data;
-    try{
-      data=JSON.stringify({rows,ignored,lastRun,exportedAt:at,exportedLocal:localReadable(at),...(label?{label}:{})},null,2);
-    }catch(e){ setSaveNote({ok:false,text:"NOT SAVED \u2014 the file couldn\u2019t be built: "+String(e?.message||e)}); return; }
+    const f=saveFile({rows,ignored,lastRun,typed:saveLabel});
+    if(f.note){ setSaveNote(f.note); return; }
     setSaveBusy(true);
     try{
-      // cloud: null = not asked for; true = kept; a string = why not. Started, not
-      // awaited: the file question opens while the copy is written (her decision).
-      const cloudDone=(async()=>{
-        if(!saveCloud||cloudReadOnly)return null;
-        if(!await storeReached())return "this viewer can\u2019t reach the page\u2019s store";
-        try{
-          await cloudTakeSnapshot(data,{label,kind:"manual",rows:rows.length,quarantined:ignored.length,filename,at});
-          if(showSnaps)loadSnaps();
-          return true;
-        }catch(e){ return cloudTrouble(e,"save"); }
-      })();
-      // file: "saved" (the viewer confirmed), "browser" (started, cannot be
-      // confirmed), or a string saying why it was not saved.
-      // Both routes live in offerFile, shared with Cloud Saves' Download.
-      let file;
-      try{ file=(await offerFile(filename,data))==="runtime"?"saved":"browser"; }
-      catch(e){
-        file=e&&e.route==="browser"?"the download couldn\u2019t start"
-          :e&&e.code==="declined"?"cancelled"
-          :"refused ("+String(e?.code||e?.message||e)+")";
-        setDebug("Save: the file was not saved \u2014 "+String(e?.code||"")+" "+String(e?.message||e));
-      }
-      const cloud=await cloudDone;
-      const cloudBit=cloud===true?null:cloud===null?"":"Cloud copy NOT kept \u2014 "+cloud+".";
-      let text,ok;
-      if(file==="saved"){
-        ok=cloud!==null&&cloud!==true?false:true;
-        text=cloud===true?"Local file saved. Extra copy also sent to the cloud."
-          :cloud===null?"Local file saved."
-          :"Local file saved. "+cloudBit;
-      }else if(file==="browser"){
-        ok=false;
-        text=(cloud===true?"Extra copy sent to the cloud. ":cloud===null?"":cloudBit+" ")
-          +"A download of the local file was started \u2014 this viewer can\u2019t confirm it arrived; check your downloads folder.";
-      }else{
-        ok=false;
-        text=cloud===true?"Cloud copy kept. Local file not saved - "+file+"."
-          :cloud===null?"Local file not saved - "+file+"."
-          :"NOTHING SAVED \u2014 local file not saved - "+file+". "+cloudBit;
-      }
-      setSaveNote({ok,text,file:filename});
-      if(file==="saved"){
+      const r=await saveLedger(f,saveCloud,{kept:()=>{ if(showSnaps)loadSnaps(); },refused:setDebug});
+      setSaveNote({ok:r.ok,text:r.text,file:f.filename});
+      if(r.file==="saved"){
         setError(null); setDirty(false); setUnconfirmedSave(null);
         setShowSave(false); setSaveLabel(""); setSaveCloud(true);
         // THE IMPORT REMINDER ASKS FOR BOTH, her wording — it goes only when both happened.
-        if(cloud===true)setRefreshDone(null);
+        if(r.cloud===true)setRefreshDone(null);
       }
-      setDebug("Save "+filename+" ("+localReadable(at)+"): file "+(file==="saved"?"confirmed by the viewer":file)+"; cloud "+(cloud===true?"kept":cloud===null?"not asked for":cloud)+".");
+      setDebug(r.debug);
     }finally{ setSaveBusy(false); }
   }
 
@@ -8798,6 +8927,7 @@ export default function App(){
   // The line under the buttons: what the last Save did, until the next change; otherwise
   // what was loaded. Whether work is safe is the cloud line's job.
   const hasLedger=rows.length>0;
+  const cloudStatus=cloudStatusLine({saveState,saveErr,lastSaved,cloudLive,hasLedger});
   // The "not saved to a file" banner is unwired, not deleted (her decision): with the
   // cloud copy saving every change it would nag. If the trial fails, set true.
   const FILE_UNSAVED_WARNING=false;
@@ -8850,23 +8980,13 @@ export default function App(){
         {/* The status lines, in her order (docs/app.md §9): the cloud line first, always —
             green, or the red banner when saving has stopped; a line's space; what loading
             did; what saving did. */}
-        {(saveState==="failed"||saveState==="off")?
+        {cloudStatus.trouble?
           <div style={{marginTop:8,padding:"9px 12px",background:C.warnBg,border:"2px solid "+C.warnEdge,borderRadius:5,fontSize:12.5,fontWeight:700,color:C.warnInk,lineHeight:1.4,display:"flex",alignItems:"flex-start",gap:9}}>
             <span style={{fontSize:17,lineHeight:1.1}}>{"☁"}</span>
-            {/* When it last worked (her ask): how far back the cloud copy stands. */}
-            <span>{"CLOUD COPY NOT SAVING — "+(saveErr||"reason unknown.")
-              +(lastSaved&&lastSaved.savedAt?" Last cloud save: "+localReadable(lastSaved.savedAt)+" ("+relTime(lastSaved.savedAt)+")."
-                :" Nothing has been saved to the cloud yet.")
-              +(hasLedger?" Changes since then are on screen only \u2014 tap Save to keep them in a file.":"")}</span>
+            <span>{cloudStatus.text}</span>
           </div>
         :<div style={{marginTop:6,fontSize:11,color:C.okEdge,fontWeight:600,display:"flex",gap:8,alignItems:"baseline",flexWrap:"wrap"}}>
-          <span>{"☁ "}{
-            saveState==="saving"?"Saving to the cloud copy…"
-            :lastSaved?("Last cloud save: "+localReadable(lastSaved.savedAt)+" ("+relTime(lastSaved.savedAt)+") · "+lastSaved.rows+" exhibitions")
-            :cloudLive&&cloudLive.why?("Cloud copy: "+cloudLive.why)
-            :cloudLive&&cloudLive.rec===null?"No cloud copy yet — it starts when you open your ledger."
-            :"Checking the cloud copy…"
-          }</span>
+          <span>{"☁ "}{cloudStatus.text}</span>
           {!hasLedger&&cloudLive&&cloudLive.rec&&<button onClick={requestOpenCloud} style={{background:"none",border:"none",color:C.action,fontSize:11,fontWeight:600,textDecoration:"underline",cursor:"pointer",padding:0}}>Open it</button>}
         </div>}
         <div style={{marginTop:16}}>
