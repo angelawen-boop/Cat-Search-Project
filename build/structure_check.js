@@ -10,6 +10,8 @@
  *      Levels: foundations 1, connections 2, saving and logs 3, the feature parts (ledger, periods, import,
  *      shop_finder, lookup) 4, screens 5.
  *   2. any part but connections/store.jsx calls useCap("db"), or calls .doc( or .collection( on something.
+ *   3. any part outside screens/ uses a React hook (useState, useEffect, useMemo, useCallback, useRef,
+ *      useReducer, useLayoutEffect, useContext) or contains JSX: state and drawing are the screens' own.
  * References between different feature parts (level 4) are listed, not failed.
  * Exit 0 when clean, 1 on a violation.
  */
@@ -21,6 +23,9 @@ const { partFiles } = require('./app_join.js');
 
 const LEVEL = { foundations: 1, connections: 2, saving: 3, logs: 3, ledger: 4, periods: 4, import: 4, shop_finder: 4, lookup: 4, screens: 5 };
 const STORE_DOOR = 'connections/store.jsx';
+
+const HOOKS = new Set(['useState', 'useEffect', 'useMemo', 'useCallback', 'useRef', 'useReducer', 'useLayoutEffect', 'useContext']);
+const SCREENS = 'screens';
 
 const levelOf = file => LEVEL[file.split('/')[0]];
 
@@ -61,7 +66,7 @@ function check(root) {
   const topLevel = d => d && (ts.isFunctionDeclaration(d) || ts.isClassDeclaration(d) || ts.isVariableDeclaration(d))
     && (ts.isSourceFile(d.parent) || (ts.isVariableDeclarationList(d.parent) && ts.isVariableStatement(d.parent.parent) && ts.isSourceFile(d.parent.parent.parent)));
 
-  const upward = new Map(), sideways = new Map(), direct = [];
+  const upward = new Map(), sideways = new Map(), direct = [], screenOnly = [];
   for (const f of files) {
     const sf = program.getSourceFile(path.resolve(root, names(f)));
     const mine = levelOf(f);
@@ -79,6 +84,10 @@ function check(root) {
           }
         }
       }
+      if (f.split('/')[0] !== SCREENS) {
+        if (ts.isIdentifier(n) && HOOKS.has(n.text)) screenOnly.push({ from: f, what: 'uses the React hook ' + n.text, line: lineOf(n) });
+        if (ts.isJsxElement(n) || ts.isJsxSelfClosingElement(n) || ts.isJsxFragment(n)) screenOnly.push({ from: f, what: 'contains JSX', line: lineOf(n) });
+      }
       if (f !== STORE_DOOR && ts.isCallExpression(n)) {
         const c = n.expression;
         if (ts.isIdentifier(c) && c.text === 'useCap' && n.arguments[0] && (ts.isStringLiteralLike(n.arguments[0])) && n.arguments[0].text === 'db')
@@ -95,6 +104,8 @@ function check(root) {
     problems.push(`app/${u.from} (level ${levelOf(u.from)}) names ${u.name}, defined in app/${u.defIn} (level ${levelOf(u.defIn)}) — a part may not name a higher one (line ${u.line}${u.count > 1 ? `, ${u.count} times` : ''})`);
   for (const d of direct)
     problems.push(`app/${d.from} line ${d.line} calls ${d.what} — only app/${STORE_DOOR} reaches the store`);
+  for (const d of screenOnly.filter((d, k, a) => a.findIndex(x => x.from === d.from && x.what === d.what && x.line === d.line) === k))
+    problems.push(`app/${d.from} line ${d.line} ${d.what} — only the parts in app/${SCREENS}/ hold state and drawing`);
   return { problems, sideways: [...sideways.values()], parts: files.length };
 }
 
@@ -113,5 +124,5 @@ if (require.main === module) {
     console.log(`STRUCTURE CHECK FAILED: ${r.problems.length} problem(s) in ${r.parts} parts.`);
     process.exit(1);
   }
-  console.log(`PASS  structure: no part names a higher one, and only ${STORE_DOOR} reaches the store (${r.parts} parts)`);
+  console.log(`PASS  structure: no part names a higher one, only ${STORE_DOOR} reaches the store, and no part outside ${SCREENS}/ uses a hook or JSX (${r.parts} parts)`);
 }
