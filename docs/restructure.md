@@ -245,7 +245,12 @@ the first of them:
 
 ## Handover record — updated after every step
 
-**Where we are:** layers 0–5a moved and merged, page identical; nothing reorganized yet. Next: the work items in order, 1A first (see "Work items now").
+**Where we are:** layers 0–5a moved; the side-by-side check widened (merged); 1A done. Next: 1B.
+
+**Work items done:** the wider check (Opus; proved on every screen, a mixed review added by the
+coordinator). 1A (Sonnet): the parts hold no copy of the scraper's rules, the join writes them; only
+the summary examples are stored; gates re-run by the coordinator, side by side identical; 22 of 22
+suites (the old copy check folded into the join check).
 
 **Done and proven:** the moving script, the join, the gates and side-by-side check; the proof passes
 (every layer moves with the page identical; all eight breaks caught; the moving script refuses a
