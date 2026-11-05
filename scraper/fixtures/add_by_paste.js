@@ -120,8 +120,10 @@ const runtime = () => ({
     const none = read(CARO, 'Anthony Caro', '');
     ok(!none.faults.length && none.page.noDates && !none.page.start, 'PS-004a: no date words given: undated, with the sweep\'s note');
     const metPage = page(MET, 'https://www.metmuseum.org/x'), T = 'The Age of Spirituality: Late Antique and Early Christian Art, Third to Seventh Century';
-    const reworded = faults({ title: T, dates: 'November 19, 1977 to February 12, 1978', summary: 'Late Antique and Early Christian art, third to seventh century.' }, metPage);
-    const fromRest = faults({ title: T, dates: 'November 19, 1977 to February 12, 1978', summary: 'Landmark Late Antique and Early Christian art at the Met.' }, metPage);
+    // The check is the one every way in shares (answerFaults), no longer Paste's own.
+    const answerFaults = fn('answerFaults');
+    const reworded = answerFaults({ title: T, dates: 'November 19, 1977 to February 12, 1978', summary: 'Late Antique and Early Christian art, third to seventh century.' }, metPage);
+    const fromRest = answerFaults({ title: T, dates: 'November 19, 1977 to February 12, 1978', summary: 'Landmark Late Antique and Early Christian art at the Met.' }, metPage);
     ok(reworded.some(f => /only rewords the title/.test(f)) && !fromRest.length,
       'PS-004c: her Met paste: a summary that only rewords the title is refused and asked again; one with more passes', JSON.stringify([reworded, fromRest]));
     const D = fn('DATES');

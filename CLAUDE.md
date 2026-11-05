@@ -264,6 +264,8 @@ rules, Cini, Prado, Correr): `docs/app.md`, `docs/add_by_link.md`.
   since 57.2 (her decision; `docs/app.md` §1, "Which model"). Her verdict: they try harder, but extra detail is not richness —
   some now say things no one would go to a show for. Her test: would you go to see the exhibition on that byline? Her case
   (Louisiana): *Louise Bourgeois* → "Bourgeois's Cells, begun when she was almost eighty." Agree any change with her first.
+- **In code, not yet published — never the title reworded, for every way in** (sweep, Links, Pages, Paste: one shared rule
+  and check; it had been Paste's alone). Her next links and sweep confirm (`docs/compression.md`, "Enforcement").
 - **In code, not yet published (her decision: no publish) — a shop written into a venue's entry is never asked on the shop
   screen** (Basel was asked again; AL-092). Goes out with the next publish.
 - **OPEN — Belvedere stays German** (lookup log L1792752998011063a): the English search found `belvedere.at/en/museum-shop`, whose

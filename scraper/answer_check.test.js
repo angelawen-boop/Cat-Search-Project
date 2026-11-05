@@ -62,3 +62,29 @@ test('AC-006: the compressor refuses a run whose answer makes a claim its page d
     assert.strictEqual(passed, true);
   } finally { fs.rmSync(run, { recursive: true, force: true }); }
 });
+
+test('AC-007: a description that only rewords the title is caught — her Palazzo Strozzi links, plurals included', () => {
+  assert.strictEqual(A.rewordsTitle('Sargent and the American Impressionists in Florence.', 'Americans in Florence: Sargent and the American Impressionist'), true);
+  assert.strictEqual(A.rewordsTitle('Late Antique and Early Christian art, third to seventh century.', 'The Age of Spirituality: Late Antique and Early Christian Art, Third to Seventh Century'), true);
+  assert.strictEqual(A.rewordsTitle('Over sixty Emin works on sex and solitude.', 'Tracey Emin: Sex and Solitude'), false);
+  assert.strictEqual(A.rewordsTitle('Sargent and the Americans who made Florence home.', 'Americans in Florence: Sargent and the American Impressionist'), false);
+  assert.strictEqual(A.rewordsTitle('Bronze sculpture.', ''), false);
+});
+
+test('AC-008: the compressor refuses a sweep answer that only rewords the title, as Links, Pages and Paste do', () => {
+  const dir = '_answer_check_title_' + process.pid;
+  const run = path.join(__dirname, 'output', dir);
+  fs.mkdirSync(run, { recursive: true });
+  try {
+    fs.writeFileSync(path.join(run, 'compress_pending.json'), JSON.stringify({ rows: [
+      { index: 0, title: 'Americans in Florence: Sargent and the American Impressionist', venue_code: 'occ', action: 'review', raw: 'Sargent and the Americans who made Florence home.' },
+    ] }));
+    fs.writeFileSync(path.join(run, 'compress_answers.json'), JSON.stringify({ 0: 'Sargent and the American Impressionists in Florence.' }));
+    const said = [], log = console.log;
+    console.log = (...a) => said.push(a.join(' '));
+    let passed;
+    try { passed = CLI.check(dir); } finally { console.log = log; }
+    assert.strictEqual(passed, false);
+    assert.ok(said.some(l => /row 0: the summary only rewords the title/.test(l)), said.join('\n'));
+  } finally { fs.rmSync(run, { recursive: true, force: true }); }
+});

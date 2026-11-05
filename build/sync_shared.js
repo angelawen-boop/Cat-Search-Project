@@ -133,7 +133,7 @@ function answerCheckBlock() {
   const end = src.indexOf('\nmodule.exports');
   if (start < 0 || end < 0) die('scraper/answer_check.js has lost its \'use strict\' line or its module.exports');
   // Wrapped so its names (fold, CLAIMS…) cannot collide with the app's.
-  return 'const ANSWER_CHECK=(()=>{\n' + src.slice(start + "'use strict';".length, end).trim() + '\nreturn { MAX_WORDS, validateAnswer, validateEnglish, stringFaults, unsupportedClaims };\n})();';
+  return 'const ANSWER_CHECK=(()=>{\n' + src.slice(start + "'use strict';".length, end).trim() + '\nreturn { MAX_WORDS, validateAnswer, validateEnglish, stringFaults, unsupportedClaims, rewordsTitle, REWORDS_TITLE };\n})();';
 }
 function boilerplateBlock() {
   return 'const BOILERPLATE=' + JSON.stringify(require(path.join(ROOT, 'scraper', 'boilerplate.js')).BOILERPLATE) + ';';

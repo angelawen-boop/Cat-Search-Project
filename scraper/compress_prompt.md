@@ -114,6 +114,8 @@ that came back in Italian would quietly break that.
 > - Maximum 10 words. The examples average about six.
 > - End with a full stop. Avoid colons — the accepted summaries almost never use one.
 > - Name the artist or artists the exhibition is built around.
+> - Say what the exhibition shows, from the text — never the title reworded. The
+>   title is shown beside the summary, so a summary that repeats it tells her nothing.
 >
 > NAME THEM THE WAY A GALLERY-GOER WOULD. Surname alone, unless the surname alone
 > would be ambiguous. Write "Zurbarán", not "Francisco de Zurbarán". "Shonibare",

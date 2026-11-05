@@ -281,6 +281,10 @@ function runtime() {
           ? { summary: 'Pontormo\u2019s paintings and drawings.', english: '', englishSpeaking: false }
           : { summary: 'First major monographic exhibition on Pontormo.', english: '', englishSpeaking: false };
         if (/^Never Passes$/.test(title)) return { summary: 'The first show of its kind.', english: '', englishSpeaking: false };
+        // AL-062d: her Palazzo Strozzi link's live answer, the title said again, then right when told why.
+        if (/^Americans in Florence/.test(title)) return /YOUR LAST ANSWER WAS REFUSED/.test(prompt)
+          ? { summary: 'Sargent and the Americans who made Florence home.', english: '', englishSpeaking: false }
+          : { summary: 'Sargent and the American Impressionists in Florence.', english: '', englishSpeaking: false };
         // Within the ten-word cap, as every answer must be (scraper/answer_check.js).
         return { summary: 'A summary of ' + String(title).split(/\s+/).slice(0, 6).join(' ') + '.', english: '', englishSpeaking: true };
       } };
@@ -1629,10 +1633,12 @@ function runtime() {
     const S1 = 'https://scuderiequirinale.it/en/exhibition/pontormo', S2 = 'https://scuderiequirinale.it/en/exhibition/never-passes';
     P[S1] = { url: S1, title: 'PONTORMO', full_content: '# Pontormo' + body };
     P[S2] = { url: S2, title: 'Never Passes', full_content: '# Never Passes' + body.replace('Pontormo is', 'the show is') };
+    const S3 = 'https://scuderiequirinale.it/en/exhibition/americans-in-florence';
+    P[S3] = { url: S3, title: 'Americans in Florence', full_content: '# Americans in Florence: Sargent and the American Impressionist' + body.replace('Pontormo is', 'Sargent and the Americans who made Florence home are') };
     await click(importBtn());
     if (!dialog().querySelector('textarea')) await click(inDialog('Links'));
     const box = dialog().querySelector('textarea');
-    await act(async () => { setter.call(box, S1 + '\n' + S2); box.dispatchEvent(new win.Event('input', { bubbles: true })); });
+    await act(async () => { setter.call(box, S1 + '\n' + S2 + '\n' + S3); box.dispatchEvent(new win.Event('input', { bubbles: true })); });
     await settle();
     calls.length = 0;
     await click([...dialog().querySelectorAll('button')].find(b => b.textContent === 'Read'));
@@ -1643,6 +1649,10 @@ function runtime() {
       'AL-062: a description making a claim its page does not hold ("first", Pontormo) is asked for again, with the reason', JSON.stringify(p.map(c => c.prompt.slice(-160))));
     ok(p.length === 2 && p[1].prompt.includes('THE ANSWER REFUSED: ' + JSON.stringify({ summary: 'First major monographic exhibition on Pontormo.', english: '', englishSpeaking: false })),
       'AL-062c:  and Claude is shown the answer it gave, to fix rather than start afresh (her Memling link)', p[1] && p[1].prompt.slice(-300));
+    const am = asks('Americans in Florence: Sargent and the American Impressionist');
+    ok(am.length === 2 && /YOUR LAST ANSWER WAS REFUSED: the summary only rewords the title/.test(am[1].prompt)
+      && /never the title reworded/.test(am[0].prompt) && win.document.body.textContent.includes('Sargent and the Americans who made Florence home.'),
+      'AL-062d:  a link\'s description that only rewords the title is refused and asked again — the same rule and check as Paste and the sweep', JSON.stringify(am.map(c => c.prompt.slice(-200))));
     const shown = win.document.body.textContent;
     ok(shown.includes('Pontormo\u2019s paintings and drawings.') && !/First major monographic/.test(shown),
       'AL-062a:  the answer that passes is the card\'s description', shown.slice(Math.max(0, shown.indexOf('Pontormo') - 40), shown.indexOf('Pontormo') + 200));

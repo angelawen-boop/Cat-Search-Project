@@ -109,6 +109,12 @@ AD-009–010. Her next monthly import is the check (CLAUDE.md §2.2.7).
   all pass. Cases: Pontormo's "first" (a link); in the imported 15 Oct run, Brera's "25 confiscated
   paintings" (the page says 52), the Rijksmuseum's "120 works" and "100 highlights" (no number on either
   page) — imported as swept (her decision: a fix never changes a run already swept). AC- tests.
+- **Never the title reworded — one rule and one check for every way in** (sweep, Links, Pages, Paste; her decision).
+  The shared rules say so; `rewordsTitle` refuses a description whose every word is the title's. Measured on her 8
+  Palazzo Strozzi links (fresh calls, the app's exact prompt): Opus and Sonnet both echoed the title on the old rules,
+  so the model was not the cause; removing the title line or the other answer keys changed nothing. On the new rules,
+  title words in a description fell from about half to about an eighth, none mostly title, no name off the page.
+  The check alone catches only a pure restatement (1 of the 8); the rule does the work. AC-007, AC-008, AL-062d.
 - **Process is enforced by a hook:** `.claude/hooks/confirm-subagent.sh` asks
   before any subagent spawns, matching both `Task` and `Agent`, and rewrites the
   approval text to lead with the MODEL and its effort ("SESSION DEFAULT" when

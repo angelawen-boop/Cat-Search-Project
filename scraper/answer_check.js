@@ -139,4 +139,22 @@ function unsupportedClaims(text, source) {
   return out;
 }
 
-module.exports = { MAX_WORDS, wordCount, validateAnswer, validateEnglish, stringFaults, unsupportedClaims, CLAIMS };
+// Words a description may share with its title and still say something.
+const TITLE_SMALL_WORDS = new Set(['the', 'and', 'for', 'from', 'with', 'art', 'its', 'his', 'her', 'their']);
+const titleWords = s => fold(s).replace(/[^\p{L}\p{N}]+/gu, ' ').trim().split(' ').filter(Boolean);
+/**
+ * True when every word of the description that carries meaning is already in the exhibition's
+ * title — the title said again, which tells her nothing (her Met paste, her Palazzo Strozzi links).
+ * A word and its plural count as one ("Impressionist", "Impressionists"). Every way in runs it:
+ * the sweep's compressor, Links, Pages and Paste.
+ */
+function rewordsTitle(text, title) {
+  const t = new Set(titleWords(title));
+  if (!t.size) return false;
+  const said = titleWords(text).filter(w => w.length > 2 && !TITLE_SMALL_WORDS.has(w));
+  const inTitle = w => t.has(w) || t.has(w.replace(/s$/, '')) || t.has(w + 's');
+  return said.length > 0 && said.every(inTitle);
+}
+const REWORDS_TITLE = 'the summary only rewords the title: say what the exhibition shows, from the rest of the text';
+
+module.exports = { MAX_WORDS, wordCount, validateAnswer, validateEnglish, stringFaults, unsupportedClaims, rewordsTitle, REWORDS_TITLE, CLAIMS };

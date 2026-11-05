@@ -421,6 +421,7 @@ function check(dir) {
       // A claim or a number the page does not hold. A retitle row keeps its held description and
       // asks only for the English title, so there is nothing new to check.
       if (p.raw) for (const f of A.unsupportedClaims(summary, [p.title, p.raw].join('\n'))) problems.push(`row ${k}: ${f} — ${shown}`);
+      if (p.raw && A.rewordsTitle(summary, p.title)) problems.push(`row ${k}: ${A.REWORDS_TITLE} — ${shown}`);
     }
     if (typeof v === 'object' && typeof v.english === 'string') for (const f of A.stringFaults(v.english + '.').filter(f => f !== 'does not end in a full stop')) problems.push(`row ${k}: the English title ${f} — ${shown}`);
   }
