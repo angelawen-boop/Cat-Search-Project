@@ -375,7 +375,9 @@ has no shelf).
 The app names no model. It asks the viewer's Claude through `sample`; every
 lookup read passes `modelTier: default`. **The one exception: the Links, Pages and Paste read asks `complex`**
 (her decision, after its descriptions turned flat on `default`; `LINK_READ_TIER`, AL-090) — one request for the whole
-import (`docs/add_by_link.md`), so the cost is per import, not per link. Her verdict on 57.2: better, not necessarily good (CLAUDE.md §2.2.11). `quick` risks exactly the misreadings
+import (`docs/add_by_link.md`), so the cost is per import, not per link. **Which model answered is not recorded:** the app reads
+`sample.json`, which hides `modelTierApplied`, so the lookup log cannot show whether `complex` was served. Measured on her
+Palazzo Strozzi links: the old rules echoed the title on Opus and Sonnet alike, so the model was not the cause. Her verdict on 57.2: better, not necessarily good (CLAUDE.md §2.2.11). `quick` risks exactly the misreadings
 this route was rebuilt to fix; `complex` costs more; nothing has misread, so
 there is nothing to tune against. Only one `.jsx` has ever existed in this repo
 — the "Sonnet copy" was a Chat artifact.
