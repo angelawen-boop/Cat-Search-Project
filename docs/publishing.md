@@ -21,7 +21,12 @@ the next goes through. Later ones go straight through.
 
 ## What is live now
 
-**Live: 57.3 in her app**: Louisiana — a link that opens its Past Exhibitions list says "The page contents cannot be seen — Parallel fault. Import the full saved page." (AL-091a); its two-line heading ending in a comma runs on (Arbus, AL-091); cards "Denmark Louisiana"; Moderna Museet's cards "Stockholm Moderna".
+**Live: 58 in her app**: Links, Pages and Paste send the whole import to Claude in one request, with the sweep's own
+opening, full current examples and rules (re-taken at every build); only pages refused or missing are asked again; a large
+import is split (AL-003a, AL-053, AL-094). Never the title reworded, one shared rule and check for every way in (AC-007,
+AC-008, AL-062d). A shop written into a venue's entry is never asked on the shop screen (Basel; AL-092).
+
+Before that 57.3: Louisiana — a link that opens its Past Exhibitions list says "The page contents cannot be seen — Parallel fault. Import the full saved page." (AL-091a); its two-line heading ending in a comma runs on (Arbus, AL-091); cards "Denmark Louisiana"; Moderna Museet's cards "Stockholm Moderna".
 
 Before that 57.2: the Links, Pages and Paste read (one Claude call: description, subtitle, English title, venue; Paste's title and dates) asks the `complex` tier, every other read stays on `default` (her decision; AL-090); Moderna Museet's "16.2–26.5 2013" and "8.10 2011–15.1 2012" dates read (a Moderna Museet rule, `SPACED_YEAR_VENUES`; DS-012); its cards say "Stockholm Moderna Museet" (her name).
 

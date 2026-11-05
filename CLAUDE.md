@@ -264,13 +264,11 @@ rules, Cini, Prado, Correr): `docs/app.md`, `docs/add_by_link.md`.
   since 57.2 (her decision; `docs/app.md` §1, "Which model"). Her verdict: they try harder, but extra detail is not richness —
   some now say things no one would go to a show for. Her test: would you go to see the exhibition on that byline? Her case
   (Louisiana): *Louise Bourgeois* → "Bourgeois's Cells, begun when she was almost eighty." Agree any change with her first.
-- **In code, not yet published — one request to Claude for the whole Links, Pages or Paste import** (her decision),
-  with the sweep's own opening, full current examples and rules; only pages refused or missing are asked again
-  (`docs/add_by_link.md`, step 4). Her next import confirms.
-- **In code, not yet published — never the title reworded, for every way in** (sweep, Links, Pages, Paste: one shared rule
-  and check; it had been Paste's alone). Her next links and sweep confirm (`docs/compression.md`, "Enforcement").
-- **In code, not yet published (her decision: no publish) — a shop written into a venue's entry is never asked on the shop
-  screen** (Basel was asked again; AL-092). Goes out with the next publish.
+- **Live at 58, her next import confirms — one request to Claude for the whole Links, Pages or Paste import** (her
+  decision), with the sweep's own opening, full current examples and rules; only pages refused or missing are asked again
+  (`docs/add_by_link.md`, step 4). **Never the title reworded**, one shared rule and check for every way in, the sweep
+  included (`docs/compression.md`, "Enforcement"). **A shop written into a venue's entry is never asked on the shop
+  screen** (Basel; AL-092).
 - **OPEN — Belvedere stays German** (lookup log L1792752998011063a): the English search found `belvedere.at/en/museum-shop`, whose
   shop link points to the German `belvedere.at/shop`, and the app followed it; the English-version step tried only English FRONT
   pages, never the English version of the shop page. Its English shop's address is not known. The shop check passed it because a
@@ -527,7 +525,7 @@ bot-blocked, so Pages and Paste only) is a fact about that venue, never a limit 
 > restating `capabilities` must restate all four; omitting it carries them
 > forward. **Renaming the connector means restating them.**
 
-**Live: 57.3 in her app** (the app is named **Art Watch** on screen since 57; the header's big line is unchanged), with the cloud ledger (merged at 46). What each recent version changed is in
+**Live: 58 in her app** (the app is named **Art Watch** on screen since 57; the header's big line is unchanged), with the cloud ledger (merged at 46). What each recent version changed is in
 `docs/publishing.md`, "What is live now".
 
 #### The mental model, load-bearing
