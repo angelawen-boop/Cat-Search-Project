@@ -5,6 +5,11 @@
  * true makes the nth write fail, as a dropped connection would. `beforeSet(path)` may
  * return a promise that holds a write back until it resolves, as a slow store would.
  * Used by cloud_ledger.js and cloud_app.js.
+ *
+ * The page reaches its store only through its door (connections/store.jsx: storeRead, storeWrite,
+ * storeDelete, storeList…), which asks `useCap("db")`. `onStore` binds code lifted from the page to a
+ * stand-in store: each named function takes the store as its first argument, as it did before the door.
+ * `doorSource` lifts the door itself, for a fixture whose section does not hold it.
  */
 'use strict';
 function fakeStore({ failOnSet, beforeSet } = {}) {
@@ -44,4 +49,22 @@ function fakeStore({ failOnSet, beforeSet } = {}) {
   };
 }
 
-module.exports = { fakeStore };
+// make(useCap) runs the lifted code and returns its functions; the named ones take the store first.
+function onStore(make, storeFns) {
+  let cur = null;
+  const api = make(async name => (name === 'db' ? cur : null));
+  const out = { ...api };
+  for (const k of storeFns) out[k] = (db, ...a) => { cur = db; return api[k](...a); };
+  return out;
+}
+
+const DOOR = ['storeRef', 'storeNo', 'storeReached', 'storeRead', 'storeList', 'storeWrite', 'storeDelete', 'storeWritable'];
+function doorSource(src) {
+  return DOOR.map(n => {
+    const m = new RegExp('^(async )?function ' + n + '\\(', 'm').exec(src);
+    if (!m) throw new Error('fake_store: the door\'s ' + n + ' is not in Cat_Watch.jsx');
+    return src.slice(m.index, src.indexOf('\n}\n', m.index) + 3);
+  }).join('');
+}
+
+module.exports = { fakeStore, onStore, doorSource };

@@ -45,16 +45,14 @@ function quarantineFromList(list){
 
 
 async function readQuarantine(){
-  const db=await useCap("db");
-  if(!db){ markUnread(UNREAD_QUAR); return {map:{},why:"This page can\u2019t reach its quarantine list in this viewer, so nothing is being blocked."}; }
   try{
-    const snap=await db.doc(QUARANTINE_DOC).get();
+    const snap=await storeRead(QUARANTINE_DOC,{part:UNREAD_QUAR});
     if(!snap.exists) return {map:{},why:null};
-    const d=snap.data()||{};
+    const d=snap.data||{};
     return {map:(d.rows&&typeof d.rows==="object")?d.rows:{},why:null};
   }catch(e){
-    markUnread(UNREAD_QUAR);
     const code=String((e&&e.code)||"");
+    if(code==="no_store") return {map:{},why:"This page can\u2019t reach its quarantine list in this viewer, so nothing is being blocked."};
     if(code==="not_granted") return {map:{},why:"You declined this page access to its quarantine list."};
     return {map:{},why:"Couldn\u2019t read the quarantine list ("+(code||"unknown")+")."};
   }
@@ -63,9 +61,6 @@ async function readQuarantine(){
 
 
 async function writeQuarantine(next){
-  if(STORE_UNREAD.has(UNREAD_QUAR))return false;
-  const db=await useCap("db");
-  if(!db) return false;
-  try{ await db.doc(QUARANTINE_DOC).set({rows:next,updatedAt:new Date().toISOString()}); return true; }
+  try{ await storeWrite(QUARANTINE_DOC,{rows:next,updatedAt:new Date().toISOString()},{part:UNREAD_QUAR}); return true; }
   catch{ return false; }
 }

@@ -79,25 +79,21 @@ const pageDocId=u=>{ let h=5381; for(const c of String(normalizeUrlKey(u)||u))h=
 //@piece readPendingPages
 
 async function readPendingPages(){
-  const db=await useCap("db");
-  if(!db){ markUnread(UNREAD_PAGES); return[]; }
   try{
-    const snap=await db.collection(PAGES_COLL).orderBy("at","asc").limit(1000).get();
-    return snap.docs.map(d=>d.data()||{}).filter(p=>p.url&&p.text).map(p=>({url:p.url,title:p.title||"",name:p.name||"",text:p.text}));
-  }catch{ markUnread(UNREAD_PAGES); return []; }
+    const list=await storeList(PAGES_COLL,{by:"at",dir:"asc",limit:1000},{part:UNREAD_PAGES});
+    return list.map(d=>d.data||{}).filter(p=>p.url&&p.text).map(p=>({url:p.url,title:p.title||"",name:p.name||"",text:p.text}));
+  }catch{ return []; }
 }
 //@piece writePendingPages
 
 async function writePendingPages(list){
-  if(STORE_UNREAD.has(UNREAD_PAGES))return false;
-  const db=await useCap("db");
-  if(!db)return false;
+  if(!await storeReached({part:UNREAD_PAGES}))return false;
   try{
     const keep=new Set(list.map(p=>pageDocId(p.url)));
-    const snap=await db.collection(PAGES_COLL).orderBy("at","asc").limit(1000).get();
-    for(const d of snap.docs) if(!keep.has(d.id))await db.doc(PAGES_COLL+"/"+d.id).delete();
+    const had=await storeList(PAGES_COLL,{by:"at",dir:"asc",limit:1000});
+    for(const d of had) if(!keep.has(d.id))await storeDelete(PAGES_COLL+"/"+d.id);
     const at=Date.now();
-    for(let i=0;i<list.length;i++){ const p=list[i]; await db.doc(PAGES_COLL+"/"+pageDocId(p.url)).set({url:p.url,title:p.title||"",name:p.name||"",text:p.text,at:at+i}); }
+    for(let i=0;i<list.length;i++){ const p=list[i]; await storeWrite(PAGES_COLL+"/"+pageDocId(p.url),{url:p.url,title:p.title||"",name:p.name||"",text:p.text,at:at+i}); }
     return true;
   }catch{ return false; }
 }
@@ -178,26 +174,22 @@ let pastesWritten=new Map();
 //@piece readPendingPastes
    // box id → what the store holds for it
 async function readPendingPastes(){
-  const db=await useCap("db");
-  if(!db){ markUnread(UNREAD_PASTES); return[]; }
   try{
-    const snap=await db.collection(PASTES_COLL).orderBy("at","asc").limit(1000).get();
-    const l=snap.docs.map(d=>({id:d.id,...(d.data()||{})})).map(x=>({id:x.id,at:+x.at||0,url:String(x.url||""),text:String(x.text||"")})).filter(filledBox);
+    const list=await storeList(PASTES_COLL,{by:"at",dir:"asc",limit:1000},{part:UNREAD_PASTES});
+    const l=list.map(d=>({id:d.id,...(d.data||{})})).map(x=>({id:x.id,at:+x.at||0,url:String(x.url||""),text:String(x.text||"")})).filter(filledBox);
     pastesWritten=new Map(l.map(x=>[x.id,x.url+"\n"+x.text]));
     return l;
-  }catch{ markUnread(UNREAD_PASTES); return []; }
+  }catch{ return []; }
 }
 //@piece writePendingPastes
 
 async function writePendingPastes(items){
-  if(STORE_UNREAD.has(UNREAD_PASTES))return false;
-  const db=await useCap("db");
-  if(!db)return false;
+  if(!await storeReached({part:UNREAD_PASTES}))return false;
   try{
     const keep=items.filter(filledBox), ids=new Set(keep.map(x=>x.id));
-    for(const id of [...pastesWritten.keys()]) if(!ids.has(id)){ await db.doc(PASTES_COLL+"/"+id).delete(); pastesWritten.delete(id); }
+    for(const id of [...pastesWritten.keys()]) if(!ids.has(id)){ await storeDelete(PASTES_COLL+"/"+id); pastesWritten.delete(id); }
     for(const x of keep){ const v=x.url+"\n"+x.text; if(pastesWritten.get(x.id)===v)continue;
-      await db.doc(PASTES_COLL+"/"+x.id).set({url:x.url,text:x.text,at:x.at}); pastesWritten.set(x.id,v); }
+      await storeWrite(PASTES_COLL+"/"+x.id,{url:x.url,text:x.text,at:x.at}); pastesWritten.set(x.id,v); }
     return true;
   }catch{ return false; }
 }
@@ -229,15 +221,10 @@ function mergePages(had,add){
 
 
 async function readPendingLinks(){
-  const db=await useCap("db");
-  if(!db){ markUnread(UNREAD_LINKS); return""; }
-  try{ const s=await db.doc(LINKS_DOC).get(); return s.exists?String((s.data()||{}).text||""):""; }catch{ markUnread(UNREAD_LINKS); return ""; }
+  try{ const s=await storeRead(LINKS_DOC,{part:UNREAD_LINKS}); return s.exists?String((s.data||{}).text||""):""; }catch{ return ""; }
 }
 //@piece writePendingLinks
 
 async function writePendingLinks(text){
-  if(STORE_UNREAD.has(UNREAD_LINKS))return false;
-  const db=await useCap("db");
-  if(!db)return false;
-  try{ await db.doc(LINKS_DOC).set({text:String(text||""),updatedAt:new Date().toISOString()}); return true; }catch{ return false; }
+  try{ await storeWrite(LINKS_DOC,{text:String(text||""),updatedAt:new Date().toISOString()},{part:UNREAD_LINKS}); return true; }catch{ return false; }
 }

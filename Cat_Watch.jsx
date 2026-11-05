@@ -2276,15 +2276,10 @@ const UNREAD_OCC="the link venues", UNREAD_LINKS="the links waiting in the Links
   UNREAD_PASTES="the boxes waiting in Paste",
   UNREAD_SWEEPS="the sweep log", UNREAD_QUAR="the quarantine list";
 async function readOccasional(){
-  const db=await useCap("db");
-  if(!db){ markUnread(UNREAD_OCC); return{}; }
-  try{ const s=await db.doc(OCC_DOC).get(); return s.exists?((s.data()||{}).venues||{}):{}; }catch{ markUnread(UNREAD_OCC); return {}; }
+  try{ const s=await storeRead(OCC_DOC,{part:UNREAD_OCC}); return s.exists?((s.data||{}).venues||{}):{}; }catch{ return {}; }
 }
 async function writeOccasional(map){
-  if(STORE_UNREAD.has(UNREAD_OCC))return false;
-  const db=await useCap("db");
-  if(!db)return false;
-  try{ await db.doc(OCC_DOC).set({venues:map,updatedAt:new Date().toISOString()}); return true; }catch{ return false; }
+  try{ await storeWrite(OCC_DOC,{venues:map,updatedAt:new Date().toISOString()},{part:UNREAD_OCC}); return true; }catch{ return false; }
 }
 // ── PAGES: a show page she saved (her decision; docs/add_by_link.md, "Saved pages") ──
 // For a site that refuses Parallel. A saved page (.mht/.mhtml from Chrome, or .html) is
@@ -2353,23 +2348,19 @@ function savedPageReply(text,parse){
 const PAGES_COLL="links_pages";
 const pageDocId=u=>{ let h=5381; for(const c of String(normalizeUrlKey(u)||u))h=((h*33)^c.charCodeAt(0))>>>0; return "p"+h.toString(36); };
 async function readPendingPages(){
-  const db=await useCap("db");
-  if(!db){ markUnread(UNREAD_PAGES); return[]; }
   try{
-    const snap=await db.collection(PAGES_COLL).orderBy("at","asc").limit(1000).get();
-    return snap.docs.map(d=>d.data()||{}).filter(p=>p.url&&p.text).map(p=>({url:p.url,title:p.title||"",name:p.name||"",text:p.text}));
-  }catch{ markUnread(UNREAD_PAGES); return []; }
+    const list=await storeList(PAGES_COLL,{by:"at",dir:"asc",limit:1000},{part:UNREAD_PAGES});
+    return list.map(d=>d.data||{}).filter(p=>p.url&&p.text).map(p=>({url:p.url,title:p.title||"",name:p.name||"",text:p.text}));
+  }catch{ return []; }
 }
 async function writePendingPages(list){
-  if(STORE_UNREAD.has(UNREAD_PAGES))return false;
-  const db=await useCap("db");
-  if(!db)return false;
+  if(!await storeReached({part:UNREAD_PAGES}))return false;
   try{
     const keep=new Set(list.map(p=>pageDocId(p.url)));
-    const snap=await db.collection(PAGES_COLL).orderBy("at","asc").limit(1000).get();
-    for(const d of snap.docs) if(!keep.has(d.id))await db.doc(PAGES_COLL+"/"+d.id).delete();
+    const had=await storeList(PAGES_COLL,{by:"at",dir:"asc",limit:1000});
+    for(const d of had) if(!keep.has(d.id))await storeDelete(PAGES_COLL+"/"+d.id);
     const at=Date.now();
-    for(let i=0;i<list.length;i++){ const p=list[i]; await db.doc(PAGES_COLL+"/"+pageDocId(p.url)).set({url:p.url,title:p.title||"",name:p.name||"",text:p.text,at:at+i}); }
+    for(let i=0;i<list.length;i++){ const p=list[i]; await storeWrite(PAGES_COLL+"/"+pageDocId(p.url),{url:p.url,title:p.title||"",name:p.name||"",text:p.text,at:at+i}); }
     return true;
   }catch{ return false; }
 }
@@ -2424,24 +2415,20 @@ let boxSeq=0;
 const filledBox=x=>!!(x.url.trim()||x.text.trim());
 let pastesWritten=new Map();   // box id → what the store holds for it
 async function readPendingPastes(){
-  const db=await useCap("db");
-  if(!db){ markUnread(UNREAD_PASTES); return[]; }
   try{
-    const snap=await db.collection(PASTES_COLL).orderBy("at","asc").limit(1000).get();
-    const l=snap.docs.map(d=>({id:d.id,...(d.data()||{})})).map(x=>({id:x.id,at:+x.at||0,url:String(x.url||""),text:String(x.text||"")})).filter(filledBox);
+    const list=await storeList(PASTES_COLL,{by:"at",dir:"asc",limit:1000},{part:UNREAD_PASTES});
+    const l=list.map(d=>({id:d.id,...(d.data||{})})).map(x=>({id:x.id,at:+x.at||0,url:String(x.url||""),text:String(x.text||"")})).filter(filledBox);
     pastesWritten=new Map(l.map(x=>[x.id,x.url+"\n"+x.text]));
     return l;
-  }catch{ markUnread(UNREAD_PASTES); return []; }
+  }catch{ return []; }
 }
 async function writePendingPastes(items){
-  if(STORE_UNREAD.has(UNREAD_PASTES))return false;
-  const db=await useCap("db");
-  if(!db)return false;
+  if(!await storeReached({part:UNREAD_PASTES}))return false;
   try{
     const keep=items.filter(filledBox), ids=new Set(keep.map(x=>x.id));
-    for(const id of [...pastesWritten.keys()]) if(!ids.has(id)){ await db.doc(PASTES_COLL+"/"+id).delete(); pastesWritten.delete(id); }
+    for(const id of [...pastesWritten.keys()]) if(!ids.has(id)){ await storeDelete(PASTES_COLL+"/"+id); pastesWritten.delete(id); }
     for(const x of keep){ const v=x.url+"\n"+x.text; if(pastesWritten.get(x.id)===v)continue;
-      await db.doc(PASTES_COLL+"/"+x.id).set({url:x.url,text:x.text,at:x.at}); pastesWritten.set(x.id,v); }
+      await storeWrite(PASTES_COLL+"/"+x.id,{url:x.url,text:x.text,at:x.at}); pastesWritten.set(x.id,v); }
     return true;
   }catch{ return false; }
 }
@@ -2461,15 +2448,10 @@ function mergePages(had,add){
 }
 
 async function readPendingLinks(){
-  const db=await useCap("db");
-  if(!db){ markUnread(UNREAD_LINKS); return""; }
-  try{ const s=await db.doc(LINKS_DOC).get(); return s.exists?String((s.data()||{}).text||""):""; }catch{ markUnread(UNREAD_LINKS); return ""; }
+  try{ const s=await storeRead(LINKS_DOC,{part:UNREAD_LINKS}); return s.exists?String((s.data||{}).text||""):""; }catch{ return ""; }
 }
 async function writePendingLinks(text){
-  if(STORE_UNREAD.has(UNREAD_LINKS))return false;
-  const db=await useCap("db");
-  if(!db)return false;
-  try{ await db.doc(LINKS_DOC).set({text:String(text||""),updatedAt:new Date().toISOString()}); return true; }catch{ return false; }
+  try{ await storeWrite(LINKS_DOC,{text:String(text||""),updatedAt:new Date().toISOString()},{part:UNREAD_LINKS}); return true; }catch{ return false; }
 }
 
 // ── FINDING A NEW VENUE'S SHOP SECTION — once per venue, then kept ─────────
@@ -4104,12 +4086,12 @@ const FETCH_TOOL    = "web_fetch";
 const SEARCH_SESSION = "catwatch" + Math.random().toString(16).slice(2).padEnd(16, "0")
                                   + Date.now().toString(16);
 
+// One of the page's capabilities, or null when this viewer has none. The store ("db") is
+// reached only through the door below.
 async function useCap(name){
   try{
     if(typeof window==="undefined"||!window.claude||typeof window.claude.use!=="function")return null;
-    const cap=await window.claude.use(name);
-    // A READ-ONLY COPY CANNOT WRITE TO THE STORE — see ONE COPY EDITS.
-    return (name==="db"&&cap&&cloudReadOnly)?readOnlyStore(cap):cap;
+    return await window.claude.use(name);
   }catch{ return null; }
 }
 
@@ -4298,8 +4280,7 @@ async function gzipBase64(text){
 async function saveLookupTape(tape,out){
   if(lookupTape===tape)lookupTape=null;
   try{
-    const db=await useCap("db");
-    if(!db||!tape)return false;
+    if(!await storeReached()||!tape)return false;
     const row=tape.row||{}, mu=MU[row.museumId];
     const at=new Date(tape.t0).toISOString();
     const body=JSON.stringify({
@@ -4314,21 +4295,21 @@ async function saveLookupTape(tape,out){
     const pieces=[];
     for(let i=0;i<text.length;i+=LOOKUP_PIECE)pieces.push(text.slice(i,i+LOOKUP_PIECE));
     const id="L"+tape.t0+Math.random().toString(36).slice(2,6);
-    const rec=db.doc(LOOKUP_LOG+"/"+id);
-    await rec.set({at,action:tape.action,title:row.title||null,venue:mu?mu.name:null,museumId:row.museumId||null,
+    const rec=LOOKUP_LOG+"/"+id;
+    await storeWrite(rec,{at,action:tape.action,title:row.title||null,venue:mu?mu.name:null,museumId:row.museumId||null,
       version:APP_VERSION,calls:tape.calls.length,enc,pieces:pieces.length,complete:false});
-    for(let i=0;i<pieces.length;i++)await rec.collection("pieces").doc(String(i)).set({text:pieces[i]});
-    await rec.update({complete:true});
-    await pruneLookupLog(db);
+    for(let i=0;i<pieces.length;i++)await storeWrite(rec+"/pieces/"+i,{text:pieces[i]});
+    await storeWrite(rec,{complete:true},{merge:true});
+    await pruneLookupLog();
     return true;
   }catch{ return false; }
 }
-async function pruneLookupLog(db){
-  const snap=await db.collection(LOOKUP_LOG).orderBy("at","desc").limit(1000).get();
-  for(const d of snap.docs.slice(LOOKUP_KEEP)){
-    const n=Number((d.data()||{}).pieces)||0, rec=db.doc(LOOKUP_LOG+"/"+d.id);
-    for(let i=0;i<n;i++)await rec.collection("pieces").doc(String(i)).delete();
-    await rec.delete();
+async function pruneLookupLog(){
+  const list=await storeList(LOOKUP_LOG,{by:"at",dir:"desc",limit:1000});
+  for(const d of list.slice(LOOKUP_KEEP)){
+    const n=Number((d.data||{}).pieces)||0, rec=LOOKUP_LOG+"/"+d.id;
+    for(let i=0;i<n;i++)await storeDelete(rec+"/pieces/"+i);
+    await storeDelete(rec);
   }
 }
 
@@ -4342,51 +4323,41 @@ const SWEEP_LOG_DOC = "sweeps/venues";
 // drawer prints it rather than showing an empty panel, because "no sweeps yet"
 // and "could not reach the store" look identical and mean opposite things.
 async function readSweepLog(){
-  const db=await useCap("db");
-  if(!db){ markUnread(UNREAD_SWEEPS); return {log:{},why:"This page can\u2019t reach its sweep log in this viewer."}; }
   try{
-    const snap=await db.doc(SWEEP_LOG_DOC).get();
+    const snap=await storeRead(SWEEP_LOG_DOC,{part:UNREAD_SWEEPS});
     if(!snap.exists) return {log:{},why:null};
-    const d=snap.data()||{};
+    const d=snap.data||{};
     const log=(d.venues&&typeof d.venues==="object")?d.venues:{};
     return {log,why:null};
   }catch(e){
-    markUnread(UNREAD_SWEEPS);
     const code=String((e&&e.code)||"");
+    if(code==="no_store") return {log:{},why:"This page can\u2019t reach its sweep log in this viewer."};
     if(code==="not_granted") return {log:{},why:"You declined this page access to its sweep log."};
     return {log:{},why:"Couldn\u2019t read the sweep log ("+(code||"unknown")+")."};
   }
 }
 
 async function writeSweepLog(next){
-  if(STORE_UNREAD.has(UNREAD_SWEEPS))return false;
-  const db=await useCap("db");
-  if(!db) return false;
-  try{ await db.doc(SWEEP_LOG_DOC).set({venues:next,updatedAt:new Date().toISOString()}); return true; }
+  try{ await storeWrite(SWEEP_LOG_DOC,{venues:next,updatedAt:new Date().toISOString()},{part:UNREAD_SWEEPS}); return true; }
   catch{ return false; }
 }
 
 async function readQuarantine(){
-  const db=await useCap("db");
-  if(!db){ markUnread(UNREAD_QUAR); return {map:{},why:"This page can\u2019t reach its quarantine list in this viewer, so nothing is being blocked."}; }
   try{
-    const snap=await db.doc(QUARANTINE_DOC).get();
+    const snap=await storeRead(QUARANTINE_DOC,{part:UNREAD_QUAR});
     if(!snap.exists) return {map:{},why:null};
-    const d=snap.data()||{};
+    const d=snap.data||{};
     return {map:(d.rows&&typeof d.rows==="object")?d.rows:{},why:null};
   }catch(e){
-    markUnread(UNREAD_QUAR);
     const code=String((e&&e.code)||"");
+    if(code==="no_store") return {map:{},why:"This page can\u2019t reach its quarantine list in this viewer, so nothing is being blocked."};
     if(code==="not_granted") return {map:{},why:"You declined this page access to its quarantine list."};
     return {map:{},why:"Couldn\u2019t read the quarantine list ("+(code||"unknown")+")."};
   }
 }
 
 async function writeQuarantine(next){
-  if(STORE_UNREAD.has(UNREAD_QUAR))return false;
-  const db=await useCap("db");
-  if(!db) return false;
-  try{ await db.doc(QUARANTINE_DOC).set({rows:next,updatedAt:new Date().toISOString()}); return true; }
+  try{ await storeWrite(QUARANTINE_DOC,{rows:next,updatedAt:new Date().toISOString()},{part:UNREAD_QUAR}); return true; }
   catch{ return false; }
 }
 
@@ -4452,63 +4423,62 @@ async function cloudSha(text){
 function cloudNewId(prefix){ return prefix+Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
 
 // Writes `text` as parts `<coll>/<id>-0 … -n`. Returns what the reader needs.
-async function cloudWriteParts(db,coll,id,text){
+async function cloudWriteParts(coll,id,text){
   const z=await cloudGzip(text);
   const parts=Math.max(1,Math.ceil(z.length/CLOUD_PART_CHARS));
   for(let i=0;i<parts;i++){
-    await db.doc(coll+"/"+id+"-"+i).set({z:z.slice(i*CLOUD_PART_CHARS,(i+1)*CLOUD_PART_CHARS),i,of:parts});
+    await storeWrite(coll+"/"+id+"-"+i,{z:z.slice(i*CLOUD_PART_CHARS,(i+1)*CLOUD_PART_CHARS),i,of:parts});
   }
   return {id,parts,sha:await cloudSha(text),bytes:text.length,zbytes:z.length};
 }
-async function cloudReadParts(db,coll,meta){
+async function cloudReadParts(coll,meta){
   let z="";
   for(let i=0;i<meta.parts;i++){
-    const snap=await db.doc(coll+"/"+meta.id+"-"+i).get();
+    const snap=await storeRead(coll+"/"+meta.id+"-"+i);
     if(!snap.exists)throw {code:"missing_part",message:"Part "+(i+1)+" of "+meta.parts+" is missing."};
-    z+=String((snap.data()||{}).z||"");
+    z+=String((snap.data||{}).z||"");
   }
   const text=await cloudGunzip(z);
   if(await cloudSha(text)!==meta.sha)throw {code:"fingerprint",message:"The copy doesn’t match its fingerprint, so it was not used."};
   return text;
 }
-async function cloudDeleteParts(db,coll,id,parts){
-  for(let i=0;i<parts;i++){ try{ await db.doc(coll+"/"+id+"-"+i).delete(); }catch{} }
+async function cloudDeleteParts(coll,id,parts){
+  for(let i=0;i<parts;i++){ try{ await storeDelete(coll+"/"+id+"-"+i); }catch{} }
 }
 
 // THE LIVE LEDGER. `prev` is the record this page last wrote or read, so the
 // old parts can be removed once the switch has moved; a save never reads
 // first, which keeps it to the writes it actually needs.
-async function cloudSaveLive(db,text,info,prev){
-  const w=await cloudWriteParts(db,CLOUD_PARTS,cloudNewId("g"),text);
+async function cloudSaveLive(text,info,prev){
+  const w=await cloudWriteParts(CLOUD_PARTS,cloudNewId("g"),text);
   const rec={...w,savedAt:new Date().toISOString(),rows:info.rows,quarantined:info.quarantined};
-  await db.doc(CLOUD_LIVE_DOC).set(rec);      // THE SWITCH — only after every part landed
-  if(prev&&prev.id&&prev.id!==rec.id)await cloudDeleteParts(db,CLOUD_PARTS,prev.id,prev.parts);
+  await storeWrite(CLOUD_LIVE_DOC,rec);      // THE SWITCH — only after every part landed
+  if(prev&&prev.id&&prev.id!==rec.id)await cloudDeleteParts(CLOUD_PARTS,prev.id,prev.parts);
   return rec;
 }
 // {rec:null} when nothing has ever been saved; throws when something is there
 // and cannot be trusted.
-async function cloudReadLive(db){
-  const snap=await db.doc(CLOUD_LIVE_DOC).get();
+async function cloudReadLive(){
+  const snap=await storeRead(CLOUD_LIVE_DOC);
   if(!snap.exists)return {rec:null,text:null};
-  const rec=snap.data();
-  return {rec,text:await cloudReadParts(db,CLOUD_PARTS,rec)};
+  const rec=snap.data;
+  return {rec,text:await cloudReadParts(CLOUD_PARTS,rec)};
 }
 
 // Snapshots: parts first, the listing record last, so a half-written one never appears.
 // A Save's copy carries the offline file's name and moment (her decision).
-async function cloudTakeSnapshot(db,text,info){
-  const w=await cloudWriteParts(db,SNAP_PARTS,cloudNewId("s"),text);
+async function cloudTakeSnapshot(text,info){
+  const w=await cloudWriteParts(SNAP_PARTS,cloudNewId("s"),text);
   const rec={...w,at:info.at||new Date().toISOString(),label:String(info.label||"").slice(0,80),
              kind:info.kind||"manual",rows:info.rows,quarantined:info.quarantined};
   if(info.filename)rec.filename=String(info.filename);
-  await db.doc(SNAP_COLL+"/"+w.id).set(rec);
+  await storeWrite(SNAP_COLL+"/"+w.id,rec);
   return rec;
 }
-async function cloudListSnapshots(db,n){
-  const q=await db.collection(SNAP_COLL).orderBy("at","desc").limit(n||1000).get();
-  return q.docs.map(d=>d.data());
+async function cloudListSnapshots(n){
+  return (await storeList(SNAP_COLL,{by:"at",dir:"desc",limit:n||1000})).map(d=>d.data);
 }
-async function cloudReadSnapshot(db,rec){ return cloudReadParts(db,SNAP_PARTS,rec); }
+async function cloudReadSnapshot(rec){ return cloudReadParts(SNAP_PARTS,rec); }
 
 // WHAT COUNTS AS THE SAME LEDGER. Exhibitions compared by id with their keys
 // in a fixed order, and the quarantine list as a set. `lastRun` and the export
@@ -4559,26 +4529,78 @@ const SESSION_STALE_MS=60000;
 const CLOUD_SESSION_ID=cloudNewId("t");
 let cloudReadOnly=false;
 
-// The store, with every write refused. Reads pass through.
-function readOnlyStore(db){
-  const no=()=>Promise.reject({code:"read_only",message:"This copy is read only."});
-  // Named members only: the platform's namespace is frozen, and spreading it
-  // would copy nothing its prototype holds.
-  return {doc:path=>({get:()=>db.doc(path).get(),set:no,update:no,delete:no}),
-          collection:c=>db.collection(c)};
+// THE STORE'S DOOR — the only code that reads or writes the page's store. Its rules:
+// - no store in this viewer: every operation rejects {code:"no_store"};
+// - a read-only copy (see ONE COPY EDITS): every write rejects {code:"read_only"}, except the
+//   one-tab claim's own, made with {claim:true};
+// - with {part} (an UNREAD_ name): a read that fails, or finds no store, marks that part
+//   unread, and while it is unread its writes reject {code:"unread"}.
+// A path of four steps or more is reached through its parent record (lookups/<id>/pieces/<n>).
+function storeRef(db,path){
+  const s=String(path).split("/");
+  let r=db.doc(s.slice(0,2).join("/"));
+  for(let i=2;i+1<s.length;i+=2)r=r.collection(s[i]).doc(s[i+1]);
+  return r;
+}
+function storeNo(code){
+  return code==="read_only"?{code,message:"This copy is read only."}
+    :code==="unread"?{code,message:"This part of the store could not be read, so it is not written."}
+    :{code,message:"This viewer can\u2019t reach the page\u2019s store."};
+}
+// True when the store is reached and, with {part}, that part is not unread: a write may go ahead.
+async function storeReached(o){
+  if(o&&o.part&&STORE_UNREAD.has(o.part))return false;
+  return !!(await useCap("db"));
+}
+// One record: {exists,data}.
+async function storeRead(path,o){
+  try{
+    const db=await useCap("db");
+    if(!db)throw storeNo("no_store");
+    const s=await storeRef(db,path).get();
+    return {exists:!!s.exists,data:s.exists?s.data():undefined};
+  }catch(e){ if(o&&o.part)markUnread(o.part); throw e; }
+}
+// A collection's records, [{id,data}], in the order and number asked: {by,dir,limit}.
+async function storeList(coll,q,o){
+  try{
+    const db=await useCap("db");
+    if(!db)throw storeNo("no_store");
+    let c=db.collection(coll);
+    if(q&&q.by)c=c.orderBy(q.by,q.dir);
+    if(q&&q.limit)c=c.limit(q.limit);
+    const s=await c.get();
+    return s.docs.map(d=>({id:d.id,data:d.data()}));
+  }catch(e){ if(o&&o.part)markUnread(o.part); throw e; }
+}
+// Writes one record whole; {merge:true} adds its fields to the record instead.
+async function storeWrite(path,value,o){
+  const db=await storeWritable(o);
+  const r=storeRef(db,path);
+  await ((o&&o.merge)?r.update(value):r.set(value));
+}
+async function storeDelete(path,o){
+  const db=await storeWritable(o);
+  await storeRef(db,path).delete();
+}
+// The store for a write, or the rule that refuses it.
+async function storeWritable(o){
+  if(o&&o.part&&STORE_UNREAD.has(o.part))throw storeNo("unread");
+  const db=await useCap("db");
+  if(!db)throw storeNo("no_store");
+  if(cloudReadOnly&&!(o&&o.claim))throw storeNo("read_only");
+  return db;
 }
 // "mine": this copy may edit (the record now names it). "other": another copy
-// is editing. Reads the record, then writes it — so it is also the heartbeat.
-async function cloudSessionClaim(db,now){
+// is editing. Reads the record, then writes it — so it is also the heartbeat. The one write a
+// read-only copy may make (claim:true). Throws when the store cannot be reached.
+async function cloudSessionClaim(now){
   const t=now||Date.now();
   let cur=null;
-  try{ const snap=await db.doc(CLOUD_SESSION_DOC).get(); cur=snap.exists?snap.data():null; }catch{}
+  try{ const snap=await storeRead(CLOUD_SESSION_DOC); cur=snap.exists?snap.data:null; }catch{}
   if(cur&&cur.id!==CLOUD_SESSION_ID&&t-Date.parse(cur.beat)<SESSION_STALE_MS)return "other";
-  await db.doc(CLOUD_SESSION_DOC).set({id:CLOUD_SESSION_ID,beat:new Date(t).toISOString()});
+  await storeWrite(CLOUD_SESSION_DOC,{id:CLOUD_SESSION_ID,beat:new Date(t).toISOString()},{claim:true});
   return "mine";
-}
-async function rawStore(){
-  try{ return (typeof window!=="undefined"&&window.claude&&window.claude.use)?await window.claude.use("db"):null; }catch{ return null; }
 }
 // ── END OF THE CLOUD LEDGER ──────────────────────────────────────────────────
 
@@ -7320,12 +7342,10 @@ export default function App(){
     readQuarantine().then(({map,why})=>{ setQuarantine(map); setQuarWhy(why); });
     // The cloud copy is read on open; during the trial it is only read (CLOUD_OPENS).
     (async()=>{
-      const raw=await rawStore();
-      if(raw){ try{ if(await cloudSessionClaim(raw)==="other")goReadOnly(); }catch{} }
-      const db=await useCap("db");
-      if(!db){ setCloudLive({why:"This viewer can’t reach the page’s store."}); setSaveState("off"); setSaveErr("This viewer can’t reach the page’s store, so nothing is being saved to the cloud copy."); return; }
+      try{ if(await cloudSessionClaim()==="other")goReadOnly(); }catch{}
+      if(!await storeReached()){ setCloudLive({why:"This viewer can’t reach the page’s store."}); setSaveState("off"); setSaveErr("This viewer can’t reach the page’s store, so nothing is being saved to the cloud copy."); return; }
       try{
-        const {rec,text}=await cloudReadLive(db);
+        const {rec,text}=await cloudReadLive();
         if(!rec){ setCloudLive({rec:null}); return; }
         const data=JSON.parse(text);
         cloudPrev.current=rec; cloudFp.current=ledgerFingerprintText(data);
@@ -7352,11 +7372,11 @@ export default function App(){
   // THE HEARTBEAT, and letting go on the way out (best effort — a closing page
   // may not finish it; the record then goes stale in SESSION_STALE_MS).
   useEffect(()=>{
-    const beat=async()=>{ if(cloudReadOnly)return; const raw=await rawStore(); if(!raw)return;
-      try{ if(await cloudSessionClaim(raw)==="other")goReadOnly(); }catch{} };
+    const beat=async()=>{ if(cloudReadOnly)return;
+      try{ if(await cloudSessionClaim()==="other")goReadOnly(); }catch{} };
     const t=setInterval(beat,SESSION_BEAT_MS);
-    const bye=async()=>{ if(cloudReadOnly)return; const raw=await rawStore(); if(!raw)return;
-      try{ const snap=await raw.doc(CLOUD_SESSION_DOC).get(); if(snap.exists&&(snap.data()||{}).id===CLOUD_SESSION_ID)await raw.doc(CLOUD_SESSION_DOC).delete(); }catch{} };
+    const bye=async()=>{ if(cloudReadOnly)return;
+      try{ const snap=await storeRead(CLOUD_SESSION_DOC); if(snap.exists&&(snap.data||{}).id===CLOUD_SESSION_ID)await storeDelete(CLOUD_SESSION_DOC,{claim:true}); }catch{} };
     window.addEventListener("pagehide",bye);
     return()=>{ clearInterval(t); window.removeEventListener("pagehide",bye); };
   },[goReadOnly]);
@@ -7408,10 +7428,8 @@ export default function App(){
     if(cloudReadOnly)return;
     if(cloudBusy.current){ cloudAgain.current=true; return; }
     // Another copy took over while this one slept? Then nothing is written.
-    { const raw=await rawStore();
-      if(raw){ try{ if(await cloudSessionClaim(raw)==="other"){ goReadOnly(); setError(RO_LINE); return; } }catch{} } }
-    const db=await useCap("db");
-    if(!db){ setSaveState("off"); setSaveErr("This viewer can’t reach the page’s store, so nothing is being saved to the cloud copy."); return; }
+    try{ if(await cloudSessionClaim()==="other"){ goReadOnly(); setError(RO_LINE); return; } }catch{}
+    if(!await storeReached()){ setSaveState("off"); setSaveErr("This viewer can’t reach the page’s store, so nothing is being saved to the cloud copy."); return; }
     cloudBusy.current=true;
     try{
       do{
@@ -7423,11 +7441,11 @@ export default function App(){
         const text=JSON.stringify({rows:d.rows,ignored:d.ignored,lastRun:d.lastRun,savedAt:new Date().toISOString()});
         const info={rows:d.rows.length,quarantined:d.ignored.length};
         let rec;
-        try{ rec=await cloudSaveLive(db,text,info,cloudPrev.current); }
+        try{ rec=await cloudSaveLive(text,info,cloudPrev.current); }
         catch(e){
           if(e&&["invalid_argument","quota_exceeded","not_granted","revoked"].includes(e.code))throw e;
           await new Promise(r=>setTimeout(r,800+Math.random()*700));
-          rec=await cloudSaveLive(db,text,info,cloudPrev.current);
+          rec=await cloudSaveLive(text,info,cloudPrev.current);
         }
         cloudPrev.current=rec; cloudFp.current=fp;
         setLastSaved(rec); setSaveErr(null); setSaveState("saved");
@@ -7447,10 +7465,9 @@ export default function App(){
   // that fails nothing is replaced. Returns true when it put a line on screen about what
   // was loaded (then "Loaded N exhibitions" is not shown — her decision).
   async function guardCloudBeforeReplace(incoming,reason){
-    const db=await useCap("db");
-    if(!db){ setCloudCheck(null); return false; }
+    if(!await storeReached()){ setCloudCheck(null); return false; }
     let live;
-    try{ live=await cloudReadLive(db); }
+    try{ live=await cloudReadLive(); }
     catch(e){ setCloudCheck("The cloud copy couldn’t be read ("+cloudTrouble(e,"read")+"). It was left in the store untouched; this ledger is saved as the new cloud copy."); cloudPrev.current=null; cloudFp.current=null; return true; }
     if(!live.rec){ setCloudCheck("No cloud copy existed yet — this ledger is now the first one."); return true; }
     const data=JSON.parse(live.text);
@@ -7471,7 +7488,7 @@ export default function App(){
     const head=what+" differs from the last cloud save ("+when+"): "+n+" difference"+(n===1?"":"s")+".";
     setDebug("Compared with the last cloud save ("+when+"): "+bits.join(", ")+".");
     try{
-      await cloudTakeSnapshot(db,live.text,{label:"Safety snapshot before "+(reason==="reset"?"Reset":"Load"),kind:"safety",rows:data.rows.length,quarantined:(data.ignored||[]).length});
+      await cloudTakeSnapshot(live.text,{label:"Safety snapshot before "+(reason==="reset"?"Reset":"Load"),kind:"safety",rows:data.rows.length,quarantined:(data.ignored||[]).length});
       loadSnaps();   // an open drawer shows it straight away
       setCloudCheck(head+" A snapshot of the last cloud state was taken before loading "+(reason==="reset"?"it":"your file")+".");
       return true;
@@ -7493,9 +7510,9 @@ export default function App(){
   // Allowed in a read-only copy (her decision): it shows the cloud copy, writes nothing.
   async function requestOpenCloud(){
     const go=async()=>{
-      const db=await useCap("db"); if(!db)return;
+      if(!await storeReached())return;
       try{
-        const {rec,text}=await cloudReadLive(db);
+        const {rec,text}=await cloudReadLive();
         if(!rec){ setError("There is no cloud copy yet."); return; }
         openCloudData(rec,JSON.parse(text));
       }catch(e){ setError("The cloud copy couldn’t be opened: "+cloudTrouble(e,"read")); }
@@ -7506,9 +7523,8 @@ export default function App(){
 
   // SNAPSHOTS.
   async function loadSnaps(){
-    const db=await useCap("db");
-    if(!db){ setSnaps([]); setSnapWhy("This viewer can’t reach the page’s store."); return; }
-    try{ setSnaps(await cloudListSnapshots(db)); setSnapWhy(null); }
+    if(!await storeReached()){ setSnaps([]); setSnapWhy("This viewer can’t reach the page’s store."); return; }
+    try{ setSnaps(await cloudListSnapshots()); setSnapWhy(null); }
     catch(e){ setSnaps([]); setSnapWhy("Couldn’t read the cloud saves ("+cloudTrouble(e,"read")+")."); }
   }
   // Roll back: the ledger it replaces is kept first as a safety snapshot (her decision),
@@ -7518,14 +7534,14 @@ export default function App(){
     setConfirmBox({title:"Roll back to this cloud save?",
       text:"The ledger becomes the cloud save “"+snapTitle(s,snaps)+"” from "+localReadable(s.at)+" ("+s.rows+" exhibitions). What you have now is kept in Cloud Saves first, so this can be undone.",
       act:async()=>{
-        const db=await useCap("db"); if(!db)return;
+        if(!await storeReached())return;
         setSnapBusy(true);
         try{
           let curText=null,curRows=0,curQ=0;
           if(rows.length){ const d=cloudLatest.current; curText=JSON.stringify({rows:d.rows,ignored:d.ignored,lastRun:d.lastRun,savedAt:new Date().toISOString()}); curRows=d.rows.length; curQ=d.ignored.length; }
-          else{ const live=await cloudReadLive(db); if(live.rec){ curText=live.text; const cd=JSON.parse(live.text); curRows=cd.rows.length; curQ=(cd.ignored||[]).length; cloudPrev.current=live.rec; } }
-          if(curText)await cloudTakeSnapshot(db,curText,{label:"Safety snapshot before roll-back to snapshot of "+localReadable(s.at),kind:"safety",rows:curRows,quarantined:curQ});
-          const data=JSON.parse(await cloudReadSnapshot(db,s));
+          else{ const live=await cloudReadLive(); if(live.rec){ curText=live.text; const cd=JSON.parse(live.text); curRows=cd.rows.length; curQ=(cd.ignored||[]).length; cloudPrev.current=live.rec; } }
+          if(curText)await cloudTakeSnapshot(curText,{label:"Safety snapshot before roll-back to snapshot of "+localReadable(s.at),kind:"safety",rows:curRows,quarantined:curQ});
+          const data=JSON.parse(await cloudReadSnapshot(s));
           loadLedger((data.rows||[]).map(r=>({...r,watching:r.watching||false})),data.lastRun||null,
             "Rolled back to the cloud save “"+snapTitle(s,snaps)+"” from "+localReadable(s.at)+" — "+(data.rows||[]).length+" exhibitions.",
             {ignored:Array.isArray(data.ignored)?data.ignored:[]});
@@ -7538,9 +7554,9 @@ export default function App(){
       }});
   }
   async function downloadSnapshot(s){
-    const db=await useCap("db"); if(!db)return;
+    if(!await storeReached())return;
     try{
-      const text=await cloudReadSnapshot(db,s);
+      const text=await cloudReadSnapshot(s);
       // A copy made by Save comes back under the name its offline twin has.
       // Older copies, and the automatic ones, are named as before.
       const slug=labelSlug(s.label);
@@ -8420,10 +8436,9 @@ export default function App(){
   async function handleSave(){
     if(saveBusy||!rows.length)return;
     let most=0;
-    if(!cloudReadOnly){ const db=await useCap("db");
-      // The live record alone carries the count; its parts (the whole ledger) are not read.
-      if(db){ try{ const ls=await db.doc(CLOUD_LIVE_DOC).get(); const live=ls.exists?ls.data():null; const snap=(await cloudListSnapshots(db,1))[0];
-        most=Math.max(live?live.rows||0:0,snap?snap.rows||0:0); }catch{} } }
+    // The live record alone carries the count; its parts (the whole ledger) are not read.
+    if(!cloudReadOnly){ try{ const ls=await storeRead(CLOUD_LIVE_DOC); const live=ls.exists?ls.data:null; const snap=(await cloudListSnapshots(1))[0];
+        most=Math.max(live?live.rows||0:0,snap?snap.rows||0:0); }catch{} }
     if(rows.length<most){ setConfirmBox({title:"Save a smaller ledger?",text:"You\u2019re saving "+rows.length+" exhibition"+(rows.length===1?"":"s")+"; your last cloud save has "+most+". Save anyway?",yes:"Save anyway",act:saveNow}); return; }
     saveNow();
   }
@@ -8443,10 +8458,9 @@ export default function App(){
       // awaited: the file question opens while the copy is written (her decision).
       const cloudDone=(async()=>{
         if(!saveCloud||cloudReadOnly)return null;
-        const db=await useCap("db");
-        if(!db)return "this viewer can\u2019t reach the page\u2019s store";
+        if(!await storeReached())return "this viewer can\u2019t reach the page\u2019s store";
         try{
-          await cloudTakeSnapshot(db,data,{label,kind:"manual",rows:rows.length,quarantined:ignored.length,filename,at});
+          await cloudTakeSnapshot(data,{label,kind:"manual",rows:rows.length,quarantined:ignored.length,filename,at});
           if(showSnaps)loadSnaps();
           return true;
         }catch(e){ return cloudTrouble(e,"save"); }

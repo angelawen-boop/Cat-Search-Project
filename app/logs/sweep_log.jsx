@@ -31,17 +31,15 @@ const SWEEP_LOG_DOC = "sweeps/venues";
 // drawer prints it rather than showing an empty panel, because "no sweeps yet"
 // and "could not reach the store" look identical and mean opposite things.
 async function readSweepLog(){
-  const db=await useCap("db");
-  if(!db){ markUnread(UNREAD_SWEEPS); return {log:{},why:"This page can\u2019t reach its sweep log in this viewer."}; }
   try{
-    const snap=await db.doc(SWEEP_LOG_DOC).get();
+    const snap=await storeRead(SWEEP_LOG_DOC,{part:UNREAD_SWEEPS});
     if(!snap.exists) return {log:{},why:null};
-    const d=snap.data()||{};
+    const d=snap.data||{};
     const log=(d.venues&&typeof d.venues==="object")?d.venues:{};
     return {log,why:null};
   }catch(e){
-    markUnread(UNREAD_SWEEPS);
     const code=String((e&&e.code)||"");
+    if(code==="no_store") return {log:{},why:"This page can\u2019t reach its sweep log in this viewer."};
     if(code==="not_granted") return {log:{},why:"You declined this page access to its sweep log."};
     return {log:{},why:"Couldn\u2019t read the sweep log ("+(code||"unknown")+")."};
   }
@@ -50,9 +48,6 @@ async function readSweepLog(){
 
 
 async function writeSweepLog(next){
-  if(STORE_UNREAD.has(UNREAD_SWEEPS))return false;
-  const db=await useCap("db");
-  if(!db) return false;
-  try{ await db.doc(SWEEP_LOG_DOC).set({venues:next,updatedAt:new Date().toISOString()}); return true; }
+  try{ await storeWrite(SWEEP_LOG_DOC,{venues:next,updatedAt:new Date().toISOString()},{part:UNREAD_SWEEPS}); return true; }
   catch{ return false; }
 }

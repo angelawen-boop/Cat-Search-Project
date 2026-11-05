@@ -17,7 +17,7 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 const { execFileSync } = require('child_process');
-const { fakeStore } = require('./fake_store.js');
+const { fakeStore, doorSource } = require('./fake_store.js');
 
 const ROOT = path.join(__dirname, '..', '..');
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'cw-unread-'));
@@ -58,8 +58,9 @@ function brokenReads(store, paths) {
 
 (async () => {
   // ── SU-004/005: the write itself, lifted from the page ──
-  const sec = src.slice(src.indexOf('// A STORE READ THAT FAILED'), src.indexOf('// ── PAGES:'));
-  const lift = db => new Function('useCap', 'OCC_DOC', sec + '\nreturn {readOccasional,writeOccasional};')(async () => db, 'venues/occasional');
+  // The section and the page's door to the store, which the two ask.
+  const sec = src.slice(src.indexOf('// A STORE READ THAT FAILED'), src.indexOf('// ── PAGES:')) + doorSource(src);
+  const lift = db => new Function('useCap', 'OCC_DOC', 'cloudReadOnly', sec + '\nreturn {readOccasional,writeOccasional};')(async () => db, 'venues/occasional', false);
   const held = fakeStore();
   await held.doc('venues/occasional').set({ venues: { 'occ-a': { id: 'occ-a', name: 'Museum A' }, 'occ-b': { id: 'occ-b', name: 'Museum B' } } });
   const kept = held.docs.get('venues/occasional');

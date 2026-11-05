@@ -23,7 +23,7 @@
    "files": {
     "connections/web.jsx": "Parallel search and fetch, what a fetched page's text is, and when a page is too short to read.",
     "connections/claude.jsx": "Asking Claude and reading its JSON answer.",
-    "connections/store.jsx": "Reaching the page's capabilities, and its store: read-only mode, the unread markers."
+    "connections/store.jsx": "The page's capabilities, and the only door to its store: the read-only lock, the unread markers."
    }
   },
   {
@@ -185,9 +185,15 @@
   "STORE_UNREAD": "connections/store.jsx",
   "storeUnreadSeen": "connections/store.jsx",
   "markUnread": "connections/store.jsx",
-  "rawStore": "connections/store.jsx",
   "cloudReadOnly": "connections/store.jsx",
-  "readOnlyStore": "connections/store.jsx",
+  "storeRef": "connections/store.jsx",
+  "storeNo": "connections/store.jsx",
+  "storeReached": "connections/store.jsx",
+  "storeRead": "connections/store.jsx",
+  "storeList": "connections/store.jsx",
+  "storeWrite": "connections/store.jsx",
+  "storeDelete": "connections/store.jsx",
+  "storeWritable": "connections/store.jsx",
   "offerFile": "saving/file.jsx",
   "LEDGER_PREFIX": "saving/file.jsx",
   "labelSlug": "saving/file.jsx",

@@ -23,12 +23,14 @@ const a = src.indexOf(A), b = src.indexOf(B, a);
 if (a < 0 || b < 0) throw new Error('cloud_ledger: anchors not found');
 const section = src.slice(a, b);
 
-const load = (partChars) => new Function(`
+const { fakeStore, onStore } = require('./fake_store.js');
+
+// The section holds the page's door to the store; each storage function takes the stand-in store first.
+const load = (partChars) => onStore(useCap => new Function('useCap', `
   ${partChars ? section.replace(/const CLOUD_PART_CHARS=\d+;/, 'const CLOUD_PART_CHARS=' + partChars + ';') : section}
   return {cloudSaveLive,cloudReadLive,cloudTakeSnapshot,cloudListSnapshots,cloudReadSnapshot,
-          ledgerFingerprintText,ledgerDifference,cloudTrouble,CLOUD_PART_CHARS,CLOUD_OPENS};`)();
-
-const { fakeStore } = require('./fake_store.js');
+          ledgerFingerprintText,ledgerDifference,cloudTrouble,CLOUD_PART_CHARS,CLOUD_OPENS};`)(useCap),
+  ['cloudSaveLive', 'cloudReadLive', 'cloudTakeSnapshot', 'cloudListSnapshots', 'cloudReadSnapshot']);
 
 let pass = 0, fail = 0;
 const ok = (cond, name, detail) => {

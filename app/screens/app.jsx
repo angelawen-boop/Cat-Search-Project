@@ -247,12 +247,10 @@ export default function App(){
     readQuarantine().then(({map,why})=>{ setQuarantine(map); setQuarWhy(why); });
     // The cloud copy is read on open; during the trial it is only read (CLOUD_OPENS).
     (async()=>{
-      const raw=await rawStore();
-      if(raw){ try{ if(await cloudSessionClaim(raw)==="other")goReadOnly(); }catch{} }
-      const db=await useCap("db");
-      if(!db){ setCloudLive({why:"This viewer can’t reach the page’s store."}); setSaveState("off"); setSaveErr("This viewer can’t reach the page’s store, so nothing is being saved to the cloud copy."); return; }
+      try{ if(await cloudSessionClaim()==="other")goReadOnly(); }catch{}
+      if(!await storeReached()){ setCloudLive({why:"This viewer can’t reach the page’s store."}); setSaveState("off"); setSaveErr("This viewer can’t reach the page’s store, so nothing is being saved to the cloud copy."); return; }
       try{
-        const {rec,text}=await cloudReadLive(db);
+        const {rec,text}=await cloudReadLive();
         if(!rec){ setCloudLive({rec:null}); return; }
         const data=JSON.parse(text);
         cloudPrev.current=rec; cloudFp.current=ledgerFingerprintText(data);
@@ -279,11 +277,11 @@ export default function App(){
   // THE HEARTBEAT, and letting go on the way out (best effort — a closing page
   // may not finish it; the record then goes stale in SESSION_STALE_MS).
   useEffect(()=>{
-    const beat=async()=>{ if(cloudReadOnly)return; const raw=await rawStore(); if(!raw)return;
-      try{ if(await cloudSessionClaim(raw)==="other")goReadOnly(); }catch{} };
+    const beat=async()=>{ if(cloudReadOnly)return;
+      try{ if(await cloudSessionClaim()==="other")goReadOnly(); }catch{} };
     const t=setInterval(beat,SESSION_BEAT_MS);
-    const bye=async()=>{ if(cloudReadOnly)return; const raw=await rawStore(); if(!raw)return;
-      try{ const snap=await raw.doc(CLOUD_SESSION_DOC).get(); if(snap.exists&&(snap.data()||{}).id===CLOUD_SESSION_ID)await raw.doc(CLOUD_SESSION_DOC).delete(); }catch{} };
+    const bye=async()=>{ if(cloudReadOnly)return;
+      try{ const snap=await storeRead(CLOUD_SESSION_DOC); if(snap.exists&&(snap.data||{}).id===CLOUD_SESSION_ID)await storeDelete(CLOUD_SESSION_DOC,{claim:true}); }catch{} };
     window.addEventListener("pagehide",bye);
     return()=>{ clearInterval(t); window.removeEventListener("pagehide",bye); };
   },[goReadOnly]);
@@ -335,10 +333,8 @@ export default function App(){
     if(cloudReadOnly)return;
     if(cloudBusy.current){ cloudAgain.current=true; return; }
     // Another copy took over while this one slept? Then nothing is written.
-    { const raw=await rawStore();
-      if(raw){ try{ if(await cloudSessionClaim(raw)==="other"){ goReadOnly(); setError(RO_LINE); return; } }catch{} } }
-    const db=await useCap("db");
-    if(!db){ setSaveState("off"); setSaveErr("This viewer can’t reach the page’s store, so nothing is being saved to the cloud copy."); return; }
+    try{ if(await cloudSessionClaim()==="other"){ goReadOnly(); setError(RO_LINE); return; } }catch{}
+    if(!await storeReached()){ setSaveState("off"); setSaveErr("This viewer can’t reach the page’s store, so nothing is being saved to the cloud copy."); return; }
     cloudBusy.current=true;
     try{
       do{
@@ -350,11 +346,11 @@ export default function App(){
         const text=JSON.stringify({rows:d.rows,ignored:d.ignored,lastRun:d.lastRun,savedAt:new Date().toISOString()});
         const info={rows:d.rows.length,quarantined:d.ignored.length};
         let rec;
-        try{ rec=await cloudSaveLive(db,text,info,cloudPrev.current); }
+        try{ rec=await cloudSaveLive(text,info,cloudPrev.current); }
         catch(e){
           if(e&&["invalid_argument","quota_exceeded","not_granted","revoked"].includes(e.code))throw e;
           await new Promise(r=>setTimeout(r,800+Math.random()*700));
-          rec=await cloudSaveLive(db,text,info,cloudPrev.current);
+          rec=await cloudSaveLive(text,info,cloudPrev.current);
         }
         cloudPrev.current=rec; cloudFp.current=fp;
         setLastSaved(rec); setSaveErr(null); setSaveState("saved");
@@ -374,10 +370,9 @@ export default function App(){
   // that fails nothing is replaced. Returns true when it put a line on screen about what
   // was loaded (then "Loaded N exhibitions" is not shown — her decision).
   async function guardCloudBeforeReplace(incoming,reason){
-    const db=await useCap("db");
-    if(!db){ setCloudCheck(null); return false; }
+    if(!await storeReached()){ setCloudCheck(null); return false; }
     let live;
-    try{ live=await cloudReadLive(db); }
+    try{ live=await cloudReadLive(); }
     catch(e){ setCloudCheck("The cloud copy couldn’t be read ("+cloudTrouble(e,"read")+"). It was left in the store untouched; this ledger is saved as the new cloud copy."); cloudPrev.current=null; cloudFp.current=null; return true; }
     if(!live.rec){ setCloudCheck("No cloud copy existed yet — this ledger is now the first one."); return true; }
     const data=JSON.parse(live.text);
@@ -398,7 +393,7 @@ export default function App(){
     const head=what+" differs from the last cloud save ("+when+"): "+n+" difference"+(n===1?"":"s")+".";
     setDebug("Compared with the last cloud save ("+when+"): "+bits.join(", ")+".");
     try{
-      await cloudTakeSnapshot(db,live.text,{label:"Safety snapshot before "+(reason==="reset"?"Reset":"Load"),kind:"safety",rows:data.rows.length,quarantined:(data.ignored||[]).length});
+      await cloudTakeSnapshot(live.text,{label:"Safety snapshot before "+(reason==="reset"?"Reset":"Load"),kind:"safety",rows:data.rows.length,quarantined:(data.ignored||[]).length});
       loadSnaps();   // an open drawer shows it straight away
       setCloudCheck(head+" A snapshot of the last cloud state was taken before loading "+(reason==="reset"?"it":"your file")+".");
       return true;
@@ -420,9 +415,9 @@ export default function App(){
   // Allowed in a read-only copy (her decision): it shows the cloud copy, writes nothing.
   async function requestOpenCloud(){
     const go=async()=>{
-      const db=await useCap("db"); if(!db)return;
+      if(!await storeReached())return;
       try{
-        const {rec,text}=await cloudReadLive(db);
+        const {rec,text}=await cloudReadLive();
         if(!rec){ setError("There is no cloud copy yet."); return; }
         openCloudData(rec,JSON.parse(text));
       }catch(e){ setError("The cloud copy couldn’t be opened: "+cloudTrouble(e,"read")); }
@@ -433,9 +428,8 @@ export default function App(){
 
   // SNAPSHOTS.
   async function loadSnaps(){
-    const db=await useCap("db");
-    if(!db){ setSnaps([]); setSnapWhy("This viewer can’t reach the page’s store."); return; }
-    try{ setSnaps(await cloudListSnapshots(db)); setSnapWhy(null); }
+    if(!await storeReached()){ setSnaps([]); setSnapWhy("This viewer can’t reach the page’s store."); return; }
+    try{ setSnaps(await cloudListSnapshots()); setSnapWhy(null); }
     catch(e){ setSnaps([]); setSnapWhy("Couldn’t read the cloud saves ("+cloudTrouble(e,"read")+")."); }
   }
   // Roll back: the ledger it replaces is kept first as a safety snapshot (her decision),
@@ -445,14 +439,14 @@ export default function App(){
     setConfirmBox({title:"Roll back to this cloud save?",
       text:"The ledger becomes the cloud save “"+snapTitle(s,snaps)+"” from "+localReadable(s.at)+" ("+s.rows+" exhibitions). What you have now is kept in Cloud Saves first, so this can be undone.",
       act:async()=>{
-        const db=await useCap("db"); if(!db)return;
+        if(!await storeReached())return;
         setSnapBusy(true);
         try{
           let curText=null,curRows=0,curQ=0;
           if(rows.length){ const d=cloudLatest.current; curText=JSON.stringify({rows:d.rows,ignored:d.ignored,lastRun:d.lastRun,savedAt:new Date().toISOString()}); curRows=d.rows.length; curQ=d.ignored.length; }
-          else{ const live=await cloudReadLive(db); if(live.rec){ curText=live.text; const cd=JSON.parse(live.text); curRows=cd.rows.length; curQ=(cd.ignored||[]).length; cloudPrev.current=live.rec; } }
-          if(curText)await cloudTakeSnapshot(db,curText,{label:"Safety snapshot before roll-back to snapshot of "+localReadable(s.at),kind:"safety",rows:curRows,quarantined:curQ});
-          const data=JSON.parse(await cloudReadSnapshot(db,s));
+          else{ const live=await cloudReadLive(); if(live.rec){ curText=live.text; const cd=JSON.parse(live.text); curRows=cd.rows.length; curQ=(cd.ignored||[]).length; cloudPrev.current=live.rec; } }
+          if(curText)await cloudTakeSnapshot(curText,{label:"Safety snapshot before roll-back to snapshot of "+localReadable(s.at),kind:"safety",rows:curRows,quarantined:curQ});
+          const data=JSON.parse(await cloudReadSnapshot(s));
           loadLedger((data.rows||[]).map(r=>({...r,watching:r.watching||false})),data.lastRun||null,
             "Rolled back to the cloud save “"+snapTitle(s,snaps)+"” from "+localReadable(s.at)+" — "+(data.rows||[]).length+" exhibitions.",
             {ignored:Array.isArray(data.ignored)?data.ignored:[]});
@@ -465,9 +459,9 @@ export default function App(){
       }});
   }
   async function downloadSnapshot(s){
-    const db=await useCap("db"); if(!db)return;
+    if(!await storeReached())return;
     try{
-      const text=await cloudReadSnapshot(db,s);
+      const text=await cloudReadSnapshot(s);
       // A copy made by Save comes back under the name its offline twin has.
       // Older copies, and the automatic ones, are named as before.
       const slug=labelSlug(s.label);
@@ -1347,10 +1341,9 @@ export default function App(){
   async function handleSave(){
     if(saveBusy||!rows.length)return;
     let most=0;
-    if(!cloudReadOnly){ const db=await useCap("db");
-      // The live record alone carries the count; its parts (the whole ledger) are not read.
-      if(db){ try{ const ls=await db.doc(CLOUD_LIVE_DOC).get(); const live=ls.exists?ls.data():null; const snap=(await cloudListSnapshots(db,1))[0];
-        most=Math.max(live?live.rows||0:0,snap?snap.rows||0:0); }catch{} } }
+    // The live record alone carries the count; its parts (the whole ledger) are not read.
+    if(!cloudReadOnly){ try{ const ls=await storeRead(CLOUD_LIVE_DOC); const live=ls.exists?ls.data:null; const snap=(await cloudListSnapshots(1))[0];
+        most=Math.max(live?live.rows||0:0,snap?snap.rows||0:0); }catch{} }
     if(rows.length<most){ setConfirmBox({title:"Save a smaller ledger?",text:"You\u2019re saving "+rows.length+" exhibition"+(rows.length===1?"":"s")+"; your last cloud save has "+most+". Save anyway?",yes:"Save anyway",act:saveNow}); return; }
     saveNow();
   }
@@ -1370,10 +1363,9 @@ export default function App(){
       // awaited: the file question opens while the copy is written (her decision).
       const cloudDone=(async()=>{
         if(!saveCloud||cloudReadOnly)return null;
-        const db=await useCap("db");
-        if(!db)return "this viewer can\u2019t reach the page\u2019s store";
+        if(!await storeReached())return "this viewer can\u2019t reach the page\u2019s store";
         try{
-          await cloudTakeSnapshot(db,data,{label,kind:"manual",rows:rows.length,quarantined:ignored.length,filename,at});
+          await cloudTakeSnapshot(data,{label,kind:"manual",rows:rows.length,quarantined:ignored.length,filename,at});
           if(showSnaps)loadSnaps();
           return true;
         }catch(e){ return cloudTrouble(e,"save"); }
