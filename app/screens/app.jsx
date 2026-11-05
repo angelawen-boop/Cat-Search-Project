@@ -851,7 +851,7 @@ export default function App(){
     // carries the list too.
     if(out.quarantineAdd){
       setQuarantine(prev=>{ const merged=mergeQuarantine(prev,out.quarantineAdd);
-        writeQuarantine(merged).then(ok=>{ if(!ok) setQuarWhy("The quarantine couldn\u2019t be saved to this page\u2019s store, so it may reset when you reload. Save to keep it."); });
+        saveImportQuarantine(merged).then(why=>{ if(why) setQuarWhy(why); });
         return merged; });
     }
     commit(out.ledger,new Date().toISOString());

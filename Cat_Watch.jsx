@@ -3652,6 +3652,11 @@ function readSweepFile(text,rows,ignored){
 function saveSweepLog(log){
   return writeSweepLog(log).then(ok=>ok?null:"The sweep log couldn\u2019t be saved to this page\u2019s store, so it may reset when you reload.");
 }
+// An import's new quarantine written to the store, the copy that survives a Reset (the export
+// carries the list too); resolves to why it was not saved, or null.
+function saveImportQuarantine(list){
+  return writeQuarantine(list).then(ok=>ok?null:"The quarantine couldn\u2019t be saved to this page\u2019s store, so it may reset when you reload. Save to keep it.");
+}
 
 // The ledger gate counts undecided cards; it lives outside the component so fixtures
 // reach it (docs/app.md §3). Rejecting IS deciding: only an untouched card is
@@ -8245,7 +8250,7 @@ export default function App(){
     // carries the list too.
     if(out.quarantineAdd){
       setQuarantine(prev=>{ const merged=mergeQuarantine(prev,out.quarantineAdd);
-        writeQuarantine(merged).then(ok=>{ if(!ok) setQuarWhy("The quarantine couldn\u2019t be saved to this page\u2019s store, so it may reset when you reload. Save to keep it."); });
+        saveImportQuarantine(merged).then(why=>{ if(why) setQuarWhy(why); });
         return merged; });
     }
     commit(out.ledger,new Date().toISOString());

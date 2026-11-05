@@ -253,3 +253,10 @@ function readSweepFile(text,rows,ignored){
 function saveSweepLog(log){
   return writeSweepLog(log).then(ok=>ok?null:"The sweep log couldn\u2019t be saved to this page\u2019s store, so it may reset when you reload.");
 }
+//@piece saveImportQuarantine
+
+// An import's new quarantine written to the store, the copy that survives a Reset (the export
+// carries the list too); resolves to why it was not saved, or null.
+function saveImportQuarantine(list){
+  return writeQuarantine(list).then(ok=>ok?null:"The quarantine couldn\u2019t be saved to this page\u2019s store, so it may reset when you reload. Save to keep it.");
+}

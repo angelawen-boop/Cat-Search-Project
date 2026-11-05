@@ -307,6 +307,7 @@
   "analyzeProForma": "import/csv.jsx",
   "readSweepFile": "import/csv.jsx",
   "saveSweepLog": "import/csv.jsx",
+  "saveImportQuarantine": "import/csv.jsx",
   "isUndecidedCard": "import/review.jsx",
   "topicOf": "import/review.jsx",
   "isTopicCard": "import/review.jsx",
