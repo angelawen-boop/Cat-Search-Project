@@ -2038,13 +2038,13 @@ function batchAnswers(data,text){
 // The whole import asked at once: each page's answer checked; the ones refused, or that did not come
 // back, asked again together (LINK_ASK_AGAIN times), never the whole import. A call that fails outright
 // (declined, rate-limited) is not repeated: each page goes on with no description, as one page did.
-// Each page's lookup-log record holds every request its page was in.
-async function readLinkBatch(work,run){
+// Each page's lookup-log record holds every request its page was in. `stopped` says whether Cancel was pressed.
+async function readLinkBatch(work,stopped){
   for(const w of work){ w.ask=null; w.faults=["no answer"]; }
   let pending=work.slice();
   for(let round=0;round<=LINK_ASK_AGAIN&&pending.length;round++){
     for(const batch of linkBatches(pending.map(w=>({key:String(w.n),item:w.entry,refused:w.refused||null,w})))){
-      if(run&&run.current.stop)return;
+      if(stopped&&stopped())return;
       const prompt=linkBatchPrompt(batch), t0=Date.now();
       lookupTape=null;
       const out=await readResultsCall(prompt,LINK_READ_TIER);
@@ -2452,6 +2452,10 @@ async function readPendingLinks(){
 }
 async function writePendingLinks(text){
   try{ await storeWrite(LINKS_DOC,{text:String(text||""),updatedAt:new Date().toISOString()},{part:UNREAD_LINKS}); return true; }catch{ return false; }
+}
+// The waiting box, list or boxes stored, by kind ("links", "pages", "paste").
+function writePending(kind,value){
+  return kind==="paste"?writePendingPastes(value):kind==="pages"?writePendingPages(value):writePendingLinks(value);
 }
 
 // ── FINDING A NEW VENUE'S SHOP SECTION — once per venue, then kept ─────────
@@ -4061,6 +4065,215 @@ function importComplete(done){
     head:"Import complete. Save it now.",
     counts:done.added+" added, "+done.filled+" filled in, "+done.changed+" updated"+(done.never?", "+done.never+" quarantined":"")+(done.left?", "+done.left+" left undecided":"")+".",
   };
+}
+
+// What a Read is given: kind "links", "pages" or "paste", and the box, list or boxes waiting.
+// Nothing to read → `nothing`, the lines to show.
+function readInputs(kind,{linkText,pages,pastes}){
+  const fromPasted=kind==="paste", fromPages=kind==="pages"||fromPasted;
+  // Pasted boxes: each turned into a page now, then read as a saved page is; a box that
+  // cannot be is a line, never read.
+  const pasteBad=[];
+  const pasted=fromPasted?pastes.filter(filledBox).map(x=>{ const r=pastedPageReply(x.url,x.text); if(!r.ok){ pasteBad.push({url:x.url.trim(),why:r.why}); return null; } return{url:r.res.url,text:r.res.text,box:x}; }).filter(Boolean):[];
+  const items=fromPasted?pasted:fromPages?pages:linksIn(linkText).map(url=>({url}));
+  const urls=items.map(x=>x.url);
+  const input={kind:fromPasted?"paste":fromPages?"pages":"links",items,urls,pasted,pasteBad};
+  if(!urls.length)input.nothing=pasteBad.length?pasteBad:[{url:"",why:fromPasted?"Nothing pasted.":fromPages?"No pages chosen.":"No links found in the box."}];
+  return input;
+}
+
+// ── ADD BY LINK — the button's work ────────────────────────────────────────
+// One page read per link, then one model call for the prose; a new venue's
+// shop is found once. Every row then goes through analyzeProForma, the same
+// door as a sweep file. What could not be read stays in the box.
+// Pages (saved pages) take the same road, the page's text in place of the fetch;
+// what could not be read stays in the Pages list.
+// `occVenues` is the working copy of her link venues; `progress` takes each progress line and
+// `stopped` says whether Cancel was pressed mid-Read. Hands back the rows read (`got`), the lines
+// that could not be read (`fails`), the venues met, and the venues as they now stand.
+async function readShows(input,occVenues,{progress,stopped}){
+  const {items,urls,pasteBad}=input, fromPasted=input.kind==="paste", fromPages=input.kind!=="links";
+  const got=[], fails=[...pasteBad], met=new Set(), looked=new Set();
+  let venues={...occVenues}, venuesChanged=false;
+  const work=[], namedNow=new Set();
+  for(let n=0;n<urls.length;n++){
+    if(stopped())break;
+    const url=urls[n];
+    progress({done:n,total:urls.length,label:"Reading "+(n+1)+" of "+urls.length+"\u2026"});
+    const item=items[n];
+    // Each link's reading is one record in the lookup log: what code read off the
+    // page, Claude's answer and the title made from them.
+    const tape=tapeStart(fromPasted?"Add by paste":fromPages?"Add by page":"Add by link",{title:url,exUrl:url}), seen={url};
+    const failsBefore=fails.length;
+    let queued=false;
+    try{
+      const f=fromPages?{ok:true,results:[{url,title:item.title,full_content:item.text}]}:await fetchPage(url,"The exhibition's title, dates and description.",null,{full:true});
+      if(!f.ok){ fails.push({url,why:f.detail}); continue; }
+      const res=f.results[0];
+      if(!res){
+        const e=(f.errors||[])[0];
+        fails.push({url,why:pageUnreadWhy(e)});
+        continue;
+      }
+      let page=fromPasted?pastedPage(item.text,url):readShowPage(res,url,linkReadVenue(url));
+      seen.venue=knownVenueFor(url)||null; seen.page=page;
+      if(!page.ok){ fails.push({url,why:page.why}); continue; }
+      const lv=linkVenue(url,page);
+      let vc=lv.id;
+      seen.venue=vc||null;
+      if(!vc){ fails.push({url,why:lv.why}); continue; }
+      if(lv.line)page.between=page.between.filter(l=>l!==lv.line);
+      let host=hostOf(siteUrlOf(url));
+      // A venue not met before (or stored named only by its address): Claude names it (her
+      // decision). On someone else's page, code files the show at the venue Claude names
+      // (heldElsewhere; her decision, a last resort).
+      // A venue on another part of one of her museums' own site is asked every time, so each
+      // page there can file under the museum it names (ownMuseumNamed).
+      // A new venue is named once per import: by its first page (AL-053).
+      const askFresh=isOcc(vc)&&needsFacts(venues[vc])&&!namedNow.has(vc), askVenue=askFresh||(isOcc(vc)&&!(linkEntry(vc)||{}).name&&nearMuseumSite(host));
+      // An entry that only places the venue's chip leaves this as it was (Cini).
+      const lk=linkEntry(vc), ownSite=vc===occVenueId(host)&&(!lk||Object.keys(lk).every(k=>k==="ownChip"||k==="chip"||k==="group"));
+      if(askFresh)namedNow.add(vc);
+      work.push({n,url,item,res,page,vc,host,askFresh,askVenue,ownSite,tape,seen,entry:linkItem(page,askVenue,url,vc)});
+      queued=true;
+    }catch(e){ fails.push({url,why:"Couldn\u2019t read it ("+String((e&&e.message)||e)+")."}); }
+    finally{
+      if(!queued){ tape.link={...seen,row:null}; saveLookupTape(tape,{ok:false,said:fails.length>failsBefore?fails[fails.length-1].why:null}); }
+    }
+  }
+  // Every page read: Claude is asked for all of them at once (readLinkBatch).
+  if(work.length&&!stopped())await readLinkBatch(work,stopped);
+  for(const w of work){
+    if(stopped())break;
+    const {n,url,res,tape,seen,askFresh,askVenue,ownSite}=w;
+    // Counted now: a page that failed to read meanwhile is not this page's failure.
+    const failsBefore=fails.length;
+    let {page,vc,host}=w;
+    const ask=w.ask, faults=w.faults;
+    lookupTape=tape;
+    try{
+      if(faults.length){ fails.push({url,why:"Claude\u2019s description failed check and re-attempt multiple times ("+faults.join("; ")+")"}); continue; }
+      let a=linkAnswer(ask.ok?ask.data:null);
+      // A pasted box: no title, no box read (the title is Claude's, checked; her decision).
+      if(page.pasted){
+        if(!ask.ok){ fails.push({url,why:"Claude couldn\u2019t read the text ("+ask.detail.replace(/\s+\[.*$/,"")+")."}); continue; }
+        page=pasteDates({...page,base:pasteTitle(a.pasteTitle)},a.pasteDates,vc); seen.page=page;
+      }
+      if(askFresh&&ownSite&&maybeElsewhere(a,host)){ const more=await readResults(elsewherePrompt(page,url,a)); if(more.ok)a={...a,...elsewhereAnswer(more.data)}; }
+      const away=askFresh&&ownSite?heldElsewhere(a,host):null;
+      if(away){ vc=away.id; host=away.host; seen.venue=vc; seen.heldElsewhere=away; }
+      const ownMuseum=!away&&askVenue?ownMuseumNamed(a,host):null;
+      if(ownMuseum){ vc=ownMuseum; seen.venue=vc; seen.ownMuseum=ownMuseum; }
+      const named=askFresh&&!ownMuseum&&a.venue?{name:a.venue,short:a.venueShort||a.venue,aka:a.venueAlso,city:a.venueCity,country:a.venueCountry}:null;
+      const fresh=!venues[vc];
+      if(isOcc(vc)){
+        met.add(vc);
+        const had=venues[vc];
+        // A new venue's shop is looked for once per Read. On a later Read, again only
+        // while unconfirmed AND (found by the first finder, or no books section found)
+        // — a miss is never kept as the answer.
+        if(!looked.has(vc)&&(!had||(!had.confirmed&&(!(had.finder>=2)||had.shop!=="found")))){
+          looked.add(vc);
+          const name=venueSearchName(vc,{...(had&&!namedByAddress(had)?had:{name:page.site}),...(named&&(!had||namedByAddress(had))?{name:named.name}:{}),...(named?{aka:named.aka,city:named.city,country:named.country}:{})});
+          progress({done:n,total:urls.length,label:"Reading "+(n+1)+" of "+urls.length+"\u2026 looking for "+name+"\u2019s shop"});
+          const pageShop=away?"":shopLinkOnPage(oneText(res),host);
+          const gallery=had&&had.gallery!==undefined?had.gallery:ask.ok&&a.gallery;
+          const shop=await discoverShop(pageShop,host,name,had?had.turnedDown:[],vc,null,(had&&had.english===false)||(ask.ok&&a.englishSpeaking===false),gallery&&!away?{page:oneText(res),url}:gallery);
+          venues={...venues,[vc]:{...(had||{}),id:vc,name:had?had.name:named?named.name:page.site,host,english:had?had.english:undefined,
+            shopHome:null,shopCatalogues:null,shelfKind:null,shopSearch:null,why:null,shopEnglishUnread:null,englishPicked:false,
+            ...shop,confirmed:false,turnedDown:had?had.turnedDown||[]:[],pageShop,addedAt:had?had.addedAt:new Date().toISOString()}};
+          venuesChanged=true;
+        }
+      }
+      if(isOcc(vc)&&named&&venues[vc]&&needsFacts(venues[vc])){
+        const renamed=fresh||namedByAddress(venues[vc]);
+        venues={...venues,[vc]:{...venues[vc],...(renamed?{name:named.name,short:named.short}:{}),aka:named.aka,city:named.city,country:named.country}}; venuesChanged=true; seen.named=named;
+      }
+      if(isOcc(vc)&&venues[vc]&&venues[vc].english===undefined&&ask.ok){ venues={...venues,[vc]:{...venues[vc],english:a.englishSpeaking}}; venuesChanged=true; }
+      if(isOcc(vc)&&venues[vc]&&venues[vc].gallery===undefined&&ask.ok){ venues={...venues,[vc]:{...venues[vc],gallery:a.gallery}}; venuesChanged=true; }
+      // A venue whose subtitle sits under the heading: read by code. A line
+      // ending like a sentence is the text, not a subtitle.
+      const own=(MU[vc]||{}).subtitleUnderHeading&&page.under&&page.under.length<=120&&!/[.!?]$/.test(page.under)?page.under:"";
+      // A show held elsewhere takes the title Claude read (someone else's page title can be anything).
+      const lt=page.pasted?page.base:(away&&a.title)||nameInLines(page,vc)||linkTitle(page.base,own||a.subtitle,page.between);
+      const title=cardTitle(lt,vc);
+      Object.assign(seen,{venue:vc,answer:a,subtitleUnderHeading:own||null,title});
+      tape.row={title,museumId:vc,exUrl:url};
+      got.push({venue_code:vc,title,start_date:page.start,end_date:page.end,
+        summary:a.summary?composeSummary(cardTitle(a.english,vc),a.summary):"",url:page.link,
+        notes:[page.noDates?(page.orderUnknown?DATES.ORDER_UNKNOWN_NOTE:page.shown?DATES.shownOnlyNote(page.shown,page.shownWhy):page.scriptDates?SCRIPT_DATES_NOTE:DATES.NO_DATES_NOTE):"",page.dateNote||"",
+          ask.ok?"":"Description not written \u2014 "+ask.detail.replace(/\s+\[.*$/,"")].filter(Boolean).join(" ")});
+    }catch(e){ fails.push({url,why:"Couldn\u2019t read it ("+String((e&&e.message)||e)+")."}); }
+    finally{
+      const failed=fails.length>failsBefore;
+      tape.link={...seen,row:failed?null:got[got.length-1]};
+      saveLookupTape(tape,{ok:!failed,said:failed?fails[fails.length-1].why:null});
+    }
+  }
+  return {stopped:stopped(),got,fails,met:[...met],venues,venuesChanged};
+}
+
+// After the Read: what stays in the box (or list, or boxes) — the links that failed — and what the
+// rows read come to: nothing read, a refused file, nothing new to propose (its line), or the cards.
+// `held` is what Cancel import or the apply puts back (pendingAfterCancel, pendingAfterApply).
+function readOutcome(input,out,{pages,pastes,rows,ignored}){
+  const {kind,items,urls,pasted}=input, fromPasted=kind==="paste", fromPages=kind!=="links";
+  const {got,fails}=out;
+  const failed=new Set(fails.map(x=>x.url));
+  const left=fails.map(x=>x.url).join("\n"), leftPages=pages.filter(p=>failed.has(p.url));
+  // A pasted box stays when it was not read or failed.
+  const readBox=new Map(pasted.map(p=>[p.box,p.url]));
+  const leftPastes=pasteBoxes(pastes.filter(x=>filledBox(x)&&(!readBox.has(x)||failed.has(readBox.get(x)))));
+  const pending=fromPasted?leftPastes:fromPages?leftPages:left;
+  if(!got.length)return {pending};
+  const res=analyzeProForma(proFormaCsv(got),rows,new Set(ignored.map(x=>x.key)),{notePrefix:""});
+  if(res.error)return {pending,note:res.error};
+  if(!res.props.length){
+    // Every one quarantined: it says so, not "your ledger already matches" (her wording).
+    return {pending,finished:true,tally:res.tally||null,
+      note:"Read "+got.length+(fromPages?" page":" link")+(got.length===1?"":"s")+", but "+(res.tally&&res.tally.blocked>=got.length?"nothing to add \u2014 already in your quarantine.":"nothing new to propose \u2014 your ledger already matches "+(got.length===1?"it":"them")+".")};
+  }
+  return {pending,props:res.props,tally:res.tally||null,
+    held:{kind,items:fromPasted?pasted.map(p=>({...p.box,url:p.url})):fromPages?items:urls}};
+}
+// The progress line once Cancel is pressed mid-Read.
+const readStopping=kind=>"Stopping after this "+(kind==="pages"||kind==="paste"?"page":"link")+"\u2026";
+
+// The import is finished: back in the box go the unread links plus the links of rejected cards,
+// and of cards a partial apply left undecided (her decision); in Pages and Paste, those pages and
+// boxes. `held` is what the Read read (readOutcome); with none, the links box.
+function pendingAfterApply(held,proposals,decisions,{linkText,pages,pastes}){
+  const back=proposals.filter((p,i)=>/^(rejected|undecided)$/.test(cardOutcome(p,decisions[i]))).map(p=>(p.cand||{}).exUrl).filter(Boolean);
+  if(held&&held.kind==="paste"){
+    const keys=new Set(back.map(u=>normalizeUrlKey(u)));
+    return {kind:"paste",value:mergeBoxes(pastes,held.items.filter(p=>keys.has(normalizeUrlKey(p.url))))};
+  }
+  if(held&&held.kind==="pages"){
+    const keys=new Set(back.map(u=>normalizeUrlKey(u)));
+    return {kind:"pages",value:mergePages(pages,held.items.filter(p=>keys.has(normalizeUrlKey(p.url))))};
+  }
+  return {kind:"links",value:[...new Set([...linksIn(linkText),...back])].join("\n")};
+}
+// Cancel import after a Read puts every link (or page) it read back in the box (or list), stored (her decision).
+function pendingAfterCancel(held,{linkText,pages,pastes}){
+  if(!held)return null;
+  if(held.kind==="paste")return {kind:"paste",value:mergeBoxes(pastes,held.items)};
+  if(held.kind==="pages")return {kind:"pages",value:mergePages(pages,held.items)};
+  return {kind:"links",value:[...new Set([...linksIn(linkText),...held.items])].join("\n")};
+}
+// Pages chosen: each file turned into its text now, the file itself never kept. Added to
+// the list (and the store) at once, as typing fills the Links box. `files`: each
+// {name,text}, or {name,failed:true,error} when the file could not be read; `parse` turns HTML into a document.
+function pickedPages(pages,files,parse){
+  const add=[], bad=[];
+  for(const f of files){
+    let r;
+    try{ if(f.failed)throw f.error; r=savedPageReply(f.text,parse); }
+    catch(err){ r={ok:false,why:"Couldn\u2019t read it ("+String((err&&err.message)||err)+")."}; }
+    if(r.ok)add.push({url:r.res.url,title:r.res.title,name:f.name,text:r.res.full_content});
+    else bad.push({url:"",why:f.name+": "+r.why});
+  }
+  return {list:mergePages(pages,add),bad,store:add.length>0};
 }
 
 // Merge, never replace: a venue's dates move only for a LATER time, so an old sweep
@@ -7981,187 +8194,53 @@ export default function App(){
     setRecheckSaid({id,failed:false,text:"Relabelled: "+periodText(r)+" \u2014 no regrouping."});
   }
 
-  // ── ADD BY LINK — the button's work ────────────────────────────────────────
-  // One page read per link, then one model call for the prose; a new venue's
-  // shop is found once. Every row then goes through analyzeProForma, the same
-  // door as a sweep file. What could not be read stays in the box.
-  // Pages (saved pages) take the same road, the page's text in place of the fetch;
-  // what could not be read stays in the Pages list.
+  // ── ADD BY LINK — the Read button. The job is readShows (the Links/Pages/Paste parts);
+  // here the screen is busy, shows its progress and puts what comes back on screen.
   async function readLinks(kind){
-    const fromPasted=kind==="paste", fromPages=kind==="pages"||fromPasted;
-    // Pasted boxes: each turned into a page now, then read as a saved page is; a box that
-    // cannot be is a line, never read.
-    const pasteBad=[];
-    const pasted=fromPasted?pastes.filter(filledBox).map(x=>{ const r=pastedPageReply(x.url,x.text); if(!r.ok){ pasteBad.push({url:x.url.trim(),why:r.why}); return null; } return{url:r.res.url,text:r.res.text,box:x}; }).filter(Boolean):[];
-    const items=fromPasted?pasted:fromPages?pages:linksIn(linkText).map(url=>({url}));
-    const urls=items.map(x=>x.url);
-    if(!urls.length){ setLinkFails(pasteBad.length?pasteBad:[{url:"",why:fromPasted?"Nothing pasted.":fromPages?"No pages chosen.":"No links found in the box."}]); return; }
+    const input=readInputs(kind,{linkText,pages,pastes});
+    if(input.nothing){ setLinkFails(input.nothing); return; }
     setBusy(true); setLinkNote(null); setLinkFails([]);
     linkRead.current={on:true,stop:false};
-    const got=[], fails=[...pasteBad], met=new Set(), looked=new Set();
-    let venues={...occVenues}, venuesChanged=false;
-    const work=[], namedNow=new Set();
-    for(let n=0;n<urls.length;n++){
-      if(linkRead.current.stop)break;
-      const url=urls[n];
-      setProg({done:n,total:urls.length,label:"Reading "+(n+1)+" of "+urls.length+"\u2026"});
-      const item=items[n];
-      // Each link's reading is one record in the lookup log: what code read off the
-      // page, Claude's answer and the title made from them.
-      const tape=tapeStart(fromPasted?"Add by paste":fromPages?"Add by page":"Add by link",{title:url,exUrl:url}), seen={url};
-      const failsBefore=fails.length;
-      let queued=false;
-      try{
-        const f=fromPages?{ok:true,results:[{url,title:item.title,full_content:item.text}]}:await fetchPage(url,"The exhibition's title, dates and description.",null,{full:true});
-        if(!f.ok){ fails.push({url,why:f.detail}); continue; }
-        const res=f.results[0];
-        if(!res){
-          const e=(f.errors||[])[0];
-          fails.push({url,why:pageUnreadWhy(e)});
-          continue;
-        }
-        let page=fromPasted?pastedPage(item.text,url):readShowPage(res,url,linkReadVenue(url));
-        seen.venue=knownVenueFor(url)||null; seen.page=page;
-        if(!page.ok){ fails.push({url,why:page.why}); continue; }
-        const lv=linkVenue(url,page);
-        let vc=lv.id;
-        seen.venue=vc||null;
-        if(!vc){ fails.push({url,why:lv.why}); continue; }
-        if(lv.line)page.between=page.between.filter(l=>l!==lv.line);
-        let host=hostOf(siteUrlOf(url));
-        // A venue not met before (or stored named only by its address): Claude names it (her
-        // decision). On someone else's page, code files the show at the venue Claude names
-        // (heldElsewhere; her decision, a last resort).
-        // A venue on another part of one of her museums' own site is asked every time, so each
-        // page there can file under the museum it names (ownMuseumNamed).
-        // A new venue is named once per import: by its first page (AL-053).
-        const askFresh=isOcc(vc)&&needsFacts(venues[vc])&&!namedNow.has(vc), askVenue=askFresh||(isOcc(vc)&&!(linkEntry(vc)||{}).name&&nearMuseumSite(host));
-        // An entry that only places the venue's chip leaves this as it was (Cini).
-        const lk=linkEntry(vc), ownSite=vc===occVenueId(host)&&(!lk||Object.keys(lk).every(k=>k==="ownChip"||k==="chip"||k==="group"));
-        if(askFresh)namedNow.add(vc);
-        work.push({n,url,item,res,page,vc,host,askFresh,askVenue,ownSite,tape,seen,entry:linkItem(page,askVenue,url,vc)});
-        queued=true;
-      }catch(e){ fails.push({url,why:"Couldn\u2019t read it ("+String((e&&e.message)||e)+")."}); }
-      finally{
-        if(!queued){ tape.link={...seen,row:null}; saveLookupTape(tape,{ok:false,said:fails.length>failsBefore?fails[fails.length-1].why:null}); }
-      }
-    }
-    // Every page read: Claude is asked for all of them at once (readLinkBatch).
-    if(work.length&&!linkRead.current.stop)await readLinkBatch(work,linkRead);
-    for(const w of work){
-      if(linkRead.current.stop)break;
-      const {n,url,res,tape,seen,askFresh,askVenue,ownSite}=w;
-      // Counted now: a page that failed to read meanwhile is not this page's failure.
-      const failsBefore=fails.length;
-      let {page,vc,host}=w;
-      const ask=w.ask, faults=w.faults;
-      lookupTape=tape;
-      try{
-        if(faults.length){ fails.push({url,why:"Claude\u2019s description failed check and re-attempt multiple times ("+faults.join("; ")+")"}); continue; }
-        let a=linkAnswer(ask.ok?ask.data:null);
-        // A pasted box: no title, no box read (the title is Claude's, checked; her decision).
-        if(page.pasted){
-          if(!ask.ok){ fails.push({url,why:"Claude couldn\u2019t read the text ("+ask.detail.replace(/\s+\[.*$/,"")+")."}); continue; }
-          page=pasteDates({...page,base:pasteTitle(a.pasteTitle)},a.pasteDates,vc); seen.page=page;
-        }
-        if(askFresh&&ownSite&&maybeElsewhere(a,host)){ const more=await readResults(elsewherePrompt(page,url,a)); if(more.ok)a={...a,...elsewhereAnswer(more.data)}; }
-        const away=askFresh&&ownSite?heldElsewhere(a,host):null;
-        if(away){ vc=away.id; host=away.host; seen.venue=vc; seen.heldElsewhere=away; }
-        const ownMuseum=!away&&askVenue?ownMuseumNamed(a,host):null;
-        if(ownMuseum){ vc=ownMuseum; seen.venue=vc; seen.ownMuseum=ownMuseum; }
-        const named=askFresh&&!ownMuseum&&a.venue?{name:a.venue,short:a.venueShort||a.venue,aka:a.venueAlso,city:a.venueCity,country:a.venueCountry}:null;
-        const fresh=!venues[vc];
-        if(isOcc(vc)){
-          met.add(vc);
-          const had=venues[vc];
-          // A new venue's shop is looked for once per Read. On a later Read, again only
-          // while unconfirmed AND (found by the first finder, or no books section found)
-          // — a miss is never kept as the answer.
-          if(!looked.has(vc)&&(!had||(!had.confirmed&&(!(had.finder>=2)||had.shop!=="found")))){
-            looked.add(vc);
-            const name=venueSearchName(vc,{...(had&&!namedByAddress(had)?had:{name:page.site}),...(named&&(!had||namedByAddress(had))?{name:named.name}:{}),...(named?{aka:named.aka,city:named.city,country:named.country}:{})});
-            setProg({done:n,total:urls.length,label:"Reading "+(n+1)+" of "+urls.length+"\u2026 looking for "+name+"\u2019s shop"});
-            const pageShop=away?"":shopLinkOnPage(oneText(res),host);
-            const gallery=had&&had.gallery!==undefined?had.gallery:ask.ok&&a.gallery;
-            const shop=await discoverShop(pageShop,host,name,had?had.turnedDown:[],vc,null,(had&&had.english===false)||(ask.ok&&a.englishSpeaking===false),gallery&&!away?{page:oneText(res),url}:gallery);
-            venues={...venues,[vc]:{...(had||{}),id:vc,name:had?had.name:named?named.name:page.site,host,english:had?had.english:undefined,
-              shopHome:null,shopCatalogues:null,shelfKind:null,shopSearch:null,why:null,shopEnglishUnread:null,englishPicked:false,
-              ...shop,confirmed:false,turnedDown:had?had.turnedDown||[]:[],pageShop,addedAt:had?had.addedAt:new Date().toISOString()}};
-            venuesChanged=true;
-          }
-        }
-        if(isOcc(vc)&&named&&venues[vc]&&needsFacts(venues[vc])){
-          const renamed=fresh||namedByAddress(venues[vc]);
-          venues={...venues,[vc]:{...venues[vc],...(renamed?{name:named.name,short:named.short}:{}),aka:named.aka,city:named.city,country:named.country}}; venuesChanged=true; seen.named=named;
-        }
-        if(isOcc(vc)&&venues[vc]&&venues[vc].english===undefined&&ask.ok){ venues={...venues,[vc]:{...venues[vc],english:a.englishSpeaking}}; venuesChanged=true; }
-        if(isOcc(vc)&&venues[vc]&&venues[vc].gallery===undefined&&ask.ok){ venues={...venues,[vc]:{...venues[vc],gallery:a.gallery}}; venuesChanged=true; }
-        // A venue whose subtitle sits under the heading: read by code. A line
-        // ending like a sentence is the text, not a subtitle.
-        const own=(MU[vc]||{}).subtitleUnderHeading&&page.under&&page.under.length<=120&&!/[.!?]$/.test(page.under)?page.under:"";
-        // A show held elsewhere takes the title Claude read (someone else's page title can be anything).
-        const lt=page.pasted?page.base:(away&&a.title)||nameInLines(page,vc)||linkTitle(page.base,own||a.subtitle,page.between);
-        const title=cardTitle(lt,vc);
-        Object.assign(seen,{venue:vc,answer:a,subtitleUnderHeading:own||null,title});
-        tape.row={title,museumId:vc,exUrl:url};
-        got.push({venue_code:vc,title,start_date:page.start,end_date:page.end,
-          summary:a.summary?composeSummary(cardTitle(a.english,vc),a.summary):"",url:page.link,
-          notes:[page.noDates?(page.orderUnknown?DATES.ORDER_UNKNOWN_NOTE:page.shown?DATES.shownOnlyNote(page.shown,page.shownWhy):page.scriptDates?SCRIPT_DATES_NOTE:DATES.NO_DATES_NOTE):"",page.dateNote||"",
-            ask.ok?"":"Description not written \u2014 "+ask.detail.replace(/\s+\[.*$/,"")].filter(Boolean).join(" ")});
-      }catch(e){ fails.push({url,why:"Couldn\u2019t read it ("+String((e&&e.message)||e)+")."}); }
-      finally{
-        const failed=fails.length>failsBefore;
-        tape.link={...seen,row:failed?null:got[got.length-1]};
-        saveLookupTape(tape,{ok:!failed,said:failed?fails[fails.length-1].why:null});
-      }
-    }
+    const out=await readShows(input,occVenues,{progress:setProg,stopped:()=>linkRead.current.stop});
     // Cancelled mid-Read: nothing from this Read is kept; every link stays in the box.
-    if(linkRead.current.stop){ linkRead.current={on:false,stop:false}; setProg({done:0,total:0,label:""}); setBusy(false); setImportMode(null); return; }
+    if(out.stopped){ linkRead.current={on:false,stop:false}; setProg({done:0,total:0,label:""}); setBusy(false); setImportMode(null); return; }
     linkRead.current={on:false,stop:false};
-    if(venuesChanged){ registerOccasional(venues); setOccVenues(venues); }   // held, not stored: see occSaved
-    setProg({done:0,total:0,label:""}); setBusy(false); setReadVenues([...met]);
-    const failed=new Set(fails.map(x=>x.url));
-    const left=fails.map(x=>x.url).join("\n"), leftPages=pages.filter(p=>failed.has(p.url));
-    // A pasted box stays when it was not read or failed.
-    const readBox=new Map(pasted.map(p=>[p.box,p.url]));
-    const leftPastes=pasteBoxes(pastes.filter(x=>filledBox(x)&&(!readBox.has(x)||failed.has(readBox.get(x)))));
+    if(out.venuesChanged){ registerOccasional(out.venues); setOccVenues(out.venues); }   // held, not stored: see occSaved
+    setProg({done:0,total:0,label:""}); setBusy(false); setReadVenues(out.met);
+    const done=readOutcome(input,out,{pages,pastes,rows,ignored});
     // The box (or list) is stored when the import finishes.
-    if(fromPasted)setPastes(leftPastes); else if(fromPages)setPages(leftPages); else setLinkText(left);
-    setLinkFails(fails);
+    setPending(input.kind,done.pending);
+    setLinkFails(out.fails);
     linksAtRead.current=null;
-    if(!got.length)return;
-    const res=analyzeProForma(proFormaCsv(got),rows,new Set(ignored.map(x=>x.key)),{notePrefix:""});
-    if(res.error){ setLinkNote(res.error); return; }
-    if(!res.props.length){
-      setTally(res.tally||null);
-      if(fromPasted)writePendingPastes(leftPastes); else if(fromPages)writePendingPages(leftPages); else writePendingLinks(left);   // nothing to approve: this Read is finished
-      // Every one quarantined: it says so, not "your ledger already matches" (her wording).
-      setLinkNote("Read "+got.length+(fromPages?" page":" link")+(got.length===1?"":"s")+", but "+(res.tally&&res.tally.blocked>=got.length?"nothing to add \u2014 already in your quarantine.":"nothing new to propose \u2014 your ledger already matches "+(got.length===1?"it":"them")+"."));
+    if(done.finished){
+      setTally(done.tally);
+      writePending(input.kind,done.pending);   // nothing to approve: this Read is finished
+      setLinkNote(done.note);
       return;
     }
-    setProposals(res.props); setCoverage([]); setTally(res.tally||null); setSeenInFile(null); setDecisions(topicPresets(res.props));
-    labelCards(res.props);
-    linksAtRead.current=fromPasted?{pastes:pasted.map(p=>({...p.box,url:p.url}))}:fromPages?{pages:items}:urls;
+    if(done.note){ setLinkNote(done.note); return; }
+    if(!done.props)return;
+    setProposals(done.props); setCoverage([]); setTally(done.tally); setSeenInFile(null); setDecisions(topicPresets(done.props));
+    labelCards(done.props);
+    linksAtRead.current=done.held;
     // Done with the pop-up — unless a link could not be read: then it stays
     // under the review, its lines waiting for her when the review closes.
-    if(!fails.length)setImportMode(null);
+    if(!out.fails.length)setImportMode(null);
   }
-  // Pages chosen: each file turned into its text now, the file itself never kept. Added to
-  // the list (and the store) at once, as typing fills the Links box.
+  // The waiting box, list or boxes on screen, by kind ("links", "pages", "paste").
+  const setPending=(kind,value)=>kind==="paste"?setPastes(value):kind==="pages"?setPages(value):setLinkText(value);
+  // Pages chosen: the screen reads each file; pickedPages turns them into the list's pages.
   async function pickPages(e){
     const files=[...(e.target.files||[])]; e.target.value="";
     if(!files.length)return;
-    const add=[], bad=[];
+    const read=[];
     for(const f of files){
-      let r;
-      try{ r=savedPageReply(await f.text(),h=>new DOMParser().parseFromString(h,"text/html")); }
-      catch(err){ r={ok:false,why:"Couldn\u2019t read it ("+String((err&&err.message)||err)+")."}; }
-      if(r.ok)add.push({url:r.res.url,title:r.res.title,name:f.name,text:r.res.full_content});
-      else bad.push({url:"",why:f.name+": "+r.why});
+      try{ read.push({name:f.name,text:await f.text()}); }
+      catch(err){ read.push({name:f.name,failed:true,error:err}); }
     }
-    const list=mergePages(pages,add);
-    setPages(list); setLinkFails(bad); setLinkNote(null);
-    if(add.length)writePendingPages(list);
+    const picked=pickedPages(pages,read,h=>new DOMParser().parseFromString(h,"text/html"));
+    setPages(picked.list); setLinkFails(picked.bad); setLinkNote(null);
+    if(picked.store)writePendingPages(picked.list);
   }
   // The shop screen's answers are held in the working copy and stored when the ledger
   // moves; Cancel import drops them, Back keeps them (her decision). Confirmed in a
@@ -8226,25 +8305,10 @@ export default function App(){
   function applyRefresh(partial){
     const out=applyCards(rows,proposals,decisions,partial);
     // The import is finished, so what it held back is stored now: a CSV's sweep log
-    // (seenInFile — a link is not a sweep), or for a Read the box: unread links plus
-    // the links of rejected cards, and of cards a partial apply left undecided (her
-    // decision). "Clear" in the box empties it.
+    // (seenInFile — a link is not a sweep), or for a Read what goes back in the box
+    // (pendingAfterApply). "Clear" in the box empties it.
     if(seenInFile)recordSweep(seenInFile);
-    else{
-      const back=proposals.filter((p,i)=>/^(rejected|undecided)$/.test(cardOutcome(p,decisions[i]))).map(p=>(p.cand||{}).exUrl).filter(Boolean);
-      if(linksAtRead.current&&linksAtRead.current.pastes){
-        const keys=new Set(back.map(u=>normalizeUrlKey(u)));
-        const list=mergeBoxes(pastes,linksAtRead.current.pastes.filter(p=>keys.has(normalizeUrlKey(p.url))));
-        setPastes(list); writePendingPastes(list);
-      }else if(linksAtRead.current&&linksAtRead.current.pages){
-        const keys=new Set(back.map(u=>normalizeUrlKey(u)));
-        const list=mergePages(pages,linksAtRead.current.pages.filter(p=>keys.has(normalizeUrlKey(p.url))));
-        setPages(list); writePendingPages(list);
-      }else{
-        const box=[...new Set([...linksIn(linkText),...back])].join("\n");
-        setLinkText(box); writePendingLinks(box);
-      }
-    }
+    else{ const p=pendingAfterApply(linksAtRead.current,proposals,decisions,{linkText,pages,pastes}); setPending(p.kind,p.value); writePending(p.kind,p.value); }
     linksAtRead.current=null;
     // A new quarantine goes to the store, the copy that survives a Reset; the export
     // carries the list too.
@@ -8262,18 +8326,10 @@ export default function App(){
     setAcqWanted(false); setAcqOwned(false); setAcq3mo(false); setAcq6mo(false); setAcqHasCat(false); setAcqNoCat(false); setAcqDigital(false); setAcqBuyNext(false); setBnPeriod(false); setBnDate(false);
     setDismissedOnly(false); setShowAll(false); setSearch("");
   }
-  // Cancel import after a Read puts every link (or page) it read back in the box (or list), stored (her decision).
+  // Cancel import after a Read puts every link (or page) it read back (pendingAfterCancel), stored.
   function cancelRefresh(){
-    if(linksAtRead.current&&linksAtRead.current.pastes){
-      const list=mergeBoxes(pastes,linksAtRead.current.pastes);
-      setPastes(list); writePendingPastes(list); linksAtRead.current=null;
-    }else if(linksAtRead.current&&linksAtRead.current.pages){
-      const list=mergePages(pages,linksAtRead.current.pages);
-      setPages(list); writePendingPages(list); linksAtRead.current=null;
-    }else if(linksAtRead.current){
-      const box=[...new Set([...linksIn(linkText),...linksAtRead.current])].join("\n");
-      setLinkText(box); writePendingLinks(box); linksAtRead.current=null;
-    }
+    const p=pendingAfterCancel(linksAtRead.current,{linkText,pages,pastes});
+    if(p){ setPending(p.kind,p.value); writePending(p.kind,p.value); linksAtRead.current=null; }
     dropHeldVenues(); setShopScreen(null); setShopAdding(null); setReadVenues([]); setProposals(null); setDecisions({}); setCoverage([]); setTally(null); setSeenInFile(null); }
   // A second tap on Date reverses it; a third goes back to the usual order.
   const pickSort=k=>{if(bnOnly){if(k==="period"||k==="date"){const cur=bnPeriod?"period":bnDate?"date":"";if(cur!==k){setBnPeriod(k==="period");setBnDate(k==="date");setDateReversed(false);}else if(!dateReversed)setDateReversed(true);else{setBnPeriod(false);setBnDate(false);setDateReversed(false);}}return;}setDateReversed((k==="date"||k==="period")&&sortBy===k&&!pinTouched&&!dateReversed);setSortBy(k);setPinTouched(false);}; // manual sort releases the pinned refresh group
@@ -9190,7 +9246,7 @@ export default function App(){
             {/* Cancel always answers: a catalogue search also sets busy, and once locked the
                 pop-up out until the search ended (her report). */}
             <div style={{textAlign:"center",marginTop:10}}>
-              <button onClick={()=>{ if(linkRead.current.on){ linkRead.current.stop=true; setProg(p=>({...p,label:"Stopping after this "+(importMode==="pages"||importMode==="paste"?"page":"link")+"\u2026"})); return; } if(!proposals)dropHeldVenues(); setImportMode(null); }} style={{background:"none",border:"none",color:C.soft,fontSize:10,textDecoration:"underline",cursor:"pointer",padding:0}}>Cancel</button>
+              <button onClick={()=>{ if(linkRead.current.on){ linkRead.current.stop=true; setProg(p=>({...p,label:readStopping(importMode)})); return; } if(!proposals)dropHeldVenues(); setImportMode(null); }} style={{background:"none",border:"none",color:C.soft,fontSize:10,textDecoration:"underline",cursor:"pointer",padding:0}}>Cancel</button>
             </div>
           </div>
         </div>

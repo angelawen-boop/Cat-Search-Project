@@ -123,13 +123,13 @@ function batchAnswers(data,text){
 // The whole import asked at once: each page's answer checked; the ones refused, or that did not come
 // back, asked again together (LINK_ASK_AGAIN times), never the whole import. A call that fails outright
 // (declined, rate-limited) is not repeated: each page goes on with no description, as one page did.
-// Each page's lookup-log record holds every request its page was in.
-async function readLinkBatch(work,run){
+// Each page's lookup-log record holds every request its page was in. `stopped` says whether Cancel was pressed.
+async function readLinkBatch(work,stopped){
   for(const w of work){ w.ask=null; w.faults=["no answer"]; }
   let pending=work.slice();
   for(let round=0;round<=LINK_ASK_AGAIN&&pending.length;round++){
     for(const batch of linkBatches(pending.map(w=>({key:String(w.n),item:w.entry,refused:w.refused||null,w})))){
-      if(run&&run.current.stop)return;
+      if(stopped&&stopped())return;
       const prompt=linkBatchPrompt(batch), t0=Date.now();
       lookupTape=null;
       const out=await readResultsCall(prompt,LINK_READ_TIER);

@@ -67,7 +67,8 @@
     "import/link_venues.jsx": "Venue link rules (LINK_VENUES), Occasional venues and how a link's venue is decided.",
     "import/page_reader.jsx": "Reading one show's page: can it be read, title, dates, description.",
     "import/claude_read.jsx": "The one request to Claude for the whole import, and checking its answers.",
-    "import/pages_paste.jsx": "Saved pages, pasted text, and the pending links/pages/pastes in the store."
+    "import/pages_paste.jsx": "Saved pages, pasted text, and the pending links/pages/pastes in the store.",
+    "import/read_job.jsx": "The Read button's job for Links, Pages and Paste: reading each one, its progress lines, and what goes back into the pending lists."
    }
   },
   {
@@ -326,6 +327,13 @@
   "withChoices": "import/review.jsx",
   "applyCards": "import/review.jsx",
   "importComplete": "import/review.jsx",
+  "readInputs": "import/read_job.jsx",
+  "readShows": "import/read_job.jsx",
+  "readOutcome": "import/read_job.jsx",
+  "readStopping": "import/read_job.jsx",
+  "pendingAfterApply": "import/read_job.jsx",
+  "pendingAfterCancel": "import/read_job.jsx",
+  "pickedPages": "import/read_job.jsx",
   "OCC_DOC": "import/link_venues.jsx",
   "isOcc": "import/link_venues.jsx",
   "PRM_TAIL": "import/link_venues.jsx",
@@ -452,6 +460,7 @@
   "mergePages": "import/pages_paste.jsx",
   "readPendingLinks": "import/pages_paste.jsx",
   "writePendingLinks": "import/pages_paste.jsx",
+  "writePending": "import/pages_paste.jsx",
   "needsPageRead": "lookup/find.jsx",
   "resultsText": "lookup/find.jsx",
   "applyIsbnFill": "lookup/find.jsx",
