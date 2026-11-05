@@ -126,19 +126,24 @@ async function snapshot(jsxFile, outFile, liveFile) {
   win.__catWatchTest = true;   // draws Reset to Seed, as the tests' page has it
   const store = fakeStore();
   const saved = [];
-  // The web and Claude answer only during the Read jobs; before that, as today, the page has neither.
+  // The web answers only during the Read jobs. Claude answers throughout (the period labels after an
+  // import ask it), so no failed question is retried later inside another step.
   const live = liveFile ? JSON.parse(fs.readFileSync(liveFile, 'utf8')) : {};
   let reading = false;
   const calls = [];
-  const mcp = { callTool: async (server, tool, args) => {
+  let pending = 0;   // calls not yet answered: a screen is not steady while one is out
+  const answering = fn => async (...a) => { pending++; try { return await fn(...a); } finally { pending--; } };
+  const mcp = { callTool: answering(async (server, tool, args) => {
     calls.push('web ' + server + ' ' + tool + ' ' + JSON.stringify(args));
     const u = (args.urls || [])[0];
     if (tool === 'web_fetch' && live[u]) return { payload: live[u] };
     return { payload: { results: [], errors: [] } };
-  } };
+  }) };
   // Claude's fixed reply, in the shape the app reads (scraper/fixtures/add_by_link.js, add_by_paste.js).
-  const sample = { json: async (full, opts) => {
+  const sample = { json: answering(async (full, opts) => {
     calls.push('claude ' + JSON.stringify(opts || {}) + '\n' + full);
+    // The period labels (scraper/fixtures/period_render.js): every show asked about is Baroque, 1650.
+    if (/name the art period/.test(full)) return { labels: full.split('Exhibitions:\n')[1].split('\n').filter(Boolean).map(l => ({ i: JSON.parse(l).i, period: 'baroque', year: 1650, themes: [] })) };
     return batchReply(full, async prompt => {
       if (/pasted or typed by hand/.test(prompt)) return { summary: 'Landmark Late Antique and Early Christian art at the Met.',
         title: 'The Age of Spirituality: Late Antique and Early Christian Art, Third to Seventh Century', dates: 'November 19, 1977 to February 12, 1978',
@@ -149,9 +154,9 @@ async function snapshot(jsxFile, outFile, liveFile) {
       if (/venueOwnPage/.test(prompt)) Object.assign(reply, { venue: 'Palazzo Reale Milano', venueShort: 'Palazzo Reale', venueCity: 'Milan', venueCountry: 'Italy', venueOwnPage: true });
       return reply;
     });
-  } };
+  }) };
   win.claude = { use: async name => (name === 'db' ? store : name === 'downloads' ? { save: async f => { saved.push(f); } }
-    : name === 'mcp' && reading ? mcp : name === 'sample' && reading ? sample : null) };
+    : name === 'mcp' && reading ? mcp : name === 'sample' ? sample : null) };
   for (const k of ['window', 'document', 'navigator', 'localStorage', 'requestAnimationFrame', 'cancelAnimationFrame',
     'MutationObserver', 'Node', 'Element', 'HTMLElement', 'Event', 'CustomEvent', 'getComputedStyle', 'FileReader',
     'File', 'DOMParser', 'HTMLInputElement', 'KeyboardEvent', 'MouseEvent']) { try { global[k] = win[k]; } catch {} }
@@ -181,8 +186,8 @@ async function snapshot(jsxFile, outFile, liveFile) {
   // Steady: the screen, the store and the downloads unchanged for 0.8 s (longer than the 0.6 s automatic save).
   const storeText = () => [...store.docs.entries()].sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0)).map(([k, v]) => k + ' = ' + v).join('\n');
   const steady = async () => { let last = '', same = 0; const t = RealDate.now();
-    while (RealDate.now() - t < 20000) { const h = doc.body.innerHTML + '\u0000' + store.docs.size + ':' + storeText().length + ':' + saved.length;
-      same = h === last ? same + 1 : 0; last = h; if (same >= 16) return; await settle(50); } };
+    while (RealDate.now() - t < 20000) { const h = doc.body.innerHTML + '\u0000' + store.docs.size + ':' + storeText().length + ':' + saved.length + ':' + calls.length + ':' + pending;
+      same = h === last && !pending ? same + 1 : 0; last = h; if (same >= 16) return; await settle(50); } };
   const screens = {}, missed = {};
   // One capture. A step that never reached its screen is recorded as missed, and the comparison fails on it.
   const capture = (name, reached, value) => { if (!reached) missed[name] = true; screens[name] = reached ? value() : ''; };
@@ -410,6 +415,7 @@ async function run(oldFile, newFile, { changesAllowed, live }) {
   });
   const [o, n] = await Promise.all([runOne(oldFile, 0), runOne(newFile, 1)]);
   diffs += compare(o, n, changesAllowed);
+  if (diffs) console.log(`both runs kept: ${path.join(tmp, '0.json')} (old), ${path.join(tmp, '1.json')} (new)`);
   console.log(diffs ? `SIDE BY SIDE: ${diffs} difference(s).` : 'SIDE BY SIDE: identical.');
   process.exit(diffs ? 1 : 0);
 }

@@ -13,7 +13,7 @@
  * The real page is run once; the Links read's two pages are fetched live once, through the free
  * Parallel server, and handed to every run.
  *
- *   node build/side_by_side_proof.js          about eight minutes
+ *   node build/side_by_side_proof.js          about eleven minutes
  */
 'use strict';
 const fs = require('fs');
@@ -63,13 +63,13 @@ const BREAKS = [
   ['cloudDrawer', swap('{" · "+s.rows+" exhibitions"}', '{" · "+s.rows+" shows"}')],
   ['review', swap('Nothing unusual about these {"\\u2014"} one row in the file', 'Nothing odd about these {"\\u2014"} one row in the file')],
   ['applied', swap('"Import complete. Save it now."', '"Import complete. Save it soon."')],
-  ['applied-store', swap('returned:  later(was.returned,', 'returned:  later(was.attempted,')],
+  ['applied-store', swap('returned:  later(was.returned,', 'brought:  later(was.returned,')],
   ['reset', swap('" exhibitions) \\u2014 not saved to a file."', '" exhibitions) \\u2014 not saved to any file."')],
   ['reset-store', swap('"Safety snapshot before "+(reason==="reset"?"Reset":"Load")', '"Safety snapshot before "+(reason==="reset"?"Resetting":"Load")')],
-  ['readLinks', swap('words.some(w=>w.length>=6)', 'words.some(w=>w.length>=16)')],
+  ['readLinks', swap('"No start date."', '"No opening date."')],
   ['readLinks-calls', swap('"The exhibition\'s title, dates and description."', '"The exhibition\'s title, dates and summary."')],
   ['readPages', swap('const title=((doc.querySelector("title")', 'const title=((doc.querySelector("h1")')],
-  ['readPages-calls', swap('if(tag==="LI")out.push("* ");', 'if(tag==="LI")out.push("- ");')],
+  ['readPages-calls', swap('/^(?:P|DIV|', '/^(?:PRE|DIV|')],
   ['readPaste', swap('return{...page,start:r.start||"",end:r.end||""', 'return{...page,start:r.start||"",end:r.start||""')],
   ['readPaste-calls', swap('raw:String(text).slice(0,LINK_RAW_CHARS)', 'raw:String(text).slice(1,LINK_RAW_CHARS)')],
 ];
