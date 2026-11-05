@@ -1326,25 +1326,6 @@ function registerUnseenOccasional(rows){
     KNOWN_VENUES.add(r.museumId);
   }
 }
-//@piece STORE_UNREAD
-
-
-// A STORE READ THAT FAILED IS NEVER SHOWN AS "NOTHING THERE", AND NEVER SAVED OVER (her decision: her link
-// venues once came up as bare addresses after a failed read, and the next import would have written the list
-// back with only its new venue). A part of the store that could not be read this opening is named on the page,
-// and its write refuses until the page is opened again. A part that is simply empty is read as empty.
-const STORE_UNREAD=new Set();
-//@piece storeUnreadSeen
-
-let storeUnreadSeen=()=>{};
-//@piece markUnread
-   // the page's banner, told when a read fails
-function markUnread(what){ STORE_UNREAD.add(what); storeUnreadSeen([...STORE_UNREAD]); }
-//@piece UNREAD_OCC,UNREAD_LINKS,UNREAD_PAGES,UNREAD_PASTES,UNREAD_SWEEPS,UNREAD_QUAR
-
-const UNREAD_OCC="the link venues", UNREAD_LINKS="the links waiting in the Links box", UNREAD_PAGES="the pages waiting in the Pages list",
-  UNREAD_PASTES="the boxes waiting in Paste",
-  UNREAD_SWEEPS="the sweep log", UNREAD_QUAR="the quarantine list";
 //@piece readOccasional
 
 async function readOccasional(){
@@ -3424,125 +3405,6 @@ function mergeSeedInto(existing){const byId=new Map(existing.map(r=>[r.id,r]));f
 // show's name; resellers use the ISBN or the book's title. Booko: booko.au/<isbn>,
 // or its title search with no ISBN.
 function buyLinks(r){const isbn=cleanIsbn(r.isbn13),title=r.catalogueTitle||r.title,q=encodeURIComponent(isbn||title),tq=encodeURIComponent(title),mu=MU[r.museumId],out=[];if(r.shopUrl)out.push({name:shopLinkLabel(r.shopState),href:r.shopUrl});else if(shopButtonUrl(mu,r.title))out.push({name:"Museum shop",href:shopButtonUrl(mu,r.title)});if(r.publisherUrl)out.push({name:publisherLinkLabel(r.publisherResult),href:r.publisherUrl});out.push({name:"Amazon",href:"https://www.amazon.com.au/s?k="+q},{name:"AbeBooks",href:"https://www.abebooks.com/servlet/SearchResults?ds=30&dym=on&kn="+(isbn||tq)+"&rollup=on&sortby=17"},{name:"Alibris",href:"https://www.alibris.com/booksearch?keyword="+q},{name:"Booko",href:isbn?"https://booko.au/"+isbn:"https://booko.au/search?query_type=1&q="+tq.replace(/%20/g,"+")});return out;}
-//@piece SEARCH_SERVER
-
-
-// ── FINDING A CATALOGUE (docs/app.md §1; CLAUDE.md §5.1 "Catalogue lookup") ────
-// The page cannot reach the internet, so searching and reading go through her keyed
-// connector, and `sample` asks Claude to read only the text handed to it — it can
-// never report a page that was not found.
-// SEARCH_SERVER must match the connector name in the page's published `mcp`
-// capability (docs/app.md §1).
-const SEARCH_SERVER = "Parallel Search Key";
-//@piece SEARCH_TOOL
-
-const SEARCH_TOOL   = "web_search";
-//@piece FETCH_TOOL
-
-// Reads a whole page, not a snippet.
-const FETCH_TOOL    = "web_fetch";
-//@piece SEARCH_SESSION
-
-
-// The connector wants a stable id per conversation for its free-tier limits.
-// One per page load is the honest reading of "conversation" here.
-const SEARCH_SESSION = "catwatch" + Math.random().toString(16).slice(2).padEnd(16, "0")
-                                  + Date.now().toString(16);
-//@piece useCap
-
-
-async function useCap(name){
-  try{
-    if(typeof window==="undefined"||!window.claude||typeof window.claude.use!=="function")return null;
-    const cap=await window.claude.use(name);
-    // A READ-ONLY COPY CANNOT WRITE TO THE STORE — see ONE COPY EDITS.
-    return (name==="db"&&cap&&cloudReadOnly)?readOnlyStore(cap):cap;
-  }catch{ return null; }
-}
-//@piece mcpTrouble
-
-
-// Each failure code with its own fix gets its own sentence; one catch-all banner
-// would hide the fix.
-function mcpTrouble(e){
-  const code=String((e&&e.code)||"");
-  if(code==="server_not_connected")return "Add the \u201cParallel Search Key\u201d connector in claude.ai \u2192 Settings \u2192 Connectors, then try again.";
-  if(code==="needs_reauth")       return "Reconnect \u201cParallel Search Key\u201d in claude.ai \u2192 Settings \u2192 Connectors \u2014 its access has lapsed.";
-  if(code==="not_in_manifest")    return "This page isn\u2019t allowed to use \u201cParallel Search Key\u201d \u2014 you may have turned it off for this artifact.";
-  if(code==="selection_required") return "You have more than one \u201cParallel Search Key\u201d connector. Pick one when Claude asks, then try again.";
-  if(code==="blocked_by_policy")  return "Your organisation blocks this connector.";
-  if(code==="server_unavailable") return "The search service didn\u2019t answer. Worth one more try in a moment.";
-  if(code==="cancelled")          return "Search stopped.";
-  return "Search failed ("+(code||"unknown")+").";
-}
-//@piece searchWeb
-
-
-// Ask the connector. Returns {ok, results, detail} — never throws.
-async function searchWeb(objective,queries){
-  const t0=Date.now(), out=await searchWebCall(objective,queries);
-  tapeCall("search",{objective,queries},out,t0);
-  return out;
-}
-//@piece searchWebCall
-
-async function searchWebCall(objective,queries){
-  const mcp=await useCap("mcp");
-  if(!mcp)return{ok:false,results:[],detail:"No connector access in this viewer. The page must be opened from its claude.ai link."};
-  let res;
-  try{
-    res=await mcp.callTool(SEARCH_SERVER,SEARCH_TOOL,{
-      objective,
-      search_queries:queries,
-      session_id:SEARCH_SESSION,
-    });
-  }catch(e){
-    return{ok:false,results:[],detail:mcpTrouble(e)+"  ["+String((e&&e.code)||"")+" "+String((e&&e.message)||e)+"]"};
-  }
-  const p=res&&res.payload;
-  const results=(p&&Array.isArray(p.results))?p.results:[];
-  return{ok:true,results,detail:"search: "+results.length+" results for "+JSON.stringify(queries)};
-}
-//@piece fetchPage
-
-
-// Read one page or several (the shelf and the search box go in ONE call). An ISBN sits
-// in a page's small print, rarely in a search excerpt (docs/app.md §1 "The ISBN"). A
-// collapsed panel already in the page is read; details fetched on click are not.
-// {full:true} reads the page whole (her decision): excerpts dropped the Orsay
-// Cassatt's EAN. The shelf stays excerpts — a call is capped at ~25,000 characters.
-async function fetchPage(url,objective,queries,opts){
-  const t0=Date.now(), out=await fetchPageCall(url,objective,queries,opts);
-  tapeCall("open",{urls:Array.isArray(url)?url:[url],objective,queries,full:!!(opts&&opts.full)},out,t0);
-  return out;
-}
-//@piece fetchPageCall
-
-async function fetchPageCall(url,objective,queries,opts){
-  const urls=Array.isArray(url)?url.filter(Boolean):[url];
-  if(!urls.length)return{ok:false,results:[],detail:"No page to open."};
-  const mcp=await useCap("mcp");
-  if(!mcp)return{ok:false,results:[],detail:"No connector access in this viewer."};
-  let res;
-  try{
-    res=await mcp.callTool(SEARCH_SERVER,FETCH_TOOL,{
-      urls,
-      objective,
-      search_queries:queries,
-      session_id:SEARCH_SESSION,
-      ...((opts&&opts.full)?{full_content:true}:{}),
-    });
-  }catch(e){
-    return{ok:false,results:[],detail:mcpTrouble(e)+"  ["+String((e&&e.code)||"")+" "+String((e&&e.message)||e)+"]"};
-  }
-  const p=res&&res.payload;
-  const results=(p&&Array.isArray(p.results))?p.results:[];
-  // The connector names each address it could not read, with its HTTP status.
-  // Re-check reads a 404 off this as "the page is gone" — see recheckLinkedPage.
-  const errors=(p&&Array.isArray(p.errors))?p.errors:[];
-  return{ok:true,results,errors,detail:"opened "+urls.join(" + ")+": "+results.length+" page(s)"
-    +(errors.length?", "+errors.length+" refused ("+errors.map(e=>String((e&&e.http_status_code)||(e&&e.error_type)||"?")).join(", ")+")":"")};
-}
 //@piece SHELF_DEPTH
 
 
@@ -3576,64 +3438,6 @@ function shopPagesFor(mu,title){
   // Curly quotes straightened: shops file "O’Keeffe" with a straight one.
   if(mu&&mu.shopSearch)out.push(mu.shopSearch+encodeURIComponent(String(title).replace(/[\u2018\u2019]/g,"'").replace(/[\u201c\u201d]/g,'"')));
   return out;
-}
-//@piece readResults
-
-
-// Hand the search results to Claude and ask it to read the catalogue off them.
-// It sees ONLY these excerpts, so it cannot report a shop page that was not
-// found. Returns {ok, data, detail}.
-// tier: the model tier asked for — "default", or "complex" for the Links, Pages and Paste read,
-// which writes the description (her decision: flat descriptions on the default tier).
-async function readResults(prompt,tier="default"){
-  const t0=Date.now(), out=await readResultsCall(prompt,tier);
-  tapeCall("claude",{prompt},out,t0);
-  return out;
-}
-//@piece readResultsCall
-
-async function readResultsCall(prompt,tier){
-  const sample=await useCap("sample");
-  if(!sample)return{ok:false,data:null,code:"unavailable",detail:"Claude isn\u2019t available to this page in this viewer."};
-  try{
-    // Never a replayed answer: the platform replays an identical question asked within five minutes,
-    // so Relabel, Search again and Re-check would not ask again (her Metamorphoses Relabel).
-    const data=await sample.json(prompt,{modelTier:tier||"default",cache:false});
-    return{ok:true,data,detail:"read the results"};
-  }catch(e){
-    const code=String((e&&e.code)||"");
-    // A reply holding two answers ("Wait — here is the corrected object", Hubert Robert):
-    // the last one is Claude's own correction. TW-001 to TW-004.
-    if(code==="invalid_json"&&e&&e.text){
-      const data=lastJsonObject(e.text);
-      if(data)return{ok:true,data,detail:"read the results (the reply held more than one answer; the last was taken)"};
-    }
-    let why="Couldn\u2019t read the search results ("+(code||"unknown")+").";
-    if(code==="not_granted")       why="You declined to let this page use Claude. Reload and allow it to search.";
-    else if(code==="rate_limited") why="Claude is rate-limited.";
-    else if(code==="invalid_json") why="Claude\u2019s answer came back unreadable. Try again.";
-    return{ok:false,data:null,code,partial:(e&&e.text)||null,detail:why+"  ["+String((e&&e.message)||e)+"]"};
-  }
-}
-//@piece lastJsonObject
-
-
-// The last complete {…} object in a reply that parses, or null. Strings are skipped
-// whole, so a brace inside one is not counted.
-function lastJsonObject(text){
-  const t=String(text||""), found=[];
-  let depth=0, start=-1, inStr=false, esc=false;
-  for(let i=0;i<t.length;i++){
-    const c=t[i];
-    if(inStr){ if(esc)esc=false; else if(c==="\\")esc=true; else if(c==='"')inStr=false; continue; }
-    if(c==='"'){ if(depth>0)inStr=true; continue; }
-    if(c==="{"){ if(depth===0)start=i; depth++; }
-    else if(c==="}"&&depth>0){ depth--; if(depth===0)found.push(t.slice(start,i+1)); }
-  }
-  for(let k=found.length-1;k>=0;k--){
-    try{ const v=JSON.parse(found[k]); if(v&&typeof v==="object"&&!Array.isArray(v))return v; }catch{}
-  }
-  return null;
 }
 //@piece LOOKUP_LOG,LOOKUP_KEEP,LOOKUP_PIECE
 
@@ -4008,20 +3812,6 @@ const SESSION_STALE_MS=60000;
 //@piece CLOUD_SESSION_ID
 
 const CLOUD_SESSION_ID=cloudNewId("t");
-//@piece cloudReadOnly
-
-let cloudReadOnly=false;
-//@piece readOnlyStore
-
-
-// The store, with every write refused. Reads pass through.
-function readOnlyStore(db){
-  const no=()=>Promise.reject({code:"read_only",message:"This copy is read only."});
-  // Named members only: the platform's namespace is frozen, and spreading it
-  // would copy nothing its prototype holds.
-  return {doc:path=>({get:()=>db.doc(path).get(),set:no,update:no,delete:no}),
-          collection:c=>db.collection(c)};
-}
 //@piece cloudSessionClaim
 
 // "mine": this copy may edit (the record now names it). "other": another copy
@@ -4033,11 +3823,6 @@ async function cloudSessionClaim(db,now){
   if(cur&&cur.id!==CLOUD_SESSION_ID&&t-Date.parse(cur.beat)<SESSION_STALE_MS)return "other";
   await db.doc(CLOUD_SESSION_DOC).set({id:CLOUD_SESSION_ID,beat:new Date(t).toISOString()});
   return "mine";
-}
-//@piece rawStore
-
-async function rawStore(){
-  try{ return (typeof window!=="undefined"&&window.claude&&window.claude.use)?await window.claude.use("db"):null; }catch{ return null; }
 }
 //@piece needsPageRead
 
@@ -4217,27 +4002,10 @@ function publisherLinkOf(u,publisher,dom,museumId){
   if(!t||!publisher||isSelfPublisher(publisher,museumId))return null;
   return publisherDomainFrom([{url:t}],publisher)?t:null;
 }
-//@piece SHELL_CHARS
-
-
-
-// ── A CONTAINER IS NOT THE BOOK; A SHELL IS NOT AN EMPTY SHELF (docs/app.md §1) ──
-// A publisher candidate is opened before it is believed: it IS the book, it LISTS the
-// book (take the link off it), or it came back empty (keep it, labelled as the
-// section). No rendering fetch for the few script-drawn publisher sites (her decision).
-
-// Text a fetched page must carry before we believe we saw it — measured: Hannibal's
-// script-drawn section returns 110 characters, a real shelf thousands.
-const SHELL_CHARS=400;
 //@piece SHOP_PRICE
 
 // A price on a shop page: a shelf of books always shows them (shopStep).
 const SHOP_PRICE=/(?:[\u20ac$\u00a3]\s?\d|\d(?:[.,]\d{1,2})?\s?(?:\u20ac|(?:EUR|USD|GBP)\b))/;
-//@piece pageTextOf
-
-function pageTextOf(results){
-  return (results||[]).map(oneText).join("\n").trim();
-}
 //@piece titleKey
 
 
@@ -4319,12 +4087,6 @@ function isbnInResults(results,bookTitle){
   }
   return found.size===1?[...found][0]:null;
 }
-//@piece pageIsShell
-
-
-// An empty page is not a page with nothing on it: a script-drawn page is our blind
-// spot, never a finding.
-function pageIsShell(results){ return pageTextOf(results).length<SHELL_CHARS; }
 //@piece sameAddress
 
 
@@ -5591,13 +5353,6 @@ function printingsOf(cands,card,results,museumId){
       _pub:pub,_pubFrom:coded?"the ISBN’s results":"general results"});
   }
   return out;
-}
-//@piece resultText
-
-// Everything a result carries: its title, its address and its text, whole and excerpted.
-function resultText(x){
-  return [x&&x.title,x&&x.url,x&&typeof x.full_content==="string"?x.full_content:"",
-    Array.isArray(x&&x.excerpts)?x.excerpts.join("\n"):""].filter(Boolean).join("\n");
 }
 //@piece editionsOf
 
