@@ -9,11 +9,15 @@ function needsPageRead(hit){
   return !!(hit&&hit.ok&&hit.pageUrl&&hit.row&&hit.row.hasCatalogue==="yes"
             &&(!hit.row.isbn13||!hit.row.publisher));
 }
+//@piece resultsText
+
+// The plain text of a list of search results (a text or nothing passes through): what toIsbn13 checks an ISBN against.
+function resultsText(rs){ return Array.isArray(rs)?rs.map(resultText).join("\n"):rs; }
 //@piece applyIsbnFill
 
 
 // Fills blanks only (docs/app.md §1 "The ISBN"): a value already on the row stands;
-// anything not a real ISBN, or not printed in `seen`, is refused; a page yielding
+// anything not a real ISBN, or not printed in `seen` (plain text), is refused; a page yielding
 // nothing leaves the row as it was.
 function applyIsbnFill(row,o,dom,seen){
   const isbn=toIsbn13(o&&o.isbn13,seen);

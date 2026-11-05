@@ -217,7 +217,8 @@ it to the coordinator). Commit on the branch with a clear
 
 - `build/app_split.js --bootstrap` makes `app/`.
 - `build/build_app.js` runs `node build/app_join.js --check` first and stops on a failure.
-- `scraper/run_tests.js` runs the same check before any suite, and fails the run on it.
+- `scraper/run_tests.js` runs the same check before any suite, and fails the run on it; it then runs
+  `build/structure_check.js` (the structure guard) the same way, and the gates print it as a line.
 - Since 1A, the part holding the `SHARED` piece holds a directive line and the summary examples only; the join
   (`build/shared_from_scraper.js`) writes the scraper's rules in, `app_join.js --check` fails when they changed,
   and `build/sync_shared.js` only re-takes the examples, then joins.
@@ -245,7 +246,7 @@ the first of them:
 
 ## Handover record — updated after every step
 
-**Where we are:** layers 0–5a moved; the side-by-side check widened (merged); 1A and 1B done. Next: 2a–2c and the guard.
+**Where we are:** layers 0–5a moved; the side-by-side check widened (merged); 1A, 1B, 2a–2c and the guard done. Next: 3a.
 
 **Work items done:** the wider check (Opus; proved on every screen, a mixed review added by the
 coordinator). 1A (Sonnet): the parts hold no copy of the scraper's rules, the join writes them; only
@@ -257,6 +258,12 @@ and claim rules inside it); no other part reaches the store; gates re-run, side 
 so a save under way when another copy takes over stops before the switch instead of finishing (its
 new parts are left unused in the store). The two check pages under `build/` still reach the store
 themselves; they are not part of the app.
+2a–2c and the guard (Sonnet): the venue list's occasional-venue ordering and chips moved to the link-venue
+part; the ISBN check takes plain text; the connections announce calls and the log listens;
+`build/structure_check.js` fails on any part naming a higher one or reaching the store (proved on the old
+code and two deliberate breaks), run by the test runner and the gates. Gates re-run, side by side
+identical; 22 of 22. Eight references between feature parts are listed, not failed (lookup → shop
+finder, lookup and shop finder → link-venue entries, periods → venue order).
 
 **Done and proven:** the moving script, the join, the gates and side-by-side check; the proof passes
 (every layer moves with the page identical; all eight breaks caught; the moving script refuses a

@@ -29,6 +29,9 @@ function tapeCall(kind,input,output,t0){
   const t=lookupTape;
   if(t)t.calls.push({n:t.calls.length+1,kind,at:t0-t.t0,ms:Date.now()-t0,input,output});
 }
+//@piece stmt:onCall(tapeCall);
+
+onCall(tapeCall);
 //@piece cardFields
 
 const cardFields=r=>Object.fromEntries(CARD_FIELDS.map(k=>[k,r?(r[k]===undefined?null:r[k]):null]));

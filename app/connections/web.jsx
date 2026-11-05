@@ -39,13 +39,20 @@ function mcpTrouble(e){
   if(code==="cancelled")          return "Search stopped.";
   return "Search failed ("+(code||"unknown")+").";
 }
+//@piece onCall
+
+// Who is told of each search, page open and Claude call: a part registers with onCall; the connections never name it.
+function onCall(fn){ (onCall.listeners=onCall.listeners||[]).push(fn); }
+//@piece announceCall
+
+function announceCall(kind,input,output,t0){ for(const fn of onCall.listeners||[])fn(kind,input,output,t0); }
 //@piece searchWeb
 
 
 // Ask the connector. Returns {ok, results, detail} — never throws.
 async function searchWeb(objective,queries){
   const t0=Date.now(), out=await searchWebCall(objective,queries);
-  tapeCall("search",{objective,queries},out,t0);
+  announceCall("search",{objective,queries},out,t0);
   return out;
 }
 //@piece searchWebCall
@@ -77,7 +84,7 @@ async function searchWebCall(objective,queries){
 // Cassatt's EAN. The shelf stays excerpts — a call is capped at ~25,000 characters.
 async function fetchPage(url,objective,queries,opts){
   const t0=Date.now(), out=await fetchPageCall(url,objective,queries,opts);
-  tapeCall("open",{urls:Array.isArray(url)?url:[url],objective,queries,full:!!(opts&&opts.full)},out,t0);
+  announceCall("open",{urls:Array.isArray(url)?url:[url],objective,queries,full:!!(opts&&opts.full)},out,t0);
   return out;
 }
 //@piece fetchPageCall

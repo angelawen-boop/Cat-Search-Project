@@ -1,4 +1,55 @@
 //@ Venue link rules (LINK_VENUES), Occasional venues and how a link's venue is decided.
+//@piece OCC_COUNTRY_ORDER
+
+// The Occasional venues (no chip of their own) follow, by country: the United States, the rest of that group
+// (Australia), then Europe in her country order (her decision). Hard-coded, her decision: the countries of the venues that
+// store no country (below); a venue the store holds a country for takes that one.
+const OCC_COUNTRY_ORDER=["United States","United Kingdom","Germany","Belgium","France","Switzerland","Italy","Spain","Netherlands"];
+//@piece OCC_EUROPE_ELSE
+
+const OCC_EUROPE_ELSE=["Austria","Denmark","Sweden","Norway","Finland","Portugal","Ireland","Poland","Czechia","Hungary","Greece","Luxembourg"];
+//@piece OCC_COUNTRY_NAMES
+
+const OCC_COUNTRY_NAMES={"usa":"United States","us":"United States","united states of america":"United States","uk":"United Kingdom","great britain":"United Kingdom","england":"United Kingdom","scotland":"United Kingdom","wales":"United Kingdom","northern ireland":"United Kingdom","the netherlands":"Netherlands","holland":"Netherlands","czech republic":"Czechia","deutschland":"Germany"};
+//@piece OCC_COUNTRY
+
+const OCC_COUNTRY={"occ-mfa-org":"United States","occ-clevelandart-org":"United States","occ-dia-org":"United States","occ-archive-worcesterart-org":"United States","occ-philamuseum-org":"United States","occ-adelsongalleries-com":"United States",
+  "occ-courtauld-ac-uk":"United Kingdom","occ-royalacademy-org-uk":"United Kingdom","ashmolean":"United Kingdom","occ-rct-uk":"United Kingdom",
+  "occ-staatsgalerie-de":"Germany","occ-hlmd-de":"Germany","occ-kmska-be":"Belgium","occ-mskgent-be":"Belgium","occ-galerie-karsten-greve-com":"France","occ-kunstmuseumbasel-ch":"Switzerland",
+  "occ-museitoscana-cultura-gov-it":"Italy","occ-palazzoducale-genova-it":"Italy","occ-palazzorealemilano-it":"Italy","occ-museothyssen-org":"Spain","occ-museoreinasofia-es":"Spain","occ-mauritshuis-nl":"Netherlands",
+  "occ-ngv-vic-gov-au":"Australia"};
+//@piece occCountry
+
+const occCountry=id=>{ const c=OCC_COUNTRY[id]||(MU[id]||{}).country||""; const k=String(c).trim().toLowerCase(); return OCC_COUNTRY_NAMES[k]||String(c).trim(); };
+//@piece OCC_EUROPE_TLD
+
+// "us", "eu" or "other": the three chips that hold the venues with no chip of their own.
+// Two groups only (her decision): Europe, UK included, and everything else under Occ - US (Australia last).
+// No country stored: the address's country ending (".uk", ".de"…) says.
+const OCC_EUROPE_TLD=["uk","de","be","fr","ch","it","es","nl","at","dk","se","no","fi","pt","ie","pl","cz","hu","gr","lu"];
+//@piece occRegion
+
+const occRegion=id=>{ const c=occCountry(id); if(c)return(OCC_COUNTRY_ORDER.includes(c)&&c!=="United States")||OCC_EUROPE_ELSE.includes(c)?"eu":"us";
+  const m=/-([a-z]{2})$/.exec(String(id)); return m&&OCC_EUROPE_TLD.includes(m[1])?"eu":"us"; };
+//@piece OCC_CHIPS
+
+const OCC_CHIPS=[["occ:us","Occ - US"],["occ:eu","Occ - Europe"]];
+//@piece hasNoChip
+
+const hasNoChip=id=>MUSEUMS.some(m=>m.id===id&&m.underOcc)||(String(id).startsWith("occ-")&&!ownChip(id));
+//@piece OCC_NAMED_ORDER
+// MUSEUMS is sorted at load, before isOcc, ownChip and LINK_VENUES exist: orderOf reaches them only for a venue neither VENUE_ORDER nor underOcc covers.
+// Within a country, the venues her order already named come first, in that order; the rest follow by name.
+const OCC_NAMED_ORDER=["occ-mfa-org","occ-clevelandart-org","occ-dia-org","occ-archive-worcesterart-org","occ-courtauld-ac-uk","occ-royalacademy-org-uk","ashmolean","occ-museitoscana-cultura-gov-it","occ-palazzoducale-genova-it","occ-palazzorealemilano-it","occ-museothyssen-org"];
+//@piece orderOf
+
+const orderOf=id=>{ const i=VENUE_ORDER.indexOf(id); if(i>=0)return i; if(!hasNoChip(id))return 1e6;
+  const c=occCountry(id),j=OCC_COUNTRY_ORDER.indexOf(c),k=OCC_NAMED_ORDER.indexOf(id);
+  const base=c==="United States"?100:occRegion(id)==="eu"?(j>=0?110+j:150):105;   // the United States, the rest of the US group (Australia), then Europe
+  return base+(k>=0?k/100:0.5); };
+//@piece stmt:MUSEUMS.sort((a,b)=>orderOf(a.id)-orderO
+
+MUSEUMS.sort((a,b)=>orderOf(a.id)-orderOf(b.id));
 //@piece OCC_DOC
 
 
@@ -354,6 +405,17 @@ function venueSearchName(id,v){
   for(const x of [...(s.aka||[]),s.city,s.country]) if(x&&!foldText(name).includes(foldText(x)))name+=" "+x;
   return name.trim();
 }
+//@piece allVenues
+
+// Every venue a card can be filed under, in VENUE_ORDER; the rest by name.
+// The review walks THIS, not MUSEUMS, or occasional cards are counted and never drawn.
+function allVenues(){
+  const occ=Object.values(MU).filter(m=>m&&m.occasional);
+  return MUSEUMS.concat(occ).sort((a,b)=>orderOf(a.id)-orderOf(b.id)||a.short.localeCompare(b.short));
+}
+//@piece venueRank
+
+function venueRank(id){ const i=allVenues().findIndex(m=>m.id===id); return i<0?1e6:i; }
 //@piece registerOccasional
 
 function registerOccasional(map){

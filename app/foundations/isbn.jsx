@@ -32,14 +32,14 @@ function isbn10to13(v){
 
 
 // Every ISBN entering the app goes through toIsbn13: a 13 whose check digit holds, or a
-// converted valid 10, else nothing. With `seen` (the text or results the app fetched)
+// converted valid 10, else nothing. With `seen` (the plain text the app fetched)
 // it is taken only if its digits, 13 or 10, are printed there — a read cannot invent
 // one. cleanIsbn stays as it is: it also shows ISBNs already in her ledger.
 const toIsbn13=(v,seen)=>{
   const d=String(v||"").replace(/[^0-9]/g,"");
   const isbn=d.length===13?(isbn13Checks(d)?d:null):isbn10to13(v);
   if(!isbn||seen===undefined)return isbn;
-  return isbnInText(isbn,Array.isArray(seen)?seen.map(resultText).join("\n"):seen)?isbn:null;
+  return isbnInText(isbn,seen)?isbn:null;
 };
 //@piece isbn13to10
 

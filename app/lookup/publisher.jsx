@@ -231,7 +231,7 @@ function publisherOnIsbnResults(results,isbn){
 function editionOnPublisherPage(editions,pageResults,origIsbn){
   for(const ed of (Array.isArray(editions)?editions:[])){
     if(!ed||!ed.title||!isEnglishLang(ed.language))continue;
-    const en=toIsbn13(ed.isbn13,pageResults||[]);
+    const en=toIsbn13(ed.isbn13,resultsText(pageResults||[]));
     if(!en||en===origIsbn)continue;
     return{title:String(ed.title).trim(),isbn13:en,url:ed.url||null};
   }
