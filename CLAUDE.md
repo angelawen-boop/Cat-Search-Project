@@ -171,6 +171,12 @@ pages return 404, plus occasional page timeouts — which say so on the row.
 Everything not listed here is finished. Do not reopen a closed item without a
 new fact.
 
+#### 2.2.1 The restructure — under way (her decision)
+
+The app is being moved, bottom up and one layer at a time, into feature parts under `app/` that a session can read whole;
+`Cat_Watch.jsx` becomes the joined output. **She types "Continue the restructure." → read `docs/restructure.md` in full and do
+what its "Start here" says.** While a layer's branch is open, no other app change goes on `main`.
+
 #### 2.2.2 Fixes not yet checked in the cases they were written for
 
 **The 15 Oct sweep's fixes — in code for the next sweep; this month's runs were imported as the
@@ -372,6 +378,7 @@ a session needs lives only behind such a link. Read the one for the work in hand
 | `docs/branches.md` | The branch table and holding a push for another session | Creating, merging or pushing a branch |
 | `docs/publishing.md` | Version numbering, building the app and the publish steps | Publishing the app |
 | `docs/testing.md` | Which test group to run, where a failure is recorded, the live proof pages, test anchors, JSX validation | Running or writing tests, or re-checking live proof pages |
+| `docs/restructure.md`, `docs/restructure/placement.json` | The restructure into feature parts: the layers, the gates and their proof, who does what, the handover record; where every piece goes | "Continue the restructure.", or any change to the app while it is under way |
 
 **Reviews**
 
