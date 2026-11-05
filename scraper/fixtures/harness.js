@@ -44,28 +44,15 @@ const src = fs.readFileSync(JSX, 'utf8');
 // prose that describes a section, not on a line of code that can be rewritten.
 const prelude = slice(src, 'const MUSEUMS = [', '// URGENCY COLOURS, ONE SET PER THEME');
 
-// The intake itself, as one contiguous run of the component's body.
-const intake = slice(src,
-  '  // WHAT A QUARANTINE REMEMBERS.',
-  '  function handleRefreshFile(e){');
-
-// withChoices sits further down, past the render helpers.
-// The end anchor is the COMMENT that opens applyRefresh, not its signature:
-// the signature grew a parameter on 22 Sep (partial apply) and an anchor on
-// the line of code itself would have died with it. Anchor on prose.
-const choices = slice(src,
-  '  const withChoices=(cand,dec)=>{',
-  '  // PARTIAL IS A PARAMETER, NOT A SECOND COPY OF THIS FUNCTION.');
-
-// `rows` is the ledger, which analyzeProForma closes over in the app. Here it
-// is a plain binding the fixtures set directly.
+// The intake (matching, folding, the cards and applying them) is top-level code in
+// the CSV and review parts, so it sits inside the prelude above. `rows` is the ledger,
+// a parameter of analyzeProForma in the app; here a plain binding the fixtures set
+// directly, handed in by the wrapper below.
 const program = `
 ${prelude}
 let rows = [];
-${intake}
-${choices}
 return {
-  analyzeProForma,
+  analyzeProForma: (text, ignoredKeys, opts) => analyzeProForma(text, rows, ignoredKeys, opts),
   withChoices,
   foldDuplicateRows,
   ignoreKeyFor,

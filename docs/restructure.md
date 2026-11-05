@@ -87,7 +87,7 @@ proves it (below).
 - **The guard, from 2 on:** `build/structure_check.js`, run by the test runner and the gates, fails
   when a part names anything from a part above it (foundations, then connections, then saving and logs,
   then the features, then the screens), or when any part but the store's door reaches the store; from
-  item 3 on, also when a part outside the screens uses anything of the screen's (state, drawing).
+  item 3 on, also when a part outside the screens uses a React hook or holds JSX (state, drawing).
 - **3a–3d.** Each piece of machinery leaves the main screen for its feature as functions that take
   what they need and hand back a result (and, for a long job, report progress as they go). They decide
   what happens and what is said; the screen calls them and shows what comes back. 3a → the CSV part

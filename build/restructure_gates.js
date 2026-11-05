@@ -93,11 +93,11 @@ if (layerId && joined) {
   if (unplaced.length) fail('pieces the placement list does not name: ' + list(unplaced));
 }
 
-// ── The structure guard: no part names a higher one; only the store's door reaches the store ──
+// ── The structure guard: no part names a higher one; only the store's door reaches the store; hooks and JSX in screens/ only ──
 {
   const sc = spawnSync(process.execPath, [path.join(__dirname, 'structure_check.js'), '--root', ROOT], { encoding: 'utf8', maxBuffer: 64 << 20 });
   const lines = ((sc.stdout || '') + (sc.stderr || '')).split('\n').filter(l => /^(FAIL|NOTE|PASS|STRUCTURE| {6})/.test(l));
-  sc.status === 0 ? pass('structure guard: no part names a higher one; only connections/store.jsx reaches the store') : fail('structure guard:\n' + lines.join('\n'));
+  sc.status === 0 ? pass('structure guard: no part names a higher one; only connections/store.jsx reaches the store; no part outside screens/ uses a hook or JSX') : fail('structure guard:\n' + lines.join('\n'));
   const notes = lines.filter(l => /^(NOTE| {6})/.test(l));
   if (notes.length) console.log(notes.join('\n'));
 }

@@ -167,7 +167,7 @@ async function main() {
   // Cat_Watch.jsx must be what the parts in app/ and the scraper's rules join to (this replaces the old sync_shared --check suite), or the run fails before any suite (docs/restructure.md).
   const join = spawnSync('node', [path.join(ROOT, 'build', 'app_join.js'), '--check'], { encoding: 'utf8' });
   if (join.status !== 0) { console.error((join.stderr || join.stdout || 'app_join.js --check failed').trim()); process.exit(1); }
-  // No part names a higher one, and only the store's door reaches the store (build/structure_check.js).
+  // No part names a higher one, only the store's door reaches the store, and hooks and JSX stay in the screens (build/structure_check.js).
   const structure = spawnSync('node', [path.join(ROOT, 'build', 'structure_check.js')], { encoding: 'utf8' });
   if (structure.status !== 0) { console.error((structure.stdout || structure.stderr || 'structure_check.js failed').trim()); process.exit(1); }
 
