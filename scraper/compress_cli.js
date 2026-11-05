@@ -91,7 +91,7 @@ function buildExamples() {
 }
 
 // The examples as Claude reads them: the same text in every sweep job and, written in by
-// build/sync_shared.js, in every Links, Pages and Paste request (one copy, her decision).
+// build/sync_shared.js (stored in the app's part, re-taken each build), in every Links, Pages and Paste request (one copy, her decision).
 function examplesText() {
   return buildExamples().map(p => `RAW: ${p.raw}\n  →  ${p.summary}\n`).join('\n');
 }

@@ -1,9 +1,9 @@
 /**
  * dates.js — THE date reader, and the capitals fixer for titles, shared by the scraper
  * and the app (one copy: two parsers drifted apart twice and lost dates).
- * `node build/sync_shared.js` writes everything above module.exports into
- * Cat_Watch.jsx, and `npm test` fails if they differ. Edit
- * HERE, then run the sync. Pure: nothing above module.exports may use Node.
+ * `node build/app_join.js` writes everything above module.exports into
+ * Cat_Watch.jsx, and `node build/app_join.js --check` (the tests run it) fails until it
+ * has. Edit HERE, then run the join. Pure: nothing above module.exports may use Node.
  * Formats and their reasons: docs/scraper.md §3.
  */
 'use strict';

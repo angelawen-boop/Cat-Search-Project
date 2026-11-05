@@ -13,11 +13,17 @@
  * A piece added to a part goes out right after the piece above it in that part; a piece
  * deleted from every part leaves the order. A piece found in two parts, or a part with text
  * outside any piece, stops the join.
+ *
+ * The SHARED piece (app/foundations/shared_with_scraper.jsx) holds one directive line, not the
+ * scraper's rules: the join takes the date reader, summary rules, venue sites and checks from the
+ * scraper's own files each time (build/shared_from_scraper.js). So --check also fails when a
+ * scraper rule changed and the page was not joined again.
  */
 'use strict';
 const fs = require('fs');
 const path = require('path');
 const { readPart } = require('./app_pieces.js');
+const { expandShared } = require('./shared_from_scraper.js');
 
 function paths(root) {
   return {
@@ -71,7 +77,8 @@ function join(root) {
   const manifest = JSON.parse(fs.readFileSync(P.MANIFEST, 'utf8'));
   const { byId, byFile } = readParts(P.APP);
   const order = orderFor(manifest, byId, byFile);
-  const text = order.map(id => byId.get(id).text).join('') + manifest.tail;
+  // The SHARED piece holds a directive; the scraper's rules are written in its place here.
+  const text = order.map(id => expandShared(byId.get(id).text, root)).join('') + manifest.tail;
   return { text, order, manifest, P };
 }
 
@@ -83,9 +90,9 @@ if (require.main === module) {
   try { r = join(root); } catch (e) { console.error('JOIN FAILED — ' + e.message); process.exit(1); }
   if (args.includes('--check')) {
     const now = fs.readFileSync(r.P.JSX, 'utf8');
-    if (now === r.text) { console.log('join: Cat_Watch.jsx is what the parts in app/ join to.'); process.exit(0); }
-    console.error('JOIN CHECK FAILED — Cat_Watch.jsx is not what the parts in app/ join to. Edit the parts in app/, never'
-      + ' Cat_Watch.jsx, then run `node build/app_join.js`.');
+    if (now === r.text) { console.log('join: Cat_Watch.jsx is what the parts in app/ and the scraper\'s rules join to.'); process.exit(0); }
+    console.error('JOIN CHECK FAILED — Cat_Watch.jsx is not what the parts in app/ and the scraper\'s rules join to (a part or a scraper rule'
+      + ' changed, or the page was edited by hand). Edit the parts in app/ or the scraper, never Cat_Watch.jsx, then run `node build/app_join.js`.');
     process.exit(1);
   }
   fs.writeFileSync(r.P.JSX, r.text);
@@ -96,4 +103,4 @@ if (require.main === module) {
   console.log('join: Cat_Watch.jsx written from ' + r.order.length + ' pieces.');
 }
 
-module.exports = { join, readParts, partFiles };
+module.exports = { join, readParts, partFiles, expandShared };

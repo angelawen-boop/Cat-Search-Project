@@ -18,7 +18,7 @@
 const fs = require('fs');
 const path = require('path');
 const { split, writePart, readPart } = require('./app_pieces.js');
-const { readParts, partFiles } = require('./app_join.js');
+const { readParts, partFiles, expandShared } = require('./app_join.js');
 
 const args = process.argv.slice(2);
 const ri = args.indexOf('--root');
@@ -72,7 +72,7 @@ for (const id of manifest.order) {
 // Join in memory: the page must come out exactly as it is now.
 const text = new Map();
 for (const ps of Object.values(files)) for (const p of ps) text.set(p.id, p.text);
-const joined = manifest.order.map(id => text.get(id)).join('') + manifest.tail;
+const joined = manifest.order.map(id => expandShared(text.get(id), ROOT)).join('') + manifest.tail;
 if (joined !== fs.readFileSync(JSX, 'utf8')) die('the parts would no longer join to Cat_Watch.jsx exactly. Nothing written.'
   + ' (Run `node build/app_join.js --check` first: Cat_Watch.jsx may have been edited by hand.)');
 

@@ -389,7 +389,7 @@ A last resort (her decision): a show so old its venue's page is gone, read off a
 - **The general reader does not yet work at** acq, rijks, borghese, louvre, uffizi, mam, mad, ashmolean, artic, brit, dellav.
   **Her choice: only acq, louvre, artic and brit get work**; the others may never come into play. A page printing no year still
   fails — blank dates are NOT approved, and "current year" would misdate archives.
-- **A link from one of the 28 files under that venue**, known by its site (`VENUE_SITES`, written by `build/sync_shared.js`; the
+- **A link from one of the 28 files under that venue**, known by its site (`VENUE_SITES`, written into the page by the join; the
   Tates by path). A new venue's shop is looked for once per Read, never once per link.
 - **Claude reads relevant passages, not the first N characters** (`pickPassages`); a link labelled "catalog" onto the venue's shop
   in web results is taken in code (`catalogueLinkOn`). Titles from a page title: the show is the first part of a barred title, a

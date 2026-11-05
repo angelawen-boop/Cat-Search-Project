@@ -1,7 +1,7 @@
 /**
  * ANSWER CHECK — every description Claude writes is checked here before it is used: by the
  * compressor (compress_cli.js --check, which --apply runs first) and by Add by link (written into
- * Cat_Watch.jsx by build/sync_shared.js). One copy, so the two cannot drift. A description that
+ * Cat_Watch.jsx by build/app_join.js). One copy, so the two cannot drift. A description that
  * fails is asked for again; nothing is written until it passes (her decision; docs/compression.md,
  * "Enforcement").
  *

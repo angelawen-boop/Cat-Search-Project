@@ -31,7 +31,7 @@ npm run test:scraper                         scraper tests (npm test: app and sc
 | File | What it is |
 |---|---|
 | `sweep_prototype.js` | The real scraper. Playwright + Chromium |
-| `dates.js` | THE date reader — the app gets it via `node build/sync_shared.js` (with compression's rules); `npm test` fails if they differ |
+| `dates.js` | THE date reader — the app gets it when `node build/app_join.js` joins the page (with compression's rules); `app_join.js --check`, which the tests run, fails if the page is behind |
 | `compress.js` / `compress_cli.js` | Raw text → the summary she reads |
 | `qc.js` | Exceptions report **and the gate in front of her import file**. A faulty row (no title, no venue code) BLOCKS `--apply`; an exception warns and never acts |
 | `sweep_log.js`, `venue_status.js` | Freshness drawer rebuilt from disk; CLAUDE.md §2.1's printed venue status |

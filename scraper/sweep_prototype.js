@@ -1914,7 +1914,7 @@ const ALWAYS_NOISE = 'cmplz|cookie|consent|gdpr|onetrust|optanon|\\bot-(sdk|acc|
 // beats listing its wordings: the notice text changes weekly.
 const NOISE_CONTAINER = 'privacy|banner|newsletter|subscribe|promo|caption|credit|alert|footer|nav|ticket|visit-info|visitor-info|contact|address|opening-hours|practical';
 
-// The boilerplate phrases live in scraper/boilerplate.js, shared with Add by link (sync_shared).
+// The boilerplate phrases live in scraper/boilerplate.js, shared with Add by link (build/app_join.js).
 const { BOILERPLATE } = require('./boilerplate');
 
 // A container holding fewer than this many of the page's real paragraphs is
@@ -4288,7 +4288,7 @@ const VENUES = {
     // excluded.
     selector: 'a[href*="/whats-on/tate-modern/"]',
     // ONE SITE, TWO VENUES: the app's Add by link tells a Tate link's gallery
-    // by this path (build/sync_shared.js). Only a venue sharing its site has one.
+    // by this path (build/shared_from_scraper.js, run by the join). Only a venue sharing its site has one.
     showPath: '/whats-on/tate-modern/',
     // The results grid only: the header's promos carry the headline shows on every page
     // (docs/title_case_pages/).

@@ -297,7 +297,7 @@ function linkReadVenue(url){
 
 
 // A link to one of the swept venues files under it, matched by site from the scraper's
-// recipes (VENUE_SITES, written by sync_shared); the Tates are told apart by path.
+// recipes (VENUE_SITES, written by the join from the scraper); the Tates are told apart by path.
 function knownVenueFor(url){
   const site=siteUrlOf(url);
   const h=hostOf(site).replace(/^www\./,"");

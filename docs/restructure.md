@@ -218,8 +218,9 @@ it to the coordinator). Commit on the branch with a clear
 - `build/app_split.js --bootstrap` makes `app/`.
 - `build/build_app.js` runs `node build/app_join.js --check` first and stops on a failure.
 - `scraper/run_tests.js` runs the same check before any suite, and fails the run on it.
-- `build/sync_shared.js` writes the shared block into the part that holds the `SHARED` piece (found by
-  its opening marker under `app/`), then runs `node build/app_join.js`; `--check` compares that part.
+- Since 1A, the part holding the `SHARED` piece holds a directive line and the summary examples only; the join
+  (`build/shared_from_scraper.js`) writes the scraper's rules in, `app_join.js --check` fails when they changed,
+  and `build/sync_shared.js` only re-takes the examples, then joins.
 - Docs: `docs/publishing.md` (the version number lives in the part holding `APP_VERSION`), CLAUDE.md §1
   and §5.3/§5.4 wherever a session is told to edit `Cat_Watch.jsx` or between the SHARED markers.
 - Branches holding their own copy of `Cat_Watch.jsx` (`parked`, `claude/theme-shelf`) are not merged
@@ -244,7 +245,12 @@ the first of them:
 
 ## Handover record — updated after every step
 
-**Where we are:** layers 0–5a moved and merged, page identical; nothing reorganized yet. Next: the work items in order, 1A first (see "Work items now").
+**Where we are:** layers 0–5a moved; the side-by-side check widened (merged); 1A done. Next: 1B.
+
+**Work items done:** the wider check (Opus; proved on every screen, a mixed review added by the
+coordinator). 1A (Sonnet): the parts hold no copy of the scraper's rules, the join writes them; only
+the summary examples are stored; gates re-run by the coordinator, side by side identical; 22 of 22
+suites (the old copy check folded into the join check).
 
 **Done and proven:** the moving script, the join, the gates and side-by-side check; the proof passes
 (every layer moves with the page identical; all eight breaks caught; the moving script refuses a

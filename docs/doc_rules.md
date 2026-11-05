@@ -84,5 +84,5 @@ change in behaviour.
 **Exceptions:** the numbering rule beside `APP_VERSION` stays, as short as
 possible. The SHARED block's comments come from the scraper (`dates.js`,
 `compress_prompt.md`, `compress.js`, `sweep_prototype.js`'s `VENUES`): apply
-these rules there, run `node build/sync_shared.js`, then the full `npm test`.
+these rules there, run `node build/app_join.js`, then the full `npm test`.
 Never edit the block directly (§5.4).

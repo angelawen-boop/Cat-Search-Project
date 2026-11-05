@@ -2,7 +2,7 @@
  * BOILERPLATE — phrases that never describe an exhibition: ticket and admission wording,
  * funders, image credits, cookie and newsletter notices. A sentence holding one is dropped
  * from a description. One copy, for the scraper (sweep_prototype.js) and Add by link (written
- * into Cat_Watch.jsx by build/sync_shared.js). Lower case; matched inside the sentence.
+ * into Cat_Watch.jsx by build/app_join.js). Lower case; matched inside the sentence.
  */
 'use strict';
 const BOILERPLATE = [
