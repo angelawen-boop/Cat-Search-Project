@@ -247,21 +247,20 @@ it to the coordinator). Commit on the branch with a clear
 
 ## Start here — the next session's job
 
-Layers 0–5a are merged as a move only: every piece is in its feature part and `app/unsorted.jsx` is
-gone, the page still the same file, character for character. Nothing has been reorganized yet.
+**What is left, in order (her plan):**
+1. **3a–3d** — the machinery out of the main screen into its features: 3a the CSV import engine, 3b the
+   Read job for Links/Pages/Paste, 3c Save now and the cloud save, 3d Reset. One item per branch
+   (`claude/restructure-3a` …), each by a sub-agent (model by the judgement it needs; Opus for these),
+   gates with `--changes-allowed` and the test run re-run by the coordinator, then merged to `main`.
+2. **Her test round 2** — set the test page up from her app's store, run `build/test_page_check.js`,
+   build with `--test-page`, publish to the test page, send her the link, the checklist and the latest
+   sweep file ("Her tests").
+3. **4** — the UI split into its screens (its design written here first), then **her test round 3**.
+4. **Publish to her app when she says.** That publish also brings the `art-watch-` file names for
+   saved ledgers and safety copies (on `main` since round 1).
 
-**Next: the work items ("Work items now"), in order: 1A, 1B, 2a–2c, 3a–3d, 4.** Each changes code, so before
-the first of them:
-1. **First, widen the side-by-side check** as "The side-by-side check for items that change code"
-   says, and prove each new check fails on a deliberate one-word change.
-2. **Each item's design is in "The design of each item"**; item 4's is written there once 3a–3d are
-   done. The coordinator decides; she is not asked.
-3. **One item (for 4, one screen) per step**, each by a sub-agent on its own branch: gates with
-   `--changes-allowed` (side by side must still be identical), then the test run. The coordinator
-   re-runs both after every step.
-4. **At each test round ("Her tests — three rounds"):** build from `main`, publish to the
-   restructure test page (never her app), give her the checklist, wait for "same" or what differs.
-   Publish to her app only when she says.
+The checks, before any item: read "The design of each item", "The side-by-side check for items that
+change code" and "Her tests".
 
 ## Handover record — updated after every step
 
