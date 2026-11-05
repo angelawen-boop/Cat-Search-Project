@@ -454,7 +454,8 @@ async function run(oldFile, newFile, { changesAllowed, live }) {
 const args = process.argv.slice(2);
 const flags = { changesAllowed: args.includes('--changes-allowed'), live: args.includes('--live') };
 const rest = args.filter(a => a !== '--changes-allowed' && a !== '--live');
-if (rest[0] === '--snapshot') snapshot(rest[1], rest[2], rest[3]).catch(e => { console.log(String(e && e.stack || e)); process.exit(1); });
+if (rest[0] === '--fetch-live') fetchLive(rest[1]).then(() => process.exit(0), e => { console.log(String(e && e.message || e)); process.exit(1); });
+else if (rest[0] === '--snapshot') snapshot(rest[1], rest[2], rest[3]).catch(e => { console.log(String(e && e.stack || e)); process.exit(1); });
 else if (rest[0] === '--base') {
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'cw-sbs-'));
   const old = path.join(tmp, 'old.jsx');
