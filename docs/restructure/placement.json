@@ -91,13 +91,13 @@
    }
   },
   {
-   "id": "5",
-   "name": "Screens",
+   "id": "5a",
+   "name": "Screens: the screen pieces moved into their parts (the main screen whole, in screens/app.jsx)",
    "files": {
-    "screens/theme.jsx": "Colours and small shared screen pieces.",
+    "screens/theme.jsx": "The two colour palettes, the card draw step and the link-button style.",
     "screens/period_scrubber.jsx": "The period scrubber.",
-    "screens/ledger_card.jsx": "An exhibition card and its catalogue box.",
-    "screens/app.jsx": "The main screen (to be split into its parts in this layer)."
+    "screens/ledger_card.jsx": "An exhibition card, its digital-catalogue link and its catalogue box.",
+    "screens/app.jsx": "The whole main screen, to be split into its screens in layer 5b."
    }
   }
  ],

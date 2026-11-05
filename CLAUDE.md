@@ -10,7 +10,8 @@ out-of-print window, so she can buy before it is too late.
 Two components, and they are **coupled**:
 
 1. **The app** — `Cat_Watch.jsx`, a React page published on her Claude account. It is edited in its parts under `app/`
-   (today all in `app/unsorted.jsx`; `grep -rn` under `app/` finds a piece), then `node build/app_join.js` writes
+   (by feature: foundations, connections, saving, logs, ledger, periods, import, shop_finder, lookup, screens — each
+   part opening with a one-line note; `grep -rn` under `app/` finds a piece), then `node build/app_join.js` writes
    `Cat_Watch.jsx`; never edit `Cat_Watch.jsx` by hand.
 2. **The scraper** — `scraper/`, which produces the CSV the app eats.
 

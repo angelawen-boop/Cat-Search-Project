@@ -43,9 +43,10 @@ feature parts, each small enough for a session to read whole.
 | 4d | Links, Pages and Paste | `claude/restructure-L4d` | **done** — page identical, 23 of 23 suites |
 | 4e | The shop finder | `claude/restructure-L4e` | **done** — page identical, 23 of 23 suites |
 | 4f | The catalogue lookup | `claude/restructure-L4f` | **done** — page identical, 23 of 23 suites |
-| 5 | Screens: theme, period scrubber, ledger card, then the 2,300-line main screen split into its screens | `claude/restructure-L5` | not started |
+| 5a | Screens: theme, period scrubber, ledger card and the main screen moved whole into `app/screens/` | `claude/restructure-L5a` | **done** — page identical, 23 of 23 suites |
+| 5b | The 2,300-line main screen split into its separate screens, one at a time — changes code, so her checklist applies | `claude/restructure-L5b` | not started |
 
-Layers 0–4f only move pieces: the page stays the same file, character for character. Layer 5 rewrites
+Layers 0–5a only move pieces: the page stays the same file, character for character. Layer 5b rewrites
 the main screen into separate components, so it changes code text; it is done one screen at a time.
 
 **After the move (not part of this project until she says):** the "words" list per feature — every
@@ -62,7 +63,7 @@ sentence a feature shows her, in one place — and the fix for the Getty empty-p
    version, same clock, same inputs (her test ledger in `docs/ledger_2026-09-24/`, her 15 Oct sweep
    file), give the same top-level values (every table, every function's text) and the same screens
    (opening, after loading the ledger, the review after reading the sweep file).
-4. **Her test** — only when the page is NOT identical (layer 5). The gates script prints PAGE IDENTICAL
+4. **Her test** — only when the page is NOT identical (layer 5b). The gates script prints PAGE IDENTICAL
    when it is: then there is nothing to publish and nothing for her to see. When it is not: publish to a
    test page (never her app), give her the checklist below, and wait for "same" or what differs.
 
@@ -78,7 +79,7 @@ must refuse a hand-edited page. Run it again after any change to the tools.
 Claude's recorded replies were named as an input when this was planned; they are not needed for
 layers 0–4f, because the gates prove every piece of the lookup is unchanged letter for letter.
 
-## Her checklist (layer 5 and anything else that changes the page)
+## Her checklist (layer 5b and anything else that changes the page)
 
 On the test page: load her ledger export; scroll the list and open a few cards; star and unstar one;
 use the venue and theme chips and the Period sort; Import → CSV with a sweep file, look through the
@@ -126,14 +127,26 @@ it to the coordinator). Commit on the branch with a clear
 
 ## Start here — the next session's job
 
-Layers 0–4f are merged: foundations, connections, saving, logs, ledger rules, periods and all four
-ways in, the shop finder and the catalogue lookup are in their parts; only the screens are left in
-`app/unsorted.jsx`. Next: layer 5, per "Per layer — who does what". Start each sub-agent with
-`model: "opus"`, `effort: "medium"`, one at a time (her decision).
+Layers 0–5a are merged: every piece is in its feature part and `app/unsorted.jsx` is gone. The page is
+still the same file, character for character, so nothing has been published or needed her test.
+
+**Next: layer 5b, splitting the main screen** (`app/screens/app.jsx`, one component of about 2,300
+lines holding about 95 pieces of state and 60 actions). This is the first layer that changes code, so:
+1. **First, widen the side-by-side check** (`build/side_by_side.js`) to every screen layer 5b will
+   touch, by clicking through them in the stand-in browser: the Import pop-up and each of its four tabs,
+   a card opened, the venue and theme chips, the Period sort, the cloud copies drawer, Save. Prove each
+   new screen check fails on a deliberate one-word change, as the existing ones were proved.
+2. **Then write the split into this file before any code:** which screens become their own components,
+   what state each owns, what passes between them. The coordinator decides; she is not asked.
+3. **One screen per step**, each by a sub-agent on `claude/restructure-L5b`: gates with
+   `--changes-allowed` (side by side must still be identical), then the test run. The coordinator
+   re-runs both after every step.
+4. **When the branch is complete:** build, publish to a test page (never her app), give her the
+   checklist below, wait for "same" or what differs. Merge only then; publish to her app when she says.
 
 ## Handover record — updated after every step
 
-**Where we are:** layers 0–4f merged; layer 5 next.
+**Where we are:** layers 0–5a merged; layer 5b next (see Start here).
 
 **Done and proven:** the moving script, the join, the gates and side-by-side check; the proof passes
 (every layer moves with the page identical; all eight breaks caught; the moving script refuses a
@@ -152,6 +165,9 @@ Layer 4c: 14 pieces into the CSV and review parts; gates re-run, PAGE IDENTICAL;
 Layer 4d: 126 pieces into four Links/Pages/Paste parts; gates re-run, PAGE IDENTICAL; 23 of 23.
 Layer 4e: 93 pieces into the museum and gallery shop-finder parts; gates re-run, PAGE IDENTICAL; 23 of 23.
 Layer 4f: 158 pieces into six catalogue-lookup parts; gates re-run, PAGE IDENTICAL; 23 of 23.
+Layer 5a: 11 screen pieces into four screen parts; `app/unsorted.jsx` gone; gates re-run, PAGE
+IDENTICAL; 23 of 23. Layer 5 was split into 5a (the move) and 5b (the rewrite) so the move could be
+proven identical on its own.
 
 **Decisions:** bottom-up order (her decision); a sub-agent does each layer's moving and testing, the
 coordinator sets up, re-checks and records (her decision); one sub-agent at a time, no higher than
