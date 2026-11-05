@@ -4522,6 +4522,14 @@ const S=[
 function buildSeed(){return S.map(([m,t,s,e,d,sl])=>{const id=m+"-"+t.toLowerCase().replace(/[^a-z0-9]+/g,"").slice(0,50);const mu=MU[m];return{id,museumId:m,title:t,startDate:s||null,endDate:e||null,summary:d,exUrl:sl?(mu.exBase+sl):mu.listUrl,interested:true,watching:false,acquiring:null,looked:false,hasCatalogue:"unknown",catalogueTitle:null,isbn13:null,publisher:null,publisherUrl:null,publisherResult:null,shopUrl:null,shopState:null,shopChange:null};});}
 
 function mergeSeedInto(existing){const byId=new Map(existing.map(r=>[r.id,r]));for(const s of buildSeed()){const p=byId.get(s.id);if(p)byId.set(s.id,{...p,startDate:p.startDate||s.startDate,endDate:p.endDate||s.endDate,summary:p.summary||s.summary,exUrl:p.exUrl||s.exUrl,watching:p.watching||false});else byId.set(s.id,s);}return Array.from(byId.values());}
+// Reset's job: the built-in starter set and the two sentences about it — the one on the screen's
+// line and the one in the debug line. The screen replaces its ledger with them.
+function resetSeed(){
+  const rows=buildSeed();
+  return {rows,
+    note:"Starter set loaded ("+rows.length+" exhibitions) \u2014 not saved to a file.",
+    debug:"Reset: loaded the built-in starter set ("+rows.length+" exhibitions). It isn't in any file \u2014 Save if you want one."};
+}
 
 const cleanIsbn=v=>{if(!v)return null;const d=String(v).replace(/[^0-9]/g,"");return d.length===13?d:null;};
 const fmtIsbn=v=>{const c=cleanIsbn(v);return c?c.slice(0,3)+"-"+c.slice(3):null;};
@@ -4903,6 +4911,32 @@ async function offerFile(filename,data){
     setTimeout(()=>URL.revokeObjectURL(url),1000);
     return "browser";
   }catch(e){ throw {route:"browser",cause:e}; }
+}
+// Confirm-before-replace: Import and Reset can wipe the screen in one tap, so
+// they ask first WHENEVER there is unsaved work showing. The question to ask before Loading
+// a file, or null when the screen may go straight to the file picker.
+function loadQuestion(rowsCount,dirty,cloudNotSaving){
+  if(rowsCount>0&&dirty&&cloudNotSaving)return "Loading replaces everything on screen. The cloud copy is NOT saving, so your changes since your last Save are on screen only and will be lost. Continue?";
+  return null;
+}
+// Reset to Seed always asks while a ledger is on screen (her decision): the question to ask,
+// or null when nothing is on screen and Reset may go straight ahead.
+function resetQuestion(rowsCount,dirty,cloudNotSaving){
+  if(rowsCount>0&&dirty&&cloudNotSaving)return "This loads the built-in starter set and replaces everything on screen. The cloud copy is NOT saving, so your changes since your last Save are on screen only and will be lost. Continue?";
+  if(rowsCount>0)return "This loads the seed set and replaces everything on screen. Continue?";
+  return null;
+}
+// Load's job: read the text of a ledger backup file. Hands back {error} with the sentence to show,
+// or the rows, the quarantine that came with them, the last run, and the two sentences about it
+// (note: the screen's line when no cloud safety copy spoke first; debug: the debug line).
+function readLedgerFile(text){
+  let d;
+  try{d=JSON.parse(text);}catch{return {error:"Could not read that file \u2014 it may not be a valid ledger backup."};}
+  if(!(d&&Array.isArray(d.rows)))return {error:"That file didn't contain a ledger (no entries found)."};
+  const rows=d.rows.map(r=>({...r,watching:r.watching||false})),ignored=Array.isArray(d.ignored)?d.ignored:[];
+  return {rows,ignored,lastRun:d.lastRun||null,
+    note:"Loaded "+d.rows.length+" exhibitions from your file \u2014 no edits yet.",
+    debug:"Loaded "+d.rows.length+" exhibitions from your file. It matches your file, so it's not counted as unsaved until you change something."};
 }
 
 // ── THE CLOUD LEDGER — storage ────────────────────────────────────────────────
@@ -5971,6 +6005,10 @@ function resetCard(r){
   return{...r,looked:false,hasCatalogue:"unknown",catalogueTitle:null,isbn13:null,publisher:null,
     publisherUrl:null,publisherResult:null,shopUrl:null,shopState:null,shopChange:null,englishCheck:null,originalEdition:null,otherVenueBook:null,alsoVersion:null,
     editions:null,editionPick:null};
+}
+// The ledger after Reset cards resets one card: that card cleared, every other row as it was.
+function resetOneCard(rows,id){
+  return rows.map(x=>x.id===id?resetCard(x):x);
 }
 // The cards Reset cards can offer: searched ones whose title, catalogue title
 // or venue carry what she typed. Accents and capitals do not count.
@@ -8697,20 +8735,21 @@ export default function App(){
   // AN IMPORT CHECKS THE CLOUD COPY FIRST (guardCloudBeforeReplace), then
   // replaces the screen and arms saving. If the cloud copy differed and could
   // not be kept as a snapshot, the import stops there and says so.
-  function handleImport(e){const file=e.target.files[0];if(!file)return;if(roStop()){e.target.value="";return;}const reader=new FileReader();reader.onload=async()=>{let d;try{d=JSON.parse(reader.result);}catch{setError("Could not read that file \u2014 it may not be a valid ledger backup.");return;}if(!(d&&Array.isArray(d.rows))){setError("That file didn't contain a ledger (no entries found).");return;}const next=d.rows.map(r=>({...r,watching:r.watching||false})),ign=Array.isArray(d.ignored)?d.ignored:[];let said=false;try{said=await guardCloudBeforeReplace({rows:next,ignored:ign},"import");}catch{return;}loadLedger(next,d.lastRun||null,said?null:"Loaded "+d.rows.length+" exhibitions from your file \u2014 no edits yet.",{ignored:ign});cloudArmed.current=true;setDebug("Loaded "+d.rows.length+" exhibitions from your file. It matches your file, so it's not counted as unsaved until you change something.");};reader.readAsText(file);e.target.value="";}
+  function handleImport(e){const file=e.target.files[0];if(!file)return;if(roStop()){e.target.value="";return;}const reader=new FileReader();reader.onload=async()=>{const got=readLedgerFile(reader.result);if(got.error){setError(got.error);return;}const next=got.rows,ign=got.ignored;let said=false;try{said=await guardCloudBeforeReplace({rows:next,ignored:ign},"import");}catch{return;}loadLedger(next,got.lastRun,said?null:got.note,{ignored:ign});cloudArmed.current=true;setDebug(got.debug);};reader.readAsText(file);e.target.value="";}
 
   // Confirm-before-replace: Import and Reset can wipe the screen in one tap, so
   // they ask first WHENEVER there is unsaved work showing.
   const openFilePicker=()=>fileRef.current?.click();
   function requestImport(){
-    if(rows.length>0&&dirty&&cloudNotSaving){setConfirmBox({text:"Loading replaces everything on screen. The cloud copy is NOT saving, so your changes since your last Save are on screen only and will be lost. Continue?",act:openFilePicker});}
+    const ask=loadQuestion(rows.length,dirty,cloudNotSaving);
+    if(ask){setConfirmBox({text:ask,act:openFilePicker});}
     else openFilePicker();
   }
-  const doReset=async()=>{if(roStop())return;const seed=buildSeed();try{await guardCloudBeforeReplace({rows:seed,ignored},"reset");}catch{return;}cloudArmed.current=true;loadLedger(seed,null,"Starter set loaded ("+seed.length+" exhibitions) \u2014 not saved to a file.");setDebug("Reset: loaded the built-in starter set ("+seed.length+" exhibitions). It isn't in any file \u2014 Save if you want one.");};
+  const doReset=async()=>{if(roStop())return;const seed=resetSeed();try{await guardCloudBeforeReplace({rows:seed.rows,ignored},"reset");}catch{return;}cloudArmed.current=true;loadLedger(seed.rows,null,seed.note);setDebug(seed.debug);};
   // Reset to Seed always asks while a ledger is on screen (her decision).
   function requestReset(){
-    if(rows.length>0&&dirty&&cloudNotSaving){setConfirmBox({text:"This loads the built-in starter set and replaces everything on screen. The cloud copy is NOT saving, so your changes since your last Save are on screen only and will be lost. Continue?",act:doReset});}
-    else if(rows.length>0){setConfirmBox({text:"This loads the seed set and replaces everything on screen. Continue?",act:doReset});}
+    const ask=resetQuestion(rows.length,dirty,cloudNotSaving);
+    if(ask){setConfirmBox({text:ask,act:doReset});}
     else doReset();
   }
 
@@ -9256,7 +9295,7 @@ export default function App(){
               <div key={r.id} style={{display:"flex",gap:10,fontSize:12.5,color:C.ink,padding:"4px 0",alignItems:"baseline",marginTop:4}}>
                 <span style={{minWidth:130,fontWeight:600}}>{MU[r.museumId]?MU[r.museumId].short:r.museumId}</span>
                 <button onClick={()=>setConfirmBox({title:"Reset this search?",yes:"Yes",act:()=>{
-                  commit(rows.map(x=>x.id===r.id?resetCard(x):x));
+                  commit(resetOneCard(rows,r.id));
                   if(recheckSaid&&recheckSaid.id===r.id)setRecheckSaid(null);
                   setResetQuery("");}})} style={{flex:1,textAlign:"left",background:"none",border:"none",color:C.action,fontSize:12.5,fontFamily:"inherit",textDecoration:"underline",cursor:"pointer",padding:0}}>{r.title}</button>
               </div>));

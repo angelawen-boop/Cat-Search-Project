@@ -123,3 +123,13 @@ function buildSeed(){return S.map(([m,t,s,e,d,sl])=>{const id=m+"-"+t.toLowerCas
 
 
 function mergeSeedInto(existing){const byId=new Map(existing.map(r=>[r.id,r]));for(const s of buildSeed()){const p=byId.get(s.id);if(p)byId.set(s.id,{...p,startDate:p.startDate||s.startDate,endDate:p.endDate||s.endDate,summary:p.summary||s.summary,exUrl:p.exUrl||s.exUrl,watching:p.watching||false});else byId.set(s.id,s);}return Array.from(byId.values());}
+//@piece resetSeed
+
+// Reset's job: the built-in starter set and the two sentences about it — the one on the screen's
+// line and the one in the debug line. The screen replaces its ledger with them.
+function resetSeed(){
+  const rows=buildSeed();
+  return {rows,
+    note:"Starter set loaded ("+rows.length+" exhibitions) \u2014 not saved to a file.",
+    debug:"Reset: loaded the built-in starter set ("+rows.length+" exhibitions). It isn't in any file \u2014 Save if you want one."};
+}
