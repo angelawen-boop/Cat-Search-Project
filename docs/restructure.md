@@ -42,7 +42,7 @@ feature parts, each small enough for a session to read whole.
 | 4c | CSV import and the review cards | `claude/restructure-L4c` | **done** — page identical, 23 of 23 suites |
 | 4d | Links, Pages and Paste | `claude/restructure-L4d` | **done** — page identical, 23 of 23 suites |
 | 4e | The shop finder | `claude/restructure-L4e` | **done** — page identical, 23 of 23 suites |
-| 4f | The catalogue lookup | `claude/restructure-L4f` | not started |
+| 4f | The catalogue lookup | `claude/restructure-L4f` | **done** — page identical, 23 of 23 suites |
 | 5 | Screens: theme, period scrubber, ledger card, then the 2,300-line main screen split into its screens | `claude/restructure-L5` | not started |
 
 Layers 0–4f only move pieces: the page stays the same file, character for character. Layer 5 rewrites
@@ -126,14 +126,14 @@ it to the coordinator). Commit on the branch with a clear
 
 ## Start here — the next session's job
 
-Layers 0–4e are merged: foundations, connections, saving, logs, ledger rules, periods and all four
-ways in and the shop finder are in their parts, everything else is still in `app/unsorted.jsx`.
-Next: layer 4f, per "Per layer — who does what". Start each sub-agent with
+Layers 0–4f are merged: foundations, connections, saving, logs, ledger rules, periods and all four
+ways in, the shop finder and the catalogue lookup are in their parts; only the screens are left in
+`app/unsorted.jsx`. Next: layer 5, per "Per layer — who does what". Start each sub-agent with
 `model: "opus"`, `effort: "medium"`, one at a time (her decision).
 
 ## Handover record — updated after every step
 
-**Where we are:** layers 0–4e merged; layer 4f next.
+**Where we are:** layers 0–4f merged; layer 5 next.
 
 **Done and proven:** the moving script, the join, the gates and side-by-side check; the proof passes
 (every layer moves with the page identical; all eight breaks caught; the moving script refuses a
@@ -151,6 +151,7 @@ Layer 4b: 29 pieces into the periods part; gates re-run, PAGE IDENTICAL; 23 of 2
 Layer 4c: 14 pieces into the CSV and review parts; gates re-run, PAGE IDENTICAL; 23 of 23.
 Layer 4d: 126 pieces into four Links/Pages/Paste parts; gates re-run, PAGE IDENTICAL; 23 of 23.
 Layer 4e: 93 pieces into the museum and gallery shop-finder parts; gates re-run, PAGE IDENTICAL; 23 of 23.
+Layer 4f: 158 pieces into six catalogue-lookup parts; gates re-run, PAGE IDENTICAL; 23 of 23.
 
 **Decisions:** bottom-up order (her decision); a sub-agent does each layer's moving and testing, the
 coordinator sets up, re-checks and records (her decision); one sub-agent at a time, no higher than
