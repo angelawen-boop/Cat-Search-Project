@@ -264,7 +264,7 @@ change code" and "Her tests".
 
 ## Handover record — updated after every step
 
-**Where we are:** 1A, 1B, 2a–2c and the guard done; her test round 1 passed (her checklist, on the test page set up from her app's store). 3a done. Next: 3b.
+**Where we are:** 1A, 1B, 2a–2c and the guard done; her test round 1 passed (her checklist, on the test page set up from her app's store). 3a and 3b done. Next: 3c.
 
 **Work items done:** the wider check (Opus; proved on every screen, a mixed review added by the
 coordinator). 1A (Sonnet): the parts hold no copy of the scraper's rules, the join writes them; only
@@ -289,6 +289,11 @@ also fails on a hook or JSX outside the screens (proved on a deliberate break); 
 to the screens part to pass it. The harness takes the intake from top level; its suites' case counts are
 unchanged (86, 64). Gates re-run by the coordinator, side by side identical; 22 of 22. Noted, not fixed
 (not part of this work): the import's quarantine write runs inside a React state updater.
+3b (Opus): the Read job for Links, Pages and Paste is a new part, `import/read_job.jsx` (what to read,
+the read loop with its progress lines handed to the screen, the outcome, what goes back into the box,
+list or boxes after apply or Cancel, chosen files into Pages entries); the screen keeps the buttons,
+inputs, state and drawing. Gates re-run by the coordinator with `--live` (the Links read on live pages),
+side by side identical; 22 of 22.
 
 **Done and proven:** the moving script, the join, the gates and side-by-side check; the proof passes
 (every layer moves with the page identical; all eight breaks caught; the moving script refuses a
