@@ -264,7 +264,7 @@ change code" and "Her tests".
 
 ## Handover record — updated after every step
 
-**Where we are:** 1A, 1B, 2a–2c and the guard done; her test round 1 passed (her checklist, on the test page set up from her app's store). 3a–3d done. Next: her test round 2.
+**Where we are:** 1A, 1B, 2a–2c and the guard done; her test round 1 passed (her checklist, on the test page set up from her app's store). 3a–3d done. Her test round 2 published on the test page (store set up from her app's, the check passed); waiting for her result. Next: 4, once round 2 passes.
 
 **Work items done:** the wider check (Opus; proved on every screen, a mixed review added by the
 coordinator). 1A (Sonnet): the parts hold no copy of the scraper's rules, the join writes them; only
