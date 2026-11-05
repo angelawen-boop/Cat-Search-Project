@@ -57,7 +57,7 @@
    "name": "CSV import and the review",
    "files": {
     "import/csv.jsx": "Reading the pro forma CSV.",
-    "import/review.jsx": "The review cards' decisions, 'Probably not for you', partial apply, counts."
+    "import/review.jsx": "The review cards' decisions, 'Probably not for you', partial apply, counts, and which venues' shop answers are kept."
    }
   },
   {
