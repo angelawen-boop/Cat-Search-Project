@@ -108,7 +108,7 @@ MUSEUMS.sort((a,b)=>orderOf(a.id)-orderOf(b.id));
 const lookupName=mu=>mu.lookupName||mu.short;
 const MU = Object.fromEntries(MUSEUMS.map(m=>[m.id,m]));
 
-// ===== SHARED WITH THE SCRAPER — written by `node build/sync_shared.js`; never edit between these markers. Edit scraper/dates.js or scraper/compress_prompt.md, then run it. =====
+// ===== SHARED WITH THE SCRAPER — the join writes the rules below from the scraper's own files (scraper/dates.js, compress_prompt.md, compress.js, boilerplate.js, bot_check.js, answer_check.js, VENUES); never edit between these markers. Edit the scraper, then run `node build/app_join.js`. =====
 const DATES=(()=>{
 // ── Date helpers ──────────────────────────────────────────────────────────────
 // Every month spelling a venue has used, in one shared map (docs/scraper.md §3).
@@ -2200,7 +2200,7 @@ function linkReadVenue(url){
 }
 
 // A link to one of the swept venues files under it, matched by site from the scraper's
-// recipes (VENUE_SITES, written by sync_shared); the Tates are told apart by path.
+// recipes (VENUE_SITES, written by the join from the scraper); the Tates are told apart by path.
 function knownVenueFor(url){
   const site=siteUrlOf(url);
   const h=hostOf(site).replace(/^www\./,"");
