@@ -22,7 +22,7 @@ Confirmed by her on real files, not only by fixtures. **Design and evidence:
   imports new venues in batches of 50–100 cards and needs to work them in
   sittings. The way back is re-importing the same file; rejections do not
   survive the round trip, which she accepted. It is not confirm-and-continue
-  (CLAUDE.md §4.2). To remove it one day: the marked block in `Cat_Watch.jsx`, `partial` on
+  (CLAUDE.md §4.2). To remove it one day: the marked block in the parts under `app/`, `partial` on
   `applyRefresh`, `offerPartialApply` and its harness export, fixture 18h.
 - **Counts that reconcile**, **sorting and dividers**, **dark mode**: §3. **The seed set**: §6.
 - **Quarantine ("never add this")**, keyed on normalised URL. Latest decision

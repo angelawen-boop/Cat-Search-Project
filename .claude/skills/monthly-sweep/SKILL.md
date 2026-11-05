@@ -17,7 +17,7 @@ approval), runs the final QC and hands her the CSV. This job does none of that.
 - **Never sweep a venue again once it has written its file.** Her decision:
   a fault is fixed from kept pages or diagnosed from the log, never by sweeping
   again. Any re-sweep waits for her.
-- **Never change code** — `scraper/*.js`, recipes, `Cat_Watch.jsx`, tests,
+- **Never change code** — `scraper/*.js`, recipes, `Cat_Watch.jsx`, `app/`, tests,
   `build/`, `CLAUDE.md`, `docs/`. A broken recipe or any other fault needing a
   code change: diagnose offline, write the proposed fix in the report, wait
   for her. That includes a fix applied with `reread_kept.js --write`, which

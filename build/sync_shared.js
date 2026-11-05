@@ -1,6 +1,9 @@
 #!/usr/bin/env node
 /*
- * sync_shared.js — write the scraper's shared pieces into Cat_Watch.jsx.
+ * sync_shared.js — write the scraper's shared pieces into the app.
+ *
+ * The region goes into the part under app/ that holds the OPEN marker, then
+ * `node build/app_join.js` writes Cat_Watch.jsx from the parts (docs/restructure.md).
  *
  * WHY THIS EXISTS — "Add by link", 4 Oct 2026 (docs/add_by_link.md). The app
  * now reads show pages itself, so it needs the scraper's DATE READER and the
@@ -38,14 +41,16 @@
  * Usage:
  *   node build/sync_shared.js              rewrite dates + rules
  *   node build/sync_shared.js --examples   also re-take the examples
- *   node build/sync_shared.js --check      exit 1 if the JSX differs
+ *   node build/sync_shared.js --check      exit 1 if the part's region differs
  */
 'use strict';
 const fs = require('fs');
 const path = require('path');
+const { execFileSync } = require('child_process');
+const { partFiles } = require('./app_join.js');
 
 const ROOT = path.join(__dirname, '..');
-const JSX = path.join(ROOT, 'Cat_Watch.jsx');
+const APP = path.join(ROOT, 'app');
 const DATES = path.join(ROOT, 'scraper', 'dates.js');
 const PROMPT = path.join(ROOT, 'scraper', 'compress_prompt.md');
 
@@ -120,9 +125,14 @@ function examplesBlock() {
   return 'const SUMMARY_EXAMPLES=' + JSON.stringify(text) + ';';
 }
 
-const jsx = fs.readFileSync(JSX, 'utf8');
+// The one part under app/ that holds the OPEN marker carries the region.
+const holders = partFiles(APP).filter(f => fs.readFileSync(path.join(APP, f), 'utf8').includes(OPEN));
+if (holders.length !== 1) die((holders.length ? 'more than one part holds' : 'no part under app/ holds') + ' the SHARED marker' + (holders.length ? ': ' + holders.join(', ') : ''));
+const PART = path.join(APP, holders[0]);
+const PART_NAME = 'app/' + holders[0];
+const jsx = fs.readFileSync(PART, 'utf8');
 const i = jsx.indexOf(OPEN), j = jsx.indexOf(CLOSE);
-if (i < 0 || j < 0 || j < i) die('Cat_Watch.jsx has no SHARED markers');
+if (i < 0 || j < 0 || j < i) die(PART_NAME + ' has no SHARED markers');
 const current = jsx.slice(i + OPEN.length, j);
 // A kept copy is the examples TEXT; the old eight-pair list is re-taken.
 const keptExamples = (current.match(/^const SUMMARY_EXAMPLES=".*;$/m) || [])[0];
@@ -145,9 +155,11 @@ function botCheckBlock() {
 const region = '\n' + [datesBlock(), rulesBlock(), composeBlock(), sitesBlock(), boilerplateBlock(), botCheckBlock(), answerCheckBlock(), examples].join('\n') + '\n';
 
 if (check) {
-  if (region !== current) die('Cat_Watch.jsx is OUT OF STEP with scraper/dates.js, compress_prompt.md, compress.js, answer_check.js or the scraper\'s VENUES — run `node build/sync_shared.js`.');
-  console.log('sync_shared: Cat_Watch.jsx matches scraper/dates.js, compress_prompt.md, compress.js and VENUES.');
+  if (region !== current) die(PART_NAME + ' is OUT OF STEP with scraper/dates.js, compress_prompt.md, compress.js, answer_check.js or the scraper\'s VENUES — run `node build/sync_shared.js`.');
+  console.log('sync_shared: ' + PART_NAME + ' matches scraper/dates.js, compress_prompt.md, compress.js and VENUES.');
   process.exit(0);
 }
-fs.writeFileSync(JSX, jsx.slice(0, i + OPEN.length) + region + jsx.slice(j));
-console.log('sync_shared: wrote the shared region into Cat_Watch.jsx' + (retakeExamples || !keptExamples ? ' (examples re-taken).' : '.'));
+fs.writeFileSync(PART, jsx.slice(0, i + OPEN.length) + region + jsx.slice(j));
+console.log('sync_shared: wrote the shared region into ' + PART_NAME + (retakeExamples || !keptExamples ? ' (examples re-taken).' : '.'));
+// Cat_Watch.jsx follows the parts.
+execFileSync('node', [path.join(__dirname, 'app_join.js')], { stdio: 'inherit' });

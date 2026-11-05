@@ -9,7 +9,9 @@ out-of-print window, so she can buy before it is too late.
 
 Two components, and they are **coupled**:
 
-1. **The app** — `Cat_Watch.jsx`, a React page published on her Claude account.
+1. **The app** — `Cat_Watch.jsx`, a React page published on her Claude account. It is edited in its parts under `app/`
+   (today all in `app/unsorted.jsx`; `grep -rn` under `app/` finds a piece), then `node build/app_join.js` writes
+   `Cat_Watch.jsx`; never edit `Cat_Watch.jsx` by hand.
 2. **The scraper** — `scraper/`, which produces the CSV the app eats.
 
 They agree on the pro forma CSV columns (§5.2). If the scraper changes what it
@@ -651,7 +653,7 @@ fix about half the time** (exhibition info misread, shop not found).
 is read once by code (title, dates); then one request to the model for the whole import (prose, always English); then the same
 intake as a sweep; no lookback. New
 venues file under an "Occasional" chip; shop sections are confirmed on a screen after the review. **The date reader and summary
-rules are the scraper's own**, written into the JSX by `node build/sync_shared.js` — never edit between its SHARED markers.
+rules are the scraper's own**, written into the part under `app/` that holds them by `node build/sync_shared.js` — never edit between its SHARED markers.
 Venue link rules live in the APP, on the venue's `MUSEUMS` entry, never in the scraper. The shop is searched live only, no saved
 copies (her decision; `docs/testing.md`). The decisions, the shop finder's design and the cases are all in `docs/add_by_link.md`.
 

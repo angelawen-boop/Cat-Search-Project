@@ -1,6 +1,6 @@
 # Add by link — design, decisions and venue link rules
 
-**Her design; signed off at 39.5.** Code: "ADD BY LINK" in `Cat_Watch.jsx`; test `scraper/fixtures/add_by_link.js` (AL-).
+**Her design; signed off at 39.5.** Code: "ADD BY LINK" in the parts under `app/`; test `scraper/fixtures/add_by_link.js` (AL-).
 The app handles unreadable links itself; no scraper-side reader. Why it exists: some venues matter only now and then
 (~5 shows a year); a full venue costs a recipe, an archive and a monthly sweep, and ~27 of ~30 rows get dismissed.
 

@@ -21,7 +21,7 @@
 // file, so merging main into a branch never clashes over the test list. Those
 // suites run with every app group (today there are none).
 
-const { spawn } = require('child_process');
+const { spawn, spawnSync } = require('child_process');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
@@ -164,6 +164,10 @@ async function main() {
   if (p.flags.has('--save-times')) { console.log(`Kept the usual times of ${W.saveTimes()} parts in scraper/test_times.json.`); return; }
   const expected = estimate(args);
   if (p.flags.has('--estimate')) { console.log(W.line(expected)); return; }
+
+  // Cat_Watch.jsx must be what the parts in app/ join to, or the run fails before any suite (docs/restructure.md).
+  const join = spawnSync('node', [path.join(ROOT, 'build', 'app_join.js'), '--check'], { encoding: 'utf8' });
+  if (join.status !== 0) { console.error((join.stderr || join.stdout || 'app_join.js --check failed').trim()); process.exit(1); }
 
   const what = 'node scraper/run_tests.js ' + args.join(' ');
   W.takeLock(what.trim(), expected);
