@@ -30,7 +30,7 @@
    "id": "3",
    "name": "Saving and logs",
    "files": {
-    "saving/file.jsx": "Export and import of her ledger file; snapshot names.",
+    "saving/file.jsx": "Handing her a file (Save, Cloud Saves downloads); save and snapshot names.",
     "saving/seed.jsx": "The starting set of exhibitions (the seed).",
     "saving/cloud.jsx": "The cloud ledger: live copy, safety copies, the one-tab claim.",
     "logs/lookup_log.jsx": "The lookup log: recording every search, page and Claude call.",
