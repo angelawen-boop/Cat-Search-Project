@@ -114,8 +114,14 @@ execFileSync('node', [path.join(__dirname, 'sync_shared.js')], { stdio: 'inherit
 // than one, and the render check is the only thing standing between a typo and
 // a black screen.
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'cw-build-'));
+const FOOTER = 'Art Watch {"\u00b7"} v {APP_VERSION}';
+const TEST_FOOTER = 'Art Watch {"\u00b7"} TEST PAGE \u2014 not your app {"\u00b7"} v {APP_VERSION}';
+const forRestructure = process.argv.includes('--test-page');
+const source = fs.readFileSync(JSX, 'utf8');
+// The restructure test page says in its footer that it is not her app (her ask).
+if (forRestructure && !source.includes(FOOTER)) die('the footer line was not found — the test page could not be marked');
 const prepared = 'const { useState, useEffect, useMemo, useCallback, useRef } = React;\n'
-  + fs.readFileSync(JSX, 'utf8')
+  + (forRestructure ? source.replace(FOOTER, TEST_FOOTER) : source)
       .replace(/^import React.*$/m, '')
       .replace(/^export default function App\(\)\{/m, 'function App(){');
 fs.writeFileSync(path.join(tmp, 'app.tsx'), prepared);
@@ -149,11 +155,14 @@ try { branch = execFileSync('git', ['rev-parse', '--abbrev-ref', 'HEAD'], { cwd:
 // The Period trial's own test page (her decision: a branch and a test page, never her app).
 const PERIOD_PAGE = 'https://claude.ai/artifact/JeoJyWxJbU9RApY9q4sVni';
 const PERIOD_BRANCH = 'claude/period-sort';
+// The restructure's test page (docs/restructure.md, "Her tests"): built from main with --test-page.
+const RESTRUCTURE_PAGE = 'https://claude.ai/artifact/Ju1pKP84Gi3VNL1b2SULc5';
 const forTest = branch === TEST_BRANCH, forPeriod = branch === PERIOD_BRANCH;
-const target = branch === 'main' ? HER_APP : forTest ? TEST_PAGE : forPeriod ? PERIOD_PAGE : null;
+const target = forRestructure ? (branch === 'main' ? RESTRUCTURE_PAGE : null) : branch === 'main' ? HER_APP : forTest ? TEST_PAGE : forPeriod ? PERIOD_PAGE : null;
 let head = fs.readFileSync(HEAD, 'utf8');
-if (forTest) head = head.replace('<title>Art Watch</title>', '<title>Cat Watch Cloud Test</title>');
-if (forPeriod) head = head.replace('<title>Art Watch</title>', '<title>Cat Watch Period Test</title>');
+if (forTest) head = head.replace('<title>Art Watch</title>', '<title>Art Watch Cloud Test</title>');
+if (forPeriod) head = head.replace('<title>Art Watch</title>', '<title>Art Watch Period Test</title>');
+if (forRestructure) head = head.replace('<title>Art Watch</title>', '<title>Art Watch Restructure Test</title>');
 
 fs.mkdirSync(OUT_DIR, { recursive: true });
 fs.writeFileSync(OUT, head + js + fs.readFileSync(TAIL, 'utf8'));
@@ -165,7 +174,7 @@ if (!target) {
   console.log('NOT FOR PUBLISHING: built on "' + (branch || '?') + '". Her app is published from main.');
   process.exit(0);
 }
-console.log((forTest ? 'FOR THE CLOUD TEST PAGE — title set to "Cat Watch Cloud Test".' : forPeriod ? 'FOR THE PERIOD TEST PAGE — title set to "Cat Watch Period Test".' : 'FOR HER APP.') + ' Publishing is not');
+console.log((forRestructure ? 'FOR THE RESTRUCTURE TEST PAGE — title "Art Watch Restructure Test", footer marked TEST PAGE.' : forTest ? 'FOR THE CLOUD TEST PAGE — title set to "Art Watch Cloud Test".' : forPeriod ? 'FOR THE PERIOD TEST PAGE — title set to "Art Watch Period Test".' : 'FOR HER APP.') + ' Publishing is not');
 console.log('automatable: the service refuses a session that has not viewed the live page. In order:');
 console.log('');
 console.log('  1. Artifact action:"publish" url:"' + target + '" file_path:"build/dist/index.html"');

@@ -1,5 +1,5 @@
 /**
- * Cat Watch — Sweep Prototype
+ * Art Watch — Sweep Prototype
  * Six venues: met, ng, rijks, acq, borghese, morgan
  *
  * Outputs:

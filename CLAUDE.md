@@ -1,9 +1,9 @@
-# Cat Watch — project guide for Claude Code
+# Art Watch — project guide for Claude Code
 
 **Repo:** `angelawen-boop/Cat-Search-Project`
 
 She collects art-exhibition catalogues. They go out of print fast once a show
-closes, then resale prices climb. **Cat Watch** tracks temporary exhibitions at 28
+closes, then resale prices climb. **Art Watch** tracks temporary exhibitions at 28
 museums and galleries and shows how close each catalogue is to its likely
 out-of-print window, so she can buy before it is too late.
 
@@ -250,7 +250,7 @@ New shows in a topic she always quarantines are labelled by compression and set 
 
 #### 2.2.8 Theme Shelf — prototype 3 published, her review
 
-Art books by theme, an extension of Cat Watch on its own page while a prototype; code on `claude/theme-shelf`. Where it stands, her
+Art books by theme, an extension of Art Watch on its own page while a prototype; code on `claude/theme-shelf`. Where it stands, her
 design and what is unproven: `docs/themes.md`. Read it before any Themes work.
 
 #### 2.2.9 Period sort — merged into her app at 51
@@ -438,7 +438,7 @@ Each line came from a real failure. Details are in git history and `docs/`.
   shopless until a link was read). **Copy a fixture's reply shape from a live reply, never assume it**, and search
   for every copy of a rule before calling it fixed (the lookup kept its own "books need prices" check).
 - **A search is proved only by a page for that book alone** — a page that ignores the words (a home page, a fixed listing) shows the book too (Berlin, CEDON). Run a venue's whole chain live, not one step: Berlin's cut-short titles showed only then.
-- **A page that extends Cat Watch copies its controls one for one** — placement, wording, layout, pop-ups —
+- **A page that extends Art Watch copies its controls one for one** — placement, wording, layout, pop-ups —
   not just its colours; render both side by side before showing her (Theme Shelf drew its own look twice).
 - **Never say "it works" before the check that proves it has run** (Wallraf's title fix, said to work before Claude was asked on it). Never guess what she would or would not add: the test pages stand for faults any museum can show.
 - **No test run is left unwatched — hard-wired, her decision** (`scraper/test_watch.js`, the Bash hook

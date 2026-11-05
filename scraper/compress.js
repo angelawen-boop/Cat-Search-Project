@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Cat Watch — summary compression.
+ * Art Watch — summary compression.
  *
  * The scraper writes up to 2000 characters of raw curatorial text into the
  * summary column. This turns that into the short teaser she actually reads —

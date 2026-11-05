@@ -119,7 +119,7 @@ function ShopCheck(){
   return <div className="sc">
     <style>{SC_STYLE}</style>
     <h1>Yale Shop Check</h1>
-    <div className="soft">Cat Watch {SC_BUILD.appVersion} code, built from {SC_BUILD.branch} at {SC_BUILD.commit}, {SC_BUILD.builtAt}.
+    <div className="soft">Art Watch {SC_BUILD.appVersion} code, built from {SC_BUILD.branch} at {SC_BUILD.commit}, {SC_BUILD.builtAt}.
       Runs the app's own shop finder, Find catalogue and Re-check museum shop on one case. Uses your Parallel Search Key and Claude, as a lookup in the app does.</div>
     <div className="box">
       <div><b>{SC_CASE.title}</b> — Yale Center for British Art</div>

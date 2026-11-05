@@ -6747,7 +6747,7 @@ async function lookupCatalogue(row,hooks){
   return done({ok:true,row:composeRow(row,F),...(trouble?{trouble}:{}),...(troubleLang?{troubleLang:true}:{})});
 }
 
-const LEDGER_PREFIX="cat-watch-ledger-";
+const LEDGER_PREFIX="art-watch-ledger-";
 
 // Local 24hr timestamp (browser's timezone), e.g. 2026-08-23-2230 = 10:30pm local.
 // A description, as it goes into a file name: lower case, words joined by hyphens.
@@ -7566,7 +7566,7 @@ export default function App(){
       // A copy made by Save comes back under the name its offline twin has.
       // Older copies, and the automatic ones, are named as before.
       const slug=labelSlug(s.label);
-      const filename=s.filename||("cat-watch-snapshot-"+localStamp(s.at)+(slug?"-"+slug:"")+".json");
+      const filename=s.filename||("art-watch-snapshot-"+localStamp(s.at)+(slug?"-"+slug:"")+".json");
       const route=await offerFile(filename,JSON.stringify(JSON.parse(text),null,2));
       setSnapWhy(route==="runtime"?"Saved "+filename+".":"A download of "+filename+" was started — this viewer can’t confirm it arrived; check your downloads folder.");
     }catch(e){

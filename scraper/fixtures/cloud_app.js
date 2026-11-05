@@ -154,7 +154,7 @@ const until = async (fn, ms = 8000) => { const t = Date.now(); while (Date.now()
     await until(() => saved.length === 1 && snapCount() === 1 && /Local file saved/.test(text()));
     let snaps = await C.cloudListSnapshots(store);
     const file1 = saved[0];
-    ok(file1 && /^cat-watch-ledger-\d{4}-\d\d-\d\d-\d{4}-after-starring\.json$/.test(file1.filename), 'CA-004d: the offline file is named with her description', file1 && file1.filename);
+    ok(file1 && /^art-watch-ledger-\d{4}-\d\d-\d\d-\d{4}-after-starring\.json$/.test(file1.filename), 'CA-004d: the offline file is named with her description', file1 && file1.filename);
     ok(snaps.length === 1 && snaps[0].label === 'after starring' && snaps[0].kind === 'manual' && snaps[0].filename === file1.filename,
       'CA-004e: the cloud copy carries her description and the SAME file name', JSON.stringify(snaps.map(x => [x.label, x.kind, x.filename])));
     const snapText = await C.cloudReadSnapshot(store, snaps[0]);
@@ -162,7 +162,7 @@ const until = async (fn, ms = 8000) => { const t = Date.now(); while (Date.now()
     const snapData = JSON.parse(snapText);
     ok(same(snapData, afterStar), 'CA-004g: and it holds exactly the ledger on screen');
     ok(/Local file saved\. Extra copy also sent to the cloud\./.test(text()), 'CA-004h: the note says both happened, in her words');
-    ok(/after starring/.test(text()) && /cat-watch-ledger-.*-after-starring\.json/.test(text()), 'CA-004i: the open drawer lists it at once, with its file name');
+    ok(/after starring/.test(text()) && /art-watch-ledger-.*-after-starring\.json/.test(text()), 'CA-004i: the open drawer lists it at once, with its file name');
     ok(/Export: \u201cafter starring\u201d · 352 exhibitions/.test(text())&&!/Cloud copy of/.test(text()), 'CA-004j: in the list it reads Export: "her description" · count');
 
     // 5. Another change, then roll back to the snapshot.
@@ -214,7 +214,7 @@ const until = async (fn, ms = 8000) => { const t = Date.now(); while (Date.now()
     click(downloads()[0]);
     await until(() => saved.length === 2);
     let got = saved[saved.length - 1];
-    ok(got && /^cat-watch-snapshot-.*\.json$/.test(got.filename) && Array.isArray(JSON.parse(got.data).rows),
+    ok(got && /^art-watch-snapshot-.*\.json$/.test(got.filename) && Array.isArray(JSON.parse(got.data).rows),
       'CA-008: Download hands over an automatic copy as a ledger file Load can read', got && got.filename);
     click(downloads()[downloads().length - 1]);
     await until(() => saved.length === 3);
@@ -235,7 +235,7 @@ const until = async (fn, ms = 8000) => { const t = Date.now(); while (Date.now()
     click(tick2);
     await until(() => !tick2.checked);
     click(button('Save now'));
-    ok(await until(() => /Local file saved\. \(cat-watch-ledger-/.test(text()) && saved.length === 4), 'CA-008e: unticked, Save gives the file alone and says only "Local file saved."');
+    ok(await until(() => /Local file saved\. \(art-watch-ledger-/.test(text()) && saved.length === 4), 'CA-008e: unticked, Save gives the file alone and says only "Local file saved."');
     ok(snapCount() === 4, 'CA-008f: and keeps no cloud copy');
 
     // 8f2. The file question does not wait for the cloud copy (her decision): with the store

@@ -54,7 +54,7 @@ Tate, bought in its American edition from Yale.
 
 ## Covers — tested 27 Sep
 
-Test page, separate from Cat Watch, kept by her choice:
+Test page, separate from Art Watch, kept by her choice:
 **https://claude.ai/artifact/S7aB8Q1S26S4xnhT9WDDAH** (source:
 `docs/library_cover_test.html`; store holds one sample cover and one picture
 she added).

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Cat Watch — the command-line half of summary compression.
+ * Art Watch — the command-line half of summary compression.
  *
  * Kept separate from compress.js so the pure logic can be imported by the
  * fixtures without a CLI running underneath them.

@@ -188,9 +188,14 @@ three times, each before the next stage starts:
    logged (2c). Her checklist, with one Find catalogue and one Save now then the cloud copies drawer.
 2. **After 3a–3d** — the import engine, the Read job, Save and Reset moved.
 3. **After 4** — the screen split.
-The restructure test page: https://claude.ai/artifact/Ju1pKP84Gi3VNL1b2SULc5 (built from `main` by
-`node build/build_app.js`, title changed to "Cat Watch Restructure Test", published there with the same
-four capabilities as her app). A round's faults are fixed before the next stage starts. Her app is published only when she says.
+The restructure test page: https://claude.ai/artifact/Ju1pKP84Gi3VNL1b2SULc5, built from `main` by
+`node build/build_app.js --test-page` (title "Art Watch Restructure Test", footer "TEST PAGE — not your
+app"), with her app's four capabilities. **Before every round** (her decision — a test page is a true test
+only if it is set up as her app is): copy from her app's store into the test page's store her link venues
+(`venues/occasional`), quarantine (`quarantine/rows`) and sweep log (`sweeps/venues`) — her store is only
+read; then load her current ledger (decoded from her store's `ledger/live`, kept in the scratchpad, never
+committed) in the stand-in browser with those records, and check the cards, venue names and chips before
+she gets the link; then send her the link and the latest sweep file. A round's faults are fixed before the next stage starts. Her app is published only when she says.
 
 ## Her checklist (every test round)
 
@@ -213,7 +218,7 @@ the cloud copies drawer. She says "same", or what looks or behaves differently.
    then is written under "Open problems" below and fixed after the merge.
 
 **The sub-agent's brief (copy, fill in the layer):**
-> You are moving layer `<id>` of the Cat Watch restructure, on branch `<branch>` (already checked out).
+> You are moving layer `<id>` of the Art Watch restructure, on branch `<branch>` (already checked out).
 > Read `docs/restructure.md` in full first. Run `node build/app_split.js --layer <id>`. If it lists
 > pieces not in the placement list, add each to `docs/restructure/placement.json` in the part where it
 > is used, and run the move again. Never edit `Cat_Watch.jsx` or retype code. Then run

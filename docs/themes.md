@@ -27,10 +27,10 @@ presentation**: they are not exhibitions and are not shown among the cards.
 
 ## Her decisions
 
-- **An extension of Cat Watch, on its own page only while it is a prototype.** It looks and
-  behaves like Cat Watch: its palettes, fonts, header, button row, chip rows, pop-ups and
+- **An extension of Art Watch, on its own page only while it is a prototype.** It looks and
+  behaves like Art Watch: its palettes, fonts, header, button row, chip rows, pop-ups and
   footer, copied control for control — never a look of its own. Only its rose sets it apart.
-- **No check against the ledger.** Themes stay fully separate from Cat Watch.
+- **No check against the ledger.** Themes stay fully separate from Art Watch.
 - **One drag order for every book**, whichever theme is showing — the simpler choice, for
   now; she was unsure between one order per theme and one for everything.
 - **Start simple: no bells and whistles.**
@@ -47,14 +47,14 @@ Shared code (ISBNs, booksellers, saved pages, palettes, link buttons) is copied 
 Watch by `build/sync_shelf.js`; `npm test` fails if the copies differ.
 
 **Her design, as built:**
-- **Grid:** cards in Cat Watch's style; publisher, ISBN (typewriter face) and the year alone,
-  as Cat Watch prints them; booksellers without "AU". Books across: phone 2 with details, 3
+- **Grid:** cards in Art Watch's style; publisher, ISBN (typewriter face) and the year alone,
+  as Art Watch prints them; booksellers without "AU". Books across: phone 2 with details, 3
   or 5 covers only; computer as many as fit, 5 or 7 covers only; underlined 2/3/5/7 beside 🔍.
 - **Owned or Wishlist:** every book is Owned unless wishlisted. A card's three dots open a
   narrow menu in place with one line, Wishlist (the gem with inner lines); a wishlisted book
   shows that gem left of the dots; the same line takes it off. The book view's corner tag
   says Owned or Wishlist. Counts: Books · Owned · Wishlist; a Status row filters.
-- **Add book:** Cat Watch's Import pop-up — ISBN, Links, Pages; one box size; Pages opens the
+- **Add book:** Art Watch's Import pop-up — ISBN, Links, Pages; one box size; Pages opens the
   file picker at once; Read, then the books found, ticked, then Add; Cancel centred.
 - **Covers:** from a saved page only (link and ISBN bring none — she accepts that). Raw-byte
   and AVIF pictures are read (her Clothing Art save). Tapping a cover opens, top to bottom

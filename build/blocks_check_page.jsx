@@ -111,7 +111,7 @@ function BlocksCheck(){
   return <div className="bc" style={{background:C.bg,color:C.ink,minHeight:"100vh"}}>
     <style>{BC_STYLE}</style>
     <h1>Catalogue Blocks Check</h1>
-    <div className="soft">Cat Watch code from {BC_BUILD.branch} at {BC_BUILD.commit} ({BC_BUILD.builtAt}). Each Run is a fresh Find catalogue from a blank card, using your Parallel Search Key and Claude. Nothing here reaches your app.</div>
+    <div className="soft">Art Watch code from {BC_BUILD.branch} at {BC_BUILD.commit} ({BC_BUILD.builtAt}). Each Run is a fresh Find catalogue from a blank card, using your Parallel Search Key and Claude. Nothing here reaches your app.</div>
     {lost&&<div className="case" style={{background:C.warnBg,border:"1px solid "+C.warnEdge,color:C.warnInk}}>The last result could not be kept on this page — it will be gone if you leave.</div>}
     {!ready?<div className="soft" style={{marginTop:14}}>Opening…</div>:BC_CASES.map(c=>{
       const k=kept[c.id], r=k?k.row:null, mu=MU[c.museumId];

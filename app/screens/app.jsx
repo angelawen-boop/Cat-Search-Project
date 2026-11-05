@@ -465,7 +465,7 @@ export default function App(){
       // A copy made by Save comes back under the name its offline twin has.
       // Older copies, and the automatic ones, are named as before.
       const slug=labelSlug(s.label);
-      const filename=s.filename||("cat-watch-snapshot-"+localStamp(s.at)+(slug?"-"+slug:"")+".json");
+      const filename=s.filename||("art-watch-snapshot-"+localStamp(s.at)+(slug?"-"+slug:"")+".json");
       const route=await offerFile(filename,JSON.stringify(JSON.parse(text),null,2));
       setSnapWhy(route==="runtime"?"Saved "+filename+".":"A download of "+filename+" was started — this viewer can’t confirm it arrived; check your downloads folder.");
     }catch(e){

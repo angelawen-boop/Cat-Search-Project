@@ -29,7 +29,7 @@ async function offerFile(filename,data){
 //@piece LEDGER_PREFIX
 
 
-const LEDGER_PREFIX="cat-watch-ledger-";
+const LEDGER_PREFIX="art-watch-ledger-";
 //@piece labelSlug
 
 

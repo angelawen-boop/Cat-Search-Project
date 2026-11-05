@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Cat Watch — testing the one judgement the compressor delegates.
+ * Art Watch — testing the one judgement the compressor delegates.
  *
  * WHAT THIS IS NOT: `compress.test.js` covers the code — when a model is asked
  * at all, how rows are matched, what may be written. Those are settled by

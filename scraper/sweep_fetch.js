@@ -1,5 +1,5 @@
 /**
- * Cat Watch — Sweep Fetch Diagnostic
+ * Art Watch — Sweep Fetch Diagnostic
  * Six venues: met, ng, rijks, acq, borghese, morgan
  *
  * Diagnostic copy of sweep_prototype.js using Node fetch instead of Playwright.
