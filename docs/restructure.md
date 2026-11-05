@@ -264,7 +264,7 @@ change code" and "Her tests".
 
 ## Handover record — updated after every step
 
-**Where we are:** 1A, 1B, 2a–2c and the guard done; her test round 1 passed (her checklist, on the test page set up from her app's store). Next: 3a.
+**Where we are:** 1A, 1B, 2a–2c and the guard done; her test round 1 passed (her checklist, on the test page set up from her app's store). 3a done. Next: 3b.
 
 **Work items done:** the wider check (Opus; proved on every screen, a mixed review added by the
 coordinator). 1A (Sonnet): the parts hold no copy of the scraper's rules, the join writes them; only
@@ -282,6 +282,13 @@ part; the ISBN check takes plain text; the connections announce calls and the lo
 code and two deliberate breaks), run by the test runner and the gates. Gates re-run, side by side
 identical; 22 of 22. Eight references between feature parts are listed, not failed (lookup → shop
 finder, lookup and shop finder → link-venue entries, periods → venue order).
+3a (Opus): the CSV engine (matching, folding, reading the file, building and applying the cards, the
+"Import complete" and partial-apply sentences, the sweep-log and quarantine save sentences) is top-level
+functions in the CSV and review parts; the screen keeps the file input, state and drawing. The guard now
+also fails on a hook or JSX outside the screens (proved on a deliberate break); `momentLines` (JSX) moved
+to the screens part to pass it. The harness takes the intake from top level; its suites' case counts are
+unchanged (86, 64). Gates re-run by the coordinator, side by side identical; 22 of 22. Noted, not fixed
+(not part of this work): the import's quarantine write runs inside a React state updater.
 
 **Done and proven:** the moving script, the join, the gates and side-by-side check; the proof passes
 (every layer moves with the page identical; all eight breaks caught; the moving script refuses a
