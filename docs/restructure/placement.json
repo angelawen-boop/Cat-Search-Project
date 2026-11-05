@@ -91,8 +91,8 @@
    }
   },
   {
-   "id": "5",
-   "name": "Screens",
+   "id": "5a",
+   "name": "Screens: the screen pieces moved into their parts (the main screen whole, in screens/app.jsx)",
    "files": {
     "screens/theme.jsx": "Colours and small shared screen pieces.",
     "screens/period_scrubber.jsx": "The period scrubber.",

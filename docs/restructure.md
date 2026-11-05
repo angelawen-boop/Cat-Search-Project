@@ -43,9 +43,10 @@ feature parts, each small enough for a session to read whole.
 | 4d | Links, Pages and Paste | `claude/restructure-L4d` | **done** — page identical, 23 of 23 suites |
 | 4e | The shop finder | `claude/restructure-L4e` | **done** — page identical, 23 of 23 suites |
 | 4f | The catalogue lookup | `claude/restructure-L4f` | **done** — page identical, 23 of 23 suites |
-| 5 | Screens: theme, period scrubber, ledger card, then the 2,300-line main screen split into its screens | `claude/restructure-L5` | not started |
+| 5a | Screens: theme, period scrubber, ledger card and the main screen moved whole into `app/screens/` | `claude/restructure-L5a` | not started |
+| 5b | The 2,300-line main screen split into its separate screens, one at a time — changes code, so her checklist applies | `claude/restructure-L5b` | not started |
 
-Layers 0–4f only move pieces: the page stays the same file, character for character. Layer 5 rewrites
+Layers 0–5a only move pieces: the page stays the same file, character for character. Layer 5b rewrites
 the main screen into separate components, so it changes code text; it is done one screen at a time.
 
 **After the move (not part of this project until she says):** the "words" list per feature — every
@@ -62,7 +63,7 @@ sentence a feature shows her, in one place — and the fix for the Getty empty-p
    version, same clock, same inputs (her test ledger in `docs/ledger_2026-09-24/`, her 15 Oct sweep
    file), give the same top-level values (every table, every function's text) and the same screens
    (opening, after loading the ledger, the review after reading the sweep file).
-4. **Her test** — only when the page is NOT identical (layer 5). The gates script prints PAGE IDENTICAL
+4. **Her test** — only when the page is NOT identical (layer 5b). The gates script prints PAGE IDENTICAL
    when it is: then there is nothing to publish and nothing for her to see. When it is not: publish to a
    test page (never her app), give her the checklist below, and wait for "same" or what differs.
 
@@ -78,7 +79,7 @@ must refuse a hand-edited page. Run it again after any change to the tools.
 Claude's recorded replies were named as an input when this was planned; they are not needed for
 layers 0–4f, because the gates prove every piece of the lookup is unchanged letter for letter.
 
-## Her checklist (layer 5 and anything else that changes the page)
+## Her checklist (layer 5b and anything else that changes the page)
 
 On the test page: load her ledger export; scroll the list and open a few cards; star and unstar one;
 use the venue and theme chips and the Period sort; Import → CSV with a sweep file, look through the
