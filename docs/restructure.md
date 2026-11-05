@@ -217,7 +217,8 @@ it to the coordinator). Commit on the branch with a clear
 
 - `build/app_split.js --bootstrap` makes `app/`.
 - `build/build_app.js` runs `node build/app_join.js --check` first and stops on a failure.
-- `scraper/run_tests.js` runs the same check before any suite, and fails the run on it.
+- `scraper/run_tests.js` runs the same check before any suite, and fails the run on it; it then runs
+  `build/structure_check.js` (the structure guard) the same way, and the gates print it as a line.
 - Since 1A, the part holding the `SHARED` piece holds a directive line and the summary examples only; the join
   (`build/shared_from_scraper.js`) writes the scraper's rules in, `app_join.js --check` fails when they changed,
   and `build/sync_shared.js` only re-takes the examples, then joins.
