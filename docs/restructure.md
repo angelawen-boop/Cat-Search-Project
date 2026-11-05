@@ -39,7 +39,7 @@ feature parts, each small enough for a session to read whole.
 | 3 | Saving and logs: file, seed, cloud ledger, lookup log, sweep log, quarantine | `claude/restructure-L3` | **done** — page identical, 23 of 23 suites |
 | 4a | Ledger rules: closing window, tiers, Buy next | `claude/restructure-L4a` | **done** — page identical, 23 of 23 suites |
 | 4b | Periods and themes | `claude/restructure-L4b` | **done** — page identical, 23 of 23 suites |
-| 4c | CSV import and the review cards | `claude/restructure-L4c` | not started |
+| 4c | CSV import and the review cards | `claude/restructure-L4c` | **done** — page identical, 23 of 23 suites |
 | 4d | Links, Pages and Paste | `claude/restructure-L4d` | not started |
 | 4e | The shop finder | `claude/restructure-L4e` | not started |
 | 4f | The catalogue lookup | `claude/restructure-L4f` | not started |
@@ -126,13 +126,13 @@ it to the coordinator). Commit on the branch with a clear
 
 ## Start here — the next session's job
 
-Layers 0–4b are merged: foundations, connections, saving, logs, ledger rules and periods are in their
-parts, everything else is still in `app/unsorted.jsx`. Next: layer 4c, per "Per layer — who does what". Start each sub-agent with
+Layers 0–4c are merged: foundations, connections, saving, logs, ledger rules, periods and the CSV
+import and review are in their parts, everything else is still in `app/unsorted.jsx`. Next: layer 4d, per "Per layer — who does what". Start each sub-agent with
 `model: "opus"`, `effort: "medium"`, one at a time (her decision).
 
 ## Handover record — updated after every step
 
-**Where we are:** layers 0–4b merged; layer 4c next.
+**Where we are:** layers 0–4c merged; layer 4d next.
 
 **Done and proven:** the moving script, the join, the gates and side-by-side check; the proof passes
 (every layer moves with the page identical; all eight breaks caught; the moving script refuses a
@@ -147,6 +147,7 @@ Sub-agents now start without asking within her permission (`.claude/hooks/confir
 Layer 3: 53 pieces into six saving and log parts; gates re-run by the coordinator, PAGE IDENTICAL; 23 of 23.
 Layer 4a: 9 pieces into the ledger rules part; gates re-run, PAGE IDENTICAL; 23 of 23.
 Layer 4b: 29 pieces into the periods part; gates re-run, PAGE IDENTICAL; 23 of 23.
+Layer 4c: 14 pieces into the CSV and review parts; gates re-run, PAGE IDENTICAL; 23 of 23.
 
 **Decisions:** bottom-up order (her decision); a sub-agent does each layer's moving and testing, the
 coordinator sets up, re-checks and records (her decision); one sub-agent at a time, no higher than
