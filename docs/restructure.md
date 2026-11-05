@@ -46,6 +46,14 @@ recorded as "done" while the promises the layers were sold on were not kept. The
   buttons, layout and design — split into its separate screens. The old layer 5b plan split by screen
   only and would have left the machinery inside a screen.
 
+**The line between machinery and UI (her decision; the guiding principle from now on).** Machinery
+decides what is true and what to say: rules, searches, imports, which case has happened and the
+sentence for it (a sentence's wording sits with its feature). The UI takes what the machinery hands
+it and puts it on screen: which pieces of information show, in what order, the layout, the buttons.
+The UI asks and shows; the machinery never knows a screen exists. Never mix the two again.
+
+The search redesign is not part of this work; when built it is mostly machinery with a thin UI.
+
 **Not part of this work (her decision):** any fault in what the app does (e.g. the Getty "The page came
 back empty." case). The restructure reorganizes and cleans up the code without changing what it does;
 faults are tackled after it.
