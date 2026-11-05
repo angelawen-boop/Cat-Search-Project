@@ -12,6 +12,36 @@ slight variation in later sessions (the Getty "The page came back empty." case: 
 cut-off sat about 3,200 lines away from the link reader that used it). The app is being moved into
 feature parts, each small enough for a session to read whole.
 
+**The point is to reorganize, simplify and streamline, not merely to split (her decision).** Moving
+unchanged code into separate files is the first step only; no layer counts as done until its promise
+below is met in the code, not just in the file layout.
+
+## Work items now (her decision) — in this order
+
+Layers 0–5a moved code into parts with the page unchanged. A hostile review found that the move was
+recorded as "done" while the promises the layers were sold on were not kept. These are the work:
+
+- **1A — the date and summary rules: one real copy shared with the scraper.** Today
+  `build/sync_shared.js` still copies them into `app/foundations/shared_with_scraper.jsx`. Promised in
+  layer 1, quietly dropped.
+- **1B — one way to use the page's store.** Today about eight parts (the logs, Links/Pages/Paste, link
+  venues, the cloud saving inside the main screen) each fetch the store and read and write it
+  themselves; `connections/store.jsx` only hands it out. Promised in layer 2, quietly dropped.
+- **2 — foundations and connections depend on nothing above them.** Three links run the wrong way:
+  the venue list uses the Links venue rules (`hasNoChip` → `ownChip`, `isOcc`, `LINK_VENUES`); the ISBN
+  check reads web-search results (`resultText`); the web and Claude connections write to the lookup
+  log (`tapeCall`). Each to be rewired so the lower part no longer reaches up.
+- **3 — the feature rules out of the main screen, then the screen split.** The main screen holds
+  feature work, not only what she sees: the CSV import engine (matching rows to shows, folding a show
+  swept twice, building and applying the cards, the "Import complete" counts), the Links/Pages/Paste
+  read flow, Save now and the cloud save, Reset. First each goes to its feature's part, taking inputs
+  and giving results; then what is left — the list, cards, buttons, filters, sorting, the pop-ups —
+  is split into screens. The old layer 5b plan split by screen only and would have left these rules
+  inside a screen.
+- **4 — the Getty "The page came back empty." case**, the fault that started the restructure.
+
+Items 1A–4 change code, so the gates run with `--changes-allowed` and her checklist applies.
+
 ## How it works
 
 - **`app/` holds the parts; they are what gets edited.** Each part is a list of pieces, each opened by a
@@ -33,24 +63,24 @@ feature parts, each small enough for a session to read whole.
 
 | Layer | What moves | Branch | State |
 |---|---|---|---|
-| 0 | Set-up: every piece into `app/unsorted.jsx`; build, tests and `sync_shared.js` wired to the parts; the docs that say "edit Cat_Watch.jsx" corrected | `claude/restructure-L0` | **done** — page identical, 23 of 23 suites |
-| 1 | Foundations: version, venues, the shared date/summary block, text tools, ISBN, date display | `claude/restructure-L1` | **done** — page identical, 23 of 23 suites |
-| 2 | Connections: the web service, Claude, the store | `claude/restructure-L2` | **done** — page identical, 23 of 23 suites |
-| 3 | Saving and logs: file, seed, cloud ledger, lookup log, sweep log, quarantine | `claude/restructure-L3` | **done** — page identical, 23 of 23 suites |
-| 4a | Ledger rules: closing window, tiers, Buy next | `claude/restructure-L4a` | **done** — page identical, 23 of 23 suites |
-| 4b | Periods and themes | `claude/restructure-L4b` | **done** — page identical, 23 of 23 suites |
-| 4c | CSV import and the review cards | `claude/restructure-L4c` | **done** — page identical, 23 of 23 suites |
-| 4d | Links, Pages and Paste | `claude/restructure-L4d` | **done** — page identical, 23 of 23 suites |
-| 4e | The shop finder | `claude/restructure-L4e` | **done** — page identical, 23 of 23 suites |
-| 4f | The catalogue lookup | `claude/restructure-L4f` | **done** — page identical, 23 of 23 suites |
-| 5a | Screens: theme, period scrubber, ledger card and the main screen moved whole into `app/screens/` | `claude/restructure-L5a` | **done** — page identical, 23 of 23 suites |
+| 0 | Set-up: every piece into `app/unsorted.jsx`; build, tests and `sync_shared.js` wired to the parts; the docs that say "edit Cat_Watch.jsx" corrected | `claude/restructure-L0` | **moved only** — page identical, 23 of 23 suites |
+| 1 | Foundations: version, venues, the shared date/summary block, text tools, ISBN, date display | `claude/restructure-L1` | **moved only** — page identical, 23 of 23 suites |
+| 2 | Connections: the web service, Claude, the store | `claude/restructure-L2` | **moved only** — page identical, 23 of 23 suites |
+| 3 | Saving and logs: file, seed, cloud ledger, lookup log, sweep log, quarantine | `claude/restructure-L3` | **moved only** — page identical, 23 of 23 suites |
+| 4a | Ledger rules: closing window, tiers, Buy next | `claude/restructure-L4a` | **moved only** — page identical, 23 of 23 suites |
+| 4b | Periods and themes | `claude/restructure-L4b` | **moved only** — page identical, 23 of 23 suites |
+| 4c | CSV import and the review cards | `claude/restructure-L4c` | **moved only** — page identical, 23 of 23 suites |
+| 4d | Links, Pages and Paste | `claude/restructure-L4d` | **moved only** — page identical, 23 of 23 suites |
+| 4e | The shop finder | `claude/restructure-L4e` | **moved only** — page identical, 23 of 23 suites |
+| 4f | The catalogue lookup | `claude/restructure-L4f` | **moved only** — page identical, 23 of 23 suites |
+| 5a | Screens: theme, period scrubber, ledger card and the main screen moved whole into `app/screens/` | `claude/restructure-L5a` | **moved only** — page identical, 23 of 23 suites |
 | 5b | The 2,300-line main screen split into its separate screens, one at a time — changes code, so her checklist applies | `claude/restructure-L5b` | not started |
 
 Layers 0–5a only move pieces: the page stays the same file, character for character. Layer 5b rewrites
 the main screen into separate components, so it changes code text; it is done one screen at a time.
 
 **After the move (not part of this project until she says):** the "words" list per feature — every
-sentence a feature shows her, in one place — and the fix for the Getty empty-page sentence.
+sentence a feature shows her, in one place. (The Getty empty-page fix is now work item 4.)
 
 ## The gates — per layer, in this order
 
@@ -127,18 +157,19 @@ it to the coordinator). Commit on the branch with a clear
 
 ## Start here — the next session's job
 
-Layers 0–5a are merged: every piece is in its feature part and `app/unsorted.jsx` is gone. The page is
-still the same file, character for character, so nothing has been published or needed her test.
+Layers 0–5a are merged as a move only: every piece is in its feature part and `app/unsorted.jsx` is
+gone, the page still the same file, character for character. Nothing has been reorganized yet.
 
-**Next: layer 5b, splitting the main screen** (`app/screens/app.jsx`, one component of about 2,300
-lines holding about 95 pieces of state and 60 actions). This is the first layer that changes code, so:
-1. **First, widen the side-by-side check** (`build/side_by_side.js`) to every screen layer 5b will
+**Next: the work items ("Work items now"), 1A first, then 1B, 2, 3, 4.** Each changes code, so before
+the first of them:
+1. **First, widen the side-by-side check** (`build/side_by_side.js`) to every screen the work items
    touch, by clicking through them in the stand-in browser: the Import pop-up and each of its four tabs,
    a card opened, the venue and theme chips, the Period sort, the cloud copies drawer, Save. Prove each
    new screen check fails on a deliberate one-word change, as the existing ones were proved.
-2. **Then write the split into this file before any code:** which screens become their own components,
-   what state each owns, what passes between them. The coordinator decides; she is not asked.
-3. **One screen per step**, each by a sub-agent on `claude/restructure-L5b`: gates with
+2. **Then write each item's design into this file before its code:** for item 3, which rules leave the
+   main screen for which part, then which screens become their own components, what state each owns,
+   what passes between them. The coordinator decides; she is not asked.
+3. **One item (for item 3, one feature or screen) per step**, each by a sub-agent on its own branch: gates with
    `--changes-allowed` (side by side must still be identical), then the test run. The coordinator
    re-runs both after every step.
 4. **When the branch is complete:** build, publish to a test page (never her app), give her the
@@ -146,7 +177,7 @@ lines holding about 95 pieces of state and 60 actions). This is the first layer 
 
 ## Handover record — updated after every step
 
-**Where we are:** layers 0–5a merged; layer 5b next (see Start here).
+**Where we are:** layers 0–5a moved and merged, page identical; nothing reorganized yet. Next: the work items, 1A first (see "Work items now").
 
 **Done and proven:** the moving script, the join, the gates and side-by-side check; the proof passes
 (every layer moves with the page identical; all eight breaks caught; the moving script refuses a
