@@ -2,13 +2,15 @@
 /*
  * restructure_gates.js — the gates a restructure layer must pass (docs/restructure.md).
  *
- *   node build/restructure_gates.js --base <git ref> [--layer <id>] [--changes-allowed]
+ *   node build/restructure_gates.js --base <git ref> [--layer <id>] [--changes-allowed] [--live]
  *
  *   --base      the commit the layer started from (main before the layer's branch).
  *   --layer     also check that every piece placed in this layer, and every layer before it, sits
  *               in its part.
  *   --changes-allowed   for a layer that rewrites code (screens, wording lists): changed pieces
- *               are listed instead of failing; the side-by-side check must still be identical.
+ *               are listed instead of failing; the side-by-side check compares every value but a
+ *               function's text, and every screen and store record must still be identical.
+ *   --live      the side-by-side check also runs the Links read on pages fetched live (needs the network).
  *
  * Gate 1 — nothing lost or doubled: Cat_Watch.jsx is exactly what app/ joins to; every piece at the
  *          base is there once, in the same order, letter for letter; nothing new appeared.
@@ -35,7 +37,8 @@ const ROOT = ri >= 0 ? path.resolve(args[ri + 1]) : path.join(__dirname, '..');
 const base = opt('--base');
 const layerId = opt('--layer');
 const changesAllowed = args.includes('--changes-allowed');
-if (!base && !opt('--base-file')) { console.log('usage: node build/restructure_gates.js --base <git ref> [--layer <id>] [--changes-allowed]'); process.exit(2); }
+const live = args.includes('--live');
+if (!base && !opt('--base-file')) { console.log('usage: node build/restructure_gates.js --base <git ref> [--layer <id>] [--changes-allowed] [--live]'); process.exit(2); }
 
 let failed = 0;
 const pass = m => console.log('PASS  ' + m);
@@ -94,10 +97,11 @@ if (layerId && joined) {
 const identical = nowText === baseText;
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'cw-gates-'));
 fs.writeFileSync(path.join(tmp, 'base.jsx'), baseText);
-const r = spawnSync(process.execPath, [path.join(__dirname, 'side_by_side.js'), path.join(tmp, 'base.jsx'), path.join(ROOT, 'Cat_Watch.jsx')],
-  { encoding: 'utf8', cwd: path.join(__dirname, '..'), timeout: 600000 });
+const r = spawnSync(process.execPath, [path.join(__dirname, 'side_by_side.js'), path.join(tmp, 'base.jsx'), path.join(ROOT, 'Cat_Watch.jsx')]
+  .concat(changesAllowed ? ['--changes-allowed'] : [], live ? ['--live'] : []),
+  { encoding: 'utf8', cwd: path.join(__dirname, '..'), timeout: 1200000, maxBuffer: 64 << 20 });
 const out = (r.stdout || '') + (r.stderr || '');
-r.status === 0 ? pass('side by side with the base: identical values and screens')
+r.status === 0 ? pass('side by side with the base: identical ' + (changesAllowed ? 'values (functions\' text aside)' : 'values') + ', screens and store records')
   : fail('side by side with the base:\n' + out.split('\n').filter(l => !/^same /.test(l)).join('\n'));
 
 console.log('');
