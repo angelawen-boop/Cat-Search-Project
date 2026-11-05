@@ -99,6 +99,13 @@
     "screens/ledger_card.jsx": "An exhibition card, its digital-catalogue link and its catalogue box.",
     "screens/app.jsx": "The whole main screen, to be split into its screens in layer 5b."
    }
+  },
+  {
+   "id": "2a",
+   "name": "The venue list keeps its own venues; the occasional venues' chips and order sit with the link venues",
+   "files": {
+    "import/link_venues.jsx": "Venue link rules (LINK_VENUES), Occasional venues and how a link's venue is decided."
+   }
   }
  ],
  "pieces": {
@@ -107,23 +114,23 @@
   "APP_VERSION_DATE": "foundations/version.jsx",
   "MUSEUMS": "foundations/venues.jsx",
   "VENUE_ORDER": "foundations/venues.jsx",
-  "OCC_COUNTRY_ORDER": "foundations/venues.jsx",
-  "OCC_EUROPE_ELSE": "foundations/venues.jsx",
-  "OCC_COUNTRY_NAMES": "foundations/venues.jsx",
-  "OCC_COUNTRY": "foundations/venues.jsx",
-  "occCountry": "foundations/venues.jsx",
-  "OCC_EUROPE_TLD": "foundations/venues.jsx",
-  "occRegion": "foundations/venues.jsx",
-  "OCC_CHIPS": "foundations/venues.jsx",
-  "hasNoChip": "foundations/venues.jsx",
-  "OCC_NAMED_ORDER": "foundations/venues.jsx",
-  "orderOf": "foundations/venues.jsx",
-  "stmt:MUSEUMS.sort((a,b)=>orderOf(a.id)-orderO": "foundations/venues.jsx",
+  "OCC_COUNTRY_ORDER": "import/link_venues.jsx",
+  "OCC_EUROPE_ELSE": "import/link_venues.jsx",
+  "OCC_COUNTRY_NAMES": "import/link_venues.jsx",
+  "OCC_COUNTRY": "import/link_venues.jsx",
+  "occCountry": "import/link_venues.jsx",
+  "OCC_EUROPE_TLD": "import/link_venues.jsx",
+  "occRegion": "import/link_venues.jsx",
+  "OCC_CHIPS": "import/link_venues.jsx",
+  "hasNoChip": "import/link_venues.jsx",
+  "OCC_NAMED_ORDER": "import/link_venues.jsx",
+  "orderOf": "import/link_venues.jsx",
+  "stmt:MUSEUMS.sort((a,b)=>orderOf(a.id)-orderO": "import/link_venues.jsx",
   "lookupName": "foundations/venues.jsx",
   "MU": "foundations/venues.jsx",
   "KNOWN_VENUES": "foundations/venues.jsx",
-  "allVenues": "foundations/venues.jsx",
-  "venueRank": "foundations/venues.jsx",
+  "allVenues": "import/link_venues.jsx",
+  "venueRank": "import/link_venues.jsx",
   "SHARED": "foundations/shared_with_scraper.jsx",
   "TRACKING_PARAM": "foundations/text.jsx",
   "withoutTracking": "foundations/text.jsx",

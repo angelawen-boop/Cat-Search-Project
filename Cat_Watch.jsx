@@ -97,7 +97,7 @@ const OCC_EUROPE_TLD=["uk","de","be","fr","ch","it","es","nl","at","dk","se","no
 const occRegion=id=>{ const c=occCountry(id); if(c)return(OCC_COUNTRY_ORDER.includes(c)&&c!=="United States")||OCC_EUROPE_ELSE.includes(c)?"eu":"us";
   const m=/-([a-z]{2})$/.exec(String(id)); return m&&OCC_EUROPE_TLD.includes(m[1])?"eu":"us"; };
 const OCC_CHIPS=[["occ:us","Occ - US"],["occ:eu","Occ - Europe"]];
-const hasNoChip=id=>MUSEUMS.some(m=>m.id===id&&m.underOcc)||(String(id).startsWith("occ-")&&!ownChip(id));   // the venue list is sorted at load, before isOcc and LINK_VENUES exist
+const hasNoChip=id=>MUSEUMS.some(m=>m.id===id&&m.underOcc)||(String(id).startsWith("occ-")&&!ownChip(id));// MUSEUMS is sorted at load, before isOcc, ownChip and LINK_VENUES exist: orderOf reaches them only for a venue neither VENUE_ORDER nor underOcc covers.
 // Within a country, the venues her order already named come first, in that order; the rest follow by name.
 const OCC_NAMED_ORDER=["occ-mfa-org","occ-clevelandart-org","occ-dia-org","occ-archive-worcesterart-org","occ-courtauld-ac-uk","occ-royalacademy-org-uk","ashmolean","occ-museitoscana-cultura-gov-it","occ-palazzoducale-genova-it","occ-palazzorealemilano-it","occ-museothyssen-org"];
 const orderOf=id=>{ const i=VENUE_ORDER.indexOf(id); if(i>=0)return i; if(!hasNoChip(id))return 1e6;
