@@ -42,7 +42,7 @@
    "id": "4a",
    "name": "Ledger rules",
    "files": {
-    "ledger/closing_window.jsx": "Tiers, the closing window, star colours, Buy next."
+    "ledger/closing_window.jsx": "Tiers and their colours, the closing window, Buy next and its dot's size beside the star."
    }
   },
   {
