@@ -119,10 +119,9 @@ AD-009–010. Her next monthly import is the check (CLAUDE.md §2.2.7).
   so the model was not the cause; removing the title line or the other answer keys changed nothing. On the new rules,
   title words in a description fell from about half to about an eighth, none mostly title, no name off the page.
   The check alone catches only a pure restatement (1 of the 8); the rule does the work. AC-007, AC-008, AL-062d.
-- **Process is enforced by a hook:** `.claude/hooks/confirm-subagent.sh` asks
-  before any subagent spawns, matching both `Task` and `Agent`, and rewrites the
-  approval text to lead with the MODEL and its effort ("SESSION DEFAULT" when
-  none was set).
+- **Process is enforced by a hook:** `.claude/hooks/confirm-subagent.js`, matching both `Task` and `Agent`, starts a
+  sub-agent without asking only within her standing permission (one at a time, a named model no higher than Opus, effort
+  low or medium); anything else asks, with the approval text leading with the MODEL and its effort.
 
 ## Rejected — do not re-propose
 
