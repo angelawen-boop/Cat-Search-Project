@@ -9,7 +9,7 @@
  *      the page must stay identical;
  *   2. from the fully moved copy, makes one break at a time and runs the gates — each must fail.
  *
- *   node build/restructure_gates_proof.js          about four minutes
+ *   node build/restructure_gates_proof.js          about fifteen minutes (the side-by-side check runs at every gate)
  */
 'use strict';
 const fs = require('fs');
