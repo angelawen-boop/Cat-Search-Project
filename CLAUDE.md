@@ -369,7 +369,7 @@ a session needs lives only behind such a link. Read the one for the work in hand
 
 | File | What is in it | Read it when |
 |---|---|---|
-| `docs/library.md` | Purchase tracking and a Library tab — **future consideration, never propose** | She raises it |
+| `docs/library.md` | Purchase tracking — on her roadmap (§6) | Any purchase-tracking work |
 | `docs/themes.md` | Themes — art books by theme: her brief and decisions, and the Theme Shelf prototype as built | Any Themes work |
 | `docs/periods.md` | The Period sort: her design, the period list and its order, the theme labels, every rule Claude follows | Any Period work |
 
@@ -678,5 +678,9 @@ Ideas not yet built — none is open work, and none is proposed unless she raise
   (Exa, Tavily, Brave, Firecrawl…), Google's Gemini with search grounding. Nothing built until she says.
 - **Google Drive backup by button** — on the table, never automatic; through a Google Drive
   connector (`docs/app.md`).
-- **Library — purchase tracking and a Library tab** (`docs/library.md`): future consideration, never
-  propose.
+- **Roadmap — purchase tracking** (her ask; `docs/library.md`). Not the Theme Shelf. Open, hers: a Library tab, the
+  card flipping to show its purchases on the back with an all-purchases view, or both.
+- **Roadmap — Search selected words gets a Back** (her ask): after the results show, Back returns her to the screen
+  and spot she searched from, as she left it (`docs/app.md`, "Search selected words").
+- **Roadmap — the venue-name review page made permanent** (her ask): reopened whenever she likes, listing venues that
+  came in by Links, Pages or Paste since her last review, so she renames them (`docs/add_by_link.md`, her rename page).

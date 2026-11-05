@@ -1,10 +1,11 @@
 # Library — purchase tracking (future consideration)
 
-**Her idea, brainstormed 27 Sep 2026. Not open work.** She may build it or
-may not. **Never propose it, list it among open items, or start it** — she
-raises it when she wants it. If she does: the cloud ledger has merged to
-`main`, so nothing waits on it; this adds fields to the ledger, so build it on one
-branch only.
+**On her roadmap (her ask). Not open work until she says build.** This adds fields to the ledger, so build it on one
+branch only. It is not the Theme Shelf.
+
+**Open, hers — where it lives:** the design below has a separate Library tab. She has since raised a second shape: the
+card flips over to show its purchases on the back, plus an aggregate view of every purchase — or both. Settle with
+her before building.
 
 ## What she wants
 
