@@ -1,12 +1,13 @@
 # Publishing the app
 
-- **The number lives in `APP_VERSION`; the footer prints it with the date.**
+- **The number lives in `APP_VERSION` (in the part under `app/` that holds it); the footer prints it with the date.**
   Bump it in the same breath as the change.
 - **Her numbering:** whole number for a substantial change, decimal for a small one
   (adding link venues is a decimal: Berlin and Munich were 47.2). **One number per PUBLISH**, never per build.
   Bump it only when a publish is under way — never turn by turn while one
   issue is still being worked on (her ask).
-- The file is `Cat_Watch.jsx` — no version number in the name, ever.
+- The file is `Cat_Watch.jsx` — no version number in the name, ever. It is edited in its parts under `app/`
+  (`grep -rn` under `app/` finds a piece), then `node build/app_join.js` writes it; never edit it by hand.
 
 **Building is code's job — `node build/build_app.js`**: transpiles, wraps it in
 the committed shell (`build/shell_head.html`, `build/shell_tail.html`), proves it

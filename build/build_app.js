@@ -49,7 +49,7 @@
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
-const { execFileSync } = require('child_process');
+const { execFileSync, spawnSync } = require('child_process');
 
 const ROOT = path.join(__dirname, '..');
 const JSX = path.join(ROOT, 'Cat_Watch.jsx');
@@ -67,6 +67,12 @@ const shellFrom = (() => { const i = args.indexOf('--shell-from'); return i < 0 
 const writeShell = args.includes('--write-shell');
 
 function die(m) { console.error('BUILD FAILED — ' + m); process.exit(1); }
+
+// Cat_Watch.jsx must be what the parts in app/ join to, or the build stops (docs/restructure.md).
+{
+  const j = spawnSync('node', [path.join(__dirname, 'app_join.js'), '--check'], { encoding: 'utf8' });
+  if (j.status !== 0) die((j.stderr || j.stdout || 'app_join.js --check failed').trim());
+}
 
 // ── the shell, and how to re-take it from a live page ───────────────────────
 //

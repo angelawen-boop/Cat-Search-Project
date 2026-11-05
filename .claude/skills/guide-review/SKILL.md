@@ -13,7 +13,7 @@ numbers typed by hand that a script prints, side docs used as a dumping ground,
 the same fact written in two places, pointers that stopped pointing at anything.
 
 Scope: `CLAUDE.md` and everything under `docs/` (and `.md` READMEs inside it).
-**Nothing else.** Never edit `Cat_Watch.jsx`, `scraper/*.js`, `build/`, run
+**Nothing else.** Never edit `Cat_Watch.jsx`, `app/`, `scraper/*.js`, `build/`, run
 folders, or saved pages — except a code COMMENT, or a line in `.claude/skills/`
 or `.claude/hooks/`, that points at a guide section or doc you renumbered or
 renamed.
