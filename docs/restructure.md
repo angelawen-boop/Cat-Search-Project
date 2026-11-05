@@ -188,7 +188,9 @@ three times, each before the next stage starts:
    logged (2c). Her checklist, with one Find catalogue and one Save now then the cloud copies drawer.
 2. **After 3a–3d** — the import engine, the Read job, Save and Reset moved.
 3. **After 4** — the screen split.
-A round's faults are fixed before the next stage starts. Her app is published only when she says.
+The restructure test page: https://claude.ai/artifact/Ju1pKP84Gi3VNL1b2SULc5 (built from `main` by
+`node build/build_app.js`, title changed to "Cat Watch Restructure Test", published there with the same
+four capabilities as her app). A round's faults are fixed before the next stage starts. Her app is published only when she says.
 
 ## Her checklist (every test round)
 
@@ -258,7 +260,7 @@ the first of them:
 
 ## Handover record — updated after every step
 
-**Where we are:** layers 0–5a moved; the side-by-side check widened (merged); 1A, 1B, 2a–2c and the guard done. Next: her test round 1, then 3a.
+**Where we are:** layers 0–5a moved; the side-by-side check widened (merged); 1A, 1B, 2a–2c and the guard done. Her test round 1 is on the test page; waiting for her answer, then 3a.
 
 **Work items done:** the wider check (Opus; proved on every screen, a mixed review added by the
 coordinator). 1A (Sonnet): the parts hold no copy of the scraper's rules, the join writes them; only
