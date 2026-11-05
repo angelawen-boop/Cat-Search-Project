@@ -15,6 +15,7 @@
  *   node scraper/fixtures/add_by_page.js
  */
 'use strict';
+const { batchReply } = require('./batch_reply.js');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
@@ -80,12 +81,12 @@ const runtime = () => ({
     if (name === 'db') return store;
     if (name === 'downloads') return { save: async () => ({ ok: true }) };
     if (name === 'mcp') return { callTool: async (server, tool, args) => { fetched.push(args); return { payload: { results: [], errors: [] } }; } };
-    if (name === 'sample') return { json: async prompt => {
+    if (name === 'sample') return { json: async full => batchReply(full, async prompt => {
       const t = (prompt.match(/EXHIBITION TITLE, as the page gives it: (".*")/) || [])[1];
       // Within the ten-word cap, as every answer must be (scraper/answer_check.js).
       // CASORATI's English title comes back in capitals, as Claude translates a title typed in them.
       return { summary: 'A summary of ' + (t ? JSON.parse(t) : '').split(/\s+/).slice(0, 6).join(' ') + '.', english: /CASORATI/.test(t || '') ? 'CASORATI IN ENGLISH' : '', englishSpeaking: false };
-    } };
+    }) };
     return null;
   },
   complete: async () => '',

@@ -90,6 +90,12 @@ function buildExamples() {
   return pairs;
 }
 
+// The examples as Claude reads them: the same text in every sweep job and, written in by
+// build/sync_shared.js, in every Links, Pages and Paste request (one copy, her decision).
+function examplesText() {
+  return buildExamples().map(p => `RAW: ${p.raw}\n  →  ${p.summary}\n`).join('\n');
+}
+
 /**
  * Record that this folder's compressed file was written under the English-title
  * rule. The marker lists FILE NAMES, one per line — see titleJudgedIn().
@@ -276,8 +282,7 @@ function plan(dir, { recompress = false, seedWins = false } = {}) {
   // Each job file is self-contained: examples first, then one JSON object per
   // line. A subagent reads exactly one file and answers.
   const CHUNK_ROWS = 75;          // ~100k tokens per job, measured three times
-  const examples = buildExamples()
-    .map(p => `RAW: ${p.raw}\n  →  ${p.summary}\n`).join('\n');
+  const examples = examplesText();
   const jobs = [];
   const writeJob = (name, rows) => {
     const lines = [
@@ -577,4 +582,4 @@ function main(argv) {
   } else plan(dir, { recompress: flags.has('--recompress'), seedWins: flags.has('--seed-wins') });
 }
 
-module.exports = { main, buildExamples, newestRun, check };
+module.exports = { main, buildExamples, examplesText, newestRun, check };

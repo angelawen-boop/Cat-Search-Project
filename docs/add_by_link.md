@@ -81,11 +81,17 @@ handing a job to Claude.
 2. **Title = what the catalogue would be called** (her decision): the page's title, site name stripped; subtitles and split
    headings kept; in the museum's language.
 3. **Dates:** the first range after the show's heading, by the scraper's own date reader (`dates.js`, shared, never copied).
-4. **Description by the model** (`modelTier: default`, her decision), the compression prompt shared not copied. **Any non-English
+4. **Description by the model** (`LINK_READ_TIER`, `complex`, her decision), the compression prompt shared not copied.
+   **One request for the whole import** (her decision; Links, Pages and Paste alike): the sweep's opening, its full current
+   examples and the rules once, then each page as an item with its own extra questions (`linkBatchPrompt`, `linkItem`). A new
+   venue is named by its first page only. An import too big for one request is split (`LINK_BATCH_BYTES`, `LINK_BATCH_ITEMS`).
+   Each page keeps its own lookup-log record, holding every request it was in. AL-003a, AL-053, AL-094. **Any non-English
    page comes out in English; a non-English title gets its translation first** (`In English: "…".`, every language, her
    decision), recased as the title is (`cardTitle`, AP-012b).
 5. **Claude's answer is checked as the compressor's** (`answerFaults`, shared `scraper/answer_check.js`): shape, and every claim
-   word and number on the page. A refused answer is asked again with its reason, twice at most (`LINK_ASK_AGAIN`); one that
+   word and number on the page. Only the pages refused, or missing from a reply cut short, are asked again — together, the
+   refused ones shown their answer and reason — twice at most (`LINK_ASK_AGAIN`, `readLinkBatch`); never the whole import (her
+   decision). A call refused outright (declined, rate-limited) is not repeated. One that
    never passes leaves the link unread: "Claude's description failed check and re-attempt multiple times (…)", faults in the
    brackets (her wording; AL-062).
 6. No note — a link is not a sweep; `swept_at` blank, sweep log untouched.

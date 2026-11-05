@@ -12,6 +12,7 @@
  *   node scraper/fixtures/add_by_paste.js
  */
 'use strict';
+const { batchReply } = require('./batch_reply.js');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
@@ -64,7 +65,7 @@ const runtime = () => ({
     if (name === 'downloads') return { save: async () => ({ ok: true }) };
     if (name === 'mcp') return { callTool: async (server, tool, args) => { fetched.push(args);
       return { payload: { results: (args.urls || []).includes(RESEARCH) ? [RESEARCH_PAGE] : [], errors: [] } }; } };
-    if (name === 'sample') return { json: async prompt => {
+    if (name === 'sample') return { json: async full => batchReply(full, async prompt => {
       asked.push(prompt);
       if (/pasted or typed by hand/.test(prompt)) {
         const [title, dates] = /George Stubbs/.test(prompt) ? ['George Stubbs : a celebration.', '21 Aug. 2006 - 1 Jan. 2007']
@@ -78,7 +79,7 @@ const runtime = () => ({
       const v = /Made Show/.test(t) ? 'Tate Modern' : 'Tate Britain';
       return { summary: /Stubbs/.test(t) ? null : 'A summary of ' + t.split(/\s+/).slice(0, 4).join(' ') + '.', english: '', englishSpeaking: true,
         venue: v, venueShort: v, venueCity: 'London', venueCountry: 'United Kingdom', venueOwnPage: true };
-    } };
+    }) };
     return null;
   },
   complete: async () => '',

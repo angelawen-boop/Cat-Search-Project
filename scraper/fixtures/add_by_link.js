@@ -23,6 +23,8 @@
  *   node scraper/fixtures/add_by_link.js
  */
 'use strict';
+const { batchReply } = require('./batch_reply.js');
+const batchState = {};
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
@@ -261,8 +263,17 @@ function runtime() {
         if (SHOPS[u] !== undefined) return { payload: { results: [{ url: u, title: 'Shop', full_content: SHOPS[u] }], errors: [] } };
         return { payload: { results: [{ url: u, title: '', full_content: '' }], errors: [] } };
       } };
-      if (name === 'sample') return { json: async (prompt, opts) => {
-        calls.push({ kind: 'sample', prompt, tier: opts && opts.modelTier });
+      if (name === 'sample') return { json: async (full, opts) => {
+        calls.push({ kind: 'sample', prompt: full, tier: opts && opts.modelTier });
+        // AL-094a: a reply cut short mid-answer, the first time "Cut Short" is in a request.
+        if (/EXHIBITION TITLE, as the page gives it: "Cut Short"/.test(full) && !batchState.cut) {
+          batchState.cut = true;
+          const items = [...full.matchAll(/===== ITEM (\d+) =====\n[\s\S]*?EXHIBITION TITLE, as the page gives it: (".*")/g)].map(m => [m[1], JSON.parse(m[2])]);
+          const whole = items.filter(([, t]) => t !== 'Cut Short').map(([k]) => JSON.stringify(k) + ':' + JSON.stringify({ summary: 'Whole before the cut.', english: '', englishSpeaking: true })).join(',');
+          const cut = items.find(([, t]) => t === 'Cut Short')[0];
+          throw { code: 'invalid_json', message: 'unreadable', text: '{' + whole + ',' + JSON.stringify(cut) + ':{"summary":"Cut sh' };
+        }
+        return batchReply(full, async prompt => {
         const t = (prompt.match(/EXHIBITION TITLE, as the page gives it: (".*")/) || [])[1];
         const title = t ? JSON.parse(t) : '';
         if (/Peggy/.test(title)) return { summary: 'Guggenheim Jeune, her radical London gallery, revisited.', subtitle: 'The Making of a Collector', english: '', englishSpeaking: true };
@@ -281,13 +292,16 @@ function runtime() {
           ? { summary: 'Pontormo\u2019s paintings and drawings.', english: '', englishSpeaking: false }
           : { summary: 'First major monographic exhibition on Pontormo.', english: '', englishSpeaking: false };
         if (/^Never Passes$/.test(title)) return { summary: 'The first show of its kind.', english: '', englishSpeaking: false };
+        // AL-094: a page the first reply skips, answered when asked again alone.
+        if (/^Comes Back Late$/.test(title)) { if (!batchState.late) { batchState.late = true; return undefined; } return { summary: 'Asked again, alone.', english: '', englishSpeaking: true }; }
+        if (/^Cut Short$/.test(title)) return { summary: 'Asked again after the cut.', english: '', englishSpeaking: true };
         // AL-062d: her Palazzo Strozzi link's live answer, the title said again, then right when told why.
         if (/^Americans in Florence/.test(title)) return /YOUR LAST ANSWER WAS REFUSED/.test(prompt)
           ? { summary: 'Sargent and the Americans who made Florence home.', english: '', englishSpeaking: false }
           : { summary: 'Sargent and the American Impressionists in Florence.', english: '', englishSpeaking: false };
         // Within the ten-word cap, as every answer must be (scraper/answer_check.js).
         return { summary: 'A summary of ' + String(title).split(/\s+/).slice(0, 6).join(' ') + '.', english: '', englishSpeaking: true };
-      } };
+        }); } };
       return null;
     },
     complete: async () => '',
@@ -736,7 +750,8 @@ function runtime() {
   ok(showFetches.length === 12, 'AL-003: twelve different links, the repeated RA one read once — twelve page reads', showFetches.length);
   // The Period trial's labelling question about the new cards is not a page read.
   const reads = calls.filter(c => c.kind === 'sample' && !/name the art period/.test(c.prompt || ''));
-  ok(reads.length === 10, 'AL-003a:  and one Claude call per page that read, ten', reads.length);
+  const readItems = reads.flatMap(c => [...c.prompt.matchAll(/===== ITEM (\d+) =====/g)]);
+  ok(reads.length === 1 && readItems.length === 10, 'AL-003a:  and ONE Claude request for the whole import, holding the ten pages that read (her decision)', JSON.stringify([reads.length, readItems.length]));
   const labels = calls.filter(c => c.kind === 'sample' && /name the art period/.test(c.prompt || ''));
   ok(reads.every(c => c.tier === 'complex') && labels.length && labels.every(c => c.tier === 'default'),
     'AL-090: the link read, which writes the description, asks the complex tier; the period labels stay on default (her decision)', [...new Set(reads.map(c => c.tier))].join(',') + ' / ' + [...new Set(labels.map(c => c.tier))].join(','));
@@ -1425,8 +1440,9 @@ function runtime() {
     calls.length = 0;
     await click([...dialog().querySelectorAll('button')].find(b => b.textContent === 'Read'));
     await settle(30);
-    const asked = calls.filter(c => c.kind === 'sample' && !/name the art period/.test(c.prompt || '')).map(c => /"venueShort"/.test(c.prompt));
-    ok(asked.length === 2 && asked[0] && !asked[1], 'AL-053:  a museum never met: Claude is asked its name on the first link only; its own page asks nothing more', JSON.stringify(asked));
+    const reqs = calls.filter(c => c.kind === 'sample' && !/name the art period/.test(c.prompt || ''));
+    const asked = reqs.flatMap(c => [...c.prompt.matchAll(/===== ITEM (\d+) =====\n([\s\S]*?)\n===== END ITEM \1 =====/g)].map(m => /"venueShort"/.test(m[2])));
+    ok(reqs.length === 1 && asked.length === 2 && asked[0] && !asked[1], 'AL-053:  a museum never met: both links in one request, its name asked on the first link only; its own page asks nothing more', JSON.stringify([reqs.length, asked]));
     const first = calls.find(c => c.kind === 'sample');
     ok(first && /"Boston MFA"/.test(first.prompt) && /"St\u00e4del Frankfurt"/.test(first.prompt), 'AL-053a:  her names for venues are the style for the short name');
     const text = win.document.body.textContent;
@@ -1660,6 +1676,46 @@ function runtime() {
       'AL-062b:  one that never passes, asked twice more, leaves the link unread with the reason (her decision)', asks('Never Passes').length);
     const cancel = buttons(/^Cancel import$/)[0];
     if (cancel) await click(cancel);
+  }
+
+  // ── AL-094: one request for the whole import; only the pages that did not come back are asked again ──
+  {
+    const fn = name => new Function('React', 'window', 'document', 'localStorage', code + '\n;return ' + name + ';')(React, win, win.document, win.localStorage);
+    const body = '\n\n9 Oct 2026 \u2013 7 Feb 2027\n\nCelebrated alike by scholars, collectors, and the wider public, the artist is now the subject of a landmark exhibition dedicated exclusively to his life and artistic achievement. Bringing together the artist\u2019s most important paintings alongside an exceptional selection of drawings, the exhibition offers an opportunity to explore the full breadth of his artistic production.\n\n' + '* Instagram\n'.repeat(40);
+    const urlFor = t => 'https://scuderiequirinale.it/en/exhibition/' + t.toLowerCase().replace(/ /g, '-');
+    const titlesIn = c => [...c.prompt.matchAll(/EXHIBITION TITLE, as the page gives it: (".*")/g)].map(m => JSON.parse(m[1]));
+    const readAll = async titles => {
+      for (const t of titles) P[urlFor(t)] = { url: urlFor(t), title: t, full_content: '# ' + t + body };
+      await click(importBtn());
+      if (!dialog().querySelector('textarea')) await click(inDialog('Links'));
+      const box = dialog().querySelector('textarea');
+      await act(async () => { setter.call(box, titles.map(urlFor).join('\n')); box.dispatchEvent(new win.Event('input', { bubbles: true })); });
+      await settle();
+      calls.length = 0;
+      await click([...dialog().querySelectorAll('button')].find(b => b.textContent === 'Read'));
+      await settle(30);
+      return calls.filter(c => c.kind === 'sample' && /===== ITEM/.test(c.prompt));
+    };
+    const reqs = await readAll(['On Time', 'Comes Back Late', 'Also On Time']);
+    ok(reqs.length === 2 && titlesIn(reqs[0]).length === 3 && JSON.stringify(titlesIn(reqs[1])) === '["Comes Back Late"]'
+      && win.document.body.textContent.includes('Asked again, alone.'),
+      'AL-094:  three links, one request; the page the reply skipped is asked again on its own, never the whole import (her decision)', JSON.stringify(reqs.map(titlesIn)) + ' ' + (dialog() ? dialog().textContent.slice(0, 600) : 'no dialog'));
+    const ex = fn('SUMMARY_EXAMPLES');
+    ok(reqs.length > 0 && ex === require('../compress_cli.js').examplesText() && reqs[0].prompt.split(ex).length === 2,
+      'AL-094b:  the examples are the sweep\'s own examples text, sent once per request');
+    let cancel = buttons(/^Cancel import$/)[0];
+    if (cancel) await click(cancel);
+    const creqs = await readAll(['Before The Cut', 'Cut Short']);
+    const shown = win.document.body.textContent;
+    ok(creqs.length === 2 && JSON.stringify(titlesIn(creqs[1])) === '["Cut Short"]' && shown.includes('Whole before the cut.') && shown.includes('Asked again after the cut.'),
+      'AL-094a:  a reply cut short keeps the answers it holds whole; only the cut one is asked again', JSON.stringify(creqs.map(titlesIn)));
+    cancel = buttons(/^Cancel import$/)[0];
+    if (cancel) await click(cancel);
+    const batches = fn('linkBatches'), cap = fn('LINK_BATCH_ITEMS');
+    const many = Array.from({ length: 45 }, (_, i) => ({ key: String(i), item: 'EXHIBITION TITLE, as the page gives it: "S' + i + '"\nRAW TEXT:\n' + 'word '.repeat(300) }));
+    const split = batches(many);
+    ok(split.length === 3 && split.every(b => b.length <= cap) && split.flat().length === 45,
+      'AL-094c:  a large import is split into a few requests, each within the caps; no page lost', JSON.stringify(split.map(b => b.length)));
   }
 
   // ── AL-080: a link to a show in her quarantine says so, not "your ledger already matches it" ──

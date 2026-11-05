@@ -18,18 +18,22 @@
  *   scraper/boilerplate.js     → BOILERPLATE, the phrases a description drops (Add by link too).
  *   scraper/answer_check.js    → ANSWER_CHECK, the checks on every description Claude writes
  *                                 (shape, and claims the page must hold).
- *   compress.js --examples     → SUMMARY_EXAMPLES — only with --examples.
+ *   compress_prompt.md         → SUMMARY_OPENING and SUMMARY_STUDY (Prompt A's first sentence,
+ *                                 and its line on the examples), so both open alike.
+ *   compress_cli.js            → SUMMARY_EXAMPLES — the sweep's own examples text, every pair at
+ *                                 full length (examplesText). Re-taken with --examples, which
+ *                                 build/build_app.js runs before every build.
  *   sweep_prototype.js VENUES  → VENUE_SITES: each venue's site (and, where
  *                                 two venues share one, its showPath), so a
  *                                 link from one of her 28 files under it —
  *                                 7 Oct, her Jacquemart-André links were
  *                                 filed as a new venue.
  *
- * THE EXAMPLES ARE A SNAPSHOT, ON PURPOSE. They are built from whatever runs
- * are on disk, so they change with every sweep; checking them would fail
- * `npm test` after every sweep for no fault. They teach style, which does not
- * drift. `--check` therefore carries the examples already in the JSX across
- * unchanged and compares only the dates and the rules.
+ * THE EXAMPLES ARE RE-TAKEN AT EVERY BUILD. They are built from whatever runs are on
+ * disk, so they change with every sweep; `--check` carries the copy in the JSX across
+ * (comparing it would fail `npm test` after every sweep for no fault), and
+ * build/build_app.js runs `--examples` first, so a published page always carries the
+ * sweep's current set.
  *
  * Usage:
  *   node build/sync_shared.js              rewrite dates + rules
@@ -77,7 +81,12 @@ function rulesBlock() {
     // title on every row in its own words.
     .filter(p => !/^A FEW ROWS CARRY/.test(p) && !/^ROWS MARKED/.test(p));
   if (paras.length < 4) die('compress_prompt.md: Prompt A\'s rules came out too short — check the anchors');
-  return 'const SUMMARY_RULES=' + JSON.stringify(paras.join('\n\n')) + ';';
+  // Prompt A's opening sentence and its line on the examples, the same words to both.
+  const opening = ((md.slice(a).match(/^> (You are writing [^.]*\.)/m) || [])[1] || '').replace(/\s*\n>\s*/g, ' ');
+  const study = (md.slice(a).match(/^> (The examples define the style\.[^\n]*)/m) || [])[1];
+  if (!opening || !study) die('compress_prompt.md: Prompt A\'s opening sentence or its examples line is gone');
+  return 'const SUMMARY_OPENING=' + JSON.stringify(opening) + ';const SUMMARY_STUDY=' + JSON.stringify(study.trim()) + ';\n'
+    + 'const SUMMARY_RULES=' + JSON.stringify(paras.join('\n\n')) + ';';
 }
 
 function composeBlock() {
@@ -105,27 +114,18 @@ function sitesBlock() {
 }
 
 function examplesBlock() {
-  const { buildExamples } = require(path.join(ROOT, 'scraper', 'compress_cli.js'));
-  const pairs = buildExamples()
-    .slice().sort((x, y) => (x.venue + x.title).localeCompare(y.venue + y.title));
-  // Spread across venues, eight at most: style, not coverage.
-  const byVenue = new Map();
-  for (const p of pairs) { if (!byVenue.has(p.venue)) byVenue.set(p.venue, []); byVenue.get(p.venue).push(p); }
-  const picked = [];
-  for (let round = 0; picked.length < 8; round++) {
-    let any = false;
-    for (const list of byVenue.values()) { if (list[round] && picked.length < 8) { picked.push(list[round]); any = true; } }
-    if (!any) break;
-  }
-  const cut = s => { const t = String(s).replace(/\s+/g, ' ').trim(); if (t.length <= 600) return t; const c = t.slice(0, 600); return c.slice(0, c.lastIndexOf(' ')) + '…'; };
-  return 'const SUMMARY_EXAMPLES=' + JSON.stringify(picked.map(p => ({ title: p.title, raw: cut(p.raw), summary: p.summary }))) + ';';
+  const { examplesText } = require(path.join(ROOT, 'scraper', 'compress_cli.js'));
+  const text = examplesText();
+  if (!text.trim()) die('no example pairs found: the seed and the runs on disk share no show');
+  return 'const SUMMARY_EXAMPLES=' + JSON.stringify(text) + ';';
 }
 
 const jsx = fs.readFileSync(JSX, 'utf8');
 const i = jsx.indexOf(OPEN), j = jsx.indexOf(CLOSE);
 if (i < 0 || j < 0 || j < i) die('Cat_Watch.jsx has no SHARED markers');
 const current = jsx.slice(i + OPEN.length, j);
-const keptExamples = (current.match(/^const SUMMARY_EXAMPLES=.*;$/m) || [])[0];
+// A kept copy is the examples TEXT; the old eight-pair list is re-taken.
+const keptExamples = (current.match(/^const SUMMARY_EXAMPLES=".*;$/m) || [])[0];
 const examples = retakeExamples || !keptExamples ? examplesBlock() : keptExamples;
 function answerCheckBlock() {
   const src = fs.readFileSync(path.join(ROOT, 'scraper', 'answer_check.js'), 'utf8');

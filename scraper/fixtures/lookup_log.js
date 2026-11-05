@@ -250,7 +250,8 @@ const script = {
           title: 'Venice: Canaletto and His Rivals | Past exhibitions | National Gallery', full_content: '# Venice: Canaletto and His Rivals' + body }], errors: [] } };
         return { payload: { results: [], errors: [{ url: args.urls[0], http_status_code: 403 }] } };
       } };
-      if (name === 'sample') return { json: async () => ({ summary: 'Venice painted for Grand Tour visitors.', english: true, englishSpeaking: true, subtitle: null }) };
+      // The import asks for every page in one request: each page answered as if alone (batch_reply.js).
+      if (name === 'sample') return { json: async prompt => require('./batch_reply.js').batchReply(prompt, async () => ({ summary: 'Venice painted for Grand Tour visitors.', english: true, englishSpeaking: true, subtitle: null })) };
       if (name === 'db') return store.api;
       return null;
     } };
@@ -291,7 +292,7 @@ const script = {
       const good = all.find(r => r.link && r.link.url === GOOD), bad = all.find(r => r.link && r.link.url === BAD);
       ok(good && good.ok && good.link.title === 'Venice: Canaletto and His Rivals' && good.link.page && good.link.page.base
         && good.link.answer && good.calls.some(c => c.kind === 'open') && good.calls.some(c => c.kind === 'claude'),
-        'LL-009: the read link — the page as code read it, Claude’s answer, the title made, every call', good && JSON.stringify(good.link.title));
+        'LL-009: the read link — the page as code read it, Claude’s answer, the title made, every call', good && JSON.stringify([good.ok, good.link.title, good.calls.map(c => c.kind), good.said]));
       ok(bad && !bad.ok && /refused/.test(bad.said || ''), 'LL-009: the refused link — recorded, with why', bad && bad.said);
       ok(/Link reading/.test(reader.describe(good)), 'LL-009: the reader writes the link reading out');
     } catch (e) {

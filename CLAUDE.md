@@ -264,6 +264,9 @@ rules, Cini, Prado, Correr): `docs/app.md`, `docs/add_by_link.md`.
   since 57.2 (her decision; `docs/app.md` §1, "Which model"). Her verdict: they try harder, but extra detail is not richness —
   some now say things no one would go to a show for. Her test: would you go to see the exhibition on that byline? Her case
   (Louisiana): *Louise Bourgeois* → "Bourgeois's Cells, begun when she was almost eighty." Agree any change with her first.
+- **In code, not yet published — one request to Claude for the whole Links, Pages or Paste import** (her decision),
+  with the sweep's own opening, full current examples and rules; only pages refused or missing are asked again
+  (`docs/add_by_link.md`, step 4). Her next import confirms.
 - **In code, not yet published — never the title reworded, for every way in** (sweep, Links, Pages, Paste: one shared rule
   and check; it had been Paste's alone). Her next links and sweep confirm (`docs/compression.md`, "Enforcement").
 - **In code, not yet published (her decision: no publish) — a shop written into a venue's entry is never asked on the shop
@@ -640,7 +643,8 @@ pages: `docs/link_proof_pages.json`.
 fix about half the time** (exhibition info misread, shop not found).
 
 **How it works** (her design): Import opens a small pop-up — CSV · Links · Pages · Paste; **nothing added to the page itself**. Each link
-is read once by code (title, dates) and the model (prose, always English), then the same intake as a sweep; no lookback. New
+is read once by code (title, dates); then one request to the model for the whole import (prose, always English); then the same
+intake as a sweep; no lookback. New
 venues file under an "Occasional" chip; shop sections are confirmed on a screen after the review. **The date reader and summary
 rules are the scraper's own**, written into the JSX by `node build/sync_shared.js` — never edit between its SHARED markers.
 Venue link rules live in the APP, on the venue's `MUSEUMS` entry, never in the scraper. The shop is searched live only, no saved

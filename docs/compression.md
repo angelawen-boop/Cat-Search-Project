@@ -109,6 +109,10 @@ AD-009–010. Her next monthly import is the check (CLAUDE.md §2.2.7).
   all pass. Cases: Pontormo's "first" (a link); in the imported 15 Oct run, Brera's "25 confiscated
   paintings" (the page says 52), the Rijksmuseum's "120 works" and "100 highlights" (no number on either
   page) — imported as swept (her decision: a fix never changes a run already swept). AC- tests.
+- **One prompt for every way in** (her decision): the sweep's opening sentence, its examples line, its examples text
+  (`examplesText`, every pair at full length) and its rules are written into the app by `build/sync_shared.js`; every
+  build re-takes the examples, so the app never carries an old set. They differ only where the channel forces it (the
+  sweep's two-city and English-title batch fields; the app's questions about the page).
 - **Never the title reworded — one rule and one check for every way in** (sweep, Links, Pages, Paste; her decision).
   The shared rules say so; `rewordsTitle` refuses a description whose every word is the title's. Measured on her 8
   Palazzo Strozzi links (fresh calls, the app's exact prompt): Opus and Sonnet both echoed the title on the old rules,
