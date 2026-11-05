@@ -654,7 +654,7 @@ fix about half the time** (exhibition info misread, shop not found).
 is read once by code (title, dates); then one request to the model for the whole import (prose, always English); then the same
 intake as a sweep; no lookback. New
 venues file under an "Occasional" chip; shop sections are confirmed on a screen after the review. **The date reader and summary
-rules are the scraper's own**, written into the part under `app/` that holds them by `node build/sync_shared.js` — never edit between its SHARED markers.
+rules are the scraper's own**, written into `Cat_Watch.jsx` by the join (`node build/app_join.js`) from the scraper's own files; the part under `app/` holds only a directive line and the summary examples — edit the scraper, then join.
 Venue link rules live in the APP, on the venue's `MUSEUMS` entry, never in the scraper. The shop is searched live only, no saved
 copies (her decision; `docs/testing.md`). The decisions, the shop finder's design and the cases are all in `docs/add_by_link.md`.
 

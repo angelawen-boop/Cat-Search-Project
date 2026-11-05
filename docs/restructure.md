@@ -218,8 +218,9 @@ it to the coordinator). Commit on the branch with a clear
 - `build/app_split.js --bootstrap` makes `app/`.
 - `build/build_app.js` runs `node build/app_join.js --check` first and stops on a failure.
 - `scraper/run_tests.js` runs the same check before any suite, and fails the run on it.
-- `build/sync_shared.js` writes the shared block into the part that holds the `SHARED` piece (found by
-  its opening marker under `app/`), then runs `node build/app_join.js`; `--check` compares that part.
+- Since 1A, the part holding the `SHARED` piece holds a directive line and the summary examples only; the join
+  (`build/shared_from_scraper.js`) writes the scraper's rules in, `app_join.js --check` fails when they changed,
+  and `build/sync_shared.js` only re-takes the examples, then joins.
 - Docs: `docs/publishing.md` (the version number lives in the part holding `APP_VERSION`), CLAUDE.md §1
   and §5.3/§5.4 wherever a session is told to edit `Cat_Watch.jsx` or between the SHARED markers.
 - Branches holding their own copy of `Cat_Watch.jsx` (`parked`, `claude/theme-shelf`) are not merged

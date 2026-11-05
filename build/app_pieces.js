@@ -6,8 +6,9 @@
  * lines above it. The pieces joined in order give back the file exactly, character for
  * character; `split` refuses to return pieces that do not.
  *
- * The block written by sync_shared.js (between its SHARED markers) is one piece, "SHARED",
- * so the markers never land in two different files.
+ * The block the join writes from the scraper (between its SHARED markers) is one piece, "SHARED",
+ * so the markers never land in two different files. In the part it is a directive line; here, in
+ * the joined page, it is the rules' text.
  */
 'use strict';
 const ts = require('typescript');

@@ -108,7 +108,7 @@ Never take the builder's report on trust.
   feature's live proof-page list.
 - Comments follow CLAUDE.md's comment rules; no dates on her decisions. Before
   rewording a comment, grep `scraper/fixtures/` for it (test anchors). Never
-  edit between the SHARED markers — `node build/sync_shared.js`. A behaviour
+  edit between the SHARED markers — the join writes them from the scraper (`node build/app_join.js`). A behaviour
   change and a tidy-up are separate commits; a tidy's diff touches comment
   lines only.
 

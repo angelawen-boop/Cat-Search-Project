@@ -103,9 +103,9 @@ if (shellFrom) {
 
 // ── the description examples, re-taken ──────────────────────────────────────
 //
-// Links, Pages and Paste show Claude the sweep's own examples (build/sync_shared.js); every
+// Links, Pages and Paste show Claude the sweep's own examples (re-taken by build/sync_shared.js); every
 // build re-takes them from the runs on disk, so a published page never carries an old set.
-execFileSync('node', [path.join(__dirname, 'sync_shared.js'), '--examples'], { stdio: 'inherit' });
+execFileSync('node', [path.join(__dirname, 'sync_shared.js')], { stdio: 'inherit' });
 
 // ── transpile ───────────────────────────────────────────────────────────────
 //

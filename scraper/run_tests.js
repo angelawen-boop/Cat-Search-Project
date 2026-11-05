@@ -75,7 +75,6 @@ const SUITES = [
   [SCRAPER, 'node scraper/fixtures/description_pages_oct.js'],
   [SCRAPER, 'node scraper/fixtures/bridge_reuse.js'],
   [SCRAPER, 'node scraper/fixtures/robots_pages.js'],
-  [[...BOTH, LINKS, LOOKUP], 'node build/sync_shared.js --check'],
   [[...BOTH, LINKS, LOOKUP], 'node scraper/fixtures/add_by_link.js'],
   [[APP, LINKS], 'node scraper/fixtures/add_by_page.js'],
   [[APP, LINKS], 'node scraper/fixtures/add_by_paste.js'],
@@ -165,7 +164,7 @@ async function main() {
   const expected = estimate(args);
   if (p.flags.has('--estimate')) { console.log(W.line(expected)); return; }
 
-  // Cat_Watch.jsx must be what the parts in app/ join to, or the run fails before any suite (docs/restructure.md).
+  // Cat_Watch.jsx must be what the parts in app/ and the scraper's rules join to (this replaces the old sync_shared --check suite), or the run fails before any suite (docs/restructure.md).
   const join = spawnSync('node', [path.join(ROOT, 'build', 'app_join.js'), '--check'], { encoding: 'utf8' });
   if (join.status !== 0) { console.error((join.stderr || join.stdout || 'app_join.js --check failed').trim()); process.exit(1); }
 

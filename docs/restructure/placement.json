@@ -11,7 +11,7 @@
    "files": {
     "foundations/version.jsx": "The import line and the version number shown in the footer.",
     "foundations/venues.jsx": "The 28 venues and the occasional ones: their order, chips and regions, and the lookup by id (MU).",
-    "foundations/shared_with_scraper.jsx": "The date reader and summary rules, written by build/sync_shared.js from the scraper. Never edit by hand.",
+    "foundations/shared_with_scraper.jsx": "The date reader and summary rules, written into the page by the join from the scraper's files; only the summary examples are stored in the part.",
     "foundations/text.jsx": "Small text and address tools: folding letters, Markdown and HTML entities, hosts, URL keys, the clipboard.",
     "foundations/isbn.jsx": "ISBN-10/13 conversion, checking and display.",
     "foundations/dates_display.jsx": "How dates and times are shown: date ranges, 'x weeks ago', local stamps."

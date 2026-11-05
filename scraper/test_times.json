@@ -2,7 +2,6 @@
  "node --test scraper/answer_check.test.js": 0.1,
  "node --test scraper/compress.test.js": 3.9,
  "node --test scraper/date.test.js scraper/qc.test.js scraper/sweep_log.test.js scraper/venue_status.test.js scraper/pacing.test.js scraper/sweep_diff.test.js scraper/routine_window.test.js": 8.5,
- "node build/sync_shared.js --check": 0.3,
  "node scraper/doc_budget.js && node scraper/guide_check.js": 0.1,
  "node scraper/fixtures/add_by_link.js": 11.6,
  "node scraper/fixtures/add_by_page.js": 5.4,

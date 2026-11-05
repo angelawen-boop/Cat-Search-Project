@@ -103,14 +103,14 @@ AD-009–010. Her next monthly import is the check (CLAUDE.md §2.2.7).
   enforced:** `--check` and `--apply` refuse a missing, over-length or malformed
   answer and write nothing.
 - **Every answer is checked by one shared copy, `scraper/answer_check.js`** (her decision), which Add by
-  link runs too (written into the app by `sync_shared`): the shape above, and every claim word ("first",
+  link runs too (written into the app by the join): the shape above, and every claim word ("first",
   "only", "largest"…, matched in each venue language) and every number in the description on its page.
   A refused answer is **asked for again with its reason, never edited by hand**; nothing is written until
   all pass. Cases: Pontormo's "first" (a link); in the imported 15 Oct run, Brera's "25 confiscated
   paintings" (the page says 52), the Rijksmuseum's "120 works" and "100 highlights" (no number on either
   page) — imported as swept (her decision: a fix never changes a run already swept). AC- tests.
 - **One prompt for every way in** (her decision): the sweep's opening sentence, its examples line, its examples text
-  (`examplesText`, every pair at full length) and its rules are written into the app by `build/sync_shared.js`; every
+  (`examplesText`, every pair at full length) and its rules are written into the app (the examples re-taken by `build/sync_shared.js`, the rules by the join); every
   build re-takes the examples, so the app never carries an old set. They differ only where the channel forces it (the
   sweep's two-city and English-title batch fields; the app's questions about the page).
 - **Never the title reworded — one rule and one check for every way in** (sweep, Links, Pages, Paste; her decision).
