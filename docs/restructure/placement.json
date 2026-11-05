@@ -23,7 +23,7 @@
    "files": {
     "connections/web.jsx": "Parallel search and fetch, what a fetched page's text is, and when a page is too short to read.",
     "connections/claude.jsx": "Asking Claude and reading its JSON answer.",
-    "connections/store.jsx": "The page's store: the capability, read-only mode, the unread markers."
+    "connections/store.jsx": "Reaching the page's capabilities, and its store: read-only mode, the unread markers."
    }
   },
   {
