@@ -805,20 +805,21 @@ export default function App(){
   // AN IMPORT CHECKS THE CLOUD COPY FIRST (guardCloudBeforeReplace), then
   // replaces the screen and arms saving. If the cloud copy differed and could
   // not be kept as a snapshot, the import stops there and says so.
-  function handleImport(e){const file=e.target.files[0];if(!file)return;if(roStop()){e.target.value="";return;}const reader=new FileReader();reader.onload=async()=>{let d;try{d=JSON.parse(reader.result);}catch{setError("Could not read that file \u2014 it may not be a valid ledger backup.");return;}if(!(d&&Array.isArray(d.rows))){setError("That file didn't contain a ledger (no entries found).");return;}const next=d.rows.map(r=>({...r,watching:r.watching||false})),ign=Array.isArray(d.ignored)?d.ignored:[];let said=false;try{said=await guardCloudBeforeReplace({rows:next,ignored:ign},"import");}catch{return;}loadLedger(next,d.lastRun||null,said?null:"Loaded "+d.rows.length+" exhibitions from your file \u2014 no edits yet.",{ignored:ign});cloudArmed.current=true;setDebug("Loaded "+d.rows.length+" exhibitions from your file. It matches your file, so it's not counted as unsaved until you change something.");};reader.readAsText(file);e.target.value="";}
+  function handleImport(e){const file=e.target.files[0];if(!file)return;if(roStop()){e.target.value="";return;}const reader=new FileReader();reader.onload=async()=>{const got=readLedgerFile(reader.result);if(got.error){setError(got.error);return;}const next=got.rows,ign=got.ignored;let said=false;try{said=await guardCloudBeforeReplace({rows:next,ignored:ign},"import");}catch{return;}loadLedger(next,got.lastRun,said?null:got.note,{ignored:ign});cloudArmed.current=true;setDebug(got.debug);};reader.readAsText(file);e.target.value="";}
 
   // Confirm-before-replace: Import and Reset can wipe the screen in one tap, so
   // they ask first WHENEVER there is unsaved work showing.
   const openFilePicker=()=>fileRef.current?.click();
   function requestImport(){
-    if(rows.length>0&&dirty&&cloudNotSaving){setConfirmBox({text:"Loading replaces everything on screen. The cloud copy is NOT saving, so your changes since your last Save are on screen only and will be lost. Continue?",act:openFilePicker});}
+    const ask=loadQuestion(rows.length,dirty,cloudNotSaving);
+    if(ask){setConfirmBox({text:ask,act:openFilePicker});}
     else openFilePicker();
   }
-  const doReset=async()=>{if(roStop())return;const seed=buildSeed();try{await guardCloudBeforeReplace({rows:seed,ignored},"reset");}catch{return;}cloudArmed.current=true;loadLedger(seed,null,"Starter set loaded ("+seed.length+" exhibitions) \u2014 not saved to a file.");setDebug("Reset: loaded the built-in starter set ("+seed.length+" exhibitions). It isn't in any file \u2014 Save if you want one.");};
+  const doReset=async()=>{if(roStop())return;const seed=resetSeed();try{await guardCloudBeforeReplace({rows:seed.rows,ignored},"reset");}catch{return;}cloudArmed.current=true;loadLedger(seed.rows,null,seed.note);setDebug(seed.debug);};
   // Reset to Seed always asks while a ledger is on screen (her decision).
   function requestReset(){
-    if(rows.length>0&&dirty&&cloudNotSaving){setConfirmBox({text:"This loads the built-in starter set and replaces everything on screen. The cloud copy is NOT saving, so your changes since your last Save are on screen only and will be lost. Continue?",act:doReset});}
-    else if(rows.length>0){setConfirmBox({text:"This loads the seed set and replaces everything on screen. Continue?",act:doReset});}
+    const ask=resetQuestion(rows.length,dirty,cloudNotSaving);
+    if(ask){setConfirmBox({text:ask,act:doReset});}
     else doReset();
   }
 
@@ -1364,7 +1365,7 @@ export default function App(){
               <div key={r.id} style={{display:"flex",gap:10,fontSize:12.5,color:C.ink,padding:"4px 0",alignItems:"baseline",marginTop:4}}>
                 <span style={{minWidth:130,fontWeight:600}}>{MU[r.museumId]?MU[r.museumId].short:r.museumId}</span>
                 <button onClick={()=>setConfirmBox({title:"Reset this search?",yes:"Yes",act:()=>{
-                  commit(rows.map(x=>x.id===r.id?resetCard(x):x));
+                  commit(resetOneCard(rows,r.id));
                   if(recheckSaid&&recheckSaid.id===r.id)setRecheckSaid(null);
                   setResetQuery("");}})} style={{flex:1,textAlign:"left",background:"none",border:"none",color:C.action,fontSize:12.5,fontFamily:"inherit",textDecoration:"underline",cursor:"pointer",padding:0}}>{r.title}</button>
               </div>));

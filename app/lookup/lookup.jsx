@@ -22,6 +22,12 @@ function resetCard(r){
     publisherUrl:null,publisherResult:null,shopUrl:null,shopState:null,shopChange:null,englishCheck:null,originalEdition:null,otherVenueBook:null,alsoVersion:null,
     editions:null,editionPick:null};
 }
+//@piece resetOneCard
+
+// The ledger after Reset cards resets one card: that card cleared, every other row as it was.
+function resetOneCard(rows,id){
+  return rows.map(x=>x.id===id?resetCard(x):x);
+}
 //@piece cardsToReset
 
 // The cards Reset cards can offer: searched ones whose title, catalogue title
