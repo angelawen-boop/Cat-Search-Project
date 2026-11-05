@@ -264,7 +264,7 @@ change code" and "Her tests".
 
 ## Handover record — updated after every step
 
-**Where we are:** 1A, 1B, 2a–2c and the guard done; her test round 1 passed (her checklist, on the test page set up from her app's store). 3a and 3b done. Next: 3c.
+**Where we are:** 1A, 1B, 2a–2c and the guard done; her test round 1 passed (her checklist, on the test page set up from her app's store). 3a, 3b and 3c done. Next: 3d.
 
 **Work items done:** the wider check (Opus; proved on every screen, a mixed review added by the
 coordinator). 1A (Sonnet): the parts hold no copy of the scraper's rules, the join writes them; only
@@ -294,6 +294,12 @@ the read loop with its progress lines handed to the screen, the outcome, what go
 list or boxes after apply or Cancel, chosen files into Pages entries); the screen keeps the buttons,
 inputs, state and drawing. Gates re-run by the coordinator with `--live` (the Links read on live pages),
 side by side identical; 22 of 22.
+3c (Opus): Save now, the automatic save, the check before Load or Reset with its safety copy, the
+one-tab claim and heartbeat, opening the cloud copy and the Cloud Saves drawer (roll back, download) are
+a new part, `saving/cloud_jobs.jsx`, handing back their sentences; the screen keeps its state, buttons
+and the timers that trigger them. The cloud suites' counts unchanged (20, 54, 12, 14). Gates re-run by
+the coordinator, side by side identical; 22 of 22. Noted, not fixed: the Save panel's "File name:"
+preview is still worked out on the screen, without the trim and 80-character cut the save applies.
 
 **Done and proven:** the moving script, the join, the gates and side-by-side check; the proof passes
 (every layer moves with the page identical; all eight breaks caught; the moving script refuses a
