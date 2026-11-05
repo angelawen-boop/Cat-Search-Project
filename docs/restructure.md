@@ -36,7 +36,7 @@ feature parts, each small enough for a session to read whole.
 | 0 | Set-up: every piece into `app/unsorted.jsx`; build, tests and `sync_shared.js` wired to the parts; the docs that say "edit Cat_Watch.jsx" corrected | `claude/restructure-L0` | **done** — page identical, 23 of 23 suites |
 | 1 | Foundations: version, venues, the shared date/summary block, text tools, ISBN, date display | `claude/restructure-L1` | **done** — page identical, 23 of 23 suites |
 | 2 | Connections: the web service, Claude, the store | `claude/restructure-L2` | **done** — page identical, 23 of 23 suites |
-| 3 | Saving and logs: file, seed, cloud ledger, lookup log, sweep log, quarantine | `claude/restructure-L3` | not started |
+| 3 | Saving and logs: file, seed, cloud ledger, lookup log, sweep log, quarantine | `claude/restructure-L3` | **done** — page identical, 23 of 23 suites |
 | 4a | Ledger rules: closing window, tiers, Buy next | `claude/restructure-L4a` | not started |
 | 4b | Periods and themes | `claude/restructure-L4b` | not started |
 | 4c | CSV import and the review cards | `claude/restructure-L4c` | not started |
@@ -126,13 +126,13 @@ it to the coordinator). Commit on the branch with a clear
 
 ## Start here — the next session's job
 
-Layers 0–2 are merged: the foundations and connections are in their parts, everything else is still
-in `app/unsorted.jsx`. Next: layer 3, per "Per layer — who does what". Start each sub-agent with
+Layers 0–3 are merged: foundations, connections, saving and logs are in their parts, everything else
+is still in `app/unsorted.jsx`. Next: layer 4a, per "Per layer — who does what". Start each sub-agent with
 `model: "opus"`, `effort: "medium"`, one at a time (her decision).
 
 ## Handover record — updated after every step
 
-**Where we are:** layers 0–2 merged; layer 3 next.
+**Where we are:** layers 0–3 merged; layer 4a next.
 
 **Done and proven:** the moving script, the join, the gates and side-by-side check; the proof passes
 (every layer moves with the page identical; all eight breaks caught; the moving script refuses a
@@ -144,6 +144,7 @@ Layer 1: 63 pieces moved into six foundation parts; gates re-run by the coordina
 `npm run test:app` 23 of 23; `sync_shared.js --check` passes against the new part.
 Layer 2: 24 pieces into three connection parts; gates re-run by the coordinator, PAGE IDENTICAL; 23 of 23.
 Sub-agents now start without asking within her permission (`.claude/hooks/confirm-subagent.js`).
+Layer 3: 53 pieces into six saving and log parts; gates re-run by the coordinator, PAGE IDENTICAL; 23 of 23.
 
 **Decisions:** bottom-up order (her decision); a sub-agent does each layer's moving and testing, the
 coordinator sets up, re-checks and records (her decision); one sub-agent at a time, no higher than
@@ -151,7 +152,8 @@ Opus at medium effort (her decision); her test only where the page changes
 (page identical → nothing for her to see); placement is the coordinator's call, not hers.
 
 **Open problems:** a sub-agent cannot start the watched test run — the test hook reads the
-coordinator's transcript for the "Expected test run" line — so the coordinator runs gate 2 itself.
+coordinator's transcript for the "Expected test run" line — so the coordinator runs gate 2 itself. The
+hook often refuses the first try even after the line is written; write the line again and retry.
 
 **Her reports:** none yet.
 
