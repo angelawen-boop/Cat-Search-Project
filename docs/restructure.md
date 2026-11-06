@@ -377,7 +377,7 @@ by default, and names it in the end report (her decision); her test only where t
 coordinator's transcript for the "Expected test run" line — so the coordinator runs gate 2 itself. The
 hook often refuses the first try even after the line is written; write the line again and retry.
 
-**Her reports:** round 2 — technically passes (her checklist, Pages and Paste included); nothing different found.
+**Her reports:** round 2 — technically passes (her checklist, Pages and Paste included).
 
 ## When a session ends
 
