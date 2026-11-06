@@ -185,14 +185,14 @@ test('VR-024: in the catalogue lookup, a city on the venue\'s own list is never 
 // ── the publish files them (build/build_app.js) ──
 test('VR-030: a new venue lands beside the last venue of its country, so the register keeps her country order', () => {
   const text = fs.readFileSync(REGISTER, 'utf8');
-  const w = { id: 'occ-pallant-org-uk', name: 'Pallant House Gallery', short: 'Pallant House Chichester', city: 'Chichester', country: 'United Kingdom', english: true, host: 'pallant.org.uk', shop: 'found' };
-  const r = F.file(text, VENUES, { 'occ-pallant-org-uk': w });
-  const after = F.evalRegister(r.text), i = after.findIndex(v => v.id === 'occ-pallant-org-uk');
+  const w = { id: 'occ-test-gallery-uk', name: 'Test Gallery', short: 'Test Gallery York', city: 'York', country: 'United Kingdom', english: true, host: 'test-gallery.uk', shop: 'found' };
+  const r = F.file(text, VENUES, { 'occ-test-gallery-uk': w });
+  const after = F.evalRegister(r.text), i = after.findIndex(v => v.id === 'occ-test-gallery-uk');
   const lastUk = VENUES.filter(v => v.kind === 'manual' && v.country === 'United Kingdom').pop();
   assert.strictEqual(after[i - 1].id, lastUk.id);
   assert.strictEqual(after.length, VENUES.length + 1);
   // Nothing else moves.
-  const strip = vs => JSON.stringify(vs.filter(v => v.id !== 'occ-pallant-org-uk'), (k, v) => v instanceof RegExp ? String(v) : v);
+  const strip = vs => JSON.stringify(vs.filter(v => v.id !== 'occ-test-gallery-uk'), (k, v) => v instanceof RegExp ? String(v) : v);
   assert.strictEqual(strip(after), strip(VENUES));
 });
 
