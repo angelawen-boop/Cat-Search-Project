@@ -181,7 +181,8 @@ new fact.
 
 The app is being moved, bottom up and one layer at a time, into feature parts under `app/` that a session can read whole;
 `Cat_Watch.jsx` becomes the joined output. **She types "Continue the restructure." → read `docs/restructure.md` in full and do
-what its "Start here" says.** While a layer's branch is open, no other app change goes on `main`.
+what its "Start here" says.** Her venue review page (every venue's names, a box for hers, facts to choose), permanent,
+refreshed and filed at each publish: https://claude.ai/artifact/RmSC86pu1rkBxsZDtfdA1J (docs/restructure.md, 4A). While a layer's branch is open, no other app change goes on `main`.
 
 #### 2.2.2 Fixes not yet checked in the cases they were written for
 
@@ -685,5 +686,3 @@ Ideas not yet built — none is open work, and none is proposed unless she raise
   card flipping to show its purchases on the back with an all-purchases view, or both.
 - **Roadmap — Search selected words gets a Back** (her ask): after the results show, Back returns her to the screen
   and spot she searched from, as she left it (`docs/app.md`, "Search selected words").
-- **Roadmap — the venue-name review page made permanent** (her ask): reopened whenever she likes, listing venues that
-  came in by Links, Pages or Paste since her last review, so she renames them (`docs/add_by_link.md`, her rename page).
