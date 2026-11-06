@@ -12,7 +12,8 @@ const OCC_EUROPE_ELSE=["Austria","Denmark","Sweden","Norway","Finland","Portugal
 const OCC_COUNTRY_NAMES={"usa":"United States","us":"United States","united states of america":"United States","uk":"United Kingdom","great britain":"United Kingdom","england":"United Kingdom","scotland":"United Kingdom","wales":"United Kingdom","northern ireland":"United Kingdom","the netherlands":"Netherlands","holland":"Netherlands","czech republic":"Czechia","deutschland":"Germany"};
 //@piece occCountry
 
-const occCountry=id=>{ const k=String((MU[id]||{}).country||"").trim().toLowerCase(); return OCC_COUNTRY_NAMES[k]||String((MU[id]||{}).country||"").trim(); };
+// A venue's country as MU shows it, else its register entry's (a venue not yet shown).
+const occCountry=id=>{ const c=String((MU[id]||REG[id]||{}).country||"").trim(); return OCC_COUNTRY_NAMES[c.toLowerCase()]||c; };
 //@piece OCC_EUROPE_TLD
 
 // "us", "eu" or "other": the three chips that hold the venues with no chip of their own.
@@ -228,8 +229,9 @@ const bareHost=h=>String(h||"").toLowerCase().replace(/^www\./,"");
 // the English name alone found Brussels', "KMSKA" beside it found Antwerp's shop. The card name is
 // the short one. `v`: the venue's record (recordOf), or Claude's facts.
 function venueSearchName(id,v){
-  const s=v||{};
-  let name=String(s.name||"").trim();
+  const s=v||{}, e=REG[id];
+  // Her names are never replaced by Claude's (names.hers).
+  let name=String((e&&e.names.hers&&e.names.full)||s.name||"").trim();
   for(const x of [...(s.aka||[]),s.city,s.country]) if(x&&!foldText(name).includes(foldText(x)))name+=" "+x;
   return name.trim();
 }
@@ -258,42 +260,6 @@ function registerUnseenOccasional(rows){
     KNOWN_VENUES.add(r.museumId);
   }
 }
-//@piece STORE_FACTS
-
-// The fields of a waiting-room record that its register entry also holds, and where.
-const STORE_FACTS={name:e=>e.names.full,short:e=>e.names.card,aka:e=>e.names.aka,city:e=>e.city,country:e=>e.country,english:e=>e.english};
-//@piece sameRecord
-
-// Two records alike, whatever the order of their fields.
-const sameRecord=(a,b)=>{ const c=x=>x===undefined?"null":JSON.stringify(x,(k,v)=>v&&typeof v==="object"&&!Array.isArray(v)?Object.fromEntries(Object.keys(v).sort().map(j=>[j,v[j]])):v); return c(a)===c(b); };
-//@piece recordOf
-
-// A manual-import venue's record: the register's facts over the record its entry was filed from (`filed`),
-// and over both each field of the waiting record `w` that has changed since it was filed (her latest word).
-function recordOf(e,w){
-  const filed=e.filed||{}, out={...filed};
-  for(const [k,f] of Object.entries(STORE_FACTS)){ const x=f(e); if(x!=null)out[k]=x; }
-  for(const k of Object.keys(w||{})) if(!sameRecord(w[k],filed[k]))out[k]=w[k];
-  return out;
-}
-//@piece heldByRegister
-
-// A waiting record the register already holds: the one its entry was filed from, or the entry's own record.
-const heldByRegister=(id,w)=>!!REG[id]&&REG[id].kind==="manual"&&(sameRecord(w,REG[id].filed)||sameRecord(w,recordOf(REG[id])));
-//@piece occasionalOver
-
-// The register's manual-import venues the store has met, each with its waiting record over it, then the
-// venues only the waiting room holds.
-function occasionalOver(w){
-  const out={};
-  for(const e of VENUE_REGISTER) if(e.kind==="manual"&&(e.filed||(w&&w[e.id])))out[e.id]=recordOf(e,w&&w[e.id]);
-  for(const [id,v] of Object.entries(w||{})) if(!REG[id])out[id]=v;
-  return out;
-}
-//@piece herVenue
-
-// The register holds her decisions for this venue: her names for it, or its own reading rules.
-const herVenue=id=>{ const e=REG[id]; return !!e&&(e.names.hers||!!e.read.link||e.read.sites.length>0||!!e.shop.catalogues); };
 //@piece readOccasional
 
 // The venues met by Links, Pages and Paste: each register entry the store has met (recordOf), and over
@@ -323,3 +289,40 @@ async function tidyOccasional(){
   if(!n)return 0;
   try{ await storeWrite(OCC_DOC,{venues:kept,updatedAt:new Date().toISOString()},{part:UNREAD_OCC}); return n; }catch{ return 0; }
 }
+//@piece STORE_FACTS
+
+// The fields of a waiting-room record that its register entry also holds, and where.
+const STORE_FACTS={name:e=>e.names.full,short:e=>e.names.card,aka:e=>e.names.aka,city:e=>e.city,country:e=>e.country,english:e=>e.english};
+//@piece sameRecord
+
+// Two records alike, whatever the order of their fields.
+const sameRecord=(a,b)=>{ const c=x=>x===undefined?"null":JSON.stringify(x,(k,v)=>v&&typeof v==="object"&&!Array.isArray(v)?Object.fromEntries(Object.keys(v).sort().map(j=>[j,v[j]])):v); return c(a)===c(b); };
+//@piece recordOf
+
+// A manual-import venue's record: the register's facts over the record its entry was filed from (`filed`),
+// and over both each field of the waiting record `w` that has changed since it was filed (her latest word).
+// Her names (names.hers) are never replaced by a name Claude gave.
+function recordOf(e,w){
+  const filed=e.filed||{}, out={...filed};
+  for(const [k,f] of Object.entries(STORE_FACTS)){ const x=f(e); if(x!=null)out[k]=x; }
+  for(const k of Object.keys(w||{})) if(!sameRecord(w[k],filed[k])&&!(e.names.hers&&(k==="name"||k==="short")&&out[k]!=null))out[k]=w[k];
+  return out;
+}
+//@piece heldByRegister
+
+// A waiting record the register already holds: the one its entry was filed from, or the entry's own record.
+const heldByRegister=(id,w)=>!!REG[id]&&REG[id].kind==="manual"&&(sameRecord(w,REG[id].filed)||sameRecord(w,recordOf(REG[id])));
+//@piece occasionalOver
+
+// The register's manual-import venues the store has met, each with its waiting record over it, then the
+// venues only the waiting room holds.
+function occasionalOver(w){
+  const out={};
+  for(const e of VENUE_REGISTER) if(e.kind==="manual"&&(e.filed||(w&&w[e.id])))out[e.id]=recordOf(e,w&&w[e.id]);
+  for(const [id,v] of Object.entries(w||{})) if(!REG[id])out[id]=v;
+  return out;
+}
+//@piece herVenue
+
+// The register holds her decisions for this venue: her names for it, or its own reading rules.
+const herVenue=id=>{ const e=REG[id]; return !!e&&(e.names.hers||!!e.read.link||e.read.sites.length>0||!!e.shop.catalogues); };

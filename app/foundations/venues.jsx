@@ -24,7 +24,8 @@ const linkRulesOf=e=>!e||!e.read.link?null:e.read.places.length?{...e.read.link,
 function venueView(e,rec,fallback){
   const n=e?e.names:{}, sh=e?e.shop:{}, rd=e?e.read:{}, s=rec||{};
   const manual=!e||e.kind==="manual";
-  const name=s.name||n.full||fallback||null, card=s.short||n.card||name;
+  // Her names (names.hers) are never replaced by a name Claude gave on the record.
+  const name=(n.hers&&n.full)||s.name||n.full||fallback||null, card=(n.hers&&n.card)||s.short||n.card||name;
   const en=s.english!=null?s.english:e?e.english:null;
   const v={id:e?e.id:s.id,card,chip:n.chip||null,group:n.group||null,name,nameInEnglish:n.inEnglish||null,
     aka:s.aka||n.aka||[],lookupName:n.lookup||card,replaced:n.replaced||[],hers:!!n.hers,

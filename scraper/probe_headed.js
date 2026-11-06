@@ -95,22 +95,12 @@ const DEBUG_PORT = 9222;
 //           Cloudflare serves it from cache, so it never reaches the origin and
 //           proves nothing about whether we are let in.
 //   morgan  current.
-const TARGETS = [
-  { code: 'moma',   base: 'https://www.moma.org',           listing: '/calendar/exhibitions',
-    selector: 'a[href*="/calendar/exhibitions/"]',
-    isNav: href => /\/calendar\/exhibitions\/?$/.test(href)
-                || /\/calendar\/exhibitions\/history\/?$/.test(href) },
-
-  { code: 'brit',   base: 'https://www.britishmuseum.org',  listing: '/exhibitions-events/past-exhibitions',
-    selector: 'a[href*="/exhibitions-events/"]',
-    isNav: href => /\/exhibitions-events\/?$/.test(href)
-                || /\/exhibitions-events\/past-exhibitions\/?$/.test(href) },
-
-  { code: 'morgan', base: 'https://www.themorgan.org',      listing: '/exhibitions/current',
-    selector: 'a[href*="/exhibitions/"]',
-    isNav: href => /\/exhibitions\/(current|upcoming|past)\/?$/.test(href)
-                || /\/exhibitions\/?$/.test(href) },
-];
+const { VENUES } = require('./sweep_prototype.js');
+const target = (code, ctx) => {
+  const v = VENUES[code], pg = v.pages.find(p => p.ctx === ctx);
+  return { code, base: v.base, listing: pg.path, selector: pg.selector || v.selector, isNav: v.isNav || (() => false) };
+};
+const TARGETS = [target('moma', 'current/upcoming'), target('brit', 'past'), target('morgan', 'current')];
 
 // Three venues, one listing and one detail page each. Twelve across both runs.
 const MAX_VISITS = 6;

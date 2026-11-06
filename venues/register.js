@@ -129,10 +129,10 @@ const VENUES = [
     sweep: { exBase: "https://www.acquavellagalleries.com/exhibitions/", listUrl: "https://www.acquavellagalleries.com/exhibitions" },
     filed: null },
 
-  // Shopify, like Acquavella's. Chip "Levy", cards "Lévy Gorvy Dayan" (her decision).
+  // Shopify, like Acquavella's. Chip and cards "Levy" (her decision); its galleries are read.places.
   { id: "lgd", kind: "swept",
-    names: { card: "L\u00e9vy Gorvy Dayan", chip: "Levy", group: null, full: "L\u00e9vy Gorvy Dayan", inEnglish: null, aka: [], lookup: "Levy", replaced: [], hers: true },
-    city: "New York / London", country: null, english: true, language: null,
+    names: { card: "Levy", chip: "Levy", group: null, full: "L\u00e9vy Gorvy Dayan", inEnglish: null, aka: [], lookup: "Levy", replaced: [], hers: true },
+    city: null, country: null, english: true, language: null,
     shop: { home: "https://shop.levygorvydayan.com/", catalogues: "https://shop.levygorvydayan.com/collections/all", search: "https://shop.levygorvydayan.com/search?q=", unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
     read: { link: null, sites: [], dateOrder: null, spacedYear: false, places: ["New York", "London"], placeOwner: "L\u00e9vy Gorvy Dayan", subtitleUnderHeading: false },
     sweep: { exBase: "https://www.levygorvydayan.com/exhibitions/", listUrl: "https://www.levygorvydayan.com/exhibitions" },
@@ -140,7 +140,7 @@ const VENUES = [
 
   // Mia's page titles end "–– Minneapolis Institute of Art".
   { id: "occ-new-artsmia-org", kind: "manual",
-    names: { card: "Mia", chip: "Mia", group: null, full: "Minneapolis Institute of Art", inEnglish: null, aka: [], lookup: "Mia", replaced: [], hers: true },
+    names: { card: "Minneapolis", chip: "Mia", group: null, full: "Minneapolis Institute of Art", inEnglish: null, aka: [], lookup: "Mia", replaced: ["Mia"], hers: true },
     city: null, country: null, english: true, language: null,
     shop: { home: null, catalogues: null, search: null, unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
     read: { link: { titleDrop: /\s+[-–—]+\s+Minneapolis Institute of Art$/i }, sites: [], dateOrder: null, spacedYear: false, places: [], placeOwner: null, subtitleUnderHeading: false },
@@ -207,7 +207,7 @@ const VENUES = [
     filed: { addedAt: "2026-10-13T12:48:23.190Z", confirmed: true, english: true, finder: 3, foundBy: "a search", host: "www.nationalgalleries.org", id: "occ-nationalgalleries-org", name: "National Galleries of Scotland", pageShop: "https://shop.nationalgalleries.org/", shelfKind: "books", shop: "found", shopCatalogues: "https://shop.nationalgalleries.org/collection-exhibitions/exhibition-books/", shopHome: "https://shop.nationalgalleries.org/", shopSearch: "https://shop.nationalgalleries.org/search?q=", turnedDown: [], why: null } },
 
   { id: "louvre", kind: "swept",
-    names: { card: "Louvre", chip: "Louvre", group: null, full: "Louvre Museum", inEnglish: null, aka: [], lookup: "Louvre", replaced: [], hers: true },
+    names: { card: "Louvre", chip: "Louvre", group: null, full: "Louvre", inEnglish: null, aka: [], lookup: "Louvre", replaced: [], hers: true },
     city: "Paris", country: null, english: false, language: "French",
     shop: { home: "https://boutique.louvre.fr/en/", catalogues: "https://boutique.louvre.fr/en/products/400001-exhibition-catalogues/", search: "https://boutique.louvre.fr/en/search/products/?q=", unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
     read: { link: { title: "pieces", minLine: 60, skip: /\bclosed\b|remain open|apologis|pleasant visit/i }, sites: [], dateOrder: null, spacedYear: false, places: [], placeOwner: null, subtitleUnderHeading: false },
@@ -236,7 +236,7 @@ const VENUES = [
 
   // Chantilly (Musée Condé): chip "Chantilly" after Jacquemart; its cards keep the store's name (her decision).
   { id: "occ-chateaudechantilly-fr", kind: "manual",
-    names: { card: "Chantilly Mus\u00e9e Cond\u00e9", chip: "Chantilly", group: null, full: "Mus\u00e9e Cond\u00e9, Ch\u00e2teau de Chantilly", inEnglish: null, aka: ["Ch\u00e2teau de Chantilly", "Domaine de Chantilly"], lookup: "Chantilly Mus\u00e9e Cond\u00e9", replaced: [], hers: false },
+    names: { card: "Mus\u00e9e Cond\u00e9 Chantilly", chip: "Chantilly", group: null, full: "Mus\u00e9e Cond\u00e9, Ch\u00e2teau de Chantilly", inEnglish: null, aka: ["Ch\u00e2teau de Chantilly", "Domaine de Chantilly"], lookup: "Chantilly Mus\u00e9e Cond\u00e9", replaced: ["Chantilly Mus\u00e9e Cond\u00e9"], hers: true },
     city: "Chantilly", country: "France", english: false, language: null,
     shop: { home: null, catalogues: null, search: null, unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
     read: { link: null, sites: [], dateOrder: null, spacedYear: false, places: [], placeOwner: null, subtitleUnderHeading: false },
@@ -275,7 +275,7 @@ const VENUES = [
   // (DATE_ORDER, dates.js).
   // Its all-number dates: "6/9/2026 - 9/27/2026".
   { id: "occ-museodelprado-es", kind: "manual",
-    names: { card: "Prado Madrid", chip: "Prado", group: null, full: "Museo Nacional del Prado", inEnglish: null, aka: ["Prado", "Museo del Prado"], lookup: "Museo Nacional del Prado", replaced: [], hers: true },
+    names: { card: "Prado", chip: "Prado", group: null, full: "Museo Nacional del Prado", inEnglish: null, aka: ["Prado", "Museo del Prado"], lookup: "Museo Nacional del Prado", replaced: ["Prado Madrid"], hers: true },
     city: "Madrid", country: "Spain", english: false, language: null,
     shop: { home: null, catalogues: null, search: null, unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
     read: { link: null, sites: [], dateOrder: "month", spacedYear: false, places: [], placeOwner: null, subtitleUnderHeading: false },
@@ -528,7 +528,7 @@ const VENUES = [
     filed: { addedAt: "2026-10-29T10:04:35.166Z", aka: ["Getty Museum", "Getty Center"], city: "Los Angeles", confirmed: true, country: "United States", english: true, englishPicked: false, finder: 3, foundBy: "the shop's list of sections", gallery: false, host: "www.getty.edu", id: "occ-getty-edu", name: "J. Paul Getty Museum", pageShop: "http://shop.getty.edu/", searchRule: 2, shelfKind: "catalogues", shop: "found", shopCatalogues: "https://shop.getty.edu/collections/exhibition-catalogues", shopEnglishUnread: null, shopHome: "https://shop.getty.edu/", shopSearch: "https://shop.getty.edu/search?q=", short: "Getty Museum", turnedDown: ["https://shop.getty.edu/collections/current-exhibition-catalogues", "https://shop.getty.edu/collections/current-exhibition-catalogues?hp-2nd-level-nav=1"], why: null } },
 
   { id: "occ-guggenheim-org", kind: "manual",
-    names: { card: "Guggenheim New York", chip: null, group: null, full: "Solomon R. Guggenheim Museum", inEnglish: null, aka: ["Guggenheim Museum", "The Guggenheim"], lookup: "Guggenheim New York", replaced: [], hers: false },
+    names: { card: "Guggenheim", chip: null, group: null, full: "Solomon R. Guggenheim Museum", inEnglish: null, aka: ["Guggenheim Museum", "The Guggenheim"], lookup: "Guggenheim New York", replaced: ["Guggenheim New York"], hers: true },
     city: "New York", country: "United States", english: true, language: null,
     shop: { home: null, catalogues: null, search: null, unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
     read: { link: null, sites: [], dateOrder: null, spacedYear: false, places: [], placeOwner: null, subtitleUnderHeading: false },
@@ -538,7 +538,7 @@ const VENUES = [
   // Moretti (her decision, Moretti only): the place after " : " leaves the title ("… : Monaco", "… : New York,
   // Sotheby's"); its description is typed in capitals (capsText); the cookie panel ends the passage.
   { id: "occ-morettigallery-com", kind: "manual",
-    names: { card: "Moretti Fine Art", chip: null, group: null, full: "Moretti Fine Art", inEnglish: null, aka: [], lookup: "Moretti Fine Art", replaced: [], hers: false },
+    names: { card: "Moretti Fine Art NY", chip: null, group: null, full: "Moretti Fine Art", inEnglish: null, aka: [], lookup: "Moretti Fine Art", replaced: ["Moretti Fine Art"], hers: true },
     city: "New York", country: "United States", english: true, language: null,
     shop: { home: null, catalogues: null, search: null, unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
     read: { link: { titleDrop: /\s+:\s+[^:]+$/, capsText: true, until: /^Manage cookies$/ }, sites: [], dateOrder: null, spacedYear: false, places: [], placeOwner: null, subtitleUnderHeading: false },
@@ -689,7 +689,7 @@ const VENUES = [
 
   // Her names for venues Claude named (her review of link venues); notCard is the name Claude gave.
   { id: "occ-centrepompidou-fr", kind: "manual",
-    names: { card: "Centre Pompidou", chip: null, group: null, full: "Centre Pompidou", inEnglish: null, aka: ["Centre national d'art et de culture Georges-Pompidou"], lookup: "Centre Pompidou", replaced: ["Pompidou Paris"], hers: true },
+    names: { card: "Pompidou", chip: null, group: null, full: "Centre Pompidou", inEnglish: null, aka: ["Centre national d'art et de culture Georges-Pompidou"], lookup: "Centre Pompidou", replaced: ["Pompidou Paris", "Centre Pompidou"], hers: true },
     city: "Paris", country: "France", english: false, language: null,
     shop: { home: null, catalogues: null, search: null, unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
     read: { link: null, sites: [], dateOrder: null, spacedYear: false, places: [], placeOwner: null, subtitleUnderHeading: false },
@@ -827,7 +827,7 @@ const VENUES = [
   // next line (headingCommaJoin; "Diane Arbus Photographs," over "1956-1971").
   // Its all-number dates: "11.10.24 - 27.4.25".
   { id: "occ-louisiana-dk", kind: "manual",
-    names: { card: "Denmark Louisiana", chip: null, group: null, full: "Louisiana Museum of Modern Art", inEnglish: null, aka: ["Louisiana", "Louisiana Museum for Moderne Kunst"], lookup: "Louisiana Museum of Modern Art", replaced: ["Louisiana Humleb\u00e6k"], hers: true },
+    names: { card: "Louisiana Denmark", chip: null, group: null, full: "Louisiana Museum of Modern Art", inEnglish: null, aka: ["Louisiana", "Louisiana Museum for Moderne Kunst"], lookup: "Louisiana Museum of Modern Art", replaced: ["Louisiana Humleb\u00e6k", "Denmark Louisiana"], hers: true },
     city: "Humleb\u00e6k", country: "Denmark", english: false, language: null,
     shop: { home: null, catalogues: null, search: null, unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
     read: { link: { listingPage: /^Past exhibitions$/i, headingCommaJoin: true }, sites: [], dateOrder: "day", spacedYear: false, places: [], placeOwner: null, subtitleUnderHeading: false },

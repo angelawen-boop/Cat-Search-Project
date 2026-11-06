@@ -1308,14 +1308,16 @@ test('A-009: a title broken after a colon is rejoined, and a blurb still is not'
 // and its met and artic rows were nothing but refusals sitting in the stitched
 // file beside the 171 real rows her own machine had for the same two venues.
 
-const SWEEP_SRC = require('fs').readFileSync(
+const SWEEP_FILE = require('fs').readFileSync(
   require('path').join(__dirname, 'sweep_prototype.js'), 'utf8');
+// The VENUES block only: a recipe is a key at two spaces inside it.
+const SWEEP_SRC = SWEEP_FILE.slice(SWEEP_FILE.indexOf('\nconst VENUES = {'), SWEEP_FILE.indexOf('\nconst VENUE_ORDER = '));
 
 // A HYPHENATED KEY IS QUOTED, and the first version of this fixture did not
 // allow for that: it saw 19 recipes, not 21, and reported "tate-modern has no
 // recipe" for a venue that has one. A fixture that cannot see a venue cannot
 // check it — which is the same silence as no fixture at all.
-const RECIPE_KEY = /\n  '?([a-z-]+)'?: \{\n    name: /g;
+const RECIPE_KEY = /\n  '?([a-z-]+)'?: \{\n/g;
 
 const routeOf = code => {
   // Read the recipe's own text rather than importing the scraper, which would
@@ -1323,7 +1325,7 @@ const routeOf = code => {
   const at = SWEEP_SRC.search(new RegExp("\\n  '?" + code + "'?: \\{"));
   assert.ok(at > -1, code + ' has no recipe');
   const rest = SWEEP_SRC.slice(at + 1);
-  const next = rest.search(/\n  '?[a-z-]+'?: \{\n    name: /);
+  const next = rest.search(/\n  '?[a-z-]+'?: \{\n/);
   const block = next > -1 ? rest.slice(0, next) : rest;
   return /route:\s*'local'/.test(block) ? 'home' : /route:\s*'none'/.test(block) ? 'none' : 'container';
 };
@@ -1366,10 +1368,10 @@ test('R-005: moma says out loud that it needs a visible browser', () => {
   // next session takes it as evidence the venue is wired.
   const at = SWEEP_SRC.indexOf("\n  moma: {");
   const rest = SWEEP_SRC.slice(at + 1);
-  const next = rest.search(/\n  '?[a-z-]+'?: \{\n    name: /);
+  const next = rest.search(/\n  '?[a-z-]+'?: \{\n/);
   const block = next > -1 ? rest.slice(0, next) : rest;
   assert.match(block, /headed:\s*true/, 'moma should be marked headed');
-  assert.match(SWEEP_SRC, /VENUES\[c\]\.headed/,
+  assert.match(SWEEP_FILE, /VENUES\[c\]\.headed/,
     'the run must READ the headed flag, not merely carry it');
 
   // Her scope: current and upcoming only. The archive is not swept.
@@ -1382,7 +1384,7 @@ test('R-005: moma says out loud that it needs a visible browser', () => {
 test('R-006: moma names its blurb container and drops installations', () => {
   const at = SWEEP_SRC.indexOf("\n  moma: {");
   const rest = SWEEP_SRC.slice(at + 1);
-  const next = rest.search(/\n  '?[a-z-]+'?: \{\n    name: /);
+  const next = rest.search(/\n  '?[a-z-]+'?: \{\n/);
   const block = next > -1 ? rest.slice(0, next) : rest;
 
   // Read from the pages she saved, not guessed: #description holds the
@@ -1450,7 +1452,7 @@ test('R-024: the Ashmolean is added by link only — no machine sweeps it, and t
 const morganBlock = (() => {
   const at = SWEEP_SRC.indexOf("\n  morgan: {");
   const rest = SWEEP_SRC.slice(at + 1);
-  const next = rest.search(/\n  '?[a-z-]+'?: \{\n    name: /);
+  const next = rest.search(/\n  '?[a-z-]+'?: \{\n/);
   return next > -1 ? rest.slice(0, next) : rest;
 })();
 
@@ -1477,7 +1479,7 @@ test('MG-002: and the pairs move on their own as the years do', () => {
   assert.strictEqual(pages[0].path, '/exhibitions/past/2026-2027');
   assert.strictEqual(pages.at(-1).path, '/exhibitions/past/2023-2024',
     'the floor pair is still asked for — the floor does not move');
-  assert.doesNotMatch(SWEEP_SRC, /['"]\/exhibitions\/past\/20\d\d-20\d\d['"]/,
+  assert.doesNotMatch(SWEEP_FILE, /['"]\/exhibitions\/past\/20\d\d-20\d\d['"]/,
     'no year pair may be written into the file by hand');
 });
 

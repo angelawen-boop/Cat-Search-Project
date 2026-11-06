@@ -756,8 +756,8 @@ const {
 // Every venue's names, city and galleries (venues/register.js): the recipes below hold only how each is swept.
 const REGISTER = require('../venues/register.js').VENUES;
 const entryOf = code => REGISTER.find(v => v.id === code) || null;
-// A venue as the log and the status table name it: its full name and city.
-const venueLabel = code => { const e = entryOf(code); return e ? [e.names.full, e.city].filter(Boolean).join(', ') : code; };
+// A venue as the log and the status table name it: its full name and city (or its galleries).
+const venueLabel = code => { const e = entryOf(code); return e ? [e.names.full, e.city || e.read.places.join(' and ')].filter(Boolean).join(', ') : code; };
 
 function afterLookback(endDateStr, floor = LOOKBACK) {
   // If no end date, include (we don't know when it ended)
