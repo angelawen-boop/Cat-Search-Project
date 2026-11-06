@@ -858,9 +858,10 @@ export default function App(){
     const tierOf=r=>{let t=tiers.get(r);if(t===undefined){t=tierFor(r);tiers.set(r,t);}return t;};
     const newestRun=labelledF?rows.reduce((m,r)=>r.labelledAt&&r.labelledAt>m?r.labelledAt:m,""):"";
     let out=rows.filter(r=>{
-      // The search narrows; it does not end the check, so every other filter applies. Accents
-      // count as plain letters both ways ("Bocklin" finds Böcklin; her ask).
-      if(sq&&![r.title,r.summary,MU[r.museumId]?.name].some(t=>foldText(t).includes(sq)))return false;
+      // The search narrows; it does not end the check, so every other filter applies. It reads what the
+      // card prints: title, description, the venue's card name (her decision). Accents count as plain
+      // letters both ways ("Bocklin" finds Böcklin; her ask).
+      if(sq&&![r.title,r.summary,MU[r.museumId]?.card].some(t=>foldText(t).includes(sq)))return false;
       // Dismissed narrows too. A search still finds a dismissed show unless Dismissed
       // is on.
       if(dismissedOnly){ if(r.interested)return false; }

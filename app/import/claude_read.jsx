@@ -18,7 +18,7 @@ const SHORT_NAME_EXAMPLES=()=>VENUE_REGISTER.filter(e=>e.kind==="manual"&&e.name
 // Her renames of Claude's card names (`notCard`), each with the name Claude gave: so Claude learns her style.
 // The full name is the entry's, else the one Claude gave, as the store holds it (MU).
 const SHORT_NAME_RENAMES=()=>VENUE_REGISTER.filter(e=>e.kind==="manual"&&e.names.hers&&e.names.replaced.length)
-  .map(e=>"for "+JSON.stringify(e.names.full||e.names.lookup||e.names.card)+": "+JSON.stringify(e.names.card)+", not "+e.names.replaced.map(x=>JSON.stringify(x)).join(" or "));
+  .map(e=>"for "+JSON.stringify(e.names.full||e.names.card)+": "+JSON.stringify(e.names.card)+", not "+e.names.replaced.map(x=>JSON.stringify(x)).join(" or "));
 //@piece linkItem
 
 // ONE REQUEST FOR THE WHOLE IMPORT (her decision): every page of a Links, Pages or Paste import goes

@@ -12,6 +12,10 @@ const REG=Object.fromEntries(VENUE_REGISTER.map(e=>[e.id,e]));
 
 // How Links, Pages and Paste read a venue's pages: its link options, with its galleries (Acquavella's places).
 const linkRulesOf=e=>!e||!e.read.link?null:e.read.places.length?{...e.read.link,places:e.read.places}:e.read.link;
+//@piece groupChip
+
+// A group's chip label, written once, on its first venue (names.chip true on the others).
+const groupChip=g=>{ const e=VENUE_REGISTER.find(x=>x.names.group===g&&typeof x.names.chip==="string"); return e?e.names.chip:null; };
 //@piece venueView
 
 // A venue as every part reads it (MU): its register entry `e` and, for a manual-import venue, the record
@@ -27,8 +31,8 @@ function venueView(e,rec,fallback){
   // Her names (names.hers) are never replaced by a name Claude gave on the record.
   const name=(n.hers&&n.full)||s.name||n.full||fallback||null, card=(n.hers&&n.card)||s.short||n.card||name;
   const en=s.english!=null?s.english:e?e.english:null;
-  const v={id:e?e.id:s.id,card,chip:n.chip||null,group:n.group||null,name,nameInEnglish:n.inEnglish||null,
-    aka:s.aka||n.aka||[],lookupName:n.lookup||card,replaced:n.replaced||[],hers:!!n.hers,
+  const v={id:e?e.id:s.id,card,chip:n.chip===true?groupChip(n.group):n.chip||null,group:n.group||null,name,nameInEnglish:n.inEnglish||null,
+    aka:s.aka||n.aka||[],lookupName:name,replaced:n.replaced||[],hers:!!n.hers,
     city:s.city||(e&&e.city)||null,country:s.country||(e&&e.country)||null,english:en===false?false:undefined,language:(e&&e.language)||null,
     linkRead:linkRulesOf(e),sites:rd.sites||[],places:rd.places||[],subtitleUnderHeading:!!rd.subtitleUnderHeading,
     inStock:sh.inStock||null,shopQueries:sh.queries&&sh.queries.length?sh.queries:null,shopNamed:sh.named||null,rankAsOwn:sh.rankAsOwn||[],

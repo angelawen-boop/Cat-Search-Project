@@ -745,6 +745,7 @@
   "VENUE_REGISTER": "foundations/venues.jsx",
   "REG": "foundations/venues.jsx",
   "linkRulesOf": "foundations/venues.jsx",
+  "groupChip": "foundations/venues.jsx",
   "venueView": "foundations/venues.jsx",
   "venueNames": "foundations/venues.jsx",
   "CHIP_RANK": "import/link_venues.jsx",
