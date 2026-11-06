@@ -136,6 +136,35 @@ proves it (below).
   Links/Pages/Paste parts (the Read job, its progress reports, the pending lists); 3c → the cloud part
   (Save now, the automatic save, the safety copies, the one-tab claim and heartbeat); 3d → the saving
   part (Reset and what it loads and writes).
+- **4A — the venue register.** Branch `claude/restructure-4a`.
+  - **The one home:** `venues/register.js` at the repo root, data only: an ordered list (the order IS her
+    venue order; Occasional venues keep their computed country order), one entry per venue, every entry
+    the same field layout — id, kind (swept or manual), names (card, chip label, chip group, full name in
+    its own language, English name, other names, the lookup's search name, Claude's names she replaced),
+    city, country, English-speaking, shop (home, catalogue shelf, search, the finder's findings and her
+    confirmations), page-reading rules (link options, other sites, date order, Acquavella's places),
+    sweep addresses. Plain JS (it holds patterns), required by the scraper; the join writes it into
+    `Cat_Watch.jsx` as it writes the scraper's rules (1A) — the app part holds only a directive line.
+  - **Deleted:** `MUSEUMS`' facts, `LINK_VENUES`, `OCC_COUNTRY`, `VENUE_ORDER`, the scraper's venue names
+    and cities, `DATE_ORDER`/`SPACED_YEAR_VENUES`' venue lists, `TRAVELLING_LOCATIONS`, `VENUE_LANGUAGE`/
+    `CATALOGUE_WORDS`' venue lists, the shop field lists (one list, from the register), the test files' own
+    venue copies — each reads the register. Every "which copy wins" rule (`occVenue`'s, `occCountry`'s) goes.
+    A venue's set of names is built by one function.
+  - **The waiting room:** the store's `venues/occasional`. What the app learns there shows at once, over
+    the register's entry (her latest word). When a published version opens, it clears each waiting
+    entry the register now holds exactly. `node build/file_venues.js <store file>` files waiting
+    entries into the register (code: one right answer); the publish steps (docs/publishing.md) run it,
+    refresh the review page's list, file her names and picks from it, and tell her the one-line FYI.
+  - **The review page** (`https://claude.ai/artifact/RmSC86pu1rkBxsZDtfdA1J`, permanent): every venue's
+    names, city, a box for hers (store `names/<id>`), and "To choose" (store `picks/<key>`). Its list is
+    rebuilt from the register at each publish; her entries are filed into the register then.
+  - **What she will see change:** her chosen name wherever a venue is named (chips keep their labels);
+    her picks; a manual venue's city passed on. Nothing in her ledger.
+  - **Two build checks:** a venue fact written outside the register fails; a sentence, list or rule
+    written twice fails.
+  - **The first move:** the register built from the code, the store snapshot
+    (`docs/store_backup_2026-11-06/`) and the scraper; after her test and publish, the leftover store
+    records cleared once (her yes, given).
 - **5.** Written here once 4 is done, from what is left: which screens become their own
   components, what each holds, what passes between them.
 
@@ -332,7 +361,7 @@ change code" and "Her tests".
 
 ## Handover record — updated after every step
 
-**Where we are:** 1A, 1B, 2a–2c and the guard done; her test round 1 passed (her checklist, on the test page set up from her app's store). 3a–3d done. Her test round 2 passed technically: her checklist plus Import by Pages and by Paste (which the session had left off the checklist). Her judgement: the round only proves the cut-up-and-rejoined code behaves the same; the substantive work, one copy of every fact, had not begun. Next: 4A.
+**Where we are:** 4A under way: her decisions taken, design above, review page published (her renames and picks pending). Before that: 1A, 1B, 2a–2c and the guard done; her test round 1 passed (her checklist, on the test page set up from her app's store). 3a–3d done. Her test round 2 passed technically: her checklist plus Import by Pages and by Paste (which the session had left off the checklist). Her judgement: the round only proves the cut-up-and-rejoined code behaves the same; the substantive work, one copy of every fact, had not begun. Next: 4A.
 
 **Work items done:** the wider check (Opus; proved on every screen, a mixed review added by the
 coordinator). 1A (Sonnet): the parts hold no copy of the scraper's rules, the join writes them; only
