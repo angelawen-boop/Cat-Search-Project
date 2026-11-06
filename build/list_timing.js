@@ -5,7 +5,7 @@
  * Save name (docs/scalability.md). Not a test: numbers vary run to run; compare two builds
  * on the same machine.
  *
- *   node build/build_app.js && node build/list_timing.js [build/dist/index.html] [--rows 2000] [--slow 4]
+ *   node build/build_app.js --local && node build/list_timing.js [build/dist/index.html] [--rows 2000] [--slow 4]
  *
  * --slow slows the CPU (4 ≈ a phone). React comes from cdnjs, the page's own source.
  */

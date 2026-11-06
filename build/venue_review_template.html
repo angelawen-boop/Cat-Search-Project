@@ -1,0 +1,75 @@
+<title>Art Watch Venues</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter+Tight:wght@400;500;600&display=swap">
+<style>
+:root{--bg:#f6f5f1;--surface:#fffefb;--ink:#23211d;--soft:#6b665d;--rule:#dedad1;--accent:#2f4a3f;--done:#2f6b4a;
+  --display:"Fraunces",Georgia,serif;--body:"Inter Tight",system-ui,-apple-system,Segoe UI,sans-serif;color-scheme:light}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#1a1c1a;--surface:#222522;--ink:#ecebe6;--soft:#a3a196;--rule:#3a3d38;--accent:#9cc4ae;--done:#8fd1a8;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#1a1c1a;--surface:#222522;--ink:#ecebe6;--soft:#a3a196;--rule:#3a3d38;--accent:#9cc4ae;--done:#8fd1a8;color-scheme:dark}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.45}
+.wrap{max-width:1180px;margin:0 auto;padding-block:28px 64px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+h1{font-family:var(--display);font-weight:600;font-size:clamp(26px,4vw,36px);margin:0 0 24px;text-wrap:balance}
+h2{font-family:var(--display);font-weight:500;font-size:24px;margin:36px 0 4px;color:var(--accent);text-wrap:balance}
+h3{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--soft);font-weight:600;margin:20px 0 8px}
+.tbl{overflow-x:auto;border:1px solid var(--rule);border-radius:6px;background:var(--surface)}
+table{width:100%;border-collapse:collapse;min-width:820px}
+th{font-size:12px;font-weight:600;color:var(--soft);text-align:left;padding:8px 10px;border-bottom:1px solid var(--rule)}
+td{padding:8px 10px;border-bottom:1px solid var(--rule);vertical-align:top;overflow-wrap:anywhere}
+tr:last-child td{border-bottom:0}
+td.card{font-weight:600;width:17%} td.card small{display:block;font-weight:400;color:var(--soft)}
+td.city{width:11%} td.mine{width:23%}
+input[type=text]{width:100%;box-sizing:border-box;font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--rule);border-radius:4px;padding:6px 8px}
+input:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+tr.saved input[type=text]{border-color:var(--done);border-width:2px}
+.picks{display:grid;gap:10px}
+.pick{border:1px solid var(--rule);border-radius:6px;background:var(--surface);padding:10px 12px}
+.pick.saved{border-color:var(--done);border-width:2px}
+.pick b{display:block;margin-bottom:6px} .pick b span{font-weight:400;color:var(--soft)}
+.pick label{display:flex;gap:8px;align-items:baseline;padding:3px 0;cursor:pointer}
+.empty{color:var(--soft)}
+</style>
+<div class="wrap">
+  <h1>Venues</h1>
+  <section id="pickwrap"><h2>To choose</h2><div class="picks" id="picks"></div></section>
+  <div id="out"></div>
+</div>
+<script>
+const VENUES=/*VENUES*/[];
+const PICKS=/*PICKS*/[];
+const REGION={"United States":"North America","Canada":"North America","Australia":"Oceania","New Zealand":"Oceania"};
+const regionOf=c=>REGION[c]||"Europe"; const ORDER=["Europe","North America","Oceania"];
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const out=document.getElementById("out"), picksEl=document.getElementById("picks");
+let db=null; const names={}, picks={};
+function renderPicks(){
+  document.getElementById("pickwrap").hidden=!PICKS.length;
+  picksEl.innerHTML=PICKS.map(p=>`<fieldset class="pick${picks[p.key]?" saved":""}" data-key="${esc(p.key)}" style="margin:0"><b>${esc(p.venue)} <span>· ${esc(p.fact)}</span></b>`
+    +p.options.map((o,i)=>`<label><input type="radio" name="p-${esc(p.key)}" value="${esc(o)}"${picks[p.key]===o?" checked":""}${db?"":" disabled"}> ${esc(o)}</label>`).join("")+"</fieldset>").join("");
+}
+function render(){
+  const groups={};
+  for(const r of VENUES){ const g=regionOf(r.country); ((groups[g]??={})[r.country||"Unknown"]??=[]).push(r); }
+  const regions=Object.keys(groups).sort((a,b)=>ORDER.indexOf(a)-ORDER.indexOf(b));
+  out.innerHTML=regions.map(g=>`<h2>${esc(g)}</h2>`+Object.keys(groups[g]).sort().map(c=>`<h3>${esc(c)}</h3><div class="tbl"><table>
+    <thead><tr><th>Card name now</th><th>Full name (original language)</th><th>Full name (English)</th><th>City</th><th>Your name</th></tr></thead><tbody>`
+    +groups[g][c].sort((a,b)=>a.city.localeCompare(b.city)||a.card.localeCompare(b.card)).map(r=>`<tr data-id="${esc(r.id)}" class="${names[r.id]&&names[r.id]!==r.card?"saved":""}">
+      <td class="card">${esc(r.card)}<small>Chip: ${esc(r.chip)}</small></td><td>${esc(r.original)}</td><td>${esc(r.english)}</td><td class="city">${esc(r.city)}</td>
+      <td class="mine"><input type="text" aria-label="Your name for ${esc(r.card)}" value="${esc(names[r.id]&&names[r.id]!==r.card?names[r.id]:"")}"${db?"":" disabled"}></td></tr>`).join("")+"</tbody></table></div>").join("")).join("");
+}
+out.addEventListener("change",async e=>{ const el=e.target; if(!el.matches("input[type=text]")||!db)return;
+  const tr=el.closest("tr"), id=tr.dataset.id, v=el.value.trim(); if((names[id]||"")===v)return;
+  try{ await db.doc("names/"+id).set({wanted:v,at:new Date().toISOString()}); names[id]=v; tr.classList.toggle("saved",!!v); }catch(err){ tr.classList.remove("saved"); }});
+out.addEventListener("keydown",e=>{ if(e.key==="Enter"&&e.target.matches("input"))e.target.blur(); });
+picksEl.addEventListener("change",async e=>{ const el=e.target; if(!el.matches("input[type=radio]")||!db)return;
+  const fs=el.closest("fieldset"), k=fs.dataset.key;
+  try{ await db.doc("picks/"+k).set({chosen:el.value,at:new Date().toISOString()}); picks[k]=el.value; fs.classList.add("saved"); }catch(err){ fs.classList.remove("saved"); }});
+render(); renderPicks();
+(async()=>{
+  db=await window.claude?.use?.("db");
+  if(!db){ render(); renderPicks(); return; }
+  const load=async(col,into,field)=>{ try{ const s=await db.collection(col).get(); for(const d of s.docs){ const v=d.data()[field]; if(v)into[d.id]=v; } }catch(e){} };
+  await Promise.all([load("names",names,"wanted"),load("picks",picks,"chosen")]);
+  render(); renderPicks();
+})();
+</script>

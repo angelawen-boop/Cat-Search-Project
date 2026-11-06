@@ -4,9 +4,9 @@
  * Data only. One entry per venue, in her venue order (chips, Sort by Venue, the freshness drawer, the
  * review); the venues with no chip of their own ("Occasional") sit in their country order. The scraper
  * requires this file; the join writes it into Cat_Watch.jsx (build/app_join.js), so the app's parts hold
- * no copy. Nothing about a venue is written anywhere else (build/venue_facts_check.js fails if it is).
+ * no copy. Nothing about a venue is written anywhere else (build/fact_check.js fails if it is).
  * A manual-import venue's facts learned since the last publish wait in the page's store
- * (`venues/occasional`) and show over its entry until `node build/file_venues.js` files them here.
+ * (`venues/occasional`) and show over its entry until the next publish files them here (build/build_app.js runs build/file_venues.js).
  *
  * Every entry has the same fields:
  *   id, kind         "swept" (one of her 28, with a recipe in scraper/sweep_prototype.js) or "manual"

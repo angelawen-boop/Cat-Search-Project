@@ -38,7 +38,10 @@
  *   Her ledger lives IN that page until she Exports.
  *
  * Usage:
- *   node build/build_app.js
+ *   node build/build_app.js [--test-page] --venues <store's venues/occasional.json> --names <review page's names dir>
+ *       Built on main for publishing, it first files the store's waiting venues and her review-page names into
+ *       venues/register.js (it says how to read them when they are missing).
+ *   node build/build_app.js --local      a build to check, never published: files nothing
  *   node build/build_app.js --shell-from <saved-live-page.html>
  *       Re-reads the shell out of a live page saved by Artifact action:"read"
  *       and says whether the committed one still matches. Run it if the page
@@ -67,6 +70,52 @@ const shellFrom = (() => { const i = args.indexOf('--shell-from'); return i < 0 
 const writeShell = args.includes('--write-shell');
 
 function die(m) { console.error('BUILD FAILED — ' + m); process.exit(1); }
+
+// ── the venues waiting in the store, filed into the code (docs/restructure.md, 4A) ───────────────
+//
+// A build that will be published files what the page's store holds for venues first: the waiting
+// room (`venues/occasional`) into venues/register.js, and her names from the venue review page. The
+// build cannot reach a store, so the session reads both into files and passes them; without them a
+// build for publishing stops. Nothing else is written; the fact check must pass after.
+const argOf = k => { const i = args.indexOf(k); return i < 0 ? null : args[i + 1]; };
+const venuesFile = argOf('--venues'), namesDir = argOf('--names');
+let gitBranch = '';
+try { gitBranch = execFileSync('git', ['rev-parse', '--abbrev-ref', 'HEAD'], { cwd: ROOT }).toString().trim(); } catch { /* not a checkout */ }
+const STORE_OF = { app: 'https://claude.ai/artifact/E2WjpRgr4W5eSzYtxyfrt5', test: 'https://claude.ai/artifact/Ju1pKP84Gi3VNL1b2SULc5' };
+const REVIEW = require('./venue_review.js');
+const filedLines = [];
+// `--local`: a build for checking only (list_timing.js), never published; it files nothing.
+const localOnly = args.includes('--local');
+if (gitBranch === 'main' && !shellFrom && !localOnly) {
+  const store = args.includes('--test-page') ? STORE_OF.test : STORE_OF.app;
+  if (!venuesFile || !namesDir) die('a build for publishing files the store\'s waiting venues first. Read them, then run again:\n'
+    + '  1. ArtifactData get url:"' + store + '" collection:"venues" doc_id:"occasional" out_dir:"<dir>"\n'
+    + '  2. ArtifactData list url:"' + REVIEW.REVIEW_PAGE + '" collection:"names" out_dir:"<dir>"\n'
+    + '  3. node build/build_app.js' + (args.includes('--test-page') ? ' --test-page' : '') + ' --venues <dir>/venues/occasional.json --names <dir>/names');
+  const F = require('./file_venues.js');
+  let data;
+  try { data = JSON.parse(fs.readFileSync(venuesFile, 'utf8')); } catch (e) { die('cannot read ' + venuesFile + ' — ' + e.message); }
+  const waiting = data && data.venues && typeof data.venues === 'object' ? data.venues : (data && data.data && data.data.venues) || data;
+  const names = {};
+  for (const f of fs.existsSync(namesDir) ? fs.readdirSync(namesDir) : die('no folder ' + namesDir)) {
+    if (!f.endsWith('.json')) continue;
+    const j = JSON.parse(fs.readFileSync(path.join(namesDir, f), 'utf8')), d = j.data || j;
+    if (d && d.wanted) names[f.replace(/\.json$/, '')] = d.wanted;
+  }
+  const REG_FILE = path.join(ROOT, 'venues', 'register.js');
+  const before = fs.readFileSync(REG_FILE, 'utf8');
+  const r1 = F.file(before, F.evalRegister(before), waiting);
+  const r2 = F.fileNames(r1.text, names);
+  for (const l of [...r1.lines, ...r2.lines]) console.log('filed: ' + l), filedLines.push(l);
+  if (r2.text !== before) {
+    fs.writeFileSync(REG_FILE, r2.text);
+    const j = spawnSync('node', [path.join(__dirname, 'app_join.js')], { encoding: 'utf8' });
+    if (j.status !== 0) die((j.stderr || j.stdout || 'app_join.js failed').trim());
+  }
+  const fc = spawnSync('node', [path.join(__dirname, 'fact_check.js')], { encoding: 'utf8' });
+  if (fc.status !== 0) die('the fact check fails after filing:\n' + (fc.stdout || fc.stderr).trim());
+  REVIEW.build();
+}
 
 // Cat_Watch.jsx must be what the parts in app/ join to, or the build stops (docs/restructure.md).
 {
@@ -170,8 +219,8 @@ fs.writeFileSync(OUT, head + js + fs.readFileSync(TAIL, 'utf8'));
 const kb = (fs.statSync(OUT).size / 1024).toFixed(0);
 console.log('built ' + path.relative(ROOT, OUT) + ' — ' + kb + ' KB, parses, App present.');
 console.log('');
-if (!target) {
-  console.log('NOT FOR PUBLISHING: built on "' + (branch || '?') + '". Her app is published from main.');
+if (!target || localOnly) {
+  console.log(localOnly ? 'NOT FOR PUBLISHING: a --local build files no venues.' : 'NOT FOR PUBLISHING: built on "' + (branch || '?') + '". Her app is published from main.');
   process.exit(0);
 }
 console.log((forRestructure ? 'FOR THE RESTRUCTURE TEST PAGE — title "Art Watch Restructure Test", footer marked TEST PAGE.' : forTest ? 'FOR THE CLOUD TEST PAGE — title set to "Art Watch Cloud Test".' : forPeriod ? 'FOR THE PERIOD TEST PAGE — title set to "Art Watch Period Test".' : 'FOR HER APP.') + ' Publishing is not');
@@ -187,6 +236,13 @@ console.log('     resending without the read is refused each time (her app, 15 O
 console.log('  3. Send the same file again. Refused as "identical content ... resent unchanged":');
 console.log('     expected. Send it once more and it goes through.');
 console.log('  4. Push ' + branch + '. If anything else happens, update these lines.');
+console.log('');
+console.log('  5. Publish build/dist/venue_review.html to ' + REVIEW.REVIEW_PAGE + ' (her venue review page,');
+console.log('     its list rebuilt from the register). Commit and push venues/register.js with the page.');
+const filedVenues = filedLines.filter(l => !/: not filed/.test(l));
+console.log('  6. Tell her, in one line: ' + (filedVenues.length
+  ? '"FYI: your latest venue info from the store is now in the code too."'
+  : 'nothing (no venue was waiting to be filed).'));
 console.log('');
 console.log('  Publish only on her say-so; once she has said to publish, do it without asking again (CLAUDE.md §1).');
 console.log('  Run `npm run test:app` before publishing: page_renders.js is the only check that');
