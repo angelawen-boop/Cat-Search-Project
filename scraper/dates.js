@@ -3,7 +3,8 @@
  * and the app (one copy: two parsers drifted apart twice and lost dates).
  * `node build/app_join.js` writes everything above module.exports into
  * Cat_Watch.jsx, and `node build/app_join.js --check` (the tests run it) fails until it
- * has. Edit HERE, then run the join. Pure: nothing above module.exports may use Node.
+ * has. Edit HERE, then run the join. Pure: nothing above module.exports may use Node but the
+ * register line (`//@register`), which the join replaces with the page's own register.
  * Formats and their reasons: docs/scraper.md §3.
  */
 'use strict';
@@ -112,29 +113,14 @@ const RANGE_SEP = "\\s*,?\\s*(?:-|t/m|to|till|until|through|all['\u2019]|all[oe]
 // numbers settle (a number over 12 cannot be a month) or, when they cannot, in the order recorded here
 // for its venue. Each venue's order comes from its own pages; a venue not listed whose numbers cannot
 // settle it gets ORDER_UNKNOWN_NOTE, and a session records its order (her design; docs/scraper.md §3).
-const DATE_ORDER = {
-  // Swept venues.
-  uffizi: 'day',                                // "From 18/06/2025 to 28/09/2025"
-  // Link venues.
-  'occ-museodelprado-es': 'month',              // "6/9/2026 - 9/27/2026"
-  'occ-smb-museum': 'day',                      // "14.05.2027 to 12.09.2027"
-  'occ-alte-nationalgalerie': 'day',            // "19.03.2027 to 01.08.2027"
-  'occ-neue-nationalgalerie': 'day',            // "20.03.2026 to 09.08.2026"
-  'occ-alte-pinakothek': 'day',                 // "27.10.2023-04.02.2024"
-  'occ-pinakothek-der-moderne': 'day',          // "10/07/2026 - 04/10/2026", "09.10.2026-21.02.2027"
-  'occ-sammlung-schack': 'day',                 // "14.10.2027-13.02.2028"
-  'occ-gemaeldegalerie-skd-museum': 'day',      // "14/04/2022—31/07/2022"
-  'occ-kunstmuseumbasel-ch': 'day',             // "25.05.–24.11.2024"
-  'occ-kunsthaus-ch': 'day',                    // "Until 25.10.2026"
-  'occ-louisiana-dk': 'day',                    // "11.10.24 - 27.4.25"
-  'occ-mskgent-be': 'day',                      // "01.02 – 30.04.20"
-  'occ-approfondimentimostre-com': 'day',       // "22.05.2008 | 14.08.2008"
-  'occ-modernamuseet-se': 'day',                // "16.2–26.5 2013", "8.10 2011–15.1 2012"
-};
+// Recorded on each venue's register entry (venues/register.js: read.dateOrder, read.spacedYear). In the
+// app the join puts the page's own register in place of the line below.
+const REGISTER = require('../venues/register.js').VENUES; //@register
+const DATE_ORDER = Object.fromEntries(REGISTER.filter(v => v.read.dateOrder).map(v => [v.id, v.read.dateOrder]));
 // Venues that write day.month with the year after a space, on the closing side or both
 // ("16.2–26.5 2013", "8.10 2011–15.1 2012" — Moderna Museet). A venue rule (her decision: a
 // venue's fault gets that venue's rule), so it reads nowhere else. DS-012.
-const SPACED_YEAR_VENUES = new Set(['occ-modernamuseet-se']);
+const SPACED_YEAR_VENUES = new Set(REGISTER.filter(v => v.read.spacedYear).map(v => v.id));
 const ORDER_UNKNOWN_NOTE = "Dates not yet read \u2014 confirm whether the venue's date format is day first or month first.";
 
 /**
