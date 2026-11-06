@@ -53,12 +53,12 @@ test('VR-003: a filed venue takes each fact that changed since it was filed; her
   const reg = copy();
   const ngv = VENUES.find(v => v.id === 'occ-ngv-vic-gov-au'), kmska = VENUES.find(v => v.id === 'occ-kmska-be');
   const { out, venues } = fileInto(reg, {
-    'occ-ngv-vic-gov-au': { ...ngv.filed, city: 'Melbourne', shopSearch: 'https://shop.ngv.vic.gov.au/search?q=' },
+    'occ-ngv-vic-gov-au': { ...ngv.filed, city: 'Southbank', shopSearch: 'https://shop.ngv.vic.gov.au/search?q=' },
     'occ-kmska-be': { ...kmska.filed, short: 'KMSKA Belgium' },
   });
   const n = venues.find(v => v.id === 'occ-ngv-vic-gov-au'), k = venues.find(v => v.id === 'occ-kmska-be');
   assert.match(out, /occ-ngv-vic-gov-au: filed \(city changed\)/);
-  assert.ok(n.city === 'Melbourne' && n.filed.shopSearch === 'https://shop.ngv.vic.gov.au/search?q=' && n.names.card === ngv.names.card);
+  assert.ok(n.city === 'Southbank' && n.filed.shopSearch === 'https://shop.ngv.vic.gov.au/search?q=' && n.names.card === ngv.names.card);
   assert.ok(k.names.card === 'Antwerp KMSKA' && k.filed.short === 'KMSKA Belgium', 'her card name stays');
   // Nothing else in the file moves: the other entries are as they were.
   const others = vs => JSON.stringify(vs.filter(v => !['occ-ngv-vic-gov-au', 'occ-kmska-be'].includes(v.id)), (key, v) => v instanceof RegExp ? String(v) : v);
