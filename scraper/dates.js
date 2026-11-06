@@ -3,7 +3,8 @@
  * and the app (one copy: two parsers drifted apart twice and lost dates).
  * `node build/app_join.js` writes everything above module.exports into
  * Cat_Watch.jsx, and `node build/app_join.js --check` (the tests run it) fails until it
- * has. Edit HERE, then run the join. Pure: nothing above module.exports may use Node.
+ * has. Edit HERE, then run the join. Pure: nothing above module.exports may use Node but the
+ * register line (`//@register`), which the join replaces with the page's own register.
  * Formats and their reasons: docs/scraper.md §3.
  */
 'use strict';
@@ -112,29 +113,14 @@ const RANGE_SEP = "\\s*,?\\s*(?:-|t/m|to|till|until|through|all['\u2019]|all[oe]
 // numbers settle (a number over 12 cannot be a month) or, when they cannot, in the order recorded here
 // for its venue. Each venue's order comes from its own pages; a venue not listed whose numbers cannot
 // settle it gets ORDER_UNKNOWN_NOTE, and a session records its order (her design; docs/scraper.md §3).
-const DATE_ORDER = {
-  // Swept venues.
-  uffizi: 'day',                                // "From 18/06/2025 to 28/09/2025"
-  // Link venues.
-  'occ-museodelprado-es': 'month',              // "6/9/2026 - 9/27/2026"
-  'occ-smb-museum': 'day',                      // "14.05.2027 to 12.09.2027"
-  'occ-alte-nationalgalerie': 'day',            // "19.03.2027 to 01.08.2027"
-  'occ-neue-nationalgalerie': 'day',            // "20.03.2026 to 09.08.2026"
-  'occ-alte-pinakothek': 'day',                 // "27.10.2023-04.02.2024"
-  'occ-pinakothek-der-moderne': 'day',          // "10/07/2026 - 04/10/2026", "09.10.2026-21.02.2027"
-  'occ-sammlung-schack': 'day',                 // "14.10.2027-13.02.2028"
-  'occ-gemaeldegalerie-skd-museum': 'day',      // "14/04/2022—31/07/2022"
-  'occ-kunstmuseumbasel-ch': 'day',             // "25.05.–24.11.2024"
-  'occ-kunsthaus-ch': 'day',                    // "Until 25.10.2026"
-  'occ-louisiana-dk': 'day',                    // "11.10.24 - 27.4.25"
-  'occ-mskgent-be': 'day',                      // "01.02 – 30.04.20"
-  'occ-approfondimentimostre-com': 'day',       // "22.05.2008 | 14.08.2008"
-  'occ-modernamuseet-se': 'day',                // "16.2–26.5 2013", "8.10 2011–15.1 2012"
-};
+// Recorded on each venue's register entry (venues/register.js: read.dateOrder, read.spacedYear). In the
+// app the join puts the page's own register in place of the line below.
+const REGISTER = require('../venues/register.js').VENUES; //@register
+const DATE_ORDER = Object.fromEntries(REGISTER.filter(v => v.read.dateOrder).map(v => [v.id, v.read.dateOrder]));
 // Venues that write day.month with the year after a space, on the closing side or both
 // ("16.2–26.5 2013", "8.10 2011–15.1 2012" — Moderna Museet). A venue rule (her decision: a
 // venue's fault gets that venue's rule), so it reads nowhere else. DS-012.
-const SPACED_YEAR_VENUES = new Set(['occ-modernamuseet-se']);
+const SPACED_YEAR_VENUES = new Set(REGISTER.filter(v => v.read.spacedYear).map(v => v.id));
 const ORDER_UNKNOWN_NOTE = "Dates not yet read \u2014 confirm whether the venue's date format is day first or month first.";
 
 /**
@@ -769,18 +755,33 @@ function capsTitleParts(title) {
   return String(title).split(/(\s*[:–—]\s*)/).map((seg, i) => i % 2 ? seg : titleFromCaps(seg)).join('');
 }
 
-// The swept venues that type their titles in capitals (her decisions; docs/venues.md): code writes
+// The swept venues that type their titles in capitals (read.titleCaps on the register; her decisions; docs/venues.md): code writes
 // ordinary capitals, and at the Borghese the full stop between name and subtitle becomes an em dash
 // ("Louise Bourgeois — Unconscious Memories"). One copy: the sweep's recipes take it (`capsTitleRule`)
 // and Add by link files the same title for the same venue.
-const SWEPT_CAPS_TITLES = { borghese: { stopToDash: true }, ashmolean: {} };
+const SWEPT_CAPS_TITLES = Object.fromEntries(REGISTER.filter(v => v.read.titleCaps).map(v => [v.id, v.read.titleCaps === 'stopToDash' ? { stopToDash: true } : {}]));
 function capsTitleRule(code) {
   const r = SWEPT_CAPS_TITLES[code];
   return r ? { capsTitles: true, ...(r.stopToDash ? { stopToDash: true } : {}) } : {};
 }
-// A swept venue's title as the sweep writes it: the em dash first where the venue takes one, then
-// ordinary capitals for a title typed wholly in them. Other venues' titles are returned as they are.
+// A venue with several galleries (read.places on its register entry): a gallery tacked onto the title
+// after a dash ("… – Acquavella Palm Beach", "… – Lévy Gorvy Dayan, London") is not part of the title
+// (her decision). A gallery in brackets, the sweep's mark of a show run in two, stays.
+const foldPlace = s => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+function withoutPlaceTail(code, title) {
+  const e = REGISTER.find(v => v.id === code);
+  if (!e || !e.read.places.length || !title) return title;
+  const t = String(title), m = /\s+[-\u2013\u2014]\s+([^-\u2013\u2014()]+)$/.exec(t);
+  if (!m) return title;
+  const owner = foldPlace(e.read.placeOwner || '');
+  let tail = foldPlace(m[1]).trim();
+  if (owner && tail.startsWith(owner)) tail = tail.slice(owner.length).replace(/^,?\s+/, '');
+  return e.read.places.some(p => foldPlace(p) === tail) ? t.slice(0, m.index).trim() : title;
+}
+// A swept venue's title as the sweep writes it: a gallery tacked onto it taken off, the em dash first
+// where the venue takes one, then ordinary capitals for a title typed wholly in them.
 function sweptVenueTitle(code, title) {
+  title = withoutPlaceTail(code, title);
   const r = SWEPT_CAPS_TITLES[code];
   if (!r || !title) return title;
   return titleFromCaps(r.stopToDash ? String(title).replace(/\.\s+(?=\S)/g, ' — ') : title);
@@ -800,6 +801,7 @@ module.exports = {
   NO_DATES_NOTE,
   DATE_ORDER,
   SPACED_YEAR_VENUES,
+  withoutPlaceTail,
   ORDER_UNKNOWN_NOTE,
   numberOrder,
   SWEPT_CAPS_TITLES,

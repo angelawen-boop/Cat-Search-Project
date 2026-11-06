@@ -7,7 +7,6 @@
    "host": "dia.org",
    "searchName": "Detroit Institute of Arts Museum",
    "pageShop": "https://diashop.org/",
-   "shop": "https://diashop.org/dia-publications/",
    "case": "the section comes back only when both queries are sent (\"DIA Publications\")",
    "truth": "hers",
    "lastGood": [
@@ -62,7 +61,6 @@
    "host": "www.clevelandart.org",
    "searchName": "Cleveland Museum of Art",
    "pageShop": "https://shop.clevelandart.org/",
-   "shop": "https://shop.clevelandart.org/collections/exhibitions",
    "case": "the right section ranked fourth: code ranks every result",
    "truth": "hers",
    "lastGood": [
@@ -153,7 +151,6 @@
    "host": "archive.worcesterart.org",
    "searchName": "Worcester Art Museum",
    "pageShop": "https://archive.worcesterart.org/visit/shop/",
-   "shop": "https://the-museum-shop-at-wam.myshopify.com/collections/catalogs",
    "case": "the museum's Shop page sends visitors to a shop on another site (myshopify)",
    "truth": "hers",
    "lastGood": [
@@ -212,7 +209,6 @@
    "host": "britishart.yale.edu",
    "searchName": "Yale Center for British Art",
    "pageShop": "",
-   "shop": "https://secure.touchnet.net/C20510_ustores/web/store_cat.jsp?STOREID=7&CATID=16&SINGLESTORE=true",
    "case": "a shop on a payment site shared by many shops (Touchnet): its menu read on the page linked, a title-only page re-read with page=1",
    "truth": "hers",
    "lastGood": [
@@ -268,7 +264,6 @@
    "searchName": "Staatliche Museen zu Berlin",
    "english": false,
    "pageShop": "https://www.smb.museum/webshop",
-   "shop": "https://www.smb-webshop.de/buecher-und-medien/ausstellungskataloge/",
    "case": "a Shop button on the museum's own site; German compound section words; a book's address in the menu stands for its section",
    "truth": "hers; an English shop exists (/en/books-und-media/exhibition-catalogues/, 23 Oct) but Parallel returns it without its books, so the German section stands — it sells the English editions too",
    "lastGood": [
@@ -350,7 +345,6 @@
    "searchName": "Alte Pinakothek München",
    "english": false,
    "pageShop": "",
-   "shop": "https://www.museumsshop.cedon.de/Kataloge/Alte-Pinakothek-Muenchen",
    "case": "a shop company's site selling for several houses (CEDON): only this house's section, searched in German",
    "truth": "hers",
    "lastGood": [
@@ -401,7 +395,6 @@
    "searchName": "Städel Museum",
    "english": false,
    "pageShop": "",
-   "shop": "https://liebieghaus.ticketfritz.de/Shop/Index/staedel-publikationen/43885",
    "case": "the section written into the venue's entry (her decision, hard-coded)",
    "truth": "hers",
    "lastGood": [
@@ -418,7 +411,6 @@
    "searchName": "Sammlung Schack",
    "english": false,
    "pageShop": "",
-   "shop": null,
    "case": "a house with no shop of its own on a site shared with houses that have one: never another house's section",
    "truth": "hers",
    "lastGood": [
@@ -456,7 +448,6 @@
    "searchName": "Koninklijk Museum voor Schone Kunsten Antwerpen KMSKA Belgium",
    "english": false,
    "pageShop": "https://kmska.be/en/kmskashop-and-coffee-bar",
-   "shop": "https://www.kmskashop.be/en/books/kmska/",
    "case": "the search shows the whole Books section or a later page of the shelf: the walk goes into Books for the museum's own shelf, kept as page 1",
    "truth": "hers: the KMSKA shelf under Books — the museum's own publications; the shop has no exhibition-catalogues section (its \"Exhibitions\" section unchecked)",
    "lastGood": [
@@ -540,7 +531,6 @@
    "host": "new.artsmia.org",
    "searchName": "Minneapolis Institute of Art",
    "pageShop": "",
-   "shop": "https://shop.artsmia.org/collections/exhibition-catalogues",
    "case": "a Shopify section whose page shows only its menu: judged on its products",
    "truth": "hers",
    "lastGood": [
@@ -725,7 +715,6 @@
    "searchName": "Louisiana Museum of Modern Art Humlebæk Denmark",
    "english": false,
    "pageShop": "",
-   "shop": "https://butik.louisiana.dk/en-int/collections/udstillingskataloger",
    "case": "Danish \"butik\"; Scandinavian prices",
    "truth": "hers: the shop's English version (/en-int/), English and Danish books on it; was its Danish section",
    "lastGood": [
@@ -816,7 +805,6 @@
    "searchName": "Kunsthaus Zürich Zurich Switzerland",
    "english": false,
    "pageShop": "",
-   "shop": null,
    "case": "the first search brings only the museum's own pages: one more search for the shop itself",
    "truth": "session, checked on the live shop: its online shop sells tickets; the shops are in the building",
    "lastGood": [
@@ -944,7 +932,6 @@
    "searchName": "Fondation Beyeler Riehen Switzerland",
    "english": false,
    "pageShop": "",
-   "shop": "https://shop.fondationbeyeler.ch/en/kategorie/exhibition-catalogues",
    "case": "Swiss prices (\"CHF 45.00\")",
    "truth": "session, checked on the live shop: section Exhibition catalogues",
    "lastGood": [

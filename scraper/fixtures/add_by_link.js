@@ -37,7 +37,10 @@ const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'cw-links-'));
 const prepared = 'const { useState, useEffect, useMemo, useCallback, useRef } = React;\n'
   + fs.readFileSync(JSX, 'utf8')
       .replace(/^import React.*$/m, '')
-      .replace(/^export default function App\(\)\{/m, 'function App(){');
+      .replace(/^export default function App\(\)\{/m, 'function App(){')
+      // These cases start from a store that has met no venue: the register's names and rules stay, the
+      // records its entries were filed from go (venues/register.js, `filed`).
+      .replace(/^const REG=/m, 'for(const e of VENUE_REGISTER)e.filed=null;\nconst REG=');
 fs.writeFileSync(path.join(tmp, 'app.tsx'), prepared);
 try {
   execFileSync('npx', ['tsc', path.join(tmp, 'app.tsx'), '--jsx', 'react',
@@ -471,9 +474,9 @@ function runtime() {
     const other = read({ title: 'Some show | Elsewhere', full_content: '# Some show' + body }, 'https://example.org/show', null);
     ok(!other.start && !other.end, 'AL-038b:  two-digit years are read at NGV only', JSON.stringify([other.start, other.end]));
     const fn = name => new Function('React', 'window', 'document', 'localStorage', code + '\n;return ' + name + ';')(React, win, win.document, win.localStorage);
-    const orderOf = fn('orderOf'), lv = fn('LINK_VENUES');
-    ok(orderOf('occ-mfa-org') < orderOf('occ-ngv-vic-gov-au') && orderOf('occ-ngv-vic-gov-au') < orderOf('occ-courtauld-ac-uk') && lv['occ-ngv-vic-gov-au'].card === 'National Gallery Victoria',
-      'AL-038c:  NGV goes last of the Occ - US group, before Europe; its cards say "National Gallery Victoria" (her decision)', JSON.stringify([orderOf('occ-ngv-vic-gov-au'), lv['occ-ngv-vic-gov-au'].card]));
+    const orderOf = fn('orderOf'), lv = fn('REG');
+    ok(orderOf('occ-mfa-org') < orderOf('occ-ngv-vic-gov-au') && orderOf('occ-ngv-vic-gov-au') < orderOf('occ-courtauld-ac-uk') && lv['occ-ngv-vic-gov-au'].names.card === 'National Gallery Victoria',
+      'AL-038c:  NGV goes last of the Occ - US group, before Europe; its cards say "National Gallery Victoria" (her decision)', JSON.stringify([orderOf('occ-ngv-vic-gov-au'), lv['occ-ngv-vic-gov-au'].names.card]));
   }
   // ── AL-046: the shop screen asks only about a venue with a card going in (her decision) ─
   {
@@ -497,15 +500,15 @@ function runtime() {
        && kept.c.shop === 'unknown' && !Object.values(kept).some(v => 'beforeAnswer' in v),
       'AL-046f: an answer for a venue with no show going in is not kept: what the finder found (or what the store held) instead', JSON.stringify(kept));
     const occVenue = fn('occVenue');
-    const sm = occVenue(SM, { id: SM, name: 'Direzione regionale Musei nazionali Toscana', shop: 'none', confirmed: true });
-    ok(sm.name === 'Museo di San Marco' && sm.lookupName === 'Museo di San Marco' && sm.short === 'San Marco',
-      'AL-046d: the lookup calls San Marco "Museo di San Marco", never the regional office the site names (her decision)', JSON.stringify([sm.name, sm.lookupName, sm.short]));
+    const sm = occVenue(SM, fn('occasionalOver')({ [SM]: { id: SM, name: 'Direzione regionale Musei nazionali Toscana', shop: 'none', confirmed: true } })[SM]);
+    ok(sm.name === 'Museo di San Marco' && sm.lookupName === 'Museo di San Marco' && sm.card === 'San Marco Florence',
+      'AL-046d: the lookup calls San Marco "Museo di San Marco", never the regional office the site names (her decision)', JSON.stringify([sm.name, sm.lookupName, sm.card]));
     const split = fn('splitPageTitle');
     const gd = split('Van Dyck, the European -', 'palazzoducale.genova.it');
     ok(gd.show === 'Van Dyck, the European' && split('Show – ', 'x.org').show === 'Show' && split('A - B', 'x.org').show === 'A - B',
       'AL-047:  Genoa Van Dyck: a page title ending in a separator with no site after it loses the separator; a dash inside a title stays', JSON.stringify(gd));
     const GD = 'occ-palazzoducale-genova-it', PR = 'occ-palazzorealemilano-it';
-    const o2 = fn('orderOf'), lv2 = fn('LINK_VENUES'), s2 = id => lv2[id].short;
+    const o2 = fn('orderOf'), lv2 = fn('REG'), s2 = id => lv2[id].names.card;
     ok(o2(SM) < o2(GD) && o2(GD) < o2(PR) && o2(PR) < o2('occ-museothyssen-org') && s2(GD) === 'Palazzo Ducale Genova' && s2(PR) === 'Palazzo Reale Milano',
       'AL-046e: Palazzo Ducale Genova second and Palazzo Reale Milano third of the Italian Occasional venues, by her names (her decision)', JSON.stringify([o2(SM), o2(GD), o2(PR)]));
     // Shaped as the live reply (palazzorealemilano.it/en/-/brueghel): heading, short name, full name, dates.
@@ -514,9 +517,9 @@ function runtime() {
     ok(br.ok && nil(br, PR) === 'I Brueghel. Le origini dei generi pittorici in Europa' && br.start === '2026-09-29',
       'AL-048:  Palazzo Reale Milano Brueghel: the full name below the heading is the title, "- Palazzo Reale Milano" dropped', JSON.stringify([br.base, nil(br, PR), br.start]));
     ok(nil(br, 'occ-other-org') === '', 'AL-048a: at any other venue the rule does nothing');
-    const o3 = fn('orderOf'), short = fn('LINK_VENUES')[SM].short;
-    ok(o3(SM) < o3('occ-palazzoducale-genova-it') && Math.floor(o3(SM)) === Math.floor(o3('occ-palazzorealemilano-it')) && short === 'San Marco',
-      'AL-046c: San Marco (museitoscana.cultura.gov.it) first of the Italian Occasional venues, named "San Marco" (her decision)', JSON.stringify([o3(SM), short]));
+    const o3 = fn('orderOf'), short = fn('REG')[SM].names.card;
+    ok(o3(SM) < o3('occ-palazzoducale-genova-it') && Math.floor(o3(SM)) === Math.floor(o3('occ-palazzorealemilano-it')) && short === 'San Marco Florence',
+      'AL-046c: San Marco (museitoscana.cultura.gov.it) first of the Italian Occasional venues, its cards "San Marco Florence" (her decision)', JSON.stringify([o3(SM), short]));
     const oc = fn('occCountry'), rg = fn('occRegion'), CO = fn('OCC_COUNTRY_ORDER');
     const ord = ['occ-mfa-org', 'occ-ngv-vic-gov-au', 'occ-courtauld-ac-uk', 'occ-staatsgalerie-de', 'occ-kmska-be', 'occ-galerie-karsten-greve-com', 'occ-kunstmuseumbasel-ch', SM, 'occ-museothyssen-org', 'occ-mauritshuis-nl'].map(o3);
     ok(ord.every((v, i) => !i || ord[i - 1] < v) && CO.join() === 'United States,United Kingdom,Germany,Belgium,France,Switzerland,Italy,Spain,Netherlands',
@@ -793,7 +796,7 @@ function runtime() {
     await click(buttons(/^Next$/)[0]);
     const scr = () => [...win.document.querySelectorAll('[role=dialog]')].find(d => /New Venue Shops/.test(d.textContent));
     const card = name => [...scr().querySelectorAll('div')].find(d => d.firstChild && d.firstChild.textContent === name && d.querySelector('button'));
-    await click([...card('Museo Nacional Thyssen-Bornemisza').querySelectorAll('button')].find(x => x.textContent === 'Confirm'));
+    await click([...card('Thyssen-Bornemisza').querySelectorAll('button')].find(x => x.textContent === 'Confirm'));
     ok(JSON.stringify(occStored()) === before12, 'AL-012a:  Confirm on the shop screen stores nothing yet');
     await click([...scr().querySelectorAll('button')].find(b => b.textContent === 'Back'));
     await click(buttons(/^Cancel import$/)[0]);
@@ -826,7 +829,7 @@ function runtime() {
   ok(fetched('https://tienda.museothyssen.org/en/collections.json?limit=250'), 'AL-008e:  Thyssen: the search found only single books, so the shop\'s section list was read — its English one');
   ok(fetched('https://diashop.org/dia-publications') && !fetched('https://diashop.org/dia-museum-book-shop/'),
     'AL-008f:  DIA: "DIA Publications", the 1st result of her keyed search (4 Oct), opened to check; "Books & Stationery" never offered');
-  ok(searchedFor(/Detroit/).length === 1 && searchedFor(/Detroit/)[0].args.search_queries[1] === 'Detroit Institute of Arts Museum shop books publications',
+  ok(searchedFor(/Detroit/).length === 1 && searchedFor(/Detroit/)[0].args.search_queries[1] === 'Detroit Institute of Arts Museum United States shop books publications',
     'AL-008f2:  the books section\'s own query rides in the same search call — without it Parallel never returned DIA Publications', JSON.stringify(searchedFor(/Detroit/).map(c => c.args.search_queries)));
   {
     const r = await discoverShop('https://diashop.org/', 'dia.org', 'DIA only mixed', []);
@@ -975,7 +978,9 @@ function runtime() {
   // Pages and shop searches are proved live (docs/add_by_link.md, "Munich"); this holds the rules.
   {
     const fn = name => new Function('React', 'window', 'document', 'localStorage', code + '\n;return ' + name + ';')(React, win, win.document, win.localStorage);
-    const linkVenue = fn('linkVenue'), namesVenue = fn('namesVenue'), own = fn('LINK_VENUES'), order = fn('VENUE_ORDER');
+    const linkVenue = fn('linkVenue'), namesVenue = fn('namesVenue'), order = Object.keys(fn('CHIP_RANK'));
+    // Each venue as the app reads it from its register entry (venues/register.js).
+    const view = fn('id => venueView(REG[id])'), own = new Proxy({}, { get: (t, id) => view(id) });
     const A = 'occ-alte-pinakothek', M = 'occ-pinakothek-der-moderne';
     const alte = linkVenue('https://www.pinakothek.de/de/von-turner-bis-van-gogh', { between: ['Meisterwerke der Neuen Pinakothek in der Alten Pinakothek', 'Alte Pinakothek'] });
     const mod = linkVenue('https://www.pinakothek.de/en/exhibition/between-and-beyond', { between: ['INTERSPACES AND TRANSITIONS IN ART SINCE 1960', 'Pinakothek der Moderne | Art'] });
@@ -987,7 +992,7 @@ function runtime() {
     ok(none.id === null && /Munich Alte Pinakothek, Munich der Moderne or Munich Sammlung Schack/.test(none.why), 'AL-043b:  a page naming none of the houses is a line, never a card', JSON.stringify(none));
     const S = 'occ-sammlung-schack';
     const schack = linkVenue('https://www.pinakothek.de/en/exhibition/boecklin-and-schack-a-dialogue-between-artist-and-collector', { between: ['On the 200th Anniversary of Arnold Böcklin’s Birth', 'Sammlung Schack'] });
-    ok(schack.id === S && own[S].short === 'Munich Sammlung Schack' && own[S].group === own[A].group && !own[S].shopQueries && !own[S].shopNamed
+    ok(schack.id === S && own[S].card === 'Munich Sammlung Schack' && own[S].group === own[A].group && !own[S].shopQueries && !own[S].shopNamed
       && order.indexOf(M) + 1 === order.indexOf(S),
       'AL-043h:  Sammlung Schack files as its own venue under "Munich", cards "Munich Sammlung Schack", with no shop settings (the finder answers "none"; her decision)', JSON.stringify(schack));
     ok([A, M, S].every(id => own[id].linkRead && own[id].linkRead.capsTitles), 'AL-043i:  titles the Munich houses type in capitals are recased');
@@ -998,13 +1003,13 @@ function runtime() {
     const cas = linkVenue('https://www.smb.museum/en/museums-institutions/alte-nationalgalerie/exhibitions/detail/cassirer-and-the-breakthrough-of-impressionism/', { between: [] });
     const gg = linkVenue('https://www.smb.museum/en/museums-institutions/gemaeldegalerie/exhibitions/detail/renaissance-faces/', { between: [], afterDates: ['Gemäldegalerie'] });
     const other = linkVenue('https://www.smb.museum/en/exhibitions/detail/some-show/', { between: [], afterDates: ['Bode-Museum'] });
-    ok(boe.id === N && cas.id === N && gg.id === G && other.id === G && own[N].short === 'Berlin Alte NG' && own[G].card === 'Berlin Gemäldegalerie'
+    ok(boe.id === N && cas.id === N && gg.id === G && other.id === G && own[N].card === 'Berlin Alte NG' && own[G].card === 'Berlin Gemäldegalerie'
       && chipKey(N) === chipKey(G) && own[N].chip === 'Berlin' && order.indexOf(G) + 1 === order.indexOf(N),
       'AL-074: Berlin: the Alte Nationalgalerie files as "Berlin Alte NG" by its path or house line, the rest as before, one chip "Berlin"', JSON.stringify([boe, cas, gg, other]));
     const NN = 'occ-neue-nationalgalerie';
     const wols = linkVenue('https://www.smb.museum/en/exhibitions/detail/wols-prints/', { between: ['On the Centenary of the Artist\'s Birth'], afterDates: ['Neue Nationalgalerie', 'Side room in the Neue Nationalgalerie, 30.7.-8.9.2013'] });
     const nnPath = linkVenue('https://www.smb.museum/en/museums-institutions/neue-nationalgalerie/exhibitions/detail/x/', { between: [] });
-    ok(wols.id === NN && nnPath.id === NN && own[NN].short === 'Berlin Neue NG' && chipKey(NN) === chipKey(G) && order.indexOf(N) + 1 === order.indexOf(NN),
+    ok(wols.id === NN && nnPath.id === NN && own[NN].card === 'Berlin Neue NG' && chipKey(NN) === chipKey(G) && order.indexOf(N) + 1 === order.indexOf(NN),
       'AL-074a: the Neue Nationalgalerie files as "Berlin Neue NG" by its path or house line (Wols), under "Berlin" after the Alte', JSON.stringify([wols, nnPath]));
     const occV = fn('occVenue'), btn = fn('shopButtonUrl');
     const basel = occV('occ-kunstmuseumbasel-ch', { id: 'occ-kunstmuseumbasel-ch', name: 'Kunstmuseum Basel', shop: 'found', confirmed: true,
@@ -1013,21 +1018,22 @@ function runtime() {
     ok(btn(basel, 'Verso') === 'https://shop.kunstmuseumbasel.ch/en/merchandise?category=Exhibition+Catalogues' && btn(xorg, 'A B') === 'https://shop.x.org/search?q=A%20B',
       'BS-004: the card\'s Museum shop link is the section written in for the venue (Basel); elsewhere as before', JSON.stringify([btn(basel, 'Verso'), btn(xorg, 'A B')]));
     const D = 'occ-gemaeldegalerie-skd-museum', card = id => own[id].card;
-    ok(own[D].short === 'Dresden' && card(D) === 'Dresden Gemäldegalerie' && own[D].linkRead.titleAfter.test('Active page: Hopper')
+    ok(own[D].chip === 'Dresden' && card(D) === 'Dresden Gemäldegalerie' && own[D].linkRead.titleAfter.test('Active page: Hopper')
       && own[D].linkRead.skip.test('Exhibition Site Zwinger') && !own[D].shopQueries,
       'AL-045:  Dresden: chip "Dresden", cards "Dresden Gemäldegalerie", the site line never reaches Claude (her decision)');
-    const P = 'occ-museodelprado-es', prado = fn('occVenue')(P, { short: 'Museo del Prado', name: 'Museo Nacional del Prado' });
-    ok(fn('occVenueId')('www.museodelprado.es') === P && own[P].ownChip && prado.chip === 'Prado' && prado.short === 'Prado Madrid'
+    const over = fn('occasionalOver');
+    const P = 'occ-museodelprado-es', prado = fn('occVenue')(P, over({ [P]: { id: P, short: 'Madrid Prado', name: 'Museo Nacional del Prado' } })[P]);
+    ok(fn('occVenueId')('www.museodelprado.es') === P && own[P].chip && prado.chip === 'Prado' && prado.card === 'Prado'
       && order.indexOf('khm') + 1 === order.indexOf(P),
-      'AL-085:  the Prado: chip "Prado" right after KHM, cards "Prado Madrid" (her decision)', JSON.stringify([prado.chip, prado.short]));
+      'AL-085:  the Prado: chip "Prado" right after KHM, cards "Prado" (her decision), never the store\'s "Madrid Prado"', JSON.stringify([prado.chip, prado.card]));
     const F = 'occ-staedelmuseum-de';
-    ok(fn('occVenueId')('www.staedelmuseum.de') === F && own[F].short === 'Frankfurt' && card(F) === 'Städel Frankfurt' && order.indexOf(D) + 1 === order.indexOf(F),
+    ok(fn('occVenueId')('www.staedelmuseum.de') === F && own[F].chip === 'Frankfurt' && card(F) === 'Städel Frankfurt' && order.indexOf(D) + 1 === order.indexOf(F),
       'AL-049:  the Städel: chip "Frankfurt" right after Dresden, cards "Städel Frankfurt" (her decision)');
-    const C = 'occ-chateaudechantilly-fr', chip = fn('occVenue')(C, { short: 'Chantilly Musée Condé', name: 'Musée Condé, Château de Chantilly' });
-    ok(own[C].ownChip && chip.chip === 'Chantilly' && chip.short === 'Chantilly Musée Condé' && order.indexOf('jacquemart') + 1 === order.indexOf(C),
-      'AL-081:  Chantilly: chip "Chantilly" right after Jacquemart, cards keep the store\'s "Chantilly Musée Condé" (her decision)', JSON.stringify([chip.chip, chip.short]));
+    const C = 'occ-chateaudechantilly-fr', chip = fn('occVenue')(C, over({ [C]: { id: C, short: 'Chantilly Musée Condé', name: 'Musée Condé, Château de Chantilly' } })[C]);
+    ok(own[C].chip && chip.chip === 'Chantilly' && chip.card === 'Musée Condé Chantilly' && order.indexOf('jacquemart') + 1 === order.indexOf(C),
+      'AL-081:  Chantilly: chip "Chantilly" right after Jacquemart, cards "Musée Condé Chantilly" (her rename)', JSON.stringify([chip.chip, chip.card]));
     const CI = 'occ-cini-it', GV = 'occ-lestanzedelvetro-org', PH = 'occ-lestanzedellafotografia-it', ck = fn('chipKey');
-    ok([CI, GV, PH].every(id => own[id].ownChip && own[id].chip === 'Cini' && ck(id) === 'cini' && !own[id].short) && own[CI].card === 'Fondazione Cini' && own[PH].card === 'Stanze della Fotografia Venice' && !own[GV].card && !own[CI].askElsewhere
+    ok([CI, GV, PH].every(id => own[id].chip === 'Cini' && ck(id) === 'cini') && own[CI].card === 'Fondazione Cini' && own[PH].card === 'Stanze della Fotografia Venice' && !fn('REG')[GV].names.hers && !own[CI].askElsewhere
       && order.indexOf('capo') + 1 === order.indexOf(CI) && order.indexOf(CI) + 1 === order.indexOf(GV) && order.indexOf(GV) + 1 === order.indexOf(PH),
       'AL-084:  Cini: the foundation, the glass and the photography houses under one chip "Cini" after Capo, in that order; her card names for two, Claude\'s for the glass (her decision)');
     {
@@ -1039,8 +1045,8 @@ function runtime() {
       ok(head('parallel') === 'The museum shop contents cannot be seen — Parallel fault' && head('script') === 'The museum shop contents cannot be seen — JS-rendering'
         && head('blocked') === 'The museum shop is blocked', 'AL-049b:  the card\'s three lines for a shop that cannot be read (her wording)');
     }
-    ok(own[A].group === own[M].group && own[A].chip === 'Munich' && own[A].short === 'Munich Alte Pinakothek'
-      && own[M].short === 'Munich der Moderne' && order.indexOf(A) + 1 === order.indexOf(M),
+    ok(own[A].group === own[M].group && own[A].chip === 'Munich' && own[A].card === 'Munich Alte Pinakothek'
+      && own[M].card === 'Munich der Moderne' && order.indexOf(A) + 1 === order.indexOf(M),
       'AL-043c:  one chip "Munich", the Alte first; cards "Munich Alte Pinakothek" and "Munich der Moderne"');
     ok(/Museumsshop/.test(own[A].shopQueries[0]) && /Museumsshop/.test(own[M].shopQueries[0]), 'AL-043d:  both shops are searched in German');
     const cedon = 'https://www.museumsshop.cedon.de/Kataloge/';
@@ -1102,30 +1108,30 @@ function runtime() {
   const shopCard = name => [...shops().querySelectorAll('div')].find(d => d.firstChild && d.firstChild.textContent === name && d.querySelector('button'));
   const press = async (name, label) => { const c = shopCard(name); const b = c && [...c.querySelectorAll('button')].find(x => x.textContent === label); if (b) await click(b); return !!b; };
   const footer = () => [...shops().querySelectorAll('button')].pop().textContent;
-  ok(footer() === '5 still to decide' && !shopCard('Royal Academy of Arts'), 'AL-009c:  five venues to answer — not the RA, its one card rejected — and the ledger button says so', footer());
+  ok(footer() === '5 still to decide' && !shopCard('Royal Academy UK'), 'AL-009c:  five venues to answer — not the RA, its one card rejected — and the ledger button says so', footer());
   ok(/New Venue Shops/.test(shops().textContent) && !shops().textContent.includes('Check and approve each shop link.'), 'AL-009c2:  her heading, with no line under it');
   {
     const has = (name, u) => shopCard(name).textContent.includes(u);
     ok(has('Courtauld', 'https://shop.courtauld.ac.uk/collections/courtauld-catalogues')
-       && has('Cleveland Museum of Art', 'https://shop.clevelandart.org/collections/exhibitions')
+       && has('Cleveland', 'https://shop.clevelandart.org/collections/exhibitions')
        && has('Mauritshuis', 'https://shop.mauritshuis.nl/product-categorie/boeken-catalogi/catalogi')
-       && has('Museo Nacional Thyssen-Bornemisza', 'https://tienda.museothyssen.org/en/collections/publicaciones-museo'),
+       && has('Thyssen-Bornemisza', 'https://tienda.museothyssen.org/en/collections/publicaciones-museo'),
       'AL-009c3:  each card shows the section the finder took: Courtauld\'s catalogues (not the reseller\'s shelf), Cleveland\'s 4th result "Exhibition Catalogues", Mauritshuis\'s "Catalogi", Thyssen\'s menu "Museum publications"');
     const said = name => shopCard(name).textContent.includes('Shop found, but not its catalogues section https://');
-    ok(said('Museo Nacional Thyssen-Bornemisza') && !said('Courtauld') && !said('Cleveland Museum of Art')
+    ok(said('Thyssen-Bornemisza') && !said('Courtauld') && !said('Cleveland')
        && !/its publications|its books:|exhibition catalogues section/.test(shops().textContent),
-      'AL-009c5:  a section that is not a catalogues section carries her one line, "Shop found, but not its catalogues section", and nothing about what it is; a catalogues section carries none', shopCard('Museo Nacional Thyssen-Bornemisza').textContent);
+      'AL-009c5:  a section that is not a catalogues section carries her one line, "Shop found, but not its catalogues section", and nothing about what it is; a catalogues section carries none', shopCard('Thyssen-Bornemisza').textContent);
   }
   await click([...shops().querySelectorAll('button')].find(b => b.textContent === 'Back'));
   await raPress(/Add new entry$/);
   await click(buttons(/^Next$/)[0]);
-  ok(footer() === '6 still to decide' && !!shopCard('Royal Academy of Arts'), 'AL-009c4:  the RA\'s card added back, the RA is asked too', footer());
+  ok(footer() === '6 still to decide' && !!shopCard('Royal Academy UK'), 'AL-009c4:  the RA\'s card added back, the RA is asked too', footer());
   {
     const order = name => [...shopCard(name).querySelectorAll('button')].map(b => b.textContent).join('|');
-    const conf = [...shopCard('Royal Academy of Arts').querySelectorAll('button')].find(b => b.textContent === 'Confirm');
-    ok(shopCard('Royal Academy of Arts').textContent.includes('No museum shop found.') && order('Royal Academy of Arts') === 'Confirm|Look again|No shop|Add'
+    const conf = [...shopCard('Royal Academy UK').querySelectorAll('button')].find(b => b.textContent === 'Confirm');
+    ok(shopCard('Royal Academy UK').textContent.includes('No museum shop found.') && order('Royal Academy UK') === 'Confirm|Look again|No shop|Add'
        && conf.disabled && order('Courtauld') === 'Confirm|Look again|No shop|Add',
-      'AL-009d:  the same four buttons in the same places on every card; Confirm greyed where nothing was found', order('Royal Academy of Arts'));
+      'AL-009d:  the same four buttons in the same places on every card; Confirm greyed where nothing was found', order('Royal Academy UK'));
   }
   ok(shopCard('Detroit').textContent.includes('https://diashop.org/dia-publications'), 'AL-009e0:  DIA\'s section shown, to confirm');
   // DIA Publications turned down: "Books & Stationery" is mixed, so it is only
@@ -1135,8 +1141,8 @@ function runtime() {
   ok(shopCard('Detroit').textContent.includes('Shop found, but not its books section: https://diashop.org/')
      && !shopCard('Detroit').textContent.includes('dia-museum-book-shop') && fetched('https://diashop.org/dia-museum-book-shop/'),
     'AL-009e:  Look again never offers a mixed books-and-stationery section; with nothing books-only left it says so and links the shop', shopCard('Detroit').textContent);
-  await press('Museo Nacional Thyssen-Bornemisza', 'Confirm');
-  ok(/^✓ Confirm$/.test([...shopCard('Museo Nacional Thyssen-Bornemisza').querySelectorAll('button')][0].textContent), 'AL-009f0:  Confirm ticks, as "Add new entry" does');
+  await press('Thyssen-Bornemisza', 'Confirm');
+  ok(/^✓ Confirm$/.test([...shopCard('Thyssen-Bornemisza').querySelectorAll('button')][0].textContent), 'AL-009f0:  Confirm ticks, as "Add new entry" does');
   ok(!(occStored()['occ-museothyssen-org'] || {}).confirmed && footer() === '5 still to decide',
     'AL-009f:  Confirm counts at once — one fewer to decide — but is not stored yet', footer());
   calls.length = 0;
@@ -1148,30 +1154,30 @@ function runtime() {
   await click([...shops().querySelectorAll('button')].find(b => b.textContent === 'Back'));
   ok(!shops() && buttons(/^Next$/).length === 1, 'AL-009i:  Back returns to the review, decisions kept');
   await click(buttons(/^Next$/)[0]);
-  ok(/^✓ Confirm$/.test([...shopCard('Museo Nacional Thyssen-Bornemisza').querySelectorAll('button')][0].textContent) && footer() === '5 still to decide',
+  ok(/^✓ Confirm$/.test([...shopCard('Thyssen-Bornemisza').querySelectorAll('button')][0].textContent) && footer() === '5 still to decide',
     'AL-009i2:  and the shop answers given before Back are still there', footer());
   {
     // ── AL-080: "Add" — her own shop link (her ask) ──
-    const box = () => shopCard('Royal Academy of Arts').querySelector('input');
+    const box = () => shopCard('Royal Academy UK').querySelector('input');
     const type = async (el, t, key) => { await act(async () => { Object.getOwnPropertyDescriptor(win.HTMLInputElement.prototype, 'value').set.call(el, t); el.dispatchEvent(new win.Event('input', { bubbles: true })); }); await settle();
       await act(async () => { el.dispatchEvent(new win.KeyboardEvent('keydown', { key, bubbles: true })); }); await settle(); };
     const was = footer();
-    await press('Royal Academy of Arts', 'Add');
-    ok(!!box() && box().value === '' && !box().placeholder && !/\S/.test(shopCard('Royal Academy of Arts').textContent.replace(/Royal Academy of Arts|No museum shop found\.|Confirm|Look again|No shop|Add/g, '')),
+    await press('Royal Academy UK', 'Add');
+    ok(!!box() && box().value === '' && !box().placeholder && !/\S/.test(shopCard('Royal Academy UK').textContent.replace(/Royal Academy UK|No museum shop found\.|Confirm|Look again|No shop|Add/g, '')),
       'AL-080:  Add opens an empty box beside the buttons, with no words of its own');
     await type(box(), 'not a link', 'Enter');
-    ok(!!box() && footer() === was && !/✓/.test(shopCard('Royal Academy of Arts').textContent), 'AL-080a: words that are not a link are not taken: the box stays open, nothing answered');
+    ok(!!box() && footer() === was && !/✓/.test(shopCard('Royal Academy UK').textContent), 'AL-080a: words that are not a link are not taken: the box stays open, nothing answered');
     await type(box(), 'not a link', 'Escape');
     ok(!box() && footer() === was, 'AL-080b: Escape closes the box, nothing answered');
-    await press('Royal Academy of Arts', 'Add');
+    await press('Royal Academy UK', 'Add');
     await type(box(), 'shop.royalacademy.org.uk/books', 'Enter');
-    const btns = () => [...shopCard('Royal Academy of Arts').querySelectorAll('button')].map(b => b.textContent).join('|');
-    ok(!box() && shopCard('Royal Academy of Arts').textContent.includes('https://shop.royalacademy.org.uk/books') && btns() === 'Confirm|Look again|No shop|✓ Add'
+    const btns = () => [...shopCard('Royal Academy UK').querySelectorAll('button')].map(b => b.textContent).join('|');
+    ok(!box() && shopCard('Royal Academy UK').textContent.includes('https://shop.royalacademy.org.uk/books') && btns() === 'Confirm|Look again|No shop|✓ Add'
        && footer() === String(Number(was.split(' ')[0]) - 1) + ' still to decide',
       'AL-080c: a link typed without https:// is taken on Enter: shown as the shop, Add ticks, one fewer to decide', btns() + ' | ' + footer());
   }
-  await press('Royal Academy of Arts', 'No shop');
-  ok(/^✓ No shop$/.test([...shopCard('Royal Academy of Arts').querySelectorAll('button')][2].textContent), 'AL-009j:  No shop is an answer');
+  await press('Royal Academy UK', 'No shop');
+  ok(/^✓ No shop$/.test([...shopCard('Royal Academy UK').querySelectorAll('button')][2].textContent), 'AL-009j:  No shop is an answer');
   {
     // ── AL-079: "Shop found, but not its books section": Confirm takes the shop shown (her ask) ──
     const conf = () => [...shopCard('Detroit').querySelectorAll('button')].find(b => /Confirm$/.test(b.textContent));
@@ -1182,7 +1188,7 @@ function runtime() {
       'AL-079:  a shop with no books section seen can be confirmed: Confirm ticks, the shop shown is taken as its section, one fewer to decide', shopCard('Detroit').textContent + ' | ' + footer());
   }
   await press('Detroit', 'No shop');
-  await press('Courtauld', 'Confirm'); await press('Cleveland Museum of Art', 'Confirm');
+  await press('Courtauld', 'Confirm'); await press('Cleveland', 'Confirm');
   // Mauritshuis answered by Add (AL-080d): the section typed in herself.
   await press('Mauritshuis', 'Add');
   {
@@ -1195,7 +1201,7 @@ function runtime() {
   await click([...shops().querySelectorAll('button')].find(b => b.textContent === 'Back'));
   await raPress(/Reject$/);
   await click(buttons(/^Next$/)[0]);
-  ok(!shopCard('Royal Academy of Arts'), 'AL-009j2:  the RA\'s card rejected again, the RA leaves the screen');
+  ok(!shopCard('Royal Academy UK'), 'AL-009j2:  the RA\'s card rejected again, the RA leaves the screen');
   ok(footer() === 'Go ahead and update the ledger', 'AL-009k:  every shop answered, the ledger may move', footer());
   await click([...shops().querySelectorAll('button')].pop());
   ok(!shops() && ledgerCards() > cardsBefore, 'AL-009l:  and does');
@@ -1227,7 +1233,7 @@ function runtime() {
   const arts = [...win.document.querySelectorAll('article')];
   ok(arts.length === 9, 'AL-010a:  pressed, it shows the nine occasional shows accepted (the RA one rejected) and nothing else', arts.length);
   const cle = arts.find(a => a.textContent.includes('Filippino Lippi'));
-  ok(cle && /^Cleveland Museum of Art/.test(cle.textContent), 'AL-010b:  each card is headed by its venue', cle && cle.textContent.slice(0, 60));
+  ok(cle && /^Cleveland/.test(cle.textContent), 'AL-010b:  each card is headed by its venue', cle && cle.textContent.slice(0, 60));
 
   const dia = arts.find(a => a.textContent.includes('Caravaggio'));
   ok(dia && /^Detroit/.test(dia.textContent) && !/^Detroit Institute/.test(dia.textContent), 'AL-011: a venue\'s short name, hers, heads its cards', dia && dia.textContent.slice(0, 40));
@@ -1567,7 +1573,7 @@ function runtime() {
       'AL-069: a bot check in place of the page (Anubis at the Staatsgalerie, Cloudflare) stays unread with the sweep\'s own words — never an undated card', anubis.why);
     // ── AL-066: her renames of Claude's card names are Claude's examples ─
     {
-      const box = new Function('React', 'window', 'document', 'localStorage', code + '\n;return {LINK_VENUES,linkPrompt};')(React, win, win.document, win.localStorage);
+      const box = new Function('React', 'window', 'document', 'localStorage', code + '\n;return {VENUE_REGISTER,linkPrompt};')(React, win, win.document, win.localStorage);
       const pg = { base: 'Folly Beyond Words', between: [], raw: 'A show about Bruegel and proverbs.', dateLine: '' };
       const before = box.linkPrompt(pg, true, 'https://kmska.be/en/folly');
       ok(before.includes('for "Koninklijk Museum voor Schone Kunsten Antwerpen": "Antwerp KMSKA", not "KMSKA Antwerp"') && before.includes('"Antwerp KMSKA"'),
@@ -1575,7 +1581,7 @@ function runtime() {
       const ad = new Function('React', 'window', 'document', 'localStorage', code + '\n;return addressVenue;')(React, win, win.document, win.localStorage);
       ok(ad('https://press.christies.com/a-sale') === 'occ-christies-com' && ad('https://www.christies.com/en/x') === null,
         'AL-066b: Christie\'s press site files under Christie\'s own venue (her decision, links from now on)');
-      for (const v of Object.values(box.LINK_VENUES)) delete v.notCard;
+      for (const e of box.VENUE_REGISTER) e.names.replaced = [];
       ok(!/renamed/.test(box.linkPrompt(pg, true, 'https://kmska.be/en/folly')), 'AL-066a:  none renamed, the question says nothing of renames');
     }
     // ── AL-092: a shop written into the venue's entry (Basel) is her answer: the shop screen never asks it ─

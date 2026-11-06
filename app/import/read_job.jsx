@@ -67,9 +67,9 @@ async function readShows(input,occVenues,{progress,stopped}){
       // A venue on another part of one of her museums' own site is asked every time, so each
       // page there can file under the museum it names (ownMuseumNamed).
       // A new venue is named once per import: by its first page (AL-053).
-      const askFresh=isOcc(vc)&&needsFacts(venues[vc])&&!namedNow.has(vc), askVenue=askFresh||(isOcc(vc)&&!(linkEntry(vc)||{}).name&&nearMuseumSite(host));
+      const askFresh=isOcc(vc)&&needsFacts(venues[vc])&&!namedNow.has(vc), askVenue=askFresh||(isOcc(vc)&&!(REG[vc]&&REG[vc].names.full)&&nearMuseumSite(host));
       // An entry that only places the venue's chip leaves this as it was (Cini).
-      const lk=linkEntry(vc), ownSite=vc===occVenueId(host)&&(!lk||Object.keys(lk).every(k=>k==="ownChip"||k==="chip"||k==="group"));
+      const ownSite=vc===occVenueId(host)&&!herVenue(vc);
       if(askFresh)namedNow.add(vc);
       work.push({n,url,item,res,page,vc,host,askFresh,askVenue,ownSite,tape,seen,entry:linkItem(page,askVenue,url,vc)});
       queued=true;
@@ -117,7 +117,7 @@ async function readShows(input,occVenues,{progress,stopped}){
           const gallery=had&&had.gallery!==undefined?had.gallery:ask.ok&&a.gallery;
           const shop=await discoverShop(pageShop,host,name,had?had.turnedDown:[],vc,null,(had&&had.english===false)||(ask.ok&&a.englishSpeaking===false),gallery&&!away?{page:oneText(res),url}:gallery);
           venues={...venues,[vc]:{...(had||{}),id:vc,name:had?had.name:named?named.name:page.site,host,english:had?had.english:undefined,
-            shopHome:null,shopCatalogues:null,shelfKind:null,shopSearch:null,why:null,shopEnglishUnread:null,englishPicked:false,
+            ...SHOP_RESET,
             ...shop,confirmed:false,turnedDown:had?had.turnedDown||[]:[],pageShop,addedAt:had?had.addedAt:new Date().toISOString()}};
           venuesChanged=true;
         }
@@ -137,7 +137,7 @@ async function readShows(input,occVenues,{progress,stopped}){
       Object.assign(seen,{venue:vc,answer:a,subtitleUnderHeading:own||null,title});
       tape.row={title,museumId:vc,exUrl:url};
       got.push({venue_code:vc,title,start_date:page.start,end_date:page.end,
-        summary:a.summary?composeSummary(cardTitle(a.english,vc),a.summary):"",url:page.link,
+        summary:a.summary?composeSummary(cardTitle(a.english,vc),ANSWER_CHECK.withoutPlaceOpener(a.summary,title,REG[vc]?REG[vc].read.places:[])):"",url:page.link,
         notes:[page.noDates?(page.orderUnknown?DATES.ORDER_UNKNOWN_NOTE:page.shown?DATES.shownOnlyNote(page.shown,page.shownWhy):page.scriptDates?SCRIPT_DATES_NOTE:DATES.NO_DATES_NOTE):"",page.dateNote||"",
           ask.ok?"":"Description not written \u2014 "+ask.detail.replace(/\s+\[.*$/,"")].filter(Boolean).join(" ")});
     }catch(e){ fails.push({url,why:"Couldn\u2019t read it ("+String((e&&e.message)||e)+")."}); }

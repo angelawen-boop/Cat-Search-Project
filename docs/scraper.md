@@ -342,8 +342,14 @@ alongside the real text).
 
 A venue with two galleries running one show keeps both rows, the city in each
 title; `noteTravellingRuns()` adds "The same exhibition is also shown at …".
-Never de-duplication. Opt in with `locations`. Acquavella adds the gallery only
-to a show run in both within six months.
+Never de-duplication. Opt in by listing its galleries on its register entry (`read.places`, and
+`read.placeOwner` for its own name written before a gallery) — nothing else. The gallery goes in the
+title only for a show run in both within six months (`placeTravellingRuns`); a gallery tacked onto a
+title after a dash leaves it (`withoutPlaceTail`); compression asks once for the pair; a description
+does not open with the gallery its title already names (`withoutPlaceOpener`, every way in). Acquavella
+reads its gallery from the card's parts; Lévy Gorvy Dayan from the card line that is one of its
+galleries (its show pages print "Lévy Gorvy Dayan, London" under the title — no saved listing page,
+so how its listing card marks the gallery is unproven until a sweep). VR-020–VR-024.
 
 ---
 
@@ -368,6 +374,11 @@ to a show run in both within six months.
    if every page is read and her count holds. **A failure is diagnosed offline
    from its log** (reply labels, stall report, kept pages), never by sweeping
    again; the next attempt is hers to call.
+
+**Its facts go in the venue register, never the recipe** (`venues/register.js`): names, city, country,
+language, shop, date order, its galleries. The recipe says only how it is swept. **A gallery with
+several locations gets the identical setup to Acquavella and Lévy Gorvy Dayan** (her decision): its
+places listed once in the register (`read.places`, `read.placeOwner`), nothing else (§11).
 
 **Reading the page alone (`pageOnly`) — Ashmolean only.** Only for a venue
 whose PAGES HANG (the stall report: the page answered, its files did not): she

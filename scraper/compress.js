@@ -79,7 +79,10 @@ const ANSWERS_JSON   = 'compress_answers.json';
 
 // The checks on every answer — shape, and claims the page must hold — are one copy, shared with
 // Add by link (scraper/answer_check.js).
-const { MAX_WORDS, wordCount, validateAnswer, validateEnglish } = require('./answer_check');
+const { MAX_WORDS, wordCount, validateAnswer, validateEnglish, withoutPlaceOpener } = require('./answer_check');
+// Data only: each venue's galleries and show addresses (venues/register.js).
+const REGISTER = require('../venues/register.js').VENUES;
+const placesOf = code => (REGISTER.find(v => v.id === code) || { read: { places: [] } }).read.places;
 
 /**
  * Written into `notes` when the model judged the page text not to be a
@@ -151,18 +154,15 @@ function composeSummary(english, teaser) {
 }
 
 /**
- * Venues that run the same exhibition at more than one address.
- *
- * MIRRORS `VENUES[code].locations` in sweep_prototype.js, and a fixture asserts
- * the two agree — compress.js must not require the scraper, which would drag
- * Playwright into a step that is pure text.
+ * Venues that run the same exhibition at more than one address: each venue's galleries, from its
+ * register entry (read.places), the list the scraper's "also shown at" note reads too.
  *
  * Acquavella shows Portraiture: From Cassatt to Warhol in New York AND Palm
  * Beach. Both rows are kept, always (Section 3: the scraper never
  * de-duplicates), but they must not end up carrying DIFFERENT summaries or
  * they read as two unrelated exhibitions on the approval cards.
  */
-const TRAVELLING_LOCATIONS = { acq: ['New York', 'Palm Beach'] };
+const TRAVELLING_LOCATIONS = Object.fromEntries(REGISTER.filter(v => v.read.places.length > 1).map(v => [v.id, v.read.places]));
 
 /**
  * The identity of an exhibition ignoring which city it is in.
@@ -522,9 +522,11 @@ function decide(row, prev) {
  */
 function resolveAnswer(value, p) {
   const marked = !!p.englishTitle;
+  // A gallery in brackets in the title: the description does not open with it too (withoutPlaceOpener).
+  const unplaced = r => (r.ok && !r.skip ? { ...r, text: withoutPlaceOpener(r.text, p.title, placesOf(p.venue_code)) } : r);
   if (!marked) {
     if (value !== null && typeof value !== 'string') return { ok: false, reason: 'not a string' };
-    return validateAnswer(value);
+    return unplaced(validateAnswer(value));
   }
   if (value === null) {
     if (p.action === 'retitle') return { ok: false, reason: 'null on a row asked only for its English title' };
@@ -541,7 +543,7 @@ function resolveAnswer(value, p) {
     if (!kept) return { ok: false, reason: 'nothing held to keep' };
     return { ok: true, text: composeSummary(en.text, kept) };
   }
-  const d = validateAnswer(value.summary === undefined ? '' : value.summary);
+  const d = unplaced(validateAnswer(value.summary === undefined ? '' : value.summary));
   if (!d.ok || d.skip) return d.ok ? { ok: false, reason: 'null summary inside an object; answer null instead' } : d;
   return { ok: true, text: composeSummary(en.text, d.text) };
 }
@@ -795,9 +797,7 @@ function seedMemory(jsxPath) {
   };
   // eslint-disable-next-line no-eval
   const seed = eval(slice('const S=['));
-  // eslint-disable-next-line no-eval
-  const museums = eval(slice('const MUSEUMS'));
-  const base = Object.fromEntries(museums.map(m => [m.id, m.exBase || '']));
+  const base = Object.fromEntries(REGISTER.map(v => [v.id, v.sweep.exBase || '']));
 
   const rows = [];
   for (const [venue, title, start, end, summary, slug] of seed) {

@@ -59,16 +59,25 @@ async function callTool(server, tool, args) {
 const win = { claude: { use: async name => (name === 'mcp' ? { callTool } : null) } };
 const A = load(path.join(ROOT, 'Cat_Watch.jsx'), ['discoverShop', 'normalizeUrlKey'], win);
 
+// A venue the register holds takes its right shop from there (shop.catalogues, else the section it was
+// filed with), unless the list names one of its own (a section the register does not hold).
+const { VENUES: REGISTER } = require('../venues/register.js');
+function rightShop(v) {
+  if (v.shop !== undefined) return v.shop;
+  const e = REGISTER.find(x => x.id === (v.id || v.key));
+  return e ? e.shop.catalogues || (e.filed && e.filed.shopCatalogues) || null : null;
+}
 // Right when the finder's answer is the venue's right shop: its books section (`shop`), any of
 // `also` where the shop has more than one right section, no shop where it has none, or the shop
 // itself (`noshelfHome`) where Parallel cannot see its books.
 function judge(v, got) {
-  if (v.shop === null) return got.shop !== 'found' ? null : 'found ' + got.shopCatalogues + ', where the venue has no shop of its own';
+  const shop = rightShop(v);
+  if (shop === null) return got.shop !== 'found' ? null : 'found ' + got.shopCatalogues + ', where the venue has no shop of its own';
   // A shop whose books Parallel cannot see: "Shop found, but not its books section" with that shop is right.
   if (v.noshelfHome && got.shop === 'noshelf') return A.normalizeUrlKey(got.shopHome) === A.normalizeUrlKey(v.noshelfHome) ? null : 'gave ' + got.shopHome + ' as the shop, not ' + v.noshelfHome;
-  if (got.shop !== 'found') return 'answered "' + got.shop + '"' + (got.why ? ' (' + got.why + ')' : '') + ', not ' + v.shop;
+  if (got.shop !== 'found') return 'answered "' + got.shop + '"' + (got.why ? ' (' + got.why + ')' : '') + ', not ' + shop;
   const k = A.normalizeUrlKey;
-  return [v.shop, ...(v.also || [])].some(u => k(u) === k(got.shopCatalogues)) ? null : 'took ' + got.shopCatalogues + ', not ' + v.shop;
+  return [shop, ...(v.also || [])].some(u => k(u) === k(got.shopCatalogues)) ? null : 'took ' + got.shopCatalogues + ', not ' + shop;
 }
 const stepLine = s => '    ' + s.step.padEnd(16) + JSON.stringify(Object.fromEntries(Object.entries(s).filter(([k]) => k !== 'step'))).slice(0, 220);
 

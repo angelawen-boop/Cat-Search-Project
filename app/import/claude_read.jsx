@@ -12,13 +12,13 @@ const LINK_READ_TIER="complex";
 // and other names, city and country, for searching, and a short card name in her style. Whether the page is
 // the museum's own decides the rest: only someone else's page asks more (elsewherePrompt).
 // Her names for venues, as the style for a new venue's short name.
-const SHORT_NAME_EXAMPLES=()=>Object.values(LINK_VENUES).map(v=>v.card||v.short).filter(Boolean);
+const SHORT_NAME_EXAMPLES=()=>VENUE_REGISTER.filter(e=>e.kind==="manual"&&e.names.hers).map(e=>e.names.card).filter(Boolean);
 //@piece SHORT_NAME_RENAMES
 
 // Her renames of Claude's card names (`notCard`), each with the name Claude gave: so Claude learns her style.
 // The full name is the entry's, else the one Claude gave, as the store holds it (MU).
-const SHORT_NAME_RENAMES=()=>Object.entries(LINK_VENUES).filter(([,v])=>v.notCard&&(v.card||v.short))
-  .map(([id,v])=>"for "+JSON.stringify(v.name||(MU[id]&&MU[id].name)||v.lookupName||v.short)+": "+JSON.stringify(v.card||v.short)+", not "+JSON.stringify(v.notCard));
+const SHORT_NAME_RENAMES=()=>VENUE_REGISTER.filter(e=>e.kind==="manual"&&e.names.hers&&e.names.replaced.length)
+  .map(e=>"for "+JSON.stringify(e.names.full||e.names.lookup||e.names.card)+": "+JSON.stringify(e.names.card)+", not "+e.names.replaced.map(x=>JSON.stringify(x)).join(" or "));
 //@piece linkItem
 
 // ONE REQUEST FOR THE WHOLE IMPORT (her decision): every page of a Links, Pages or Paste import goes

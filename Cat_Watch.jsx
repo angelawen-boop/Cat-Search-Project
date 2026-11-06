@@ -6,90 +6,888 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 const APP_VERSION = "58";
 const APP_VERSION_DATE = "5 Nov 2026";
 
-// The venue order is VENUE_ORDER, below the list, which sorts MUSEUMS; drawer, chips,
-// Sort by Venue and refresh headings all follow it.
-//
-// shopCatalogues: the shop's catalogue shelf, opened first. shopSearch: its search box
-// plus the exhibition title, opened with it. Addresses: docs/app.md §1 "Shop addresses".
-// card: the name on exhibition cards where it differs from the chip's `short`.
-// chip: the Venue chip's label alone, where shorter than `short` (her decision: "Rijks").
-// underOcc: no chip of its own; its cards file under "Occasional" (her decision; Ashmolean).
-// lookupName: the name the catalogue lookup searches with, where `short` is only a label.
-// english:false: only these venues get the language check and English-edition search
-// (lookupCatalogue, phases 2b and 3).
-const MUSEUMS = [
+// ===== THE VENUE REGISTER — the join writes venues/register.js in below, every venue's facts in her venue order; never edit it here. Edit venues/register.js, then run `node build/app_join.js`. =====
+const VENUE_REGISTER=(()=>{
+// Palazzo Reale Milano's heading is the short name plus " - Palazzo Reale Milano", the full
+// name on a line below it (nameInLines: the longest line between title and dates that starts
+// with the short name; AL-048). Its pages on the city council's site open with a "# Navigation"
+// heading and the site's menu; the show's heading is the one ending in the venue's name
+// (titleHeading): "Palazzo Reale Milano", "Palazzo Reale, Milan" or "Royal Palace of Milan".
+// Its English pages say "as of" for "to" ("from February 21, 2019 as of June 6, 2019";
+// Antonello da Messina; asOfTo).
+const PRM_TAIL = /\s+[-–—]\s+(?:Palazzo Reale,? Milano?|Royal Palace of Milan)$/i;
+// Its "Upcoming Exhibitions" box lists other shows with their dates: the show's own dates and
+// text end there (until, datesUntil; Soutine took the box's first dates).
+const PRM_BOX = /^(?:Current|Upcoming|Past) Exhibitions$|^Mostre (?:in corso|future|passate)$/i;
+
+const VENUES = [
+
   // The Met prints a show's dates on its "on view" line: below a podcast transcript (Manet/Degas), or above the only line naming the show (Impossible Conversations).
-  { id:"met", linkRead:{ dateLine:/\bon view\b/i }, short:"The Met", name:"The Metropolitan Museum of Art", city:"New York",
-    exBase:"https://www.metmuseum.org/exhibitions/", shopSearch:"https://store.metmuseum.org/search?q=", shopCatalogues:"https://store.metmuseum.org/books-toys-games/exhibition-catalogues", shopHome:"https://store.metmuseum.org/", listUrl:"https://www.metmuseum.org/exhibitions" },
-  { id:"rijks", english:false, short:"Rijksmuseum", chip:"Rijks", name:"Rijksmuseum", city:"Amsterdam",
-    exBase:"https://www.rijksmuseum.nl/en/whats-on/exhibitions/", shopSearch:"https://www.rijksmuseumshop.nl/en/search?q=", shopCatalogues:"https://www.rijksmuseumshop.nl/en/books/exhibition-books", shopHome:"https://www.rijksmuseumshop.nl/en/", listUrl:"https://www.rijksmuseum.nl/en/whats-on/exhibitions/now-on-view" },
-  { id:"ng", short:"NG UK", lookupName:"National Gallery", name:"The National Gallery", city:"London",
-    exBase:"https://www.nationalgallery.org.uk/exhibitions/", shopSearch:"https://shop.nationalgallery.org.uk/catalogsearch/result/?q=", shopCatalogues:"https://shop.nationalgallery.org.uk/books/exhibition-catalogues.html", shopHome:"https://shop.nationalgallery.org.uk/", listUrl:"https://www.nationalgallery.org.uk/exhibitions" },
+  { id: "met", kind: "swept",
+    names: { card: "The Met", chip: "The Met", group: null, full: "The Metropolitan Museum of Art", inEnglish: null, aka: [], lookup: "The Met", replaced: [], hers: true },
+    city: "New York", country: "United States", english: true, language: null,
+    shop: { home: "https://store.metmuseum.org/", catalogues: "https://store.metmuseum.org/books-toys-games/exhibition-catalogues", search: "https://store.metmuseum.org/search?q=", unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
+    read: { link: { dateLine: /\bon view\b/i }, sites: [], dateOrder: null, spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
+    sweep: { exBase: "https://www.metmuseum.org/exhibitions/", listUrl: "https://www.metmuseum.org/exhibitions" },
+    filed: null },
+
+  { id: "ng", kind: "swept",
+    names: { card: "NG UK", chip: "NG UK", group: null, full: "The National Gallery", inEnglish: null, aka: [], lookup: "National Gallery", replaced: [], hers: true },
+    city: "London", country: "United Kingdom", english: true, language: null,
+    shop: { home: "https://shop.nationalgallery.org.uk/", catalogues: "https://shop.nationalgallery.org.uk/books/exhibition-catalogues.html", search: "https://shop.nationalgallery.org.uk/catalogsearch/result/?q=", unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
+    read: { link: null, sites: [], dateOrder: null, spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
+    sweep: { exBase: "https://www.nationalgallery.org.uk/exhibitions/", listUrl: "https://www.nationalgallery.org.uk/exhibitions" },
+    filed: null },
+
+  { id: "occ-nga-gov", kind: "manual",
+    names: { card: "NG Washington", chip: "NG Washington", group: null, full: "National Gallery of Art", inEnglish: null, aka: ["NGA"], lookup: "NGA", replaced: [], hers: true },
+    city: "Washington, DC", country: "United States", english: true, language: null,
+    shop: { home: null, catalogues: null, search: null, unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
+    read: { link: null, sites: [], dateOrder: null, spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
+    sweep: { exBase: null, listUrl: null },
+    filed: { addedAt: "2026-10-09T13:32:40.150Z", aka: ["NGA"], city: "Washington, DC", confirmed: true, country: "United States", english: true, finder: 3, foundBy: "a search", host: "www.nga.gov", id: "occ-nga-gov", name: "National Gallery of Art", pageShop: "https://shop.nga.gov/", shelfKind: "catalogues", shop: "found", shopCatalogues: "https://shop.nga.gov/collections/books-exhibition-catalogs", shopHome: "https://shop.nga.gov/", shopSearch: "https://shop.nga.gov/search?q=", turnedDown: [], why: null } },
+
+  // The whole Publications shelf: the Frick files some show books outside "Exhibition catalogues" (her finding).
+  { id: "frick", kind: "swept",
+    names: { card: "Frick", chip: "Frick", group: null, full: "The Frick Collection", inEnglish: null, aka: [], lookup: "Frick", replaced: [], hers: true },
+    city: "New York", country: "United States", english: true, language: null,
+    shop: { home: "https://shop.frick.org/", catalogues: "https://shop.frick.org/publications/", search: "https://shop.frick.org/search.php?search_query=", unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
+    read: { link: { titleDrop: /^Special Loan:\s*/i }, sites: [], dateOrder: null, spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
+    sweep: { exBase: null, listUrl: null },
+    filed: null },
+
+  { id: "morgan", kind: "swept",
+    names: { card: "Morgan", chip: "Morgan", group: null, full: "Morgan Library & Museum", inEnglish: null, aka: [], lookup: "Morgan", replaced: [], hers: true },
+    city: "New York", country: "United States", english: true, language: null,
+    shop: { home: "https://shop.themorgan.org/", catalogues: "https://shop.themorgan.org/collections/exhibition-catalogs", search: "https://shop.themorgan.org/search?q=", unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
+    read: { link: null, sites: [], dateOrder: null, spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
+    sweep: { exBase: null, listUrl: null },
+    filed: null },
+
+  { id: "artic", kind: "swept",
+    names: { card: "Artic", chip: "Artic", group: null, full: "Art Institute of Chicago", inEnglish: null, aka: [], lookup: "Artic", replaced: [], hers: true },
+    city: "Chicago", country: "United States", english: true, language: null,
+    shop: { home: "https://shop.artic.edu/", catalogues: "https://shop.artic.edu/collections/exhibition-catalogues", search: "https://shop.artic.edu/search?q=", unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
+    read: { link: { from: /^Share$/, until: /^(?:Share|Related(?: Exhibitions| Products)?|Sign up for our enewsletter\b.*)$/, minLine: 60, skip: /\u00a9|Press 300ppi|Image CC|Photo courtesy|^(?:an?|the)\s+(?:[\w,\x27-]+\s+){0,5}?(?:painting|poster|drawing|photograph|photomontage|statuette|cover|print)\b,?\s+(?:of|with|reads|that|in|featuring|showing)\b/i }, sites: [], dateOrder: null, spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
+    sweep: { exBase: null, listUrl: null },
+    filed: null },
+
+  { id: "menil", kind: "swept",
+    names: { card: "Menil", chip: "Menil", group: null, full: "The Menil Collection", inEnglish: null, aka: [], lookup: "Menil", replaced: [], hers: true },
+    city: "Houston", country: "United States", english: true, language: null,
+    shop: { home: "https://bookstore.menil.org/", catalogues: "https://bookstore.menil.org/collections/menil-publications", search: "https://bookstore.menil.org/search?q=", unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
+    read: { link: { titleDrop: /^Collection Close-Up:\s*/i }, sites: [], dateOrder: null, spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
+    sweep: { exBase: null, listUrl: null },
+    filed: null },
+
   // linkRead: Add by link options for met, acq, frick, menil, louvre, artic, brit, cincinnati, moma (docs/add_by_link.md, "Venue link rules").
   // No apostrophe or double quote inside a linkRead pattern (write \x27): compress.js seedMemory scans this list as text.
-  { id:"acq", linkRead:{ title:"subtitle", places:["New York","Palm Beach"], credit:/^In collaboration with\b/i, dashAfterColon:true, from:/^Press Release$/, minLine:60, skip:/^Gallery Hours:|\bImage Courtesy\b/, skipEntities:true, cleanLink:true }, short:"Acquavella", name:"Acquavella Galleries", city:"New York",
-    exBase:"https://www.acquavellagalleries.com/exhibitions/", shopSearch:"https://acquavellagalleries.myshopify.com/search?q=", shopCatalogues:"https://acquavellagalleries.myshopify.com/collections/all", shopHome:"https://acquavellagalleries.myshopify.com/", listUrl:"https://www.acquavellagalleries.com/exhibitions" },
-  // Shopify, like Acquavella's. Chip "Levy", cards "Lévy Gorvy Dayan" (her decision).
-  { id:"lgd", short:"Levy", name:"Lévy Gorvy Dayan", city:"New York / London",
-    exBase:"https://www.levygorvydayan.com/exhibitions/", shopSearch:"https://shop.levygorvydayan.com/search?q=", shopCatalogues:"https://shop.levygorvydayan.com/collections/all", shopHome:"https://shop.levygorvydayan.com/", listUrl:"https://www.levygorvydayan.com/exhibitions" },
-  // The whole Publications shelf: the Frick files some show books outside "Exhibition catalogues" (her finding).
-  { id:"frick", linkRead:{ titleDrop:/^Special Loan:\s*/i }, short:"Frick", name:"The Frick Collection", city:"New York", exBase:null, shopSearch:"https://shop.frick.org/search.php?search_query=", shopCatalogues:"https://shop.frick.org/publications/", shopHome:"https://shop.frick.org/", listUrl:null },
-  { id:"menil", linkRead:{ titleDrop:/^Collection Close-Up:\s*/i }, short:"Menil", name:"The Menil Collection", city:"Houston", exBase:null, shopSearch:"https://bookstore.menil.org/search?q=", shopCatalogues:"https://bookstore.menil.org/collections/menil-publications", shopHome:"https://bookstore.menil.org/", listUrl:null },
-  { id:"artic", linkRead:{ from:/^Share$/, until:/^(?:Share|Related(?: Exhibitions| Products)?|Sign up for our enewsletter\b.*)$/, minLine:60, skip:/\u00a9|Press 300ppi|Image CC|Photo courtesy|^(?:an?|the)\s+(?:[\w,\x27-]+\s+){0,5}?(?:painting|poster|drawing|photograph|photomontage|statuette|cover|print)\b,?\s+(?:of|with|reads|that|in|featuring|showing)\b/i }, short:"Artic", name:"Art Institute of Chicago", city:"Chicago", exBase:null, shopSearch:"https://shop.artic.edu/search?q=", shopCatalogues:"https://shop.artic.edu/collections/exhibition-catalogues", shopHome:"https://shop.artic.edu/", listUrl:null },
+  { id: "acq", kind: "swept",
+    names: { card: "Acquavella", chip: "Acquavella", group: null, full: "Acquavella Galleries", inEnglish: null, aka: [], lookup: "Acquavella", replaced: [], hers: true },
+    city: "New York", country: "United States", english: true, language: null,
+    shop: { home: "https://acquavellagalleries.myshopify.com/", catalogues: "https://acquavellagalleries.myshopify.com/collections/all", search: "https://acquavellagalleries.myshopify.com/search?q=", unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
+    read: { link: { title: "subtitle", credit: /^In collaboration with\b/i, dashAfterColon: true, from: /^Press Release$/, minLine: 60, skip: /^Gallery Hours:|\bImage Courtesy\b/, skipEntities: true, cleanLink: true }, sites: [], dateOrder: null, spacedYear: false, places: ["New York", "Palm Beach"], placeOwner: "Acquavella", titleCaps: null, subtitleUnderHeading: false },
+    sweep: { exBase: "https://www.acquavellagalleries.com/exhibitions/", listUrl: "https://www.acquavellagalleries.com/exhibitions" },
+    filed: null },
+
+  // Shopify, like Acquavella's. Chip and cards "Levy" (her decision); its galleries are read.places.
+  { id: "lgd", kind: "swept",
+    names: { card: "Levy", chip: "Levy", group: null, full: "L\u00e9vy Gorvy Dayan", inEnglish: null, aka: [], lookup: "Levy", replaced: [], hers: true },
+    city: null, country: "United States", english: true, language: null,
+    shop: { home: "https://shop.levygorvydayan.com/", catalogues: "https://shop.levygorvydayan.com/collections/all", search: "https://shop.levygorvydayan.com/search?q=", unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
+    read: { link: null, sites: [], dateOrder: null, spacedYear: false, places: ["New York", "London"], placeOwner: "L\u00e9vy Gorvy Dayan", titleCaps: null, subtitleUnderHeading: false },
+    sweep: { exBase: "https://www.levygorvydayan.com/exhibitions/", listUrl: "https://www.levygorvydayan.com/exhibitions" },
+    filed: null },
+
+  // Mia's page titles end "–– Minneapolis Institute of Art".
+  { id: "occ-new-artsmia-org", kind: "manual",
+    names: { card: "Minneapolis", chip: "Mia", group: null, full: "Minneapolis Institute of Art", inEnglish: null, aka: [], lookup: "Mia", replaced: ["Mia"], hers: true },
+    city: "Minneapolis", country: "United States", english: true, language: null,
+    shop: { home: null, catalogues: null, search: null, unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
+    read: { link: { titleDrop: /\s+[-–—]+\s+Minneapolis Institute of Art$/i }, sites: [], dateOrder: null, spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
+    sweep: { exBase: null, listUrl: null },
+    filed: { addedAt: "2026-10-13T13:05:11.688Z", confirmed: true, english: true, finder: 3, foundBy: "a search", host: "new.artsmia.org", id: "occ-new-artsmia-org", name: "Minneapolis Institute of Art", pageShop: "", shelfKind: "catalogues", shop: "found", shopCatalogues: "https://shop.artsmia.org/collections/exhibition-catalogues", shopHome: "https://shop.artsmia.org/", shopSearch: "https://shop.artsmia.org/search?q=", turnedDown: [], why: null } },
+
   // Her addition, after Artic. Shopify: search box and her Books shelf.
-  { id:"cincinnati", linkRead:{ crumb:true }, short:"Cincinnati", name:"Cincinnati Art Museum", city:"Cincinnati", exBase:null, shopSearch:"https://shop.cincinnatiartmuseum.org/search?q=", shopCatalogues:"https://shop.cincinnatiartmuseum.org/collections/books", shopHome:"https://shop.cincinnatiartmuseum.org/", listUrl:null },
-  { id:"wallace", short:"Wallace", name:"The Wallace Collection", city:"London", exBase:null, shopSearch:"https://wallacecollectionshop.org/search?q=", shopCatalogues:"https://wallacecollectionshop.org/collections/wallace-collection-publications", shopHome:"https://wallacecollectionshop.org/", listUrl:null },
-  { id:"tate-britain", short:"Tate Britain", name:"Tate Britain", city:"London", exBase:null, shopSearch:"https://shop.tate.org.uk/search?q=", shopCatalogues:"https://shop.tate.org.uk/books/exhibition-books?sz=96", shopHome:"https://shop.tate.org.uk/", listUrl:null },
-  // Her addition, after Tate Britain. Shopify: search box and her exhibition-catalogues shelf.
-  { id:"ashmolean", underOcc:true, short:"Ashmolean", name:"Ashmolean Museum", city:"Oxford", exBase:null, shopSearch:"https://shop.ashmolean.org/search?q=", shopCatalogues:"https://shop.ashmolean.org/collections/exhibition-catalogues", shopHome:"https://shop.ashmolean.org/", listUrl:null },
-  { id:"va", short:"V&A", name:"Victoria and Albert Museum", city:"London", exBase:null, shopSearch:"https://www.vam.ac.uk/shop/search?q=", shopCatalogues:"https://www.vam.ac.uk/shop/books/exhibition-books.html", shopHome:"https://www.vam.ac.uk/shop", listUrl:null },
-  { id:"louvre", linkRead:{ title:"pieces", minLine:60, skip:/\bclosed\b|remain open|apologis|pleasant visit/i }, english:false, short:"Louvre", name:"Louvre Museum", city:"Paris", exBase:null, shopSearch:"https://boutique.louvre.fr/en/search/products/?q=", shopCatalogues:"https://boutique.louvre.fr/en/products/400001-exhibition-catalogues/", shopHome:"https://boutique.louvre.fr/en/", listUrl:null },
+  { id: "cincinnati", kind: "swept",
+    names: { card: "Cincinnati", chip: "Cincinnati", group: null, full: "Cincinnati Art Museum", inEnglish: null, aka: [], lookup: "Cincinnati", replaced: [], hers: true },
+    city: "Cincinnati", country: "United States", english: true, language: null,
+    shop: { home: "https://shop.cincinnatiartmuseum.org/", catalogues: "https://shop.cincinnatiartmuseum.org/collections/books", search: "https://shop.cincinnatiartmuseum.org/search?q=", unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
+    read: { link: { crumb: true }, sites: [], dateOrder: null, spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
+    sweep: { exBase: null, listUrl: null },
+    filed: null },
+
+  // rankAsOwn: other houses ranked as the venue's own in her order, display only (her decision:
+  // Yale's two imprints rank the same).
+  { id: "occ-britishart-yale-edu", kind: "manual",
+    names: { card: "Yale CBA", chip: "Yale CBA", group: null, full: "Yale Center for British Art", inEnglish: null, aka: [], lookup: "Yale Center for British Art", replaced: [], hers: true },
+    city: "New Haven", country: "United States", english: true, language: null,
+    shop: { home: null, catalogues: null, search: null, unseen: null, queries: [], named: null, rankAsOwn: ["Yale University Press"], inStock: null },
+    read: { link: null, sites: [], dateOrder: null, spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
+    sweep: { exBase: null, listUrl: null },
+    filed: { addedAt: "2026-10-17T06:44:41.407Z", confirmed: true, english: true, finder: 3, foundBy: "the shop's menu", host: "britishart.yale.edu", id: "occ-britishart-yale-edu", name: "Yale Center for British Art", pageShop: "", shelfKind: "publications", shop: "found", shopCatalogues: "https://secure.touchnet.net/C20510_ustores/web/store_cat.jsp?STOREID=7&CATID=16&SINGLESTORE=true", shopHome: "https://secure.touchnet.net/C20510_ustores/web/store_main.jsp?STOREID=7&SINGLESTORE=true", shopSearch: null, turnedDown: [], why: null } },
+
+  { id: "brit", kind: "swept",
+    names: { card: "British Museum", chip: "British Museum", group: null, full: "The British Museum", inEnglish: null, aka: [], lookup: "British Museum", replaced: [], hers: true },
+    city: "London", country: "United Kingdom", english: true, language: null,
+    shop: { home: "https://britishmuseumshoponline.org/", catalogues: "https://www.britishmuseumshoponline.org/books/exhibition-books.html", search: "https://www.britishmuseumshoponline.org/catalogsearch/result/?q=", unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
+    read: { link: { from: /^(?:For the catalogue, homewares and gifts from the exhibition|Book tickets$)/ }, sites: [], dateOrder: null, spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
+    sweep: { exBase: null, listUrl: null },
+    filed: null },
+
+  { id: "tate-britain", kind: "swept",
+    names: { card: "Tate Britain", chip: "Tate Britain", group: null, full: "Tate Britain", inEnglish: null, aka: [], lookup: "Tate Britain", replaced: [], hers: true },
+    city: "London", country: "United Kingdom", english: true, language: null,
+    shop: { home: "https://shop.tate.org.uk/", catalogues: "https://shop.tate.org.uk/books/exhibition-books?sz=96", search: "https://shop.tate.org.uk/search?q=", unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
+    read: { link: null, sites: [], dateOrder: null, spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
+    sweep: { exBase: null, listUrl: null },
+    filed: null },
+
+  { id: "wallace", kind: "swept",
+    names: { card: "Wallace", chip: "Wallace", group: null, full: "The Wallace Collection", inEnglish: null, aka: [], lookup: "Wallace", replaced: [], hers: true },
+    city: "London", country: "United Kingdom", english: true, language: null,
+    shop: { home: "https://wallacecollectionshop.org/", catalogues: "https://wallacecollectionshop.org/collections/wallace-collection-publications", search: "https://wallacecollectionshop.org/search?q=", unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
+    read: { link: null, sites: [], dateOrder: null, spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
+    sweep: { exBase: null, listUrl: null },
+    filed: null },
+
+  { id: "va", kind: "swept",
+    names: { card: "V&A", chip: "V&A", group: null, full: "Victoria and Albert Museum", inEnglish: null, aka: [], lookup: "V&A", replaced: [], hers: true },
+    city: "London", country: "United Kingdom", english: true, language: null,
+    shop: { home: "https://www.vam.ac.uk/shop", catalogues: "https://www.vam.ac.uk/shop/books/exhibition-books.html", search: "https://www.vam.ac.uk/shop/search?q=", unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
+    read: { link: null, sites: [], dateOrder: null, spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
+    sweep: { exBase: null, listUrl: null },
+    filed: null },
+
+  { id: "occ-nationalgalleries-org", kind: "manual",
+    names: { card: "NG Scotland", chip: "NG Scotland", group: null, full: "National Galleries of Scotland", inEnglish: null, aka: [], lookup: "NG Scotland", replaced: [], hers: true },
+    city: "Edinburgh", country: "United Kingdom", english: true, language: null,
+    shop: { home: null, catalogues: null, search: null, unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
+    read: { link: null, sites: [], dateOrder: null, spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
+    sweep: { exBase: null, listUrl: null },
+    filed: { addedAt: "2026-10-13T12:48:23.190Z", confirmed: true, english: true, finder: 3, foundBy: "a search", host: "www.nationalgalleries.org", id: "occ-nationalgalleries-org", name: "National Galleries of Scotland", pageShop: "https://shop.nationalgalleries.org/", shelfKind: "books", shop: "found", shopCatalogues: "https://shop.nationalgalleries.org/collection-exhibitions/exhibition-books/", shopHome: "https://shop.nationalgalleries.org/", shopSearch: "https://shop.nationalgalleries.org/search?q=", turnedDown: [], why: null } },
+
+  { id: "louvre", kind: "swept",
+    names: { card: "Louvre", chip: "Louvre", group: null, full: "Louvre", inEnglish: null, aka: [], lookup: "Louvre", replaced: [], hers: true },
+    city: "Paris", country: "France", english: false, language: "French",
+    shop: { home: "https://boutique.louvre.fr/en/", catalogues: "https://boutique.louvre.fr/en/products/400001-exhibition-catalogues/", search: "https://boutique.louvre.fr/en/search/products/?q=", unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
+    read: { link: { title: "pieces", minLine: 60, skip: /\bclosed\b|remain open|apologis|pleasant visit/i }, sites: [], dateOrder: null, spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
+    sweep: { exBase: null, listUrl: null },
+    filed: null },
+
   // The French venues below share the Louvre's shop system: search box and "Exhibition catalogs" shelf.
   // Orsay: the national museums' shared shop; shelf and search are hers (the search covers every museum there).
-  { id:"orsay", english:false, short:"Orsay", name:"Mus\u00e9e d'Orsay", city:"Paris", exBase:null, shopSearch:"https://www.boutiquesdemusees.fr/en/search/products/?q=", shopCatalogues:"https://www.boutiquesdemusees.fr/en/ext/products/musee-orsay/5452-exhibition-catalogues/", shopHome:"https://www.boutiquesdemusees.fr/en/ext/products/musee-orsay/5452-exhibition-catalogues/", listUrl:null },
-  // No search box, so the publications shelf is the only route in. Pages are numbered in the
-  // path (/c462/2/; shelfPages). shopHome is the shelf, so her shop link lands on the books.
-  { id:"mad", english:false, short:"MAD Paris", name:"Mus\u00e9e des Arts D\u00e9coratifs", city:"Paris", exBase:null, shopSearch:null, shopCatalogues:"https://boutique.madparis.fr/en/mads-publications/c462/1/", shopHome:"https://boutique.madparis.fr/en/mads-publications/c462/1/", listUrl:null },
+  { id: "orsay", kind: "swept",
+    names: { card: "Orsay", chip: "Orsay", group: null, full: "Mus\u00e9e d'Orsay", inEnglish: null, aka: [], lookup: "Orsay", replaced: [], hers: true },
+    city: "Paris", country: "France", english: false, language: "French",
+    shop: { home: "https://www.boutiquesdemusees.fr/en/ext/products/musee-orsay/5452-exhibition-catalogues/", catalogues: "https://www.boutiquesdemusees.fr/en/ext/products/musee-orsay/5452-exhibition-catalogues/", search: "https://www.boutiquesdemusees.fr/en/search/products/?q=", unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
+    read: { link: null, sites: [], dateOrder: null, spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
+    sweep: { exBase: null, listUrl: null },
+    filed: null },
+
   // subtitleUnderHeading: the line under a show page's heading is its subtitle, read by code
   // for Add by link (docs/link_pages/).
-  { id:"jacquemart", chip:"Jacquemart", subtitleUnderHeading:true, english:false, short:"Jacquemart-Andr\u00e9", name:"Mus\u00e9e Jacquemart-Andr\u00e9", city:"Paris", exBase:null, shopSearch:"https://boutique.musee-jacquemart-andre.com/en/search/products/?q=", shopCatalogues:"https://boutique.musee-jacquemart-andre.com/en/products/116-exhibition-catalogs/", shopHome:"https://boutique.musee-jacquemart-andre.com/en/", listUrl:null },
+  { id: "jacquemart", kind: "swept",
+    names: { card: "Jacquemart-Andr\u00e9", chip: "Jacquemart", group: null, full: "Mus\u00e9e Jacquemart-Andr\u00e9", inEnglish: null, aka: [], lookup: "Jacquemart-Andr\u00e9", replaced: [], hers: true },
+    city: "Paris", country: "France", english: false, language: "French",
+    shop: { home: "https://boutique.musee-jacquemart-andre.com/en/", catalogues: "https://boutique.musee-jacquemart-andre.com/en/products/116-exhibition-catalogs/", search: "https://boutique.musee-jacquemart-andre.com/en/search/products/?q=", unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
+    read: { link: null, sites: [], dateOrder: null, spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: true },
+    sweep: { exBase: null, listUrl: null },
+    filed: null },
+
+  // Chantilly (Musée Condé): chip "Chantilly" after Jacquemart; its cards keep the store's name (her decision).
+  { id: "occ-chateaudechantilly-fr", kind: "manual",
+    names: { card: "Mus\u00e9e Cond\u00e9 Chantilly", chip: "Chantilly", group: null, full: "Mus\u00e9e Cond\u00e9, Ch\u00e2teau de Chantilly", inEnglish: null, aka: ["Ch\u00e2teau de Chantilly", "Domaine de Chantilly"], lookup: "Chantilly Mus\u00e9e Cond\u00e9", replaced: ["Chantilly Mus\u00e9e Cond\u00e9"], hers: true },
+    city: "Chantilly", country: "France", english: false, language: null,
+    shop: { home: null, catalogues: null, search: null, unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
+    read: { link: null, sites: [], dateOrder: null, spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
+    sweep: { exBase: null, listUrl: null },
+    filed: { addedAt: "2026-10-29T02:55:17.273Z", aka: ["Ch\u00e2teau de Chantilly", "Domaine de Chantilly"], city: "Chantilly", confirmed: true, country: "France", english: false, englishPicked: false, finder: 3, gallery: false, host: "chateaudechantilly.fr", id: "occ-chateaudechantilly-fr", name: "Mus\u00e9e Cond\u00e9, Ch\u00e2teau de Chantilly", pageShop: "", shelfKind: null, shop: "none", shopCatalogues: null, shopEnglishUnread: null, shopHome: null, shopSearch: null, short: "Chantilly Mus\u00e9e Cond\u00e9", turnedDown: [], why: null } },
+
+  // No search box, so the publications shelf is the only route in. Pages are numbered in the
+  // path (/c462/2/; shelfPages). shopHome is the shelf, so her shop link lands on the books.
+  { id: "mad", kind: "swept",
+    names: { card: "MAD Paris", chip: "MAD Paris", group: null, full: "Mus\u00e9e des Arts D\u00e9coratifs", inEnglish: null, aka: [], lookup: "MAD Paris", replaced: [], hers: true },
+    city: "Paris", country: "France", english: false, language: "French",
+    shop: { home: "https://boutique.madparis.fr/en/mads-publications/c462/1/", catalogues: "https://boutique.madparis.fr/en/mads-publications/c462/1/", search: null, unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
+    read: { link: null, sites: [], dateOrder: null, spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
+    sweep: { exBase: null, listUrl: null },
+    filed: null },
+
+  { id: "rijks", kind: "swept",
+    names: { card: "Rijksmuseum", chip: "Rijks", group: null, full: "Rijksmuseum", inEnglish: null, aka: [], lookup: "Rijksmuseum", replaced: [], hers: true },
+    city: "Amsterdam", country: "Netherlands", english: false, language: "Dutch",
+    shop: { home: "https://www.rijksmuseumshop.nl/en/", catalogues: "https://www.rijksmuseumshop.nl/en/books/exhibition-books", search: "https://www.rijksmuseumshop.nl/en/search?q=", unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
+    read: { link: null, sites: [], dateOrder: null, spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
+    sweep: { exBase: "https://www.rijksmuseum.nl/en/whats-on/exhibitions/", listUrl: "https://www.rijksmuseum.nl/en/whats-on/exhibitions/now-on-view" },
+    filed: null },
+
   // Search address is hers. The shop answers with a waiting room, so the lookup reports it
   // blocked; the address stays for her shop link.
-  { id:"khm", english:false, short:"KHM", name:"Kunsthistorisches Museum", city:"Vienna", exBase:null, shopSearch:"https://shop.khm.at/en/products?shop%5Bq%5D=", shopHome:"https://shop.khm.at/en/", listUrl:null },
-  { id:"uffizi", english:false, short:"Uffizi", name:"Uffizi Galleries", city:"Florence", exBase:null, shopSearch:"https://shop.uffizi.it/en/?s=", shopHome:"https://shop.uffizi.it/en/", listUrl:null },
-  { id:"dellav", english:false, short:"Accademia", name:"Gallerie dell'Accademia", city:"Venice", exBase:null, shopSearch:null, shopHome:null, listUrl:null },
-  { id:"borghese", english:false, short:"Borghese", name:"Galleria Borghese", city:"Rome", exBase:null, shopSearch:null, shopHome:null, listUrl:null },
-  { id:"brera", english:false, short:"Brera", name:"Pinacoteca di Brera", city:"Milan", exBase:null, shopSearch:"https://bottegabrera.org/en/search?q=", shopCatalogues:"https://bottegabrera.org/en/collections/guide-e-cataloghi", shopHome:"https://bottegabrera.org/en/", listUrl:null },
-  { id:"capo", english:false, short:"Capo", card:"Capodimonte", lookupName:"Capodimonte", name:"Museo e Real Bosco di Capodimonte aka Museo Nazionale di Capodimonte", city:"Naples", exBase:null, shopSearch:null, shopHome:null, listUrl:null },
-  { id:"morgan", short:"Morgan", name:"Morgan Library & Museum", city:"New York", exBase:null, shopSearch:"https://shop.themorgan.org/search?q=", shopCatalogues:"https://shop.themorgan.org/collections/exhibition-catalogs", shopHome:"https://shop.themorgan.org/", listUrl:null },
-  { id:"brit", linkRead:{ from:/^(?:For the catalogue, homewares and gifts from the exhibition|Book tickets$)/ }, short:"British Museum", name:"The British Museum", city:"London", exBase:null, shopSearch:"https://www.britishmuseumshoponline.org/catalogsearch/result/?q=", shopCatalogues:"https://www.britishmuseumshoponline.org/books/exhibition-books.html", shopHome:"https://britishmuseumshoponline.org/", listUrl:null },
+  { id: "khm", kind: "swept",
+    names: { card: "KHM", chip: "KHM", group: null, full: "Kunsthistorisches Museum", inEnglish: null, aka: [], lookup: "KHM", replaced: [], hers: true },
+    city: "Vienna", country: "Austria", english: false, language: "German",
+    shop: { home: "https://shop.khm.at/en/", catalogues: null, search: "https://shop.khm.at/en/products?shop%5Bq%5D=", unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
+    read: { link: null, sites: [], dateOrder: null, spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
+    sweep: { exBase: null, listUrl: null },
+    filed: null },
+
+  // The Prado: chip "Prado" right after KHM, cards "Prado Madrid" (her decision). Its dates are month first
+  // (DATE_ORDER, dates.js).
+  // Its all-number dates: "6/9/2026 - 9/27/2026".
+  { id: "occ-museodelprado-es", kind: "manual",
+    names: { card: "Prado", chip: "Prado", group: null, full: "Museo Nacional del Prado", inEnglish: null, aka: ["Prado", "Museo del Prado"], lookup: "Museo Nacional del Prado", replaced: ["Prado Madrid"], hers: true },
+    city: "Madrid", country: "Spain", english: false, language: null,
+    shop: { home: null, catalogues: null, search: null, unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
+    read: { link: null, sites: [], dateOrder: "month", spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
+    sweep: { exBase: null, listUrl: null },
+    filed: { addedAt: "2026-10-29T04:52:37.794Z", aka: ["Prado", "Museo del Prado"], city: "Madrid", confirmed: true, country: "Spain", english: false, englishPicked: false, finder: 3, foundBy: "a search", gallery: false, host: "www.museodelprado.es", id: "occ-museodelprado-es", name: "Museo Nacional del Prado", pageShop: "https://tiendaprado.com/en/", searchRule: 2, shelfKind: "catalogues", shop: "found", shopCatalogues: "https://tiendaprado.com/en/410-catalogues", shopEnglishUnread: null, shopHome: "https://tiendaprado.com/", shopSearch: null, short: "Madrid Prado", turnedDown: [], why: null } },
+
+  // Munich's Alte Pinakothek, Pinakothek der Moderne and Sammlung Schack: three venues on one
+  // site (pinakothek.de), one chip "Munich", the Alte first (her decision). The house line
+  // between the show's title and its dates says which ("Pinakothek der Moderne | Art"); der
+  // Moderne's own site prints "10/07/2026 - 04/10/2026" above the title, day first. The Alte
+  // and der Moderne's shops are searched in German (`shopQueries`); CEDON sells for both, its
+  // sections named for each house (`shopNamed`, namesVenue). Schack has no shop of its own and
+  // no CEDON section: it gets no shop settings, so the finder answers "none". Titles typed in
+  // capitals are recased (`capsTitles`).
+  // Its all-number dates: "27.10.2023-04.02.2024".
+  { id: "occ-alte-pinakothek", kind: "manual",
+    names: { card: "Munich Alte Pinakothek", chip: "Munich", group: "munich-pinakotheken", full: "Alte Pinakothek M\u00fcnchen", inEnglish: null, aka: [], lookup: "Alte Pinakothek", replaced: [], hers: true },
+    city: "Munich", country: "Germany", english: false, language: null,
+    shop: { home: null, catalogues: null, search: null, unseen: null, queries: ["Alte Pinakothek M\u00fcnchen Museumsshop Kataloge"], named: "Alte Pinakothek", rankAsOwn: [], inStock: null },
+    read: { link: { capsTitles: true }, sites: [{ host: "pinakothek.de", line: /^Alte Pinakothek\b/i }], dateOrder: "day", spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
+    sweep: { exBase: null, listUrl: null },
+    filed: { addedAt: "2026-10-18T05:37:39.636Z", confirmed: true, english: false, finder: 3, foundBy: "a search", host: "www.pinakothek.de", id: "occ-alte-pinakothek", name: "pinakothek.de", pageShop: "", searchRule: 2, shelfKind: "catalogues", shop: "found", shopCatalogues: "https://www.museumsshop.cedon.de/Kataloge/Alte-Pinakothek-Muenchen", shopHome: "https://www.museumsshop.cedon.de/", shopSearch: "https://www.museumsshop.cedon.de/search?search=", turnedDown: [], why: null } },
+
+  // Its all-number dates: "10/07/2026 - 04/10/2026", "09.10.2026-21.02.2027".
+  { id: "occ-pinakothek-der-moderne", kind: "manual",
+    names: { card: "Munich der Moderne", chip: "Munich", group: "munich-pinakotheken", full: "Pinakothek der Moderne M\u00fcnchen", inEnglish: null, aka: [], lookup: "Pinakothek der Moderne", replaced: [], hers: true },
+    city: "Munich", country: "Germany", english: false, language: null,
+    shop: { home: null, catalogues: null, search: null, unseen: null, queries: ["Pinakothek der Moderne M\u00fcnchen Museumsshop Kataloge"], named: "Pinakothek der Moderne", rankAsOwn: [], inStock: null },
+    read: { link: { capsTitles: true }, sites: [{ host: "pinakothek.de", line: /^Pinakothek der Moderne\b/i }, { host: "pinakothek-der-moderne.de" }], dateOrder: "day", spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
+    sweep: { exBase: null, listUrl: null },
+    filed: { addedAt: "2026-10-18T05:37:59.500Z", confirmed: true, english: false, finder: 3, foundBy: "a search", host: "www.pinakothek.de", id: "occ-pinakothek-der-moderne", name: "pinakothek.de", pageShop: "", searchRule: 2, shelfKind: "catalogues", shop: "found", shopCatalogues: "https://www.museumsshop.cedon.de/Kataloge/Pinakothek-der-Moderne-Muenchen", shopHome: "https://www.museumsshop.cedon.de/", shopSearch: "https://www.museumsshop.cedon.de/search?search=", turnedDown: [], why: null } },
+
+  // Its all-number dates: "14.10.2027-13.02.2028".
+  { id: "occ-sammlung-schack", kind: "manual",
+    names: { card: "Munich Sammlung Schack", chip: "Munich", group: "munich-pinakotheken", full: "Sammlung Schack", inEnglish: null, aka: [], lookup: "Sammlung Schack", replaced: [], hers: true },
+    city: "Munich", country: "Germany", english: false, language: null,
+    shop: { home: null, catalogues: null, search: null, unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
+    read: { link: { capsTitles: true }, sites: [{ host: "pinakothek.de", line: /^Sammlung Schack\b/i }], dateOrder: "day", spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
+    sweep: { exBase: null, listUrl: null },
+    filed: { addedAt: "2026-10-18T05:37:46.493Z", confirmed: true, english: false, finder: 3, host: "www.pinakothek.de", id: "occ-sammlung-schack", name: "pinakothek.de", pageShop: "", shelfKind: null, shop: "none", shopCatalogues: null, shopHome: null, shopSearch: null, turnedDown: [], why: null } },
+
+  // Staatliche Museen zu Berlin (smb.museum): chip "Berlin" after KHM, cards "Berlin Gemäldegalerie" (her decision).
+  // The Alte and Neue Nationalgalerie are venues under the chip too, cards "Berlin Alte NG" and "Berlin Neue NG"
+  // (her decision): their pages sit under their own paths, or carry their house line just under the dates
+  // (Böcklin, Wols); every other smb.museum page files under the Gemäldegalerie, as before (linkVenue).
+  // Its all-number dates: "14.05.2027 to 12.09.2027".
+  { id: "occ-smb-museum", kind: "manual",
+    names: { card: "Berlin Gem\u00e4ldegalerie", chip: "Berlin", group: "berlin", full: "Staatliche Museen zu Berlin", inEnglish: null, aka: [], lookup: "Gem\u00e4ldegalerie Berlin", replaced: [], hers: true },
+    city: "Berlin", country: "Germany", english: false, language: null,
+    shop: { home: null, catalogues: null, search: null, unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
+    read: { link: null, sites: [], dateOrder: "day", spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
+    sweep: { exBase: null, listUrl: null },
+    filed: { addedAt: "2026-10-18T04:37:40.571Z", aka: ["Staatliche Museen zu Berlin", "Old National Gallery"], city: "Berlin", confirmed: true, country: "Germany", english: false, finder: 3, foundBy: "the shop's menu", host: "www.smb.museum", id: "occ-smb-museum", name: "Staatliche Museen zu Berlin", pageShop: "https://www.smb.museum/webshop", searchRule: 2, shelfKind: "catalogues", shop: "found", shopCatalogues: "https://www.smb-webshop.de/buecher-und-medien/ausstellungskataloge/", shopHome: "https://www.smb-webshop.de/", shopSearch: "https://www.smb-webshop.de/search?sSearch=", turnedDown: [], why: null } },
+
+  // Its all-number dates: "19.03.2027 to 01.08.2027".
+  { id: "occ-alte-nationalgalerie", kind: "manual",
+    names: { card: "Berlin Alte NG", chip: "Berlin", group: "berlin", full: "Alte Nationalgalerie", inEnglish: null, aka: ["Staatliche Museen zu Berlin", "Old National Gallery"], lookup: "Alte Nationalgalerie Berlin", replaced: [], hers: true },
+    city: "Berlin", country: "Germany", english: false, language: null,
+    shop: { home: null, catalogues: null, search: null, unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
+    read: { link: null, sites: [{ host: "smb.museum", path: /\/museums-institutions\/alte-nationalgalerie\//i }, { host: "smb.museum", line: /^Alte Nationalgalerie$/i }], dateOrder: "day", spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
+    sweep: { exBase: null, listUrl: null },
+    filed: { addedAt: "2026-10-26T06:01:09.715Z", aka: ["Staatliche Museen zu Berlin", "Old National Gallery"], city: "Berlin", confirmed: true, country: "Germany", english: false, englishPicked: false, finder: 3, foundBy: "the shop's menu", host: "www.smb.museum", id: "occ-alte-nationalgalerie", name: "Alte Nationalgalerie", pageShop: "https://www.smb.museum/webshop", searchRule: 2, shelfKind: "catalogues", shop: "found", shopCatalogues: "https://www.smb-webshop.de/buecher-und-medien/ausstellungskataloge/", shopEnglishUnread: null, shopHome: "https://www.smb-webshop.de/museen-und-sammlungen/", shopSearch: null, short: "Berlin Alte NG", turnedDown: [], why: null } },
+
+  // Its all-number dates: "20.03.2026 to 09.08.2026".
+  { id: "occ-neue-nationalgalerie", kind: "manual",
+    names: { card: "Berlin Neue NG", chip: "Berlin", group: "berlin", full: "Neue Nationalgalerie", inEnglish: null, aka: [], lookup: "Neue Nationalgalerie Berlin", replaced: [], hers: true },
+    city: "Berlin", country: "Germany", english: false, language: null,
+    shop: { home: null, catalogues: null, search: null, unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
+    read: { link: null, sites: [{ host: "smb.museum", path: /\/museums-institutions\/neue-nationalgalerie\//i }, { host: "smb.museum", line: /^Neue Nationalgalerie$/i }], dateOrder: "day", spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
+    sweep: { exBase: null, listUrl: null },
+    filed: { addedAt: "2026-10-26T07:16:16.435Z", aka: ["Kupferstichkabinett", "Museum of Prints and Drawings", "SMB"], city: "Berlin", confirmed: true, country: "Germany", english: false, englishPicked: false, finder: 3, foundBy: "the shop's menu", host: "www.smb.museum", id: "occ-neue-nationalgalerie", name: "Kupferstichkabinett, Staatliche Museen zu Berlin", pageShop: "https://www.smb.museum/webshop", searchRule: 2, shelfKind: "catalogues", shop: "found", shopCatalogues: "https://www.smb-webshop.de/buecher-und-medien/ausstellungskataloge/", shopEnglishUnread: null, shopHome: "https://www.smb-webshop.de/museen-und-sammlungen/", shopSearch: null, short: "Berlin Kupferstichkabinett", turnedDown: [], why: null } },
+
+  // Dresden's Gemäldegalerie Alte Meister: chip "Dresden", cards "Dresden Gemäldegalerie" (her
+  // decision). Its pages open with a short "# " name above every SKD museum's menu; the show's
+  // own heading follows "Active page:" (titleAfter). Dates day first with slashes; the site
+  // line ("Exhibition Site Zwinger") never reaches Claude (her decision; skip).
+  // Its all-number dates: "14/04/2022—31/07/2022".
+  { id: "occ-gemaeldegalerie-skd-museum", kind: "manual",
+    names: { card: "Dresden Gem\u00e4ldegalerie", chip: "Dresden", group: null, full: "Gem\u00e4ldegalerie Alte Meister", inEnglish: null, aka: [], lookup: "Gem\u00e4ldegalerie Alte Meister Dresden", replaced: [], hers: true },
+    city: "Dresden", country: "Germany", english: false, language: null,
+    shop: { home: null, catalogues: null, search: null, unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
+    read: { link: { titleAfter: /^Active page:/, skip: /^(?:Exhibition Site\b|Opening Hours\b|\[Translate to English:\]|\u00a9)/ }, sites: [], dateOrder: "day", spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
+    sweep: { exBase: null, listUrl: null },
+    filed: { addedAt: "2026-10-18T05:48:07.945Z", confirmed: true, english: false, finder: 3, host: "gemaeldegalerie.skd.museum", id: "occ-gemaeldegalerie-skd-museum", name: "Gem\u00e4ldegalerie Alte Meister", pageShop: "https://shop.skd.museum/", searchRule: 2, shelfKind: null, shop: "none", shopCatalogues: null, shopHome: null, shopSearch: null, turnedDown: [], why: null } },
+
+  // The Städel (staedelmuseum.de): chip "Frankfurt" after Dresden, cards "Frankfurt Städel" (her decision).
+  // Written in, her decision: its shop's books section (the finder cannot see its books), and
+  // `shopUnseen` — its books are in the page's HTML but Parallel drops them, so a shop page
+  // with no priced line reads "Parallel fault" (docs/add_by_link.md, "Frankfurt").
+  { id: "occ-staedelmuseum-de", kind: "manual",
+    names: { card: "St\u00e4del Frankfurt", chip: "Frankfurt", group: null, full: "St\u00e4del Museum", inEnglish: null, aka: [], lookup: "St\u00e4del Museum", replaced: [], hers: true },
+    city: "Frankfurt", country: "Germany", english: false, language: null,
+    shop: { home: "https://liebieghaus.ticketfritz.de/", catalogues: "https://liebieghaus.ticketfritz.de/Shop/Index/staedel-publikationen/43885", search: null, unseen: "parallel", queries: [], named: null, rankAsOwn: [], inStock: null },
+    read: { link: null, sites: [], dateOrder: null, spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
+    sweep: { exBase: null, listUrl: null },
+    filed: { addedAt: "2026-10-19T04:12:56.470Z", confirmed: true, english: false, finder: 3, foundBy: "the venue's rule", host: "www.staedelmuseum.de", id: "occ-staedelmuseum-de", name: "St\u00e4del Museum", pageShop: "", searchRule: 2, shelfKind: null, shop: "found", shopCatalogues: "https://liebieghaus.ticketfritz.de/Shop/Index/staedel-publikationen/43885", shopHome: "https://liebieghaus.ticketfritz.de/", shopSearch: null, turnedDown: [], why: null } },
+
+  // Its all-number dates: "From 18/06/2025 to 28/09/2025".
+  { id: "uffizi", kind: "swept",
+    names: { card: "Uffizi", chip: "Uffizi", group: null, full: "Uffizi Galleries", inEnglish: null, aka: [], lookup: "Uffizi", replaced: [], hers: true },
+    city: "Florence", country: "Italy", english: false, language: "Italian",
+    shop: { home: "https://shop.uffizi.it/en/", catalogues: null, search: "https://shop.uffizi.it/en/?s=", unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
+    read: { link: null, sites: [], dateOrder: "day", spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
+    sweep: { exBase: null, listUrl: null },
+    filed: null },
+
+  { id: "dellav", kind: "swept",
+    names: { card: "Accademia", chip: "Accademia", group: null, full: "Gallerie dell'Accademia", inEnglish: null, aka: [], lookup: "Accademia", replaced: [], hers: true },
+    city: "Venice", country: "Italy", english: false, language: "Italian",
+    shop: { home: null, catalogues: null, search: null, unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
+    read: { link: null, sites: [], dateOrder: null, spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
+    sweep: { exBase: null, listUrl: null },
+    filed: null },
+
+  { id: "borghese", kind: "swept",
+    names: { card: "Borghese", chip: "Borghese", group: null, full: "Galleria Borghese", inEnglish: null, aka: [], lookup: "Borghese", replaced: [], hers: true },
+    city: "Rome", country: "Italy", english: false, language: "Italian",
+    shop: { home: null, catalogues: null, search: null, unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
+    read: { link: null, sites: [], dateOrder: null, spacedYear: false, places: [], placeOwner: null, titleCaps: "stopToDash", subtitleUnderHeading: false },
+    sweep: { exBase: null, listUrl: null },
+    filed: null },
+
+  { id: "brera", kind: "swept",
+    names: { card: "Brera", chip: "Brera", group: null, full: "Pinacoteca di Brera", inEnglish: null, aka: [], lookup: "Brera", replaced: [], hers: true },
+    city: "Milan", country: "Italy", english: false, language: "Italian",
+    shop: { home: "https://bottegabrera.org/en/", catalogues: "https://bottegabrera.org/en/collections/guide-e-cataloghi", search: "https://bottegabrera.org/en/search?q=", unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
+    read: { link: null, sites: [], dateOrder: null, spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
+    sweep: { exBase: null, listUrl: null },
+    filed: null },
+
+  { id: "capo", kind: "swept",
+    names: { card: "Capodimonte", chip: "Capo", group: null, full: "Museo e Real Bosco di Capodimonte aka Museo Nazionale di Capodimonte", inEnglish: null, aka: [], lookup: "Capodimonte", replaced: [], hers: true },
+    city: "Naples", country: "Italy", english: false, language: "Italian",
+    shop: { home: null, catalogues: null, search: null, unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
+    read: { link: null, sites: [], dateOrder: null, spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
+    sweep: { exBase: null, listUrl: null },
+    filed: null },
+
+  // The Cini Foundation and its island's two houses: three venues, Claude's names, under one chip "Cini" after
+  // Capodimonte (her decision).
+  { id: "occ-cini-it", kind: "manual",
+    names: { card: "Fondazione Cini", chip: "Cini", group: "cini", full: "Fondazione Giorgio Cini", inEnglish: null, aka: ["Fondazione Giorgio Cini Onlus", "Cini Foundation"], lookup: "Fondazione Cini", replaced: ["Venice Cini"], hers: true },
+    city: "Venice", country: "Italy", english: false, language: null,
+    shop: { home: null, catalogues: null, search: null, unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
+    read: { link: null, sites: [], dateOrder: null, spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
+    sweep: { exBase: null, listUrl: null },
+    filed: { addedAt: "2026-10-29T04:43:01.799Z", aka: ["Fondazione Giorgio Cini Onlus", "Cini Foundation"], city: "Venice", confirmed: true, country: "Italy", english: false, englishPicked: false, finder: 3, gallery: false, host: "www.cini.it", id: "occ-cini-it", name: "Fondazione Giorgio Cini", pageShop: "", shelfKind: null, shop: "none", shopCatalogues: null, shopEnglishUnread: null, shopHome: null, shopSearch: null, short: "Venice Cini", turnedDown: [], why: null } },
+
+  { id: "occ-lestanzedelvetro-org", kind: "manual",
+    names: { card: "Le Stanze del Vetro", chip: "Cini", group: "cini", full: "Le Stanze del Vetro", inEnglish: null, aka: [], lookup: "Le Stanze del Vetro", replaced: [], hers: false },
+    city: "Venice", country: "Italy", english: false, language: null,
+    shop: { home: null, catalogues: null, search: null, unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
+    read: { link: null, sites: [], dateOrder: null, spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
+    sweep: { exBase: null, listUrl: null },
+    filed: { addedAt: "2026-10-29T04:38:56.876Z", aka: [], city: "Venice", confirmed: true, country: "Italy", english: false, englishPicked: false, finder: 3, foundBy: "the shop's front page", gallery: false, host: "lestanzedelvetro.org", id: "occ-lestanzedelvetro-org", name: "Le Stanze del Vetro", pageShop: "", searchRule: 2, shelfKind: "front", shop: "found", shopCatalogues: "https://lestanzedelvetro.org/en/shop/", shopEnglishUnread: null, shopHome: "https://lestanzedelvetro.org/en/shop/", shopSearch: "https://lestanzedelvetro.org/en/?post_type=product&s=", short: "Le Stanze del Vetro", turnedDown: ["https://lestanzedelvetro.org/en/shop/"], why: null } },
+
+  { id: "occ-lestanzedellafotografia-it", kind: "manual",
+    names: { card: "Stanze della Fotografia Venice", chip: "Cini", group: "cini", full: "Le Stanze della Fotografia", inEnglish: null, aka: [], lookup: "Stanze della Fotografia Venice", replaced: ["Venice Stanze della Fotografia"], hers: true },
+    city: "Venice", country: "Italy", english: false, language: null,
+    shop: { home: null, catalogues: null, search: null, unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
+    read: { link: null, sites: [], dateOrder: null, spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
+    sweep: { exBase: null, listUrl: null },
+    filed: { addedAt: "2026-10-29T04:42:51.092Z", aka: [], city: "Venice", confirmed: true, country: "Italy", english: false, englishPicked: false, finder: 3, gallery: false, host: "lestanzedellafotografia.it", id: "occ-lestanzedellafotografia-it", name: "Le Stanze della Fotografia", pageShop: "", searchRule: 2, shelfKind: "front", shop: "found", shopCatalogues: "https://lestanzedellafotografia.it/it/attivita/bookshop", shopEnglishUnread: null, shopHome: "https://lestanzedellafotografia.it/it/attivita/bookshop", shopSearch: null, short: "Venice Stanze della Fotografia", turnedDown: [], why: null } },
+
   // inStock: a book page there whose own status line says "In Stock" is for sale; its Add to Cart is drawn by script, so the
   // page as read lacks it (Labrouste; her decision, a MoMA rule; docs/catalogue_versions.md, "MoMA *Brancusi*").
-  { id:"moma", linkRead:{ spaceBeforeComma:true }, inStock:{ path:/^\/products\//, line:/\bItem#\s*\S+\s+In Stock\b/ }, short:"MoMA", name:"Museum of Modern Art", city:"New York", exBase:null, shopSearch:"https://store.moma.org/collections/shop?q=" /* her own search */, shopCatalogues:"https://store.moma.org/collections/exhibition-catalogues", shopHome:"https://store.moma.org/", listUrl:null },
-  { id:"tate-modern", short:"Tate Modern", name:"Tate Modern", city:"London", exBase:null, shopSearch:"https://shop.tate.org.uk/search?q=", shopCatalogues:"https://shop.tate.org.uk/books/exhibition-books?sz=96", shopHome:"https://shop.tate.org.uk/", listUrl:null },
+  { id: "moma", kind: "swept",
+    names: { card: "MoMA", chip: "MoMA", group: null, full: "Museum of Modern Art", inEnglish: null, aka: [], lookup: "MoMA", replaced: [], hers: true },
+    city: "New York", country: "United States", english: true, language: null,
+    shop: { home: "https://store.moma.org/", catalogues: "https://store.moma.org/collections/exhibition-catalogues", search: "https://store.moma.org/collections/shop?q=" /* her own search */, unseen: null, queries: [], named: null, rankAsOwn: [], inStock: { path: /^\/products\//, line: /\bItem#\s*\S+\s+In Stock\b/ } },
+    read: { link: { spaceBeforeComma: true }, sites: [], dateOrder: null, spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
+    sweep: { exBase: null, listUrl: null },
+    filed: null },
+
+  { id: "tate-modern", kind: "swept",
+    names: { card: "Tate Modern", chip: "Tate Modern", group: null, full: "Tate Modern", inEnglish: null, aka: [], lookup: "Tate Modern", replaced: [], hers: true },
+    city: "London", country: "United Kingdom", english: true, language: null,
+    shop: { home: "https://shop.tate.org.uk/", catalogues: "https://shop.tate.org.uk/books/exhibition-books?sz=96", search: "https://shop.tate.org.uk/search?q=", unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
+    read: { link: null, sites: [], dateOrder: null, spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
+    sweep: { exBase: null, listUrl: null },
+    filed: null },
+
   // The search is hers, query moved last so the title can follow. A Cloudflare check refuses
   // us, so the lookup reports it blocked; the address stays for her shop link.
-  { id:"mam", english:false, short:"MAM Paris", name:"Mus\u00e9e d'Art Moderne de Paris", city:"Paris", exBase:null, shopSearch:"https://www.mamlibrairieboutique.fr/listeliv.php?flou&base=paper&mots_recherche=", shopHome:"https://www.mamlibrairieboutique.fr/", listUrl:null },
+  { id: "mam", kind: "swept",
+    names: { card: "MAM Paris", chip: "MAM Paris", group: null, full: "Mus\u00e9e d'Art Moderne de Paris", inEnglish: null, aka: [], lookup: "MAM Paris", replaced: [], hers: true },
+    city: "Paris", country: "France", english: false, language: "French",
+    shop: { home: "https://www.mamlibrairieboutique.fr/", catalogues: null, search: "https://www.mamlibrairieboutique.fr/listeliv.php?flou&base=paper&mots_recherche=", unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
+    read: { link: null, sites: [], dateOrder: null, spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
+    sweep: { exBase: null, listUrl: null },
+    filed: null },
+
+  // Under "Occasional". Boston MFA prints the dates on the line above the show's title.
+  { id: "occ-mfa-org", kind: "manual",
+    names: { card: "Boston MFA", chip: null, group: null, full: "Museum of Fine Arts Boston", inEnglish: null, aka: ["MFA", "MFA Boston"], lookup: "Boston MFA", replaced: [], hers: true },
+    city: "Boston", country: "United States", english: true, language: null,
+    shop: { home: null, catalogues: null, search: null, unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
+    read: { link: null, sites: [], dateOrder: null, spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
+    sweep: { exBase: null, listUrl: null },
+    filed: { addedAt: "2026-10-14T10:44:35.097Z", aka: ["MFA", "MFA Boston"], city: "Boston", confirmed: true, country: "United States", english: true, finder: 3, foundBy: "a search", gallery: false, host: "www.mfa.org", id: "occ-mfa-org", name: "Museum of Fine Arts Boston", pageShop: "", shelfKind: "catalogues", shop: "found", shopCatalogues: "https://mfashop.com/books/exhibition-catalogues/", shopHome: "https://mfashop.com/", shopSearch: "https://mfashop.com/search?q=", turnedDown: [], why: null } },
+
+  { id: "occ-clevelandart-org", kind: "manual",
+    names: { card: "Cleveland", chip: null, group: null, full: "Cleveland Museum of Art", inEnglish: null, aka: [], lookup: "Cleveland", replaced: [], hers: false },
+    city: "Cleveland", country: "United States", english: true, language: null,
+    shop: { home: null, catalogues: null, search: null, unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
+    read: { link: null, sites: [], dateOrder: null, spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
+    sweep: { exBase: null, listUrl: null },
+    filed: { addedAt: "2026-10-04T01:01:30.062Z", confirmed: true, english: true, finder: 2, foundBy: "the shop's menu", host: "www.clevelandart.org", id: "occ-clevelandart-org", name: "Cleveland Museum of Art", pageShop: "https://shop.clevelandart.org/", rejected: [], shelfKind: "catalogues", shop: "found", shopCatalogues: "https://shop.clevelandart.org/collections/exhibitions", shopHome: "https://shop.clevelandart.org/", shopSearch: "https://shop.clevelandart.org/search?q=", short: "Cleveland", turnedDown: [], why: null } },
+
+  { id: "occ-dia-org", kind: "manual",
+    names: { card: "Detroit", chip: null, group: null, full: "Detroit Institute of Arts Museum", inEnglish: null, aka: [], lookup: "Detroit", replaced: [], hers: false },
+    city: "Detroit", country: "United States", english: true, language: null,
+    shop: { home: null, catalogues: null, search: null, unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
+    read: { link: null, sites: [], dateOrder: null, spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
+    sweep: { exBase: null, listUrl: null },
+    filed: { addedAt: "2026-10-04T01:01:25.244Z", confirmed: true, english: true, finder: 3, foundBy: "a search", host: "dia.org", id: "occ-dia-org", name: "Detroit Institute of Arts Museum", pageShop: "https://diashop.org/", rejected: [], shelfKind: "books", shop: "found", shopCatalogues: "https://diashop.org/dia-publications/", shopHome: "https://diashop.org/", shopSearch: "https://diashop.org/search.php?search_query=", short: "Detroit", turnedDown: ["https://diashop.org/dia-museum-book-shop"], why: null } },
+
+  { id: "occ-archive-worcesterart-org", kind: "manual",
+    names: { card: "Worcester", chip: null, group: null, full: "Worcester Art Museum", inEnglish: null, aka: [], lookup: "Worcester", replaced: [], hers: true },
+    city: "Worcester, MA", country: "United States", english: true, language: null,
+    shop: { home: null, catalogues: null, search: null, unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
+    read: { link: null, sites: [], dateOrder: null, spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
+    sweep: { exBase: null, listUrl: null },
+    filed: { addedAt: "2026-10-13T13:04:00.912Z", confirmed: true, english: true, finder: 3, foundBy: "the shop's list of sections", host: "archive.worcesterart.org", id: "occ-archive-worcesterart-org", name: "Worcester Art Museum", pageShop: "https://archive.worcesterart.org/visit/shop/", shelfKind: "catalogues", shop: "found", shopCatalogues: "https://the-museum-shop-at-wam.myshopify.com/collections/catalogs", shopHome: "https://the-museum-shop-at-wam.myshopify.com/", shopSearch: "https://the-museum-shop-at-wam.myshopify.com/search?q=", turnedDown: [], why: null } },
+
+  { id: "occ-adelsongalleries-com", kind: "manual",
+    names: { card: "Adelson Galleries", chip: null, group: null, full: "Adelson Galleries", inEnglish: null, aka: [], lookup: "Adelson Galleries", replaced: [], hers: false },
+    city: "New York", country: "United States", english: true, language: null,
+    shop: { home: null, catalogues: null, search: null, unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
+    read: { link: null, sites: [], dateOrder: null, spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
+    sweep: { exBase: null, listUrl: null },
+    filed: { addedAt: "2026-10-14T10:49:19.375Z", confirmed: true, english: true, finder: 3, host: "adelsongalleries.com", id: "occ-adelsongalleries-com", name: "Adelson Galleries", pageShop: "", shelfKind: null, shop: "none", shopCatalogues: null, shopHome: null, shopSearch: null, turnedDown: [], why: null } },
+
+  { id: "occ-wallach-columbia-edu", kind: "manual",
+    names: { card: "Wallach Gallery Columbia", chip: null, group: null, full: "Miriam and Ira D. Wallach Art Gallery", inEnglish: null, aka: ["Wallach Art Gallery"], lookup: "Wallach Gallery Columbia", replaced: ["Columbia Wallach"], hers: true },
+    city: "New York", country: "United States", english: true, language: null,
+    shop: { home: null, catalogues: null, search: null, unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
+    read: { link: null, sites: [], dateOrder: null, spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
+    sweep: { exBase: null, listUrl: null },
+    filed: { addedAt: "2026-10-29T13:35:54.995Z", aka: ["Wallach Art Gallery"], city: "New York", confirmed: true, country: "United States", english: true, englishPicked: false, finder: 3, gallery: false, host: "wallach.columbia.edu", id: "occ-wallach-columbia-edu", name: "Miriam and Ira D. Wallach Art Gallery", pageShop: "", shelfKind: null, shop: "none", shopCatalogues: null, shopEnglishUnread: null, shopHome: null, shopSearch: null, short: "Columbia Wallach", turnedDown: [], why: null } },
+
+  // The Getty (her decision, Getty only): its collection database's exhibition pages are titled
+  // "Museum Collection", so their heading is the show's name.
+  { id: "occ-getty-edu", kind: "manual",
+    names: { card: "Getty Museum", chip: null, group: null, full: "J. Paul Getty Museum", inEnglish: null, aka: ["Getty Museum", "Getty Center"], lookup: "Getty Museum", replaced: [], hers: false },
+    city: "Los Angeles", country: "United States", english: true, language: null,
+    shop: { home: null, catalogues: null, search: null, unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
+    read: { link: { tabNotName: /^Museum Collection$/ }, sites: [], dateOrder: null, spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
+    sweep: { exBase: null, listUrl: null },
+    filed: { addedAt: "2026-10-29T10:04:35.166Z", aka: ["Getty Museum", "Getty Center"], city: "Los Angeles", confirmed: true, country: "United States", english: true, englishPicked: false, finder: 3, foundBy: "the shop's list of sections", gallery: false, host: "www.getty.edu", id: "occ-getty-edu", name: "J. Paul Getty Museum", pageShop: "http://shop.getty.edu/", searchRule: 2, shelfKind: "catalogues", shop: "found", shopCatalogues: "https://shop.getty.edu/collections/exhibition-catalogues", shopEnglishUnread: null, shopHome: "https://shop.getty.edu/", shopSearch: "https://shop.getty.edu/search?q=", short: "Getty Museum", turnedDown: ["https://shop.getty.edu/collections/current-exhibition-catalogues", "https://shop.getty.edu/collections/current-exhibition-catalogues?hp-2nd-level-nav=1"], why: null } },
+
+  { id: "occ-guggenheim-org", kind: "manual",
+    names: { card: "Guggenheim", chip: null, group: null, full: "Solomon R. Guggenheim Museum", inEnglish: null, aka: ["Guggenheim Museum", "The Guggenheim"], lookup: "Guggenheim New York", replaced: ["Guggenheim New York"], hers: true },
+    city: "New York", country: "United States", english: true, language: null,
+    shop: { home: null, catalogues: null, search: null, unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
+    read: { link: null, sites: [], dateOrder: null, spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
+    sweep: { exBase: null, listUrl: null },
+    filed: { addedAt: "2026-11-01T15:28:11.076Z", aka: ["Guggenheim Museum", "The Guggenheim"], city: "New York", confirmed: true, country: "United States", english: true, englishPicked: false, finder: 3, foundBy: "her link", gallery: false, host: "www.guggenheim.org", id: "occ-guggenheim-org", name: "Solomon R. Guggenheim Museum", pageShop: "", searchRule: null, shelfKind: null, shop: "found", shopAdded: true, shopCatalogues: "https://guggenheimstore.org/collections/shop-by-category-books", shopEnglishUnread: null, shopHome: "https://guggenheimstore.org/", shopSearch: null, short: "Guggenheim New York", turnedDown: [], why: null } },
+
+  // Moretti (her decision, Moretti only): the place after " : " leaves the title ("… : Monaco", "… : New York,
+  // Sotheby's"); its description is typed in capitals (capsText); the cookie panel ends the passage.
+  { id: "occ-morettigallery-com", kind: "manual",
+    names: { card: "Moretti Fine Art NY", chip: null, group: null, full: "Moretti Fine Art", inEnglish: null, aka: [], lookup: "Moretti Fine Art", replaced: ["Moretti Fine Art"], hers: true },
+    city: "New York", country: "United States", english: true, language: null,
+    shop: { home: null, catalogues: null, search: null, unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
+    read: { link: { titleDrop: /\s+:\s+[^:]+$/, capsText: true, until: /^Manage cookies$/ }, sites: [], dateOrder: null, spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
+    sweep: { exBase: null, listUrl: null },
+    filed: { addedAt: "2026-10-29T04:46:29.539Z", aka: [], city: "New York", confirmed: true, country: "United States", english: true, englishPicked: false, finder: 3, gallery: true, host: "morettigallery.com", id: "occ-morettigallery-com", name: "Moretti Fine Art", pageShop: "", shelfKind: null, shop: "none", shopCatalogues: null, shopEnglishUnread: null, shopHome: null, shopSearch: null, short: "Moretti Fine Art", turnedDown: [], why: null } },
+
+  { id: "occ-philamuseum-org", kind: "manual",
+    names: { card: "Philadelphia MA", chip: null, group: null, full: "Philadelphia Museum of Art", inEnglish: null, aka: ["PMA"], lookup: "Philadelphia MA", replaced: [], hers: false },
+    city: "Philadelphia", country: "United States", english: true, language: null,
+    shop: { home: null, catalogues: null, search: null, unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
+    read: { link: null, sites: [], dateOrder: null, spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
+    sweep: { exBase: null, listUrl: null },
+    filed: { addedAt: "2026-10-25T12:04:32.004Z", aka: ["PMA"], city: "Philadelphia", confirmed: true, country: "United States", english: true, englishPicked: false, finder: 3, foundBy: "a search", host: "www.philamuseum.org", id: "occ-philamuseum-org", name: "Philadelphia Museum of Art", pageShop: "https://store.philamuseum.org/", searchRule: 2, shelfKind: "catalogues", shop: "found", shopCatalogues: "https://store.philamuseum.org/pma-icons/pma-catalogues/pma-exhbition-catalogues/", shopEnglishUnread: null, shopHome: "https://store.philamuseum.org/", shopSearch: "https://store.philamuseum.org/search?q=", short: "Philadelphia MA", turnedDown: ["https://store.philamuseum.org/pma-icons/pma-catalogues/pma-highlights-books/"], why: null } },
+
+  { id: "occ-sfmoma-org", kind: "manual",
+    names: { card: "SFMOMA", chip: null, group: null, full: "San Francisco Museum of Modern Art", inEnglish: null, aka: ["SFMOMA"], lookup: "SFMOMA", replaced: [], hers: false },
+    city: "San Francisco", country: "United States", english: true, language: null,
+    shop: { home: null, catalogues: null, search: null, unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
+    read: { link: null, sites: [], dateOrder: null, spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
+    sweep: { exBase: null, listUrl: null },
+    filed: { addedAt: "2026-10-29T14:14:33.447Z", aka: ["SFMOMA"], city: "San Francisco", confirmed: true, country: "United States", english: true, englishPicked: false, finder: 3, foundBy: "the shop's front page", gallery: false, host: "www.sfmoma.org", id: "occ-sfmoma-org", name: "San Francisco Museum of Modern Art", pageShop: "https://museumstore.sfmoma.org/", searchRule: 2, shelfKind: "front", shop: "found", shopCatalogues: "https://museumstore.sfmoma.org/", shopEnglishUnread: null, shopHome: "https://museumstore.sfmoma.org/", shopSearch: "https://museumstore.sfmoma.org/search?q=", short: "SFMOMA", turnedDown: ["https://museumstore.sfmoma.org/", "https://museumstore.sfmoma.org/"], why: null } },
+
+  { id: "occ-whitney-org", kind: "manual",
+    names: { card: "Whitney", chip: null, group: null, full: "Whitney Museum of American Art", inEnglish: null, aka: ["Whitney", "The Whitney"], lookup: "Whitney", replaced: [], hers: false },
+    city: "New York", country: "United States", english: true, language: null,
+    shop: { home: null, catalogues: null, search: null, unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
+    read: { link: null, sites: [], dateOrder: null, spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
+    sweep: { exBase: null, listUrl: null },
+    filed: { addedAt: "2026-11-01T14:52:10.663Z", aka: ["Whitney", "The Whitney"], city: "New York", confirmed: true, country: "United States", english: true, englishPicked: false, finder: 3, foundBy: "her link", gallery: false, host: "whitney.org", id: "occ-whitney-org", name: "Whitney Museum of American Art", pageShop: "", searchRule: null, shelfKind: null, shop: "found", shopAdded: true, shopCatalogues: "https://shop.whitney.org/collections/exhibition-catalogues", shopEnglishUnread: null, shopHome: "https://shop.whitney.org/", shopSearch: null, short: "Whitney", turnedDown: [], why: null } },
+
+  // NGV writes two-digit years ("4 Sep 26 – 31 Jan 27").
+  { id: "occ-ngv-vic-gov-au", kind: "manual",
+    names: { card: "National Gallery Victoria", chip: null, group: null, full: "NGV", inEnglish: null, aka: [], lookup: "National Gallery Victoria", replaced: [], hers: true },
+    city: "Melbourne", country: "Australia", english: true, language: null,
+    shop: { home: null, catalogues: null, search: null, unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
+    read: { link: { shortYear: true }, sites: [], dateOrder: null, spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
+    sweep: { exBase: null, listUrl: null },
+    filed: { addedAt: "2026-10-14T11:34:36.828Z", confirmed: true, english: true, finder: 3, foundBy: "a search", host: "www.ngv.vic.gov.au", id: "occ-ngv-vic-gov-au", name: "NGV", pageShop: "https://store.ngv.vic.gov.au/", shelfKind: "books", shop: "found", shopCatalogues: "https://store.ngv.vic.gov.au/collections/books", shopHome: "https://store.ngv.vic.gov.au/", shopSearch: "https://store.ngv.vic.gov.au/search?q=", turnedDown: [], why: null } },
+
+  { id: "occ-courtauld-ac-uk", kind: "manual",
+    names: { card: "Courtauld", chip: null, group: null, full: "Courtauld", inEnglish: null, aka: [], lookup: "Courtauld", replaced: [], hers: false },
+    city: "London", country: "United Kingdom", english: true, language: null,
+    shop: { home: null, catalogues: null, search: null, unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
+    read: { link: null, sites: [], dateOrder: null, spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
+    sweep: { exBase: null, listUrl: null },
+    filed: { addedAt: "2026-10-04T01:01:19.607Z", confirmed: true, english: true, finder: 2, foundBy: "a search", host: "courtauld.ac.uk", id: "occ-courtauld-ac-uk", name: "Courtauld", pageShop: "https://shop.courtauld.ac.uk/", rejected: [], shelfKind: "catalogues", shop: "found", shopCatalogues: "https://shop.courtauld.ac.uk/collections/courtauld-catalogues", shopHome: "https://shop.courtauld.ac.uk/", shopSearch: "https://shop.courtauld.ac.uk/search?q=", turnedDown: [], why: null } },
+
+  { id: "occ-royalacademy-org-uk", kind: "manual",
+    names: { card: "Royal Academy UK", chip: null, group: null, full: "Royal Academy of Arts", inEnglish: null, aka: [], lookup: "Royal Academy UK", replaced: [], hers: false },
+    city: "London", country: "United Kingdom", english: true, language: null,
+    shop: { home: null, catalogues: null, search: null, unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
+    read: { link: null, sites: [], dateOrder: null, spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
+    sweep: { exBase: null, listUrl: null },
+    filed: { addedAt: "2026-10-04T01:01:13.484Z", confirmed: true, english: true, finder: 3, foundBy: "a search", host: "www.royalacademy.org.uk", id: "occ-royalacademy-org-uk", name: "Royal Academy of Arts", pageShop: "", rejected: [], shelfKind: "catalogues", shop: "found", shopCatalogues: "https://shop.royalacademy.org.uk/books/bookshop/exhibition-catalogues", shopHome: "https://shop.royalacademy.org.uk/", shopSearch: null, short: "Royal Academy UK", turnedDown: [], why: null } },
+
+  // Her addition, after Tate Britain. Shopify: search box and her exhibition-catalogues shelf.
+  { id: "ashmolean", kind: "swept",
+    names: { card: "Ashmolean", chip: null, group: null, full: "Ashmolean Museum", inEnglish: null, aka: [], lookup: "Ashmolean", replaced: [], hers: true },
+    city: "Oxford", country: "United Kingdom", english: true, language: null,
+    shop: { home: "https://shop.ashmolean.org/", catalogues: "https://shop.ashmolean.org/collections/exhibition-catalogues", search: "https://shop.ashmolean.org/search?q=", unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
+    read: { link: null, sites: [], dateOrder: null, spacedYear: false, places: [], placeOwner: null, titleCaps: "caps", subtitleUnderHeading: false },
+    sweep: { exBase: null, listUrl: null },
+    filed: null },
+
+  { id: "occ-rct-uk", kind: "manual",
+    names: { card: "Queen's Gallery Edinburgh", chip: null, group: null, full: "The Queen\u2019s Gallery, Palace of Holyroodhouse", inEnglish: null, aka: [], lookup: "Queen's Gallery Edinburgh", replaced: ["The Queen\u2019s Gallery, Palace of Holyroodhouse"], hers: true },
+    city: "Edinburgh", country: "United Kingdom", english: true, language: null,
+    shop: { home: null, catalogues: null, search: null, unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
+    read: { link: null, sites: [], dateOrder: null, spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
+    sweep: { exBase: null, listUrl: null },
+    filed: { addedAt: "2026-10-21T03:00:24.644Z", confirmed: true, english: true, finder: 3, host: "rct.uk", id: "occ-rct-uk", name: "The Queen\u2019s Gallery, Palace of Holyroodhouse", pageShop: "", shelfKind: null, shop: "none", shopCatalogues: null, shopHome: null, shopSearch: null, turnedDown: [], why: null } },
+
+  { id: "occ-hlmd-de", kind: "manual",
+    names: { card: "Darmstadt Landesmuseum", chip: null, group: null, full: "Hessisches Landesmuseum Darmstadt", inEnglish: null, aka: ["HLMD"], lookup: "Darmstadt Landesmuseum", replaced: [], hers: false },
+    city: "Darmstadt", country: "Germany", english: false, language: null,
+    shop: { home: null, catalogues: null, search: null, unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
+    read: { link: null, sites: [], dateOrder: null, spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
+    sweep: { exBase: null, listUrl: null },
+    filed: { addedAt: "2026-10-26T06:11:07.479Z", aka: ["HLMD"], city: "Darmstadt", confirmed: true, country: "Germany", english: false, englishPicked: false, finder: 3, host: "www.hlmd.de", id: "occ-hlmd-de", name: "Hessisches Landesmuseum Darmstadt", pageShop: "https://shop.hlmd.de/", searchRule: 2, shelfKind: null, shop: "none", shopCatalogues: null, shopEnglishUnread: null, shopHome: null, shopSearch: null, short: "Darmstadt Landesmuseum", turnedDown: [], why: null } },
+
+  { id: "occ-esmh-de", kind: "manual",
+    names: { card: "Emil Schumacher Hagen", chip: null, group: null, full: "Emil Schumacher Museum", inEnglish: null, aka: ["ESMH"], lookup: "Emil Schumacher Hagen", replaced: ["Hagen Emil Schumacher"], hers: true },
+    city: "Hagen", country: "Germany", english: false, language: null,
+    shop: { home: null, catalogues: null, search: null, unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
+    read: { link: null, sites: [], dateOrder: null, spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
+    sweep: { exBase: null, listUrl: null },
+    filed: { addedAt: "2026-10-31T02:35:35.232Z", aka: ["ESMH"], city: "Hagen", confirmed: true, country: "Germany", english: false, englishPicked: false, finder: 3, foundBy: "her link", gallery: false, host: "esmh.de", id: "occ-esmh-de", name: "Emil Schumacher Museum", pageShop: "", searchRule: 2, shelfKind: null, shop: "found", shopAdded: true, shopCatalogues: "https://esmh.de/kataloge/", shopEnglishUnread: null, shopHome: "https://esmh.de/", shopSearch: null, short: "Hagen Emil Schumacher", turnedDown: [], why: null } },
+
+  { id: "occ-staatsgalerie-de", kind: "manual",
+    names: { card: "Stuttgart Staatsgalerie", chip: null, group: null, full: "Staatsgalerie Stuttgart", inEnglish: null, aka: ["Staatsgalerie"], lookup: "Stuttgart Staatsgalerie", replaced: [], hers: false },
+    city: "Stuttgart", country: "Germany", english: false, language: null,
+    shop: { home: null, catalogues: null, search: null, unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
+    read: { link: null, sites: [], dateOrder: null, spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
+    sweep: { exBase: null, listUrl: null },
+    filed: { addedAt: "2026-10-23T00:43:44.642Z", aka: ["Staatsgalerie"], city: "Stuttgart", confirmed: true, country: "Germany", english: false, finder: 3, foundBy: "a search", gallery: false, host: "www.staatsgalerie.de", id: "occ-staatsgalerie-de", name: "Staatsgalerie Stuttgart", pageShop: "https://museumsshop.cedon.de/", searchRule: 2, shelfKind: "catalogues", shop: "found", shopCatalogues: "https://www.museumsshop.cedon.de/Kataloge/Staatsgalerie-Stuttgart", shopHome: "https://museumsshop.cedon.de/", shopSearch: null, short: "Stuttgart Staatsgalerie", turnedDown: [], why: null } },
+
+  // Her name, not Claude's "KMSKA Antwerp" (notCard: Claude learns her style from it).
+  { id: "occ-kmska-be", kind: "manual",
+    names: { card: "Antwerp KMSKA", chip: null, group: null, full: "Koninklijk Museum voor Schone Kunsten Antwerpen", inEnglish: null, aka: ["KMSKA", "Koninklijk Museum voor Schone Kunsten Antwerpen"], lookup: "Koninklijk Museum voor Schone Kunsten Antwerpen", replaced: ["KMSKA Antwerp"], hers: true },
+    city: "Antwerp", country: "Belgium", english: false, language: null,
+    shop: { home: null, catalogues: null, search: null, unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
+    read: { link: null, sites: [], dateOrder: null, spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
+    sweep: { exBase: null, listUrl: null },
+    filed: { addedAt: "2026-10-23T00:37:08.015Z", aka: ["KMSKA", "Koninklijk Museum voor Schone Kunsten Antwerpen"], city: "Antwerp", confirmed: true, country: "Belgium", english: false, finder: 3, foundBy: "a search", host: "kmska.be", id: "occ-kmska-be", name: "Royal Museum of Fine Arts Antwerp", pageShop: "https://kmska.be/en/kmskashop-and-coffee-bar", searchRule: 2, shelfKind: "books", shop: "found", shopCatalogues: "https://www.kmskashop.be/en/books/kmska/", shopHome: "https://kmska.be/", shopSearch: null, short: "Antwerp Fine Arts", turnedDown: ["https://www.kmskashop.be/nl/boeken/"], why: null } },
+
+  // Its all-number dates: "01.02 – 30.04.20".
+  { id: "occ-mskgent-be", kind: "manual",
+    names: { card: "Ghent Fine Arts", chip: null, group: null, full: "Museum of Fine Arts Ghent", inEnglish: null, aka: ["MSK", "Museum voor Schone Kunsten Gent"], lookup: "Ghent Fine Arts", replaced: [], hers: false },
+    city: "Ghent", country: "Belgium", english: false, language: null,
+    shop: { home: null, catalogues: null, search: null, unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
+    read: { link: null, sites: [], dateOrder: "day", spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
+    sweep: { exBase: null, listUrl: null },
+    filed: { addedAt: "2026-10-26T14:24:49.089Z", aka: ["MSK", "Museum voor Schone Kunsten Gent"], city: "Ghent", confirmed: true, country: "Belgium", english: false, englishPicked: false, finder: 3, gallery: false, host: "www.mskgent.be", id: "occ-mskgent-be", name: "Museum of Fine Arts Ghent", pageShop: "", searchRule: 2, shelfKind: null, shop: "none", shopCatalogues: null, shopEnglishUnread: null, shopHome: null, shopSearch: null, short: "Ghent Fine Arts", turnedDown: [], why: null } },
+
+  // Christie's press site is the same venue as christies.com (her decision; links from now on, rows already in left as they are).
+  { id: "occ-christies-com", kind: "manual",
+    names: { card: "Christie's Paris", chip: null, group: null, full: "Christie's Paris", inEnglish: null, aka: ["Christie's"], lookup: "Christie's Paris", replaced: [], hers: false },
+    city: "Paris", country: "France", english: false, language: null,
+    shop: { home: null, catalogues: null, search: null, unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
+    read: { link: null, sites: [{ host: "press.christies.com" }], dateOrder: null, spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
+    sweep: { exBase: null, listUrl: null },
+    filed: { addedAt: "2026-10-29T13:42:10.959Z", aka: ["Christie's"], city: "Paris", confirmed: true, country: "France", english: false, englishPicked: false, finder: 3, gallery: false, host: "www.christies.com", id: "occ-christies-com", name: "Christie's Paris", pageShop: "", shelfKind: null, shop: "none", shopCatalogues: null, shopEnglishUnread: null, shopHome: null, shopSearch: null, short: "Christie's Paris", turnedDown: [], why: null } },
+
+  { id: "occ-galerie-karsten-greve-com", kind: "manual",
+    names: { card: "Karsten Greve Paris", chip: null, group: null, full: "Galerie Karsten Greve Paris", inEnglish: null, aka: ["Galerie Karsten Greve"], lookup: "Karsten Greve Paris", replaced: [], hers: false },
+    city: "Paris", country: "France", english: false, language: null,
+    shop: { home: null, catalogues: null, search: null, unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
+    read: { link: null, sites: [], dateOrder: null, spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
+    sweep: { exBase: null, listUrl: null },
+    filed: { addedAt: "2026-10-26T08:35:31.092Z", aka: ["Galerie Karsten Greve"], city: "Paris", confirmed: true, country: "France", english: false, englishPicked: false, finder: 3, foundBy: "the gallery's own page", gallery: true, host: "galerie-karsten-greve.com", id: "occ-galerie-karsten-greve-com", name: "Galerie Karsten Greve Paris", pageShop: "", searchRule: 2, shelfKind: "books", shop: "found", shopCatalogues: "https://galerie-karsten-greve.com/en/publications?filter=C", shopEnglishUnread: null, shopHome: "https://galerie-karsten-greve.com/", shopSearch: null, short: "Karsten Greve Paris", turnedDown: [], why: null } },
+
+  { id: "occ-musees-nationaux-alpesmaritimes-fr", kind: "manual",
+    names: { card: "Chagall Museum Nice", chip: null, group: null, full: "Mus\u00e9e national Marc Chagall", inEnglish: null, aka: ["Mus\u00e9e Marc Chagall", "Mus\u00e9e national Message Biblique Marc Chagall"], lookup: "Chagall Museum Nice", replaced: ["Nice Chagall"], hers: true },
+    city: "Nice", country: "France", english: false, language: null,
+    shop: { home: null, catalogues: null, search: null, unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
+    read: { link: null, sites: [], dateOrder: null, spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
+    sweep: { exBase: null, listUrl: null },
+    filed: { addedAt: "2026-10-29T14:13:56.728Z", aka: ["Mus\u00e9e Marc Chagall", "Mus\u00e9e national Message Biblique Marc Chagall"], city: "Nice", confirmed: true, country: "France", english: false, englishPicked: false, finder: 3, foundBy: "the shop's front page", gallery: false, host: "musees-nationaux-alpesmaritimes.fr", id: "occ-musees-nationaux-alpesmaritimes-fr", name: "Mus\u00e9e national Marc Chagall", pageShop: "", searchRule: 2, shelfKind: "front", shop: "found", shopCatalogues: "https://www.boutiquesdemusees.fr/fr/boutique/musees/musee-national-marc-chagall/?par=11", shopEnglishUnread: null, shopHome: "https://www.boutiquesdemusees.fr/fr/boutique/musees/musee-national-marc-chagall/?par=11", shopSearch: "https://www.boutiquesdemusees.fr/search?q=", short: "Nice Chagall", turnedDown: ["https://www.boutiquesdemusees.fr/en/selection/english-and-foreign-language-books-525/1/", "https://www.boutiquesdemusees.fr/fr/boutique/musees/musee-national-marc-chagall/?par=11", "https://www.boutiquesdemusees.fr/fr/boutique/musees/musee-national-marc-chagall/?par=11"], why: null } },
+
+  // Galerie de la Présidence ends its show headings " : Exhibition".
+  { id: "occ-presidence-fr", kind: "manual",
+    names: { card: "Galerie de la Pr\u00e9sidence Paris", chip: null, group: null, full: "Pr\u00e9sidence de la R\u00e9publique", inEnglish: null, aka: ["\u00c9lys\u00e9e Palace", "Palais de l'\u00c9lys\u00e9e"], lookup: "Galerie de la Pr\u00e9sidence Paris", replaced: ["Paris Pr\u00e9sidence"], hers: true },
+    city: "Paris", country: "France", english: false, language: null,
+    shop: { home: null, catalogues: null, search: null, unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
+    read: { link: { titleDrop: /\s*:\s*Exhibition$/i }, sites: [], dateOrder: null, spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
+    sweep: { exBase: null, listUrl: null },
+    filed: { addedAt: "2026-10-31T02:35:41.832Z", aka: ["\u00c9lys\u00e9e Palace", "Palais de l'\u00c9lys\u00e9e"], city: "Paris", confirmed: true, country: "France", english: false, englishPicked: false, finder: 3, gallery: false, host: "www.presidence.fr", id: "occ-presidence-fr", name: "Pr\u00e9sidence de la R\u00e9publique", pageShop: "", shelfKind: null, shop: "none", shopCatalogues: null, shopEnglishUnread: null, shopHome: null, shopSearch: null, short: "Paris Pr\u00e9sidence", turnedDown: [], why: null } },
+
+  // Her names for venues Claude named (her review of link venues); notCard is the name Claude gave.
+  { id: "occ-centrepompidou-fr", kind: "manual",
+    names: { card: "Pompidou", chip: null, group: null, full: "Centre Pompidou", inEnglish: null, aka: ["Centre national d'art et de culture Georges-Pompidou"], lookup: "Centre Pompidou", replaced: ["Pompidou Paris", "Centre Pompidou"], hers: true },
+    city: "Paris", country: "France", english: false, language: null,
+    shop: { home: null, catalogues: null, search: null, unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
+    read: { link: null, sites: [], dateOrder: null, spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
+    sweep: { exBase: null, listUrl: null },
+    filed: { addedAt: "2026-10-29T14:14:26.847Z", aka: ["Centre national d'art et de culture Georges-Pompidou"], city: "Paris", confirmed: true, country: "France", english: false, englishPicked: false, finder: 3, foundBy: "the shop's menu", gallery: false, host: "www.centrepompidou.fr", id: "occ-centrepompidou-fr", name: "Centre Pompidou", pageShop: "", searchRule: 2, shelfKind: "catalogues", shop: "found", shopCatalogues: "https://boutique.centrepompidou.fr/en/products/2267-exhibition-catalogs-and-monographs/", shopEnglishUnread: null, shopHome: "https://boutique.centrepompidou.fr/", shopSearch: "https://boutique.centrepompidou.fr/search?q=", short: "Pompidou Paris", turnedDown: [], why: null } },
+
+  // Written in, her decision: a shop drawn by script (its page's code holds no books, only a frame and a
+  // script) gets its best section written in and `shopUnseen` "script": a lookup there reads "contents
+  // cannot be seen — JS-rendering" and goes to the web (docs/add_by_link.md, "A shop drawn by script").
+  // Its all-number dates: "25.05.–24.11.2024".
+  { id: "occ-kunstmuseumbasel-ch", kind: "manual",
+    names: { card: "Kunstmuseum Basel", chip: null, group: null, full: "Kunstmuseum Basel", inEnglish: null, aka: [], lookup: "Kunstmuseum Basel", replaced: ["Basel Kunstmuseum"], hers: true },
+    city: "Basel", country: "Switzerland", english: false, language: null,
+    shop: { home: "https://shop.kunstmuseumbasel.ch/en/", catalogues: "https://shop.kunstmuseumbasel.ch/en/merchandise?category=Exhibition+Catalogues", search: null, unseen: "script", queries: [], named: null, rankAsOwn: [], inStock: null },
+    read: { link: null, sites: [], dateOrder: "day", spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
+    sweep: { exBase: null, listUrl: null },
+    filed: { addedAt: "2026-10-26T06:10:30.646Z", aka: [], city: "Basel", confirmed: true, country: "Switzerland", english: false, englishPicked: false, finder: 3, foundBy: "the venue's rule", gallery: false, host: "kunstmuseumbasel.ch", id: "occ-kunstmuseumbasel-ch", name: "Kunstmuseum Basel", pageShop: "https://kunstmuseumbasel.ch/en/visit/shop", searchRule: 2, shelfKind: null, shop: "found", shopAdded: false, shopCatalogues: "https://shop.kunstmuseumbasel.ch/en/merchandise?category=Exhibition+Catalogues", shopEnglishUnread: null, shopHome: "https://shop.kunstmuseumbasel.ch/en/", shopSearch: null, short: "Basel Kunstmuseum", turnedDown: [], why: null } },
+
+  { id: "occ-fondationbeyeler-ch", kind: "manual",
+    names: { card: "Fondation Beyeler", chip: null, group: null, full: "Fondation Beyeler", inEnglish: null, aka: ["Beyeler Foundation"], lookup: "Fondation Beyeler", replaced: [], hers: false },
+    city: "Riehen", country: "Switzerland", english: false, language: null,
+    shop: { home: null, catalogues: null, search: null, unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
+    read: { link: null, sites: [], dateOrder: null, spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
+    sweep: { exBase: null, listUrl: null },
+    filed: { addedAt: "2026-11-01T14:34:51.806Z", aka: ["Beyeler Foundation"], city: "Riehen", confirmed: true, country: "Switzerland", english: false, englishPicked: false, finder: 3, foundBy: "a search", gallery: false, host: "www.fondationbeyeler.ch", id: "occ-fondationbeyeler-ch", name: "Fondation Beyeler", pageShop: "", searchRule: 2, shelfKind: "catalogues", shop: "found", shopAdded: false, shopCatalogues: "https://shop.fondationbeyeler.ch/en/kategorie/exhibition-catalogues", shopEnglishUnread: null, shopHome: "https://shop.fondationbeyeler.ch/", shopSearch: null, short: "Fondation Beyeler", turnedDown: [], why: null } },
+
+  // The Tuscan state museums' site names itself "Direzione regionale Musei nazionali Toscana";
+  // its cards show "San Marco" and the lookup searches as "Museo di San Marco" (her decision).
+  // Its pages are press releases: the title is the headline's first sentence, without "Mostra"
+  // (exhibition) or the quotation marks round the name; capitals recased (her decision).
+  { id: "occ-museitoscana-cultura-gov-it", kind: "manual",
+    names: { card: "San Marco Florence", chip: null, group: null, full: "Museo di San Marco", inEnglish: null, aka: [], lookup: "Museo di San Marco", replaced: [], hers: true },
+    city: "Florence", country: "Italy", english: false, language: null,
+    shop: { home: null, catalogues: null, search: null, unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
+    read: { link: { firstSentence: true, unquote: true, capsTitles: true }, sites: [], dateOrder: null, spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
+    sweep: { exBase: null, listUrl: null },
+    filed: { addedAt: "2026-10-18T09:08:51.834Z", confirmed: true, english: false, finder: 3, host: "museitoscana.cultura.gov.it", id: "occ-museitoscana-cultura-gov-it", name: "Direzione regionale Musei nazionali Toscana", pageShop: "", shelfKind: null, shop: "none", shopCatalogues: null, shopHome: null, shopSearch: null, turnedDown: [], why: null } },
+
+  // Genoa's page titles give no name, Milan's name the city council (her names, both written in).
+  { id: "occ-palazzoducale-genova-it", kind: "manual",
+    names: { card: "Palazzo Ducale Genova", chip: null, group: null, full: "Palazzo Ducale Genova", inEnglish: null, aka: [], lookup: "Palazzo Ducale Genova", replaced: [], hers: true },
+    city: "Genoa", country: "Italy", english: false, language: null,
+    shop: { home: null, catalogues: null, search: null, unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
+    read: { link: null, sites: [], dateOrder: null, spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
+    sweep: { exBase: null, listUrl: null },
+    filed: { addedAt: "2026-10-18T09:08:46.904Z", confirmed: true, english: false, finder: 3, host: "palazzoducale.genova.it", id: "occ-palazzoducale-genova-it", name: "palazzoducale.genova.it", pageShop: "", shelfKind: null, shop: "none", shopCatalogues: null, shopHome: null, shopSearch: null, turnedDown: [], why: null } },
+
+  // Palazzo Reale Milano's pages also sit on the city council's site, saved by her because that
+  // site refuses Parallel (docs/add_by_link.md, "Saved pages").
+  { id: "occ-palazzorealemilano-it", kind: "manual",
+    names: { card: "Palazzo Reale Milano", chip: null, group: null, full: "Palazzo Reale Milano", inEnglish: null, aka: [], lookup: "Palazzo Reale Milano", replaced: [], hers: true },
+    city: "Milan", country: "Italy", english: false, language: null,
+    shop: { home: null, catalogues: null, search: null, unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
+    read: { link: { titleHeading: PRM_TAIL, titleDrop: PRM_TAIL, nameInLines: true, until: PRM_BOX, datesUntil: PRM_BOX, capsTitles: true, asOfTo: true }, sites: [{ host: "www2.comune.milano.it", path: /^\/(?:en|it)\/web\/palazzo-reale-milano\// }], dateOrder: null, spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
+    sweep: { exBase: null, listUrl: null },
+    filed: { addedAt: "2026-10-18T12:41:17.202Z", confirmed: true, english: false, finder: 3, host: "www.palazzorealemilano.it", id: "occ-palazzorealemilano-it", name: "Comune di Milano", pageShop: "", shelfKind: null, shop: "none", shopCatalogues: null, shopHome: null, shopSearch: null, turnedDown: [], why: null } },
+
+  { id: "occ-museo-archeologico-regionale", kind: "manual",
+    names: { card: "Aosta Archaeological Museum", chip: null, group: null, full: "Museo Archeologico Regionale", inEnglish: null, aka: ["MAR", "Museo Archeologico Regionale di Aosta"], lookup: "Aosta Archaeological Museum", replaced: [], hers: false },
+    city: "Aosta", country: "Italy", english: false, language: null,
+    shop: { home: null, catalogues: null, search: null, unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
+    read: { link: null, sites: [], dateOrder: null, spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
+    sweep: { exBase: null, listUrl: null },
+    filed: { addedAt: "2026-10-29T14:36:54.550Z", aka: ["MAR", "Museo Archeologico Regionale di Aosta"], city: "Aosta", confirmed: true, country: "Italy", english: false, englishPicked: false, finder: 3, gallery: false, host: "", id: "occ-museo-archeologico-regionale", name: "Museo Archeologico Regionale", pageShop: "", shelfKind: null, shop: "none", shopCatalogues: null, shopEnglishUnread: null, shopHome: null, shopSearch: null, short: "Aosta Archaeological Museum", turnedDown: [], why: null } },
+
+  { id: "occ-palazzostrozzi-org", kind: "manual",
+    names: { card: "Palazzo Strozzi Florence", chip: null, group: null, full: "Fondazione Palazzo Strozzi", inEnglish: null, aka: ["Palazzo Strozzi"], lookup: "Palazzo Strozzi Florence", replaced: [], hers: false },
+    city: "Florence", country: "Italy", english: false, language: null,
+    shop: { home: null, catalogues: null, search: null, unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
+    read: { link: null, sites: [], dateOrder: null, spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
+    sweep: { exBase: null, listUrl: null },
+    filed: { addedAt: "2026-11-05T01:15:20.459Z", aka: ["Palazzo Strozzi"], city: "Florence", confirmed: true, country: "Italy", english: false, englishPicked: false, finder: 3, foundBy: "her link", gallery: false, host: "www.palazzostrozzi.org", id: "occ-palazzostrozzi-org", name: "Fondazione Palazzo Strozzi", pageShop: "", searchRule: null, shelfKind: null, shop: "found", shopAdded: true, shopCatalogues: "https://www.palazzostrozzi.org/en/cataloghi-libri/", shopEnglishUnread: null, shopHome: "https://www.palazzostrozzi.org/", shopSearch: null, short: "Palazzo Strozzi Florence", turnedDown: [], why: null } },
+
+  // The Correr's archive site (that site only): each show has several pages, its tab title the
+  // page's own name ("Project", "Mostra"); the show's name is the heading after "Section menu" ("Menù di sezione").
+  // Titles typed in capitals are recased (her decision), each part either side of a full stop.
+  { id: "occ-archivio-correr-visitmuve-it", kind: "manual",
+    names: { card: "Correr Venice", chip: null, group: null, full: "Museo Correr", inEnglish: null, aka: ["Museum Correr", "Correr Museum"], lookup: "Correr Venice", replaced: ["Venice Correr"], hers: true },
+    city: "Venice", country: "Italy", english: false, language: null,
+    shop: { home: null, catalogues: null, search: null, unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
+    read: { link: { titleAfter: /^(?:Section menu|Men\u00f9 di sezione)$/, capsTitles: true, capsStops: true }, sites: [], dateOrder: null, spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
+    sweep: { exBase: null, listUrl: null },
+    filed: { addedAt: "2026-10-29T10:34:02.443Z", aka: ["Museum Correr", "Correr Museum"], city: "Venice", confirmed: true, country: "Italy", english: false, englishPicked: false, finder: 3, gallery: false, host: "archivio-correr.visitmuve.it", id: "occ-archivio-correr-visitmuve-it", name: "Museo Correr", pageShop: "", searchRule: 2, shelfKind: null, shop: "none", shopCatalogues: null, shopEnglishUnread: null, shopHome: null, shopSearch: null, short: "Venice Correr", turnedDown: [], why: null } },
+
+  { id: "occ-museothyssen-org", kind: "manual",
+    names: { card: "Thyssen-Bornemisza", chip: null, group: null, full: "Museo Nacional Thyssen-Bornemisza", inEnglish: null, aka: ["Museo Thyssen-Bornemisza", "Thyssen-Bornemisza National Museum", "Museo Thyssen"], lookup: "Thyssen-Bornemisza", replaced: [], hers: false },
+    city: "Madrid", country: "Spain", english: false, language: null,
+    shop: { home: null, catalogues: null, search: null, unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
+    read: { link: null, sites: [], dateOrder: null, spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
+    sweep: { exBase: null, listUrl: null },
+    filed: { addedAt: "2026-10-04T01:00:56.784Z", aka: ["Museo Thyssen-Bornemisza", "Thyssen-Bornemisza National Museum", "Museo Thyssen"], city: "Madrid", confirmed: true, country: "Spain", english: false, finder: 2, foundBy: "a search", gallery: false, host: "www.museothyssen.org", id: "occ-museothyssen-org", name: "Museo Nacional Thyssen-Bornemisza", pageShop: "https://tienda.museothyssen.org/en", rejected: [], shelfKind: "catalogues", shop: "found", shopCatalogues: "https://tienda.museothyssen.org/en/collections/guias-y-catalogos-del-museo", shopHome: "https://tienda.museothyssen.org/", shopSearch: "https://tienda.museothyssen.org/search?q=", short: "Thyssen-Bornemisza", turnedDown: [], why: null } },
+
+  { id: "occ-guggenheim-bilbao-eus", kind: "manual",
+    names: { card: "Guggenheim Bilbao", chip: null, group: null, full: "Guggenheim Museum Bilbao", inEnglish: null, aka: ["Museo Guggenheim Bilbao", "Bilboko Guggenheim Museoa", "Guggenheim Bilbao"], lookup: "Guggenheim Bilbao", replaced: [], hers: false },
+    city: "Bilbao", country: "Spain", english: false, language: null,
+    shop: { home: null, catalogues: null, search: null, unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
+    read: { link: null, sites: [], dateOrder: null, spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
+    sweep: { exBase: null, listUrl: null },
+    filed: { addedAt: "2026-11-01T15:28:25.772Z", aka: ["Museo Guggenheim Bilbao", "Bilboko Guggenheim Museoa", "Guggenheim Bilbao"], city: "Bilbao", confirmed: true, country: "Spain", english: false, englishPicked: false, finder: 3, foundBy: "a search", gallery: false, host: "www.guggenheim-bilbao.eus", id: "occ-guggenheim-bilbao-eus", name: "Guggenheim Museum Bilbao", pageShop: "", searchRule: 2, shelfKind: "catalogues", shop: "found", shopAdded: false, shopCatalogues: "https://tienda.guggenheim-bilbao.eus/en/books/catalogs-of-exhibitions", shopEnglishUnread: null, shopHome: "https://tienda.guggenheim-bilbao.eus/", shopSearch: null, short: "Guggenheim Bilbao", turnedDown: [], why: null } },
+
+  { id: "occ-museoreinasofia-es", kind: "manual",
+    names: { card: "Reina Sof\u00eda Madrid", chip: null, group: null, full: "Museo Nacional Centro de Arte Reina Sof\u00eda", inEnglish: null, aka: ["MNCARS", "Museo Reina Sof\u00eda", "Reina Sof\u00eda"], lookup: "Reina Sof\u00eda Madrid", replaced: ["Madrid Reina Sof\u00eda"], hers: true },
+    city: "Madrid", country: "Spain", english: false, language: null,
+    shop: { home: null, catalogues: null, search: null, unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
+    read: { link: null, sites: [], dateOrder: null, spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
+    sweep: { exBase: null, listUrl: null },
+    filed: { addedAt: "2026-10-26T13:27:44.300Z", aka: ["MNCARS", "Museo Reina Sof\u00eda", "Reina Sof\u00eda"], city: "Madrid", confirmed: true, country: "Spain", english: false, englishPicked: false, finder: 3, gallery: false, host: "www.museoreinasofia.es", id: "occ-museoreinasofia-es", name: "Museo Nacional Centro de Arte Reina Sof\u00eda", pageShop: "", searchRule: 2, shelfKind: null, shop: "none", shopCatalogues: null, shopEnglishUnread: null, shopHome: null, shopSearch: null, short: "Madrid Reina Sof\u00eda", turnedDown: [], why: null } },
+
+  { id: "occ-mauritshuis-nl", kind: "manual",
+    names: { card: "Mauritshuis", chip: null, group: null, full: "Mauritshuis", inEnglish: null, aka: [], lookup: "Mauritshuis", replaced: [], hers: false },
+    city: "The Hague", country: "Netherlands", english: false, language: null,
+    shop: { home: null, catalogues: null, search: null, unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
+    read: { link: null, sites: [], dateOrder: null, spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
+    sweep: { exBase: null, listUrl: null },
+    filed: { addedAt: "2026-10-04T01:01:04.776Z", confirmed: true, english: false, finder: 2, foundBy: "a search", host: "www.mauritshuis.nl", id: "occ-mauritshuis-nl", name: "Mauritshuis", pageShop: "", rejected: [], shelfKind: "catalogues", shop: "found", shopCatalogues: "https://shop.mauritshuis.nl/product-categorie/boeken-catalogi/catalogi", shopHome: "https://shop.mauritshuis.nl/", shopSearch: null, turnedDown: [], why: null } },
+
+  { id: "occ-museumhetvalkhof-nl", kind: "manual",
+    names: { card: "Valkhof Nijmegen", chip: null, group: null, full: "Museum Het Valkhof", inEnglish: null, aka: ["Het Valkhof"], lookup: "Valkhof Nijmegen", replaced: ["Nijmegen Valkhof"], hers: true },
+    city: "Nijmegen", country: "Netherlands", english: false, language: null,
+    shop: { home: null, catalogues: null, search: null, unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
+    read: { link: null, sites: [], dateOrder: null, spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
+    sweep: { exBase: null, listUrl: null },
+    filed: { addedAt: "2026-10-29T10:20:03.694Z", aka: ["Het Valkhof"], city: "Nijmegen", confirmed: true, country: "Netherlands", english: false, englishPicked: false, finder: 3, gallery: false, host: "museumhetvalkhof.nl", id: "occ-museumhetvalkhof-nl", name: "Museum Het Valkhof", pageShop: "", shelfKind: null, shop: "none", shopCatalogues: null, shopEnglishUnread: null, shopHome: null, shopSearch: null, short: "Nijmegen Valkhof", turnedDown: [], why: null } },
+
+  { id: "occ-vangoghmuseum-nl", kind: "manual",
+    names: { card: "Van Gogh Museum", chip: null, group: null, full: "Van Gogh Museum", inEnglish: null, aka: [], lookup: "Van Gogh Museum", replaced: [], hers: false },
+    city: "Amsterdam", country: "Netherlands", english: false, language: null,
+    shop: { home: null, catalogues: null, search: null, unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
+    read: { link: null, sites: [], dateOrder: null, spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
+    sweep: { exBase: null, listUrl: null },
+    filed: { addedAt: "2026-10-29T06:02:41.812Z", aka: [], city: "Amsterdam", confirmed: true, country: "Netherlands", english: false, englishPicked: false, finder: 3, foundBy: "a search", gallery: false, host: "www.vangoghmuseum.nl", id: "occ-vangoghmuseum-nl", name: "Van Gogh Museum", pageShop: "https://www.vangogh.shop/", searchRule: 2, shelfKind: "publications", shop: "found", shopCatalogues: "https://www.vangogh.shop/en/van-gogh-museum-publicaties", shopEnglishUnread: null, shopHome: "https://www.vangogh.shop/", shopSearch: null, short: "Van Gogh Museum", turnedDown: [], why: null } },
+
+  // Her name, the country first. A retired show's address opens the "Past Exhibitions" list (Louise
+  // Bourgeois), which is never a show (listingPage); a heading line ending in a comma runs on to the
+  // next line (headingCommaJoin; "Diane Arbus Photographs," over "1956-1971").
+  // Its all-number dates: "11.10.24 - 27.4.25".
+  { id: "occ-louisiana-dk", kind: "manual",
+    names: { card: "Louisiana Denmark", chip: null, group: null, full: "Louisiana Museum of Modern Art", inEnglish: null, aka: ["Louisiana", "Louisiana Museum for Moderne Kunst"], lookup: "Louisiana Museum of Modern Art", replaced: ["Louisiana Humleb\u00e6k", "Denmark Louisiana"], hers: true },
+    city: "Humleb\u00e6k", country: "Denmark", english: false, language: null,
+    shop: { home: null, catalogues: null, search: null, unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
+    read: { link: { listingPage: /^Past exhibitions$/i, headingCommaJoin: true }, sites: [], dateOrder: "day", spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
+    sweep: { exBase: null, listUrl: null },
+    filed: { addedAt: "2026-11-01T13:48:29.836Z", aka: ["Louisiana", "Louisiana Museum for Moderne Kunst"], city: "Humleb\u00e6k", confirmed: true, country: "Denmark", english: false, englishPicked: false, finder: 3, foundBy: "a search", gallery: false, host: "louisiana.dk", id: "occ-louisiana-dk", name: "Louisiana Museum of Modern Art", pageShop: "https://butik.louisiana.dk/", searchRule: 2, shelfKind: "catalogues", shop: "found", shopAdded: false, shopCatalogues: "https://butik.louisiana.dk/en-int/collections/udstillingskataloger", shopEnglishUnread: null, shopHome: "https://butik.louisiana.dk/", shopSearch: "https://butik.louisiana.dk/search?q=", short: "Louisiana Humleb\u00e6k", turnedDown: [], why: null } },
+
+  // Her name, the city first (her decision, as Antwerp KMSKA).
+  // Its all-number dates: "16.2–26.5 2013", "8.10 2011–15.1 2012".
+  { id: "occ-modernamuseet-se", kind: "manual",
+    names: { card: "Stockholm Moderna", chip: null, group: null, full: "Moderna Museet", inEnglish: null, aka: [], lookup: "Moderna Museet", replaced: ["Moderna Museet Stockholm"], hers: true },
+    city: "Stockholm", country: "Sweden", english: false, language: null,
+    shop: { home: null, catalogues: null, search: null, unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
+    read: { link: null, sites: [], dateOrder: "day", spacedYear: true, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
+    sweep: { exBase: null, listUrl: null },
+    filed: { addedAt: "2026-11-01T13:43:00.860Z", aka: [], city: "Stockholm", confirmed: true, country: "Sweden", english: false, englishPicked: false, finder: 3, foundBy: "a search", gallery: false, host: "www.modernamuseet.se", id: "occ-modernamuseet-se", name: "Moderna Museet", pageShop: "https://webshop.modernamuseet.se/en", searchRule: 2, shelfKind: "catalogues", shop: "found", shopAdded: false, shopCatalogues: "https://webshop.modernamuseet.se/en/collections/utstallningskataloger-1", shopEnglishUnread: null, shopHome: "https://webshop.modernamuseet.se/", shopSearch: "https://webshop.modernamuseet.se/search?q=", short: "Stockholm Moderna Museet", turnedDown: [], why: null } },
+
+  // Łazienki (her decision, Łazienki only): its heading runs on into the show's opening paragraph; the
+  // page title is the show's name and its section ("The Nabis. Prophets of a New Art - Events"): the name is the title.
+  { id: "occ-lazienki-krolewskie-pl", kind: "manual",
+    names: { card: "Royal \u0141azienki Warsaw", chip: null, group: null, full: "Royal \u0141azienki Museum", inEnglish: null, aka: ["Muzeum \u0141azienki Kr\u00f3lewskie w Warszawie", "\u0141azienki Kr\u00f3lewskie"], lookup: "Royal \u0141azienki Warsaw", replaced: ["Warsaw \u0141azienki"], hers: true },
+    city: "Warsaw", country: "Poland", english: false, language: null,
+    shop: { home: null, catalogues: null, search: null, unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
+    read: { link: { tabTitle: /\s+[-–—]\s+[^-–—]+$/ }, sites: [], dateOrder: null, spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
+    sweep: { exBase: null, listUrl: null },
+    filed: { addedAt: "2026-10-29T06:02:59.654Z", aka: ["Muzeum \u0141azienki Kr\u00f3lewskie w Warszawie", "\u0141azienki Kr\u00f3lewskie"], city: "Warsaw", confirmed: true, country: "Poland", english: false, englishPicked: false, finder: 3, gallery: false, host: "www.lazienki-krolewskie.pl", id: "occ-lazienki-krolewskie-pl", name: "Royal \u0141azienki Museum", pageShop: "", shelfKind: null, shop: "none", shopCatalogues: null, shopEnglishUnread: null, shopHome: null, shopSearch: null, short: "Warsaw \u0141azienki", turnedDown: [], why: null } },
+
+  // The Tate library's records file under the Tate Claude names (ownMuseumNamed); the record's
+  // summary sits under its own "Summary" heading, below the copies list and after a tab of that name.
+  { id: "occ-library-tate-org-uk", kind: "manual",
+    names: { card: null, chip: null, group: null, full: null, inEnglish: null, aka: [], lookup: null, replaced: [], hers: false },
+    city: null, country: null, english: null, language: null,
+    shop: { home: null, catalogues: null, search: null, unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
+    read: { link: { from: /^Summary$/, fromLast: true }, sites: [], dateOrder: null, spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
+    sweep: { exBase: null, listUrl: null },
+    filed: null },
+
+  // Its all-number dates: "Until 25.10.2026".
+  { id: "occ-kunsthaus-ch", kind: "manual",
+    names: { card: null, chip: null, group: null, full: null, inEnglish: null, aka: [], lookup: null, replaced: [], hers: false },
+    city: "Zurich", country: "Switzerland", english: null, language: null,
+    shop: { home: null, catalogues: null, search: null, unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
+    read: { link: null, sites: [], dateOrder: "day", spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
+    sweep: { exBase: null, listUrl: null },
+    filed: null },
+
+  // Its all-number dates: "22.05.2008 | 14.08.2008".
+  { id: "occ-approfondimentimostre-com", kind: "manual",
+    names: { card: null, chip: null, group: null, full: null, inEnglish: null, aka: [], lookup: null, replaced: [], hers: false },
+    city: null, country: null, english: null, language: null,
+    shop: { home: null, catalogues: null, search: null, unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
+    read: { link: null, sites: [], dateOrder: "day", spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
+    sweep: { exBase: null, listUrl: null },
+    filed: null },
 ];
-// Her order for every venue list: chips, Sort by Venue, the freshness drawer and the
-// refresh screen. A venue not named here goes last, by name.
-const VENUE_ORDER=["met","ng","occ-nga-gov","frick","morgan","artic","menil",
-  "acq","lgd","occ-new-artsmia-org","cincinnati","occ-britishart-yale-edu","brit","tate-britain","wallace","va","occ-nationalgalleries-org",
-  "louvre","orsay","jacquemart","occ-chateaudechantilly-fr","mad","rijks","khm","occ-museodelprado-es","occ-alte-pinakothek","occ-pinakothek-der-moderne","occ-sammlung-schack","occ-smb-museum","occ-alte-nationalgalerie","occ-neue-nationalgalerie","occ-gemaeldegalerie-skd-museum","occ-staedelmuseum-de","uffizi","dellav","borghese","brera","capo","occ-cini-it","occ-lestanzedelvetro-org","occ-lestanzedellafotografia-it","moma",
-  "tate-modern","mam",
-  ];
+return VENUES;
+})();
+// Each venue's register entry, by id.
+const REG=Object.fromEntries(VENUE_REGISTER.map(e=>[e.id,e]));
+// How Links, Pages and Paste read a venue's pages: its link options, with its galleries (Acquavella's places).
+const linkRulesOf=e=>!e||!e.read.link?null:e.read.places.length?{...e.read.link,places:e.read.places}:e.read.link;
+// A venue as every part reads it (MU): its register entry `e` and, for a manual-import venue, the record
+// the page's store holds for it (`rec`: the entry's facts with what was learned since it was filed over
+// them, recordOf). No `e`: a venue met since the last publish, known by its record only; no record either:
+// a ledger row from a venue neither holds, named `fallback`, shop not known.
+//   shop (on the record): "found" (books section), "noshelf" (a shop, no books section), "none" (no
+//   shop; confirmed = her "No shop", lookups go to the web), "failed" (a step died — not an answer),
+//   "unknown" (look again on the next link). Lookups use "found", and "noshelf" once its search is proved.
+function venueView(e,rec,fallback){
+  const n=e?e.names:{}, sh=e?e.shop:{}, rd=e?e.read:{}, s=rec||{};
+  const manual=!e||e.kind==="manual";
+  // Her names (names.hers) are never replaced by a name Claude gave on the record.
+  const name=(n.hers&&n.full)||s.name||n.full||fallback||null, card=(n.hers&&n.card)||s.short||n.card||name;
+  const en=s.english!=null?s.english:e?e.english:null;
+  const v={id:e?e.id:s.id,card,chip:n.chip||null,group:n.group||null,name,nameInEnglish:n.inEnglish||null,
+    aka:s.aka||n.aka||[],lookupName:n.lookup||card,replaced:n.replaced||[],hers:!!n.hers,
+    city:s.city||(e&&e.city)||null,country:s.country||(e&&e.country)||null,english:en===false?false:undefined,language:(e&&e.language)||null,
+    linkRead:linkRulesOf(e),sites:rd.sites||[],places:rd.places||[],subtitleUnderHeading:!!rd.subtitleUnderHeading,
+    inStock:sh.inStock||null,shopQueries:sh.queries&&sh.queries.length?sh.queries:null,shopNamed:sh.named||null,rankAsOwn:sh.rankAsOwn||[],
+    exBase:e?e.sweep.exBase:null,listUrl:e?e.sweep.listUrl:null,occasional:manual};
+  if(!manual)return{...v,shopHome:sh.home,shopCatalogues:sh.catalogues,shopSearch:sh.search,shopUnseen:sh.unseen||undefined};
+  // A shop section written into the entry (the Städel, Basel) is her answer; else what the finder found.
+  const ruled=!!sh.catalogues, live=ruled||s.shop==="found"||(s.shop==="noshelf"&&!!s.shopSearch);
+  // Her pick on the shop screen: the English section the finder could not read (`shopEnglishUnread`), contents unseen.
+  const enPick=!!(s.englishPicked&&s.shopEnglishUnread);
+  return{...v,shopLink:sh.catalogues||undefined,shopUnseen:sh.unseen||(enPick?"unconfirmed":undefined),
+    shopHome:ruled?sh.home:live?s.shopHome||null:null,shopCatalogues:ruled?sh.catalogues:live?(enPick?s.shopEnglishUnread:s.shopCatalogues||null):null,
+    shopSearch:live?s.shopSearch||null:null,shopUnknown:!live&&!(s.shop==="none"&&s.confirmed)};
+}
+// Every name a venue goes by, as the parts that look for it in a text match it.
+const venueNames=v=>[...new Set([v&&v.name,v&&v.card,v&&v.lookupName,...((v&&v.replaced)||[])].filter(Boolean))];
+// Her 28 swept venues, in her venue order: drawer, chips, Sort by Venue and refresh headings follow it.
+const MUSEUMS=VENUE_REGISTER.filter(e=>e.kind==="swept").map(e=>venueView(e));
 // The Occasional venues (no chip of their own) follow, by country: the United States, the rest of that group
-// (Australia), then Europe in her country order (her decision). Hard-coded, her decision: the countries of the venues that
-// store no country (below); a venue the store holds a country for takes that one.
+// (Australia), then Europe in her country order (her decision). A venue's country is on its register entry.
 const OCC_COUNTRY_ORDER=["United States","United Kingdom","Germany","Belgium","France","Switzerland","Italy","Spain","Netherlands"];
 const OCC_EUROPE_ELSE=["Austria","Denmark","Sweden","Norway","Finland","Portugal","Ireland","Poland","Czechia","Hungary","Greece","Luxembourg"];
 const OCC_COUNTRY_NAMES={"usa":"United States","us":"United States","united states of america":"United States","uk":"United Kingdom","great britain":"United Kingdom","england":"United Kingdom","scotland":"United Kingdom","wales":"United Kingdom","northern ireland":"United Kingdom","the netherlands":"Netherlands","holland":"Netherlands","czech republic":"Czechia","deutschland":"Germany"};
-const OCC_COUNTRY={"occ-mfa-org":"United States","occ-clevelandart-org":"United States","occ-dia-org":"United States","occ-archive-worcesterart-org":"United States","occ-philamuseum-org":"United States","occ-adelsongalleries-com":"United States",
-  "occ-courtauld-ac-uk":"United Kingdom","occ-royalacademy-org-uk":"United Kingdom","ashmolean":"United Kingdom","occ-rct-uk":"United Kingdom",
-  "occ-staatsgalerie-de":"Germany","occ-hlmd-de":"Germany","occ-kmska-be":"Belgium","occ-mskgent-be":"Belgium","occ-galerie-karsten-greve-com":"France","occ-kunstmuseumbasel-ch":"Switzerland",
-  "occ-museitoscana-cultura-gov-it":"Italy","occ-palazzoducale-genova-it":"Italy","occ-palazzorealemilano-it":"Italy","occ-museothyssen-org":"Spain","occ-museoreinasofia-es":"Spain","occ-mauritshuis-nl":"Netherlands",
-  "occ-ngv-vic-gov-au":"Australia"};
-const occCountry=id=>{ const c=OCC_COUNTRY[id]||(MU[id]||{}).country||""; const k=String(c).trim().toLowerCase(); return OCC_COUNTRY_NAMES[k]||String(c).trim(); };
+// A venue's country as MU shows it, else its register entry's (a venue not yet shown).
+const occCountry=id=>{ const c=String((MU[id]||REG[id]||{}).country||"").trim(); return OCC_COUNTRY_NAMES[c.toLowerCase()]||c; };
 // "us", "eu" or "other": the three chips that hold the venues with no chip of their own.
 // Two groups only (her decision): Europe, UK included, and everything else under Occ - US (Australia last).
 // No country stored: the address's country ending (".uk", ".de"…) says.
@@ -97,15 +895,15 @@ const OCC_EUROPE_TLD=["uk","de","be","fr","ch","it","es","nl","at","dk","se","no
 const occRegion=id=>{ const c=occCountry(id); if(c)return(OCC_COUNTRY_ORDER.includes(c)&&c!=="United States")||OCC_EUROPE_ELSE.includes(c)?"eu":"us";
   const m=/-([a-z]{2})$/.exec(String(id)); return m&&OCC_EUROPE_TLD.includes(m[1])?"eu":"us"; };
 const OCC_CHIPS=[["occ:us","Occ - US"],["occ:eu","Occ - Europe"]];
-const hasNoChip=id=>MUSEUMS.some(m=>m.id===id&&m.underOcc)||(String(id).startsWith("occ-")&&!ownChip(id));// MUSEUMS is sorted at load, before isOcc, ownChip and LINK_VENUES exist: orderOf reaches them only for a venue neither VENUE_ORDER nor underOcc covers.
-// Within a country, the venues her order already named come first, in that order; the rest follow by name.
-const OCC_NAMED_ORDER=["occ-mfa-org","occ-clevelandart-org","occ-dia-org","occ-archive-worcesterart-org","occ-courtauld-ac-uk","occ-royalacademy-org-uk","ashmolean","occ-museitoscana-cultura-gov-it","occ-palazzoducale-genova-it","occ-palazzorealemilano-it","occ-museothyssen-org"];
-const orderOf=id=>{ const i=VENUE_ORDER.indexOf(id); if(i>=0)return i; if(!hasNoChip(id))return 1e6;
-  const c=occCountry(id),j=OCC_COUNTRY_ORDER.indexOf(c),k=OCC_NAMED_ORDER.indexOf(id);
+const hasNoChip=id=>REG[id]?!REG[id].names.chip:isOcc(id);// Her order for the venues with a chip of their own: the register's.
+const CHIP_RANK=Object.fromEntries(VENUE_REGISTER.filter(e=>e.names.chip).map((e,i)=>[e.id,i]));
+// A venue with no chip of its own sorts by country, then in the register's order; a venue met since the
+// last publish after those of its country.
+const orderOf=id=>{ if(!hasNoChip(id))return id in CHIP_RANK?CHIP_RANK[id]:1e6;
+  const c=occCountry(id),j=OCC_COUNTRY_ORDER.indexOf(c),k=VENUE_REGISTER.findIndex(e=>e.id===id);
   const base=c==="United States"?100:occRegion(id)==="eu"?(j>=0?110+j:150):105;   // the United States, the rest of the US group (Australia), then Europe
-  return base+(k>=0?k/100:0.5); };
-MUSEUMS.sort((a,b)=>orderOf(a.id)-orderOf(b.id));
-const lookupName=mu=>mu.lookupName||mu.short;
+  return base+(k>=0?k/1000:0.5); };
+const lookupName=mu=>mu.lookupName;
 const MU = Object.fromEntries(MUSEUMS.map(m=>[m.id,m]));
 
 // ===== SHARED WITH THE SCRAPER — the join writes the rules below from the scraper's own files (scraper/dates.js, compress_prompt.md, compress.js, boilerplate.js, bot_check.js, answer_check.js, VENUES); never edit between these markers. Edit the scraper, then run `node build/app_join.js`. =====
@@ -214,29 +1012,14 @@ const RANGE_SEP = "\\s*,?\\s*(?:-|t/m|to|till|until|through|all['\u2019]|all[oe]
 // numbers settle (a number over 12 cannot be a month) or, when they cannot, in the order recorded here
 // for its venue. Each venue's order comes from its own pages; a venue not listed whose numbers cannot
 // settle it gets ORDER_UNKNOWN_NOTE, and a session records its order (her design; docs/scraper.md §3).
-const DATE_ORDER = {
-  // Swept venues.
-  uffizi: 'day',                                // "From 18/06/2025 to 28/09/2025"
-  // Link venues.
-  'occ-museodelprado-es': 'month',              // "6/9/2026 - 9/27/2026"
-  'occ-smb-museum': 'day',                      // "14.05.2027 to 12.09.2027"
-  'occ-alte-nationalgalerie': 'day',            // "19.03.2027 to 01.08.2027"
-  'occ-neue-nationalgalerie': 'day',            // "20.03.2026 to 09.08.2026"
-  'occ-alte-pinakothek': 'day',                 // "27.10.2023-04.02.2024"
-  'occ-pinakothek-der-moderne': 'day',          // "10/07/2026 - 04/10/2026", "09.10.2026-21.02.2027"
-  'occ-sammlung-schack': 'day',                 // "14.10.2027-13.02.2028"
-  'occ-gemaeldegalerie-skd-museum': 'day',      // "14/04/2022—31/07/2022"
-  'occ-kunstmuseumbasel-ch': 'day',             // "25.05.–24.11.2024"
-  'occ-kunsthaus-ch': 'day',                    // "Until 25.10.2026"
-  'occ-louisiana-dk': 'day',                    // "11.10.24 - 27.4.25"
-  'occ-mskgent-be': 'day',                      // "01.02 – 30.04.20"
-  'occ-approfondimentimostre-com': 'day',       // "22.05.2008 | 14.08.2008"
-  'occ-modernamuseet-se': 'day',                // "16.2–26.5 2013", "8.10 2011–15.1 2012"
-};
+// Recorded on each venue's register entry (venues/register.js: read.dateOrder, read.spacedYear). In the
+// app the join puts the page's own register in place of the line below.
+const REGISTER = VENUE_REGISTER;
+const DATE_ORDER = Object.fromEntries(REGISTER.filter(v => v.read.dateOrder).map(v => [v.id, v.read.dateOrder]));
 // Venues that write day.month with the year after a space, on the closing side or both
 // ("16.2–26.5 2013", "8.10 2011–15.1 2012" — Moderna Museet). A venue rule (her decision: a
 // venue's fault gets that venue's rule), so it reads nowhere else. DS-012.
-const SPACED_YEAR_VENUES = new Set(['occ-modernamuseet-se']);
+const SPACED_YEAR_VENUES = new Set(REGISTER.filter(v => v.read.spacedYear).map(v => v.id));
 const ORDER_UNKNOWN_NOTE = "Dates not yet read \u2014 confirm whether the venue's date format is day first or month first.";
 
 /**
@@ -871,18 +1654,33 @@ function capsTitleParts(title) {
   return String(title).split(/(\s*[:–—]\s*)/).map((seg, i) => i % 2 ? seg : titleFromCaps(seg)).join('');
 }
 
-// The swept venues that type their titles in capitals (her decisions; docs/venues.md): code writes
+// The swept venues that type their titles in capitals (read.titleCaps on the register; her decisions; docs/venues.md): code writes
 // ordinary capitals, and at the Borghese the full stop between name and subtitle becomes an em dash
 // ("Louise Bourgeois — Unconscious Memories"). One copy: the sweep's recipes take it (`capsTitleRule`)
 // and Add by link files the same title for the same venue.
-const SWEPT_CAPS_TITLES = { borghese: { stopToDash: true }, ashmolean: {} };
+const SWEPT_CAPS_TITLES = Object.fromEntries(REGISTER.filter(v => v.read.titleCaps).map(v => [v.id, v.read.titleCaps === 'stopToDash' ? { stopToDash: true } : {}]));
 function capsTitleRule(code) {
   const r = SWEPT_CAPS_TITLES[code];
   return r ? { capsTitles: true, ...(r.stopToDash ? { stopToDash: true } : {}) } : {};
 }
-// A swept venue's title as the sweep writes it: the em dash first where the venue takes one, then
-// ordinary capitals for a title typed wholly in them. Other venues' titles are returned as they are.
+// A venue with several galleries (read.places on its register entry): a gallery tacked onto the title
+// after a dash ("… – Acquavella Palm Beach", "… – Lévy Gorvy Dayan, London") is not part of the title
+// (her decision). A gallery in brackets, the sweep's mark of a show run in two, stays.
+const foldPlace = s => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+function withoutPlaceTail(code, title) {
+  const e = REGISTER.find(v => v.id === code);
+  if (!e || !e.read.places.length || !title) return title;
+  const t = String(title), m = /\s+[-\u2013\u2014]\s+([^-\u2013\u2014()]+)$/.exec(t);
+  if (!m) return title;
+  const owner = foldPlace(e.read.placeOwner || '');
+  let tail = foldPlace(m[1]).trim();
+  if (owner && tail.startsWith(owner)) tail = tail.slice(owner.length).replace(/^,?\s+/, '');
+  return e.read.places.some(p => foldPlace(p) === tail) ? t.slice(0, m.index).trim() : title;
+}
+// A swept venue's title as the sweep writes it: a gallery tacked onto it taken off, the em dash first
+// where the venue takes one, then ordinary capitals for a title typed wholly in them.
 function sweptVenueTitle(code, title) {
+  title = withoutPlaceTail(code, title);
   const r = SWEPT_CAPS_TITLES[code];
   if (!r || !title) return title;
   return titleFromCaps(r.stopToDash ? String(title).replace(/\.\s+(?=\S)/g, ' — ') : title);
@@ -1055,7 +1853,24 @@ function rewordsTitle(text, title) {
   return said.length > 0 && said.every(inTitle);
 }
 const REWORDS_TITLE = 'the summary only rewords the title: say what the exhibition shows, from the rest of the text';
-return { MAX_WORDS, validateAnswer, validateEnglish, stringFaults, unsupportedClaims, rewordsTitle, REWORDS_TITLE };
+
+/**
+ * A show run in two of a venue's galleries carries its gallery in brackets in its title
+ * ("Portraiture: From Cassatt to Warhol (Palm Beach)"), so its description does not open with that
+ * gallery too ("Palm Beach.", "In New York,"): taken off in code once the description is written, for
+ * every way in (her decision). A one-gallery show, no gallery in its title, keeps its opener.
+ * `places`: the venue's galleries (venues/register.js, read.places).
+ */
+function withoutPlaceOpener(text, title, places) {
+  const s = String(text == null ? '' : text);
+  const m = /\(([^()]+)\)\s*$/.exec(String(title || ''));
+  const place = m && (places || []).find(p => fold(p) === fold(m[1].trim()));
+  if (!place) return s;
+  const esc = place.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const cut = s.replace(new RegExp('^\\s*(?:in\\s+)?' + esc + '\\s*[.,:;\u2014\u2013-]\\s*', 'i'), '');
+  return cut === s || !cut.trim() ? s : cut.charAt(0).toUpperCase() + cut.slice(1);
+}
+return { MAX_WORDS, validateAnswer, validateEnglish, stringFaults, unsupportedClaims, rewordsTitle, REWORDS_TITLE, withoutPlaceOpener };
 })();
 const SUMMARY_EXAMPLES="RAW: From clapping hands and tapping feet to beatboxing and whistling, the human body is a musical instrument. Musical instruments, in turn, often draw their form and decoration from our bodies. Around the world and across time, instruments emerge as powerful vehicles that represent our voices, actions, and identity not only in music but throughout the visual arts, literature, religion, pop culture, and mythology. Musical Bodies is the first major exhibition to explore the relationship between musical instruments and the body by bringing together some 130 instruments, paintings, sculptures, drawings, and more to illuminate how we express who we are, what we value, and what we believe. With works from The Met collection and institutions and collectors around the world, the exhibition explores 4,000 years of art and music history, from ancient Egyptian rattles and musical masterpieces by Titian and Degas to instrument-inspired apparel and one of Prince’s most notable guitars. Musical Bodies will resonate with visitors of all ages, whether you are a musician, a devoted listener, or simply curious about human expression. The exhibition is made possible by Barbara Tober, the Diane W. and James E. Burke Fund, the William Randolph Hearst Foundation, and the Gail and Parker Gilbert Fund. The catalogue is made possible by the Mary C. and James W. Fosburgh Publications Fund.\n  →  Instruments as sculptural and bodily objects from the Met's collection.\n\nRAW: The Costume Institute’s spring 2026 exhibition explores depictions of the dressed body across The Met’s vast collection, pairing garments with artworks to reveal the inherent relationship between clothing and the body. Focusing primarily on Western art from prehistory to the present, Costume Art presents connections between garments from The Costume Institute and objects from the Museum’s other collecting areas. Pairings between fashions and artworks will present a spectrum of connections and experiences: from the formal to the conceptual, the aesthetic to the political, the individual to the universal, the illustrative to the symbolic, and the playful to the profound. These pairings are organized into a series of thematic body types that reflect their pervasiveness and endurance through time and cultures. Costume Art is the inaugural exhibition in the new, nearly 12,000-square-foot galleries adjacent to the Great Hall. This space will display The Costume Institute’s annual spring show and, at times, shows from the Museum’s other curatorial departments, including those that explore the intersection of fashion and art. To access a large-print version of the exhibition text, click here\n  →  Costume Institute spring show. Inaugurates new fashion galleries.\n\nRAW: In co-organization with the Fondation Giacometti, this presentation brings together for the first time at The Met the work of Alberto Giacometti (1901–1966) in one of New York's most iconic spaces. The installation of 14 works in bronze and plaster, emblematic pieces from the collection of the Fondation Giacometti in Paris together with three from The Met collection, places the work of one of the great sculptors of the 20th century in dialogue with the ancient civilization that strongly influenced his art and his practice. Throughout his career, Giacometti showed a particular fascination for the art of ancient Egypt. The Egyptian statues he saw in Italy as a young artist made a lasting impression on his visual repertoire, and after he moved to Paris, he regularly visited the Egyptian galleries of the Louvre. His formal dialogue with Egypt can be seen in sketches of walking figures in profile, which were later realized in such works as Walking Woman (I) (1932). At The Met, this elegant figure will be installed in the entrance hall of the Temple of Dendur. The Temple of Dendur was completed in 10 BCE as a commission by Caesar Augustus shortly after he became emperor of Rome. Gifted from Egypt to the United States in 1965, it has been one of the most beloved works of art at The Met since it opened to the public in 1978. In ancient Egypt, the terrace before the temple functioned as an open meeting place between the deity and larger crowds. At The Met, Giacometti's figures will stand alone or in groups on the temple platform—a presentation that echoes the artist's own compositions of figures as well as the life around the temple. The exhibition is made possible by the Kate W. Cassidy Foundation.\n  →  Giacometti's elongated figures alongside the Egyptian temple.\n\nRAW: The word Orient is derived from the Latin Oriens, which means the direction of the rising sun—the east. Orientalism: Between Fact and Fantasy explores notions of “the East” in the 19th century, when globalism, shaped by colonialism and imperialism, fueled unprecedented encounters, connections, and exchanges in Europe and the Middle East. “Hard power” mingled with “soft power,” as accelerated travel, rapid technological change, and shifting geopolitics hastened artistic exchange between distant regions and different cultures. Beginning with Napoleon’s conquest of Egypt in 1798 and culminating in the paintings of Ottoman renaissance man Osman Hamdi Bey, this exhibition tells the story of how Islamic works of art made their way to European dealers, collectors, international expositions, and museums, introducing a new visual language to artists, architects, and designers. Deep admiration for the sophisticated techniques and visual language of Islamic art led Owen Jones and other influential figures to transform architecture and design in Europe and America. Artists such as Jean Auguste Dominique Ingres, Eugène Delacroix, and Jean-Léon Gérôme visited lands and people across the Mediterranean or imagined them from afar. They sometimes depicted what they saw and at other times conjured distant places through memory and imagination, often using Islamic objects to stage their paintings. Orientalism: Between Fact and Fantasy is the first exhibition at The Met to explore Orientalism as its central focus, presenting not only easel paintings but also drawings, photographs, illustrated books, architecture, arms and armor, textiles, garments, glassware, ceramics, and metalwork. Highlighting The Met collection, it features approximately 180 objects from 12 Met departments along with rarely seen loans from the U.S. and abroad. Displayed across four galleries that straddle the departments of European Paintings and Islamic Art, the presentation invites visitors to approach the exhibit\n  →  Nineteenth-century European depictions of the Middle East and North Africa.\n\nRAW: Renaissance sculpture in Florence was forever changed around 1440 when Luca della Robbia created a secret formula for making glazed terracotta reliefs and statuary. Luca and his heirs, Andrea and Giovanni, daringly perfected these techniques. Over the next century, the family workshop transformed local clay and colored glazes into peerless sculptures that gleamed with light. Praised during the Renaissance as “almost eternal,” today Della Robbia sculptures are often as vibrantly luminous as when they emerged from the kiln five hundred years ago. The Met has the largest, most significant collection of Della Robbia glazed terracottas in America. Most have remained in storage for decades. For the first time, Rediscovering Della Robbia at The Met features in a single gallery 12 of the Museum’s masterworks by three generations of the Della Robbia family. Rescued from storage, revived through conservation, and reattributed through fresh research, these sculptures are shown with two important loans from a private collector. Another two works are exciting sculptures by Giovanni della Robbia from the Dick Wolf Collection that complement existing works in the Museum’s collection—one is a promised gift and the other, the Mystic Mandorla lunette, recently was gifted to the Museum. Together, the exhibited sculptures span monumental reliefs composed of many interlocking pieces to small statuettes, signaling the scope of the Della Robbias’ art. Collaboration within the Della Robbia workshop fostered innovation. Rediscovering Della Robbia at The Met itself results from a collaborative exchange among curators, conservators, and digital specialists. Highlights include the exhibition’s centerpiece featuring 33 newly conserved interlocking pieces of a 10-foot-tall altarpiece that has been off view for 70 years. These are shown alongside a large, animated virtual reconstruction that uses 3D-scanning technology to suggest how the entire altar originally was assembled. Rediscovering Della\n  →  Glazed terracotta from the Della Robbia workshop.\n\nRAW: This special installation marks the 250th anniversary of the Declaration of Independence, the founding document of the United States of America. Featured works from across The Met offer a wide view of the roots, course, and aftermath of the Revolutionary War (1775–1783)—from early conflicts between colonists and Indigenous peoples to George Washington’s voluntary retirement, in 1797, from his two-term presidency. Rarely seen prints reveal the transatlantic circulation of news about the struggle for independence during a fractious political period. This window into the era’s print culture highlights the global dimensions of the rebellion, the contested ideas about liberty that shaped it, and its consequential outcomes. Also on view are American and European works of art that depict a range of significant individuals. These include the Wampanoag chief Metacomet, whose battles with early colonists laid the groundwork for revolution; the African American poet Phillis Wheatley, who raised her voice against an expansive tyranny in her call for emancipation; patriots and presidents such as Paul Revere and George Washington; the Mohawk leader Thayendanegea, who allied with the British in an effort to retain Indigenous sovereignty; and iconic contributors to the Declaration of Independence John Adams, Benjamin Franklin, and Thomas Jefferson. Together, these artworks acknowledge multiple complex and intertwined histories that continue to resonate in the United States and beyond, some two and half centuries later. This special installation is made possible by Kimba Wood and Frank Richardson.\n  →  Prints and visual material around revolutionary upheaval.\n\nRAW: This special installation, which features some of The Met’s most iconic European paintings, examines how human and nonhuman histories are fundamentally intertwined—and how this fact has been understood over time. Discover how artists such as Pieter Bruegel the Elder and Nicolas Poussin explored humanity’s complex relationship with nature. The paintings on view reveal that people cannot exist outside of natural ecosystems but are profoundly interdependent with the rest of the natural world. Dating from around 1525 to 1775, these paintings trace a shift in European representations of nature from expressions of embeddedness toward assertions of dominance, showing how our conceptions of nature are themselves not “natural” but instead are culturally constructed. The artists’ depictions shape viewers’ experiences of the environments they portray. Overlapping themes include ancient myths that personify natural forces; the relationship between art and science through direct observation of nature; and idealizations of agricultural labor that upheld class, gender, and colonial power structures. As physical objects, paintings alter natural resources like flax, wood, and rare minerals; in turn, these materials continue to have lives of their own. This special installation is made possible by the Sherman Fairchild Foundation.\n  →  Painting through landscape, environment and material relations.\n\nRAW: Most objects are displayed to show their “best” angle meant to impress, sometimes hiding intriguing details. Flip Sides: Seeing Korean Art Anew invites close looking and offers multiple views of the inside, reverse, or hard-to-see aspects of objects. Bringing together approximately 50 objects from The Met collection, with more than half displayed for the first time, this exhibition, with a rotation, shows treasured Korean traditions. By presenting them in ways that give us a fuller picture into each object’s unique form, Flip Sides provides insight into the construction and function of works in metal, wood, ceramic, textiles, and lacquer. A Buddhist sculpture that held offerings inside, a porcelain jar of striking openwork that conceals an inner chamber, a bronze mirror with a delicately incised image, and a king’s lacquer letter box with linings featuring impressive calligraphy are among the featured objects in Flip Sides. During the exhibition, a selection of artworks will come off view and be replaced by new works: Rotation 1: March 16–October 18, 2026 Rotation 2: October 31, 2026–May 31, 2027 The exhibition is made possible by The Kun-Hee Lee Fund for Korean Art.\n  →  Korean objects revealing their reverse or hard-to-see aspects.\n\nRAW: From the earliest hand-built figurines rooted in spiritual beliefs to the vibrant works that define today’s contemporary ceramic art scene, Japanese pottery reflects exceptional creativity and a refined sense of beauty. Its distinctiveness arises from the ingenuity and mastery of the potters, as well as the wide range of wares that have long supported daily life. This exhibition explores Japan’s extensive and rich history of ceramic art through approximately 350 extraordinary works presented in themes that offer fresh perspectives on the diverse forms and functions, from everyday tableware to vessels created for tea masters and elite households to modern sculptural compositions. Japan’s earliest pottery dates back more than 12,000 years, when makers shaped and fired clay vessels for cooking and storage—objects that bear the traces of these early potters’ hands. Expertise transmitted from China and Korea in medieval times facilitated the development of new Japanese techniques and wares. Over time, the reverence for prized ceramics led to finding beauty even through damage. Japanese artisans developed kintsugi, the art of repairing broken ceramics with gold lacquer, restoring the damaged object’s function while making it even more precious and valuable. Japanese cuisine and dining aesthetics inspired vessels designed to harmonize with the color and texture of food. Many porcelains from the Edo period (1615–1868) are embellished with motifs drawn from the natural world or symbols of happiness, longevity, and good fortune. Featuring refined ceramics and other artworks from the Museum’s Harry G. C. Packard Collection, this exhibition celebrates the 50th anniversary of this landmark acquisition that established the foundation of The Met’s Japanese art holdings. By placing ceramics in dialogue with related art forms—including lacquers, textiles, paintings, and woodblock prints—the display inspires curiosity about the multiverse of Japanese ceramics and its broader cultural\n  →  Japanese ceramic traditions across technique, glaze and form.\n\nRAW: Artists and artisans have been intrigued and inspired by the topic of death and visions of life thereafter for millennia. Afterlives: Contemporary Art in the Byzantine Crypt brings together modern-day works that reckon with death and visualize the afterlife and Byzantine Egyptian funerary art and artifacts in part of the Mary and Michael Jaharis Galleries known as the Byzantine Crypt (Gallery 302). The intimate and enchanting gallery with exposed brick walls and arched portals was unveiled in the year 2000 after a renovation that reclaimed the space beneath the Museum’s Grand Staircase. In this transhistorical presentation, the Byzantine Crypt’s religious and secular jewelry, textiles, ivory objects, vessels, and architectural sculpture from Early Christian and Coptic monastic sites are complemented and enriched by contemporary sculptures, works on paper, and installations from the 1960s to present day that similarly serve as memorials, reliquaries, and tokens to ward off evil. As part of the exhibition, Adrian Piper’s editioned work Everything #4 invites viewers to contemplate its otherworldly statement and their reflection in a variety of contexts. It will be installed in the heart of the Byzantine Crypt and five other spaces across The Met Fifth Avenue and The Met Cloisters, listed below. The exhibition is made possible by The Jaharis Family Foundation.\n  →  Contemporary work in the Byzantine galleries.\n\nRAW: The traditional East Asian lunar calendar marks time through a twelve-year cycle, each year represented by the animals of the Chinese zodiac: rat, ox, tiger, rabbit, dragon, snake, horse, ram, monkey, rooster, dog, and pig. First associated with the Chinese calendar in the third century BCE and firmly established by the first century CE, these symbolic creatures are believed to embody certain traits that are manifested in the personalities of people born in that animal’s year. February 17, 2026, marks the beginning of the Year of the Horse, a creature symbolizing power, strength, and vitality. Celebrating the Year of the Horse brings together works from The Met collection to explore the horse’s enduring nature and vital place in Chinese civilization. Domesticated in prehistoric times, this animal has shaped nearly every facet of life—from agriculture and transportation to trade, warfare, sport, and entertainment. In ancient China, horse-drawn chariots transported military commanders and the social elite, while in the Tang dynasty (618–907), tall and robust horses came to embody the strength of the state and cosmopolitan spirit of the empire. In Chinese popular culture, horses are among the most celebrated animals, and in the spiritual realm they serve as noble mounts for divine guardians believed to bring joy, protection, and prosperity to the household. This presentation, featuring a range of expressive works in ceramics, glass, jade, and metal, and woodblock prints, illuminates these roles while celebrating the horse’s power, vitality, and spirit.\n  →  Asian works for the lunar new year.\n\nRAW: In 1668, King Louis XIV of France commissioned the Paris-based Savonnerie manufactory to create the largest carpet ever woven. Composed of 92 individual pieces, the carpet was intended to cover the full span of the Grande Galerie of the Louvre, measuring 440 meters, six times the length of the Hall of Mirrors at Versailles. Not only was it a bold and unprecedented undertaking, but a unique chapter in the history of art. The first ever exhibition about the Savonnerie in the United States, A King’s Carpet sheds new light on The Met’s three carpets made as part of this ambitious scheme. Held in the iconic Wrightsman Galleries, it will explore the tumultuous history of these Baroque masterpieces from their conception and the harsh realities of their production to their dispersal after the French Revolution. A project of unheard-of scale, the weaving of the 92 carpets necessitated the establishment of massive workshops and an expendable workforce of orphans and adolescents with sharp eyesight and nimble fingers. Woven over 20 years, the carpets were never rolled out in the space for which they were intended, Louis XIV having turned his attention away from the Louvre to Versailles. During the Revolution, many were stripped of their royal emblems or sold, some eventually finding new homes with prominent American collectors such as J. P. Morgan and Alva Vanderbilt. This exhibition will present four complete carpets along with a selection of fragments, attesting to the scheme’s segmentation and dispersal. In addition, visitors will be able to observe textile conservators at work in an in-gallery temporary conservation studio as they repair and strengthen one of these monumental textiles.\n  →  Savonnerie carpets and French court display.\n\nRAW: Sublime symbols of changing weather, clouds have long been a source of fascination for artists and scientists alike. In the early 1800s, landscape painters used clouds as visual proof of their ability to capture the fleeting effects of nature in sketches made outdoors, or en plein air, while meteorologists began to study and, for the first time, classify clouds. Beginning in the 1830s, photography promised to capture the sky with unprecedented immediacy and detail, yet early technical limitations fell short of that promise. Photographers responded by painting in skies or manually combining negatives, until chemical and optical advances at the start of the 20th century made possible cloudscape photographs that rivaled paintings. Chasing Clouds follows the remarkable story of how the sky was represented during this period, tracing the depiction of clouds in works that balanced changing artistic conventions with scientific discoveries and new technologies. Opening with oil sketches from the start of the 19th century, and including paintings, drawings, and photographs from the following decades, it comes full circle in the 1920s with American photographer Alfred Stieglitz’s Equivalents, a series of cloud studies that reconciles poetic feeling and naturalistic depiction. The exhibition is made possible by The Robert Mapplethorpe Foundation, Inc.\n  →  Cloud studies across painting, drawing and photography.\n\nRAW: Multidisciplinary artist David Hartt (Canadian, born 1967) transforms John Vanderlyn's immersive historical painting, Panoramic View of the Palace and Gardens of Versailles (1818–19), into a dynamic contemporary installation, offering viewers the opportunity to explore questions of place and perspective. Vanderlyn’s highly detailed rendering of Versailles—among the largest surviving panoramas in the United States—is activated by Hartt’s architectural intervention, bringing past and present into conversation. For this site-specific commission—consisting of two Direct View LED screens and echoing imagery from the panorama itself—Hartt draws on direct documentation of Versailles, the cinematic language of French New Wave Cinema, and photographs of the palace grounds by Eugene Atget to reshape the experience of The Met’s circular gallery space housing the work. Filmed at locations from Versailles to the Boulevard Périphérique and throughout the center of Paris, Peripheries explores the constant reinvention of the French capital. Hartt’s installation reconfigures movement and angles of vision, augmented through an original score by composer and musician Jeff Parker. Visitors are visually lured away from established centers within the city toward the margins—or the “peripheries”—where alternative perspectives and histories are often relegated. By engaging directly with Vanderlyn's panorama, Hartt has created a space to reconsider not only the historical painting itself but also examine ideas of representation and cultural memory within a living environment. The exhibition is made possible by Jan and Warren Adelson in honor of Eugénie Prendergast, and The Modern Circle.\n  →  Architecture, migration and the edges of cities.\n\nRAW: The Parade is an epic cycle of 63 charcoal, pencil, and ink drawings conceived by Si Lewen (1918–2016) in the aftermath of World War II. The work unfolds a visual narrative on war, memory, and the human condition that is informed by the artist's extraordinary life. Born in Poland to Jewish parents and raised in Germany, Lewen fled Nazi persecution with his family in 1933 before immigrating to the United States. While serving in the U.S. Army as one of the Ritchie Boys, a specialized unit of German-speaking soldiers, Lewen arrived at the Buchenwald concentration camp shortly after its liberation in 1945. The Parade is rooted in the artist’s experience of these events as well as his coming of age during the tumultuous years when, as he reflected later, the parades after World War I gave way to the death marches of World War II. Experienced together as a sequence, the drawings carry viewers from military pageantry to conflict, devastation, and mourning through the cumulative force of their imagery. The power of The Parade lies not only in its historical origins but in its ability to speak across generations with urgency, asking viewers to confront the persistent cycles of violence that continue to shape our world. The exhibition's title, There Are No Words, is inspired by Lewen's own description of the format of The Parade as a wordless novel in which he explained: \"there are no words . . . just the picture itself is the narrative.\" At the same time, the title reflects his conviction that the horrors of war ultimately defy language and description.\n  →  Wordless picture sequence on war.\n\nRAW: Lee Krasner (1908–1984) and Jackson Pollock (1912–1956) met as emerging artists in New York in the winter of 1941. They married in 1945 and moved to Springs, Long Island, where they remained entwined personally, artistically, and professionally until Pollock’s untimely death. While Pollock’s reputation historically eclipsed Krasner’s, today, both artists’ practices are rightly recognized as central to the innovations of art from the mid-20th century onwards. This exhibition continues and amplifies this reevaluation, on their own terms and in dynamic relation to each other. Drawing its subtitle, Past Continuous, from a 1976 painting by Krasner, the exhibition traces parallel lives and practices—forged first by lived experience, then shadowed by memory. Krasner, born in Brooklyn to Jewish immigrant parents from what is now Ukraine, and Pollock, raised in Los Angeles and the American West, brought specific geographies and inheritances into a shared artistic context. Their early paths traced distinct strands of American modernism that would ultimately converge in the rupture known as Abstract Expressionism, a movement that valued the translation of inner feelings into dramatic visual action. In the wake of World War II, artists asked why art mattered and what it could be. For Pollock, his breakthrough was the “drip” technique, a radical mode of painting that flourished in a condensed but prolific period. Krasner’s varied practice was typified by ceaseless explorations of abstraction, often cued by her abiding interest in the possibilities of nature and color. Krasner and Pollock: Past Continuous is the first major New York presentation devoted to either artist in more than 20 years. Featuring over 120 works, it is the first exhibition to look at the full arc of their careers together. The exhibition is made possible by Kenneth C. Griffin and Griffin Catalyst, Marina Kellen French, and the Barrie A. and Deedee Wigmore Foundation.\n  →  Lee Krasner and Jackson Pollock, exchange and divergence.\n\nRAW: Can fashion photography be dangerous? Lillian Bassman was told as much when, in 1950, she started making photographs so abstract that you could barely see the clothes. Depicting midcentury style for the pages of magazines, she distilled gowns and girdles to their essential silhouettes; in her photographs, chance gestures and elegant lines convey the sensations of garments, as their details dissolve into atmospheric blur. What Bassman did not show she evoked in her expressive prints—products of darkroom distortion, achieved with tissues, brushes, and bleach. In an earlier era, such an approach might have precluded commercial success. Bassman’s timing, though, could not have been better; in 1941, at age 24, she took a design job at Harper’s Bazaar, where a group of artists and editors were then reimagining how the magazine should look. With them, she helped introduce an avant-garde sensibility to the American newsstand, advancing new possibilities for photography in print. In works from a remarkable gift to The Met, Lillian Bassman: Bazaar and Beyond highlights the influence and audacity of her magazine career. The exhibition flips between the New School in Manhattan and the “New Look” in Paris, charting Bassman’s course from design apprentice to art director and accomplished photographer. Its rare vintage prints, collages, and maquettes lay out an unlikely history of modernism, refashioned for the pages of the popular press. The exhibition is made possible by The Robert Mapplethorpe Foundation, Inc.\n  →  Fashion photographer for Harper's Bazaar.\n\nRAW: Dive into the artistic process of one of history’s most beloved and influential artists. A true titan of the Italian Renaissance, Raffaello di Giovanni Santi (1483–1520)—better known as Raphael—matched ambition with lyricism to create works with both intellectual heft and emotional depth, a necessary skill in the complex political landscape of Renaissance courts. In his short life of only 37 years, he achieved such profound success as a painter, designer, and architect that he was regarded as the pinnacle of artistic perfection for centuries after his death. Raphael: Sublime Poetry is the first comprehensive exhibition on Raphael in the United States, bringing together more than 170 of the artist’s greatest masterpieces and rarely seen treasures to illuminate the brilliance of Raphael’s extraordinary creativity. The son of a painter and poet, Raphael engaged with the foremost writers and thinkers of his age in Rome, displaying a poetic sensibility that captivated his peers and generations that followed. Follow the full breadth of his life and career, from his origins in Urbino to his rise in Florence, where he began to emerge as a peer of Leonardo da Vinci and Michelangelo, to his final, prolific decade at the papal court in Rome. To underscore the range of his genius, this presentation brings together important drawings, paintings, and tapestries from public and private collections across Europe and the United States, many of which have never been shown together. With particular attention to Raphael’s portrayal of women—from his use of nude female models for the first time in Western art to his tender depictions of the Madonna and Child—and recent scientific discoveries made using state-of-the-art technology, this exhibition offers a rare opportunity to experience the genius of an artist who helped shape the course of art history. Wolfe, Gilbert and Ildiko Butler, Debra and Leon Black, Mark Gorenberg and Cathrin Stickney, the Robert Lehman Foundation, Dinah Seiver\n  →  First comprehensive US presentation of Raphael.\n\nRAW: Born in Chippewa City, a remote Native American village on the shore of Lake Superior in northern Minnesota, George Morrison (Wah-wah-ta-ga-nah-gah-boo and Gwe-ki-ge-nah-gah-boo, Grand Portage Chippewa, 1919–2000) overcame innumerable challenges—poverty, a life-threatening childhood illness, social isolation, racial and cultural barriers—to become a leader of the Abstract Expressionist movement, which he collaboratively defined both publicly and behind the scenes. Morrison’s influence as an abstract expressionist painter began in 1943 when he traveled from rural Minnesota to New York City to study at the Art Students League on a scholarship. Immersing himself in the city’s vibrant cultural scenes, he studied painting and drawing, contributed to numerous exhibitions and publications, and openly challenged the mainstream art establishment of his generation. In New York, Morrison formed meaningful connections with artists including Willem de Kooning, Franz Kline, Lois Dodd, and Louise Nevelson, among others. His deep appreciation for urban life—specifically, industrial landscapes, jazz, and literature—permanently shaped his artistic practice and imagery. This exhibition explores how Morrison’s aesthetic inspiration and future trajectory drew from his love of New York, which he called a “Magical City.” Featuring 25 of his most important paintings and drawings from this early period, the exhibition culminates in his Horizon series. It also features rare archival materials that place Morrison at the heart of the Abstract Expressionist movement in 1940s and 1950s New York.\n  →  Ojibwe painter's abstract New York work.\n\nRAW: The hand-held fan was an unexpected muse for some of the most innovative artists in 19th-century Europe. Fans became hugely popular across many levels of society during this period, serving as functional and fashionable objects of adornment and communication. Well-known French Impressionists such as Edgar Degas and Camille Pissarro not only featured this feminine accessory in their work but also adopted it as an experimental format for their art. Fanmania investigates why avant-garde artists incorporated fans into their work and sheds light on themes of gender, courtship, consumerism, and appropriation. Artists were attracted to the semicircular form for myriad reasons, including fascination with fans from Asia and Spain, commercial ambition, and their interest in formal and technical innovation. Displaying more than 75 artworks from across The Met collection, this multimedia exhibition features painted and printed fans from Europe and Asia as well as artworks that depict women wielding fans to explore the phenomenon of “fanmania.”\n  →  Folding fans as fashion and display.\n\nRAW: Emily Sargent’s watercolors—recently rediscovered—capture the world with a clarity and expressiveness that were all her own. This exhibition brings her luminous work into focus, situating it within the creative, complex world of the Sargent family. This unique presentation features watercolors by Emily Sargent (1857–1936), her older brother, renowned portraitist John Singer Sargent (1856–1925), and their mother, Mary Newbold Sargent (1826–1906). As the artistic family traveled seasonally through Europe, Mary encouraged her children’s creative aspirations. The siblings had a close relationship and often sketched and painted side by side. As John Singer Sargent’s bold portraits increasingly garnered critical attention, his younger sister Emily supported his career while building a body of work of her own that remained largely unseen. Drawn entirely from The Met collection, Emily Sargent: Portrait of a Family takes a close look at their art and explores how paths diverged for daughter and son, revealing the challenges women artists faced in the late 19th century. Intended as a complement to The Met’s Sargent and Paris, this exhibition celebrates the recent gift—from the artists’ heirs—of 26 Emily Sargent watercolors, which will be making their debut. This generous gift continues a long legacy of family giving that formed the foundation of the Museum’s extensive Sargent holdings. Emily Sargent: Portrait of a Family is made possible by the William P. Rayner Fund.\n  →  Watercolours by Sargent's sister.\n\nRAW: Before the Brooklyn Bridge became an iconic symbol of New York City, it was a bold idea sketched on paper. With 11,000 drawings stored in the city’s Municipal Archives, its construction is one of the most thoroughly documented engineering projects of the 19th century. Met experts examined a selection of these extraordinary studies through The Met’s Scientific Research Partnerships program—a grant-funded initiative that provides free scientific support to art institutions nationwide. The Brooklyn Bridge Up Close presents seven of these impressive drawings for the first time in forty years, spotlighting the multiyear collaboration between The Met and the Municipal Archives as well as the Museum’s ongoing commitment to sharing resources with New York City institutions. Designed by German engineer John A. Roebling (1806–1869), a pioneer in steel-wire rope technology used for suspension bridges, the Brooklyn Bridge was completed in 1883 by his son, Washington A. Roebling (1837–1926), with help from skilled assistants. After Washington became ill, his wife, Emily Warren Roebling (1843–1903), took over supervision of the project and played a crucial role in its success. The Brooklyn Bridge Up Close offers fresh insights into the physical properties of these monumental drawings, informing future conservation treatments. It also highlights science’s vital role in uncovering new narratives and providing unprecedented access to artists’ creative processes. This special installation is made possible by the Mellon Foundation.\n  →  Bridge construction in drawings and prints.\n\nRAW: American artist Man Ray (1890–1976) was a visionary known for his radical experiments that pushed the limits of photography, painting, sculpture, and film. In the winter of 1921, he pioneered the rayograph, a new twist on a technique used to make photographs without a camera. By placing objects on or near a sheet of light-sensitive paper, which he exposed to light and developed, Man Ray turned recognizable subjects into wonderfully mysterious compositions. Introduced in the period between Dada and Surrealism, the rayographs’ transformative, magical qualities led the poet Tristan Tzara to describe them as capturing the moments “when objects dream.” The exhibition will be the first to situate this signature accomplishment in relation to Man Ray’s larger body of work of the 1910s and 1920s. Drawing from the collections of The Met and more than 50 U.S. and international lenders, the exhibition will feature approximately 60 rayographs and 100 paintings, objects, prints, drawings, films, and photographs—including some of the artist’s most iconic works—to highlight the central role of the rayograph in Man Ray’s boundary-breaking practice. “Before my eyes an image began to form, not quite a simple silhouette of the objects as in a straight photograph, but distorted and refracted … In the morning I examined the results, pinning a couple of the Rayographs—as I decided to call them—on the wall. They looked startlingly new and mysterious.” — Man Ray The exhibition is made possible by the Barrie A. and Deedee Wigmore Foundation. Goldsmith Foundation, The Daniel and Estrellita Brodsky Foundation, The International Council of The Metropolitan Museum of Art, Andrea Krantz and Harvey Sawikin, and Schiaparelli.\n  →  Photographs, rayographs across Dada and Surrealism.\n\nRAW: The traditional East Asian lunar calendar consists of a repeating twelve-year cycle, with each year corresponding to one of the twelve animals in the Chinese zodiac. The association of these creatures with the Chinese calendar began in the third century BCE and became firmly established by the first century CE. The twelve animals are, in sequence: rat, ox, tiger, rabbit, dragon, snake, horse, ram, monkey, rooster, dog, and pig. Each is believed to embody certain traits that are manifested in the personalities of people born in that year. January 29, 2025, marks the beginning of the Year of the Snake, a creature characterized as alert, calm, and smart. Celebrating the Year of the Snake presents a remarkable selection of works drawn from the Museum’s collection illustrating the significant role that the snake plays in Chinese culture, including a 3,000-year-old bronze ritual vessel with a spout formed by joined snakes’ heads, a 13th-century pottery figure of a mischievously smiling snake, and an 18th-century exquisitely painted porcelain cup portraying a scene from the “Legend of the White Snake,” a popular folktale of love and romance between humans and fantastic creatures.\n  →  Asian works featuring the snake.\n\nRAW: Casa Susanna brings together photographs and publications created by and for a community of cross-dressers who met regularly in New York City and the Catskill Mountains throughout the 1960s. Two modest resorts run by Susanna Valenti and her wife, Marie Tornell, provided safe spaces for guests to freely cross-dress en femme during an era of strictly defined gender roles. They used the camera to create and affirm their femme identities, exchanging photographs at gatherings or sharing them by mail. These snapshots—some candid, others playfully performative—were rediscovered at a Manhattan flea market in 2004 and have come to be known as the Casa Susanna photographs. The exhibition also features issues of Transvestia, an underground magazine that published the photographs along with fiction, poetry, makeup and clothing advice, and autobiographical essays by members of the community. During this period, most cross-dressers lived in isolation and shame. The exhibition presents new research into the double lives cross-dressers led as married men with established careers. The photographs also bring to light the type of woman they aimed to embody—such as the “girl next door,” the respectable housewife, the matron—a middle-class ideal of femininity that was both liberating and limiting. Casa Susanna offers insight into a significant pre-Stonewall cross-dressing scene, inviting visitors to understand this world and its connection to the lives of transgender people today. The exhibition is organized by the Art Gallery of Ontario and Les Rencontres d’Arles in collaboration with The Metropolitan Museum of Art. The exhibition is made possible by The Robert Mapplethorpe Foundation, Inc.\n  →  1950s–60s Catskills retreat photographs.\n\nRAW: In ancient Egypt, images of gods weren’t just images—they brought the gods to life. Egyptians believed that it was through their depictions in tombs, temples, and shrines that the deities could enter sacred spaces and become active participants in rituals, offering a vital connection between the human and divine worlds. Over Egypt’s long history, its belief system grew to include more than 1,500 gods with many overlapping forms and traits. Subtle visual cues like what a figure wore, how they posed, or the symbols they carried helped identify them and their roles. Divine Egypt brings together almost 250 works of art and objects, many of them on loan from institutions such as the Museum of Fine Arts, Boston, the Musée du Louvre, Paris, and the Ny Carlsberg Glyptotek, Copenhagen, to examine the imagery associated with the most important deities in ancient Egypt’s massive body of gods. Depictions of the stately falcon-headed Horus, the lion-headed Sakhmet, and the serene, shrouded Osiris reveal the striking ways the kings and people of ancient Egypt recognized and interacted with their gods. While the king had a daily direct relationship with the gods in the inner sanctuaries of great temples, people without such access found ways to connect with their gods through rituals, offerings, and objects of private devotion. This immersive look at how deities were depicted reveals the many roles they played in people’s lives, providing them with meaning in front of life’s uncertainties and the permanence of death. The exhibition is made possible by The John A. Moran Charitable Trust. Cullman, Alaina and Stirling Larkin, and Norby Anderson. The catalogue is made possible by the Kelekian Fund. Cotti.\n  →  Major Egyptian exhibition on twenty deities.\n\nRAW: Ganesha, the son of Shiva and Parvati, is a Brahmanical (Hindu) diety known to clear a path to the gods and remove obstacles in everyday life. He is loved by his devotees (bhakti) for his many traits, including his insatiable appetite for sweet cakes and his role as a dispenser of magic, surprise, and laughter. However, Ganesha is also the lord of ganas (nature deities) and can take on a fearsome aspect in this guise. The seventh- to twenty-first-century works in this exhibition trace his depiction across the Indian subcontinent, the Himalayas, and Southeast Asia. Featuring 24 works across sculptures, paintings, musical instruments, ritual implements, and photography, the exhibition emphasizes the vitality and exuberance of Ganesha as the bringer of new beginnings. The exhibition is made possible by the Florence and Herbert Irving Fund for Asian Art Exhibitions. During the exhibition, a selection of artworks will come off view and be replaced by new works: Rotation 1: November 19, 2022–June 11, 2023 Rotation 2: June 17, 2023–June 11, 2024 Rotation 3: June 13, 2024–January 4, 2026\n  →  Depictions of Ganesha across Asian art.\n\nRAW: Enter the spellbinding world of visionary Spanish painter Francisco de Zurbarán. Spend time with his paintings, celebrated for their vivid naturalism and deep emotional power. Move between soaring altarpieces and exquisite still lifes in the first major UK exhibition of this great artist from Baroque Seville. A peer of Murillo and Velázquez, Zurbarán stands out for his drama, mystery and vision. From the rind of a lemon to the timeless gaze of a saint, he finds an intensity in the ordinary. Strong light and deep shadow bring real faces, soft fabrics, fresh fruit and flowers to life. His paintings unite stillness, focus and faith. The exhibition brings together works from major galleries across Europe and the US that span Zurbarán’s career from his first religious commissions to paintings made for private devotion. Stand in front of monumental works that can still move and inspire us today. ‘Zurbarán’ is at the National Gallery, Sainsbury Wing between 2 May and 23 August 2026. Tickets are required. The exhibition is organised by the National Gallery, London, Musée du Louvre, Paris and the Art Institute of Chicago.\n  →  First UK exhibition of Zurbarán.\n\nRAW: See the reunion of two of Impressionism's most celebrated paintings In the summer of 1869, Monet and Renoir – then young, ambitious artists and close friends – set up their easels side by side at La Grenouillère, a fashionable riverside resort just outside Paris. Working 'en plein air’ (out-of-doors), the artists painted the same lively scene of fashionable Parisians at leisure – though their artworks reveal remarkably different approaches. For the first time in nearly twenty years, the National Gallery is reuniting two of these celebrated paintings created at La Grenouillère, side by side once more. Look closely at each brushstroke and compare the artists' individual Impressionist style and witness a close friendship that helped shape one of the most influential movements in Western art. The free display will remain on view until mid-September, before Renoir's painting is incorporated into the 'Renoir and Love' (3 October 2026 – 31 January 2027) exhibition at the National Gallery. The reunion of the two paintings has been made possible thanks to the generous loan of Renoir's ‘La Grenouillère’ from Nationalmuseum, Stockholm.\n  →  Two Impressionist paintings at the same motif.\n\nRAW: Discover the breathtaking landscapes of one of Austria’s greatest painters, Ferdinand Georg Waldmüller (1793–1865). Stroll through forests, scale rugged peaks and marvel at majestic skies across Austria and Sicily. Take in the great trees of Vienna’s Prater Park, the magnificent lakes and mountains of the Salzkammergut region and the tranquil hills and ruins of Sicily. Pause, reflect and wonder at pictures alive with intense colour and light. See why Waldmüller’s work can be compared to the Pre-Raphaelites. Admire the precise brushstrokes which shape each leaf, twig and flower. Explore how he found beauty in nature’s imperfections, through his images of aged trunks and bare branches. Find serenity in the heart of London at this first-ever exhibition dedicated to Waldmüller's landscapes.\n  →  First UK exhibition of Waldmüller.\n\nRAW: Celebrate children's creativity in this exhibition of artworks by UK primary schools As part of our annual Take One Picture programme, children from across the UK have made artworks inspired by ‘A Regatta on the Grand Canal’ by Canaletto. The painting shows a colourful boat race taking place in Venice. Crowds of people cheer on the gondolas as they race towards the finish line. Children have made a wide range of imaginative projects, all coming from their own questions and ideas about the painting. Who is going to win the race? What’s under the water? Why do the boats look like dragons? This year’s exhibition features artworks from 35 primary schools and is on display in the Roden Centre for Creative Learning.\n  →  Children's artworks inspired by Canaletto.\n\nRAW: Fall in love with Renoir and his Impressionist paintings at the National Gallery. Discover Renoir’s gift for showing love, friendship, and everyday emotion in this Impressionist exhibition. See couples waltzing in the summer air and lovers stealing a glance, families sharing a quiet moment and friends raising a glass, all through the eyes of an artist unmatched in capturing the complexities of how people connect. Experience Renoir at his peak in the 1860s to 1880s, experimenting with style and theme to become an innovator of Impressionism. Walk with him through Montmartre in his iconic painting 'Bal au Moulin de la Galette' (1876) from the Musée d’Orsay, Paris, on display in the UK for the first time. Explore the sun-dappled gardens and swirling dance halls of Paris through 40 paintings, brought together from collections across the world. Linked through friendship and love, enjoy the tenderness and joy of some of Renoir’s most modern, uplifting and admired paintings.\n  →  Renoir gathered around the theme of love.\n\nRAW: For the first time in history, see all of Jan van Eyck’s portraits together. Only once, only at the National Gallery. Portraiture as we know it begins with van Eyck. His vision and skill launched painting into a new era of unrivalled realism. Watchful eyes, a hint of stubble, wrinkles, flushed cheeks. Van Eyck captured his subjects in all their intimate details. Though these people sat for their portraits 600 years ago, they feel alive today. ‘Van Eyck: The Portraits’ brings together from across Europe all nine of the artist’s known painted portraits, making up half of his surviving works worldwide. Breathing life into van Eyck’s world, the exhibition introduces the men and women he spent his life around. They are not kings, queens and aristocrats; they are successful craftsmen, merchants and the artist’s relatives. This is a story of people. This is the moment when access to art widened. The exhibition marks the first and only time these works can be brought together. And this incredible display can only happen here, at the Gallery. Join us in autumn 2026 for this once-in-a-lifetime exhibition.\n  →  All of Van Eyck's portraits together.\n\nRAW: Across Germany’s major cities, a new generation of artists emerged between 1900 and 1918 to change the rules of painting. They were the German Expressionists. Made up of two pioneering groups – Die Brücke (The Bridge) and Der Blaue Reiter (The Blue Rider) – these young artists painted raw emotions on canvas with a new intensity. Die Brücke was formed by a group of self-taught artists. Rebelling against conservative society, they lived and worked together in the bohemian corners of Dresden and other cities, before moving to Berlin, Germany’s rapidly modernising capital. For them, colour became a way to defy tradition and express themselves in new ways. Der Blaue Reiter came together in Munich around the painters Wassily Kandinsky and Gabriele Münter. The group divided their time between the bustling Munich streets and the lush landscapes around rural Murnau, 40 miles south of the city. There, the lakes and mountains fed their creative vision, full of bright colours and striking shapes.\n  →  Fifty German Expressionist works.\n\nRAW: See the works of the master of horse painting, George Stubbs Step into the world of George Stubbs, the visionary British painter. Marvel at his monumental portrait of a rearing racehorse, ‘Scrub’. In the 1750s, Stubbs spent 18 months in a remote barn in Horkstow, Lincolnshire. Hidden away, he devoted his time to studying and drawing the anatomy of horses. What resulted was the most thorough study on the subject for over a hundred years. Incredibly, Stubbs’s pictures of horses are still some of the most accurate ever painted, all while capturing their unique characters. In this exhibition, you’ll meet one of these horses, Scrub. Painted by Stubbs around 1762, we see Scrub rearing in a landscape backdrop — notably without a rider. In a nearby room is another monumental horse painting by Stubbs, this time of Scrub’s now famous contemporary, ‘Whistlejacket’. Painted around the same time, these are two of the first life-size portraits to depict horses without a human presence in British history. The paintings changed the spirit of equine art forever. ‘Stubbs: Portrait of a Horse’ will focus on the creation of ‘Scrub’, which will be joined by other paintings and drawings by the artist. Join us in spring 2026 to get a closer look at Stubbs’s groundbreaking work.\n  →  George Stubbs, master of horse painting.\n\nRAW: In an interplay of light and darkness, Joseph Wright of Derby conjures sublime pictures of discovery and learning. 'Wright of Derby: From the Shadows' is the first major exhibition dedicated to the British artist’s ‘candlelight’ paintings. We celebrate and look again at his most admired works. Illuminated faces gather around a variety of objects – from classical sculptures and scientific instruments to bones, bladders and animals. Through his unflinching scenes of people watching, Wright of Derby proposes moral questions about acts of looking. The strong light and deep shadows create drama, reminding us of great painters from earlier centuries like Caravaggio. Challenging the traditionally held view of Wright of Derby as a figurehead of the Enlightenment, this exhibition contributes to the ongoing re-evaluation of the artist, portraying him not merely as a ‘painter of light’. More than virtuoso scenes of dramatic light and shade, Wright of Derby used the night-time to explore deeper and more sombre themes, including death, melancholy, morality, scepticism and the sublime. With over twenty works, including other paintings, mezzotints, works on paper and objects the exhibition explores both Wright of Derby’s artistic practice and the historic context of scientific and artistic development in which they were made. Watch, along with the people he paints, as his scenes of spectacle and wonder unfold.\n  →  Joseph Wright of Derby's candlelight paintings.\n\nRAW: The sower, the woodcutter, a shepherd girl. These are the subjects that made French artist Jean-Francois Millet famous. Marking the 150th anniversary of his death, this is an opportunity to see some of Millet’s best-loved paintings and drawings. Born into a farming family in Normandy, Millet moved to the village of Barbizon in 1849 where he put the people who spent their life working on the land, often the poorest of the poor in 19th-century France, at the heart of his work. He knew these people and his realistic, unsentimental approach to painting them was completely new. See his iconic 'L’Angelus' (1859) from the Musée d’Orsay, Paris, a painting typical of the dignified way he captured the working people of his age. A husband and wife stand with their heads bowed. Lit by an almost ethereal, filtered light, they’ve stopped working in the fields to say the Angelus prayer. Admired and copied by Vincent van Gogh, he inspired Impressionists and Post-Impressionist artists including Edgas Degas and Camille Pissarro. His combination of subject and effects of light and tone saw his popularity soar at the end of the 19th and beginning of the 20th century. Experience the beauty and quiet power of Millet’s work – an artist who created some of the most realist yet timeless paintings of the 19th century.\n  →  The subjects that made Millet famous.\n\nRAW: See the painting 'The Courtyard of a House in Delft' by Pieter de Hooch through the eyes of a child. Take One Picture is the National Gallery's programme for primary schools. Each year, children make and exhibit artworks in response to one painting in our collection. This year’s painting, by 17th-century Dutch artist de Hooch, has inspired a wide range of projects, from wicker sculptures and cardboard houses to clay tiles and baked apple pies! Presented across three sites in and around the National Gallery, this year's exhibition can be enjoyed as artwork displays and as a digital augmented reality trail.\n  →  Children's artworks inspired by de Hooch.\n\nRAW: See the first UK exhibition of Mexico’s much-loved artist, José María Velasco. Velasco, working in Mexico in the 19th century, was a man of many interests. He was fascinated by advances in geology, the archaeology of his home country, the study of local flora, and the increasing presence of industrialisation. He painted the sweeping landscapes of the Valley of Mexico, the home of modern-day Mexico City, with exquisite detail. His impressive panoramic views of the valley reveal allusions to Mexico's historic past and its rapidly modernising present. Velasco was keenly aware of his country’s industrialisation, capturing expanding train lines and factories alongside botanically accurate studies of plants. His scientific eye inspired his art, and his love of geology is clear to see in his detailed depictions of rocks and volcanoes.\n  →  Mexico's landscape painter.\n\nRAW: Be blown away by Van Gogh’s most spectacular paintings in our once-in-a-century exhibition. Walk with a pair of lovers beneath a starry night. Look up at swirling clouds and cypress trees swaying in the wind. Stay a little while in Van Gogh’s favourite park, the ‘Poet’s Garden’, or under a shady tree in Saint-Rémy. We’re bringing together your most loved of Van Gogh’s paintings from across the globe, some of which are rarely seen in public. They will be paired together with his extraordinary drawings. Over just two years in the south of France, Van Gogh revolutionised his style in a symphony of poetic colour and texture. He was inspired by poets, writers and artists. We look at this time in Arles and Saint-Rémy as a decisive period in his career. His desire to tell stories produced a landscape of poetic imagination and romantic love on an ambitious scale. See up-close his ‘Starry Night over the Rhône’ (1888, Musée d’Orsay) and ‘The Yellow House’ (1888, Van Gogh Museum), as well as our own ‘Sunflowers’ (1888) and ‘Van Gogh's Chair’ (1889), among many others. Join us in celebrating our 200th birthday with Van Gogh’s ‘Poets and Lovers’.\n  →  Once-in-a-century Van Gogh exhibition.\n\nRAW: Immerse yourself in 200 years of extraordinary National Gallery stories. From a resident family of 14 and an intrepid travelling agent to ground-breaking scientists and a wartime pianist, NG Stories tells the history of the National Gallery through the people who made us what we are today. There’s a slate mine in Wales where paintings were safely stored during the Second World War. A guard dog who became a member of staff. And a Keeper’s family, with 14 children, who lived in the building and kept diaries. You’ll discover some of the untold personal stories of the Gallery and the special memories we have been privileged to help create for our visitors. From childhood adventures to life-changing first art encounters, our visitors have always been at the heart of what we do. Through magical soundscapes and immersive digital interactions, you'll experience the work of the many people here at the Gallery who help to care for the paintings and see how this work has changed over the years. This experience, both online and in the Gallery, uses digital technology to tell you the unexpected human stories which have shaped the past and present of our 200-year history.\n  →  Two hundred years of Gallery history.\n\nRAW: David Hockney, in his own words, has always been a looker. Throughout his career, Hockney has found inspiration in the work of other artists. He never tires of looking at paintings. For him, there’s magic in it every time, whether that’s enjoying a picture in a gallery or a much-loved poster at home. This very personal show brings together two Hockney paintings, one showing his mother and father and the other depicting his friend, curator Henry Geldzahler. They are displayed with the thread that ties them together, Piero della Francesca’s ‘The Baptism of Christ’. ‘My Parents’ and ‘Looking at Pictures on a Screen’ both include images of paintings from the National Gallery, a place Hockney knows and has loved throughout his long career. The artists whose portraits and landscapes line the walls are to him, his contemporaries. Their paintings inspire him today as much as any other influence on his work. The exhibition, part of our Bicentenary celebrations, is a chance to slow down, to take in what’s in front of us and enjoy life-enhancing art in the Gallery. Just like Hockney’s parents and friend Geldzahler, let’s take a longer look.\n  →  Hockney against Piero della Francesca.\n\nRAW: A cyclist cheekily sticking out her tongue, tough youths on Amsterdam's Nieuwendijk, young women in miniskirts. From The Netherlands to Cuba and Japan, Ed van der Elsken chased the same unfiltered energy. Different streets, a different time - and yet you recognise it. From his first steps as a photojournalist to the design of his final photo book With handwritten notes, contact prints, experiments from the darkroom Who was the man behind the camera? A journey through his work and life\n  →  Unfiltered street energy across decades.\n\nRAW: 150 drawings by the illustrator who gave post-war Netherlands a visual language all of its own Jip and Janneke, Pim and Pom, Pluk van de Petteflet. This summer the Rijksmuseum brings together some 150 original drawings by illustrator Fiep Westendorp. From early sketches to the illustrations that have stayed with generations of children.\n  →  150 original drawings by the illustrator.\n\nRAW: This summer, the Rijksmuseum Gardens are home to the work of Carel Visser, the most influential Dutch sculptor of the twentieth century.\n  →  Most influential Dutch sculptor of the twentieth century.\n\nRAW: In this intimate fashion presentation, 24 worn, altered and reused garments take centre stage. Signs of wear, repair and craftsmanship tell their story: from 17th-century embroidered mules to a dress worn for generations by the Six family.\n  →  Dress and textiles: garments from 1640 to 1930.\n\nRAW: One hundred years ago, Willem de Kooning left the Netherlands for a new life in New York, where he became one of the most influential artists of the 20th century. This autumn, he returns, with a major retrospective of his drawings, complemented by a selection of celebrated paintings and sculptures. Alongside the exhibition, two of his most iconic paintings will be displayed in the Gallery of Honour. This exhibition is made possible through the generous support of The Willem de Kooning Foundation, The Friends Lottery, Ammodo Art, Art Mentor Foundation Lucerne, Blockbusterfonds, Rijksmuseum International Circle, Rijksmuseum Friends and the Ministry of Education, Culture and Science.\n  →  120 works tracing De Kooning's process.\n\nRAW: Kadir van Lohuizen photographs the energy transition on and around the North Sea From offshore wind farms in the open sea to heavily secured data centers, the energy transition is taking place on a scale that is almost impossible to comprehend, largely beyond our view. Photographer and filmmaker Kadir van Lohuizen shows how the North Sea and the surrounding countries are changing at a breakneck speed due to the rising demand for energy. The exhibition is made possible in part by Floor Fonds/Rijksmuseum Fonds and Rijksmuseum NEXT.\n  →  Annual commission to a Dutch photographer.\n\nRAW: Passion, desire, lust, jealousy, cunning and deceit. The Rijksmuseum takes you on a journey into one of the greatest and most important sources of inspiration for artists: The Metamorphoses by the poet Ovid.\n  →  Ovid: Bernini, Titian to Rodin, Magritte, Bourgeois.\n\nRAW: At a time when AI is becoming increasingly sophisticated, you may ask yourself: when is a photograph real or fake? Yet images have been manipulated, often with surprising ease, since the very beginnings of photography. In FAKE! you will explore 50 historical images from our collection that reveal creative and deceptive visual illusions.\n  →  Early photocollages and photomontages.\n\nRAW: The Rijksmuseum presents two versions of Steve McQueen’s 34-hour video artwork, Occupied City.\n  →  Amsterdam under occupation, Steve McQueen.\n\nRAW: What was life really like in the 17th century? That’s the museum’s most-asked question. Now, the time has come to find out. At Home in the 17th Century offers an up-close experience of daily life 400 years ago. Immerse yourself in a full day of the 17th century as you walk among the nine diorama-style displays that make up this exhibition — packed with personal stories and unique objects.\n  →  Domestic life with Rembrandt, Hals, Vermeer.\n\nRAW: Discover how colonial and contemporary perspectives converge in photographs from the Indian subcontinent. Past meets present in the Crossings exhibition.\n  →  Photography from the Indian subcontinent.\n\nRAW: Internationally acclaimed artist Fiona Tan is given carte blanche at the Rijksmuseum. Step into the world of Monomania.\n  →  The artist's view on the collection.\n\nRAW: From Shiva and the Buddha to wine casks and weapons. Everything about bronze triggers your senses. For centuries, this material has played a central role in the traditions of Asia. Now you too can experience the beauty of bronze art at last.\n  →  Four thousand years of Asian bronze.\n\nRAW: Across the Netherlands, major music festivals draw vast, exuberant crowds. In this series, Eddo Hartmann photographs the individual festivalgoer, both one with the throng and lost against the backdrop of the Dutch events industry.\n  →  Dutch festivals photographed.\n\nRAW: “I made sculpture because what interested me in painting was the clarification of my ideas. I changed medium and worked in clay as a respite from painting when I had done absolutely all that I could for the moment. Which is to say that it was always for the purpose of organization. It was done to give order to my feelings, to seek a method that completely suited me. When I found it in sculpture, it helped me in painting.” Acquavella Galleries is pleased to present Matisse: The Pursuit of Harmony, an exhibition featuring fifty paintings, works on paper, and sculpture by Henri Matisse on loan from museums, foundations, and private collections. On view from April 9 through May 22, 2026, the exhibition traces Matisse’s investigation of form in two and three dimensions, from paintings and sculptures made at the start of the 20th century through the next five decades of his career. Although Acquavella has dealt in exceptional works by Matisse for over sixty years, this marks the gallery’s first exhibition devoted to the French artist since 1973. Henri Matisse (1869–1954) is widely regarded as the unparalleled modernist master of color, having revolutionized art with his luminous palette and lyrical color harmonies, but his experimentation with form was equally central to his artistic pursuits. In each chapter of his career, Matisse worked to refine and essentialize his approach to form and the figure. In his own words: “A work of art must be harmonious in its entirety: any superfluous detail would replace some other essential detail in the mind of the spectator.” Simplified, rhythmic forms, often inspired by the graceful, flowing lines of the arabesque, were integral to Matisse’s lifelong pursuit of harmony and balance in his art. The presentation begins with two early sculptures, The Serf (1900–04) and Madeleine I (1901), and his closely related painting Male Model (1900) and drawing Study for Madeleine (c. 1901). Of the more than eighty sculptures Matisse created, more\n  →  New York. Matisse's investigation of form.\n\nRAW: The exhibition brings together an expansive dialogue of artists, from Impressionist and modern masters to leading contemporary figures including Jules de Balincourt, Fernando Botero, Will Cotton, Giorgio de Chirico, Edgar Degas, Raoul Dufy, Derek Fordjour, Lucian Freud, Marino Marini, Tomokazu Matsuyama, Joel Mesler, Sarah Miska, Pablo Picasso, Roy Lichtenstein, Robert Longo, Tom Otterness, Susan Rothenberg, Laurie Simmons, Hank Willis Thomas, and Summer Wheat. Acquavella Galleries is pleased to present Soft Reins, a group exhibition exploring the enduring significance of the horse as a powerful symbol and artistic muse, highlighting how the animal has inspired art, mythology, and storytelling throughout art history. Guest curated by the artist Tomokazu Matsuyama, Soft Reins will be on view at Acquavella’s Palm Beach gallery from February 6 through March 22, 2026. An opening reception and panel discussion will also be held at the gallery on the evening of February 6th. The title Soft Reins refers to a dynamic between a horse and its rider: when drawing gently on the reins, the horse responds naturally and without resistance. This intuitive ability and connection between horse and rider mirrors the dynamic between the artist and muse, presenting the horse as an enigmatic source of inspiration across cultures and histories. By presenting a diverse array of artists and media, Soft Reins underscores the horse's lasting impact on the artistic imagination. It highlights its capacity to convey profound messages across distinct cultures and eras, making it a dynamic subject for ever-changing times. The exhibition brings together an expansive dialogue of artists, from Impressionist and modern masters to leading contemporary figures including Jules de Balincourt, Fernando Botero, Will Cotton, Giorgio de Chirico, Edgar Degas, Raoul Dufy, Derek Fordjour, Lucian Freud, Marino Marini, Tomokazu Matsuyama, Joel Mesler, Sarah Miska, Pablo Picasso, Roy Lichtenstein, Robert Longo, Tom\n  →  Palm Beach. Horse and equestrian.\n\nRAW: “I think good paintings are moving images, because they’re not static. Great paintings move.” To read Sarah Messerschmidt's catalogue essay, please click here. Acquavella Galleries is pleased to present All the Way, Nicole Wittenberg’s second solo exhibition with the gallery and her first at Acquavella’s New York location. The exhibition will be on view from October 16 through December 5, 2025. A reception for the artist will be held the evening of Wednesday, October 29, from 5:00 to 7:00 pm. Wittenberg’s return to Acquavella this fall follows the artist’s three solo museum exhibitions over this summer: Maison La Roche, Fondation Le Corbusier, Paris; the Ogunquit Museum of American Art, Ogunquit, Maine; and the Center for Maine Contemporary Art, Rockland, Maine. Several works from Wittenberg’s museum exhibitions in Rockland and Ogunquit will appear in All the Way. All the Way explores painting’s ability to capture the sensation of a singular moment extended over time. Nicole Wittenberg's painting practice takes scenes, elements, and encounters with the natural world as its subject matter. Her landscapes and twisting florals explore the medium’s ability to capture temporal moments as impressions that retain the energy of the experience.\n  →  New York. First solo.\n\nRAW: \"Everything is connected, and everything is one. Painting, for me, is a way of knowing who I am. Tracing that history back, it became clear to me that I, too, am made of stardust; and that realization felt profoundly natural. The primeval landscapes I have encountered in my life, too, if traced back far enough, were once stardust.\" Acquavella Galleries is pleased to present Stardust, a solo exhibition of fifteen paintings by the Japanese artist Yuka Kashihara in its Palm Beach gallery, on view from October 15 through December 8, 2025. This suite of acrylic and oil paintings on canvas marks a continuation of the artist’s interest in imagining the otherworldly, while looking even farther to the cosmos. Her work is often sparked by instigating moments and views observed while traveling or walking, which she then blends with conjured vistas. In her new paintings, Kashihara explores our connection with the ancient and cosmic, combining the two ideas by exploring the origin of all organic matter, beginning deep in space. Kashihara cites Marcus Chown’s book, The Magic Furnace, as an inspiration for her new work. He states: “Every atom in our bodies has an extraordinary history. Our blood, our food, our books, our clothes–everything contains atoms forged in blistering furnaces deep inside stars, which were blown into space by those stars’ cataclysmic explosions and deaths…The birth of every atom was marked by cosmic events on an enormous scale, against a backdrop of unimaginable heat and cold, brightness and darkness, space and time.” The artist’s newest body of work draws on this idea of celestial kinship.\n  →  Palm Beach. Recent paintings.\n\nRAW: \"Painting is an urge that swallows you whole. You don't know exactly where you're going. You lose yourself completely and you end up doing something you had forgotten, or something you wanted to do without knowing how you got there. A miracle that repeats itself differently each time. It's a primitive thing, a vital thing. I felt it right away when I was painting beside my mother at twelve years old.\" Acquavella Galleries is pleased to present Miquel Barceló, the renowned Spanish artist’s fourth solo exhibition with the gallery. The exhibition presents over two dozen new paintings and a selection of recent ceramic works, featuring the artist’s signature use of layered materiality, vivid color, and richly textured surfaces. The exhibition is on view April 24 to May 30, 2025 at Acquavella’s New York location. Over the past four and a half decades, the Spanish artist Miquel Barceló (b. 1957) has explored a diverse range of media, including painting, works on paper, ceramic, bronze sculpture, large-scale installation, and performance. In addition to his deep-rooted connection to Spain and his native Mallorca, Barceló draws inspiration from his global travels, continuously experimenting with new materials and techniques influenced by ancient and contemporary cultural traditions. Throughout his practice, the artist’s fascination with the natural world has been central, resulting in textured canvases filled with earthly materiality, tactile surfaces, and compositions inspired by the effects of light and ever-changing colors of the sea. In his latest series of paintings, Barceló deepens his engagement with organic subject matter, drawing inspiration from the sea surrounding Mallorca, where he lives and works in addition to Paris. In densely layered surfaces, Barceló’s new “still life” paintings feature scenes filled with tropical fish, crabs, shells, crustaceans, and marine vegetation that emerge from layers of muted chromatic grays in brilliant hues of red and blue. Traces\n  →  New York. Recent work.\n\nRAW: \"Picasso: the word is synonymous with art. For years, I’ve studied so many systems. McDonald’s, architecture of Le Corbusier and the Bauhaus, military-industrial systems. For me, it was a way of trying to understand Picasso the way I would understand a battleship or a skyscraper. To understand how something is made. So, working with Picassos and understanding them is a way of taking them apart.\" New York, NY (October 7, 2024) – Acquavella Galleries is pleased to present our fifth solo exhibition with Tom Sachs. Titled Bronze, the exhibition features new and recent bronze sculptures by the artist and will be on view at our New York gallery from November 7—December 13, 2024. In this exhibition, Sachs continues his formal investigation and exploration of the modernist canon. Guided by the iconoclastic spirit and wit of Marcel Duchamp’s iconic “readymades,” Sachs employs his signature bricolage technique to reimagine sculptures by Pablo Picasso and Constantin Brâncuși. Drawing on an interplay between technical production and quotidian materials, these sculptures question traditional conceptions of what constitutes a work of art. Previous bodies of work have also engaged the annals of modernism, including Sachs’s take on Piet Mondrian’s abstractions in the 1990s, recreated out of duct tape and plywood; foamcore interpretations of Le Corbusier's housing complexes in the aughts; and, more recently, the reimagining of Picasso’s paintings, particularly from the so-called “war years” period between 1937 and 1945. Bronze features twelve sculptures, each constructed from a bricolage of found, everyday objects, which have been cast in bronze and painted with enamel. Drawing from Picasso’s sculpted oeuvre, Sachs’s new works are in dialogue with sculptures the Spanish artist created from the 1930s through the early 1950s, many of which were also assemblage sculptures constructed out of found materials.\n  →  New York. Bricolage in bronze.\n\nRAW: “It is a personal challenge to bring drawing to the extreme and see how far my eyes and fingers can go.” New York, NY­­–July 24th, 2024– Acquavella Galleries is pleased to present Drawing on Canvas, an exhibition of new and recent works by the artist Jacob El Hanani. In his fifth solo exhibition with the gallery, El Hanani displays a masterful dedication to the craft that he has honed over the past 50 years. Constructing abstract pen and ink drawings that involve the artist applying thousands of marks by hand, El Hanani continues his trademark practice in Drawing on Canvas while incorporating his recent shift from working on paper to working on gessoed canvas on a much larger scale. The subtle, amorphous surfaces of these canvases upon closer inspection reveal dense webs of lines and patterns, built from repeated, rudimentary marks—often simple lines or circles. As the elemental forms grow into increasingly complex patterns, the entire canvas transforms into something much more than a summation of its parts. Day by day, El Hanani slowly creates these drawings over the course of months, his ceaseless labor equally as impressive as the resulting artworks. El Hanani’s work is informed by the meditative rigor found in the Jewish practices and traditions in which he was raised. Most clearly, the artist is in dialogue with micrography, an ancient art of calligrams that once decorated Hebrew Bibles and religious manuscripts. Like these historic drawings, each small mark on El Hanani’s canvases is a gesture in storytelling and world-building.\n  →  New York. Microscopically fine line drawing.\n";
 // ===== END SHARED =====
@@ -1074,150 +1889,10 @@ const LINKS_DOC="links/pending";
 // subtitle, English title and venue (Paste: title and dates too). Not an extra call (her decision).
 const LINK_READ_TIER="complex";
 const isOcc=id=>String(id||"").startsWith("occ-");
-// Palazzo Reale Milano's heading is the short name plus " - Palazzo Reale Milano", the full
-// name on a line below it (nameInLines: the longest line between title and dates that starts
-// with the short name; AL-048). Its pages on the city council's site open with a "# Navigation"
-// heading and the site's menu; the show's heading is the one ending in the venue's name
-// (titleHeading): "Palazzo Reale Milano", "Palazzo Reale, Milan" or "Royal Palace of Milan".
-// Its English pages say "as of" for "to" ("from February 21, 2019 as of June 6, 2019";
-// Antonello da Messina; asOfTo).
-const PRM_TAIL=/\s+[-–—]\s+(?:Palazzo Reale,? Milano?|Royal Palace of Milan)$/i;
-// Its "Upcoming Exhibitions" box lists other shows with their dates: the show's own dates and
-// text end there (until, datesUntil; Soutine took the box's first dates).
-const PRM_BOX=/^(?:Current|Upcoming|Past) Exhibitions$|^Mostre (?:in corso|future|passate)$/i;
-
-// ── LINK VENUES ── Every venue Add by link files under, other than the swept ones in MUSEUMS:
-// one entry each, holding what she decided about it, as a MUSEUMS entry does. What the app
-// finds out (the venue's name, its shop, her confirmations) is kept in the page's store
-// (venues/occasional) and this entry wins over it (occVenue). A venue with no entry here
-// files under its own site, named by Claude when first met.
-//   ownChip      a chip of its own, labelled `chip`, else `short`; without it, "Occasional"
-//   group        venues sharing one chip (Munich)
-//   short        her name for it; `card`: her name on its cards, where that differs
-//   notCard      the card name Claude gave before she renamed it: her renames are Claude's examples
-//   name         its full name; `lookupName`: the name the catalogue lookup searches with
-//   sites        other sites its pages sit on, {host, path, line}: `path` a part of a shared
-//                site, `line` the house line naming it on a site several houses share
-//   linkRead     how its pages are read (as on a MUSEUMS entry)
-//   shopHome, shopCatalogues, shopUnseen, shopQueries, shopNamed, rankAsOwn — its shop (below)
-const LINK_VENUES={
-  // The Tate library's records file under the Tate Claude names (ownMuseumNamed); the record's
-  // summary sits under its own "Summary" heading, below the copies list and after a tab of that name.
-  "occ-library-tate-org-uk":{linkRead:{from:/^Summary$/,fromLast:true}},
-  // Galerie de la Présidence ends its show headings " : Exhibition".
-  "occ-presidence-fr":{card:"Galerie de la Pr\u00e9sidence Paris",notCard:"Paris Pr\u00e9sidence",linkRead:{titleDrop:/\s*:\s*Exhibition$/i}},
-  "occ-nga-gov":{ownChip:true,short:"NG Washington",lookupName:"NGA"},
-  "occ-nationalgalleries-org":{ownChip:true,short:"NG Scotland"},
-  // Mia's page titles end "–– Minneapolis Institute of Art".
-  "occ-new-artsmia-org":{ownChip:true,short:"Mia",lookupName:"Mia",name:"Minneapolis Institute of Art",linkRead:{titleDrop:/\s+[-–—]+\s+Minneapolis Institute of Art$/i}},
-  // rankAsOwn: other houses ranked as the venue's own in her order, display only (her decision:
-  // Yale's two imprints rank the same).
-  "occ-britishart-yale-edu":{ownChip:true,short:"Yale CBA",lookupName:"Yale Center for British Art",name:"Yale Center for British Art",rankAsOwn:["Yale University Press"]},
-  // Munich's Alte Pinakothek, Pinakothek der Moderne and Sammlung Schack: three venues on one
-  // site (pinakothek.de), one chip "Munich", the Alte first (her decision). The house line
-  // between the show's title and its dates says which ("Pinakothek der Moderne | Art"); der
-  // Moderne's own site prints "10/07/2026 - 04/10/2026" above the title, day first. The Alte
-  // and der Moderne's shops are searched in German (`shopQueries`); CEDON sells for both, its
-  // sections named for each house (`shopNamed`, namesVenue). Schack has no shop of its own and
-  // no CEDON section: it gets no shop settings, so the finder answers "none". Titles typed in
-  // capitals are recased (`capsTitles`).
-  "occ-alte-pinakothek":{ownChip:true,short:"Munich Alte Pinakothek",chip:"Munich",group:"munich-pinakotheken",lookupName:"Alte Pinakothek",name:"Alte Pinakothek M\u00fcnchen",
-    sites:[{host:"pinakothek.de",line:/^Alte Pinakothek\b/i}],
-    shopQueries:["Alte Pinakothek M\u00fcnchen Museumsshop Kataloge"],shopNamed:"Alte Pinakothek",linkRead:{capsTitles:true}},
-  "occ-pinakothek-der-moderne":{ownChip:true,short:"Munich der Moderne",chip:"Munich",group:"munich-pinakotheken",lookupName:"Pinakothek der Moderne",name:"Pinakothek der Moderne M\u00fcnchen",
-    sites:[{host:"pinakothek.de",line:/^Pinakothek der Moderne\b/i},{host:"pinakothek-der-moderne.de"}],
-    shopQueries:["Pinakothek der Moderne M\u00fcnchen Museumsshop Kataloge"],shopNamed:"Pinakothek der Moderne",linkRead:{capsTitles:true}},
-  "occ-sammlung-schack":{ownChip:true,short:"Munich Sammlung Schack",chip:"Munich",group:"munich-pinakotheken",lookupName:"Sammlung Schack",name:"Sammlung Schack",
-    sites:[{host:"pinakothek.de",line:/^Sammlung Schack\b/i}],linkRead:{capsTitles:true}},
-  // Staatliche Museen zu Berlin (smb.museum): chip "Berlin" after KHM, cards "Berlin Gemäldegalerie" (her decision).
-  // The Alte and Neue Nationalgalerie are venues under the chip too, cards "Berlin Alte NG" and "Berlin Neue NG"
-  // (her decision): their pages sit under their own paths, or carry their house line just under the dates
-  // (Böcklin, Wols); every other smb.museum page files under the Gemäldegalerie, as before (linkVenue).
-  "occ-smb-museum":{ownChip:true,short:"Berlin",chip:"Berlin",group:"berlin",card:"Berlin Gem\u00e4ldegalerie",lookupName:"Gem\u00e4ldegalerie Berlin",name:"Staatliche Museen zu Berlin"},
-  "occ-alte-nationalgalerie":{ownChip:true,short:"Berlin Alte NG",chip:"Berlin",group:"berlin",lookupName:"Alte Nationalgalerie Berlin",name:"Alte Nationalgalerie",
-    sites:[{host:"smb.museum",path:/\/museums-institutions\/alte-nationalgalerie\//i},{host:"smb.museum",line:/^Alte Nationalgalerie$/i}]},
-  "occ-neue-nationalgalerie":{ownChip:true,short:"Berlin Neue NG",chip:"Berlin",group:"berlin",lookupName:"Neue Nationalgalerie Berlin",name:"Neue Nationalgalerie",
-    sites:[{host:"smb.museum",path:/\/museums-institutions\/neue-nationalgalerie\//i},{host:"smb.museum",line:/^Neue Nationalgalerie$/i}]},
-  // Dresden's Gemäldegalerie Alte Meister: chip "Dresden", cards "Dresden Gemäldegalerie" (her
-  // decision). Its pages open with a short "# " name above every SKD museum's menu; the show's
-  // own heading follows "Active page:" (titleAfter). Dates day first with slashes; the site
-  // line ("Exhibition Site Zwinger") never reaches Claude (her decision; skip).
-  "occ-gemaeldegalerie-skd-museum":{ownChip:true,short:"Dresden",card:"Dresden Gem\u00e4ldegalerie",lookupName:"Gem\u00e4ldegalerie Alte Meister Dresden",name:"Gem\u00e4ldegalerie Alte Meister",
-    linkRead:{titleAfter:/^Active page:/,skip:/^(?:Exhibition Site\b|Opening Hours\b|\[Translate to English:\]|\u00a9)/}},
-  // The Städel (staedelmuseum.de): chip "Frankfurt" after Dresden, cards "Frankfurt Städel" (her decision).
-  // Written in, her decision: its shop's books section (the finder cannot see its books), and
-  // `shopUnseen` — its books are in the page's HTML but Parallel drops them, so a shop page
-  // with no priced line reads "Parallel fault" (docs/add_by_link.md, "Frankfurt").
-  "occ-staedelmuseum-de":{card:"St\u00e4del Frankfurt",ownChip:true,short:"Frankfurt",lookupName:"St\u00e4del Museum",name:"St\u00e4del Museum",
-    shopHome:"https://liebieghaus.ticketfritz.de/",shopCatalogues:"https://liebieghaus.ticketfritz.de/Shop/Index/staedel-publikationen/43885",shopUnseen:"parallel"},
-  // Written in, her decision: a shop drawn by script (its page's code holds no books, only a frame and a
-  // script) gets its best section written in and `shopUnseen` "script": a lookup there reads "contents
-  // cannot be seen — JS-rendering" and goes to the web (docs/add_by_link.md, "A shop drawn by script").
-  "occ-kunstmuseumbasel-ch":{card:"Kunstmuseum Basel",notCard:"Basel Kunstmuseum",shopHome:"https://shop.kunstmuseumbasel.ch/en/",shopCatalogues:"https://shop.kunstmuseumbasel.ch/en/merchandise?category=Exhibition+Catalogues",shopUnseen:"script"},
-  // The Prado: chip "Prado" right after KHM, cards "Prado Madrid" (her decision). Its dates are month first
-  // (DATE_ORDER, dates.js).
-  "occ-museodelprado-es":{ownChip:true,chip:"Prado",short:"Prado Madrid",name:"Museo Nacional del Prado"},
-  // Chantilly (Musée Condé): chip "Chantilly" after Jacquemart; its cards keep the store's name (her decision).
-  "occ-chateaudechantilly-fr":{ownChip:true,chip:"Chantilly"},
-  // The Cini Foundation and its island's two houses: three venues, Claude's names, under one chip "Cini" after
-  // Capodimonte (her decision).
-  "occ-cini-it":{card:"Fondazione Cini",notCard:"Venice Cini",ownChip:true,chip:"Cini",group:"cini"},
-  "occ-lestanzedelvetro-org":{ownChip:true,chip:"Cini",group:"cini"},
-  "occ-lestanzedellafotografia-it":{card:"Stanze della Fotografia Venice",notCard:"Venice Stanze della Fotografia",ownChip:true,chip:"Cini",group:"cini"},
-  // Moretti (her decision, Moretti only): the place after " : " leaves the title ("… : Monaco", "… : New York,
-  // Sotheby's"); its description is typed in capitals (capsText); the cookie panel ends the passage.
-  "occ-morettigallery-com":{linkRead:{titleDrop:/\s+:\s+[^:]+$/,capsText:true,until:/^Manage cookies$/}},
-  // Łazienki (her decision, Łazienki only): its heading runs on into the show's opening paragraph; the
-  // page title is the show's name and its section ("The Nabis. Prophets of a New Art - Events"): the name is the title.
-  "occ-lazienki-krolewskie-pl":{card:"Royal \u0141azienki Warsaw",notCard:"Warsaw \u0141azienki",linkRead:{tabTitle:/\s+[-–—]\s+[^-–—]+$/}},
-  // The Getty (her decision, Getty only): its collection database's exhibition pages are titled
-  // "Museum Collection", so their heading is the show's name.
-  "occ-getty-edu":{linkRead:{tabNotName:/^Museum Collection$/}},
-  // The Correr's archive site (that site only): each show has several pages, its tab title the
-  // page's own name ("Project", "Mostra"); the show's name is the heading after "Section menu" ("Menù di sezione").
-  // Titles typed in capitals are recased (her decision), each part either side of a full stop.
-  "occ-archivio-correr-visitmuve-it":{card:"Correr Venice",notCard:"Venice Correr",linkRead:{titleAfter:/^(?:Section menu|Men\u00f9 di sezione)$/,capsTitles:true,capsStops:true}},
-  // Under "Occasional". Boston MFA prints the dates on the line above the show's title.
-  "occ-mfa-org":{short:"Boston",card:"Boston MFA"},
-  "occ-archive-worcesterart-org":{short:"Worcester"},
-  // NGV writes two-digit years ("4 Sep 26 – 31 Jan 27").
-  "occ-ngv-vic-gov-au":{card:"National Gallery Victoria",linkRead:{shortYear:true}},
-  // Her name, not Claude's "KMSKA Antwerp" (notCard: Claude learns her style from it).
-  "occ-kmska-be":{card:"Antwerp KMSKA",short:"Antwerp Fine Arts",notCard:"KMSKA Antwerp",name:"Koninklijk Museum voor Schone Kunsten Antwerpen"},
-  // The Tuscan state museums' site names itself "Direzione regionale Musei nazionali Toscana";
-  // its cards show "San Marco" and the lookup searches as "Museo di San Marco" (her decision).
-  // Its pages are press releases: the title is the headline's first sentence, without "Mostra"
-  // (exhibition) or the quotation marks round the name; capitals recased (her decision).
-  "occ-museitoscana-cultura-gov-it":{card:"San Marco Florence",short:"San Marco",name:"Museo di San Marco",linkRead:{firstSentence:true,unquote:true,capsTitles:true}},
-  // Genoa's page titles give no name, Milan's name the city council (her names, both written in).
-  "occ-palazzoducale-genova-it":{short:"Palazzo Ducale Genova",name:"Palazzo Ducale Genova"},
-  // Palazzo Reale Milano's pages also sit on the city council's site, saved by her because that
-  // site refuses Parallel (docs/add_by_link.md, "Saved pages").
-  "occ-palazzorealemilano-it":{short:"Palazzo Reale Milano",name:"Palazzo Reale Milano",
-    sites:[{host:"www2.comune.milano.it",path:/^\/(?:en|it)\/web\/palazzo-reale-milano\//}],
-    linkRead:{titleHeading:PRM_TAIL,titleDrop:PRM_TAIL,nameInLines:true,until:PRM_BOX,datesUntil:PRM_BOX,capsTitles:true,asOfTo:true}},
-  // Her names for venues Claude named (her review of link venues); notCard is the name Claude gave.
-  "occ-centrepompidou-fr":{card:"Centre Pompidou",notCard:"Pompidou Paris"},
-  "occ-esmh-de":{card:"Emil Schumacher Hagen",notCard:"Hagen Emil Schumacher"},
-  "occ-musees-nationaux-alpesmaritimes-fr":{card:"Chagall Museum Nice",notCard:"Nice Chagall"},
-  "occ-museoreinasofia-es":{card:"Reina Sof\u00eda Madrid",notCard:"Madrid Reina Sof\u00eda"},
-  "occ-museumhetvalkhof-nl":{card:"Valkhof Nijmegen",notCard:"Nijmegen Valkhof"},
-  "occ-rct-uk":{card:"Queen's Gallery Edinburgh",notCard:"The Queen\u2019s Gallery, Palace of Holyroodhouse"},
-  "occ-wallach-columbia-edu":{card:"Wallach Gallery Columbia",notCard:"Columbia Wallach"},
-  // Her name, the city first (her decision, as Antwerp KMSKA).
-  "occ-modernamuseet-se":{card:"Stockholm Moderna",short:"Stockholm Moderna",notCard:"Moderna Museet Stockholm",name:"Moderna Museet"},
-  // Her name, the country first. A retired show's address opens the "Past Exhibitions" list (Louise
-  // Bourgeois), which is never a show (listingPage); a heading line ending in a comma runs on to the
-  // next line (headingCommaJoin; "Diane Arbus Photographs," over "1956-1971").
-  "occ-louisiana-dk":{card:"Denmark Louisiana",short:"Denmark Louisiana",notCard:"Louisiana Humleb\u00e6k",name:"Louisiana Museum of Modern Art",
-    linkRead:{listingPage:/^Past exhibitions$/i,headingCommaJoin:true}},
-  // Christie's press site is the same venue as christies.com (her decision; links from now on, rows already in left as they are).
-  "occ-christies-com":{sites:[{host:"press.christies.com"}]},
-};
-const linkEntry=id=>Object.prototype.hasOwnProperty.call(LINK_VENUES,id)?LINK_VENUES[id]:null;
-const ownChip=id=>!!(linkEntry(id)||{}).ownChip;
 // The chip a venue's cards sit under: its group's, where it has one.
-const chipKey=id=>(linkEntry(id)||{}).group||id;
+const chipKey=id=>(REG[id]&&REG[id].names.group)||id;
+// The Venue chips: one per venue with a chip of its own, one per group, in her venue order.
+const chipVenues=()=>VENUE_REGISTER.filter(e=>e.names.chip).map(e=>e.id).filter((id,i,all)=>all.findIndex(x=>chipKey(x)===chipKey(id))===i);
 // "4 Sep 26" → "4 Sep 2026": a two-digit year after a day and month, for a venue with shortYear.
 function withLongYears(l){
   return String(l).replace(/\b(\d{1,2}\s+(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sept?|Oct|Nov|Dec)[a-z]*\.?)\s+(\d{2})(?![\d:])/gi,"$1 20$2");
@@ -1463,7 +2138,7 @@ function cardTitle(t,vc){
   const words=s.split(/[^\p{L}]+/u).filter(w=>w.length>=3);
   return words.length>=2||words.some(w=>w.length>=6)?DATES.capsTitleParts(s):s;
 }
-function linkOptions(vc){ return (vc&&MU[vc]&&MU[vc].linkRead)||(linkEntry(vc)||{}).linkRead||null; }
+function linkOptions(vc){ return linkRulesOf(vc&&REG[vc]); }
 function joinTitle(name,sub,dashAfterColon){
   if(/[:.!?]\s*$/.test(name))return name+" "+sub;
   return name+(dashAfterColon&&name.includes(":")?" – ":": ")+sub;
@@ -1610,8 +2285,8 @@ function titleCandidates(pg){
 function venueNamesFor(pg){
   const{vc,host,site,words}=pg;
   const h=String(host||"").replace(/^www\./,"");
-  const houses=Object.entries(LINK_VENUES).filter(([id,v])=>id===vc||(v.sites||[]).some(x=>x.host===h)).map(([,v])=>v);
-  const names=[site,...[MU[vc]||{},...houses].flatMap(v=>[v.name,v.short,v.card,v.lookupName])];
+  const houses=VENUE_REGISTER.filter(e=>e.kind==="manual"&&(e.id===vc||e.read.sites.some(x=>x.host===h)));
+  const names=[site,...venueNames(MU[vc]),...houses.flatMap(e=>venueNames(venueView(e)))];
   return new Set(names.filter(Boolean).map(words).filter(Boolean));
 }
 function findDates(pg){
@@ -1900,7 +2575,7 @@ function pageResult(pg){
   let tracked=false; try{ tracked=[...new URL(url).searchParams.keys()].some(k=>TRACKING_PARAM.test(k)); }catch{}
   const link=lr&&lr.cleanLink?String(url).split(/[?#]/)[0]:tracked?withoutTracking(url):url;
   if(link!==url)rule(lr&&lr.cleanLink?"cleanLink":"tracking");
-  return{ok:true,base:pg.base,between:pg.between,under,afterDates,start:range.start||"",end:range.end||"",raw:pg.raw.slice(0,LINK_RAW_CHARS),site:site||(linkEntry(vc)||{}).name||host.replace(/^www\./,""),link,noDates:!!found.noDates,scriptDates:!!found.scriptDates,orderUnknown:!!found.orderUnknown,shown:found.shown||"",shownWhy:found.shownWhy||"",dateLine:found.noDates&&!found.shown?"":pg.dateLine,dateNote:DATES.closedEarlyNote(range)};
+  return{ok:true,base:pg.base,between:pg.between,under,afterDates,start:range.start||"",end:range.end||"",raw:pg.raw.slice(0,LINK_RAW_CHARS),site:site||(REG[vc]&&REG[vc].names.full)||host.replace(/^www\./,""),link,noDates:!!found.noDates,scriptDates:!!found.scriptDates,orderUnknown:!!found.orderUnknown,shown:found.shown||"",shownWhy:found.shownWhy||"",dateLine:found.noDates&&!found.shown?"":pg.dateLine,dateNote:DATES.closedEarlyNote(range)};
 }
 
 // A venue's title from its own headings (linkRead.title). "pieces": the heading is the "##"
@@ -1944,11 +2619,11 @@ function nameInLines(page,vc){
 // and other names, city and country, for searching, and a short card name in her style. Whether the page is
 // the museum's own decides the rest: only someone else's page asks more (elsewherePrompt).
 // Her names for venues, as the style for a new venue's short name.
-const SHORT_NAME_EXAMPLES=()=>Object.values(LINK_VENUES).map(v=>v.card||v.short).filter(Boolean);
+const SHORT_NAME_EXAMPLES=()=>VENUE_REGISTER.filter(e=>e.kind==="manual"&&e.names.hers).map(e=>e.names.card).filter(Boolean);
 // Her renames of Claude's card names (`notCard`), each with the name Claude gave: so Claude learns her style.
 // The full name is the entry's, else the one Claude gave, as the store holds it (MU).
-const SHORT_NAME_RENAMES=()=>Object.entries(LINK_VENUES).filter(([,v])=>v.notCard&&(v.card||v.short))
-  .map(([id,v])=>"for "+JSON.stringify(v.name||(MU[id]&&MU[id].name)||v.lookupName||v.short)+": "+JSON.stringify(v.card||v.short)+", not "+JSON.stringify(v.notCard));
+const SHORT_NAME_RENAMES=()=>VENUE_REGISTER.filter(e=>e.kind==="manual"&&e.names.hers&&e.names.replaced.length)
+  .map(e=>"for "+JSON.stringify(e.names.full||e.names.lookup||e.names.card)+": "+JSON.stringify(e.names.card)+", not "+e.names.replaced.map(x=>JSON.stringify(x)).join(" or "));
 // ONE REQUEST FOR THE WHOLE IMPORT (her decision): every page of a Links, Pages or Paste import goes
 // to Claude in one request — the opening, the examples and the rules once, as the sweep's compressor
 // sends them, then each page as an item. A page's own questions (a pasted box's title and dates, a
@@ -2135,10 +2810,10 @@ function heldElsewhere(a,pageHost){
   const site=hostOf(/^https?:\/\//i.test(a.venueSite||"")?a.venueSite:"https://"+(a.venueSite||"")).replace(/^www\./,"");
   // The page's own site names the venue (Claude's "not its own page" misread): not elsewhere.
   if(site&&baseDomain(site)===baseDomain(pageHost))return null;
-  const mine=Object.values(MU).find(m=>m&&!m.occasional&&[m.name,m.short].some(x=>x&&flatName(x)===flatName(a.venue)));
+  const mine=Object.values(MU).find(m=>m&&!m.occasional&&venueNames(m).some(x=>flatName(x)===flatName(a.venue)));
   const known=mine?mine.id:site?knownVenueFor("https://"+site+"/"):null;
   if(known)return{id:known,name:MU[known].name,host:site};
-  const occ=Object.values(MU).find(m=>m&&m.occasional&&[m.name,m.short].some(x=>x&&flatName(x)===flatName(a.venue)));
+  const occ=Object.values(MU).find(m=>m&&m.occasional&&venueNames(m).some(x=>flatName(x)===flatName(a.venue)));
   if(occ)return{id:occ.id,name:occ.name,host:site};
   return{id:site?occVenueId(site):"occ-"+flatName(a.venue).replace(/ /g,"-"),name:a.venue,host:site};
 }
@@ -2151,7 +2826,7 @@ const nearMuseumSite=host=>VENUE_SITES.some(v=>onMuseumSite(host,v.id));
 function ownMuseumNamed(a,pageHost){
   const said=flatName(a&&a.venue||"");
   if(!said)return null;
-  const m=Object.values(MU).find(m=>m&&!m.occasional&&[m.name,m.short].some(x=>x&&(said===flatName(x)||said.startsWith(flatName(x)+" "))));
+  const m=Object.values(MU).find(m=>m&&!m.occasional&&venueNames(m).some(x=>said===flatName(x)||said.startsWith(flatName(x)+" ")));
   return m&&onMuseumSite(pageHost,m.id)?m.id:null;
 }
 
@@ -2159,13 +2834,13 @@ function occVenueId(host){
   return "occ-"+String(host||"").toLowerCase().replace(/^www\./,"").replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"");
 }
 
-// The link venues whose `sites` take this address → [[id, line]] (line: the house line, or none).
+// The venues whose `sites` (read.sites) take this address → [[id, line]] (line: the house line, or none).
 function siteVenues(url){
   let u; try{ u=new URL(siteUrlOf(url)); }catch{ return []; }
   const h=u.hostname.toLowerCase().replace(/^www\./,"");
   const out=[];
-  for(const [id,v] of Object.entries(LINK_VENUES))
-    for(const s of v.sites||[]) if(s.host===h&&(!s.path||s.path.test(u.pathname)))out.push([id,s.line||null]);
+  for(const e of VENUE_REGISTER)
+    for(const s of e.read.sites) if(s.host===h&&(!s.path||s.path.test(u.pathname)))out.push([e.id,s.line||null]);
   return out;
 }
 // The one venue an address alone names: a swept venue, a link venue by one of its `sites`
@@ -2186,17 +2861,17 @@ function linkVenue(url,page){
   for(const l of (page&&page.between)||[]) for(const [id,re] of houses) if(re.test(l.trim()))return{id,line:l};
   // A house line just under the dates (Berlin's Alte Nationalgalerie).
   for(const l of (page&&page.afterDates)||[]) for(const [id,re] of houses) if(re.test(l.trim()))return{id};
-  // No house named: the site's own link venue, where it has one (smb.museum, the Gemäldegalerie).
+  // No house named: the site's own venue, where the register has one (smb.museum, the Gemäldegalerie).
   const own=occVenueId(hostOf(siteUrlOf(url)));
-  if(linkEntry(own))return{id:own};
-  const names=houses.map(([id])=>LINK_VENUES[id].short);
+  if(REG[own])return{id:own};
+  const names=houses.map(([id])=>REG[id].names.card);
   return{id:null,why:"The page doesn’t say which museum the show is in ("+names.slice(0,-1).join(", ")+" or "+names[names.length-1]+")."};
 }
 
-// The venue whose link options read a page: a swept venue, or a link venue.
+// The venue whose link options read a page: a swept venue, or a manual-import venue in the register.
 function linkReadVenue(url){
   const occ=occVenueId(hostOf(siteUrlOf(url)));
-  return addressVenue(url)||(linkEntry(occ)?occ:null);
+  return addressVenue(url)||(REG[occ]?occ:null);
 }
 
 // A link to one of the swept venues files under it, matched by site from the scraper's
@@ -2211,24 +2886,10 @@ function knownVenueFor(url){
   return hit?hit.id:null;
 }
 
-// An occasional venue as MU holds it: its LINK_VENUES entry over what the page's store holds
-// (`v`: a fact about the world, like the sweep log), so everything reads it like any venue.
-// No `v`: a ledger row from a venue this page's store has never seen (her file opened on
-// another page), named `fallback`, shop not known.
-//   shop: "found" (books section), "noshelf" (a shop, no books section), "none" (no
-//   shop; confirmed = her "No shop", lookups go to the web), "failed" (a step died —
-//   not an answer), "unknown" (look again on the next link). Lookups use "found", and
-//   "noshelf" once its search is proved.
+// A manual-import venue as MU holds it (venueView): its register entry, and the record `v` (recordOf, or a
+// venue met since the last publish); no `v`: a ledger row from a venue neither holds, named `fallback`.
 function occVenue(id,v,fallback){
-  const own=linkEntry(id)||{}, s=v||{};
-  const live=s.shop==="found"||(s.shop==="noshelf"&&!!s.shopSearch);
-  const name=own.name||s.name||fallback;
-  // Her pick on the shop screen: the English section the finder could not read (`shopEnglishUnread`), contents unseen.
-  const en=!!(s.englishPicked&&s.shopEnglishUnread);
-  return{id,shopLink:own.shopCatalogues||undefined,short:own.short||s.short||name,chip:own.chip,card:own.card,lookupName:own.lookupName||own.name||s.short||name,name,country:s.country||undefined,occasional:true,shopUnseen:own.shopUnseen||(en?"unconfirmed":undefined),english:s.english===false?false:undefined,
-    exBase:null,listUrl:null,
-    shopHome:live?s.shopHome||null:null,shopCatalogues:live?(en?s.shopEnglishUnread:s.shopCatalogues||null):null,shopSearch:live?s.shopSearch||null:null,
-    shopUnknown:!live&&!(s.shop==="none"&&s.confirmed)};
+  return venueView(REG[id]||null,v,fallback);
 }
 // A venue the store holds named only by its address, as every new venue was before Claude named them.
 const namedByAddress=v=>!!v&&!v.short&&bareHost(v.name)===bareHost(v.host);
@@ -2240,10 +2901,11 @@ const bareHost=h=>String(h||"").toLowerCase().replace(/^www\./,"");
 // Galleries in three countries) — its full name, the other names it goes by, its city and its
 // country, each where the words so far lack it. Proved live: "Palazzo Ducale" alone found Venice's;
 // the English name alone found Brussels', "KMSKA" beside it found Antwerp's shop. The card name is
-// the short one (`short`, `card`). `v`: the store's facts, or Claude's.
+// the short one. `v`: the venue's record (recordOf), or Claude's facts.
 function venueSearchName(id,v){
-  const own=linkEntry(id)||{}, s=v||{};
-  let name=String(own.name||s.name||"").trim();
+  const s=v||{}, e=REG[id];
+  // Her names are never replaced by Claude's (names.hers).
+  let name=String((e&&e.names.hers&&e.names.full)||s.name||"").trim();
   for(const x of [...(s.aka||[]),s.city,s.country]) if(x&&!foldText(name).includes(foldText(x)))name+=" "+x;
   return name.trim();
 }
@@ -2251,7 +2913,7 @@ function venueSearchName(id,v){
 // The review walks THIS, not MUSEUMS, or occasional cards are counted and never drawn.
 function allVenues(){
   const occ=Object.values(MU).filter(m=>m&&m.occasional);
-  return MUSEUMS.concat(occ).sort((a,b)=>orderOf(a.id)-orderOf(b.id)||a.short.localeCompare(b.short));
+  return MUSEUMS.concat(occ).sort((a,b)=>orderOf(a.id)-orderOf(b.id)||a.card.localeCompare(b.card));
 }
 function venueRank(id){ const i=allVenues().findIndex(m=>m.id===id); return i<0?1e6:i; }
 function registerOccasional(map){
@@ -2275,12 +2937,54 @@ function markUnread(what){ STORE_UNREAD.add(what); storeUnreadSeen([...STORE_UNR
 const UNREAD_OCC="the link venues", UNREAD_LINKS="the links waiting in the Links box", UNREAD_PAGES="the pages waiting in the Pages list",
   UNREAD_PASTES="the boxes waiting in Paste",
   UNREAD_SWEEPS="the sweep log", UNREAD_QUAR="the quarantine list";
+// The venues met by Links, Pages and Paste: each register entry the store has met (recordOf), and over
+// them the waiting room, the store's venues/occasional. A read that failed leaves the register's own.
 async function readOccasional(){
-  try{ const s=await storeRead(OCC_DOC,{part:UNREAD_OCC}); return s.exists?((s.data||{}).venues||{}):{}; }catch{ return {}; }
+  let w={};
+  try{ const s=await storeRead(OCC_DOC,{part:UNREAD_OCC}); w=s.exists?((s.data||{}).venues||{}):{}; }catch{}
+  return occasionalOver(w);
 }
+// Only what the register does not already hold is written: the waiting room.
 async function writeOccasional(map){
-  try{ await storeWrite(OCC_DOC,{venues:map,updatedAt:new Date().toISOString()},{part:UNREAD_OCC}); return true; }catch{ return false; }
+  const waiting=Object.fromEntries(Object.entries(map||{}).filter(([id,v])=>!heldByRegister(id,v)));
+  try{ await storeWrite(OCC_DOC,{venues:waiting,updatedAt:new Date().toISOString()},{part:UNREAD_OCC}); return true; }catch{ return false; }
 }
+// When the page opens, its store readable and not read only: each waiting record the register now holds
+// is cleared from the waiting room (her decision). Returns how many.
+async function tidyOccasional(){
+  let s; try{ s=await storeRead(OCC_DOC,{part:UNREAD_OCC}); }catch{ return 0; }
+  if(!s.exists)return 0;
+  const w=(s.data||{}).venues||{};
+  const kept=Object.fromEntries(Object.entries(w).filter(([id,v])=>!heldByRegister(id,v)));
+  const n=Object.keys(w).length-Object.keys(kept).length;
+  if(!n)return 0;
+  try{ await storeWrite(OCC_DOC,{venues:kept,updatedAt:new Date().toISOString()},{part:UNREAD_OCC}); return n; }catch{ return 0; }
+}
+// The fields of a waiting-room record that its register entry also holds, and where.
+const STORE_FACTS={name:e=>e.names.full,short:e=>e.names.card,aka:e=>e.names.aka,city:e=>e.city,country:e=>e.country,english:e=>e.english};
+// Two records alike, whatever the order of their fields.
+const sameRecord=(a,b)=>{ const c=x=>x===undefined?"null":JSON.stringify(x,(k,v)=>v&&typeof v==="object"&&!Array.isArray(v)?Object.fromEntries(Object.keys(v).sort().map(j=>[j,v[j]])):v); return c(a)===c(b); };
+// A manual-import venue's record: the register's facts over the record its entry was filed from (`filed`),
+// and over both each field of the waiting record `w` that has changed since it was filed (her latest word).
+// Her names (names.hers) are never replaced by a name Claude gave.
+function recordOf(e,w){
+  const filed=e.filed||{}, out={...filed};
+  for(const [k,f] of Object.entries(STORE_FACTS)){ const x=f(e); if(x!=null)out[k]=x; }
+  for(const k of Object.keys(w||{})) if(!sameRecord(w[k],filed[k])&&!(e.names.hers&&(k==="name"||k==="short")&&out[k]!=null))out[k]=w[k];
+  return out;
+}
+// A waiting record the register already holds: the one its entry was filed from, or the entry's own record.
+const heldByRegister=(id,w)=>!!REG[id]&&REG[id].kind==="manual"&&(sameRecord(w,REG[id].filed)||sameRecord(w,recordOf(REG[id])));
+// The register's manual-import venues the store has met, each with its waiting record over it, then the
+// venues only the waiting room holds.
+function occasionalOver(w){
+  const out={};
+  for(const e of VENUE_REGISTER) if(e.kind==="manual"&&(e.filed||(w&&w[e.id])))out[e.id]=recordOf(e,w&&w[e.id]);
+  for(const [id,v] of Object.entries(w||{})) if(!REG[id])out[id]=v;
+  return out;
+}
+// The register holds her decisions for this venue: her names for it, or its own reading rules.
+const herVenue=id=>{ const e=REG[id]; return !!e&&(e.names.hers||!!e.read.link||e.read.sites.length>0||!!e.shop.catalogues); };
 // ── PAGES: a show page she saved (her decision; docs/add_by_link.md, "Saved pages") ──
 // For a site that refuses Parallel. A saved page (.mht/.mhtml from Chrome, or .html) is
 // turned into the reply Parallel gives — {url,title,full_content}, headings as "#",
@@ -2866,7 +3570,7 @@ async function discoverShop(pageShop,museumHost,venueName,turnedDown,venueId,tra
 // A Shop button on the museum's own site (Berlin's smb.museum/webshop) vouches for that page, not
 // the whole site: "Online Catalogues & Databases" there is no shop.
 function shopFinderStart(pageShop,museumHost,venueName,turnedDown,venueId,trace){
-  const sf={pageShop,museumHost,venueName,venueId,trace,no:new Set((turnedDown||[]).map(normalizeUrlKey)),own:linkEntry(venueId)||{},
+  const sf={pageShop,museumHost,venueName,venueId,trace,no:new Set((turnedDown||[]).map(normalizeUrlKey)),own:REG[venueId]?venueView(REG[venueId]):{},
     pageShopHost:baseDomain(hostOf(pageShop))===baseDomain(museumHost)?"":hostOf(pageShop),
     opens:0,seenText:"",died:null,opened:new Set(),mine:[],root:"",front:"",pick:null,best:null,
     texts:new Map(),failed:new Set(),walked:new Set(),walkOpens:0,translated:[],unread:[]};
@@ -2880,7 +3584,7 @@ function shopFinderStart(pageShop,museumHost,venueName,turnedDown,venueId,trace)
   sf.note=(step,what)=>{ if(trace)trace.push({step,...what}); };
   // The museum's own name as a section's label: its address's name ("kmska"), or the names it goes by.
   const plain=x=>foldText(x||"").replace(/[^a-z0-9]+/g," ").trim();
-  const names=new Set([baseDomain(museumHost).split(".")[0],sf.own.short,sf.own.notCard,sf.own.name,venueName].map(plain).filter(x=>x.length>=3));
+  const names=new Set([baseDomain(museumHost).split(".")[0],...venueNames(sf.own),venueName].map(plain).filter(x=>x.length>=3));
   sf.ownName=label=>names.has(plain(label));
   // A proven section kept: the exhibition-catalogues section ends the search; anything less is kept
   // as the best so far, in case the shop has none.
@@ -3560,7 +4264,7 @@ function analyzeProForma(text,rows,ignoredKeys,opts){
     const sweptAt=get(r,"swept_at");
     if(KNOWN_VENUES.has(vc)) attempted[vc]=later(attempted[vc],sweptAt);
     if(isMarkerRow(rowNote)){
-      coverage.push({venueId:KNOWN_VENUES.has(vc)?vc:null,venueShort:KNOWN_VENUES.has(vc)?MU[vc].short:(vc||"(blank)"),what:title||"(a listing page)",why:rowNote,url:get(r,"url"),line});
+      coverage.push({venueId:KNOWN_VENUES.has(vc)?vc:null,venueShort:KNOWN_VENUES.has(vc)?MU[vc].card:(vc||"(blank)"),what:title||"(a listing page)",why:rowNote,url:get(r,"url"),line});
       continue;
     }
     if(KNOWN_VENUES.has(vc)&&title) returned[vc]=later(returned[vc],sweptAt);
@@ -3617,7 +4321,7 @@ function analyzeProForma(text,rows,ignoredKeys,opts){
       picked:p[f],
     })):null;
 
-    if(!match){ props.push({type:"add",venueId:vc,venueShort:MU[vc].short,title,cand,notes,line:p.line,choices,merged:!!p.mergedFrom,topic:p.topic||null}); continue; }
+    if(!match){ props.push({type:"add",venueId:vc,venueShort:MU[vc].card,title,cand,notes,line:p.line,choices,merged:!!p.mergedFrom,topic:p.topic||null}); continue; }
     const upd=[];
     const consider=(field,label,oldV,newV)=>{ const o=(oldV==null?"":String(oldV)), n=(newV==null?"":String(newV)); if(!n)return; if(!o)upd.push({field,label,oldVal:"",newVal:n,kind:"fill"}); else if(o!==n)upd.push({field,label,oldVal:o,newVal:n,kind:"change"}); };
     // A changed title is a Change card, capitals-only included (her decision): a title
@@ -3631,7 +4335,7 @@ function analyzeProForma(text,rows,ignoredKeys,opts){
     consider("exUrl","Link",match.exUrl,url);
     if(!upd.length&&!choices){ silent++; continue; }  // identical — nothing to propose
     const hasChange=upd.some(u=>u.kind==="change");
-    props.push({type:hasChange?"change":"fill",venueId:vc,venueShort:MU[vc].short,title,cand,matchId:match.id,upd,notes,line:p.line,choices,merged:!!p.mergedFrom});
+    props.push({type:hasChange?"change":"fill",venueId:vc,venueShort:MU[vc].card,title,cand,matchId:match.id,upd,notes,line:p.line,choices,merged:!!p.mergedFrom});
   }
   const tally={
     fileRows:  table.length-1,
@@ -3934,8 +4638,10 @@ function cardOutcome(p,dec){
   if(dec.mode==="addnew")return"accepted";
   return Object.values(dec.fields||{}).some(v=>v==="accept")?"accepted":"rejected";
 }
+// A venue's shop as the finder leaves it before it looks, or after her "No shop" (each caller adds its own answer).
+const SHOP_RESET={shopHome:null,shopCatalogues:null,shelfKind:null,shopSearch:null,why:null,shopEnglishUnread:null,englishPicked:false};
 // What the shop finder found for a venue, before her answer on the shop screen.
-const SHOP_FIELDS=["shop","shopHome","shopCatalogues","shelfKind","shopSearch","why","shopEnglishUnread","englishPicked","shopAdded","confirmed"];
+const SHOP_FIELDS=["shop",...Object.keys(SHOP_RESET),"shopAdded","confirmed"];
 const foundShop=v=>Object.fromEntries(SHOP_FIELDS.filter(k=>v[k]!==undefined).map(k=>[k,v[k]]));
 // The venues as stored when the ledger moves: her shop answer kept only for a venue with a card going in
 // (her decision: a show not imported leaves its venue's shop unanswered, asked again at its first import).
@@ -3949,8 +4655,8 @@ function answeredOnly(venues,saved,going){
 }
 // The venues outside her list with at least one card going in. A venue whose every card is
 // rejected, undecided or quarantined is not asked about its shop (her decision; AL-046).
-// A venue whose shop section is written into its LINK_VENUES entry (`shopCatalogues`, Basel, the Städel).
-const shopWrittenIn=id=>!!(linkEntry(id)||{}).shopCatalogues;
+// A venue whose shop section is written into its register entry (shop.catalogues: Basel, the Städel).
+const shopWrittenIn=id=>isOcc(id)&&!!(REG[id]&&REG[id].shop.catalogues);
 function venuesGoingIn(proposals,decisions){
   const ids=new Set();
   (proposals||[]).forEach((p,i)=>{ const id=(p.cand||{}).museumId; if(isOcc(id)&&cardOutcome(p,(decisions||{})[i])==="accepted")ids.add(id); });
@@ -4130,9 +4836,9 @@ async function readShows(input,occVenues,{progress,stopped}){
       // A venue on another part of one of her museums' own site is asked every time, so each
       // page there can file under the museum it names (ownMuseumNamed).
       // A new venue is named once per import: by its first page (AL-053).
-      const askFresh=isOcc(vc)&&needsFacts(venues[vc])&&!namedNow.has(vc), askVenue=askFresh||(isOcc(vc)&&!(linkEntry(vc)||{}).name&&nearMuseumSite(host));
+      const askFresh=isOcc(vc)&&needsFacts(venues[vc])&&!namedNow.has(vc), askVenue=askFresh||(isOcc(vc)&&!(REG[vc]&&REG[vc].names.full)&&nearMuseumSite(host));
       // An entry that only places the venue's chip leaves this as it was (Cini).
-      const lk=linkEntry(vc), ownSite=vc===occVenueId(host)&&(!lk||Object.keys(lk).every(k=>k==="ownChip"||k==="chip"||k==="group"));
+      const ownSite=vc===occVenueId(host)&&!herVenue(vc);
       if(askFresh)namedNow.add(vc);
       work.push({n,url,item,res,page,vc,host,askFresh,askVenue,ownSite,tape,seen,entry:linkItem(page,askVenue,url,vc)});
       queued=true;
@@ -4180,7 +4886,7 @@ async function readShows(input,occVenues,{progress,stopped}){
           const gallery=had&&had.gallery!==undefined?had.gallery:ask.ok&&a.gallery;
           const shop=await discoverShop(pageShop,host,name,had?had.turnedDown:[],vc,null,(had&&had.english===false)||(ask.ok&&a.englishSpeaking===false),gallery&&!away?{page:oneText(res),url}:gallery);
           venues={...venues,[vc]:{...(had||{}),id:vc,name:had?had.name:named?named.name:page.site,host,english:had?had.english:undefined,
-            shopHome:null,shopCatalogues:null,shelfKind:null,shopSearch:null,why:null,shopEnglishUnread:null,englishPicked:false,
+            ...SHOP_RESET,
             ...shop,confirmed:false,turnedDown:had?had.turnedDown||[]:[],pageShop,addedAt:had?had.addedAt:new Date().toISOString()}};
           venuesChanged=true;
         }
@@ -4200,7 +4906,7 @@ async function readShows(input,occVenues,{progress,stopped}){
       Object.assign(seen,{venue:vc,answer:a,subtitleUnderHeading:own||null,title});
       tape.row={title,museumId:vc,exUrl:url};
       got.push({venue_code:vc,title,start_date:page.start,end_date:page.end,
-        summary:a.summary?composeSummary(cardTitle(a.english,vc),a.summary):"",url:page.link,
+        summary:a.summary?composeSummary(cardTitle(a.english,vc),ANSWER_CHECK.withoutPlaceOpener(a.summary,title,REG[vc]?REG[vc].read.places:[])):"",url:page.link,
         notes:[page.noDates?(page.orderUnknown?DATES.ORDER_UNKNOWN_NOTE:page.shown?DATES.shownOnlyNote(page.shown,page.shownWhy):page.scriptDates?SCRIPT_DATES_NOTE:DATES.NO_DATES_NOTE):"",page.dateNote||"",
           ask.ok?"":"Description not written \u2014 "+ask.detail.replace(/\s+\[.*$/,"")].filter(Boolean).join(" ")});
     }catch(e){ fails.push({url,why:"Couldn\u2019t read it ("+String((e&&e.message)||e)+")."}); }
@@ -5875,7 +6581,7 @@ function sameCatalogue(edPublisher,origPublisher,isbnResults,museumId){
   const a=words(edPublisher), b=words(origPublisher);
   if(a.length&&b.length&&b.every(w=>a.some(x=>x.includes(w)||w.includes(x))))return true;
   const mu=MU[museumId];
-  const names=(mu?[mu.name,lookupName(mu),mu.card]:[]).map(words).filter(v=>v.length);
+  const names=(mu?venueNames(mu):[]).map(words).filter(v=>v.length);
   if(!names.length)return false;
   return (isbnResults||[]).some(x=>{ const t=" "+normPublisher((x&&x.title||"")+" "+oneText(x))+" "; return names.some(v=>v.every(w=>t.includes(" "+w+" "))); });
 }
@@ -5943,12 +6649,10 @@ function oneBook(F,results,log,dom,museumId){
 
 // The show's catalogue in the venue's own language (her decision, Hammershøi, listed
 // only in French): the show's name before any colon, the venue's name, "exhibition
-// catalogue" in its language and the opening year. Non-English venues only.
-const CATALOGUE_WORDS={louvre:"catalogue exposition",orsay:"catalogue exposition",mad:"catalogue exposition",
-  jacquemart:"catalogue exposition",mam:"catalogue exposition",khm:"Ausstellungskatalog",rijks:"tentoonstellingscatalogus",
-  uffizi:"catalogo mostra",dellav:"catalogo mostra",borghese:"catalogo mostra",brera:"catalogo mostra",capo:"catalogo mostra"};
+// catalogue" in its language (the venue's register entry) and the opening year. Non-English venues only.
+const CATALOGUE_WORDS={French:"catalogue exposition",German:"Ausstellungskatalog",Dutch:"tentoonstellingscatalogus",Italian:"catalogo mostra"};
 function localCatalogueQuery(mu,row){
-  const word=mu&&mu.english===false&&CATALOGUE_WORDS[mu.id];
+  const word=mu&&mu.english===false&&CATALOGUE_WORDS[mu.language];
   if(!word)return[];
   const head=String(row.title||"").split(/\s*:\s*/)[0].trim();
   const year=/^\d{4}/.test(String(row.startDate||""))?" "+String(row.startDate).slice(0,4):"";
@@ -6016,7 +6720,7 @@ function cardsToReset(rows,q){
   const k=foldText;
   const want=k(q).trim();
   if(!want)return[];
-  return rows.filter(r=>r.looked&&[r.title,r.catalogueTitle,MU[r.museumId]&&MU[r.museumId].short,MU[r.museumId]&&MU[r.museumId].name]
+  return rows.filter(r=>r.looked&&[r.title,r.catalogueTitle,...venueNames(MU[r.museumId])]
     .some(t=>k(t).includes(want)));
 }
 
@@ -6553,14 +7257,13 @@ async function readBookPage(hit,venue,dom,io){
 }
 
 // ── WHERE AN ENGLISH EDITION IS RECORDED ─────────────────────────────────────
-// The venue's language, for the library-record wording "originally published in
+// The venue's language (its register entry), for the library-record wording "originally published in
 // French as …". Non-English venues only, beside CATALOGUE_WORDS.
-const VENUE_LANGUAGE={louvre:"French",orsay:"French",mad:"French",jacquemart:"French",mam:"French",
-  khm:"German",rijks:"Dutch",uffizi:"Italian",dellav:"Italian",borghese:"Italian",brera:"Italian",capo:"Italian"};
+
 // Aimed at where an English edition is recorded, library catalogues included. The
 // show's English title with the publisher stays when the publisher is already known.
 function editionQueries(mu,row,book,isbn,pub){
-  const lang=mu&&VENUE_LANGUAGE[mu.id];
+  const lang=mu&&mu.language;
   const head=String(row.title||"").split(/\s*:\s*/)[0].trim();
   return [book+" English edition"]
     .concat(lang?["originally published in "+lang+" as "+book]:[])
@@ -6876,7 +7579,7 @@ function foldCoEditions(versions,results,museumId,log){
 // then English from anyone else; then other languages. Within each, hardcover, then paperback,
 // then a binding not known; otherwise as found. The first is the starting pick. VO-001 to VO-009.
 function rankedOwn(name,museumId){
-  const extra=(linkEntry(museumId)||{}).rankAsOwn||[];
+  const extra=REG[museumId]?REG[museumId].shop.rankAsOwn:[];
   return venuePrinting(name,museumId)||extra.some(h=>String(name||"").split(HOUSE_SPLIT).some(p=>sameHouse(p.trim(),h)));
 }
 function versionRank(v,museumId){
@@ -6938,9 +7641,9 @@ function versionNote(vs,i,row){
   // One house, the versions differing only in language (Metamorphoses): no notes.
   const langs=new Set(mine.map(x=>foldText(x.lang||"")));
   if(mine.length===vs.length&&langs.size===mine.length&&mine.every(x=>x.publisher&&sameHouse(x.publisher,mine[0].publisher)))return null;
-  // Printed for another showing: another museum's own, or a city not this venue's.
-  const city=mu&&mu.city?foldText(mu.city):"";
-  if(!venuePrinting(v.publisher,id)&&((vc&&foldText(vc)!==city)||(v.publisher&&museumImprintOnly(v.publisher,id))))return where;
+  // Printed for another showing: another museum's own, or a city not this venue's (its city, or any of its galleries).
+  const cities=mu?[mu.city,...(mu.places||[])].filter(Boolean).map(foldText):[];
+  if(!venuePrinting(v.publisher,id)&&((vc&&!cities.includes(foldText(vc)))||(v.publisher&&museumImprintOnly(v.publisher,id))))return where;
   if(vs.some(x=>x.showing==="other"))return "this showing's catalogue";
   const english=isEnglishLang(v.lang), hasEnglish=mine.some(x=>isEnglishLang(x.lang)), hasOriginal=mine.some(x=>x.lang&&!isEnglishLang(x.lang));
   if(!english&&v.lang&&hasEnglish)return "the original edition";
@@ -6963,7 +7666,7 @@ function versionBlock(vs,i,row){
   return{i,picked:row.editionPick===i,title:v.title||null,
     publisher:v.publisher?v.publisher+(later?" \u00b7 "+v.year:""):null,facts:facts||null,
     isbn:v.isbn13?fmtIsbn(v.isbn13):null,
-    also:v.isbn13&&v.alsoIsbn13?{isbn:fmtIsbn(v.alsoIsbn13),whose:(mu?mu.short:"venue")+"\u2019s own number for the same book"}:null,
+    also:v.isbn13&&v.alsoIsbn13?{isbn:fmtIsbn(v.alsoIsbn13),whose:(mu?mu.card:"venue")+"\u2019s own number for the same book"}:null,
     why:note?note.charAt(0).toUpperCase()+note.slice(1)+".":null,source:sourceOf(v.proofUrl)};
 }
 // Null for a card with fewer than two versions.
@@ -7737,7 +8440,7 @@ const LedgerCard=React.memo(function LedgerCard({r,mu,isOpen,isBusy,busy,recheck
   if(dismissed)return(
     <article style={{background:C.dim,border:"1px solid "+C.rule,borderLeft:"4px solid "+C.muted,borderRadius:5,padding:"10px 14px",opacity:0.55}}>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline"}}>
-        <span style={{fontSize:9,letterSpacing:"0.14em",textTransform:"uppercase",color:C.soft}}>{mu?.card||mu?.short}</span>
+        <span style={{fontSize:9,letterSpacing:"0.14em",textTransform:"uppercase",color:C.soft}}>{mu?.card}</span>
         <button onClick={()=>act("restore",r.id)} style={{background:"none",border:"1px solid "+C.action,borderRadius:3,color:C.action,fontSize:10,fontWeight:500,cursor:"pointer",padding:"2px 8px"}}>Restore</button>
       </div>
       <div style={{fontFamily:"'Fraunces',Georgia,serif",fontSize:15,fontWeight:500,marginTop:3,color:C.soft}}>{r.title}</div>
@@ -7748,7 +8451,7 @@ const LedgerCard=React.memo(function LedgerCard({r,mu,isOpen,isBusy,busy,recheck
     <article style={{background:C.card,border:"1px solid "+C.rule,borderLeft:"4px solid "+(noCat?C.muted:isAcq?C.owned:tier.ink),borderRadius:5,overflow:"hidden"}}>
       <div style={{padding:"12px 14px"}}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:6}}>
-          <span style={{fontSize:9,letterSpacing:"0.14em",textTransform:"uppercase",color:C.soft,marginTop:2}}>{mu?.card||mu?.short}</span>
+          <span style={{fontSize:9,letterSpacing:"0.14em",textTransform:"uppercase",color:C.soft,marginTop:2}}>{mu?.card}</span>
           {/* No "No catalogue" tag (her decision): the corner says how long ago the
               show closed; the Catalogue button carries the cross. */}
           {isAcq?<span style={{fontSize:9,fontWeight:600,letterSpacing:"0.06em",textTransform:"uppercase",color:C.owned,background:C.ownedBg,padding:"2px 7px",borderRadius:3}}>Owned</span>
@@ -8179,6 +8882,7 @@ export default function App(){
     // The cloud copy is read on open; during the trial it is only read (CLOUD_OPENS).
     (async()=>{
       if(await cloudOtherEditing())goReadOnly();
+      tidyOccasional();
       const o=await cloudOpenRead(cloudT);
       setCloudLive(o.live);
       if(o.off){ setSaveState("off"); setSaveErr(o.off); }
@@ -8479,7 +9183,7 @@ export default function App(){
   function confirmShop(id,english){ const v=occVenues[id]; if(!v)return; const whole=v.shop==="noshelf"&&v.shopHome?{shop:"found",shopCatalogues:v.shopHome,shelfKind:"front"}:{};
     holdVenues({...occVenues,[id]:{...v,beforeAnswer:v.beforeAnswer||foundShop(v),...whole,confirmed:true,englishPicked:!!english,shopAdded:false}}); }
   // "No shop": the lookup goes straight to the web, as at Capodimonte.
-  function noShopFor(id){ const v=occVenues[id]; if(v)holdVenues({...occVenues,[id]:{...v,beforeAnswer:v.beforeAnswer||foundShop(v),shop:"none",confirmed:true,shopHome:null,shopCatalogues:null,shelfKind:null,shopSearch:null,why:null,shopEnglishUnread:null,englishPicked:false,shopAdded:false}}); }
+  function noShopFor(id){ const v=occVenues[id]; if(v)holdVenues({...occVenues,[id]:{...v,beforeAnswer:v.beforeAnswer||foundShop(v),shop:"none",confirmed:true,...SHOP_RESET,shopAdded:false}}); }
   // "Add": her own link taken as the section. Its search is worked out at the venue's first lookup (fillShopSearch).
   // Not a link → the box stays open.
   function addShopFor(id,text){
@@ -8487,7 +9191,7 @@ export default function App(){
     if(!String(text||"").trim()){ setShopAdding(null); return; }
     const href=typedLink(text); if(!href)return;
     setShopAdding(null);
-    holdVenues({...occVenues,[id]:{...v,beforeAnswer:v.beforeAnswer||foundShop(v),shop:"found",shopHome:originOf(href),shopCatalogues:href,shelfKind:null,shopSearch:null,searchRule:null,why:null,shopEnglishUnread:null,englishPicked:false,shopAdded:true,foundBy:"her link",confirmed:true}});
+    holdVenues({...occVenues,[id]:{...v,beforeAnswer:v.beforeAnswer||foundShop(v),shop:"found",...SHOP_RESET,shopHome:originOf(href),shopCatalogues:href,searchRule:null,shopAdded:true,foundBy:"her link",confirmed:true}});
   }
   // "Look again": a new search NOW, skipping only the pages she turned down, never the
   // whole site.
@@ -8501,7 +9205,7 @@ export default function App(){
     setShopLooking(null);
     setOccVenues(prev=>{
       const{beforeAnswer,...was}=prev[id];
-      const next={...prev,[id]:{...was,shopHome:null,shopCatalogues:null,shelfKind:null,shopSearch:null,why:null,shopEnglishUnread:null,englishPicked:false,shopAdded:false,...shop,confirmed:false,turnedDown}};
+      const next={...prev,[id]:{...was,...SHOP_RESET,shopAdded:false,...shop,confirmed:false,turnedDown}};
       registerOccasional(next); return next; });
   }
   // The shop screen asks about a venue outside her list whose shop is unconfirmed (venuesGoingIn).
@@ -9117,7 +9821,7 @@ export default function App(){
             const stale=v.returned&&v.attempted&&v.returned!==v.attempted;
             return(
               <div key={m.id} style={{display:"grid",gridTemplateColumns:"minmax(0,1.1fr) minmax(0,1fr) minmax(0,1fr)",gap:8,fontSize:10.5,color:C.soft,padding:"3px 0",alignItems:"baseline"}}>
-                <span style={{color:C.ink}}>{m.short}</span>
+                <span style={{color:C.ink}}>{m.card}</span>
                 <span>{momentLines("swept ",v.attempted)}</span>
                 <span style={{color:v.returned?(stale?TH.urgent.ink:C.soft):TH.urgent.ink,fontWeight:stale||!v.returned?600:400}}>
                   {v.returned?momentLines("rows ",v.returned):"no rows \u2014 refused"}
@@ -9127,7 +9831,7 @@ export default function App(){
           })}
           {MUSEUMS.filter(m=>!venueSeen[m.id]).length>0&&
             <div style={{fontSize:10.5,color:C.soft,marginTop:6,paddingTop:5,borderTop:"1px solid "+C.rule}}>
-              {"Not in any sweep yet: "+MUSEUMS.filter(m=>!venueSeen[m.id]).map(m=>m.short).join(", ")+"."}
+              {"Not in any sweep yet: "+MUSEUMS.filter(m=>!venueSeen[m.id]).map(m=>m.card).join(", ")+"."}
             </div>}
         </div>}
 
@@ -9156,7 +9860,7 @@ export default function App(){
         </div>
         <div style={{display:"flex",gap:4,flexWrap:"wrap",alignItems:"center"}}>
           <span style={{fontSize:9,letterSpacing:"0.12em",textTransform:"uppercase",color:C.soft,marginRight:2}}>Venue</span>
-          {MUSEUMS.filter(m=>!m.underOcc).map(m=>m.id).concat(Object.keys(LINK_VENUES).filter(ownChip)).sort((a,b)=>orderOf(a)-orderOf(b)).filter((id,i,all)=>all.findIndex(x=>chipKey(x)===chipKey(id))===i).map(id=><button key={chipKey(id)} onClick={()=>toggleSet(setVenueF,chipKey(id))} style={chip(venueF.has(chipKey(id)))}>{(x=>x.chip||x.short)(MU[id]||LINK_VENUES[id])}</button>)}
+          {chipVenues().map(id=><button key={chipKey(id)} onClick={()=>toggleSet(setVenueF,chipKey(id))} style={chip(venueF.has(chipKey(id)))}>{REG[id].names.chip}</button>)}
           {OCC_CHIPS.map(([k,l])=><button key={k} onClick={()=>toggleSet(setVenueF,k)} style={chip(venueF.has(k))}>{l}</button>)}
         </div>
         <div style={{display:"flex",gap:4,flexWrap:"wrap",alignItems:"center"}}>
@@ -9293,7 +9997,7 @@ export default function App(){
             if(!hits.length)return <div style={{fontSize:12,color:C.soft,marginTop:8}}>{"No searched cards match."}</div>;
             return hits.map(r=>(
               <div key={r.id} style={{display:"flex",gap:10,fontSize:12.5,color:C.ink,padding:"4px 0",alignItems:"baseline",marginTop:4}}>
-                <span style={{minWidth:130,fontWeight:600}}>{MU[r.museumId]?MU[r.museumId].short:r.museumId}</span>
+                <span style={{minWidth:130,fontWeight:600}}>{MU[r.museumId]?MU[r.museumId].card:r.museumId}</span>
                 <button onClick={()=>setConfirmBox({title:"Reset this search?",yes:"Yes",act:()=>{
                   commit(resetOneCard(rows,r.id));
                   if(recheckSaid&&recheckSaid.id===r.id)setRecheckSaid(null);
@@ -9311,7 +10015,7 @@ export default function App(){
           {/* By venue only (her decision): venues in the app's order, titles A–Z. */}
           {ignoredByVenue.map(x=>(
             <div key={x.key} style={{display:"grid",gridTemplateColumns:"minmax(60px,0.7fr) minmax(0,2fr) auto",gap:10,fontSize:12.5,color:C.ink,padding:"4px 0",alignItems:"baseline"}}>
-              <span style={{fontWeight:600}}>{MU[x.venueId]?MU[x.venueId].short:x.venueId}</span>
+              <span style={{fontWeight:600}}>{MU[x.venueId]?MU[x.venueId].card:x.venueId}</span>
               <span>{x.title||"(no title)"}</span>
               <button onClick={()=>{
                 if(roStop())return;
@@ -9472,7 +10176,7 @@ export default function App(){
                   if(!grp.length)return null;
                   return(
                     <div key={m.id} style={{marginBottom:10}}>
-                      <div style={{fontSize:10,letterSpacing:"0.14em",textTransform:"uppercase",color:C.soft,marginBottom:6,fontWeight:600}}>{m.short}</div>
+                      <div style={{fontSize:10,letterSpacing:"0.14em",textTransform:"uppercase",color:C.soft,marginBottom:6,fontWeight:600}}>{m.card}</div>
                       {grp.map(({p,i})=>renderProposalCard(p,i))}
                     </div>
                   );
@@ -9504,7 +10208,7 @@ export default function App(){
                   if(!grp.length)return null;
                   return(
                     <div key={"cvg"+m.id} style={{marginBottom:10}}>
-                      <div style={{fontSize:10,letterSpacing:"0.14em",textTransform:"uppercase",color:C.soft,marginBottom:6,fontWeight:600}}>{m.short}</div>
+                      <div style={{fontSize:10,letterSpacing:"0.14em",textTransform:"uppercase",color:C.soft,marginBottom:6,fontWeight:600}}>{m.card}</div>
                       {grp.map((cv,i)=>(
                         <div key={"cv"+i} style={{border:"1px solid "+C.rule,borderRadius:6,padding:"8px 10px",marginBottom:6,background:C.card}}>
                           <div style={{fontSize:12,color:C.ink}}>{cv.what}</div>
@@ -9567,7 +10271,7 @@ export default function App(){
                         style={{display:"flex",alignItems:"center",gap:8,width:"100%",textAlign:"left",background:"none",
                                 border:"none",borderBottom:"1px solid "+C.rule,padding:"6px 0",marginBottom:8,cursor:"pointer",color:C.accent}}>
                         <span style={{fontSize:10,lineHeight:1,width:10,display:"inline-block",transform:vOpen?"rotate(90deg)":"none",transition:"transform .12s"}}>{"\u25B6"}</span>
-                        <span style={{fontSize:14,letterSpacing:"0.01em",fontWeight:700}}>{m.card||m.short}</span>
+                        <span style={{fontSize:14,letterSpacing:"0.01em",fontWeight:700}}>{m.card}</span>
                         <span style={{fontSize:12,fontWeight:700}}>{"\u00b7"} {grp.length}</span>
                         {/* The undecided count per venue, only where there is work: a
                             closed venue still declares what it holds; a "0" is clutter
@@ -9642,7 +10346,7 @@ export default function App(){
                 const yes=v.confirmed&&v.shop==="found"&&!v.englishPicked&&!v.shopAdded, yesEn=v.confirmed&&!!en&&!!v.englishPicked, none=v.confirmed&&v.shop==="none", added=v.confirmed&&!!v.shopAdded;
                 const typing=shopAdding&&shopAdding.id===id;
                 return <div key={id} style={{paddingTop:12,marginTop:10,borderTop:"1px solid "+C.rule,fontSize:12.5,color:C.ink,lineHeight:1.45}}>
-                  <div style={{fontWeight:600}}>{(MU[id]&&(MU[id].card||MU[id].short))||v.short||v.name||id}</div>
+                  <div style={{fontWeight:600}}>{(MU[id]&&MU[id].card)||v.short||v.name||id}</div>
                   {link?<div>{lesser&&<span style={{color:C.soft}}>{lesser}</span>}<a href={link} target="_blank" rel="noopener noreferrer" style={{color:C.action,overflowWrap:"anywhere"}}>{link}</a></div>
                     :<div style={{color:C.soft}}>{said}{home&&v.shop==="noshelf"&&<a href={home} target="_blank" rel="noopener noreferrer" style={{color:C.action,overflowWrap:"anywhere"}}>{home}</a>}</div>}
                   <div style={{display:"flex",gap:6,marginTop:6,alignItems:"center",flexWrap:"wrap"}}>

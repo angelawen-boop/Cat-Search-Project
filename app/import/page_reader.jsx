@@ -246,7 +246,7 @@ function cardTitle(t,vc){
 }
 //@piece linkOptions
 
-function linkOptions(vc){ return (vc&&MU[vc]&&MU[vc].linkRead)||(linkEntry(vc)||{}).linkRead||null; }
+function linkOptions(vc){ return linkRulesOf(vc&&REG[vc]); }
 //@piece joinTitle
 
 function joinTitle(name,sub,dashAfterColon){
@@ -413,8 +413,8 @@ function titleCandidates(pg){
 function venueNamesFor(pg){
   const{vc,host,site,words}=pg;
   const h=String(host||"").replace(/^www\./,"");
-  const houses=Object.entries(LINK_VENUES).filter(([id,v])=>id===vc||(v.sites||[]).some(x=>x.host===h)).map(([,v])=>v);
-  const names=[site,...[MU[vc]||{},...houses].flatMap(v=>[v.name,v.short,v.card,v.lookupName])];
+  const houses=VENUE_REGISTER.filter(e=>e.kind==="manual"&&(e.id===vc||e.read.sites.some(x=>x.host===h)));
+  const names=[site,...venueNames(MU[vc]),...houses.flatMap(e=>venueNames(venueView(e)))];
   return new Set(names.filter(Boolean).map(words).filter(Boolean));
 }
 //@piece findDates
@@ -717,7 +717,7 @@ function pageResult(pg){
   let tracked=false; try{ tracked=[...new URL(url).searchParams.keys()].some(k=>TRACKING_PARAM.test(k)); }catch{}
   const link=lr&&lr.cleanLink?String(url).split(/[?#]/)[0]:tracked?withoutTracking(url):url;
   if(link!==url)rule(lr&&lr.cleanLink?"cleanLink":"tracking");
-  return{ok:true,base:pg.base,between:pg.between,under,afterDates,start:range.start||"",end:range.end||"",raw:pg.raw.slice(0,LINK_RAW_CHARS),site:site||(linkEntry(vc)||{}).name||host.replace(/^www\./,""),link,noDates:!!found.noDates,scriptDates:!!found.scriptDates,orderUnknown:!!found.orderUnknown,shown:found.shown||"",shownWhy:found.shownWhy||"",dateLine:found.noDates&&!found.shown?"":pg.dateLine,dateNote:DATES.closedEarlyNote(range)};
+  return{ok:true,base:pg.base,between:pg.between,under,afterDates,start:range.start||"",end:range.end||"",raw:pg.raw.slice(0,LINK_RAW_CHARS),site:site||(REG[vc]&&REG[vc].names.full)||host.replace(/^www\./,""),link,noDates:!!found.noDates,scriptDates:!!found.scriptDates,orderUnknown:!!found.orderUnknown,shown:found.shown||"",shownWhy:found.shownWhy||"",dateLine:found.noDates&&!found.shown?"":pg.dateLine,dateNote:DATES.closedEarlyNote(range)};
 }
 //@piece venueTitle
 

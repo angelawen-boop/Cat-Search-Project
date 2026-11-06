@@ -66,7 +66,7 @@ async function snapshot(jsxFile, storeDir, ledgerFile, outFile) {
   await settle(300); await steady();
   const rows = JSON.parse(fs.readFileSync(ledgerFile, 'utf8')).rows || [];
   const names = {};
-  for (const id of [...new Set(rows.map(r => r.museumId))].sort()) { const mu = env.MU[id]; names[id] = mu ? (mu.card || mu.short || '') : ''; }
+  for (const id of [...new Set(rows.map(r => r.museumId))].sort()) { const mu = env.MU[id]; names[id] = mu ? mu.card || '' : ''; }
   const chips = [...doc.querySelectorAll('button')].map(b => b.textContent.trim()).filter(Boolean);
   fs.writeFileSync(outFile, JSON.stringify({ names, chips, screen: doc.body.innerHTML, rows: rows.length }));
   process.exit(0);

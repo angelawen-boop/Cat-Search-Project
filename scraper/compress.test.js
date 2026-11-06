@@ -318,16 +318,17 @@ test('L-007: grouping finds the pair and leaves everything else alone', () => {
   assert.strictEqual([...g.values()][0].length, 2);
 });
 
-test('L-008: the location list has not drifted from the scraper', () => {
-  // compress.js deliberately does NOT require the scraper — that would drag
-  // Playwright into a pure-text step — so the list is mirrored. This is the
-  // only thing keeping the two honest: if they disagree, a travelling pair
-  // gets two different summaries and nothing else notices.
-  const { VENUES } = require('./sweep_prototype.js');
-  for (const [code, locs] of Object.entries(TRAVELLING_LOCATIONS)) {
-    assert.deepStrictEqual(locs, VENUES[code].locations,
-      `compress.js TRAVELLING_LOCATIONS.${code} disagrees with the scraper`);
+test('L-008: the galleries are the register\'s, one list read by the scraper and compress.js alike', () => {
+  const { VENUES } = require('../venues/register.js');
+  const { placesOf } = require('./sweep_prototype.js');
+  const several = VENUES.filter(v => v.read.places.length > 1);
+  assert.deepStrictEqual(Object.keys(TRAVELLING_LOCATIONS).sort(), several.map(v => v.id).sort());
+  for (const v of several) {
+    assert.deepStrictEqual(TRAVELLING_LOCATIONS[v.id], v.read.places);
+    assert.deepStrictEqual([...placesOf(v.id)], v.read.places);
   }
+  // Her decision: Lévy Gorvy Dayan has the identical setup to Acquavella.
+  assert.ok(TRAVELLING_LOCATIONS.acq && TRAVELLING_LOCATIONS.lgd, 'Acquavella and Lévy Gorvy Dayan both list their galleries');
 });
 
 // ---------------------------------------------------------------------------

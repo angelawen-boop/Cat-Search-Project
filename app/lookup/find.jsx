@@ -187,7 +187,7 @@ function sameCatalogue(edPublisher,origPublisher,isbnResults,museumId){
   const a=words(edPublisher), b=words(origPublisher);
   if(a.length&&b.length&&b.every(w=>a.some(x=>x.includes(w)||w.includes(x))))return true;
   const mu=MU[museumId];
-  const names=(mu?[mu.name,lookupName(mu),mu.card]:[]).map(words).filter(v=>v.length);
+  const names=(mu?venueNames(mu):[]).map(words).filter(v=>v.length);
   if(!names.length)return false;
   return (isbnResults||[]).some(x=>{ const t=" "+normPublisher((x&&x.title||"")+" "+oneText(x))+" "; return names.some(v=>v.every(w=>t.includes(" "+w+" "))); });
 }
@@ -214,14 +214,12 @@ function oneBook(F,results,log,dom,museumId){
 
 // The show's catalogue in the venue's own language (her decision, Hammershøi, listed
 // only in French): the show's name before any colon, the venue's name, "exhibition
-// catalogue" in its language and the opening year. Non-English venues only.
-const CATALOGUE_WORDS={louvre:"catalogue exposition",orsay:"catalogue exposition",mad:"catalogue exposition",
-  jacquemart:"catalogue exposition",mam:"catalogue exposition",khm:"Ausstellungskatalog",rijks:"tentoonstellingscatalogus",
-  uffizi:"catalogo mostra",dellav:"catalogo mostra",borghese:"catalogo mostra",brera:"catalogo mostra",capo:"catalogo mostra"};
+// catalogue" in its language (the venue's register entry) and the opening year. Non-English venues only.
+const CATALOGUE_WORDS={French:"catalogue exposition",German:"Ausstellungskatalog",Dutch:"tentoonstellingscatalogus",Italian:"catalogo mostra"};
 //@piece localCatalogueQuery
 
 function localCatalogueQuery(mu,row){
-  const word=mu&&mu.english===false&&CATALOGUE_WORDS[mu.id];
+  const word=mu&&mu.english===false&&CATALOGUE_WORDS[mu.language];
   if(!word)return[];
   const head=String(row.title||"").split(/\s*:\s*/)[0].trim();
   const year=/^\d{4}/.test(String(row.startDate||""))?" "+String(row.startDate).slice(0,4):"";

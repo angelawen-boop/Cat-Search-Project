@@ -13,8 +13,8 @@ catalogue and drawer, graded in code.
 2. **Order** (`versionOrder`, VO-): at an English-language venue, a book in its museum shop first of all (`shopFirst`, set once by
    the lookup, so a Re-check never moves a block); then English in the venue's own imprint; then English from anyone else (no order
    between those); then other languages. At a non-English venue English always leads. Within each: hardcover, paperback, binding
-   not known; otherwise as found. On Yale cards Yale University Press ranks as the Yale Center does (`rankAsOwn` on Yale's
-   `LINK_VENUES` entry, display only). **The first starts picked** — her decision, replacing the starting-pick rules; cards
+   not known; otherwise as found. On Yale cards Yale University Press ranks as the Yale Center does (`shop.rankAsOwn` on Yale's
+   register entry, display only). **The first starts picked** — her decision, replacing the starting-pick rules; cards
    searched before keep their saved ● until a Search again.
 3. **Tell.** One version: the card exactly as before (no binding, pages or source added — her decision). Several: one block per
    version, in her order (VB-).

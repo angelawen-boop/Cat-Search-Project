@@ -357,8 +357,8 @@ and `khm` have no shelf, and elsewhere the search box catches a book filed on an
 shelf. **Sold-out books stay listed** on shelves (Menil 47 with 4 sold out; National
 Gallery back to 2019).
 
-**The addresses are printed from `MUSEUMS` by `node scraper/shop_addresses.js`** — the
-code is the one copy. No shop: borghese, capo, dellav (`uffizi` sells no books; `khm`
+**The addresses are printed from the venue register (`venues/register.js`) by `node scraper/shop_addresses.js`** —
+the register is the one copy. No shop: borghese, capo, dellav (`uffizi` sells no books; `khm`
 has no shelf).
 
 - **Shelf depth is one number for every shop**: `SHELF_DEPTH`, five pages, read
@@ -482,8 +482,7 @@ Quarantine adds a "you'd said never to add" term. **Every term stays.**
   an ordinary list** — Date order, the usual sorts, nothing draggable; Buy next with Wanted stays Buy next only.
 - **Occasional is two chips: Occ - US (Australia last) and Occ - Europe (UK included); no Occ - Other** (her
   decision). Europe's order: UK, Germany, Belgium, France, Switzerland, Italy, Spain, Netherlands.
-  **Hard-coded:** the countries of venues that store none (`OCC_COUNTRY`); otherwise the stored country, then the
-  address's country ending (OC-001–002).
+  A venue's country is on its register entry (`venues/register.js`), else the address's country ending (OC-001–002).
 - Search ignores accents ("Bocklin" finds Böcklin); the When line reads Current, Past, Announced. "Reset to Seed"
   is unwired from her page (drawn only when a test sets `window.__catWatchTest`).
 

@@ -751,8 +751,13 @@ function rebuildSweepCsv() {
 
 // ── Date helpers — moved to dates.js, 4 Oct 2026 (one copy, shared with the app) ──
 const {
-  MONTHS, WEEKDAY_PREFIX_SRC, ORDINAL_SUFFIX, MONTH_PATTERN, monthNum, ymd, startYearFor, parseMonthDay, RANGE_SEP, WEEKDAY_PREFIX, stripWeekdays, EXTENDED_TO, applyExtension, readDayMonth, precedingDate, extensionNote, closedEarly, closedEarlyNote, dayText, findDateRange, findDateRangeCore, PLAUSIBLE_YEAR_MIN, PLAUSIBLE_YEAR_MAX, plausibleYear, frag, sane, unusableDateText, findDateRangeInProse, findDateRangeInProseCore, titleCase, titleFromCaps, capsTitleParts, NO_DATES_NOTE, ORDER_UNKNOWN_NOTE, shownOnlyNote, capsTitleRule, sweptVenueTitle,
+  MONTHS, WEEKDAY_PREFIX_SRC, ORDINAL_SUFFIX, MONTH_PATTERN, monthNum, ymd, startYearFor, parseMonthDay, RANGE_SEP, WEEKDAY_PREFIX, stripWeekdays, EXTENDED_TO, applyExtension, readDayMonth, precedingDate, extensionNote, closedEarly, closedEarlyNote, dayText, findDateRange, findDateRangeCore, PLAUSIBLE_YEAR_MIN, PLAUSIBLE_YEAR_MAX, plausibleYear, frag, sane, unusableDateText, findDateRangeInProse, findDateRangeInProseCore, titleCase, titleFromCaps, capsTitleParts, NO_DATES_NOTE, ORDER_UNKNOWN_NOTE, shownOnlyNote, capsTitleRule, sweptVenueTitle, withoutPlaceTail,
 } = require('./dates.js');
+// Every venue's names, city and galleries (venues/register.js): the recipes below hold only how each is swept.
+const REGISTER = require('../venues/register.js').VENUES;
+const entryOf = code => REGISTER.find(v => v.id === code) || null;
+// A venue as the log and the status table name it: its full name and city (or its galleries).
+const venueLabel = code => { const e = entryOf(code); return e ? [e.names.full, e.city || e.read.places.join(' and ')].filter(Boolean).join(', ') : code; };
 
 function afterLookback(endDateStr, floor = LOOKBACK) {
   // If no end date, include (we don't know when it ended)
@@ -2495,14 +2500,17 @@ async function readCardPieces(link, rule) {
     return { name: sel.nameOwnText ? own(sel.name) : one(sel.name), subtitle: one(sel.subtitle), place: one(sel.place) };
   }, rule.cardParts).catch(() => ({ name: '', subtitle: '', place: '' }));
 }
-// A gallery may be written with the venue's own name in front ("Acquavella Palm Beach"):
-// `locationOwner` on the recipe, carried on the list by placesOf().
+// A gallery may be written with the venue's own name in front ("Acquavella Palm Beach", "Lévy Gorvy
+// Dayan, London"): the register's placeOwner, carried on the list by placesOf(). Accents and case aside.
+const foldPlace = s => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
 const isPlace = (text, locations) => {
-  const own = locations && locations.owner ? new RegExp(`^${locations.owner}\\s+`, 'i') : null;
-  const t = String(text).trim().replace(own || /^$/, '').toLowerCase();
-  return (locations || []).find(l => l.toLowerCase() === t);
+  let t = foldPlace(text);
+  const own = foldPlace(locations && locations.owner);
+  if (own && t.startsWith(own)) t = t.slice(own.length).replace(/^,?\s+/, '');
+  return (locations || []).find(l => foldPlace(l) === t);
 };
-const placesOf = code => Object.assign(((VENUES[code] || {}).locations || []).slice(), { owner: (VENUES[code] || {}).locationOwner || '' });
+// A venue's galleries, from its register entry (read.places, read.placeOwner).
+const placesOf = code => { const e = entryOf(code); return Object.assign(e ? e.read.places.slice() : [], { owner: (e && e.read.placeOwner) || '' }); };
 
 async function cardPartsTitle(link, rule, locations) {
   const { name, subtitle } = await readCardPieces(link, rule);
@@ -2515,7 +2523,9 @@ async function cardPartsTitle(link, rule, locations) {
 }
 
 async function readCardPlace(link, rule, locations) {
-  if (!rule.cardParts) return '';
+  if (locations.length < 2) return '';
+  // A card read as lines (Lévy Gorvy Dayan): the line that is one of its galleries.
+  if (!rule.cardParts) return (await getText(link).catch(() => '')).split('\n').map(l => isPlace(l, locations)).find(Boolean) || '';
   const { subtitle, place } = await readCardPieces(link, rule);
   // The venue's own spelling of the gallery, whatever case the card uses.
   return isPlace(place, locations) || isPlace(subtitle, locations) || '';
@@ -3526,7 +3536,6 @@ const TATE_PAGES = { param: 'page', from: 2, whileMore: 'a[data-ajax-type="load-
 
 const VENUES = {
   met: {
-    name: 'The Metropolitan Museum of Art',
     // Her decisions (docs/venues.md): recurring series and every commission series out;
     // nothing excluded for coming from a collection, a gift or acquisitions.
     excludeTitle: new RegExp([
@@ -3561,7 +3570,6 @@ const VENUES = {
   },
 
   ng: {
-    name: 'National Gallery, London',
     base: 'https://www.nationalgallery.org.uk',
     pages: [
       { path: '/exhibitions',      ctx: 'current/upcoming' },
@@ -3586,7 +3594,6 @@ const VENUES = {
   },
 
   rijks: {
-    name: 'Rijksmuseum, Amsterdam',
     base: 'https://www.rijksmuseum.nl',
     // A funder credit inside the text.
     dropSentence: /(?:This|The) exhibition is made possible\b/,
@@ -3614,7 +3621,6 @@ const VENUES = {
   },
 
   acq: {
-    name: 'Acquavella Galleries, New York',
     base: 'https://www.acquavellagalleries.com',
     pages: [
       { path: '/exhibitions', ctx: 'all (current/upcoming/past)' },
@@ -3630,16 +3636,12 @@ const VENUES = {
       heading: false,
       cardParts: { name: '.title', subtitle: '.subtitle:not(.subtitle2)', place: '.subtitle2' },
     },
-    // Its two galleries. Used to cross-reference a show that ran in both.
-    locations: ['New York', 'Palm Beach'],
-    // A card can name the gallery as "Acquavella Palm Beach" — still a gallery, never a subtitle.
-    locationOwner: 'Acquavella',
+    // Its galleries are on its register entry (read.places, read.placeOwner).
   },
 
   // Lévy Gorvy Dayan, her addition. One page holds current and past; upcoming shows are
   // not announced. Each card is three lines in the link; the title is the first.
   lgd: {
-    name: 'Lévy Gorvy Dayan, New York and London',
     base: 'https://www.levygorvydayan.com',
     pages: [
       { path: '/exhibitions', ctx: 'current and past' },
@@ -3658,7 +3660,6 @@ const VENUES = {
   },
 
   borghese: {
-    name: 'Galleria Borghese, Rome',
     base: 'https://galleriaborghese.cultura.gov.it',
     // Titles typed in capitals everywhere (docs/borghese_pages/): ordinary capitals by
     // code, the name/subtitle full stop as an em dash (her decision; dates.js, shared with Add by link).
@@ -3684,7 +3685,6 @@ const VENUES = {
   },
 
   frick: {
-    name: 'The Frick Collection, New York',
     base: 'https://www.frick.org',
     pages: [
       // Its cards only: below them a "Past" section repeats the latest closed shows
@@ -3710,7 +3710,6 @@ const VENUES = {
   },
 
   morgan: {
-    name: 'Morgan Library & Museum, New York',
     // Headed (her decision): headless has never got in; never headless from her machine.
     headed: true,
     base: 'https://www.themorgan.org',
@@ -3783,7 +3782,6 @@ const VENUES = {
   },
 
   menil: {
-    name: 'The Menil Collection, Houston',
     // See excludeUndated in scrapeVenue — her decision on its permanent galleries.
     excludeUndated: true,
     // Her decisions, this venue only (docs/venues.md): "Foyer Installation: …" rotations,
@@ -3822,7 +3820,6 @@ const VENUES = {
   },
 
   va: {
-    name: 'Victoria and Albert Museum, London',
     base: 'https://www.vam.ac.uk',
     // One page, current and upcoming together (the what's-on listing filtered to
     // exhibitions also returns Displays — excluded below). The V&A publishes no past
@@ -3848,7 +3845,6 @@ const VENUES = {
   },
 
   louvre: {
-    name: 'Louvre, Paris',
     base: 'https://www.louvre.fr',
     // Its year filter is SERVER-SIDE — a different address per year, not a
     // control to operate — so the archive is simply more pages.
@@ -3870,7 +3866,6 @@ const VENUES = {
   },
 
   capo: {
-    name: 'Capodimonte, Naples',
     base: 'https://capodimonte.cultura.gov.it',
     // One page carries everything.
     pages: [
@@ -3891,7 +3886,6 @@ const VENUES = {
   },
 
   uffizi: {
-    name: 'Uffizi Galleries, Florence',
     base: 'https://www.uffizi.it',
     // The archive puts the year in the path; years derived at run time.
     pages: [
@@ -3914,7 +3908,6 @@ const VENUES = {
   },
 
   brera: {
-    name: 'Pinacoteca di Brera, Milan',
     base: 'https://pinacotecabrera.org',
     // One address, three states, chosen by a server-side query.
     pages: [
@@ -3942,7 +3935,6 @@ const VENUES = {
   // Her decisions (docs/venues.md): displays and off-site shows always kept; Parcours,
   // Immersive experience and Invitation dropped; an unseen tag is kept and named.
   orsay: {
-    name: "Musée d'Orsay, Paris",
     base: 'https://www.musee-orsay.fr',
     // Headed, her machine only (her decision): the container gets a Cloudflare 403, and
     // a headless laptop sweep was refused too.
@@ -3974,7 +3966,6 @@ const VENUES = {
   // The default tab (type_expo=Local) is the museum's own shows. ?archive=1 is dropped,
   // so a show keeps one address.
   mam: {
-    name: "Musée d'Art Moderne de Paris",
     base: 'https://www.mam.paris.fr',
     pages: [
       { path: '/en/exhibitions', ctx: 'current' },
@@ -4001,7 +3992,6 @@ const VENUES = {
   // menu link, so only the listings' cards are read (.titre, .dates, .descriptif).
   // Nothing excluded (docs/venues.md).
   mad: {
-    name: 'Musée des Arts Décoratifs, Paris',
     base: 'https://madparis.fr',
     // Her machine only, after a complete clean sweep from her laptop (her decision); the
     // container gets a plain 403.
@@ -4027,7 +4017,6 @@ const VENUES = {
   },
 
   ashmolean: {
-    name: 'Ashmolean Museum, Oxford',
     base: 'https://www.ashmolean.org',
     // Not swept: she adds its shows by link (her decision, docs/venues.md). The
     // recipe is kept, so naming it by hand still sweeps it.
@@ -4073,7 +4062,6 @@ const VENUES = {
   // in folded accordions). A show's address is a bare /en/<name>, like the menu links,
   // so only the listings' cards are read — two card designs, one per page.
   jacquemart: {
-    name: 'Musée Jacquemart-André, Paris',
     base: 'https://www.musee-jacquemart-andre.com',
     pages: [
       { path: '/en/exhibitions',      ctx: 'current/upcoming' },
@@ -4088,7 +4076,6 @@ const VENUES = {
   },
 
   khm: {
-    name: 'Kunsthistorisches Museum, Vienna',
     base: 'https://www.khm.at',
     // The page builds its cards as you scroll (the engine scrolls every listing). Two of
     // its four sections are permanent collections; `within` keeps the two the venue
@@ -4107,7 +4094,6 @@ const VENUES = {
   },
 
   artic: {
-    name: 'Art Institute of Chicago',
     base: 'https://www.artic.edu',
     // A curator or organiser credit is its own paragraph ("X is curated by …").
     creditPara: /^(?:[^.]{0,160}\bis curated by\b|It is curated by\b|(?:This|The) exhibition is (?:co-)?organized by\b)/,
@@ -4165,7 +4151,6 @@ const VENUES = {
   // Wired anyway (CLAUDE.md §2.1): a refusal costs half a second, leaves marker rows and
   // makes every sweep a monitor; blocks come and go. One attempt per page, never a retry.
   moma: {
-    name: 'Museum of Modern Art, New York',
     base: 'https://www.moma.org',
     // Main MoMA only, never PS1. Current and upcoming only (her decision); the archive
     // is not swept.
@@ -4211,7 +4196,6 @@ const VENUES = {
   },
 
   brit: {
-    name: 'British Museum, London',
     // Headed (her decision): headless has never got in; never headless from her machine.
     headed: true,
     // Her machine only, after a complete clean headed sweep from her laptop (her decision).
@@ -4257,7 +4241,6 @@ const VENUES = {
   },
 
   dellav: {
-    name: "Gallerie dell'Accademia, Venice",
     base: 'https://www.gallerieaccademia.it',
     // Not blocked: the address is gallerieaccademia.it/en/ (her correction; not the
     // Florence Accademia). No listing page — the home page carries the 1–2 current
@@ -4276,7 +4259,6 @@ const VENUES = {
   // date_range=past is not an archive and is not fetched. Tate Britain's past comes from
   // the calendar (expandDateRange); Tate Modern's past, never (docs/venues.md).
   'tate-modern': {
-    name: 'Tate Modern, London',
     base: 'https://www.tate.org.uk',
     // No excludeOngoing, unlike Tate Britain: nothing here is labelled ongoing, and her
     // count holds. Add it on evidence, never for symmetry.
@@ -4308,7 +4290,6 @@ const VENUES = {
   },
 
   'tate-britain': {
-    name: 'Tate Britain, London',
     base: 'https://www.tate.org.uk',
     // Tate prints "ONGOING" where a run would go (Chris Ofili: Requiem) — the venue's own
     // word.
@@ -4347,7 +4328,6 @@ const VENUES = {
   },
 
   wallace: {
-    name: 'The Wallace Collection, London',
     base: 'https://www.wallacecollection.org',
     // /whats-on/ is a hub; the real listing is one level down, and talks and concerts
     // live under /whats-on/events/.
@@ -4375,7 +4355,6 @@ const VENUES = {
   // is its own .thumbnailCallouts.vertical; the plain ones under them are "Explore more"
   // tiles and year links.
   cincinnati: {
-    name: 'Cincinnati Art Museum',
     base: 'https://www.cincinnatiartmuseum.org',
     pages: [
       { path: '/art/exhibitions/', ctx: 'current' },
@@ -4442,8 +4421,9 @@ const VENUE_ORDER = Object.keys(VENUES);
  */
 function venueTitle(code, title) {
   const v = VENUES[code] || {};
-  if (!title || title.startsWith('[') || !v.capsTitles) return title;
-  return sweptVenueTitle(code, title);
+  if (!title || title.startsWith('[')) return title;
+  // A gallery tacked onto the title is not part of it (withoutPlaceTail; a venue with several galleries).
+  return v.capsTitles ? sweptVenueTitle(code, title) : withoutPlaceTail(code, title);
 }
 
 async function scrapeVenue(page, code, opts = {}) {
@@ -4456,7 +4436,7 @@ async function scrapeVenueRows(page, code, { listingOnly = false } = {}) {
   const v = VENUES[code];
   if (!v) { log(`  no recipe for venue "${code}"`); return []; }
 
-  logSection(`${code.toUpperCase()} — ${v.name}`);
+  logSection(`${code.toUpperCase()} — ${venueLabel(code)}`);
   const rows = [], seenUrls = new Set(), urlToRow = new Map();
 
   // A QUEUE, NOT A FIXED LIST, because numbered archives cannot be counted in
@@ -4665,7 +4645,7 @@ async function scrapeVenueRows(page, code, { listingOnly = false } = {}) {
 
   // The gallery on a title only where the same show runs in both — over the
   // whole listing, before anything is cut. See placeTravellingRuns().
-  if (titleRule(code).cardParts) placeTravellingRuns(rows);
+  if (placesOf(code).length > 1) placeTravellingRuns(rows);
 
   // LISTING ONLY — for a diagnostic or a one-off repair that needs what the
   // listing pages say (titles, addresses) read exactly as a sweep reads them,
@@ -5524,7 +5504,7 @@ async function fetchIndividualPagesEach(page, rows, venueCode) {
  * only difference between the two spellings above does not defeat it.
  */
 function noteTravellingRuns(rows, venueCode) {
-  const locations = (VENUES[venueCode] && VENUES[venueCode].locations) || [];
+  const locations = placesOf(venueCode);
   if (locations.length < 2) return;
 
   const groups = new Map();
@@ -6257,12 +6237,12 @@ module.exports = {
   // Not pure — exported so a check can run the real detail-page pass offline.
   fetchIndividualPages,
   // For from_saved_pages.js: the sweep's own finish, over pages she saved.
-  noteTravellingRuns, writeVenueCsv, rebuildSweepCsv, RUN_DIR, routineFrom, applyRoutineWindow,
+  noteTravellingRuns, placeTravellingRuns, writeVenueCsv, rebuildSweepCsv, RUN_DIR, routineFrom, applyRoutineWindow,
   // Pure — asked directly by the fixtures.
   addNote, finishNotes, scopeSelector,
   // Exported so compress.js's mirrored location list can be checked against the
   // real one by a fixture. compress.js must not require THIS file at runtime —
   // that would pull Playwright into a step that is pure text — so a test is the
   // only thing standing between the two copies and silent drift.
-  VENUES,
+  VENUES, venueLabel,
 };

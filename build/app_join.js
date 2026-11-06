@@ -16,8 +16,9 @@
  *
  * The SHARED piece (app/foundations/shared_with_scraper.jsx) holds one directive line, not the
  * scraper's rules: the join takes the date reader, summary rules, venue sites and checks from the
- * scraper's own files each time (build/shared_from_scraper.js). So --check also fails when a
- * scraper rule changed and the page was not joined again.
+ * scraper's own files each time (build/shared_from_scraper.js), and the venues part's directive line the
+ * venue register (venues/register.js). So --check also fails when a scraper rule or the register changed
+ * and the page was not joined again.
  */
 'use strict';
 const fs = require('fs');
@@ -91,8 +92,8 @@ if (require.main === module) {
   if (args.includes('--check')) {
     const now = fs.readFileSync(r.P.JSX, 'utf8');
     if (now === r.text) { console.log('join: Cat_Watch.jsx is what the parts in app/ and the scraper\'s rules join to.'); process.exit(0); }
-    console.error('JOIN CHECK FAILED — Cat_Watch.jsx is not what the parts in app/ and the scraper\'s rules join to (a part or a scraper rule'
-      + ' changed, or the page was edited by hand). Edit the parts in app/ or the scraper, never Cat_Watch.jsx, then run `node build/app_join.js`.');
+    console.error('JOIN CHECK FAILED — Cat_Watch.jsx is not what the parts in app/, the scraper\'s rules and the venue register join to (a part, a scraper rule'
+      + ' or venues/register.js changed, or the page was edited by hand). Edit the parts in app/, the scraper or the register, never Cat_Watch.jsx, then run `node build/app_join.js`.');
     process.exit(1);
   }
   fs.writeFileSync(r.P.JSX, r.text);

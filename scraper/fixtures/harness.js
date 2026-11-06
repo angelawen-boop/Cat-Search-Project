@@ -36,13 +36,13 @@ function slice(src, startAnchor, endAnchor) {
 
 const src = fs.readFileSync(JSX, 'utf8');
 
-// Module-level helpers: MUSEUMS, MU, KNOWN_VENUES, isValidYMD, normalizeUrlKey,
+// Module-level helpers: the venue register, MUSEUMS, MU, KNOWN_VENUES, isValidYMD, normalizeUrlKey,
 // urlLooksValid, csvParse. Everything below TIERS is display or unrelated.
 // The end anchor is the comment that opens the tier colours, not the TIERS
 // constant itself: TIERS stopped being a literal on 20 Sep when dark mode
 // made it theme-dependent, and the old anchor vanished with it. Anchor on
 // prose that describes a section, not on a line of code that can be rewritten.
-const prelude = slice(src, 'const MUSEUMS = [', '// URGENCY COLOURS, ONE SET PER THEME');
+const prelude = slice(src, 'const VENUE_REGISTER=', '// URGENCY COLOURS, ONE SET PER THEME');
 
 // The intake (matching, folding, the cards and applying them) is top-level code in
 // the CSV and review parts, so it sits inside the prelude above. `rows` is the ledger,
@@ -71,7 +71,7 @@ return {
   isTopicCard,
   topicPresets,
   PERIODS, PERIOD_RANK, periodCompare, periodAnswers, periodPrompt, periodLabelled, periodText, artistPeriods, periodOf, miscFor, labelSummary, THEMES, THEME_CHIPS, themeMatch, labelDone, LABEL_WAITS, labelWhy,
-  MUSEUMS, MU, KNOWN_VENUES, VENUE_ORDER,
+  MUSEUMS, MU, KNOWN_VENUES, VENUE_REGISTER, CHIP_RANK,
 };
 `;
 

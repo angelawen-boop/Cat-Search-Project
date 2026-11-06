@@ -21,6 +21,10 @@
  *   sweep_prototype.js VENUES  → VENUE_SITES: each venue's site (and, where two venues share one,
  *                                 its showPath), so a link from one of her 28 files under it
  *
+ * The venue register (venues/register.js) is written the same way, at its own directive line
+ * (REGISTER_DIRECTIVE, in app/foundations/venues.jsx) as VENUE_REGISTER; dates.js reads each venue's
+ * date order from it, so its `//@register` line becomes the page's own register here.
+ *
  * THE ONE EXCEPTION: SUMMARY_EXAMPLES (compress_cli.js examplesText, the sweep's own pairs at full
  * length) is sweep data on disk, not a rule. It stays stored in the part and is re-taken at every
  * build by `node build/sync_shared.js` (build/build_app.js runs it).
@@ -33,6 +37,8 @@ const DEFAULT_ROOT = path.join(__dirname, '..');
 
 // The directive line in the part, and the piece's markers. app_pieces.js finds the piece by SHARED_OPEN.
 const DIRECTIVE = '//@from-scraper';
+const REGISTER_DIRECTIVE = '//@venue-register';
+const REGISTER_LINE = /^const REGISTER = require\('\.\.\/venues\/register\.js'\)\.VENUES; \/\/@register$/m;
 const OPEN = '// ===== SHARED WITH THE SCRAPER — the join writes the rules below from the scraper\'s own files (scraper/dates.js, compress_prompt.md, compress.js, boilerplate.js, bot_check.js, answer_check.js, VENUES); never edit between these markers. Edit the scraper, then run `node build/app_join.js`. =====';
 const CLOSE = '// ===== END SHARED =====';
 
@@ -44,7 +50,9 @@ function datesBlock(root = DEFAULT_ROOT) {
   const start = src.indexOf("'use strict';");
   const end = src.indexOf('\nmodule.exports');
   if (start < 0 || end < 0) die('scraper/dates.js has lost its \'use strict\' line or its module.exports');
-  const body = src.slice(start + "'use strict';".length, end).trim();
+  let body = src.slice(start + "'use strict';".length, end).trim();
+  if (!REGISTER_LINE.test(body)) die('scraper/dates.js has lost its `//@register` line (the venues\' date orders)');
+  body = body.replace(REGISTER_LINE, 'const REGISTER = VENUE_REGISTER;');
   // Wrapped so its names (ymd, frag, MONTHS…) cannot collide with the app's.
   return 'const DATES=(()=>{\n' + body + '\nreturn { findDateRange, findDateRangeInProse, capsTitleParts, NO_DATES_NOTE, ORDER_UNKNOWN_NOTE, shownOnlyNote, unusableDateText, sweptVenueTitle, closedEarly, closedEarlyNote };\n})();';
 }
@@ -100,7 +108,7 @@ function answerCheckBlock(root = DEFAULT_ROOT) {
   const end = src.indexOf('\nmodule.exports');
   if (start < 0 || end < 0) die('scraper/answer_check.js has lost its \'use strict\' line or its module.exports');
   // Wrapped so its names (fold, CLAIMS…) cannot collide with the app's.
-  return 'const ANSWER_CHECK=(()=>{\n' + src.slice(start + "'use strict';".length, end).trim() + '\nreturn { MAX_WORDS, validateAnswer, validateEnglish, stringFaults, unsupportedClaims, rewordsTitle, REWORDS_TITLE };\n})();';
+  return 'const ANSWER_CHECK=(()=>{\n' + src.slice(start + "'use strict';".length, end).trim() + '\nreturn { MAX_WORDS, validateAnswer, validateEnglish, stringFaults, unsupportedClaims, rewordsTitle, REWORDS_TITLE, withoutPlaceOpener };\n})();';
 }
 
 function boilerplateBlock(root = DEFAULT_ROOT) {
@@ -110,6 +118,16 @@ function boilerplateBlock(root = DEFAULT_ROOT) {
 function botCheckBlock(root = DEFAULT_ROOT) {
   const b = require(path.join(root, 'scraper', 'bot_check.js'));
   return 'const CHALLENGE_TITLE=' + b.CHALLENGE_TITLE.toString() + ';const BOT_CHECK_SAID=' + JSON.stringify(b.BOT_CHECK_SAID) + ';';
+}
+
+// The venue register: everything between its 'use strict' line and module.exports.
+function registerBlock(root = DEFAULT_ROOT) {
+  const src = fs.readFileSync(path.join(root, 'venues', 'register.js'), 'utf8');
+  const start = src.indexOf("'use strict';");
+  const end = src.indexOf('\nmodule.exports');
+  if (start < 0 || end < 0) die('venues/register.js has lost its \'use strict\' line or its module.exports');
+  // Wrapped so its names (PRM_TAIL…) cannot collide with the app's.
+  return 'const VENUE_REGISTER=(()=>{\n' + src.slice(start + "'use strict';".length, end).trim() + '\nreturn VENUES;\n})();';
 }
 
 // The sweep's own examples text, the one stored exception. Used by sync_shared.js.
@@ -125,14 +143,20 @@ function rulesText(root = DEFAULT_ROOT) {
   return [datesBlock(root), rulesBlock(root), composeBlock(root), sitesBlock(root), boilerplateBlock(root), botCheckBlock(root), answerCheckBlock(root)].join('\n') + '\n';
 }
 
-// A piece's text with the directive line replaced by the rules. A piece without one is returned as it is.
+// A piece's text with its directive line replaced: the scraper's rules, or the venue register. A piece
+// without one is returned as it is.
 function expandShared(text, root = DEFAULT_ROOT) {
-  const line = DIRECTIVE + '\n';
-  const at = text.indexOf('\n' + line);
-  if (at < 0) return text;
-  if (text.indexOf('\n' + line, at + 1) >= 0) die('the shared piece holds the directive twice');
-  return text.slice(0, at + 1) + rulesText(root) + text.slice(at + 1 + line.length);
+  for (const [directive, body] of [[DIRECTIVE, () => rulesText(root)], [REGISTER_DIRECTIVE, () => registerBlock(root) + '\n']]) {
+    // The directive may be the piece's last line (the register's).
+    const t = text.endsWith('\n' + directive) ? text + '\n' : text, line = directive + '\n';
+    const at = t.indexOf('\n' + line);
+    if (at < 0) continue;
+    if (t.indexOf('\n' + line, at + 1) >= 0) die('a piece holds the directive ' + directive + ' twice');
+    const out = t.slice(0, at + 1) + body() + t.slice(at + 1 + line.length);
+    return t === text ? out : out.replace(/\n$/, '');
+  }
+  return text;
 }
 
-module.exports = { DIRECTIVE, OPEN, CLOSE, expandShared, rulesText, examplesBlock,
+module.exports = { DIRECTIVE, REGISTER_DIRECTIVE, OPEN, CLOSE, expandShared, rulesText, examplesBlock, registerBlock,
   datesBlock, rulesBlock, composeBlock, sitesBlock, boilerplateBlock, botCheckBlock, answerCheckBlock };

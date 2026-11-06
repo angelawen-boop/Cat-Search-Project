@@ -1,0 +1,74 @@
+[
+ {
+  "item": "4B",
+  "text": "This viewer can’t reach the page’s store."
+ },
+ {
+  "item": "4F",
+  "text": "EXHIBITION TITLE, as the page gives it: "
+ },
+ {
+  "item": "4F",
+  "text": "RAW TEXT (the page under the title, dates taken out):\n\"\"\"\n"
+ },
+ {
+  "item": "not in the audit: found by this check (4A)",
+  "text": "” couldn't be read (needs YYYY-MM-DD) — left blank."
+ },
+ {
+  "item": "4F",
+  "text": "Couldn’t find the show’s title on the page."
+ },
+ {
+  "item": "4E",
+  "text": "\"Sold by …\" (“vendu par”, “venduto da”) names the SHOP, never the publisher — "
+ },
+ {
+  "item": "4E",
+  "text": "the Orsay’s shop says “Sold by GrandPalaisRmn” for books Hazan printed. Never report it as publisher.\n"
+ },
+ {
+  "item": "4E",
+  "text": "\nReply with ONLY this JSON object and nothing else:\n"
+ },
+ {
+  "item": "4E",
+  "text": "The ISBN-13, the publisher, and any link to the publisher’s own page for the book "
+ },
+ {
+  "item": "4E",
+  "text": "”, including any details or specification panel on the page."
+ },
+ {
+  "item": "4E",
+  "text": "/\\s*(?:\\/|;|&|\\s+and\\s+|\\s+with\\s+)\\s*/i"
+ },
+ {
+  "item": "4E",
+  "text": "The books in this section of the shop, with their prices."
+ },
+ {
+  "item": "4B",
+  "text": "This viewer can’t reach the page’s store, so nothing is being saved to the cloud copy."
+ },
+ {
+  "item": "4B",
+  "text": "Safety snapshot before roll-back to snapshot of "
+ },
+ {
+  "item": "not in the audit: found by this check (4A)",
+  "text": "ISBN not confirmed — verify before buying"
+ },
+ {
+  "item": "4F",
+  "text": "/\"products_count\"\\s*:\\s*(\\d+)/"
+ },
+ {
+  "item": "4F",
+  "text": "The site's menu and footer links: shop, books, publications, library."
+ },
+ {
+  "item": "4F",
+  "text": "The products in this section: titles, types and prices."
+ }
+]

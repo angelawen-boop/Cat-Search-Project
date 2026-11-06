@@ -157,4 +157,21 @@ function rewordsTitle(text, title) {
 }
 const REWORDS_TITLE = 'the summary only rewords the title: say what the exhibition shows, from the rest of the text';
 
-module.exports = { MAX_WORDS, wordCount, validateAnswer, validateEnglish, stringFaults, unsupportedClaims, rewordsTitle, REWORDS_TITLE, CLAIMS };
+/**
+ * A show run in two of a venue's galleries carries its gallery in brackets in its title
+ * ("Portraiture: From Cassatt to Warhol (Palm Beach)"), so its description does not open with that
+ * gallery too ("Palm Beach.", "In New York,"): taken off in code once the description is written, for
+ * every way in (her decision). A one-gallery show, no gallery in its title, keeps its opener.
+ * `places`: the venue's galleries (venues/register.js, read.places).
+ */
+function withoutPlaceOpener(text, title, places) {
+  const s = String(text == null ? '' : text);
+  const m = /\(([^()]+)\)\s*$/.exec(String(title || ''));
+  const place = m && (places || []).find(p => fold(p) === fold(m[1].trim()));
+  if (!place) return s;
+  const esc = place.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const cut = s.replace(new RegExp('^\\s*(?:in\\s+)?' + esc + '\\s*[.,:;\u2014\u2013-]\\s*', 'i'), '');
+  return cut === s || !cut.trim() ? s : cut.charAt(0).toUpperCase() + cut.slice(1);
+}
+
+module.exports = { MAX_WORDS, wordCount, validateAnswer, validateEnglish, stringFaults, unsupportedClaims, rewordsTitle, REWORDS_TITLE, CLAIMS, withoutPlaceOpener };
