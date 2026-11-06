@@ -67,7 +67,7 @@ const entryText = e => '  { id: ' + js(e.id) + ', kind: ' + js(e.kind) + ',\n'
 function newEntry(id, w) {
   const card = w.short || w.name || null;
   return { id, kind: 'manual',
-    names: { card, chip: null, group: null, full: w.name || null, inEnglish: null, aka: w.aka || [], lookup: card, replaced: [], hers: false },
+    names: { card, chip: null, group: null, full: w.name || null, inEnglish: null, aka: w.aka || [], replaced: [], hers: false },
     city: w.city || null, country: w.country || null, english: typeof w.english === 'boolean' ? w.english : null, language: null,
     shop: { home: null, catalogues: null, search: null, unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
     read: { link: null, sites: [], dateOrder: null, spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },

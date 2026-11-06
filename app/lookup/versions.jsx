@@ -14,7 +14,7 @@ function editionQueries(mu,row,book,isbn,pub){
   return [book+" English edition"]
     .concat(lang?["originally published in "+lang+" as "+book]:[])
     .concat(isbn?[isbn+" English edition"]:[])
-    .concat(head&&mu?[head+" "+(lookupName(mu)||mu.card||mu.name)+" catalogue English edition"]:[])
+    .concat(head&&mu?[head+" "+(lookupName(mu)||mu.name)+" catalogue English edition"]:[])
     .concat(pub?[String(row.title||"").trim()+" "+pub+" ISBN"]:[]);
 }
 //@piece EDITION_LINK
