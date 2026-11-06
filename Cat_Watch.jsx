@@ -573,12 +573,12 @@ const VENUES = [
     filed: { addedAt: "2026-10-21T03:00:24.644Z", confirmed: true, english: true, finder: 3, host: "rct.uk", id: "occ-rct-uk", name: "The Queen\u2019s Gallery, Palace of Holyroodhouse", pageShop: "", shelfKind: null, shop: "none", shopCatalogues: null, shopHome: null, shopSearch: null, turnedDown: [], why: null } },
 
   { id: "occ-pallant-org-uk", kind: "manual",
-    names: { card: "Pallant House Chichester", chip: null, group: null, full: "Pallant House Gallery", inEnglish: null, aka: [], replaced: [], hers: false },
+    names: { card: "Pallant House Test", chip: null, group: null, full: "Pallant House Gallery", inEnglish: null, aka: [], replaced: [], hers: false },
     city: "Chichester", country: "United Kingdom", english: true, language: null,
     shop: { home: null, catalogues: null, search: null, unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
     read: { link: null, sites: [], dateOrder: null, spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
     sweep: { exBase: null, listUrl: null },
-    filed: { addedAt: "2026-11-06T04:45:19.374Z", aka: [], city: "Chichester", confirmed: true, country: "United Kingdom", english: true, englishPicked: false, finder: 3, foundBy: "the shop's menu", gallery: false, host: "pallant.org.uk", id: "occ-pallant-org-uk", name: "Pallant House Gallery", pageShop: "https://pallant.org.uk/your-visit/shop/", searchRule: 2, shelfKind: "publications", shop: "found", shopAdded: false, shopCatalogues: "https://pallantbookshop.com/product-category/books/pallant-publications/", shopEnglishUnread: null, shopHome: "https://pallantbookshop.com/", shopSearch: "https://pallantbookshop.com/search?q=", short: "Pallant House Chichester", turnedDown: [], why: null } },
+    filed: { addedAt: "2026-11-06T04:45:19.374Z", aka: [], city: "Chichester", confirmed: true, country: "United Kingdom", english: true, englishPicked: false, finder: 3, foundBy: "the shop's menu", gallery: false, host: "pallant.org.uk", id: "occ-pallant-org-uk", name: "Pallant House Gallery", pageShop: "https://pallant.org.uk/your-visit/shop/", searchRule: 2, shelfKind: "publications", shop: "found", shopAdded: false, shopCatalogues: "https://pallantbookshop.com/product-category/books/pallant-publications/", shopEnglishUnread: null, shopHome: "https://pallantbookshop.com/", shopSearch: "https://pallantbookshop.com/search?q=", short: "Pallant House Test", turnedDown: [], why: null } },
 
   { id: "occ-hlmd-de", kind: "manual",
     names: { card: "Darmstadt Landesmuseum", chip: null, group: null, full: "Hessisches Landesmuseum Darmstadt", inEnglish: null, aka: ["HLMD"], replaced: [], hers: false },
@@ -854,7 +854,7 @@ const VENUES = [
 
 // When her review page's names were last filed: a name she typed before this is already in the
 // entries above (or was replaced by a later word of hers), so a publish files only newer ones.
-const NAMES_FILED_AT = "2026-11-06T06:17:50.698Z";
+const NAMES_FILED_AT = "2026-11-06T07:06:18.310Z";
 return VENUES;
 })();
 // Each venue's register entry, by id.
