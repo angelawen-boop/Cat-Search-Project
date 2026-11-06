@@ -120,14 +120,18 @@ function file(registerText, entries, waiting) {
 // The register a text holds, read without writing it anywhere.
 function evalRegister(text) { const m = { exports: {} }; new Function('module', 'exports', text)(m, m.exports); return m.exports.VENUES; }
 
-// Her names from the venue review page (its store's `names/<id>` records, { wanted }), filed as each
+// Her names from the venue review page (its store's `names/<id>` records, { wanted, at }), filed as each
 // venue's card name: the name it replaces is kept in names.replaced, and the name is hers. A name the
-// register already holds is left alone. { text, lines }.
-function fileNames(registerText, names) {
+// register already holds is left alone, and so is one typed before the last filing (NAMES_FILED_AT);
+// `now` becomes the new NAMES_FILED_AT. { text, lines }.
+function fileNames(registerText, names, now) {
   let text = registerText;
   const lines = [];
   const entries = evalRegister(text);
-  for (const [id, wanted] of Object.entries(names || {})) {
+  const since = (() => { const m = { exports: {} }; new Function('module', 'exports', text)(m, m.exports); return m.exports.NAMES_FILED_AT || ''; })();
+  for (const [id, n] of Object.entries(names || {})) {
+    const wanted = n && typeof n === 'object' ? n.wanted : n, typedAt = n && typeof n === 'object' ? String(n.at || '') : '';
+    if (typedAt && since && typedAt <= since) continue;
     const w = String(wanted || '').trim(), e = entries.find(x => x.id === id);
     if (!w || !e) { if (w) lines.push(id + ': not filed — no such venue'); continue; }
     if (e.names.card === w) continue;
@@ -137,6 +141,7 @@ function fileNames(registerText, names) {
     text = text.slice(0, line) + '\n    names: ' + js(names2) + text.slice(lineEnd);
     lines.push(id + ': her name "' + w + '" (was "' + e.names.card + '")');
   }
+  if (now) text = text.replace(/const NAMES_FILED_AT = "[^"]*";/, 'const NAMES_FILED_AT = ' + JSON.stringify(now) + ';');
   return { text, lines };
 }
 

@@ -198,7 +198,11 @@ test('VR-030: a new venue lands beside the last venue of its country, so the reg
 
 test('VR-031: her names from the review page become card names; the old name is kept as one she replaced', () => {
   const text = fs.readFileSync(REGISTER, 'utf8');
-  const r = F.fileNames(text, { 'occ-dia-org': 'Detroit DIA', 'occ-getty-edu': 'Getty', 'occ-nowhere': 'X' });
+  const later = '2099-01-01T00:00:00.000Z';
+  const r = F.fileNames(text, { 'occ-dia-org': { wanted: 'Detroit DIA', at: later }, 'occ-getty-edu': { wanted: 'Getty', at: later }, 'occ-nowhere': { wanted: 'X', at: later },
+    'occ-louisiana-dk': { wanted: 'Louisiana Denmark', at: '2026-11-06T01:45:24.708Z' } }, '2099-01-02T00:00:00.000Z');
+  assert.ok(!r.lines.some(l => /occ-louisiana-dk/.test(l)), 'a name typed before the last filing is not filed again');
+  assert.match(r.text, /const NAMES_FILED_AT = "2099-01-02T00:00:00.000Z";/);
   const v = F.evalRegister(r.text), d = v.find(x => x.id === 'occ-dia-org');
   assert.ok(d.names.card === 'Detroit DIA' && d.names.replaced.includes('Detroit') && d.names.hers);
   assert.ok(!r.lines.some(l => /occ-getty-edu/.test(l)), 'a name the register already holds is left alone');

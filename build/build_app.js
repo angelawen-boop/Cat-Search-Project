@@ -100,14 +100,14 @@ if (gitBranch === 'main' && !shellFrom && !localOnly) {
   for (const f of fs.existsSync(namesDir) ? fs.readdirSync(namesDir) : die('no folder ' + namesDir)) {
     if (!f.endsWith('.json')) continue;
     const j = JSON.parse(fs.readFileSync(path.join(namesDir, f), 'utf8')), d = j.data || j;
-    if (d && d.wanted) names[f.replace(/\.json$/, '')] = d.wanted;
+    if (d && d.wanted) names[f.replace(/\.json$/, '')] = { wanted: d.wanted, at: d.at || '' };
   }
   const REG_FILE = path.join(ROOT, 'venues', 'register.js');
   const before = fs.readFileSync(REG_FILE, 'utf8');
   const r1 = F.file(before, F.evalRegister(before), waiting);
-  const r2 = F.fileNames(r1.text, names);
+  const r2 = F.fileNames(r1.text, names, new Date().toISOString());
   for (const l of [...r1.lines, ...r2.lines]) console.log('filed: ' + l), filedLines.push(l);
-  if (r2.text !== before) {
+  if (r1.lines.some(l => !/: not filed/.test(l)) || r2.lines.some(l => !/: not filed/.test(l))) {
     fs.writeFileSync(REG_FILE, r2.text);
     const j = spawnSync('node', [path.join(__dirname, 'app_join.js')], { encoding: 'utf8' });
     if (j.status !== 0) die((j.stderr || j.stdout || 'app_join.js failed').trim());
