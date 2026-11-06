@@ -46,21 +46,26 @@ handing a job to Claude.
   a rejected card's, an undecided card's after a partial apply, and on Cancel import every link the Read took (AL-012c, AL-024).
 - **No lookback cutoff** for anything added by link (her decision). **Chip: one "Occasional"** for every venue added this way
   (her decision), each venue keeping its own name and shop behind it. A link to a venue already swept files under that venue.
-- **One entry per venue — `LINK_VENUES`** (her decision): own chip, group, short and card names, full and lookup names, other
-  sites (`sites`: a path on a shared site, a house `line`), link options, shop settings. What the app finds out sits in the
-  store and the entry wins (`occVenue`). Never a second table for one of these facts. Store: `venues/occasional` (venues,
-  shops, confirmations) and `links/pending` (the box). A ledger row whose venue a page's store has not met shows under its
+- **One entry per venue — the venue register, `venues/register.js`** (her decision; docs/restructure.md, 4A): chip and group,
+  card, full and lookup names, other names, city, country, other sites (`read.sites`: a path on a shared site, a house `line`),
+  link options (`read.link`), shop settings, and the store record it was last filed from (`filed`). What the app finds out
+  waits in the store, `venues/occasional`, and shows over the entry, field by field, where it changed since filing (her
+  latest word; her names are never replaced by Claude's; `recordOf`); the page clears a waiting record the register already
+  holds when it opens (`tidyOccasional`); each publish files the rest in (`node build/file_venues.js <store file>`). Never a
+  second table for one of these facts (`build/fact_check.js` fails on one). Store: `venues/occasional` and `links/pending`
+  (the box). A ledger row whose venue a page's store has not met shows under its
   web address, shop "not found".
 - **A venue not met before is named by Claude** (her decision), on its first link only, in the same call as its description:
   full name, other names (acronym, own-language), city and country, a short card name in her style (AL-053); `englishSpeaking`
   and `gallery` are asked with every link and kept. A venue stored by address only is asked once more (`namedByAddress`,
   `needsFacts`). Never written in by session except by the rename below.
-- **The card name shows on both screens** (her decision): `card`, else `short`, never the long search name. **Search name long,
+- **The card name shows wherever a venue is named** (her decision): `names.card`, never the long search name; a chip keeps
+  its own label (`names.chip`). **Search name long,
   card name short** (her decision): the shop search uses full name, other names, city, country (`venueSearchName`).
 - **Renaming a link venue Claude named — a session's job, and Claude learns from it** (her decision: no editing in the app).
-  Write its `LINK_VENUES` entry: her `card` and `notCard` (what Claude gave); `short` and `name` stay as they are, so chips
-  and shop searches do not move. Renames go into Claude's question as "for <full name>: <her name>, not <Claude's>", the
-  full name from the entry or the store (`SHORT_NAME_RENAMES`, AL-066). **Her style** (her review of every link venue, 56.2):
+  Write its register entry: her `names.card`, the name it replaces added to `names.replaced`, `names.hers` true; the chip
+  label and full name stay as they are, so chips and shop searches do not move. Renames go into Claude's question as "for
+  <full name>: <her name>, not <Claude's>" (`SHORT_NAME_RENAMES`, AL-066). **Her style** (her review of every link venue, 56.2):
   the venue's own name first, then its city ("Städel Frankfurt", "Reina Sofía Madrid"), never a comma, every accent the venue
   uses. To review again: a page listing each venue (card, full names, city, a box for hers) — her rename page,
   `https://claude.ai/artifact/RmSC86pu1rkBxsZDtfdA1J`, its store `renames`.
@@ -152,7 +157,7 @@ down, never the site. **No shop** → lookups go to the web. Venues found by the
 **The finder runs in named steps** (`discoverShop` in code; one search call with two queries, hers and "<venue> shop books
 publications"). Code ranks every result (museum's own shop site only; plural section words; "not Catalogues" and sale shelves
 last). **A site name the reader cannot match to the address
-needs a venue rule naming it** (`LINK_VENUES` `name`; Mia). Fixes from Berlin: German joins its words; the shop page that shows
+needs a venue rule naming it** (the register's `names.full`; Mia). Fixes from Berlin: German joins its words; the shop page that shows
 the shop itself links one book first, so the book's site is taken.
 
 **A gallery's shop — her design** (published at 52.1; `docs/gallery_shop_check.json`, `node scraper/gallery_shop_check.js`).
@@ -177,7 +182,7 @@ its first book under its own address (GK-001–002). Tests AL-076–076j. Right 
 
 **A shop drawn by script — her decision.** The finder meets it as a front page only. When she brings one: (1) prove the cause from
 the shop page's own code (empty frame and a script → by script; books in the code → our reading is at fault, fix the finder);
-(2) write in the best section on the venue's `LINK_VENUES` entry (`shopHome`, `shopCatalogues`) with `shopUnseen: "script"` — a
+(2) write in the best section on the venue's register entry (`shop.home`, `shop.catalogues`) with `shop.unseen: "script"` — a
 hard-coded answer, say so to her; (3) its lookups read "The museum shop contents cannot be seen — JS-rendering", search the web,
 and the card's "Museum shop" link is the written-in section (`shopLink`, `shopButtonUrl`; BS-004), Re-check the same; (4) if she
 already answered No shop, reset the store's record with her yes (`shop: "found"`, the section, `foundBy: "the venue's rule"`,
@@ -236,13 +241,18 @@ characters; "Related …" above the text is skipped; an online feature's section
 page's passage is signed off on the list (`--write-passages`). Venue rules (`from`, `until`, `skip`, `minLine`) only where a
 layout is its own; junk at the end of a passage is tolerated (her decision).
 
-**Venue options** (`linkRead` on a `MUSEUMS` or `LINK_VENUES` entry; her decision: Parallel-only rules live in the app, never the
+**Venue options** (`read.link` on the venue's register entry; her decision: Parallel-only rules live in the app, never the
 scraper; read by `readShowPage`, `venueTitle`; the options are listed where they are read). `skip` lines are never a subtitle.
 Proof pages for every rule: `docs/link_proof_pages.json`.
 
 ## Venue link rules
 
-**Occasional order and chips** are `VENUE_ORDER` (CLAUDE.md §5.4). **A venue's rule is that venue's** (her decision).
+**Order and chips** are the register's order (`venues/register.js`; Occasional venues by country, then that order). **A venue's
+rule is that venue's** (her decision).
+- **A gallery with several locations gets the identical setup to Acquavella and Lévy Gorvy Dayan** (her decision): its places
+  listed once in the register (`read.places`, `read.placeOwner`), nothing else. A link's description never opens with the
+  gallery its title names in brackets (`withoutPlaceOpener`, shared with the sweep); a city on the list is never "another
+  showing" in the catalogue lookup (`versionNote`).
 
 - **Moderna Museet** (`occ-modernamuseet-se`): cards and chip "Stockholm Moderna" (her name, city first); dates
   day.month with the year after a space ("16.2–26.5 2013", "8.10 2011–15.1 2012"), read at this venue only
@@ -310,8 +320,8 @@ Proof pages for every rule: `docs/link_proof_pages.json`.
 - **A link to a quarantined show** reads "Read 1 link, but nothing to add — already in your quarantine." when every show read is
   quarantined (her wording; AL-080); otherwise "…your ledger already matches it". A
   page with no year gets the sweep's note (`unusableDateText`, shared; her decision; AL-082).
-- **The swept venues' link options** (met, frick, menil, acq, louvre, artic, cincinnati, brit) are on their `MUSEUMS` entries
-  (`linkRead`). Her decisions among them: acq's `##` "In collaboration with" is a credit, not part of the title; cincinnati's
+- **The swept venues' link options** (met, frick, menil, acq, louvre, artic, cincinnati, brit) are on their register entries
+  (`read.link`). Her decisions among them: acq's `##` "In collaboration with" is a credit, not part of the title; cincinnati's
   "Now–May 30, 2021" is a closing date only.
 
 ## Saved pages — the Pages button
