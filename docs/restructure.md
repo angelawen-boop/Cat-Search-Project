@@ -42,9 +42,47 @@ recorded as "done" while the promises the layers were sold on were not kept. The
   - **3b** — the job behind the Read button for Links, Pages and Paste.
   - **3c** — Save now and the cloud save.
   - **3d** — Reset.
-- **4 — the UI (her word: the user interface).** What is left once 3a–3d are out — the screens,
+- **4 — one copy of every fact (her decision).** An audit found facts kept in more than one place
+  (code, store, scraper, her ledger), some with a "which copy wins" rule papering over the clash. Each
+  is brought to one home and the other copy deleted, with no precedence rule left behind. Six rounds, in
+  this order, each its own branch, side-by-side check and test run; her test after 4A and after 4E (her
+  screens or data change), the others change nothing visible. Every one must pass before 5 starts.
+  - **4A — venue facts.** One register in the code for every venue, swept and manual import (names, city,
+    country, language, chip and order, shop addresses, page-reading rules including the date-order rules
+    now in the scraper, Acquavella's two locations); the scraper reads venue names and cities from it
+    (its own 24 differing spellings go); the store becomes the inbox, each publish files new venues into
+    the register; every "which copy wins" rule deleted — where copies clash her name wins (fixing her
+    rejected names on the review screens and quarantine list, and the catalogue search using the wrong
+    short name); a venue's names assembled one way, not five; the shop fields listed once, not four times;
+    records corrected (Kupferstichkabinett stored as Neue Nationalgalerie, the Munich three stored as
+    "pinakothek.de", Christie's two records); a venue's city passed on; Lévy Gorvy Dayan's card name as
+    the code's note says; test files read the register instead of their own copies (the Thyssen shelf,
+    the Acquavella gallery shelf, the scraper probe's typed-in settings). With it, two new checks: the
+    build fails when a sentence, list or rule is written twice, and when venue facts are written anywhere
+    but the register.
+  - **4B — saving.** The store's error sentences and safety-copy labels written two or three times; the
+    store record names typed into test and check scripts.
+  - **4C — the web-address clean-up** retyped 17 times becomes one shared piece.
+  - **4D — the sweep import.** The "nothing to sweep" marker sentence (nine copies); the column list (six
+    copies, one tool writing seven columns); the three sweep-file readers; the "Topic:" note; the three
+    ways of standardising web addresses; the sweep-log merge written twice; the unused last-import date in
+    her ledger; show IDs made by two rules and the three accent rules, checked against her real
+    quarantine; the scraper's month spelling lists; the test with hand-typed show IDs.
+  - **4E — catalogue lookup.** The seller rule written three times; its repeated instructions to Claude
+    ("the books in this section…", the products one, "the ISBN-13, the publisher…"); the four ISBN
+    patterns; the publisher-splitting pattern retyped; the "English edition, published later" sentence;
+    the publisher stored twice in her ledger and her seven mangled publishers corrected (her yes and a
+    backup first); the two price rules, checked on the four shops' live pages (Basel, Beyeler, Louisiana,
+    Moderna Museet), old rule beside new.
+  - **4F — manual import and the shop finder.** Their repeated instructions to Claude; the "couldn't find
+    the show's title" sentence written twice; the shop-page reading written twice.
+  - **Stays (her decision):** the quarantine kept in both the store and her saved file.
+- **5 — the UI (her word: the user interface).** What is left once 3a–3d and 4 are done — the screens,
   buttons, layout and design — split into its separate screens. The old layer 5b plan split by screen
   only and would have left the machinery inside a screen.
+
+**Manual import (her name):** Links, Pages and Paste together. Never "link venues" or "add by link"
+for the group in anything new.
 
 **The line between machinery and UI (her decision; the guiding principle from now on).** Machinery
 decides what is true and what to say: rules, searches, imports, which case has happened and the
@@ -58,7 +96,7 @@ The search redesign is not part of this work; when built it is mostly machinery 
 back empty." case). The restructure reorganizes and cleans up the code without changing what it does;
 faults are tackled after it.
 
-Items 1A–4 change code text (not what the app does), so the gates run with `--changes-allowed` and her checklist applies.
+Items 1A–5 change code text (not what the app does), so the gates run with `--changes-allowed` and her checklist applies.
 
 ## The design of each item (the coordinator's, written before any code)
 
@@ -95,7 +133,7 @@ proves it (below).
   Links/Pages/Paste parts (the Read job, its progress reports, the pending lists); 3c → the cloud part
   (Save now, the automatic save, the safety copies, the one-tab claim and heartbeat); 3d → the saving
   part (Reset and what it loads and writes).
-- **4.** Written here once 3a–3d are done, from what is left: which screens become their own
+- **5.** Written here once 4 is done, from what is left: which screens become their own
   components, what each holds, what passes between them.
 
 ## The side-by-side check for items that change code
@@ -187,7 +225,8 @@ three times, each before the next stage starts:
 1. **After 1A–2c** — they rewired every save to the store (1B) and how every web and Claude call is
    logged (2c). Her checklist, with one Find catalogue and one Save now then the cloud copies drawer.
 2. **After 3a–3d** — the import engine, the Read job, Save and Reset moved.
-3. **After 4** — the screen split.
+3. **After 5** — the screen split.
+(Also her tests after 4A and 4E, above.)
 The restructure test page: https://claude.ai/artifact/Ju1pKP84Gi3VNL1b2SULc5, built from `main` by
 `node build/build_app.js --test-page` (title "Art Watch Restructure Test", footer "TEST PAGE — not your
 app"), with her app's four capabilities. **Before every round** (her decision — a test page is a true test
@@ -201,7 +240,7 @@ she gets the link; then send her the link and the latest sweep file. A round's f
 
 On the test page: load her ledger export; scroll the list and open a few cards; star and unstar one;
 use the venue and theme chips and the Period sort; Import → CSV with a sweep file, look through the
-review, Cancel; Import → Links with one link, Read, Cancel; Find catalogue on one card; Save now; open
+review, Cancel; Import → Links with one link, Read, Cancel; Import → Pages with one saved page, Read, Cancel; Import → Paste with one link and its text, Read, Cancel; Find catalogue on one card; Save now; open
 the cloud copies drawer. She says "same", or what looks or behaves differently.
 
 ## Per layer — who does what
@@ -255,8 +294,9 @@ it to the coordinator). Commit on the branch with a clear
 2. **Her test round 2** — set the test page up from her app's store, run `build/test_page_check.js`,
    build with `--test-page`, publish to the test page, send her the link, the checklist and the latest
    sweep file ("Her tests").
-3. **4** — the UI split into its screens (its design written here first), then **her test round 3**.
-4. **Publish to her app when she says.** That publish also brings the `art-watch-` file names for
+3. **4A–4F** — one copy of every fact, in that order (see "Work items now"); her tests after 4A and 4E.
+4. **5** — the UI split into its screens (its design written here first), then **her test round 3**.
+5. **Publish to her app when she says.** That publish also brings the `art-watch-` file names for
    saved ledgers and safety copies (on `main` since round 1).
 
 The checks, before any item: read "The design of each item", "The side-by-side check for items that
@@ -264,7 +304,7 @@ change code" and "Her tests".
 
 ## Handover record — updated after every step
 
-**Where we are:** 1A, 1B, 2a–2c and the guard done; her test round 1 passed (her checklist, on the test page set up from her app's store). 3a–3d done. Her test round 2 published on the test page (store set up from her app's, the check passed); waiting for her result. Next: 4, once round 2 passes.
+**Where we are:** 1A, 1B, 2a–2c and the guard done; her test round 1 passed (her checklist, on the test page set up from her app's store). 3a–3d done. Her test round 2 published on the test page (store set up from her app's, the check passed); waiting for her result. Next: 4A, once round 2 passes.
 
 **Work items done:** the wider check (Opus; proved on every screen, a mixed review added by the
 coordinator). 1A (Sonnet): the parts hold no copy of the scraper's rules, the join writes them; only
