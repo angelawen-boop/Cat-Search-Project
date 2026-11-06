@@ -293,8 +293,8 @@ function runtime(answer, log) {
     }
     // ── CQ-001: the catalogue searched in the venue's own language (her Hammershøi, 7 Oct) ─
     eq(api.localCatalogueQuery(api.MU.jacquemart, { title: 'Hammersh\u00f8i: the master of danish painting', startDate: '2019-03-14' }).join('|'),
-       'Hammersh\u00f8i Jacquemart-Andr\u00e9 catalogue exposition 2019', 'CQ-001: Hammersh\u00f8i \u2014 the show\u2019s name, the venue, "catalogue exposition", the year');
-    eq(api.localCatalogueQuery(api.MU.uffizi, { title: 'Test Show', startDate: '' }).join('|'), 'Test Show Uffizi catalogo mostra', 'CQ-002: Italian venue, no year known');
+       'Hammersh\u00f8i Mus\u00e9e Jacquemart-Andr\u00e9 catalogue exposition 2019', 'CQ-001: Hammersh\u00f8i \u2014 the show\u2019s name, the venue\u2019s full name, "catalogue exposition", the year');
+    eq(api.localCatalogueQuery(api.MU.uffizi, { title: 'Test Show', startDate: '' }).join('|'), 'Test Show Uffizi Galleries catalogo mostra', 'CQ-002: Italian venue, no year known (the venue searched by its full name, her decision)');
     eq(api.localCatalogueQuery(api.MU.ng, { title: 'Test Show', startDate: '2025-01-01' }).length, 0, 'CQ-003: an English-speaking venue adds nothing');
     eq(api.isSelfPublisher('The Art Institute of Chicago'), true, 'C-146: the Art Institute of Chicago is a museum\u2019s own imprint \u2014 her addition, 2 Oct');
     eq(api.isSelfPublisher('Cincinnati Art Museum'), true, 'C-146b: the Cincinnati Art Museum is a museum\u2019s own imprint \u2014 her addition, 4 Oct');
