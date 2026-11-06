@@ -304,7 +304,7 @@ change code" and "Her tests".
 
 ## Handover record — updated after every step
 
-**Where we are:** 1A, 1B, 2a–2c and the guard done; her test round 1 passed (her checklist, on the test page set up from her app's store). 3a–3d done. Her test round 2 published on the test page (store set up from her app's, the check passed); waiting for her result. Next: 4A, once round 2 passes.
+**Where we are:** 1A, 1B, 2a–2c and the guard done; her test round 1 passed (her checklist, on the test page set up from her app's store). 3a–3d done. Her test round 2 passed technically: her checklist plus Import by Pages and by Paste (which the session had left off the checklist). Her judgement: the round only proves the cut-up-and-rejoined code behaves the same; the substantive work, one copy of every fact, had not begun. Next: 4A.
 
 **Work items done:** the wider check (Opus; proved on every screen, a mixed review added by the
 coordinator). 1A (Sonnet): the parts hold no copy of the scraper's rules, the join writes them; only
@@ -377,7 +377,7 @@ by default, and names it in the end report (her decision); her test only where t
 coordinator's transcript for the "Expected test run" line — so the coordinator runs gate 2 itself. The
 hook often refuses the first try even after the line is written; write the line again and retry.
 
-**Her reports:** none yet.
+**Her reports:** round 2 — technically passes (her checklist, Pages and Paste included); nothing different found.
 
 ## When a session ends
 
