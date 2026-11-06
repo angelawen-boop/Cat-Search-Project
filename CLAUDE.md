@@ -381,7 +381,7 @@ a session needs lives only behind such a link. Read the one for the work in hand
 | `docs/branches.md` | The branch table and holding a push for another session | Creating, merging or pushing a branch |
 | `docs/publishing.md` | Version numbering, building the app and the publish steps | Publishing the app |
 | `docs/testing.md` | Which test group to run, where a failure is recorded, the live proof pages, test anchors, JSX validation | Running or writing tests, or re-checking live proof pages |
-| `docs/restructure.md`, `docs/restructure/placement.json` | The restructure into feature parts: the layers, the gates and their proof, who does what, the handover record; where every piece goes | "Continue the restructure.", or any change to the app while it is under way |
+| `docs/restructure.md`, `docs/restructure/placement.json`, `docs/restructure/duplicates.md` | The restructure into feature parts: the layers, the gates and their proof, who does what, the handover record; where every piece goes; the audit of facts kept twice (items 4A–4F) | "Continue the restructure.", or any change to the app while it is under way |
 
 **Reviews**
 
