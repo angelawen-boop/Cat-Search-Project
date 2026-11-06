@@ -105,14 +105,42 @@ function file(registerText, entries, waiting) {
     text = text.slice(0, at) + block + text.slice(end);
     lines.push(id + ': filed' + (changed.length ? ' (' + changed.join(', ') + ' changed)' : ' (its shop and her confirmations)'));
   }
-  if (added.length) {
-    const close = text.lastIndexOf('\n];');
-    text = text.slice(0, close + 1) + '\n' + added.map(entryText).join('\n') + text.slice(close + 1);
+  // A new venue goes beside the register's last manual venue of its country, so the file keeps her
+  // country order; one whose country is not yet held goes after the last manual venue that has a country.
+  for (const e of added) {
+    const all = (() => { try { return evalRegister(text); } catch { return entries; } })();
+    const manual = all.filter(x => x.kind === 'manual' && x.country);
+    const after = manual.filter(x => x.country === e.country).pop() || manual.pop();
+    const at = after ? text.indexOf(' },\n', text.indexOf('\n    filed: ', text.indexOf('  { id: ' + js(after.id) + ', kind: '))) + 4 : text.lastIndexOf('\n];') + 1;
+    text = text.slice(0, at) + '\n' + entryText(e) + text.slice(at);
   }
   return { text, lines };
 }
 
-module.exports = { file, recordOf, newEntry, js };
+// The register a text holds, read without writing it anywhere.
+function evalRegister(text) { const m = { exports: {} }; new Function('module', 'exports', text)(m, m.exports); return m.exports.VENUES; }
+
+// Her names from the venue review page (its store's `names/<id>` records, { wanted }), filed as each
+// venue's card name: the name it replaces is kept in names.replaced, and the name is hers. A name the
+// register already holds is left alone. { text, lines }.
+function fileNames(registerText, names) {
+  let text = registerText;
+  const lines = [];
+  const entries = evalRegister(text);
+  for (const [id, wanted] of Object.entries(names || {})) {
+    const w = String(wanted || '').trim(), e = entries.find(x => x.id === id);
+    if (!w || !e) { if (w) lines.push(id + ': not filed — no such venue'); continue; }
+    if (e.names.card === w) continue;
+    const names2 = { ...e.names, card: w, replaced: [...new Set([...(e.names.replaced || []), e.names.card].filter(Boolean))].filter(x => x !== w), hers: true };
+    const at = text.indexOf('  { id: ' + js(id) + ', kind: ');
+    const line = text.indexOf('\n    names: ', at), lineEnd = text.indexOf(',\n', line + 1);
+    text = text.slice(0, line) + '\n    names: ' + js(names2) + text.slice(lineEnd);
+    lines.push(id + ': her name "' + w + '" (was "' + e.names.card + '")');
+  }
+  return { text, lines };
+}
+
+module.exports = { file, fileNames, evalRegister, recordOf, newEntry, js };
 
 if (require.main === module) {
   if (!storeFile) { console.log('usage: node build/file_venues.js <store json file> [--register <file>]'); process.exit(2); }

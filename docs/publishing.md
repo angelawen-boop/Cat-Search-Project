@@ -15,7 +15,12 @@ parses, writes `build/dist/index.html`. `--shell-from <saved live page>` says
 whether the committed shell still matches.
 
 **To publish, run `node build/build_app.js` and follow what it prints** — nothing
-else. Built on `main` it prints the steps for her app; built on `claude/ledger-cloud` it sets the
+else. **Built on `main` for publishing, it first files the venues waiting in the store into the code**
+(docs/restructure.md, 4A): it stops until the session has read the store's `venues/occasional` and the
+venue review page's `names` into files (it prints the two reads), then files both into
+`venues/register.js`, joins, runs the fact check, and rebuilds the venue review page
+(`build/dist/venue_review.html`, published to her review page). When anything was filed it prints the
+one-line FYI for her. `--local`: a build to check only, never published, files nothing. Built on `main` it prints the steps for her app; built on `claude/ledger-cloud` it sets the
 retired test page's title instead. No read first. A session's first publish is refused as not
 viewed — sometimes with a saved copy to read in full first — then once more as resent unchanged;
 the next goes through. Later ones go straight through.

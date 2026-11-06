@@ -181,3 +181,37 @@ test('VR-024: in the catalogue lookup, a city on the venue\'s own list is never 
   assert.notStrictEqual(L.versionNote(vs, 0, row), "from the show's London exhibition");
   assert.strictEqual(L.versionNote(vs, 1, row), "from the show's Paris exhibition");
 });
+
+// ── the publish files them (build/build_app.js) ──
+test('VR-030: a new venue lands beside the last venue of its country, so the register keeps her country order', () => {
+  const text = fs.readFileSync(REGISTER, 'utf8');
+  const w = { id: 'occ-pallant-org-uk', name: 'Pallant House Gallery', short: 'Pallant House Chichester', city: 'Chichester', country: 'United Kingdom', english: true, host: 'pallant.org.uk', shop: 'found' };
+  const r = F.file(text, VENUES, { 'occ-pallant-org-uk': w });
+  const after = F.evalRegister(r.text), i = after.findIndex(v => v.id === 'occ-pallant-org-uk');
+  const lastUk = VENUES.filter(v => v.kind === 'manual' && v.country === 'United Kingdom').pop();
+  assert.strictEqual(after[i - 1].id, lastUk.id);
+  assert.strictEqual(after.length, VENUES.length + 1);
+  // Nothing else moves.
+  const strip = vs => JSON.stringify(vs.filter(v => v.id !== 'occ-pallant-org-uk'), (k, v) => v instanceof RegExp ? String(v) : v);
+  assert.strictEqual(strip(after), strip(VENUES));
+});
+
+test('VR-031: her names from the review page become card names; the old name is kept as one she replaced', () => {
+  const text = fs.readFileSync(REGISTER, 'utf8');
+  const r = F.fileNames(text, { 'occ-dia-org': 'Detroit DIA', 'occ-getty-edu': 'Getty', 'occ-nowhere': 'X' });
+  const v = F.evalRegister(r.text), d = v.find(x => x.id === 'occ-dia-org');
+  assert.ok(d.names.card === 'Detroit DIA' && d.names.replaced.includes('Detroit') && d.names.hers);
+  assert.ok(!r.lines.some(l => /occ-getty-edu/.test(l)), 'a name the register already holds is left alone');
+  assert.ok(r.lines.some(l => /occ-nowhere: not filed/.test(l)));
+  const strip = vs => JSON.stringify(vs.filter(x => x.id !== 'occ-dia-org'), (k, x) => x instanceof RegExp ? String(x) : x);
+  assert.strictEqual(strip(v), strip(VENUES));
+});
+
+test('VR-032: a build for publishing stops until the store\'s waiting venues are read', () => {
+  let branch = '';
+  try { branch = execFileSync('git', ['rev-parse', '--abbrev-ref', 'HEAD'], { cwd: ROOT }).toString().trim(); } catch { /* not a checkout */ }
+  if (branch !== 'main') return;
+  const r = require('child_process').spawnSync(process.execPath, [path.join(ROOT, 'build', 'build_app.js')], { cwd: ROOT, encoding: 'utf8' });
+  assert.strictEqual(r.status, 1);
+  assert.match(r.stderr, /files the store's waiting venues first/);
+});
