@@ -49,9 +49,8 @@ recorded as "done" while the promises the layers were sold on were not kept. The
   screens or data change), the others change nothing visible. Every one must pass before 5 starts.
   - **4A — venue facts.** One home (the register) for every venue, swept and manual import (names, city,
     country, language, chip and order, shop addresses, page-reading rules including the date-order rules
-    now in the scraper, Acquavella's two locations). **Where that home is — the code or the store — is
-    NOT decided (her decision to make; the discussion was never concluded).** It is the first thing the
-    next session puts to her, before any 4A design or code. The scraper reads venue names and cities from
+    now in the scraper, Acquavella's two locations). **The home is the code (her decision; "4A — her
+    decisions" under Start here).** The scraper reads venue names and cities from
     the register (its own 24 differing spellings go); every "which copy wins" rule deleted — where copies clash her name wins (fixing her
     rejected names on the review screens and quarantine list, and the catalogue search using the wrong
     short name); a venue's names assembled one way, not five; the shop fields listed once, not four times;
@@ -304,15 +303,24 @@ it to the coordinator). Commit on the branch with a clear
 3. **Publish to her app when she says.** That publish also brings the `art-watch-` file names for
    saved ledgers and safety copies (on `main` since round 1).
 
-**First, before anything else in 4A — her decision, not yet made:** where every venue's facts live, the
-code or the store (sweep venues included either way). The discussion stopped when the duplication
-surfaced; nothing was agreed. Put both to her plainly and wait for her choice. Points raised so far:
-a store can come up empty or unreadable (a fresh page, a failed read, a lost store) and has no history;
-code has history and is what the tests check, but the app cannot write to its own code mid-import, so
-the code option needs the store as an inbox that each publish files into the code (the build cannot
-read her store itself — the session reads it into a file). The store option keeps venues where the app
-already writes them, but every venue then shows as a web address when the store is empty, and a swept
-venue's page-reading rules (code) would sit apart from its facts.
+**4A — her decisions (made; the code-or-store question is closed):**
+- **The code is the one home for every venue's facts** (swept and manual import alike): one register, a
+  data-only part, one entry per venue, every field in the same layout. Nothing about a venue is written
+  anywhere else; a build check fails if it is. No session decides where a venue fact goes.
+- **The store is a waiting room, never a second copy.** What the app learns at a manual import (a new
+  venue, its shop, her confirmation or rename) goes to the store and works at once. It stays there until
+  the next publish, whatever that publish is for; the session then files it into the register.
+- **The app tidies the waiting room itself** — no session writes, no yes from her: when a published
+  version opens, a waiting entry whose facts the register now holds exactly is cleared; one that differs
+  (changed after the build) stays for the next publish. Until filed, the waiting entry is what shows (her
+  latest word).
+- **The FYI:** a publish that files venues tells her in one line that her latest venue store info is now in
+  the code too. Nothing else is asked or said.
+- **The first move, once (her yes):** a full backup of her store, then every leftover venue record cleared
+  in one go after the register holds them.
+- **Conflicting or ambiguous facts go to her on one page** to pick — never written out in chat. It is the
+  permanent venue review page (CLAUDE.md §6 roadmap: her rename page made permanent), which she reopens
+  any time to rename venues and record decisions.
 
 **The coordinator's own lessons from 3a–3d (keep):** name both the model and the effort (low or
 medium) on every sub-agent, or her permission does not cover it and it waits for her; check the
