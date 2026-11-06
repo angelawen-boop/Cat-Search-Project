@@ -5,7 +5,7 @@ and ledger as they stood on 5 Nov (her store unchanged since round 1). Each find
 more than one place. The work items that remove them are in `docs/restructure.md`, item 4. Numbers are
 as found; re-check each against the code and her store before fixing it (the store changes as she works).
 
-"Manual import" = Links, Pages and Paste together (her name). "Register" = the one venue list item 4A builds.
+"Manual import" = Links, Pages and Paste together (her name). "Register" = the one home for venue facts item 4A builds; whether it is in the code or the store is her decision, not yet made. Her ledger is never changed (her decision).
 
 ## 4A — venue facts
 
@@ -96,7 +96,7 @@ as found; re-check each against the code and her store before fixing it (the sto
   four regex forms.
 - **D5 — a book's publisher twice in her ledger:** each edition and its `card`; 7 differ (6 the picked
   one) — the edition's copy was split on "with" ("…in association / D Giles Limited"). The version block
-  reads the edition, the card line the row. Correcting her ledger needs her yes and a backup.
+  reads the edition, the card line the row. Her ledger is never changed (her decision): both copies stay.
 - **D7 — two price rules:** the shop finder accepts CHF/SEK/DKK/NOK/kr; the lookup's `SHOP_PRICE` only
   € $ £. Basel, Beyeler, Louisiana, Moderna Museet affected; checked live, old rule beside new.
 

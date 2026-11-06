@@ -47,11 +47,12 @@ recorded as "done" while the promises the layers were sold on were not kept. The
   is brought to one home and the other copy deleted, with no precedence rule left behind. Six rounds, in
   this order, each its own branch, side-by-side check and test run; her test after 4A and after 4E (her
   screens or data change), the others change nothing visible. Every one must pass before 5 starts.
-  - **4A — venue facts.** One register in the code for every venue, swept and manual import (names, city,
+  - **4A — venue facts.** One home (the register) for every venue, swept and manual import (names, city,
     country, language, chip and order, shop addresses, page-reading rules including the date-order rules
-    now in the scraper, Acquavella's two locations); the scraper reads venue names and cities from it
-    (its own 24 differing spellings go); the store becomes the inbox, each publish files new venues into
-    the register; every "which copy wins" rule deleted — where copies clash her name wins (fixing her
+    now in the scraper, Acquavella's two locations). **Where that home is — the code or the store — is
+    NOT decided (her decision to make; the discussion was never concluded).** It is the first thing the
+    next session puts to her, before any 4A design or code. The scraper reads venue names and cities from
+    the register (its own 24 differing spellings go); every "which copy wins" rule deleted — where copies clash her name wins (fixing her
     rejected names on the review screens and quarantine list, and the catalogue search using the wrong
     short name); a venue's names assembled one way, not five; the shop fields listed once, not four times;
     records corrected (Kupferstichkabinett stored as Neue Nationalgalerie, the Munich three stored as
@@ -66,17 +67,20 @@ recorded as "done" while the promises the layers were sold on were not kept. The
   - **4D — the sweep import.** The "nothing to sweep" marker sentence (nine copies); the column list (six
     copies, one tool writing seven columns); the three sweep-file readers; the "Topic:" note; the three
     ways of standardising web addresses; the sweep-log merge written twice; the unused last-import date in
-    her ledger; show IDs made by two rules and the three accent rules, checked against her real
+    her ledger — stays as it is (her ledger is never changed, below); show IDs made by two rules and the three accent rules, checked against her real
     quarantine; the scraper's month spelling lists; the test with hand-typed show IDs.
   - **4E — catalogue lookup.** The seller rule written three times; its repeated instructions to Claude
     ("the books in this section…", the products one, "the ISBN-13, the publisher…"); the four ISBN
     patterns; the publisher-splitting pattern retyped; the "English edition, published later" sentence;
-    the publisher stored twice in her ledger and her seven mangled publishers corrected (her yes and a
-    backup first); the two price rules, checked on the four shops' live pages (Basel, Beyeler, Louisiana,
+    the publisher held twice in her ledger — her ledger is never changed (below), so the seven mangled
+    publishers stay as they are and nothing rewrites either copy; the two price rules, checked on the four shops' live pages (Basel, Beyeler, Louisiana,
     Moderna Museet), old rule beside new.
   - **4F — manual import and the shop finder.** Their repeated instructions to Claude; the "couldn't find
     the show's title" sentence written twice; the shop-page reading written twice.
   - **Stays (her decision):** the quarantine kept in both the store and her saved file.
+  - **Her ledger is never changed (her decision) — banned outright, not "with her yes".** No item may
+    alter, correct, migrate, add or remove anything in her ledger rows or saved file, and no session asks
+    her to. Where a duplicate sits inside her ledger, it stays.
 - **5 — the UI (her word: the user interface).** What is left once 3a–3d and 4 are done — the screens,
   buttons, layout and design — split into its separate screens. The old layer 5b plan split by screen
   only and would have left the machinery inside a screen.
@@ -294,16 +298,21 @@ it to the coordinator). Commit on the branch with a clear
    Per item: write its design here first (what becomes the one home, what is deleted, what she will see
    change, if anything), then one branch (`claude/restructure-4a` …), one sub-agent, gates with
    `--changes-allowed`, the test run re-run by the coordinator, merge. Her test on the test page after
-   4A and after 4E, set up from her app's store first ("Her tests"). A change to her store or her ledger
-   (4A's corrected records, 4E's seven publishers) needs her yes and a backup first.
+   4A and after 4E, set up from her app's store first ("Her tests"). A change to her store (4A's corrected
+   records) needs her yes and a backup first. **Her ledger is never changed — banned, not asked about.**
 2. **5** — the UI split into its screens (its design written here first), then **her test round 3**.
 3. **Publish to her app when she says.** That publish also brings the `art-watch-` file names for
    saved ledgers and safety copies (on `main` since round 1).
 
-**4A's open design question, to settle in its design:** the register lives in the code, and the store
-holds only venues met since the last publish. The build cannot read her store itself — the session
-reads `venues/occasional` with ArtifactData into a file the build takes in. Whether a filed venue is
-then removed from her store is a write to her store: her yes first.
+**First, before anything else in 4A — her decision, not yet made:** where every venue's facts live, the
+code or the store (sweep venues included either way). The discussion stopped when the duplication
+surfaced; nothing was agreed. Put both to her plainly and wait for her choice. Points raised so far:
+a store can come up empty or unreadable (a fresh page, a failed read, a lost store) and has no history;
+code has history and is what the tests check, but the app cannot write to its own code mid-import, so
+the code option needs the store as an inbox that each publish files into the code (the build cannot
+read her store itself — the session reads it into a file). The store option keeps venues where the app
+already writes them, but every venue then shows as a web address when the store is empty, and a swept
+venue's page-reading rules (code) would sit apart from its facts.
 
 **The coordinator's own lessons from 3a–3d (keep):** name both the model and the effort (low or
 medium) on every sub-agent, or her permission does not cover it and it waits for her; check the
