@@ -287,17 +287,28 @@ it to the coordinator). Commit on the branch with a clear
 ## Start here — the next session's job
 
 **What is left, in order (her plan):**
-1. **3a–3d** — the machinery out of the main screen into its features: 3a the CSV import engine, 3b the
-   Read job for Links/Pages/Paste, 3c Save now and the cloud save, 3d Reset. One item per branch
-   (`claude/restructure-3a` …), each by a sub-agent (model by the judgement it needs; Opus for these),
-   gates with `--changes-allowed` and the test run re-run by the coordinator, then merged to `main`.
-2. **Her test round 2** — set the test page up from her app's store, run `build/test_page_check.js`,
-   build with `--test-page`, publish to the test page, send her the link, the checklist and the latest
-   sweep file ("Her tests").
-3. **4A–4F** — one copy of every fact, in that order (see "Work items now"); her tests after 4A and 4E.
-4. **5** — the UI split into its screens (its design written here first), then **her test round 3**.
-5. **Publish to her app when she says.** That publish also brings the `art-watch-` file names for
+1. **4A–4F** — one copy of every fact, in her order: 4A venue facts, 4B saving, 4C the web-address
+   clean-up, 4D the sweep import, 4E catalogue lookup, 4F manual import and the shop finder (the items
+   under "Work items now"; the evidence for each, with numbers and examples, in
+   `docs/restructure/duplicates.md` — re-check each finding against the code and her store first).
+   Per item: write its design here first (what becomes the one home, what is deleted, what she will see
+   change, if anything), then one branch (`claude/restructure-4a` …), one sub-agent, gates with
+   `--changes-allowed`, the test run re-run by the coordinator, merge. Her test on the test page after
+   4A and after 4E, set up from her app's store first ("Her tests"). A change to her store or her ledger
+   (4A's corrected records, 4E's seven publishers) needs her yes and a backup first.
+2. **5** — the UI split into its screens (its design written here first), then **her test round 3**.
+3. **Publish to her app when she says.** That publish also brings the `art-watch-` file names for
    saved ledgers and safety copies (on `main` since round 1).
+
+**4A's open design question, to settle in its design:** the register lives in the code, and the store
+holds only venues met since the last publish. The build cannot read her store itself — the session
+reads `venues/occasional` with ArtifactData into a file the build takes in. Whether a filed venue is
+then removed from her store is a write to her store: her yes first.
+
+**The coordinator's own lessons from 3a–3d (keep):** name both the model and the effort (low or
+medium) on every sub-agent, or her permission does not cover it and it waits for her; check the
+branch is checked out before a sub-agent starts (a session restart puts the checkout back on `main`);
+when a list is re-sorted or restated, match every item across before sending it to her.
 
 The checks, before any item: read "The design of each item", "The side-by-side check for items that
 change code" and "Her tests".
