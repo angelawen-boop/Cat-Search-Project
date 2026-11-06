@@ -102,6 +102,13 @@ if (layerId && joined) {
   if (notes.length) console.log(notes.join('\n'));
 }
 
+// ── One copy of every fact: venue facts in the register only; no sentence, list or rule written twice ──
+{
+  const fc = spawnSync(process.execPath, [path.join(__dirname, 'fact_check.js'), '--root', ROOT], { encoding: 'utf8', maxBuffer: 64 << 20 });
+  const lines = ((fc.stdout || '') + (fc.stderr || '')).split('\n').filter(l => /^(FAIL|PASS|FACT)/.test(l));
+  fc.status === 0 ? pass('fact check: every venue fact is in venues/register.js; no sentence, list or rule written twice (the copies listed for 4B–4F aside)') : fail('fact check:\n' + lines.join('\n'));
+}
+
 // ── Identity, then Gate 3 ───────────────────────────────────────────────────
 const identical = nowText === baseText;
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'cw-gates-'));

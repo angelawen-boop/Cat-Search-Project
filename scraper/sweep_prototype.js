@@ -6237,7 +6237,7 @@ module.exports = {
   // Not pure — exported so a check can run the real detail-page pass offline.
   fetchIndividualPages,
   // For from_saved_pages.js: the sweep's own finish, over pages she saved.
-  noteTravellingRuns, writeVenueCsv, rebuildSweepCsv, RUN_DIR, routineFrom, applyRoutineWindow,
+  noteTravellingRuns, placeTravellingRuns, writeVenueCsv, rebuildSweepCsv, RUN_DIR, routineFrom, applyRoutineWindow,
   // Pure — asked directly by the fixtures.
   addNote, finishNotes, scopeSelector,
   // Exported so compress.js's mirrored location list can be checked against the

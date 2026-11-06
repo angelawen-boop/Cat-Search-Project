@@ -40,6 +40,7 @@ const SUITES = [
   [SCRAPER, 'node --test scraper/date.test.js scraper/qc.test.js scraper/sweep_log.test.js scraper/venue_status.test.js scraper/pacing.test.js scraper/sweep_diff.test.js scraper/routine_window.test.js'],
   [BOTH,    'node --test scraper/compress.test.js'],
   [[...BOTH, LINKS], 'node --test scraper/answer_check.test.js'],
+  [[...BOTH, LINKS], 'node --test scraper/venue_register.test.js'],
   [[...EVERY_APP, SCRAPER], 'node --test scraper/test_watch.test.js'],
   [[...EVERY_APP, SCRAPER], 'node scraper/fixtures/intake_cases.js'],
   [EVERY_APP, 'node scraper/fixtures/page_loads.js'],
@@ -170,6 +171,9 @@ async function main() {
   // No part names a higher one, only the store's door reaches the store, and hooks and JSX stay in the screens (build/structure_check.js).
   const structure = spawnSync('node', [path.join(ROOT, 'build', 'structure_check.js')], { encoding: 'utf8' });
   if (structure.status !== 0) { console.error((structure.stdout || structure.stderr || 'structure_check.js failed').trim()); process.exit(1); }
+  // Every venue fact in venues/register.js, and no sentence, list or rule written twice in the parts (build/fact_check.js).
+  const facts = spawnSync('node', [path.join(ROOT, 'build', 'fact_check.js')], { encoding: 'utf8' });
+  if (facts.status !== 0) { console.error((facts.stdout || facts.stderr || 'fact_check.js failed').trim()); process.exit(1); }
 
   const what = 'node scraper/run_tests.js ' + args.join(' ');
   W.takeLock(what.trim(), expected);

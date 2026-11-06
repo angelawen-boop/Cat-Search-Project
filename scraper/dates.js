@@ -755,11 +755,11 @@ function capsTitleParts(title) {
   return String(title).split(/(\s*[:–—]\s*)/).map((seg, i) => i % 2 ? seg : titleFromCaps(seg)).join('');
 }
 
-// The swept venues that type their titles in capitals (her decisions; docs/venues.md): code writes
+// The swept venues that type their titles in capitals (read.titleCaps on the register; her decisions; docs/venues.md): code writes
 // ordinary capitals, and at the Borghese the full stop between name and subtitle becomes an em dash
 // ("Louise Bourgeois — Unconscious Memories"). One copy: the sweep's recipes take it (`capsTitleRule`)
 // and Add by link files the same title for the same venue.
-const SWEPT_CAPS_TITLES = { borghese: { stopToDash: true }, ashmolean: {} };
+const SWEPT_CAPS_TITLES = Object.fromEntries(REGISTER.filter(v => v.read.titleCaps).map(v => [v.id, v.read.titleCaps === 'stopToDash' ? { stopToDash: true } : {}]));
 function capsTitleRule(code) {
   const r = SWEPT_CAPS_TITLES[code];
   return r ? { capsTitles: true, ...(r.stopToDash ? { stopToDash: true } : {}) } : {};
