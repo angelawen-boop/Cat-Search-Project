@@ -1,18 +1,15 @@
 //@ Editions and versions of the book, their order and blocks.
-//@piece VENUE_LANGUAGE
+//@piece editionQueries
 
 
 // ── WHERE AN ENGLISH EDITION IS RECORDED ─────────────────────────────────────
-// The venue's language, for the library-record wording "originally published in
+// The venue's language (its register entry), for the library-record wording "originally published in
 // French as …". Non-English venues only, beside CATALOGUE_WORDS.
-const VENUE_LANGUAGE={louvre:"French",orsay:"French",mad:"French",jacquemart:"French",mam:"French",
-  khm:"German",rijks:"Dutch",uffizi:"Italian",dellav:"Italian",borghese:"Italian",brera:"Italian",capo:"Italian"};
-//@piece editionQueries
 
 // Aimed at where an English edition is recorded, library catalogues included. The
 // show's English title with the publisher stays when the publisher is already known.
 function editionQueries(mu,row,book,isbn,pub){
-  const lang=mu&&VENUE_LANGUAGE[mu.id];
+  const lang=mu&&mu.language;
   const head=String(row.title||"").split(/\s*:\s*/)[0].trim();
   return [book+" English edition"]
     .concat(lang?["originally published in "+lang+" as "+book]:[])
@@ -399,7 +396,7 @@ function foldCoEditions(versions,results,museumId,log){
 // then English from anyone else; then other languages. Within each, hardcover, then paperback,
 // then a binding not known; otherwise as found. The first is the starting pick. VO-001 to VO-009.
 function rankedOwn(name,museumId){
-  const extra=(linkEntry(museumId)||{}).rankAsOwn||[];
+  const extra=REG[museumId]?REG[museumId].shop.rankAsOwn:[];
   return venuePrinting(name,museumId)||extra.some(h=>String(name||"").split(HOUSE_SPLIT).some(p=>sameHouse(p.trim(),h)));
 }
 //@piece versionRank
@@ -479,9 +476,9 @@ function versionNote(vs,i,row){
   // One house, the versions differing only in language (Metamorphoses): no notes.
   const langs=new Set(mine.map(x=>foldText(x.lang||"")));
   if(mine.length===vs.length&&langs.size===mine.length&&mine.every(x=>x.publisher&&sameHouse(x.publisher,mine[0].publisher)))return null;
-  // Printed for another showing: another museum's own, or a city not this venue's.
-  const city=mu&&mu.city?foldText(mu.city):"";
-  if(!venuePrinting(v.publisher,id)&&((vc&&foldText(vc)!==city)||(v.publisher&&museumImprintOnly(v.publisher,id))))return where;
+  // Printed for another showing: another museum's own, or a city not this venue's (its city, or any of its galleries).
+  const cities=mu?[mu.city,...(mu.places||[])].filter(Boolean).map(foldText):[];
+  if(!venuePrinting(v.publisher,id)&&((vc&&!cities.includes(foldText(vc)))||(v.publisher&&museumImprintOnly(v.publisher,id))))return where;
   if(vs.some(x=>x.showing==="other"))return "this showing's catalogue";
   const english=isEnglishLang(v.lang), hasEnglish=mine.some(x=>isEnglishLang(x.lang)), hasOriginal=mine.some(x=>x.lang&&!isEnglishLang(x.lang));
   if(!english&&v.lang&&hasEnglish)return "the original edition";
@@ -506,7 +503,7 @@ function versionBlock(vs,i,row){
   return{i,picked:row.editionPick===i,title:v.title||null,
     publisher:v.publisher?v.publisher+(later?" \u00b7 "+v.year:""):null,facts:facts||null,
     isbn:v.isbn13?fmtIsbn(v.isbn13):null,
-    also:v.isbn13&&v.alsoIsbn13?{isbn:fmtIsbn(v.alsoIsbn13),whose:(mu?mu.short:"venue")+"\u2019s own number for the same book"}:null,
+    also:v.isbn13&&v.alsoIsbn13?{isbn:fmtIsbn(v.alsoIsbn13),whose:(mu?mu.card:"venue")+"\u2019s own number for the same book"}:null,
     why:note?note.charAt(0).toUpperCase()+note.slice(1)+".":null,source:sourceOf(v.proofUrl)};
 }
 //@piece versionBlocks

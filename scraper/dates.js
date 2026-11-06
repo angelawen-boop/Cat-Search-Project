@@ -764,9 +764,24 @@ function capsTitleRule(code) {
   const r = SWEPT_CAPS_TITLES[code];
   return r ? { capsTitles: true, ...(r.stopToDash ? { stopToDash: true } : {}) } : {};
 }
-// A swept venue's title as the sweep writes it: the em dash first where the venue takes one, then
-// ordinary capitals for a title typed wholly in them. Other venues' titles are returned as they are.
+// A venue with several galleries (read.places on its register entry): a gallery tacked onto the title
+// after a dash ("… – Acquavella Palm Beach", "… – Lévy Gorvy Dayan, London") is not part of the title
+// (her decision). A gallery in brackets, the sweep's mark of a show run in two, stays.
+const foldPlace = s => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+function withoutPlaceTail(code, title) {
+  const e = REGISTER.find(v => v.id === code);
+  if (!e || !e.read.places.length || !title) return title;
+  const t = String(title), m = /\s+[-\u2013\u2014]\s+([^-\u2013\u2014()]+)$/.exec(t);
+  if (!m) return title;
+  const owner = foldPlace(e.read.placeOwner || '');
+  let tail = foldPlace(m[1]).trim();
+  if (owner && tail.startsWith(owner)) tail = tail.slice(owner.length).replace(/^,?\s+/, '');
+  return e.read.places.some(p => foldPlace(p) === tail) ? t.slice(0, m.index).trim() : title;
+}
+// A swept venue's title as the sweep writes it: a gallery tacked onto it taken off, the em dash first
+// where the venue takes one, then ordinary capitals for a title typed wholly in them.
 function sweptVenueTitle(code, title) {
+  title = withoutPlaceTail(code, title);
   const r = SWEPT_CAPS_TITLES[code];
   if (!r || !title) return title;
   return titleFromCaps(r.stopToDash ? String(title).replace(/\.\s+(?=\S)/g, ' — ') : title);
@@ -786,6 +801,7 @@ module.exports = {
   NO_DATES_NOTE,
   DATE_ORDER,
   SPACED_YEAR_VENUES,
+  withoutPlaceTail,
   ORDER_UNKNOWN_NOTE,
   numberOrder,
   SWEPT_CAPS_TITLES,

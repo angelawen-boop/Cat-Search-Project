@@ -17,8 +17,8 @@ check('PS-001 Antiquity first', rank('antiquity')===0);
 // Period, then year, then her venue order (two Monet shows of the same year).
 const met={museumId:'met',period:'impressionism',periodYear:1900};
 const orsay={museumId:'orsay',period:'impressionism',periodYear:1900};
-const metFirst=H.VENUE_ORDER.indexOf('met')<H.VENUE_ORDER.indexOf('orsay');
-check('PS-002 a tie goes in her venue order', metFirst===(H.periodCompare(met,orsay)<0)&&H.periodCompare(met,orsay)!==0, {met:H.VENUE_ORDER.indexOf('met'),orsay:H.VENUE_ORDER.indexOf('orsay')});
+const metFirst=Object.keys(H.CHIP_RANK).indexOf('met')<Object.keys(H.CHIP_RANK).indexOf('orsay');
+check('PS-002 a tie goes in her venue order', metFirst===(H.periodCompare(met,orsay)<0)&&H.periodCompare(met,orsay)!==0, {met:Object.keys(H.CHIP_RANK).indexOf('met'),orsay:Object.keys(H.CHIP_RANK).indexOf('orsay')});
 check('PS-003 the period outranks the year', H.periodCompare({museumId:'met',period:'dutch',periodYear:1610},{museumId:'met',period:'baroque',periodYear:1690})>0);
 check('PS-003 the year orders within a period', H.periodCompare({museumId:'met',period:'highren',periodYear:1500},{museumId:'met',period:'highren',periodYear:1520})<0);
 

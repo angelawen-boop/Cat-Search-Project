@@ -34,7 +34,7 @@ const { venueShape, isMarker } = require('./qc.js');
 // The venue list comes from the recipes themselves. A second hand-typed list of
 // venue codes has already cost this project once — two finished recipes could
 // not be selected and nothing said why — so there is no copy here to drift.
-const { VENUES, machineOf } = require('./sweep_prototype.js');
+const { VENUES, machineOf, venueLabel } = require('./sweep_prototype.js');
 const W = require('./routine_window.js');
 
 const OUTPUT_DIR = path.join(__dirname, 'output');
@@ -102,7 +102,7 @@ function whyFrom(rows, code) {
 function collect() {
   const state = new Map();
   for (const code of Object.keys(VENUES)) {
-    state.set(code, { code, name: VENUES[code].name,
+    state.set(code, { code, name: venueLabel(code),
       machine: { home: 'her laptop', container: 'container', none: 'not swept (by link)' }[machineOf(code)],
       rows: null, rowsFrom: null, summaries: 0, triedFrom: null, markersOnly: false,
       why: null });

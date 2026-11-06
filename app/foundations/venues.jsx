@@ -29,7 +29,7 @@ function venueView(e,rec,fallback){
   const v={id:e?e.id:s.id,card,chip:n.chip||null,group:n.group||null,name,nameInEnglish:n.inEnglish||null,
     aka:s.aka||n.aka||[],lookupName:n.lookup||card,replaced:n.replaced||[],hers:!!n.hers,
     city:s.city||(e&&e.city)||null,country:s.country||(e&&e.country)||null,english:en===false?false:undefined,language:(e&&e.language)||null,
-    linkRead:linkRulesOf(e),sites:rd.sites||[],subtitleUnderHeading:!!rd.subtitleUnderHeading,
+    linkRead:linkRulesOf(e),sites:rd.sites||[],places:rd.places||[],subtitleUnderHeading:!!rd.subtitleUnderHeading,
     inStock:sh.inStock||null,shopQueries:sh.queries&&sh.queries.length?sh.queries:null,shopNamed:sh.named||null,rankAsOwn:sh.rankAsOwn||[],
     exBase:e?e.sweep.exBase:null,listUrl:e?e.sweep.listUrl:null,occasional:manual};
   if(!manual)return{...v,shopHome:sh.home,shopCatalogues:sh.catalogues,shopSearch:sh.search,shopUnseen:sh.unseen||undefined};

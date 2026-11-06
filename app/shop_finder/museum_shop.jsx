@@ -516,7 +516,7 @@ async function discoverShop(pageShop,museumHost,venueName,turnedDown,venueId,tra
 // A Shop button on the museum's own site (Berlin's smb.museum/webshop) vouches for that page, not
 // the whole site: "Online Catalogues & Databases" there is no shop.
 function shopFinderStart(pageShop,museumHost,venueName,turnedDown,venueId,trace){
-  const sf={pageShop,museumHost,venueName,venueId,trace,no:new Set((turnedDown||[]).map(normalizeUrlKey)),own:linkEntry(venueId)||{},
+  const sf={pageShop,museumHost,venueName,venueId,trace,no:new Set((turnedDown||[]).map(normalizeUrlKey)),own:REG[venueId]?venueView(REG[venueId]):{},
     pageShopHost:baseDomain(hostOf(pageShop))===baseDomain(museumHost)?"":hostOf(pageShop),
     opens:0,seenText:"",died:null,opened:new Set(),mine:[],root:"",front:"",pick:null,best:null,
     texts:new Map(),failed:new Set(),walked:new Set(),walkOpens:0,translated:[],unread:[]};
@@ -530,7 +530,7 @@ function shopFinderStart(pageShop,museumHost,venueName,turnedDown,venueId,trace)
   sf.note=(step,what)=>{ if(trace)trace.push({step,...what}); };
   // The museum's own name as a section's label: its address's name ("kmska"), or the names it goes by.
   const plain=x=>foldText(x||"").replace(/[^a-z0-9]+/g," ").trim();
-  const names=new Set([baseDomain(museumHost).split(".")[0],sf.own.short,sf.own.notCard,sf.own.name,venueName].map(plain).filter(x=>x.length>=3));
+  const names=new Set([baseDomain(museumHost).split(".")[0],...venueNames(sf.own),venueName].map(plain).filter(x=>x.length>=3));
   sf.ownName=label=>names.has(plain(label));
   // A proven section kept: the exhibition-catalogues section ends the search; anything less is kept
   // as the best so far, in case the shop has none.

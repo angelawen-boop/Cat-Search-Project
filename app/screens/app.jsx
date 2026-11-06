@@ -249,6 +249,7 @@ export default function App(){
     // The cloud copy is read on open; during the trial it is only read (CLOUD_OPENS).
     (async()=>{
       if(await cloudOtherEditing())goReadOnly();
+      tidyOccasional();
       const o=await cloudOpenRead(cloudT);
       setCloudLive(o.live);
       if(o.off){ setSaveState("off"); setSaveErr(o.off); }
@@ -549,7 +550,7 @@ export default function App(){
   function confirmShop(id,english){ const v=occVenues[id]; if(!v)return; const whole=v.shop==="noshelf"&&v.shopHome?{shop:"found",shopCatalogues:v.shopHome,shelfKind:"front"}:{};
     holdVenues({...occVenues,[id]:{...v,beforeAnswer:v.beforeAnswer||foundShop(v),...whole,confirmed:true,englishPicked:!!english,shopAdded:false}}); }
   // "No shop": the lookup goes straight to the web, as at Capodimonte.
-  function noShopFor(id){ const v=occVenues[id]; if(v)holdVenues({...occVenues,[id]:{...v,beforeAnswer:v.beforeAnswer||foundShop(v),shop:"none",confirmed:true,shopHome:null,shopCatalogues:null,shelfKind:null,shopSearch:null,why:null,shopEnglishUnread:null,englishPicked:false,shopAdded:false}}); }
+  function noShopFor(id){ const v=occVenues[id]; if(v)holdVenues({...occVenues,[id]:{...v,beforeAnswer:v.beforeAnswer||foundShop(v),shop:"none",confirmed:true,...SHOP_RESET,shopAdded:false}}); }
   // "Add": her own link taken as the section. Its search is worked out at the venue's first lookup (fillShopSearch).
   // Not a link → the box stays open.
   function addShopFor(id,text){
@@ -557,7 +558,7 @@ export default function App(){
     if(!String(text||"").trim()){ setShopAdding(null); return; }
     const href=typedLink(text); if(!href)return;
     setShopAdding(null);
-    holdVenues({...occVenues,[id]:{...v,beforeAnswer:v.beforeAnswer||foundShop(v),shop:"found",shopHome:originOf(href),shopCatalogues:href,shelfKind:null,shopSearch:null,searchRule:null,why:null,shopEnglishUnread:null,englishPicked:false,shopAdded:true,foundBy:"her link",confirmed:true}});
+    holdVenues({...occVenues,[id]:{...v,beforeAnswer:v.beforeAnswer||foundShop(v),shop:"found",...SHOP_RESET,shopHome:originOf(href),shopCatalogues:href,searchRule:null,shopAdded:true,foundBy:"her link",confirmed:true}});
   }
   // "Look again": a new search NOW, skipping only the pages she turned down, never the
   // whole site.
@@ -571,7 +572,7 @@ export default function App(){
     setShopLooking(null);
     setOccVenues(prev=>{
       const{beforeAnswer,...was}=prev[id];
-      const next={...prev,[id]:{...was,shopHome:null,shopCatalogues:null,shelfKind:null,shopSearch:null,why:null,shopEnglishUnread:null,englishPicked:false,shopAdded:false,...shop,confirmed:false,turnedDown}};
+      const next={...prev,[id]:{...was,...SHOP_RESET,shopAdded:false,...shop,confirmed:false,turnedDown}};
       registerOccasional(next); return next; });
   }
   // The shop screen asks about a venue outside her list whose shop is unconfirmed (venuesGoingIn).
@@ -1187,7 +1188,7 @@ export default function App(){
             const stale=v.returned&&v.attempted&&v.returned!==v.attempted;
             return(
               <div key={m.id} style={{display:"grid",gridTemplateColumns:"minmax(0,1.1fr) minmax(0,1fr) minmax(0,1fr)",gap:8,fontSize:10.5,color:C.soft,padding:"3px 0",alignItems:"baseline"}}>
-                <span style={{color:C.ink}}>{m.short}</span>
+                <span style={{color:C.ink}}>{m.card}</span>
                 <span>{momentLines("swept ",v.attempted)}</span>
                 <span style={{color:v.returned?(stale?TH.urgent.ink:C.soft):TH.urgent.ink,fontWeight:stale||!v.returned?600:400}}>
                   {v.returned?momentLines("rows ",v.returned):"no rows \u2014 refused"}
@@ -1197,7 +1198,7 @@ export default function App(){
           })}
           {MUSEUMS.filter(m=>!venueSeen[m.id]).length>0&&
             <div style={{fontSize:10.5,color:C.soft,marginTop:6,paddingTop:5,borderTop:"1px solid "+C.rule}}>
-              {"Not in any sweep yet: "+MUSEUMS.filter(m=>!venueSeen[m.id]).map(m=>m.short).join(", ")+"."}
+              {"Not in any sweep yet: "+MUSEUMS.filter(m=>!venueSeen[m.id]).map(m=>m.card).join(", ")+"."}
             </div>}
         </div>}
 
@@ -1226,7 +1227,7 @@ export default function App(){
         </div>
         <div style={{display:"flex",gap:4,flexWrap:"wrap",alignItems:"center"}}>
           <span style={{fontSize:9,letterSpacing:"0.12em",textTransform:"uppercase",color:C.soft,marginRight:2}}>Venue</span>
-          {MUSEUMS.filter(m=>!m.underOcc).map(m=>m.id).concat(Object.keys(LINK_VENUES).filter(ownChip)).sort((a,b)=>orderOf(a)-orderOf(b)).filter((id,i,all)=>all.findIndex(x=>chipKey(x)===chipKey(id))===i).map(id=><button key={chipKey(id)} onClick={()=>toggleSet(setVenueF,chipKey(id))} style={chip(venueF.has(chipKey(id)))}>{(x=>x.chip||x.short)(MU[id]||LINK_VENUES[id])}</button>)}
+          {chipVenues().map(id=><button key={chipKey(id)} onClick={()=>toggleSet(setVenueF,chipKey(id))} style={chip(venueF.has(chipKey(id)))}>{REG[id].names.chip}</button>)}
           {OCC_CHIPS.map(([k,l])=><button key={k} onClick={()=>toggleSet(setVenueF,k)} style={chip(venueF.has(k))}>{l}</button>)}
         </div>
         <div style={{display:"flex",gap:4,flexWrap:"wrap",alignItems:"center"}}>
@@ -1363,7 +1364,7 @@ export default function App(){
             if(!hits.length)return <div style={{fontSize:12,color:C.soft,marginTop:8}}>{"No searched cards match."}</div>;
             return hits.map(r=>(
               <div key={r.id} style={{display:"flex",gap:10,fontSize:12.5,color:C.ink,padding:"4px 0",alignItems:"baseline",marginTop:4}}>
-                <span style={{minWidth:130,fontWeight:600}}>{MU[r.museumId]?MU[r.museumId].short:r.museumId}</span>
+                <span style={{minWidth:130,fontWeight:600}}>{MU[r.museumId]?MU[r.museumId].card:r.museumId}</span>
                 <button onClick={()=>setConfirmBox({title:"Reset this search?",yes:"Yes",act:()=>{
                   commit(resetOneCard(rows,r.id));
                   if(recheckSaid&&recheckSaid.id===r.id)setRecheckSaid(null);
@@ -1381,7 +1382,7 @@ export default function App(){
           {/* By venue only (her decision): venues in the app's order, titles A–Z. */}
           {ignoredByVenue.map(x=>(
             <div key={x.key} style={{display:"grid",gridTemplateColumns:"minmax(60px,0.7fr) minmax(0,2fr) auto",gap:10,fontSize:12.5,color:C.ink,padding:"4px 0",alignItems:"baseline"}}>
-              <span style={{fontWeight:600}}>{MU[x.venueId]?MU[x.venueId].short:x.venueId}</span>
+              <span style={{fontWeight:600}}>{MU[x.venueId]?MU[x.venueId].card:x.venueId}</span>
               <span>{x.title||"(no title)"}</span>
               <button onClick={()=>{
                 if(roStop())return;
@@ -1542,7 +1543,7 @@ export default function App(){
                   if(!grp.length)return null;
                   return(
                     <div key={m.id} style={{marginBottom:10}}>
-                      <div style={{fontSize:10,letterSpacing:"0.14em",textTransform:"uppercase",color:C.soft,marginBottom:6,fontWeight:600}}>{m.short}</div>
+                      <div style={{fontSize:10,letterSpacing:"0.14em",textTransform:"uppercase",color:C.soft,marginBottom:6,fontWeight:600}}>{m.card}</div>
                       {grp.map(({p,i})=>renderProposalCard(p,i))}
                     </div>
                   );
@@ -1574,7 +1575,7 @@ export default function App(){
                   if(!grp.length)return null;
                   return(
                     <div key={"cvg"+m.id} style={{marginBottom:10}}>
-                      <div style={{fontSize:10,letterSpacing:"0.14em",textTransform:"uppercase",color:C.soft,marginBottom:6,fontWeight:600}}>{m.short}</div>
+                      <div style={{fontSize:10,letterSpacing:"0.14em",textTransform:"uppercase",color:C.soft,marginBottom:6,fontWeight:600}}>{m.card}</div>
                       {grp.map((cv,i)=>(
                         <div key={"cv"+i} style={{border:"1px solid "+C.rule,borderRadius:6,padding:"8px 10px",marginBottom:6,background:C.card}}>
                           <div style={{fontSize:12,color:C.ink}}>{cv.what}</div>
@@ -1637,7 +1638,7 @@ export default function App(){
                         style={{display:"flex",alignItems:"center",gap:8,width:"100%",textAlign:"left",background:"none",
                                 border:"none",borderBottom:"1px solid "+C.rule,padding:"6px 0",marginBottom:8,cursor:"pointer",color:C.accent}}>
                         <span style={{fontSize:10,lineHeight:1,width:10,display:"inline-block",transform:vOpen?"rotate(90deg)":"none",transition:"transform .12s"}}>{"\u25B6"}</span>
-                        <span style={{fontSize:14,letterSpacing:"0.01em",fontWeight:700}}>{m.card||m.short}</span>
+                        <span style={{fontSize:14,letterSpacing:"0.01em",fontWeight:700}}>{m.card}</span>
                         <span style={{fontSize:12,fontWeight:700}}>{"\u00b7"} {grp.length}</span>
                         {/* The undecided count per venue, only where there is work: a
                             closed venue still declares what it holds; a "0" is clutter
@@ -1712,7 +1713,7 @@ export default function App(){
                 const yes=v.confirmed&&v.shop==="found"&&!v.englishPicked&&!v.shopAdded, yesEn=v.confirmed&&!!en&&!!v.englishPicked, none=v.confirmed&&v.shop==="none", added=v.confirmed&&!!v.shopAdded;
                 const typing=shopAdding&&shopAdding.id===id;
                 return <div key={id} style={{paddingTop:12,marginTop:10,borderTop:"1px solid "+C.rule,fontSize:12.5,color:C.ink,lineHeight:1.45}}>
-                  <div style={{fontWeight:600}}>{(MU[id]&&(MU[id].card||MU[id].short))||v.short||v.name||id}</div>
+                  <div style={{fontWeight:600}}>{(MU[id]&&MU[id].card)||v.short||v.name||id}</div>
                   {link?<div>{lesser&&<span style={{color:C.soft}}>{lesser}</span>}<a href={link} target="_blank" rel="noopener noreferrer" style={{color:C.action,overflowWrap:"anywhere"}}>{link}</a></div>
                     :<div style={{color:C.soft}}>{said}{home&&v.shop==="noshelf"&&<a href={home} target="_blank" rel="noopener noreferrer" style={{color:C.action,overflowWrap:"anywhere"}}>{home}</a>}</div>}
                   <div style={{display:"flex",gap:6,marginTop:6,alignItems:"center",flexWrap:"wrap"}}>

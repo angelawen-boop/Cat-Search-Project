@@ -153,7 +153,7 @@ function analyzeProForma(text,rows,ignoredKeys,opts){
     const sweptAt=get(r,"swept_at");
     if(KNOWN_VENUES.has(vc)) attempted[vc]=later(attempted[vc],sweptAt);
     if(isMarkerRow(rowNote)){
-      coverage.push({venueId:KNOWN_VENUES.has(vc)?vc:null,venueShort:KNOWN_VENUES.has(vc)?MU[vc].short:(vc||"(blank)"),what:title||"(a listing page)",why:rowNote,url:get(r,"url"),line});
+      coverage.push({venueId:KNOWN_VENUES.has(vc)?vc:null,venueShort:KNOWN_VENUES.has(vc)?MU[vc].card:(vc||"(blank)"),what:title||"(a listing page)",why:rowNote,url:get(r,"url"),line});
       continue;
     }
     if(KNOWN_VENUES.has(vc)&&title) returned[vc]=later(returned[vc],sweptAt);
@@ -210,7 +210,7 @@ function analyzeProForma(text,rows,ignoredKeys,opts){
       picked:p[f],
     })):null;
 
-    if(!match){ props.push({type:"add",venueId:vc,venueShort:MU[vc].short,title,cand,notes,line:p.line,choices,merged:!!p.mergedFrom,topic:p.topic||null}); continue; }
+    if(!match){ props.push({type:"add",venueId:vc,venueShort:MU[vc].card,title,cand,notes,line:p.line,choices,merged:!!p.mergedFrom,topic:p.topic||null}); continue; }
     const upd=[];
     const consider=(field,label,oldV,newV)=>{ const o=(oldV==null?"":String(oldV)), n=(newV==null?"":String(newV)); if(!n)return; if(!o)upd.push({field,label,oldVal:"",newVal:n,kind:"fill"}); else if(o!==n)upd.push({field,label,oldVal:o,newVal:n,kind:"change"}); };
     // A changed title is a Change card, capitals-only included (her decision): a title
@@ -224,7 +224,7 @@ function analyzeProForma(text,rows,ignoredKeys,opts){
     consider("exUrl","Link",match.exUrl,url);
     if(!upd.length&&!choices){ silent++; continue; }  // identical — nothing to propose
     const hasChange=upd.some(u=>u.kind==="change");
-    props.push({type:hasChange?"change":"fill",venueId:vc,venueShort:MU[vc].short,title,cand,matchId:match.id,upd,notes,line:p.line,choices,merged:!!p.mergedFrom});
+    props.push({type:hasChange?"change":"fill",venueId:vc,venueShort:MU[vc].card,title,cand,matchId:match.id,upd,notes,line:p.line,choices,merged:!!p.mergedFrom});
   }
   const tally={
     fileRows:  table.length-1,

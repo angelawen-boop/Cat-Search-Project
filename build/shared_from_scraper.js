@@ -108,7 +108,7 @@ function answerCheckBlock(root = DEFAULT_ROOT) {
   const end = src.indexOf('\nmodule.exports');
   if (start < 0 || end < 0) die('scraper/answer_check.js has lost its \'use strict\' line or its module.exports');
   // Wrapped so its names (fold, CLAIMS…) cannot collide with the app's.
-  return 'const ANSWER_CHECK=(()=>{\n' + src.slice(start + "'use strict';".length, end).trim() + '\nreturn { MAX_WORDS, validateAnswer, validateEnglish, stringFaults, unsupportedClaims, rewordsTitle, REWORDS_TITLE };\n})();';
+  return 'const ANSWER_CHECK=(()=>{\n' + src.slice(start + "'use strict';".length, end).trim() + '\nreturn { MAX_WORDS, validateAnswer, validateEnglish, stringFaults, unsupportedClaims, rewordsTitle, REWORDS_TITLE, withoutPlaceOpener };\n})();';
 }
 
 function boilerplateBlock(root = DEFAULT_ROOT) {
@@ -147,11 +147,13 @@ function rulesText(root = DEFAULT_ROOT) {
 // without one is returned as it is.
 function expandShared(text, root = DEFAULT_ROOT) {
   for (const [directive, body] of [[DIRECTIVE, () => rulesText(root)], [REGISTER_DIRECTIVE, () => registerBlock(root) + '\n']]) {
-    const line = directive + '\n';
-    const at = text.indexOf('\n' + line);
+    // The directive may be the piece's last line (the register's).
+    const t = text.endsWith('\n' + directive) ? text + '\n' : text, line = directive + '\n';
+    const at = t.indexOf('\n' + line);
     if (at < 0) continue;
-    if (text.indexOf('\n' + line, at + 1) >= 0) die('a piece holds the directive ' + directive + ' twice');
-    return text.slice(0, at + 1) + body() + text.slice(at + 1 + line.length);
+    if (t.indexOf('\n' + line, at + 1) >= 0) die('a piece holds the directive ' + directive + ' twice');
+    const out = t.slice(0, at + 1) + body() + t.slice(at + 1 + line.length);
+    return t === text ? out : out.replace(/\n$/, '');
   }
   return text;
 }

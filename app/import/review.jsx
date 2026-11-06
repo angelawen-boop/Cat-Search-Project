@@ -48,10 +48,14 @@ function cardOutcome(p,dec){
   if(dec.mode==="addnew")return"accepted";
   return Object.values(dec.fields||{}).some(v=>v==="accept")?"accepted":"rejected";
 }
+//@piece SHOP_RESET
+
+// A venue's shop as the finder leaves it before it looks, or after her "No shop" (each caller adds its own answer).
+const SHOP_RESET={shopHome:null,shopCatalogues:null,shelfKind:null,shopSearch:null,why:null,shopEnglishUnread:null,englishPicked:false};
 //@piece SHOP_FIELDS
 
 // What the shop finder found for a venue, before her answer on the shop screen.
-const SHOP_FIELDS=["shop","shopHome","shopCatalogues","shelfKind","shopSearch","why","shopEnglishUnread","englishPicked","shopAdded","confirmed"];
+const SHOP_FIELDS=["shop",...Object.keys(SHOP_RESET),"shopAdded","confirmed"];
 //@piece foundShop
 
 const foundShop=v=>Object.fromEntries(SHOP_FIELDS.filter(k=>v[k]!==undefined).map(k=>[k,v[k]]));
@@ -71,8 +75,8 @@ function answeredOnly(venues,saved,going){
 
 // The venues outside her list with at least one card going in. A venue whose every card is
 // rejected, undecided or quarantined is not asked about its shop (her decision; AL-046).
-// A venue whose shop section is written into its LINK_VENUES entry (`shopCatalogues`, Basel, the Städel).
-const shopWrittenIn=id=>!!(linkEntry(id)||{}).shopCatalogues;
+// A venue whose shop section is written into its register entry (shop.catalogues: Basel, the Städel).
+const shopWrittenIn=id=>isOcc(id)&&!!(REG[id]&&REG[id].shop.catalogues);
 //@piece venuesGoingIn
 
 function venuesGoingIn(proposals,decisions){

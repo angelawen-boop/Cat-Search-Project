@@ -36,7 +36,7 @@ function cardsToReset(rows,q){
   const k=foldText;
   const want=k(q).trim();
   if(!want)return[];
-  return rows.filter(r=>r.looked&&[r.title,r.catalogueTitle,MU[r.museumId]&&MU[r.museumId].short,MU[r.museumId]&&MU[r.museumId].name]
+  return rows.filter(r=>r.looked&&[r.title,r.catalogueTitle,...venueNames(MU[r.museumId])]
     .some(t=>k(t).includes(want)));
 }
 //@piece LOOKUP_STAGE

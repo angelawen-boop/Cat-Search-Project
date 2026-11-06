@@ -1,9 +1,8 @@
-//@ Venue link rules (LINK_VENUES), Occasional venues and how a link's venue is decided.
+//@ Manual-import venues: the Occasional chips and order, the waiting room (venues/occasional) over the register, and how a link's venue is decided.
 //@piece OCC_COUNTRY_ORDER
 
 // The Occasional venues (no chip of their own) follow, by country: the United States, the rest of that group
-// (Australia), then Europe in her country order (her decision). Hard-coded, her decision: the countries of the venues that
-// store no country (below); a venue the store holds a country for takes that one.
+// (Australia), then Europe in her country order (her decision). A venue's country is on its register entry.
 const OCC_COUNTRY_ORDER=["United States","United Kingdom","Germany","Belgium","France","Switzerland","Italy","Spain","Netherlands"];
 //@piece OCC_EUROPE_ELSE
 
@@ -11,16 +10,9 @@ const OCC_EUROPE_ELSE=["Austria","Denmark","Sweden","Norway","Finland","Portugal
 //@piece OCC_COUNTRY_NAMES
 
 const OCC_COUNTRY_NAMES={"usa":"United States","us":"United States","united states of america":"United States","uk":"United Kingdom","great britain":"United Kingdom","england":"United Kingdom","scotland":"United Kingdom","wales":"United Kingdom","northern ireland":"United Kingdom","the netherlands":"Netherlands","holland":"Netherlands","czech republic":"Czechia","deutschland":"Germany"};
-//@piece OCC_COUNTRY
-
-const OCC_COUNTRY={"occ-mfa-org":"United States","occ-clevelandart-org":"United States","occ-dia-org":"United States","occ-archive-worcesterart-org":"United States","occ-philamuseum-org":"United States","occ-adelsongalleries-com":"United States",
-  "occ-courtauld-ac-uk":"United Kingdom","occ-royalacademy-org-uk":"United Kingdom","ashmolean":"United Kingdom","occ-rct-uk":"United Kingdom",
-  "occ-staatsgalerie-de":"Germany","occ-hlmd-de":"Germany","occ-kmska-be":"Belgium","occ-mskgent-be":"Belgium","occ-galerie-karsten-greve-com":"France","occ-kunstmuseumbasel-ch":"Switzerland",
-  "occ-museitoscana-cultura-gov-it":"Italy","occ-palazzoducale-genova-it":"Italy","occ-palazzorealemilano-it":"Italy","occ-museothyssen-org":"Spain","occ-museoreinasofia-es":"Spain","occ-mauritshuis-nl":"Netherlands",
-  "occ-ngv-vic-gov-au":"Australia"};
 //@piece occCountry
 
-const occCountry=id=>{ const c=OCC_COUNTRY[id]||(MU[id]||{}).country||""; const k=String(c).trim().toLowerCase(); return OCC_COUNTRY_NAMES[k]||String(c).trim(); };
+const occCountry=id=>{ const k=String((MU[id]||{}).country||"").trim().toLowerCase(); return OCC_COUNTRY_NAMES[k]||String((MU[id]||{}).country||"").trim(); };
 //@piece OCC_EUROPE_TLD
 
 // "us", "eu" or "other": the three chips that hold the venues with no chip of their own.
@@ -36,20 +28,18 @@ const occRegion=id=>{ const c=occCountry(id); if(c)return(OCC_COUNTRY_ORDER.incl
 const OCC_CHIPS=[["occ:us","Occ - US"],["occ:eu","Occ - Europe"]];
 //@piece hasNoChip
 
-const hasNoChip=id=>MUSEUMS.some(m=>m.id===id&&m.underOcc)||(String(id).startsWith("occ-")&&!ownChip(id));
-//@piece OCC_NAMED_ORDER
-// MUSEUMS is sorted at load, before isOcc, ownChip and LINK_VENUES exist: orderOf reaches them only for a venue neither VENUE_ORDER nor underOcc covers.
-// Within a country, the venues her order already named come first, in that order; the rest follow by name.
-const OCC_NAMED_ORDER=["occ-mfa-org","occ-clevelandart-org","occ-dia-org","occ-archive-worcesterart-org","occ-courtauld-ac-uk","occ-royalacademy-org-uk","ashmolean","occ-museitoscana-cultura-gov-it","occ-palazzoducale-genova-it","occ-palazzorealemilano-it","occ-museothyssen-org"];
+const hasNoChip=id=>REG[id]?!REG[id].names.chip:isOcc(id);
+//@piece CHIP_RANK
+// Her order for the venues with a chip of their own: the register's.
+const CHIP_RANK=Object.fromEntries(VENUE_REGISTER.filter(e=>e.names.chip).map((e,i)=>[e.id,i]));
 //@piece orderOf
 
-const orderOf=id=>{ const i=VENUE_ORDER.indexOf(id); if(i>=0)return i; if(!hasNoChip(id))return 1e6;
-  const c=occCountry(id),j=OCC_COUNTRY_ORDER.indexOf(c),k=OCC_NAMED_ORDER.indexOf(id);
+// A venue with no chip of its own sorts by country, then in the register's order; a venue met since the
+// last publish after those of its country.
+const orderOf=id=>{ if(!hasNoChip(id))return id in CHIP_RANK?CHIP_RANK[id]:1e6;
+  const c=occCountry(id),j=OCC_COUNTRY_ORDER.indexOf(c),k=VENUE_REGISTER.findIndex(e=>e.id===id);
   const base=c==="United States"?100:occRegion(id)==="eu"?(j>=0?110+j:150):105;   // the United States, the rest of the US group (Australia), then Europe
-  return base+(k>=0?k/100:0.5); };
-//@piece stmt:MUSEUMS.sort((a,b)=>orderOf(a.id)-orderO
-
-MUSEUMS.sort((a,b)=>orderOf(a.id)-orderOf(b.id));
+  return base+(k>=0?k/1000:0.5); };
 //@piece OCC_DOC
 
 
@@ -65,162 +55,14 @@ const OCC_DOC="venues/occasional";
 //@piece isOcc
 
 const isOcc=id=>String(id||"").startsWith("occ-");
-//@piece PRM_TAIL
-
-// Palazzo Reale Milano's heading is the short name plus " - Palazzo Reale Milano", the full
-// name on a line below it (nameInLines: the longest line between title and dates that starts
-// with the short name; AL-048). Its pages on the city council's site open with a "# Navigation"
-// heading and the site's menu; the show's heading is the one ending in the venue's name
-// (titleHeading): "Palazzo Reale Milano", "Palazzo Reale, Milan" or "Royal Palace of Milan".
-// Its English pages say "as of" for "to" ("from February 21, 2019 as of June 6, 2019";
-// Antonello da Messina; asOfTo).
-const PRM_TAIL=/\s+[-–—]\s+(?:Palazzo Reale,? Milano?|Royal Palace of Milan)$/i;
-//@piece PRM_BOX
-
-// Its "Upcoming Exhibitions" box lists other shows with their dates: the show's own dates and
-// text end there (until, datesUntil; Soutine took the box's first dates).
-const PRM_BOX=/^(?:Current|Upcoming|Past) Exhibitions$|^Mostre (?:in corso|future|passate)$/i;
-//@piece LINK_VENUES
-
-
-// ── LINK VENUES ── Every venue Add by link files under, other than the swept ones in MUSEUMS:
-// one entry each, holding what she decided about it, as a MUSEUMS entry does. What the app
-// finds out (the venue's name, its shop, her confirmations) is kept in the page's store
-// (venues/occasional) and this entry wins over it (occVenue). A venue with no entry here
-// files under its own site, named by Claude when first met.
-//   ownChip      a chip of its own, labelled `chip`, else `short`; without it, "Occasional"
-//   group        venues sharing one chip (Munich)
-//   short        her name for it; `card`: her name on its cards, where that differs
-//   notCard      the card name Claude gave before she renamed it: her renames are Claude's examples
-//   name         its full name; `lookupName`: the name the catalogue lookup searches with
-//   sites        other sites its pages sit on, {host, path, line}: `path` a part of a shared
-//                site, `line` the house line naming it on a site several houses share
-//   linkRead     how its pages are read (as on a MUSEUMS entry)
-//   shopHome, shopCatalogues, shopUnseen, shopQueries, shopNamed, rankAsOwn — its shop (below)
-const LINK_VENUES={
-  // The Tate library's records file under the Tate Claude names (ownMuseumNamed); the record's
-  // summary sits under its own "Summary" heading, below the copies list and after a tab of that name.
-  "occ-library-tate-org-uk":{linkRead:{from:/^Summary$/,fromLast:true}},
-  // Galerie de la Présidence ends its show headings " : Exhibition".
-  "occ-presidence-fr":{card:"Galerie de la Pr\u00e9sidence Paris",notCard:"Paris Pr\u00e9sidence",linkRead:{titleDrop:/\s*:\s*Exhibition$/i}},
-  "occ-nga-gov":{ownChip:true,short:"NG Washington",lookupName:"NGA"},
-  "occ-nationalgalleries-org":{ownChip:true,short:"NG Scotland"},
-  // Mia's page titles end "–– Minneapolis Institute of Art".
-  "occ-new-artsmia-org":{ownChip:true,short:"Mia",lookupName:"Mia",name:"Minneapolis Institute of Art",linkRead:{titleDrop:/\s+[-–—]+\s+Minneapolis Institute of Art$/i}},
-  // rankAsOwn: other houses ranked as the venue's own in her order, display only (her decision:
-  // Yale's two imprints rank the same).
-  "occ-britishart-yale-edu":{ownChip:true,short:"Yale CBA",lookupName:"Yale Center for British Art",name:"Yale Center for British Art",rankAsOwn:["Yale University Press"]},
-  // Munich's Alte Pinakothek, Pinakothek der Moderne and Sammlung Schack: three venues on one
-  // site (pinakothek.de), one chip "Munich", the Alte first (her decision). The house line
-  // between the show's title and its dates says which ("Pinakothek der Moderne | Art"); der
-  // Moderne's own site prints "10/07/2026 - 04/10/2026" above the title, day first. The Alte
-  // and der Moderne's shops are searched in German (`shopQueries`); CEDON sells for both, its
-  // sections named for each house (`shopNamed`, namesVenue). Schack has no shop of its own and
-  // no CEDON section: it gets no shop settings, so the finder answers "none". Titles typed in
-  // capitals are recased (`capsTitles`).
-  "occ-alte-pinakothek":{ownChip:true,short:"Munich Alte Pinakothek",chip:"Munich",group:"munich-pinakotheken",lookupName:"Alte Pinakothek",name:"Alte Pinakothek M\u00fcnchen",
-    sites:[{host:"pinakothek.de",line:/^Alte Pinakothek\b/i}],
-    shopQueries:["Alte Pinakothek M\u00fcnchen Museumsshop Kataloge"],shopNamed:"Alte Pinakothek",linkRead:{capsTitles:true}},
-  "occ-pinakothek-der-moderne":{ownChip:true,short:"Munich der Moderne",chip:"Munich",group:"munich-pinakotheken",lookupName:"Pinakothek der Moderne",name:"Pinakothek der Moderne M\u00fcnchen",
-    sites:[{host:"pinakothek.de",line:/^Pinakothek der Moderne\b/i},{host:"pinakothek-der-moderne.de"}],
-    shopQueries:["Pinakothek der Moderne M\u00fcnchen Museumsshop Kataloge"],shopNamed:"Pinakothek der Moderne",linkRead:{capsTitles:true}},
-  "occ-sammlung-schack":{ownChip:true,short:"Munich Sammlung Schack",chip:"Munich",group:"munich-pinakotheken",lookupName:"Sammlung Schack",name:"Sammlung Schack",
-    sites:[{host:"pinakothek.de",line:/^Sammlung Schack\b/i}],linkRead:{capsTitles:true}},
-  // Staatliche Museen zu Berlin (smb.museum): chip "Berlin" after KHM, cards "Berlin Gemäldegalerie" (her decision).
-  // The Alte and Neue Nationalgalerie are venues under the chip too, cards "Berlin Alte NG" and "Berlin Neue NG"
-  // (her decision): their pages sit under their own paths, or carry their house line just under the dates
-  // (Böcklin, Wols); every other smb.museum page files under the Gemäldegalerie, as before (linkVenue).
-  "occ-smb-museum":{ownChip:true,short:"Berlin",chip:"Berlin",group:"berlin",card:"Berlin Gem\u00e4ldegalerie",lookupName:"Gem\u00e4ldegalerie Berlin",name:"Staatliche Museen zu Berlin"},
-  "occ-alte-nationalgalerie":{ownChip:true,short:"Berlin Alte NG",chip:"Berlin",group:"berlin",lookupName:"Alte Nationalgalerie Berlin",name:"Alte Nationalgalerie",
-    sites:[{host:"smb.museum",path:/\/museums-institutions\/alte-nationalgalerie\//i},{host:"smb.museum",line:/^Alte Nationalgalerie$/i}]},
-  "occ-neue-nationalgalerie":{ownChip:true,short:"Berlin Neue NG",chip:"Berlin",group:"berlin",lookupName:"Neue Nationalgalerie Berlin",name:"Neue Nationalgalerie",
-    sites:[{host:"smb.museum",path:/\/museums-institutions\/neue-nationalgalerie\//i},{host:"smb.museum",line:/^Neue Nationalgalerie$/i}]},
-  // Dresden's Gemäldegalerie Alte Meister: chip "Dresden", cards "Dresden Gemäldegalerie" (her
-  // decision). Its pages open with a short "# " name above every SKD museum's menu; the show's
-  // own heading follows "Active page:" (titleAfter). Dates day first with slashes; the site
-  // line ("Exhibition Site Zwinger") never reaches Claude (her decision; skip).
-  "occ-gemaeldegalerie-skd-museum":{ownChip:true,short:"Dresden",card:"Dresden Gem\u00e4ldegalerie",lookupName:"Gem\u00e4ldegalerie Alte Meister Dresden",name:"Gem\u00e4ldegalerie Alte Meister",
-    linkRead:{titleAfter:/^Active page:/,skip:/^(?:Exhibition Site\b|Opening Hours\b|\[Translate to English:\]|\u00a9)/}},
-  // The Städel (staedelmuseum.de): chip "Frankfurt" after Dresden, cards "Frankfurt Städel" (her decision).
-  // Written in, her decision: its shop's books section (the finder cannot see its books), and
-  // `shopUnseen` — its books are in the page's HTML but Parallel drops them, so a shop page
-  // with no priced line reads "Parallel fault" (docs/add_by_link.md, "Frankfurt").
-  "occ-staedelmuseum-de":{card:"St\u00e4del Frankfurt",ownChip:true,short:"Frankfurt",lookupName:"St\u00e4del Museum",name:"St\u00e4del Museum",
-    shopHome:"https://liebieghaus.ticketfritz.de/",shopCatalogues:"https://liebieghaus.ticketfritz.de/Shop/Index/staedel-publikationen/43885",shopUnseen:"parallel"},
-  // Written in, her decision: a shop drawn by script (its page's code holds no books, only a frame and a
-  // script) gets its best section written in and `shopUnseen` "script": a lookup there reads "contents
-  // cannot be seen — JS-rendering" and goes to the web (docs/add_by_link.md, "A shop drawn by script").
-  "occ-kunstmuseumbasel-ch":{card:"Kunstmuseum Basel",notCard:"Basel Kunstmuseum",shopHome:"https://shop.kunstmuseumbasel.ch/en/",shopCatalogues:"https://shop.kunstmuseumbasel.ch/en/merchandise?category=Exhibition+Catalogues",shopUnseen:"script"},
-  // The Prado: chip "Prado" right after KHM, cards "Prado Madrid" (her decision). Its dates are month first
-  // (DATE_ORDER, dates.js).
-  "occ-museodelprado-es":{ownChip:true,chip:"Prado",short:"Prado Madrid",name:"Museo Nacional del Prado"},
-  // Chantilly (Musée Condé): chip "Chantilly" after Jacquemart; its cards keep the store's name (her decision).
-  "occ-chateaudechantilly-fr":{ownChip:true,chip:"Chantilly"},
-  // The Cini Foundation and its island's two houses: three venues, Claude's names, under one chip "Cini" after
-  // Capodimonte (her decision).
-  "occ-cini-it":{card:"Fondazione Cini",notCard:"Venice Cini",ownChip:true,chip:"Cini",group:"cini"},
-  "occ-lestanzedelvetro-org":{ownChip:true,chip:"Cini",group:"cini"},
-  "occ-lestanzedellafotografia-it":{card:"Stanze della Fotografia Venice",notCard:"Venice Stanze della Fotografia",ownChip:true,chip:"Cini",group:"cini"},
-  // Moretti (her decision, Moretti only): the place after " : " leaves the title ("… : Monaco", "… : New York,
-  // Sotheby's"); its description is typed in capitals (capsText); the cookie panel ends the passage.
-  "occ-morettigallery-com":{linkRead:{titleDrop:/\s+:\s+[^:]+$/,capsText:true,until:/^Manage cookies$/}},
-  // Łazienki (her decision, Łazienki only): its heading runs on into the show's opening paragraph; the
-  // page title is the show's name and its section ("The Nabis. Prophets of a New Art - Events"): the name is the title.
-  "occ-lazienki-krolewskie-pl":{card:"Royal \u0141azienki Warsaw",notCard:"Warsaw \u0141azienki",linkRead:{tabTitle:/\s+[-–—]\s+[^-–—]+$/}},
-  // The Getty (her decision, Getty only): its collection database's exhibition pages are titled
-  // "Museum Collection", so their heading is the show's name.
-  "occ-getty-edu":{linkRead:{tabNotName:/^Museum Collection$/}},
-  // The Correr's archive site (that site only): each show has several pages, its tab title the
-  // page's own name ("Project", "Mostra"); the show's name is the heading after "Section menu" ("Menù di sezione").
-  // Titles typed in capitals are recased (her decision), each part either side of a full stop.
-  "occ-archivio-correr-visitmuve-it":{card:"Correr Venice",notCard:"Venice Correr",linkRead:{titleAfter:/^(?:Section menu|Men\u00f9 di sezione)$/,capsTitles:true,capsStops:true}},
-  // Under "Occasional". Boston MFA prints the dates on the line above the show's title.
-  "occ-mfa-org":{short:"Boston",card:"Boston MFA"},
-  "occ-archive-worcesterart-org":{short:"Worcester"},
-  // NGV writes two-digit years ("4 Sep 26 – 31 Jan 27").
-  "occ-ngv-vic-gov-au":{card:"National Gallery Victoria",linkRead:{shortYear:true}},
-  // Her name, not Claude's "KMSKA Antwerp" (notCard: Claude learns her style from it).
-  "occ-kmska-be":{card:"Antwerp KMSKA",short:"Antwerp Fine Arts",notCard:"KMSKA Antwerp",name:"Koninklijk Museum voor Schone Kunsten Antwerpen"},
-  // The Tuscan state museums' site names itself "Direzione regionale Musei nazionali Toscana";
-  // its cards show "San Marco" and the lookup searches as "Museo di San Marco" (her decision).
-  // Its pages are press releases: the title is the headline's first sentence, without "Mostra"
-  // (exhibition) or the quotation marks round the name; capitals recased (her decision).
-  "occ-museitoscana-cultura-gov-it":{card:"San Marco Florence",short:"San Marco",name:"Museo di San Marco",linkRead:{firstSentence:true,unquote:true,capsTitles:true}},
-  // Genoa's page titles give no name, Milan's name the city council (her names, both written in).
-  "occ-palazzoducale-genova-it":{short:"Palazzo Ducale Genova",name:"Palazzo Ducale Genova"},
-  // Palazzo Reale Milano's pages also sit on the city council's site, saved by her because that
-  // site refuses Parallel (docs/add_by_link.md, "Saved pages").
-  "occ-palazzorealemilano-it":{short:"Palazzo Reale Milano",name:"Palazzo Reale Milano",
-    sites:[{host:"www2.comune.milano.it",path:/^\/(?:en|it)\/web\/palazzo-reale-milano\//}],
-    linkRead:{titleHeading:PRM_TAIL,titleDrop:PRM_TAIL,nameInLines:true,until:PRM_BOX,datesUntil:PRM_BOX,capsTitles:true,asOfTo:true}},
-  // Her names for venues Claude named (her review of link venues); notCard is the name Claude gave.
-  "occ-centrepompidou-fr":{card:"Centre Pompidou",notCard:"Pompidou Paris"},
-  "occ-esmh-de":{card:"Emil Schumacher Hagen",notCard:"Hagen Emil Schumacher"},
-  "occ-musees-nationaux-alpesmaritimes-fr":{card:"Chagall Museum Nice",notCard:"Nice Chagall"},
-  "occ-museoreinasofia-es":{card:"Reina Sof\u00eda Madrid",notCard:"Madrid Reina Sof\u00eda"},
-  "occ-museumhetvalkhof-nl":{card:"Valkhof Nijmegen",notCard:"Nijmegen Valkhof"},
-  "occ-rct-uk":{card:"Queen's Gallery Edinburgh",notCard:"The Queen\u2019s Gallery, Palace of Holyroodhouse"},
-  "occ-wallach-columbia-edu":{card:"Wallach Gallery Columbia",notCard:"Columbia Wallach"},
-  // Her name, the city first (her decision, as Antwerp KMSKA).
-  "occ-modernamuseet-se":{card:"Stockholm Moderna",short:"Stockholm Moderna",notCard:"Moderna Museet Stockholm",name:"Moderna Museet"},
-  // Her name, the country first. A retired show's address opens the "Past Exhibitions" list (Louise
-  // Bourgeois), which is never a show (listingPage); a heading line ending in a comma runs on to the
-  // next line (headingCommaJoin; "Diane Arbus Photographs," over "1956-1971").
-  "occ-louisiana-dk":{card:"Denmark Louisiana",short:"Denmark Louisiana",notCard:"Louisiana Humleb\u00e6k",name:"Louisiana Museum of Modern Art",
-    linkRead:{listingPage:/^Past exhibitions$/i,headingCommaJoin:true}},
-  // Christie's press site is the same venue as christies.com (her decision; links from now on, rows already in left as they are).
-  "occ-christies-com":{sites:[{host:"press.christies.com"}]},
-};
-//@piece linkEntry
-
-const linkEntry=id=>Object.prototype.hasOwnProperty.call(LINK_VENUES,id)?LINK_VENUES[id]:null;
-//@piece ownChip
-
-const ownChip=id=>!!(linkEntry(id)||{}).ownChip;
 //@piece chipKey
 
 // The chip a venue's cards sit under: its group's, where it has one.
-const chipKey=id=>(linkEntry(id)||{}).group||id;
+const chipKey=id=>(REG[id]&&REG[id].names.group)||id;
+//@piece chipVenues
+
+// The Venue chips: one per venue with a chip of its own, one per group, in her venue order.
+const chipVenues=()=>VENUE_REGISTER.filter(e=>e.names.chip).map(e=>e.id).filter((id,i,all)=>all.findIndex(x=>chipKey(x)===chipKey(id))===i);
 //@piece elsewherePrompt
 
 
@@ -265,10 +107,10 @@ function heldElsewhere(a,pageHost){
   const site=hostOf(/^https?:\/\//i.test(a.venueSite||"")?a.venueSite:"https://"+(a.venueSite||"")).replace(/^www\./,"");
   // The page's own site names the venue (Claude's "not its own page" misread): not elsewhere.
   if(site&&baseDomain(site)===baseDomain(pageHost))return null;
-  const mine=Object.values(MU).find(m=>m&&!m.occasional&&[m.name,m.short].some(x=>x&&flatName(x)===flatName(a.venue)));
+  const mine=Object.values(MU).find(m=>m&&!m.occasional&&venueNames(m).some(x=>flatName(x)===flatName(a.venue)));
   const known=mine?mine.id:site?knownVenueFor("https://"+site+"/"):null;
   if(known)return{id:known,name:MU[known].name,host:site};
-  const occ=Object.values(MU).find(m=>m&&m.occasional&&[m.name,m.short].some(x=>x&&flatName(x)===flatName(a.venue)));
+  const occ=Object.values(MU).find(m=>m&&m.occasional&&venueNames(m).some(x=>flatName(x)===flatName(a.venue)));
   if(occ)return{id:occ.id,name:occ.name,host:site};
   return{id:site?occVenueId(site):"occ-"+flatName(a.venue).replace(/ /g,"-"),name:a.venue,host:site};
 }
@@ -287,7 +129,7 @@ const nearMuseumSite=host=>VENUE_SITES.some(v=>onMuseumSite(host,v.id));
 function ownMuseumNamed(a,pageHost){
   const said=flatName(a&&a.venue||"");
   if(!said)return null;
-  const m=Object.values(MU).find(m=>m&&!m.occasional&&[m.name,m.short].some(x=>x&&(said===flatName(x)||said.startsWith(flatName(x)+" "))));
+  const m=Object.values(MU).find(m=>m&&!m.occasional&&venueNames(m).some(x=>said===flatName(x)||said.startsWith(flatName(x)+" ")));
   return m&&onMuseumSite(pageHost,m.id)?m.id:null;
 }
 //@piece occVenueId
@@ -299,13 +141,13 @@ function occVenueId(host){
 //@piece siteVenues
 
 
-// The link venues whose `sites` take this address → [[id, line]] (line: the house line, or none).
+// The venues whose `sites` (read.sites) take this address → [[id, line]] (line: the house line, or none).
 function siteVenues(url){
   let u; try{ u=new URL(siteUrlOf(url)); }catch{ return []; }
   const h=u.hostname.toLowerCase().replace(/^www\./,"");
   const out=[];
-  for(const [id,v] of Object.entries(LINK_VENUES))
-    for(const s of v.sites||[]) if(s.host===h&&(!s.path||s.path.test(u.pathname)))out.push([id,s.line||null]);
+  for(const e of VENUE_REGISTER)
+    for(const s of e.read.sites) if(s.host===h&&(!s.path||s.path.test(u.pathname)))out.push([e.id,s.line||null]);
   return out;
 }
 //@piece addressVenue
@@ -330,19 +172,19 @@ function linkVenue(url,page){
   for(const l of (page&&page.between)||[]) for(const [id,re] of houses) if(re.test(l.trim()))return{id,line:l};
   // A house line just under the dates (Berlin's Alte Nationalgalerie).
   for(const l of (page&&page.afterDates)||[]) for(const [id,re] of houses) if(re.test(l.trim()))return{id};
-  // No house named: the site's own link venue, where it has one (smb.museum, the Gemäldegalerie).
+  // No house named: the site's own venue, where the register has one (smb.museum, the Gemäldegalerie).
   const own=occVenueId(hostOf(siteUrlOf(url)));
-  if(linkEntry(own))return{id:own};
-  const names=houses.map(([id])=>LINK_VENUES[id].short);
+  if(REG[own])return{id:own};
+  const names=houses.map(([id])=>REG[id].names.card);
   return{id:null,why:"The page doesn’t say which museum the show is in ("+names.slice(0,-1).join(", ")+" or "+names[names.length-1]+")."};
 }
 //@piece linkReadVenue
 
 
-// The venue whose link options read a page: a swept venue, or a link venue.
+// The venue whose link options read a page: a swept venue, or a manual-import venue in the register.
 function linkReadVenue(url){
   const occ=occVenueId(hostOf(siteUrlOf(url)));
-  return addressVenue(url)||(linkEntry(occ)?occ:null);
+  return addressVenue(url)||(REG[occ]?occ:null);
 }
 //@piece knownVenueFor
 
@@ -361,24 +203,10 @@ function knownVenueFor(url){
 //@piece occVenue
 
 
-// An occasional venue as MU holds it: its LINK_VENUES entry over what the page's store holds
-// (`v`: a fact about the world, like the sweep log), so everything reads it like any venue.
-// No `v`: a ledger row from a venue this page's store has never seen (her file opened on
-// another page), named `fallback`, shop not known.
-//   shop: "found" (books section), "noshelf" (a shop, no books section), "none" (no
-//   shop; confirmed = her "No shop", lookups go to the web), "failed" (a step died —
-//   not an answer), "unknown" (look again on the next link). Lookups use "found", and
-//   "noshelf" once its search is proved.
+// A manual-import venue as MU holds it (venueView): its register entry, and the record `v` (recordOf, or a
+// venue met since the last publish); no `v`: a ledger row from a venue neither holds, named `fallback`.
 function occVenue(id,v,fallback){
-  const own=linkEntry(id)||{}, s=v||{};
-  const live=s.shop==="found"||(s.shop==="noshelf"&&!!s.shopSearch);
-  const name=own.name||s.name||fallback;
-  // Her pick on the shop screen: the English section the finder could not read (`shopEnglishUnread`), contents unseen.
-  const en=!!(s.englishPicked&&s.shopEnglishUnread);
-  return{id,shopLink:own.shopCatalogues||undefined,short:own.short||s.short||name,chip:own.chip,card:own.card,lookupName:own.lookupName||own.name||s.short||name,name,country:s.country||undefined,occasional:true,shopUnseen:own.shopUnseen||(en?"unconfirmed":undefined),english:s.english===false?false:undefined,
-    exBase:null,listUrl:null,
-    shopHome:live?s.shopHome||null:null,shopCatalogues:live?(en?s.shopEnglishUnread:s.shopCatalogues||null):null,shopSearch:live?s.shopSearch||null:null,
-    shopUnknown:!live&&!(s.shop==="none"&&s.confirmed)};
+  return venueView(REG[id]||null,v,fallback);
 }
 //@piece namedByAddress
 
@@ -398,10 +226,10 @@ const bareHost=h=>String(h||"").toLowerCase().replace(/^www\./,"");
 // Galleries in three countries) — its full name, the other names it goes by, its city and its
 // country, each where the words so far lack it. Proved live: "Palazzo Ducale" alone found Venice's;
 // the English name alone found Brussels', "KMSKA" beside it found Antwerp's shop. The card name is
-// the short one (`short`, `card`). `v`: the store's facts, or Claude's.
+// the short one. `v`: the venue's record (recordOf), or Claude's facts.
 function venueSearchName(id,v){
-  const own=linkEntry(id)||{}, s=v||{};
-  let name=String(own.name||s.name||"").trim();
+  const s=v||{};
+  let name=String(s.name||"").trim();
   for(const x of [...(s.aka||[]),s.city,s.country]) if(x&&!foldText(name).includes(foldText(x)))name+=" "+x;
   return name.trim();
 }
@@ -411,7 +239,7 @@ function venueSearchName(id,v){
 // The review walks THIS, not MUSEUMS, or occasional cards are counted and never drawn.
 function allVenues(){
   const occ=Object.values(MU).filter(m=>m&&m.occasional);
-  return MUSEUMS.concat(occ).sort((a,b)=>orderOf(a.id)-orderOf(b.id)||a.short.localeCompare(b.short));
+  return MUSEUMS.concat(occ).sort((a,b)=>orderOf(a.id)-orderOf(b.id)||a.card.localeCompare(b.card));
 }
 //@piece venueRank
 
@@ -430,13 +258,68 @@ function registerUnseenOccasional(rows){
     KNOWN_VENUES.add(r.museumId);
   }
 }
+//@piece STORE_FACTS
+
+// The fields of a waiting-room record that its register entry also holds, and where.
+const STORE_FACTS={name:e=>e.names.full,short:e=>e.names.card,aka:e=>e.names.aka,city:e=>e.city,country:e=>e.country,english:e=>e.english};
+//@piece sameRecord
+
+// Two records alike, whatever the order of their fields.
+const sameRecord=(a,b)=>{ const c=x=>x===undefined?"null":JSON.stringify(x,(k,v)=>v&&typeof v==="object"&&!Array.isArray(v)?Object.fromEntries(Object.keys(v).sort().map(j=>[j,v[j]])):v); return c(a)===c(b); };
+//@piece recordOf
+
+// A manual-import venue's record: the register's facts over the record its entry was filed from (`filed`),
+// and over both each field of the waiting record `w` that has changed since it was filed (her latest word).
+function recordOf(e,w){
+  const filed=e.filed||{}, out={...filed};
+  for(const [k,f] of Object.entries(STORE_FACTS)){ const x=f(e); if(x!=null)out[k]=x; }
+  for(const k of Object.keys(w||{})) if(!sameRecord(w[k],filed[k]))out[k]=w[k];
+  return out;
+}
+//@piece heldByRegister
+
+// A waiting record the register already holds: the one its entry was filed from, or the entry's own record.
+const heldByRegister=(id,w)=>!!REG[id]&&REG[id].kind==="manual"&&(sameRecord(w,REG[id].filed)||sameRecord(w,recordOf(REG[id])));
+//@piece occasionalOver
+
+// The register's manual-import venues the store has met, each with its waiting record over it, then the
+// venues only the waiting room holds.
+function occasionalOver(w){
+  const out={};
+  for(const e of VENUE_REGISTER) if(e.kind==="manual"&&(e.filed||(w&&w[e.id])))out[e.id]=recordOf(e,w&&w[e.id]);
+  for(const [id,v] of Object.entries(w||{})) if(!REG[id])out[id]=v;
+  return out;
+}
+//@piece herVenue
+
+// The register holds her decisions for this venue: her names for it, or its own reading rules.
+const herVenue=id=>{ const e=REG[id]; return !!e&&(e.names.hers||!!e.read.link||e.read.sites.length>0||!!e.shop.catalogues); };
 //@piece readOccasional
 
+// The venues met by Links, Pages and Paste: each register entry the store has met (recordOf), and over
+// them the waiting room, the store's venues/occasional. A read that failed leaves the register's own.
 async function readOccasional(){
-  try{ const s=await storeRead(OCC_DOC,{part:UNREAD_OCC}); return s.exists?((s.data||{}).venues||{}):{}; }catch{ return {}; }
+  let w={};
+  try{ const s=await storeRead(OCC_DOC,{part:UNREAD_OCC}); w=s.exists?((s.data||{}).venues||{}):{}; }catch{}
+  return occasionalOver(w);
 }
 //@piece writeOccasional
 
+// Only what the register does not already hold is written: the waiting room.
 async function writeOccasional(map){
-  try{ await storeWrite(OCC_DOC,{venues:map,updatedAt:new Date().toISOString()},{part:UNREAD_OCC}); return true; }catch{ return false; }
+  const waiting=Object.fromEntries(Object.entries(map||{}).filter(([id,v])=>!heldByRegister(id,v)));
+  try{ await storeWrite(OCC_DOC,{venues:waiting,updatedAt:new Date().toISOString()},{part:UNREAD_OCC}); return true; }catch{ return false; }
+}
+//@piece tidyOccasional
+
+// When the page opens, its store readable and not read only: each waiting record the register now holds
+// is cleared from the waiting room (her decision). Returns how many.
+async function tidyOccasional(){
+  let s; try{ s=await storeRead(OCC_DOC,{part:UNREAD_OCC}); }catch{ return 0; }
+  if(!s.exists)return 0;
+  const w=(s.data||{}).venues||{};
+  const kept=Object.fromEntries(Object.entries(w).filter(([id,v])=>!heldByRegister(id,v)));
+  const n=Object.keys(w).length-Object.keys(kept).length;
+  if(!n)return 0;
+  try{ await storeWrite(OCC_DOC,{venues:kept,updatedAt:new Date().toISOString()},{part:UNREAD_OCC}); return n; }catch{ return 0; }
 }
