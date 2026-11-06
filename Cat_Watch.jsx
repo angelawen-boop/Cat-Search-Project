@@ -25,7 +25,7 @@ const VENUES = [
   // The Met prints a show's dates on its "on view" line: below a podcast transcript (Manet/Degas), or above the only line naming the show (Impossible Conversations).
   { id: "met", kind: "swept",
     names: { card: "The Met", chip: "The Met", group: null, full: "The Metropolitan Museum of Art", inEnglish: null, aka: [], lookup: "The Met", replaced: [], hers: true },
-    city: "New York", country: null, english: true, language: null,
+    city: "New York", country: "United States", english: true, language: null,
     shop: { home: "https://store.metmuseum.org/", catalogues: "https://store.metmuseum.org/books-toys-games/exhibition-catalogues", search: "https://store.metmuseum.org/search?q=", unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
     read: { link: { dateLine: /\bon view\b/i }, sites: [], dateOrder: null, spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
     sweep: { exBase: "https://www.metmuseum.org/exhibitions/", listUrl: "https://www.metmuseum.org/exhibitions" },
@@ -33,7 +33,7 @@ const VENUES = [
 
   { id: "ng", kind: "swept",
     names: { card: "NG UK", chip: "NG UK", group: null, full: "The National Gallery", inEnglish: null, aka: [], lookup: "National Gallery", replaced: [], hers: true },
-    city: "London", country: null, english: true, language: null,
+    city: "London", country: "United Kingdom", english: true, language: null,
     shop: { home: "https://shop.nationalgallery.org.uk/", catalogues: "https://shop.nationalgallery.org.uk/books/exhibition-catalogues.html", search: "https://shop.nationalgallery.org.uk/catalogsearch/result/?q=", unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
     read: { link: null, sites: [], dateOrder: null, spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
     sweep: { exBase: "https://www.nationalgallery.org.uk/exhibitions/", listUrl: "https://www.nationalgallery.org.uk/exhibitions" },
@@ -50,7 +50,7 @@ const VENUES = [
   // The whole Publications shelf: the Frick files some show books outside "Exhibition catalogues" (her finding).
   { id: "frick", kind: "swept",
     names: { card: "Frick", chip: "Frick", group: null, full: "The Frick Collection", inEnglish: null, aka: [], lookup: "Frick", replaced: [], hers: true },
-    city: "New York", country: null, english: true, language: null,
+    city: "New York", country: "United States", english: true, language: null,
     shop: { home: "https://shop.frick.org/", catalogues: "https://shop.frick.org/publications/", search: "https://shop.frick.org/search.php?search_query=", unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
     read: { link: { titleDrop: /^Special Loan:\s*/i }, sites: [], dateOrder: null, spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
     sweep: { exBase: null, listUrl: null },
@@ -58,7 +58,7 @@ const VENUES = [
 
   { id: "morgan", kind: "swept",
     names: { card: "Morgan", chip: "Morgan", group: null, full: "Morgan Library & Museum", inEnglish: null, aka: [], lookup: "Morgan", replaced: [], hers: true },
-    city: "New York", country: null, english: true, language: null,
+    city: "New York", country: "United States", english: true, language: null,
     shop: { home: "https://shop.themorgan.org/", catalogues: "https://shop.themorgan.org/collections/exhibition-catalogs", search: "https://shop.themorgan.org/search?q=", unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
     read: { link: null, sites: [], dateOrder: null, spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
     sweep: { exBase: null, listUrl: null },
@@ -66,7 +66,7 @@ const VENUES = [
 
   { id: "artic", kind: "swept",
     names: { card: "Artic", chip: "Artic", group: null, full: "Art Institute of Chicago", inEnglish: null, aka: [], lookup: "Artic", replaced: [], hers: true },
-    city: "Chicago", country: null, english: true, language: null,
+    city: "Chicago", country: "United States", english: true, language: null,
     shop: { home: "https://shop.artic.edu/", catalogues: "https://shop.artic.edu/collections/exhibition-catalogues", search: "https://shop.artic.edu/search?q=", unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
     read: { link: { from: /^Share$/, until: /^(?:Share|Related(?: Exhibitions| Products)?|Sign up for our enewsletter\b.*)$/, minLine: 60, skip: /\u00a9|Press 300ppi|Image CC|Photo courtesy|^(?:an?|the)\s+(?:[\w,\x27-]+\s+){0,5}?(?:painting|poster|drawing|photograph|photomontage|statuette|cover|print)\b,?\s+(?:of|with|reads|that|in|featuring|showing)\b/i }, sites: [], dateOrder: null, spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
     sweep: { exBase: null, listUrl: null },
@@ -74,7 +74,7 @@ const VENUES = [
 
   { id: "menil", kind: "swept",
     names: { card: "Menil", chip: "Menil", group: null, full: "The Menil Collection", inEnglish: null, aka: [], lookup: "Menil", replaced: [], hers: true },
-    city: "Houston", country: null, english: true, language: null,
+    city: "Houston", country: "United States", english: true, language: null,
     shop: { home: "https://bookstore.menil.org/", catalogues: "https://bookstore.menil.org/collections/menil-publications", search: "https://bookstore.menil.org/search?q=", unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
     read: { link: { titleDrop: /^Collection Close-Up:\s*/i }, sites: [], dateOrder: null, spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
     sweep: { exBase: null, listUrl: null },
@@ -84,7 +84,7 @@ const VENUES = [
   // No apostrophe or double quote inside a linkRead pattern (write \x27): compress.js seedMemory scans this list as text.
   { id: "acq", kind: "swept",
     names: { card: "Acquavella", chip: "Acquavella", group: null, full: "Acquavella Galleries", inEnglish: null, aka: [], lookup: "Acquavella", replaced: [], hers: true },
-    city: "New York", country: null, english: true, language: null,
+    city: "New York", country: "United States", english: true, language: null,
     shop: { home: "https://acquavellagalleries.myshopify.com/", catalogues: "https://acquavellagalleries.myshopify.com/collections/all", search: "https://acquavellagalleries.myshopify.com/search?q=", unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
     read: { link: { title: "subtitle", credit: /^In collaboration with\b/i, dashAfterColon: true, from: /^Press Release$/, minLine: 60, skip: /^Gallery Hours:|\bImage Courtesy\b/, skipEntities: true, cleanLink: true }, sites: [], dateOrder: null, spacedYear: false, places: ["New York", "Palm Beach"], placeOwner: "Acquavella", titleCaps: null, subtitleUnderHeading: false },
     sweep: { exBase: "https://www.acquavellagalleries.com/exhibitions/", listUrl: "https://www.acquavellagalleries.com/exhibitions" },
@@ -93,7 +93,7 @@ const VENUES = [
   // Shopify, like Acquavella's. Chip and cards "Levy" (her decision); its galleries are read.places.
   { id: "lgd", kind: "swept",
     names: { card: "Levy", chip: "Levy", group: null, full: "L\u00e9vy Gorvy Dayan", inEnglish: null, aka: [], lookup: "Levy", replaced: [], hers: true },
-    city: null, country: null, english: true, language: null,
+    city: null, country: "United States", english: true, language: null,
     shop: { home: "https://shop.levygorvydayan.com/", catalogues: "https://shop.levygorvydayan.com/collections/all", search: "https://shop.levygorvydayan.com/search?q=", unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
     read: { link: null, sites: [], dateOrder: null, spacedYear: false, places: ["New York", "London"], placeOwner: "L\u00e9vy Gorvy Dayan", titleCaps: null, subtitleUnderHeading: false },
     sweep: { exBase: "https://www.levygorvydayan.com/exhibitions/", listUrl: "https://www.levygorvydayan.com/exhibitions" },
@@ -102,7 +102,7 @@ const VENUES = [
   // Mia's page titles end "–– Minneapolis Institute of Art".
   { id: "occ-new-artsmia-org", kind: "manual",
     names: { card: "Minneapolis", chip: "Mia", group: null, full: "Minneapolis Institute of Art", inEnglish: null, aka: [], lookup: "Mia", replaced: ["Mia"], hers: true },
-    city: null, country: null, english: true, language: null,
+    city: "Minneapolis", country: "United States", english: true, language: null,
     shop: { home: null, catalogues: null, search: null, unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
     read: { link: { titleDrop: /\s+[-–—]+\s+Minneapolis Institute of Art$/i }, sites: [], dateOrder: null, spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
     sweep: { exBase: null, listUrl: null },
@@ -111,7 +111,7 @@ const VENUES = [
   // Her addition, after Artic. Shopify: search box and her Books shelf.
   { id: "cincinnati", kind: "swept",
     names: { card: "Cincinnati", chip: "Cincinnati", group: null, full: "Cincinnati Art Museum", inEnglish: null, aka: [], lookup: "Cincinnati", replaced: [], hers: true },
-    city: "Cincinnati", country: null, english: true, language: null,
+    city: "Cincinnati", country: "United States", english: true, language: null,
     shop: { home: "https://shop.cincinnatiartmuseum.org/", catalogues: "https://shop.cincinnatiartmuseum.org/collections/books", search: "https://shop.cincinnatiartmuseum.org/search?q=", unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
     read: { link: { crumb: true }, sites: [], dateOrder: null, spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
     sweep: { exBase: null, listUrl: null },
@@ -121,7 +121,7 @@ const VENUES = [
   // Yale's two imprints rank the same).
   { id: "occ-britishart-yale-edu", kind: "manual",
     names: { card: "Yale CBA", chip: "Yale CBA", group: null, full: "Yale Center for British Art", inEnglish: null, aka: [], lookup: "Yale Center for British Art", replaced: [], hers: true },
-    city: null, country: null, english: true, language: null,
+    city: "New Haven", country: "United States", english: true, language: null,
     shop: { home: null, catalogues: null, search: null, unseen: null, queries: [], named: null, rankAsOwn: ["Yale University Press"], inStock: null },
     read: { link: null, sites: [], dateOrder: null, spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
     sweep: { exBase: null, listUrl: null },
@@ -129,7 +129,7 @@ const VENUES = [
 
   { id: "brit", kind: "swept",
     names: { card: "British Museum", chip: "British Museum", group: null, full: "The British Museum", inEnglish: null, aka: [], lookup: "British Museum", replaced: [], hers: true },
-    city: "London", country: null, english: true, language: null,
+    city: "London", country: "United Kingdom", english: true, language: null,
     shop: { home: "https://britishmuseumshoponline.org/", catalogues: "https://www.britishmuseumshoponline.org/books/exhibition-books.html", search: "https://www.britishmuseumshoponline.org/catalogsearch/result/?q=", unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
     read: { link: { from: /^(?:For the catalogue, homewares and gifts from the exhibition|Book tickets$)/ }, sites: [], dateOrder: null, spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
     sweep: { exBase: null, listUrl: null },
@@ -137,7 +137,7 @@ const VENUES = [
 
   { id: "tate-britain", kind: "swept",
     names: { card: "Tate Britain", chip: "Tate Britain", group: null, full: "Tate Britain", inEnglish: null, aka: [], lookup: "Tate Britain", replaced: [], hers: true },
-    city: "London", country: null, english: true, language: null,
+    city: "London", country: "United Kingdom", english: true, language: null,
     shop: { home: "https://shop.tate.org.uk/", catalogues: "https://shop.tate.org.uk/books/exhibition-books?sz=96", search: "https://shop.tate.org.uk/search?q=", unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
     read: { link: null, sites: [], dateOrder: null, spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
     sweep: { exBase: null, listUrl: null },
@@ -145,7 +145,7 @@ const VENUES = [
 
   { id: "wallace", kind: "swept",
     names: { card: "Wallace", chip: "Wallace", group: null, full: "The Wallace Collection", inEnglish: null, aka: [], lookup: "Wallace", replaced: [], hers: true },
-    city: "London", country: null, english: true, language: null,
+    city: "London", country: "United Kingdom", english: true, language: null,
     shop: { home: "https://wallacecollectionshop.org/", catalogues: "https://wallacecollectionshop.org/collections/wallace-collection-publications", search: "https://wallacecollectionshop.org/search?q=", unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
     read: { link: null, sites: [], dateOrder: null, spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
     sweep: { exBase: null, listUrl: null },
@@ -153,7 +153,7 @@ const VENUES = [
 
   { id: "va", kind: "swept",
     names: { card: "V&A", chip: "V&A", group: null, full: "Victoria and Albert Museum", inEnglish: null, aka: [], lookup: "V&A", replaced: [], hers: true },
-    city: "London", country: null, english: true, language: null,
+    city: "London", country: "United Kingdom", english: true, language: null,
     shop: { home: "https://www.vam.ac.uk/shop", catalogues: "https://www.vam.ac.uk/shop/books/exhibition-books.html", search: "https://www.vam.ac.uk/shop/search?q=", unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
     read: { link: null, sites: [], dateOrder: null, spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
     sweep: { exBase: null, listUrl: null },
@@ -161,7 +161,7 @@ const VENUES = [
 
   { id: "occ-nationalgalleries-org", kind: "manual",
     names: { card: "NG Scotland", chip: "NG Scotland", group: null, full: "National Galleries of Scotland", inEnglish: null, aka: [], lookup: "NG Scotland", replaced: [], hers: true },
-    city: null, country: null, english: true, language: null,
+    city: "Edinburgh", country: "United Kingdom", english: true, language: null,
     shop: { home: null, catalogues: null, search: null, unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
     read: { link: null, sites: [], dateOrder: null, spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
     sweep: { exBase: null, listUrl: null },
@@ -169,7 +169,7 @@ const VENUES = [
 
   { id: "louvre", kind: "swept",
     names: { card: "Louvre", chip: "Louvre", group: null, full: "Louvre", inEnglish: null, aka: [], lookup: "Louvre", replaced: [], hers: true },
-    city: "Paris", country: null, english: false, language: "French",
+    city: "Paris", country: "France", english: false, language: "French",
     shop: { home: "https://boutique.louvre.fr/en/", catalogues: "https://boutique.louvre.fr/en/products/400001-exhibition-catalogues/", search: "https://boutique.louvre.fr/en/search/products/?q=", unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
     read: { link: { title: "pieces", minLine: 60, skip: /\bclosed\b|remain open|apologis|pleasant visit/i }, sites: [], dateOrder: null, spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
     sweep: { exBase: null, listUrl: null },
@@ -179,7 +179,7 @@ const VENUES = [
   // Orsay: the national museums' shared shop; shelf and search are hers (the search covers every museum there).
   { id: "orsay", kind: "swept",
     names: { card: "Orsay", chip: "Orsay", group: null, full: "Mus\u00e9e d'Orsay", inEnglish: null, aka: [], lookup: "Orsay", replaced: [], hers: true },
-    city: "Paris", country: null, english: false, language: "French",
+    city: "Paris", country: "France", english: false, language: "French",
     shop: { home: "https://www.boutiquesdemusees.fr/en/ext/products/musee-orsay/5452-exhibition-catalogues/", catalogues: "https://www.boutiquesdemusees.fr/en/ext/products/musee-orsay/5452-exhibition-catalogues/", search: "https://www.boutiquesdemusees.fr/en/search/products/?q=", unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
     read: { link: null, sites: [], dateOrder: null, spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
     sweep: { exBase: null, listUrl: null },
@@ -189,7 +189,7 @@ const VENUES = [
   // for Add by link (docs/link_pages/).
   { id: "jacquemart", kind: "swept",
     names: { card: "Jacquemart-Andr\u00e9", chip: "Jacquemart", group: null, full: "Mus\u00e9e Jacquemart-Andr\u00e9", inEnglish: null, aka: [], lookup: "Jacquemart-Andr\u00e9", replaced: [], hers: true },
-    city: "Paris", country: null, english: false, language: "French",
+    city: "Paris", country: "France", english: false, language: "French",
     shop: { home: "https://boutique.musee-jacquemart-andre.com/en/", catalogues: "https://boutique.musee-jacquemart-andre.com/en/products/116-exhibition-catalogs/", search: "https://boutique.musee-jacquemart-andre.com/en/search/products/?q=", unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
     read: { link: null, sites: [], dateOrder: null, spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: true },
     sweep: { exBase: null, listUrl: null },
@@ -208,7 +208,7 @@ const VENUES = [
   // path (/c462/2/; shelfPages). shopHome is the shelf, so her shop link lands on the books.
   { id: "mad", kind: "swept",
     names: { card: "MAD Paris", chip: "MAD Paris", group: null, full: "Mus\u00e9e des Arts D\u00e9coratifs", inEnglish: null, aka: [], lookup: "MAD Paris", replaced: [], hers: true },
-    city: "Paris", country: null, english: false, language: "French",
+    city: "Paris", country: "France", english: false, language: "French",
     shop: { home: "https://boutique.madparis.fr/en/mads-publications/c462/1/", catalogues: "https://boutique.madparis.fr/en/mads-publications/c462/1/", search: null, unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
     read: { link: null, sites: [], dateOrder: null, spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
     sweep: { exBase: null, listUrl: null },
@@ -216,7 +216,7 @@ const VENUES = [
 
   { id: "rijks", kind: "swept",
     names: { card: "Rijksmuseum", chip: "Rijks", group: null, full: "Rijksmuseum", inEnglish: null, aka: [], lookup: "Rijksmuseum", replaced: [], hers: true },
-    city: "Amsterdam", country: null, english: false, language: "Dutch",
+    city: "Amsterdam", country: "Netherlands", english: false, language: "Dutch",
     shop: { home: "https://www.rijksmuseumshop.nl/en/", catalogues: "https://www.rijksmuseumshop.nl/en/books/exhibition-books", search: "https://www.rijksmuseumshop.nl/en/search?q=", unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
     read: { link: null, sites: [], dateOrder: null, spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
     sweep: { exBase: "https://www.rijksmuseum.nl/en/whats-on/exhibitions/", listUrl: "https://www.rijksmuseum.nl/en/whats-on/exhibitions/now-on-view" },
@@ -226,7 +226,7 @@ const VENUES = [
   // blocked; the address stays for her shop link.
   { id: "khm", kind: "swept",
     names: { card: "KHM", chip: "KHM", group: null, full: "Kunsthistorisches Museum", inEnglish: null, aka: [], lookup: "KHM", replaced: [], hers: true },
-    city: "Vienna", country: null, english: false, language: "German",
+    city: "Vienna", country: "Austria", english: false, language: "German",
     shop: { home: "https://shop.khm.at/en/", catalogues: null, search: "https://shop.khm.at/en/products?shop%5Bq%5D=", unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
     read: { link: null, sites: [], dateOrder: null, spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
     sweep: { exBase: null, listUrl: null },
@@ -316,7 +316,7 @@ const VENUES = [
   // Its all-number dates: "14/04/2022—31/07/2022".
   { id: "occ-gemaeldegalerie-skd-museum", kind: "manual",
     names: { card: "Dresden Gem\u00e4ldegalerie", chip: "Dresden", group: null, full: "Gem\u00e4ldegalerie Alte Meister", inEnglish: null, aka: [], lookup: "Gem\u00e4ldegalerie Alte Meister Dresden", replaced: [], hers: true },
-    city: null, country: null, english: false, language: null,
+    city: "Dresden", country: "Germany", english: false, language: null,
     shop: { home: null, catalogues: null, search: null, unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
     read: { link: { titleAfter: /^Active page:/, skip: /^(?:Exhibition Site\b|Opening Hours\b|\[Translate to English:\]|\u00a9)/ }, sites: [], dateOrder: "day", spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
     sweep: { exBase: null, listUrl: null },
@@ -328,7 +328,7 @@ const VENUES = [
   // with no priced line reads "Parallel fault" (docs/add_by_link.md, "Frankfurt").
   { id: "occ-staedelmuseum-de", kind: "manual",
     names: { card: "St\u00e4del Frankfurt", chip: "Frankfurt", group: null, full: "St\u00e4del Museum", inEnglish: null, aka: [], lookup: "St\u00e4del Museum", replaced: [], hers: true },
-    city: null, country: null, english: false, language: null,
+    city: "Frankfurt", country: "Germany", english: false, language: null,
     shop: { home: "https://liebieghaus.ticketfritz.de/", catalogues: "https://liebieghaus.ticketfritz.de/Shop/Index/staedel-publikationen/43885", search: null, unseen: "parallel", queries: [], named: null, rankAsOwn: [], inStock: null },
     read: { link: null, sites: [], dateOrder: null, spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
     sweep: { exBase: null, listUrl: null },
@@ -337,7 +337,7 @@ const VENUES = [
   // Its all-number dates: "From 18/06/2025 to 28/09/2025".
   { id: "uffizi", kind: "swept",
     names: { card: "Uffizi", chip: "Uffizi", group: null, full: "Uffizi Galleries", inEnglish: null, aka: [], lookup: "Uffizi", replaced: [], hers: true },
-    city: "Florence", country: null, english: false, language: "Italian",
+    city: "Florence", country: "Italy", english: false, language: "Italian",
     shop: { home: "https://shop.uffizi.it/en/", catalogues: null, search: "https://shop.uffizi.it/en/?s=", unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
     read: { link: null, sites: [], dateOrder: "day", spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
     sweep: { exBase: null, listUrl: null },
@@ -345,7 +345,7 @@ const VENUES = [
 
   { id: "dellav", kind: "swept",
     names: { card: "Accademia", chip: "Accademia", group: null, full: "Gallerie dell'Accademia", inEnglish: null, aka: [], lookup: "Accademia", replaced: [], hers: true },
-    city: "Venice", country: null, english: false, language: "Italian",
+    city: "Venice", country: "Italy", english: false, language: "Italian",
     shop: { home: null, catalogues: null, search: null, unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
     read: { link: null, sites: [], dateOrder: null, spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
     sweep: { exBase: null, listUrl: null },
@@ -353,7 +353,7 @@ const VENUES = [
 
   { id: "borghese", kind: "swept",
     names: { card: "Borghese", chip: "Borghese", group: null, full: "Galleria Borghese", inEnglish: null, aka: [], lookup: "Borghese", replaced: [], hers: true },
-    city: "Rome", country: null, english: false, language: "Italian",
+    city: "Rome", country: "Italy", english: false, language: "Italian",
     shop: { home: null, catalogues: null, search: null, unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
     read: { link: null, sites: [], dateOrder: null, spacedYear: false, places: [], placeOwner: null, titleCaps: "stopToDash", subtitleUnderHeading: false },
     sweep: { exBase: null, listUrl: null },
@@ -361,7 +361,7 @@ const VENUES = [
 
   { id: "brera", kind: "swept",
     names: { card: "Brera", chip: "Brera", group: null, full: "Pinacoteca di Brera", inEnglish: null, aka: [], lookup: "Brera", replaced: [], hers: true },
-    city: "Milan", country: null, english: false, language: "Italian",
+    city: "Milan", country: "Italy", english: false, language: "Italian",
     shop: { home: "https://bottegabrera.org/en/", catalogues: "https://bottegabrera.org/en/collections/guide-e-cataloghi", search: "https://bottegabrera.org/en/search?q=", unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
     read: { link: null, sites: [], dateOrder: null, spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
     sweep: { exBase: null, listUrl: null },
@@ -369,7 +369,7 @@ const VENUES = [
 
   { id: "capo", kind: "swept",
     names: { card: "Capodimonte", chip: "Capo", group: null, full: "Museo e Real Bosco di Capodimonte aka Museo Nazionale di Capodimonte", inEnglish: null, aka: [], lookup: "Capodimonte", replaced: [], hers: true },
-    city: "Naples", country: null, english: false, language: "Italian",
+    city: "Naples", country: "Italy", english: false, language: "Italian",
     shop: { home: null, catalogues: null, search: null, unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
     read: { link: null, sites: [], dateOrder: null, spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
     sweep: { exBase: null, listUrl: null },
@@ -405,7 +405,7 @@ const VENUES = [
   // page as read lacks it (Labrouste; her decision, a MoMA rule; docs/catalogue_versions.md, "MoMA *Brancusi*").
   { id: "moma", kind: "swept",
     names: { card: "MoMA", chip: "MoMA", group: null, full: "Museum of Modern Art", inEnglish: null, aka: [], lookup: "MoMA", replaced: [], hers: true },
-    city: "New York", country: null, english: true, language: null,
+    city: "New York", country: "United States", english: true, language: null,
     shop: { home: "https://store.moma.org/", catalogues: "https://store.moma.org/collections/exhibition-catalogues", search: "https://store.moma.org/collections/shop?q=" /* her own search */, unseen: null, queries: [], named: null, rankAsOwn: [], inStock: { path: /^\/products\//, line: /\bItem#\s*\S+\s+In Stock\b/ } },
     read: { link: { spaceBeforeComma: true }, sites: [], dateOrder: null, spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
     sweep: { exBase: null, listUrl: null },
@@ -413,7 +413,7 @@ const VENUES = [
 
   { id: "tate-modern", kind: "swept",
     names: { card: "Tate Modern", chip: "Tate Modern", group: null, full: "Tate Modern", inEnglish: null, aka: [], lookup: "Tate Modern", replaced: [], hers: true },
-    city: "London", country: null, english: true, language: null,
+    city: "London", country: "United Kingdom", english: true, language: null,
     shop: { home: "https://shop.tate.org.uk/", catalogues: "https://shop.tate.org.uk/books/exhibition-books?sz=96", search: "https://shop.tate.org.uk/search?q=", unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
     read: { link: null, sites: [], dateOrder: null, spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
     sweep: { exBase: null, listUrl: null },
@@ -423,7 +423,7 @@ const VENUES = [
   // us, so the lookup reports it blocked; the address stays for her shop link.
   { id: "mam", kind: "swept",
     names: { card: "MAM Paris", chip: "MAM Paris", group: null, full: "Mus\u00e9e d'Art Moderne de Paris", inEnglish: null, aka: [], lookup: "MAM Paris", replaced: [], hers: true },
-    city: "Paris", country: null, english: false, language: "French",
+    city: "Paris", country: "France", english: false, language: "French",
     shop: { home: "https://www.mamlibrairieboutique.fr/", catalogues: null, search: "https://www.mamlibrairieboutique.fr/listeliv.php?flou&base=paper&mots_recherche=", unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
     read: { link: null, sites: [], dateOrder: null, spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
     sweep: { exBase: null, listUrl: null },
@@ -440,7 +440,7 @@ const VENUES = [
 
   { id: "occ-clevelandart-org", kind: "manual",
     names: { card: "Cleveland", chip: null, group: null, full: "Cleveland Museum of Art", inEnglish: null, aka: [], lookup: "Cleveland", replaced: [], hers: false },
-    city: null, country: "United States", english: true, language: null,
+    city: "Cleveland", country: "United States", english: true, language: null,
     shop: { home: null, catalogues: null, search: null, unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
     read: { link: null, sites: [], dateOrder: null, spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
     sweep: { exBase: null, listUrl: null },
@@ -448,7 +448,7 @@ const VENUES = [
 
   { id: "occ-dia-org", kind: "manual",
     names: { card: "Detroit", chip: null, group: null, full: "Detroit Institute of Arts Museum", inEnglish: null, aka: [], lookup: "Detroit", replaced: [], hers: false },
-    city: null, country: "United States", english: true, language: null,
+    city: "Detroit", country: "United States", english: true, language: null,
     shop: { home: null, catalogues: null, search: null, unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
     read: { link: null, sites: [], dateOrder: null, spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
     sweep: { exBase: null, listUrl: null },
@@ -456,7 +456,7 @@ const VENUES = [
 
   { id: "occ-archive-worcesterart-org", kind: "manual",
     names: { card: "Worcester", chip: null, group: null, full: "Worcester Art Museum", inEnglish: null, aka: [], lookup: "Worcester", replaced: [], hers: true },
-    city: null, country: "United States", english: true, language: null,
+    city: "Worcester, MA", country: "United States", english: true, language: null,
     shop: { home: null, catalogues: null, search: null, unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
     read: { link: null, sites: [], dateOrder: null, spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
     sweep: { exBase: null, listUrl: null },
@@ -464,7 +464,7 @@ const VENUES = [
 
   { id: "occ-adelsongalleries-com", kind: "manual",
     names: { card: "Adelson Galleries", chip: null, group: null, full: "Adelson Galleries", inEnglish: null, aka: [], lookup: "Adelson Galleries", replaced: [], hers: false },
-    city: null, country: "United States", english: true, language: null,
+    city: "New York", country: "United States", english: true, language: null,
     shop: { home: null, catalogues: null, search: null, unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
     read: { link: null, sites: [], dateOrder: null, spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
     sweep: { exBase: null, listUrl: null },
@@ -533,7 +533,7 @@ const VENUES = [
   // NGV writes two-digit years ("4 Sep 26 – 31 Jan 27").
   { id: "occ-ngv-vic-gov-au", kind: "manual",
     names: { card: "National Gallery Victoria", chip: null, group: null, full: "NGV", inEnglish: null, aka: [], lookup: "National Gallery Victoria", replaced: [], hers: true },
-    city: null, country: "Australia", english: true, language: null,
+    city: "Melbourne", country: "Australia", english: true, language: null,
     shop: { home: null, catalogues: null, search: null, unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
     read: { link: { shortYear: true }, sites: [], dateOrder: null, spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
     sweep: { exBase: null, listUrl: null },
@@ -541,7 +541,7 @@ const VENUES = [
 
   { id: "occ-courtauld-ac-uk", kind: "manual",
     names: { card: "Courtauld", chip: null, group: null, full: "Courtauld", inEnglish: null, aka: [], lookup: "Courtauld", replaced: [], hers: false },
-    city: null, country: "United Kingdom", english: true, language: null,
+    city: "London", country: "United Kingdom", english: true, language: null,
     shop: { home: null, catalogues: null, search: null, unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
     read: { link: null, sites: [], dateOrder: null, spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
     sweep: { exBase: null, listUrl: null },
@@ -549,7 +549,7 @@ const VENUES = [
 
   { id: "occ-royalacademy-org-uk", kind: "manual",
     names: { card: "Royal Academy UK", chip: null, group: null, full: "Royal Academy of Arts", inEnglish: null, aka: [], lookup: "Royal Academy UK", replaced: [], hers: false },
-    city: null, country: "United Kingdom", english: true, language: null,
+    city: "London", country: "United Kingdom", english: true, language: null,
     shop: { home: null, catalogues: null, search: null, unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
     read: { link: null, sites: [], dateOrder: null, spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
     sweep: { exBase: null, listUrl: null },
@@ -566,7 +566,7 @@ const VENUES = [
 
   { id: "occ-rct-uk", kind: "manual",
     names: { card: "Queen's Gallery Edinburgh", chip: null, group: null, full: "The Queen\u2019s Gallery, Palace of Holyroodhouse", inEnglish: null, aka: [], lookup: "Queen's Gallery Edinburgh", replaced: ["The Queen\u2019s Gallery, Palace of Holyroodhouse"], hers: true },
-    city: null, country: "United Kingdom", english: true, language: null,
+    city: "Edinburgh", country: "United Kingdom", english: true, language: null,
     shop: { home: null, catalogues: null, search: null, unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
     read: { link: null, sites: [], dateOrder: null, spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
     sweep: { exBase: null, listUrl: null },
@@ -761,7 +761,7 @@ const VENUES = [
 
   { id: "occ-mauritshuis-nl", kind: "manual",
     names: { card: "Mauritshuis", chip: null, group: null, full: "Mauritshuis", inEnglish: null, aka: [], lookup: "Mauritshuis", replaced: [], hers: false },
-    city: null, country: "Netherlands", english: false, language: null,
+    city: "The Hague", country: "Netherlands", english: false, language: null,
     shop: { home: null, catalogues: null, search: null, unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
     read: { link: null, sites: [], dateOrder: null, spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
     sweep: { exBase: null, listUrl: null },
@@ -828,7 +828,7 @@ const VENUES = [
   // Its all-number dates: "Until 25.10.2026".
   { id: "occ-kunsthaus-ch", kind: "manual",
     names: { card: null, chip: null, group: null, full: null, inEnglish: null, aka: [], lookup: null, replaced: [], hers: false },
-    city: null, country: null, english: null, language: null,
+    city: "Zurich", country: "Switzerland", english: null, language: null,
     shop: { home: null, catalogues: null, search: null, unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
     read: { link: null, sites: [], dateOrder: "day", spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
     sweep: { exBase: null, listUrl: null },
