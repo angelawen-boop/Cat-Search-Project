@@ -76,6 +76,11 @@ recorded as "done" while the promises the layers were sold on were not kept. The
     Moderna Museet), old rule beside new.
   - **4F — manual import and the shop finder.** Their repeated instructions to Claude; the "couldn't find
     the show's title" sentence written twice; the shop-page reading written twice.
+    Also: two venues whose shop section in the register differs from the shop check's right answer —
+    Thyssen (the register holds the collection guides once confirmed; her answer is the exhibitions
+    section) and Acquavella (the register holds every product; the check's answer is its "Publications"
+    list, the one its site links to — the same books today). Settle each in the register, so register and
+    check agree.
   - **Stays (her decision):** the quarantine kept in both the store and her saved file.
   - **Her ledger is never changed (her decision) — banned outright, not "with her yes".** No item may
     alter, correct, migrate, add or remove anything in her ledger rows or saved file, and no session asks
