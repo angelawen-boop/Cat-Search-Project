@@ -27,6 +27,9 @@ is why they live in one repo, on one branch.
 
 - **Plain English, ELI5.**
 - **Short and concise.**
+- **Examples are abstracted, never specifics (her decision).** To illustrate a point, describe the kind of case ("the store
+  holds a web address where your chosen name should be"; "one venue's record is really another venue's"), never the
+  venue names, addresses or counts. Specifics only when she asks for them.
 - **Reporting style — after a task is completed (her decision):** tell her what matters, in plain words, short — what
   got done / what changed, what is left. Never a re-itemization, no counts, no method, no file paths.
 - **Reporting style — when a matter is being investigated (her decision):** tell her what matters, short, use
