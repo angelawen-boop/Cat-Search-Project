@@ -56,7 +56,7 @@ opens while the copy is written; a cancelled file still leaves it (CA-008c, CA-0
 before).** Likely cause, untimed: `handleSave` makes two store reads one after the other (the live
 record's count, then the newest Cloud Save) before the box opens. **If it persists, her decision:
 run the two reads at once** (`Promise.all`; the smaller-ledger check unchanged). Not the other
-option (trusting `cloudPrev` instead of reading the live record).
+option (trusting the page's own memory of the live record instead of reading it).
 
 Once, after ~7 test Saves in ~20 minutes, Claude's download box answered `rate_limited` to a file
 she cancelled (the note read "refused (rate_limited)"); her next Save read "cancelled" again. A

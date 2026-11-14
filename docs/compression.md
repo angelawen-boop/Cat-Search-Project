@@ -41,8 +41,8 @@ earlier compressed CSV (run_ and stitch_ folders, newest first;
   one-time repair flag, never a standing rule — as a rule it is a revert machine.
 - **Travelling pairs are found in code** (`groupTravellingRuns()`), asked once,
   answer written to both rows. Told to match wording itself, the model copied one
-  city's artist count onto the other. The city list is mirrored in
-  `compress.js`; fixture L-008 asserts the copies agree.
+  city's artist count onto the other. The gallery list is the venue register's
+  (`read.places`), one list read by the scraper and `compress.js` alike (L-008).
 
 **What the app does with a summary** (her table):
 

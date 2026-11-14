@@ -190,8 +190,7 @@ build with `parked` Stage 1/1b). Today the first read names one book and throws 
 Hemessen fix), and other versions are listed only after a book passes — *Victorian Radicals* lost both its books. Full record:
 `docs/catalogue_versions.md`, "Search: every catalogue of the exhibition" — read it before any search work.
 
-**Done — the catalogue blocks, live at 47.1** (her call: done unless she finds bugs): her order, the first book picked, one block
-per book, a shop line true for the picked book (`docs/catalogue_versions.md`).
+**Done — the catalogue blocks, live at 47.1** (her call: done unless she finds bugs): her order, the first book picked, one block per book.
 
 **PAUSED — no lookup patches until the redesign is agreed** (her decision: past the third-patch limit — `lookupCatalogue` changed 10
 times in three days). The redesign (find → choose → tell, every version kept, her starting-pick rules) and its nine agreed cases are in
@@ -487,7 +486,7 @@ AbeBooks link is `/servlet/SearchResults?ds=30&dym=on&kn=…&rollup=on&sortby=17
 3. **Pages** — a link Parallel cannot fetch (bot-blocked) or brings back as junk or empty: she saves the whole page.
 4. **Paste** — mostly-text pages where saving each is slow (the Tate library's records): the text pasted beside its link.
    Also her last resort for manual entry — details from several sources typed in, under a link to any page useful for that
-   show. No link, no import. Claude reads its title and dates, code checks them (56; §2.2.18).
+   show. No link, no import. Claude reads its title and dates, code checks them (`docs/add_by_link.md`, "Pasted pages").
 
 Links, Pages and Paste are one road — the same Claude read, shop finder and review; Links and Pages share the page
 reader, Paste skips it (her decision). A third-party page (press, blog, library record) goes the same road: the venue is read from the text, never
