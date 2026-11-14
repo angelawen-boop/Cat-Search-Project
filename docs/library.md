@@ -67,9 +67,8 @@ she added).
 | A picture she adds, shrunk and saved to the store | **YES**, and it survives a reload |
 
 - **Covers live in the page's store, beside the live ledger** — her
-  preference. One cover per store document; limits are 256 KiB per document
-  and 5,000 documents per page. A total size cap for the whole store is not
-  documented and not measured.
+  preference. One cover per store document; the store's limits are in
+  `docs/scalability.md`.
 - **Both test pictures were blurry.** Box 2 because Open Library's copy is
   5 KB; box 3 because the test shrinks to 400 px wide — a sharp screen needs
   about double. A sharp cover is estimated at 60–120 KB, unmeasured.

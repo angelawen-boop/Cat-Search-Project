@@ -8,441 +8,246 @@ Everything else is the coordinating session's: the plan, the sub-agents' briefs,
 
 The app was one file of about 9,400 lines. A session fixing a fault searched for the words in the
 complaint, fixed that one line and never saw the rest of the feature, so the same fault came back in a
-slight variation in later sessions (the Getty "The page came back empty." case: the "too short to read"
-cut-off sat about 3,200 lines away from the link reader that used it). The app is being moved into
-feature parts, each small enough for a session to read whole.
+slight variation (the Getty "The page came back empty." case: the "too short to read" cut-off sat about
+3,200 lines from the link reader that used it). So the app is moved into feature parts, each small enough
+for a session to read whole.
 
 **The point is to reorganize, simplify and streamline, not merely to split (her decision).** Moving
-unchanged code into separate files is the first step only; no layer counts as done until its promise
-below is met in the code, not just in the file layout.
+unchanged code is the first step only; no item counts as done until its promise is met in the code, not
+just in the file layout. A hostile review found layers 0–5a recorded as "done" while those promises were
+not kept; the work items below are the answer. **Lesson: a work item is checked against its own list of
+faults, one by one, never by gates and tests alone.**
 
-## Work items now (her decision) — in this order
-
-Layers 0–5a moved code into parts with the page unchanged. A hostile review found that the move was
-recorded as "done" while the promises the layers were sold on were not kept. These are the work:
-
-- **1A — the date and summary rules: one real copy shared with the scraper.** Today
-  `build/sync_shared.js` still copies them into `app/foundations/shared_with_scraper.jsx`. Promised in
-  layer 1, quietly dropped.
-- **1B — one way to use the page's store.** Today about eight parts (the logs, Links/Pages/Paste, link
-  venues, the cloud saving inside the main screen) each fetch the store and read and write it
-  themselves; `connections/store.jsx` only hands it out. Promised in layer 2, quietly dropped.
-- **2 — foundations and connections depend on nothing above them.** Three links run the wrong way, one
-  item each, each rewired so the lower part no longer reaches up:
-  - **2a** — the venue list uses the Links venue rules (`hasNoChip` → `ownChip`, `isOcc`, `LINK_VENUES`)
-    to decide an occasional venue's chip.
-  - **2b** — the ISBN check reads web-search results itself (`resultText`); it should take plain text.
-  - **2c** — the web and Claude connections write to the lookup log (`tapeCall`); they should report
-    each call and the log record it.
-- **3 — the machinery out of the main screen, each to its feature.** The main screen holds working
-  machinery, not only what she sees. Each moves to its feature's part, taking inputs and giving
-  results, never touching the screen:
-  - **3a** — the CSV import engine: matching sweep rows to her shows, merging a show swept twice,
-    building and applying the cards, the "Import complete" counts.
-  - **3b** — the job behind the Read button for Links, Pages and Paste.
-  - **3c** — Save now and the cloud save.
-  - **3d** — Reset.
-- **4 — one copy of every fact (her decision).** An audit found facts kept in more than one place
-  (code, store, scraper, her ledger), some with a "which copy wins" rule papering over the clash. Each
-  is brought to one home and the other copy deleted, with no precedence rule left behind. Six rounds, in
-  this order, each its own branch, side-by-side check and test run; her test after 4A and after 4E (her
-  screens or data change), the others change nothing visible. Every one must pass before 5 starts.
-  - **4A — venue facts.** One home (the register) for every venue, swept and manual import (names, city,
-    country, language, chip and order, shop addresses, page-reading rules including the date-order rules
-    now in the scraper, Acquavella's two locations). **The home is the code (her decision; "4A — her
-    decisions" under Start here).** The scraper reads venue names and cities from
-    the register (its own 24 differing spellings go); every "which copy wins" rule deleted — where copies clash her name wins (fixing her
-    rejected names on the review screens and quarantine list, and the catalogue search using the wrong
-    short name); a venue's names assembled one way, not five; the shop fields listed once, not four times;
-    records corrected (Kupferstichkabinett stored as Neue Nationalgalerie, the Munich three stored as
-    "pinakothek.de", Christie's two records); a venue's city passed on; Lévy Gorvy Dayan's card name as
-    the code's note says; test files read the register instead of their own copies (the Thyssen shelf,
-    the Acquavella gallery shelf, the scraper probe's typed-in settings). With it, two new checks: the
-    build fails when a sentence, list or rule is written twice, and when venue facts are written anywhere
-    but the register.
-  - **4B — saving.** The store's error sentences and safety-copy labels written two or three times; the
-    store record names typed into test and check scripts.
-  - **4C — the web-address clean-up** retyped 17 times becomes one shared piece.
-  - **4D — the sweep import.** The "nothing to sweep" marker sentence (nine copies); the column list (six
-    copies, one tool writing seven columns); the three sweep-file readers; the "Topic:" note; the three
-    ways of standardising web addresses; the sweep-log merge written twice; the unused last-import date in
-    her ledger — stays as it is (her ledger is never changed, below); show IDs made by two rules and the three accent rules, checked against her real
-    quarantine; the scraper's month spelling lists; the test with hand-typed show IDs.
-  - **4E — catalogue lookup.** The seller rule written three times; its repeated instructions to Claude
-    ("the books in this section…", the products one, "the ISBN-13, the publisher…"); the four ISBN
-    patterns; the publisher-splitting pattern retyped; the "English edition, published later" sentence;
-    the publisher held twice in her ledger — her ledger is never changed (below), so the seven mangled
-    publishers stay as they are and nothing rewrites either copy; the two price rules, checked on the four shops' live pages (Basel, Beyeler, Louisiana,
-    Moderna Museet), old rule beside new.
-  - **4F — manual import and the shop finder.** Their repeated instructions to Claude; the "couldn't find
-    the show's title" sentence written twice; the shop-page reading written twice.
-    Also: two venues whose shop section in the register differs from the shop check's right answer —
-    Thyssen (the register holds the collection guides once confirmed; her answer is the exhibitions
-    section) and Acquavella (the register holds every product; the check's answer is its "Publications"
-    list, the one its site links to — the same books today). Settle each in the register, so register and
-    check agree.
-  - **Stays (her decision):** the quarantine kept in both the store and her saved file.
-  - **Her ledger is never changed (her decision) — banned outright, not "with her yes".** No item may
-    alter, correct, migrate, add or remove anything in her ledger rows or saved file, and no session asks
-    her to. Where a duplicate sits inside her ledger, it stays.
-- **5 — the UI (her word: the user interface).** What is left once 3a–3d and 4 are done — the screens,
-  buttons, layout and design — split into its separate screens. The old layer 5b plan split by screen
-  only and would have left the machinery inside a screen.
-
-**Manual import (her name):** Links, Pages and Paste together. Never "link venues" or "add by link"
-for the group in anything new.
+**Not part of this work (her decision):** any fault in what the app does (e.g. the Getty case) — faults
+are tackled after it. The search redesign is not part of it either. **Manual import (her name):** Links,
+Pages and Paste together — never "link venues" or "add by link" for the group in anything new.
 
 **The line between machinery and UI (her decision; the guiding principle from now on).** Machinery
 decides what is true and what to say: rules, searches, imports, which case has happened and the
 sentence for it (a sentence's wording sits with its feature). The UI takes what the machinery hands
-it and puts it on screen: which pieces of information show, in what order, the layout, the buttons.
-The UI asks and shows; the machinery never knows a screen exists. Never mix the two again.
+it and puts it on screen: which pieces show, in what order, the layout, the buttons. The UI asks and
+shows; the machinery never knows a screen exists. Never mix the two again.
 
-The search redesign is not part of this work; when built it is mostly machinery with a thin UI.
+## The work items (her decision) — in this order
 
-**Not part of this work (her decision):** any fault in what the app does (e.g. the Getty "The page came
-back empty." case). The restructure reorganizes and cleans up the code without changing what it does;
-faults are tackled after it.
+**Done** (each gated, side by side identical, re-run by the coordinator; the full record is in git):
+- **Layers 0–5a** — every piece moved into its part, the page identical character for character
+  (branches `claude/restructure-L0` … `-L5a`). The old layer 5b (split the main screen by screen) is
+  replaced by item 5.
+- **1A** — the parts hold no copy of the scraper's rules: the SHARED part is a directive line, and the
+  join (`build/shared_from_scraper.js`) writes the rules in from `dates.js`, `compress_prompt.md`,
+  `compress.js`, `boilerplate.js`, `bot_check.js`, `answer_check.js` and the venue register each time;
+  `app_join.js --check` fails when they changed. **The one exception, said plainly:** the summary
+  examples are pairs taken from the sweeps on disk, stored in the part, re-taken by `sync_shared.js --examples`.
+- **1B** — `connections/store.jsx` is the only door to the store (read, write, delete, list), holding the
+  no-store, read-only and unread rules. Accepted difference, closer to her one-copy rule: the read-only
+  check runs at each write, so a save under way when another copy takes over stops before the switch.
+  The two check pages under `build/` still reach the store themselves; they are not the app.
+- **2a–2c and the guard** — the venue list's occasional-venue chips moved to the link-venue part; the
+  ISBN check takes plain text; the web and Claude connections announce each call and the lookup log
+  listens. `build/structure_check.js` (run by the test runner and the gates) fails when a part names a
+  part above it (foundations, connections, saving and logs, features, screens), when any part but the
+  store's door reaches the store, or when a part outside the screens holds a React hook or JSX. Eight
+  references between feature parts are listed, not failed (lookup → shop finder, lookup and shop finder
+  → link-venue entries, periods → venue order).
+- **3a–3d** — the machinery left the main screen as functions that take inputs and hand back results and
+  sentences: 3a the CSV import engine (the CSV and review parts); 3b the Read job for manual import
+  (`import/read_job.jsx`); 3c Save now, the automatic save, the safety copies, the one-tab claim and the
+  Cloud Saves drawer (`saving/cloud_jobs.jsx`); 3d Reset and Load (the saving parts). **Noted, not fixed
+  (not part of this work):** the import's quarantine write runs inside a React state updater; the Save
+  panel's "File name:" preview is worked out on the screen without the save's trim and 80-character cut.
+- **4A — venue facts** (merged; her test passed — see the handover record).
 
-Items 1A–5 change code text (not what the app does), so the gates run with `--changes-allowed` and her checklist applies.
+**Still to do — 4: one copy of every fact (her decision).** An audit found facts kept in more than one
+place (code, store, scraper, her ledger), some with a "which copy wins" rule papering over the clash. Each
+is brought to one home and the other copy deleted, no precedence rule left behind. One round each, in this
+order, each its own branch, side-by-side check and test run; her test after 4A and after 4E (her screens or
+data change). Every one passes before 5 starts. The evidence, with numbers and examples:
+`docs/restructure/duplicates.md` — re-check each finding against the code and her store first.
+- **4B — saving.** The store's error sentences and safety-copy labels written two or three times; the
+  store record names typed into test and check scripts.
+- **4C — the web-address clean-up** retyped 17 times becomes one shared piece.
+- **4D — the sweep import.** The marker sentence (nine copies); the column list (six copies, one tool
+  writing seven columns); the three sweep-file readers; the "Topic:" note; the three ways of standardising
+  web addresses; the sweep-log merge written twice; the unused last-import date in her ledger (stays — her
+  ledger is never changed); show IDs made by two rules and the three accent rules, checked against her real
+  quarantine; the scraper's month spelling lists; the test with hand-typed show IDs.
+- **4E — catalogue lookup.** The seller rule written three times; its repeated instructions to Claude; the
+  four ISBN patterns; the publisher-splitting pattern retyped; the "English edition, published later"
+  sentence; the publisher held twice in her ledger (both copies stay, the seven mangled publishers
+  included); the two price rules, checked on the four shops' live pages (Basel, Beyeler, Louisiana,
+  Moderna Museet), old rule beside new.
+- **4F — manual import and the shop finder.** Their repeated instructions to Claude; the "couldn't find
+  the show's title" sentence written twice; the shop-page reading written twice. Also two venues whose
+  register shop section differs from the shop check's right answer — Thyssen (the register holds the
+  collection guides once confirmed; her answer is the exhibitions section) and Acquavella (every product;
+  the check's answer is its "Publications" list, the same books today): settle each in the register.
+- **Stays (her decision):** the quarantine kept in both the store and her saved file.
+- **Her ledger is never changed (her decision) — banned outright, not "with her yes".** No item may
+  alter, correct, migrate, add or remove anything in her ledger rows or saved file, and no session asks
+  her to. Where a duplicate sits inside her ledger, it stays.
 
-## The design of each item (the coordinator's, written before any code)
+**Then 5 — the UI (her word: the user interface):** what is left once 4 is done, split into its separate
+screens; its design written here first (which screens become components, what each holds, what passes
+between them). Items 1A–5 change code text, not what the app does: gates run with `--changes-allowed`.
+**After it (not part of it until she says):** the "words" list — every sentence a feature shows her, in one place.
 
-**Every item keeps what the app does exactly as it is** — same screens, same store contents, same
-sentences, same results. Only where code sits and how it is wired changes. The side-by-side check
-proves it (below).
+## 4A — the venue register (merged)
 
-- **1A.** The parts hold no copy of the scraper's rules. The SHARED piece becomes one line that tells
-  the join to take the rules from the scraper's own files (`dates.js`, `compress_prompt.md`,
-  `compress.js`, `boilerplate.js`, `bot_check.js`, `answer_check.js`, the scraper's VENUES) each time
-  it joins; the builders move out of `sync_shared.js` into one module the join uses.
-  `Cat_Watch.jsx` is the built page, so it still holds the text, as any built file does. **The one
-  exception, said plainly:** the summary examples are not rules but pairs taken from the sweeps on disk,
-  re-taken at every build; they stay stored in the part, refreshed by `sync_shared.js --examples`.
-  `app_join.js --check` fails when the scraper's rules changed and the page was not joined again.
-- **1B.** `connections/store.jsx` is the only door to the store: read one record, write one, delete one,
-  list a collection. It owns the rules every caller repeats today: no store reached, the read-only copy
-  (writes refused; the one-tab claim alone may write), and the unread rule (a failed read marks that
-  part unread and its writes refuse). No other part asks for the store, holds it, or reads or writes a
-  record itself. Each feature keeps its own sentences.
-- **2a.** Everything the venue list does with occasional and link venues (the chip a venue files under,
-  and what that needs) moves to the link-venue part; the venue list knows only its venues.
-- **2b.** The ISBN check takes plain text; the lookup turns search results into text before asking it.
-- **2c.** The web and Claude connections announce each call; the lookup log listens and records it.
-  The connections never name the log.
-- **The guard, from 2 on:** `build/structure_check.js`, run by the test runner and the gates, fails
-  when a part names anything from a part above it (foundations, then connections, then saving and logs,
-  then the features, then the screens), or when any part but the store's door reaches the store; from
-  item 3 on, also when a part outside the screens uses a React hook or holds JSX (state, drawing).
-- **3a–3d.** Each piece of machinery leaves the main screen for its feature as functions that take
-  what they need and hand back a result (and, for a long job, report progress as they go). They decide
-  what happens and what is said; the screen calls them and shows what comes back. 3a → the CSV part
-  (matching, folding, building the cards, applying them, the counts, recording the sweep); 3b → the
-  Links/Pages/Paste parts (the Read job, its progress reports, the pending lists); 3c → the cloud part
-  (Save now, the automatic save, the safety copies, the one-tab claim and heartbeat); 3d → the saving
-  part (Reset and what it loads and writes).
-- **4A — the venue register.** Branch `claude/restructure-4a`.
-  - **The one home:** `venues/register.js` at the repo root, data only: an ordered list (the order IS her
-    venue order; Occasional venues keep their computed country order), one entry per venue, every entry
-    the same field layout — id, kind (swept or manual), names (card, chip label, chip group, full name in
-    its own language, English name, other names, the lookup's search name, Claude's names she replaced),
-    city, country, English-speaking, shop (home, catalogue shelf, search, the finder's findings and her
-    confirmations), page-reading rules (link options, other sites, date order, Acquavella's places),
-    sweep addresses. Plain JS (it holds patterns), required by the scraper; the join writes it into
-    `Cat_Watch.jsx` as it writes the scraper's rules (1A) — the app part holds only a directive line.
-  - **Deleted:** `MUSEUMS`' facts, `LINK_VENUES`, `OCC_COUNTRY`, `VENUE_ORDER`, the scraper's venue names
-    and cities, `DATE_ORDER`/`SPACED_YEAR_VENUES`' venue lists, `TRAVELLING_LOCATIONS`, `VENUE_LANGUAGE`/
-    `CATALOGUE_WORDS`' venue lists, the shop field lists (one list, from the register), the test files' own
-    venue copies — each reads the register. Every "which copy wins" rule (`occVenue`'s, `occCountry`'s) goes.
-    A venue's set of names is built by one function.
-  - **The waiting room:** the store's `venues/occasional`. What the app learns there shows at once, over
-    the register's entry (her latest word). When a published version opens, it clears each waiting
-    entry the register now holds exactly. `node build/file_venues.js <store file>` files waiting
-    entries into the register (code: one right answer); the publish steps (docs/publishing.md) run it,
-    refresh the review page's list, file her names and picks from it, and tell her the one-line FYI.
-  - **The review page** (`https://claude.ai/artifact/RmSC86pu1rkBxsZDtfdA1J`, permanent): every venue's
-    names, city, a box for hers (store `names/<id>`), and "To choose" (store `picks/<key>`). Its list is
-    rebuilt from the register at each publish; her entries are filed into the register then.
-  - **What she will see change:** her chosen name wherever a venue is named (chips keep their labels);
-    her picks; a manual venue's city passed on. Nothing in her ledger.
-  - **Two build checks:** a venue fact written outside the register fails; a sentence, list or rule
-    written twice fails.
-  - **The first move:** the register built from the code, the store snapshot
-    (`docs/store_backup_2026-11-06/`) and the scraper; after her test and publish, the leftover store
-    records cleared once (her yes, given).
-- **5.** Written here once 4 is done, from what is left: which screens become their own
-  components, what each holds, what passes between them.
+**Her decisions (made; the code-or-store question is closed):**
+- **The code is the one home for every venue's facts** (swept and manual import alike): `venues/register.js`,
+  data only, one entry per venue, every field in the same layout; the order is her venue order. Nothing
+  about a venue is written anywhere else; `build/fact_check.js` fails if it is, and fails a sentence, list
+  or rule written twice. No session decides where a venue fact goes. Field by field: `docs/add_by_link.md`,
+  "The design".
+- **The store is a waiting room, never a second copy.** What the app learns at a manual import (a new
+  venue, its shop, her confirmation or rename) goes to `venues/occasional` and works at once, shown over
+  the register's entry (her latest word), until the next publish, whatever it is for, files it in.
+- **Every "which copy wins" rule deleted** — where copies clashed, her name won (her rejected names had shown on the review
+  screens and quarantine list).
+- **The app tidies the waiting room itself** — no session writes, no yes from her: when a published version
+  opens, a waiting entry the register now holds exactly is cleared; one that differs stays for the next publish.
+- **The FYI:** a publish that files venues tells her in one line that her latest venue store info is now in
+  the code too. Nothing else is asked or said.
+- **The first move, once (her yes):** a full backup of her store (`docs/store_backup_2026-11-06/`), then
+  every leftover venue record cleared in one go after her first real publish.
+- **Conflicting or ambiguous facts go to her on one page** to pick — never written out in chat: the
+  permanent venue review page, https://claude.ai/artifact/RmSC86pu1rkBxsZDtfdA1J (every venue's names,
+  city, a box for hers — store `names/<id>` — and "To choose", store `picks/<key>`), which she reopens any
+  time. Its list is rebuilt from the register at each publish and her entries filed in then.
 
-## The side-by-side check for items that change code
+**What she sees change:** her chosen name wherever a venue is named (chips keep their labels); her picks; a
+manual venue's city passed on; Find catalogue searching every venue by its full name. Nothing in her ledger.
 
-Run by the gates with `--changes-allowed`: a function's text may differ, nothing else may. Every table
-and list the page defines, every screen and every record written to the store must be identical, old
-and new, through: opening; loading her test ledger; the Import pop-up and each of its four tabs; the
-venue and theme chips; the Period sort; a card opened; Save now (store and download); the cloud copies
-drawer; reading her 15 Oct sweep file, accepting every card and applying (screen, store, the "Import
-complete" line); Reset. The Read job for Links, Pages and Paste runs on the same inputs in both: a
-page fetched live once per run through Parallel and her saved pages, Claude's reply the same fixed reply
-to both — this proves old and new do the same with the same reply, not that the reading is good.
-Each check was shown to fail on a deliberate one-word change. A mixed review (cards added, rejected,
-never added and left undecided; field edits accepted and rejected; the partial apply) runs before the
-all-accept one. Her test ledger has no periods, so every ninth row is given one for the Period sort.
+**The filing at publish is wired into the build** (`build_app.js` on `main`; `docs/publishing.md`): it stops
+without the store's waiting room and the review page's names, files both into the register
+(`build/file_venues.js`), joins, runs the fact check and rebuilds the review page (VR-030–VR-032).
 
-## How it works
+## The checks — every item
 
-- **`app/` holds the parts; they are what gets edited.** Each part is a list of pieces, each opened by a
-  line `//@piece <name>`. A piece is one top-level statement (a function, a constant, the component)
-  with the comments above it. Lines starting `//@ ` before the first piece are the part's own note.
-- **`Cat_Watch.jsx` is written only by `node build/app_join.js`**, from the parts, in the order
-  `app/pieces.json` records. The build, every test and every script still read `Cat_Watch.jsx`, so none
-  of them changed. `node build/app_join.js --check` exits 1 if it was edited by hand.
-- **The moving script, `node build/app_split.js`,** moves pieces between parts word for word. It joins in
-  memory first and writes nothing unless the page comes out identical, character for character.
-- **`docs/restructure/placement.json` is the list of where every piece goes** — the coordinator's call,
-  by layer. A piece added since the list was made is placed by the session that finds it (add it to the
-  list, in the part where it is used).
-- **Order is kept.** Pieces come out of the join in their old order whatever part they sit in, so a
-  constant that needs another defined first still gets it. A lower layer's piece may still call a higher
-  one (hasNoChip → LINK_VENUES); that is the code as it is, not a placement fault.
+**The side-by-side check** (`build/side_by_side.js`, run by the gates with `--changes-allowed`): a
+function's text may differ, nothing else may. Every table and list the page defines, every screen and
+every record written to the store must be identical, old and new, through: opening; loading her test
+ledger; the Import pop-up and each of its four tabs; the venue and theme chips; the Period sort; a card
+opened; Save now (store and download); the cloud copies drawer; reading her 15 Oct sweep file, a mixed
+review (added, rejected, never added, undecided; field edits accepted and rejected; the partial apply)
+then accepting every card and applying; Reset. The Read job runs on the same inputs in both — a page
+fetched live once per run through Parallel and her saved pages, the same fixed Claude reply to both — so
+it proves old and new do the same, not that the reading is good. Each check was shown to fail on a
+one-word change. Her test ledger has no periods, so every ninth row is given one.
 
-## The layers, bottom up (her decision: never start from whatever fault is in front of you)
-
-| Layer | What moves | Branch | State |
-|---|---|---|---|
-| 0 | Set-up: every piece into `app/unsorted.jsx`; build, tests and `sync_shared.js` wired to the parts; the docs that say "edit Cat_Watch.jsx" corrected | `claude/restructure-L0` | **moved only** — page identical, 23 of 23 suites |
-| 1 | Foundations: version, venues, the shared date/summary block, text tools, ISBN, date display | `claude/restructure-L1` | **moved only** — page identical, 23 of 23 suites |
-| 2 | Connections: the web service, Claude, the store | `claude/restructure-L2` | **moved only** — page identical, 23 of 23 suites |
-| 3 | Saving and logs: file, seed, cloud ledger, lookup log, sweep log, quarantine | `claude/restructure-L3` | **moved only** — page identical, 23 of 23 suites |
-| 4a | Ledger rules: closing window, tiers, Buy next | `claude/restructure-L4a` | **moved only** — page identical, 23 of 23 suites |
-| 4b | Periods and themes | `claude/restructure-L4b` | **moved only** — page identical, 23 of 23 suites |
-| 4c | CSV import and the review cards | `claude/restructure-L4c` | **moved only** — page identical, 23 of 23 suites |
-| 4d | Links, Pages and Paste | `claude/restructure-L4d` | **moved only** — page identical, 23 of 23 suites |
-| 4e | The shop finder | `claude/restructure-L4e` | **moved only** — page identical, 23 of 23 suites |
-| 4f | The catalogue lookup | `claude/restructure-L4f` | **moved only** — page identical, 23 of 23 suites |
-| 5a | Screens: theme, period scrubber, ledger card and the main screen moved whole into `app/screens/` | `claude/restructure-L5a` | **moved only** — page identical, 23 of 23 suites |
-| 5b | The 2,300-line main screen split into its separate screens, one at a time — changes code, so her checklist applies | `claude/restructure-L5b` | not started |
-
-Layers 0–5a only move pieces: the page stays the same file, character for character. Layer 5b rewrites
-the main screen into separate components, so it changes code text; it is done one screen at a time.
-
-**After the move (not part of this project until she says):** the "words" list per feature — every
-sentence a feature shows her, in one place.
-
-## The gates — per layer, in this order
-
-1. **Nothing lost or doubled** — `node build/restructure_gates.js --base main --layer <id>`: the parts join
-   to `Cat_Watch.jsx` exactly; every piece at the base is there once, in order, letter for letter; every
-   piece of this layer and the layers before sits in its placed part.
+**The gates, in order:**
+1. **Nothing lost or doubled** — `node build/restructure_gates.js --base main --layer <id>`: the parts
+   join to `Cat_Watch.jsx` exactly; every piece at the base is there once, in order; every piece sits in
+   its placed part.
 2. **Every test passes and the page draws** — `npm run test:app` through the watched runner (write her
-   the "Expected test run" line first; docs/testing.md).
-3. **Side by side** — run by the same gates script (`build/side_by_side.js`): the base and the new
-   version, same clock, same inputs (her test ledger in `docs/ledger_2026-09-24/`, her 15 Oct sweep
-   file), give the same top-level values (every table, every function's text) and the same screens
-   (opening, after loading the ledger, the review after reading the sweep file).
-4. **Her test** — only when the page is NOT identical (layer 5b). The gates script prints PAGE IDENTICAL
-   when it is: then there is nothing to publish and nothing for her to see. When it is not: publish to a
-   test page (never her app), give her the checklist below, and wait for "same" or what differs.
+   the "Expected test run" line first; `docs/testing.md`).
+3. **Side by side** — run by the same gates script, on her test ledger (`docs/ledger_2026-09-24/`) and
+   her 15 Oct sweep file.
+4. **Her test** — only when the page is not identical: a test page, her checklist, "same" or what differs.
 
-A layer that fails a gate is not merged. **The coordinator re-runs gates 1–3 itself** and reads the
-sub-agent's change; a sub-agent's "passed" is never taken as the result.
+A failed gate is never merged. **The coordinator re-runs gates 1–3 itself** and reads the change; a
+sub-agent's "passed" is never the result. The gates are proven by `node build/restructure_gates_proof.js`
+(about fifteen minutes) and `build/side_by_side_proof.js` (about eleven): every layer moved on a copy
+with the page identical, and eight deliberate breaks each caught. Run them again after any change to the tools.
 
-**The gates are proven:** `node build/restructure_gates_proof.js` (about fifteen minutes; `build/side_by_side_proof.js`, about eleven, proves each screen check) moves
-every layer on a copy with the gates passing and the page identical, then makes eight breaks one at a
-time (a piece deleted, doubled, changed by one character, moved to the wrong part, reordered, stray
-text, an unplaced new piece, `Cat_Watch.jsx` edited by hand) — each must fail, and the moving script
-must refuse a hand-edited page. Run it again after any change to the tools.
+## Her tests (her decision)
 
-Claude's recorded replies were named as an input when this was planned; they are not needed for
-layers 0–4f, because the gates prove every piece of the lookup is unchanged letter for letter.
+The side-by-side check runs a stand-in browser, store and Claude; it cannot reach her real store, her
+Claude or a real Find catalogue. So she tests on the restructure test page (never her app),
+https://claude.ai/artifact/Ju1pKP84Gi3VNL1b2SULc5, built by `node build/build_app.js --test-page` (title
+"Art Watch Restructure Test", footer "TEST PAGE — not your app", her app's four capabilities). Rounds:
+1 after 1A–2c and 2 after 3a–3d (both passed), after 4A (passed) and 4E, and 3 after 5. A round's faults
+are fixed before the next stage. Her app is published only when she says.
 
-## Her tests — three rounds (her decision)
+**Before every round (her decision — a test is true only if the page is set up as her app is):** copy her
+app's `venues/occasional`, `quarantine/rows` and `sweeps/venues` into the test page's store (her store is
+only read); load her current ledger (decoded from her store's `ledger/live`, kept in the scratchpad, never
+committed) in the stand-in browser with those records, and check the cards, venue names and chips; then
+send her the link and the latest sweep file.
 
-The side-by-side check runs a stand-in browser with a fake store and a stand-in Claude; it cannot reach
-her real store, her real Claude or a real Find catalogue. So she tests on a test page (never her app)
-three times, each before the next stage starts:
-1. **After 1A–2c** — they rewired every save to the store (1B) and how every web and Claude call is
-   logged (2c). Her checklist, with one Find catalogue and one Save now then the cloud copies drawer.
-2. **After 3a–3d** — the import engine, the Read job, Save and Reset moved.
-3. **After 5** — the screen split.
-(Also her tests after 4A and 4E, above.)
-The restructure test page: https://claude.ai/artifact/Ju1pKP84Gi3VNL1b2SULc5, built from `main` by
-`node build/build_app.js --test-page` (title "Art Watch Restructure Test", footer "TEST PAGE — not your
-app"), with her app's four capabilities. **Before every round** (her decision — a test page is a true test
-only if it is set up as her app is): copy from her app's store into the test page's store her link venues
-(`venues/occasional`), quarantine (`quarantine/rows`) and sweep log (`sweeps/venues`) — her store is only
-read; then load her current ledger (decoded from her store's `ledger/live`, kept in the scratchpad, never
-committed) in the stand-in browser with those records, and check the cards, venue names and chips before
-she gets the link; then send her the link and the latest sweep file. A round's faults are fixed before the next stage starts. Her app is published only when she says.
+**Her checklist:** load her ledger export; scroll and open a few cards; star and unstar one; the venue and
+theme chips and the Period sort; Import → CSV with a sweep file, look through the review, Cancel; Import →
+Links with one link, Read, Cancel; Pages with one saved page, Read, Cancel; Paste with one link and its
+text, Read, Cancel; Find catalogue on one card; Save now; open the cloud copies drawer. She says "same", or
+what differs. Her judgement on round 2: a round only proves the cut-up-and-rejoined code behaves the same.
 
-## Her checklist (every test round)
+## How the parts work
 
-On the test page: load her ledger export; scroll the list and open a few cards; star and unstar one;
-use the venue and theme chips and the Period sort; Import → CSV with a sweep file, look through the
-review, Cancel; Import → Links with one link, Read, Cancel; Import → Pages with one saved page, Read, Cancel; Import → Paste with one link and its text, Read, Cancel; Find catalogue on one card; Save now; open
-the cloud copies drawer. She says "same", or what looks or behaves differently.
+- **`app/` holds the parts; they are what gets edited.** Each part is a list of pieces, each opened by
+  `//@piece <name>`; a piece is one top-level statement with the comments above it. `//@ ` lines before
+  the first piece are the part's note.
+- **`Cat_Watch.jsx` is written only by `node build/app_join.js`**, in the order `app/pieces.json`
+  records; build, tests and scripts still read it. `app_join.js --check` exits 1 if it was edited by hand;
+  `build_app.js` and `scraper/run_tests.js` run that check first and stop on it.
+- **`node build/app_split.js`** moves pieces between parts word for word, writing nothing unless the page
+  comes out identical. **`docs/restructure/placement.json`** says where every piece goes — the
+  coordinator's call; a new piece is placed by the session that finds it, in the part where it is used.
+- **Order is kept**: pieces join in their old order whatever part they sit in. Branches holding their own `Cat_Watch.jsx` (`parked`, `claude/theme-shelf`) are not merged across the
+  restructure; their work is rebuilt on the parts when she wants it.
 
-## Per layer — who does what
+## Who does what (her decisions)
 
-**The coordinating session:**
-1. Creates the layer's branch from `main` (record it in `docs/branches.md`).
-2. Starts ONE sub-agent with the brief below, filled in for the layer.
-3. When it reports: re-runs `node build/restructure_gates.js --base main --layer <id>` and the test
-   run itself; reads the diff (`git diff main --stat`, then the non-`app/` files in full).
-4. If anything fails: sends the sub-agent back with the failure, or fixes it; gates again.
-5. Page identical → merges into `main`, pushes, updates this file. Not identical → test page, her
-   checklist, then merge and, when she says, publish (docs/publishing.md).
-6. While a layer's branch is open, no other change is made to the app on `main`. A fault she reports
-   then is written under "Open problems" below and fixed after the merge.
+Bottom-up order. A sub-agent does each layer's or item's moving and testing; the coordinator sets up, re-checks and
+records. One sub-agent at a time, no higher than Opus at medium effort; the coordinator picks the model by
+the judgement the task needs — Sonnet for contained, easily checked work, Opus where behaviour is subtle —
+never the highest by default, and names it in the end report. Placement is the coordinator's call, not hers.
 
-**The sub-agent's brief (copy, fill in the layer):**
-> You are moving layer `<id>` of the Art Watch restructure, on branch `<branch>` (already checked out).
-> Read `docs/restructure.md` in full first. Run `node build/app_split.js --layer <id>`. If it lists
-> pieces not in the placement list, add each to `docs/restructure/placement.json` in the part where it
-> is used, and run the move again. Never edit `Cat_Watch.jsx` or retype code. Then run
-> `node build/restructure_gates.js --base main --layer <id>` and, through the watched runner,
-> `npm run test:app` (write the "Expected test run" line first; if the hook refuses it, say so and leave
-it to the coordinator). Commit on the branch with a clear
-> message. Report: the gates' last lines, the test run's result line, every file you changed outside
+**The coordinator:** (1) creates the item's branch from `main` and records it in `docs/branches.md`;
+(2) starts ONE sub-agent with the brief below; (3) re-runs the gates and the test run itself and reads the
+diff (`git diff main --stat`, then the non-`app/` files in full); (4) on a failure sends it back or fixes
+it, then gates again; (5) merges into `main`, pushes, updates this file — or, when the page changed, the
+test page and her checklist first; (6) while an item's branch is open, no other app change goes on `main`;
+a fault she reports then goes under "Open problems" and is fixed after the merge.
+
+**Its own lessons (keep):** name both the model and the effort (low or medium) on every sub-agent, or her
+permission does not cover it and it waits for her; check the branch is checked out before a sub-agent
+starts (a session restart puts the checkout back on `main`); when a list is re-sorted or restated, match
+every item across before sending it to her.
+
+**The sub-agent's brief (copy, fill in the item):**
+> You are doing item `<id>` of the Art Watch restructure, on branch `<branch>` (already checked out).
+> Read `docs/restructure.md` in full first. [The item's design, written here first.] Never edit
+> `Cat_Watch.jsx` or retype code. Then run `node build/restructure_gates.js --base main --layer <id>
+> --changes-allowed` and, through the watched runner, `npm run test:app` (write the "Expected test run"
+> line first; if the hook refuses it, say so and leave it to the coordinator). Commit on the branch with a
+> clear message. Report: the gates' last lines, the test run's result line, every file you changed outside
 > `app/`, and anything you could not do. Do not merge, push to `main` or publish.
-> (Layer 0 also: wire `build/build_app.js`, `scraper/run_tests.js` and `build/sync_shared.js` to the
-> parts — see "Layer 0's wiring" — and correct every doc line that tells a session to edit
-> `Cat_Watch.jsx`.)
-
-## Layer 0's wiring
-
-- `build/app_split.js --bootstrap` makes `app/`.
-- `build/build_app.js` runs `node build/app_join.js --check` first and stops on a failure.
-- `scraper/run_tests.js` runs the same check before any suite, and fails the run on it; it then runs
-  `build/structure_check.js` (the structure guard) the same way, and the gates print it as a line.
-- Since 1A, the part holding the `SHARED` piece holds a directive line and the summary examples only; the join
-  (`build/shared_from_scraper.js`) writes the scraper's rules in, `app_join.js --check` fails when they changed,
-  and `build/sync_shared.js` only re-takes the examples, then joins.
-- Docs: `docs/publishing.md` (the version number lives in the part holding `APP_VERSION`), CLAUDE.md §1
-  and §5.3/§5.4 wherever a session is told to edit `Cat_Watch.jsx` or between the SHARED markers.
-- Branches holding their own copy of `Cat_Watch.jsx` (`parked`, `claude/theme-shelf`) are not merged
-  across the restructure; their work is rebuilt on the parts when she wants it.
 
 ## Start here — the next session's job
 
 **What is left, in order (her plan):**
-1. **4A–4F** — one copy of every fact, in her order: 4A venue facts, 4B saving, 4C the web-address
-   clean-up, 4D the sweep import, 4E catalogue lookup, 4F manual import and the shop finder (the items
-   under "Work items now"; the evidence for each, with numbers and examples, in
-   `docs/restructure/duplicates.md` — re-check each finding against the code and her store first).
-   Per item: write its design here first (what becomes the one home, what is deleted, what she will see
-   change, if anything), then one branch (`claude/restructure-4a` …), one sub-agent, gates with
-   `--changes-allowed`, the test run re-run by the coordinator, merge. Her test on the test page after
-   4A and after 4E, set up from her app's store first ("Her tests"). A change to her store (4A's corrected
-   records) needs her yes and a backup first. **Her ledger is never changed — banned, not asked about.**
-2. **5** — the UI split into its screens (its design written here first), then **her test round 3**.
-3. **Publish to her app when she says.** That publish also brings the `art-watch-` file names for
-   saved ledgers and safety copies (on `main` since round 1).
-
-**4A — her decisions (made; the code-or-store question is closed):**
-- **The code is the one home for every venue's facts** (swept and manual import alike): one register, a
-  data-only part, one entry per venue, every field in the same layout. Nothing about a venue is written
-  anywhere else; a build check fails if it is. No session decides where a venue fact goes.
-- **The store is a waiting room, never a second copy.** What the app learns at a manual import (a new
-  venue, its shop, her confirmation or rename) goes to the store and works at once. It stays there until
-  the next publish, whatever that publish is for; the session then files it into the register.
-- **The app tidies the waiting room itself** — no session writes, no yes from her: when a published
-  version opens, a waiting entry whose facts the register now holds exactly is cleared; one that differs
-  (changed after the build) stays for the next publish. Until filed, the waiting entry is what shows (her
-  latest word).
-- **The FYI:** a publish that files venues tells her in one line that her latest venue store info is now in
-  the code too. Nothing else is asked or said.
-- **The first move, once (her yes):** a full backup of her store, then every leftover venue record cleared
-  in one go after the register holds them.
-- **Conflicting or ambiguous facts go to her on one page** to pick — never written out in chat. It is the
-  permanent venue review page (CLAUDE.md §6 roadmap: her rename page made permanent), which she reopens
-  any time to rename venues and record decisions.
-
-**The coordinator's own lessons from 3a–3d (keep):** name both the model and the effort (low or
-medium) on every sub-agent, or her permission does not cover it and it waits for her; check the
-branch is checked out before a sub-agent starts (a session restart puts the checkout back on `main`);
-when a list is re-sorted or restated, match every item across before sending it to her.
-
-The checks, before any item: read "The design of each item", "The side-by-side check for items that
-change code" and "Her tests".
+1. **Finish 4A** — the checks still to run, as agreed with her: the scraper, old code beside new, on saved
+   pages only (no network); manual import's page reading, live proof pages old reader beside new; the
+   catalogue search wording for every non-English venue. Then, when she says, publish (`docs/publishing.md`):
+   her store's old venue records should all clear on opening; then the one-time clear of the leftover
+   `venues/occasional` records and Christie's orphan press record (her yes given; backup in
+   `docs/store_backup_2026-11-06/`). The publish also brings the `art-watch-` file names for saved ledgers
+   and safety copies.
+2. **4B to 4F**, in order. Per item: write its design here first (the one home, what is deleted, what she
+   will see change), then one branch (`claude/restructure-4b` …), one sub-agent, the gates, merge. Her test
+   after 4E. A change to her store needs her yes and a backup first. **Her ledger is never changed.**
+3. **5**, then **her test round 3**.
+4. **Publish to her app when she says.**
 
 ## Handover record — updated after every step
 
-**Where we are:** 4A merged into `main` (gates re-run by the coordinator: side by side differs only where intended — her names, the register's new values, one Milan page no longer asking Claude to name a venue it knows; 23 of 23 suites); the test page published from it and checked against her store and ledger (every venue named, chips and buttons unchanged). **4A checked item by item against the code and her store and ledger (the coordinator, after her catch that Detroit was never fixed):** every item fixed; the misses found then were fixed in `claude/restructure-4a-fixes` (Find catalogue searches every venue by its full name, never a card name; the search box reads title, description and the card's venue name, her decision; a group's chip label written once; six full names corrected; Getty and Louisiana renamed). Christie's orphan press record goes at the one-time clear. **Lesson: a work item is checked against its own list of faults, one by one, never by gates and tests alone.** **The filing at publish is wired into the build** (it had been recorded as done and never was — her catch): `build_app.js` on `main` stops without the store's waiting room and the review page's names, files both into the register, joins, runs the fact check and rebuilds the review page (VR-030–VR-032). **The waiting room, proved live on the test page (her test):** a new venue (Pallant House) filed by the build, then cleared by the page on opening, and a fresh Find catalogue took its shop from the code; a changed fact waiting in the store shows over the code and is not cleared; a changed fact filed by the build reaches the page from the code and is cleared on opening (the test name kept off `main`, on `claude/restructure-4a-case3`). **Still to run, as agreed with her:** the scraper, old code beside new, on saved pages only (no network); manual import's page reading, live proof pages old reader beside new, and the catalogue search wording for every non-English venue. At her first real publish: her store's old venue records should all clear on opening; Christie's orphan record is deleted then (her yes). After it passes and she says to publish: publish, then the one-time clear of the leftover `venues/occasional` records (her yes given; backup in `docs/store_backup_2026-11-06/`). Then 4B. Before that: 1A, 1B, 2a–2c and the guard done; her test round 1 passed (her checklist, on the test page set up from her app's store). 3a–3d done. Her test round 2 passed technically: her checklist plus Import by Pages and by Paste (which the session had left off the checklist). Her judgement: the round only proves the cut-up-and-rejoined code behaves the same; the substantive work, one copy of every fact, had not begun. Next: 4A.
+**Where we are:** 4A merged into `main` and checked item by item against the code, her store and ledger
+(after her catch that Detroit was never fixed); the misses fixed (`claude/restructure-4a-fixes`): full names
+in Find catalogue; the search box reads title, description and the card's venue name (her decision); a
+group's chip label written once; six full names corrected; Getty and Louisiana renamed. Gates re-run: side by side differs only where intended (her
+names, the register's new values, one Milan page no longer asking Claude to name a venue it knows); 23 of
+23 suites. **The waiting room, proved live on the test page (her test):** a new venue (Pallant House)
+filed by the build, then cleared by the page on opening, a fresh Find catalogue taking its shop from the
+code; a changed fact waiting in the store shows over the code and is not cleared; a changed fact filed by
+the build reaches the page and is cleared on opening (the test name kept off `main`, on
+`claude/restructure-4a-case3`). Next: the checks under "Start here", 1.
 
-**Work items done:** the wider check (Opus; proved on every screen, a mixed review added by the
-coordinator). 1A (Sonnet): the parts hold no copy of the scraper's rules, the join writes them; only
-the summary examples are stored; gates re-run by the coordinator, side by side identical; 22 of 22
-suites (the old copy check folded into the join check).
-1B (Opus): `connections/store.jsx` is the only door (read, write, delete, list; the unread, read-only
-and claim rules inside it); no other part reaches the store; gates re-run, side by side identical; 22 of
-22. One difference, accepted as closer to her one-copy rule: the read-only check now runs at each write,
-so a save under way when another copy takes over stops before the switch instead of finishing (its
-new parts are left unused in the store). The two check pages under `build/` still reach the store
-themselves; they are not part of the app.
-2a–2c and the guard (Sonnet): the venue list's occasional-venue ordering and chips moved to the link-venue
-part; the ISBN check takes plain text; the connections announce calls and the log listens;
-`build/structure_check.js` fails on any part naming a higher one or reaching the store (proved on the old
-code and two deliberate breaks), run by the test runner and the gates. Gates re-run, side by side
-identical; 22 of 22. Eight references between feature parts are listed, not failed (lookup → shop
-finder, lookup and shop finder → link-venue entries, periods → venue order).
-3a (Opus): the CSV engine (matching, folding, reading the file, building and applying the cards, the
-"Import complete" and partial-apply sentences, the sweep-log and quarantine save sentences) is top-level
-functions in the CSV and review parts; the screen keeps the file input, state and drawing. The guard now
-also fails on a hook or JSX outside the screens (proved on a deliberate break); `momentLines` (JSX) moved
-to the screens part to pass it. The harness takes the intake from top level; its suites' case counts are
-unchanged (86, 64). Gates re-run by the coordinator, side by side identical; 22 of 22. Noted, not fixed
-(not part of this work): the import's quarantine write runs inside a React state updater.
-3b (Opus): the Read job for Links, Pages and Paste is a new part, `import/read_job.jsx` (what to read,
-the read loop with its progress lines handed to the screen, the outcome, what goes back into the box,
-list or boxes after apply or Cancel, chosen files into Pages entries); the screen keeps the buttons,
-inputs, state and drawing. Gates re-run by the coordinator with `--live` (the Links read on live pages),
-side by side identical; 22 of 22.
-3c (Opus): Save now, the automatic save, the check before Load or Reset with its safety copy, the
-one-tab claim and heartbeat, opening the cloud copy and the Cloud Saves drawer (roll back, download) are
-a new part, `saving/cloud_jobs.jsx`, handing back their sentences; the screen keeps its state, buttons
-and the timers that trigger them. The cloud suites' counts unchanged (20, 54, 12, 14). Gates re-run by
-the coordinator, side by side identical; 22 of 22. Noted, not fixed: the Save panel's "File name:"
-preview is still worked out on the screen, without the trim and 80-character cut the save applies.
-3d (Sonnet): Reset and Load — the starter set and its sentences, reading a ledger file and its error and
-loaded sentences, the Load and Reset confirm questions — are functions in the saving parts; resetting one
-searched card is a function beside `resetCard` in the lookup part. Gates re-run by the coordinator, side
-by side identical; 22 of 22.
-
-**Done and proven:** the moving script, the join, the gates and side-by-side check; the proof passes
-(every layer moves with the page identical; all eight breaks caught; the moving script refuses a
-hand-edited page). Side by side, the app against itself: 602 of 602 values and every screen identical.
-Layer 0: gates 1 and 3 passed (re-run by the coordinator), PAGE IDENTICAL; `npm run test:app` 23 of 23;
-`build_app.js` and `run_tests.js` each refuse a hand-edited `Cat_Watch.jsx` (both proven); `sync_shared.js`
-write and `--check` leave the parts unchanged.
-Layer 1: 63 pieces moved into six foundation parts; gates re-run by the coordinator, PAGE IDENTICAL;
-`npm run test:app` 23 of 23; `sync_shared.js --check` passes against the new part.
-Layer 2: 24 pieces into three connection parts; gates re-run by the coordinator, PAGE IDENTICAL; 23 of 23.
-Sub-agents now start without asking within her permission (`.claude/hooks/confirm-subagent.js`).
-Layer 3: 53 pieces into six saving and log parts; gates re-run by the coordinator, PAGE IDENTICAL; 23 of 23.
-Layer 4a: 9 pieces into the ledger rules part; gates re-run, PAGE IDENTICAL; 23 of 23.
-Layer 4b: 29 pieces into the periods part; gates re-run, PAGE IDENTICAL; 23 of 23.
-Layer 4c: 14 pieces into the CSV and review parts; gates re-run, PAGE IDENTICAL; 23 of 23.
-Layer 4d: 126 pieces into four Links/Pages/Paste parts; gates re-run, PAGE IDENTICAL; 23 of 23.
-Layer 4e: 93 pieces into the museum and gallery shop-finder parts; gates re-run, PAGE IDENTICAL; 23 of 23.
-Layer 4f: 158 pieces into six catalogue-lookup parts; gates re-run, PAGE IDENTICAL; 23 of 23.
-Layer 5a: 11 screen pieces into four screen parts; `app/unsorted.jsx` gone; gates re-run, PAGE
-IDENTICAL; 23 of 23. Layer 5 was split into 5a (the move) and 5b (the rewrite) so the move could be
-proven identical on its own.
-
-**Decisions:** bottom-up order (her decision); a sub-agent does each layer's moving and testing, the
-coordinator sets up, re-checks and records (her decision); one sub-agent at a time, no higher than
-Opus at medium effort (her decision); the coordinator picks the model for each task by the judgement
-it needs — Sonnet for contained, easily checked work, Opus where behaviour is subtle — never the highest
-by default, and names it in the end report (her decision); her test only where the page changes
-(page identical → nothing for her to see); placement is the coordinator's call, not hers.
-
-**Open problems:** a sub-agent cannot start the watched test run — the test hook reads the
-coordinator's transcript for the "Expected test run" line — so the coordinator runs gate 2 itself. The
-hook often refuses the first try even after the line is written; write the line again and retry.
-
-**Her reports:** round 2 — technically passes (her checklist, Pages and Paste included).
+**Open problems:** a sub-agent cannot start the watched test run — the test hook reads the coordinator's
+transcript for the "Expected test run" line — so the coordinator runs gate 2 itself. The hook often refuses
+the first try even after the line is written; write the line again and retry.
 
 ## When a session ends
 
-When its memory is getting thin, or a layer is waiting on her: bring "Start here" and the handover
-record up to date, commit, push, and tell her to start a new session and type **"Continue the
-restructure."**
+When its memory is getting thin, or an item is waiting on her: bring "Start here" and the handover record
+up to date, commit, push, and tell her to start a new session and type **"Continue the restructure."**

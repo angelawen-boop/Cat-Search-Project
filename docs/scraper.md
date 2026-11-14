@@ -211,7 +211,8 @@ descending trust — use the next only when the one above gives nothing:
   `<body>`.
 - **Clearing one kind of junk can pull in another** — re-check reviewed venues
   after any change here.
-- **The 4-paragraph / 2,000-character cut stays** (her decision).
+- **The 4-paragraph / 2,000-character cut stays** (her decision). Tested on a 3,360-character page: the cut and
+  the full text gave the same teaser in substance; raising it would send every long row back for a model review.
 - Tested on saved pages: `summary_pages.js` and the per-venue `*_pages.js`.
 
 ---
@@ -264,7 +265,8 @@ option is documented where it is defined in `sweep_prototype.js`.
 - **`notATitle` is checked in the heading branch too** — the heading once returned
   before any check ran.
 - **`yearArchive` never writes the years down** — `expandYearArchive()` derives
-  floor-year to last year at run time. Y-001 to Y-005 assert no hand-written year.
+  floor-year to last year at run time, or a 2028 sweep is quietly missing two years.
+  Y-001 to Y-005 assert no hand-written year.
 - **`within` and `paginate` are per page**, not per venue.
 
 ---
@@ -299,29 +301,9 @@ differ by machine).
 
 ## 9. Compression — the summary column
 
-The scraper writes the raw text; `compress.js` turns it into the teaser;
-`sweep_compressed.csv` is the file she imports. **Design and evidence:
-`docs/compression.md` — finished and signed off, do not re-plan it.**
-
-- **Reuse is by code:** every earlier compressed CSV (run_ and stitch_ folders,
-  newest first) is memory; identical raw text reuses the wording with no model
-  call. Changed text asks one question — is the old summary now false?
-- **Identical text within one file is asked once** (`groupIdenticalRaw`), or two
-  wordings reach her as a conflict.
-- **Her 110 seed summaries are memory** (`seedMemory`), matched by URL slug, and
-  never retired. **They fill gaps, never overrule** (`mergeSeedMemory`);
-  `--seed-wins` is a one-time repair flag, never a standing rule — as a rule it
-  is a revert machine.
-- **Sonnet writes fresh, Haiku judges staleness** (measured), reached through
-  subagents so the session's own model doesn't decide.
-- A reuse caused by a failed page says so in `notes`.
-- **Ten words at most, aim for six**, a noun phrase ending in a full stop —
-  measured from her seed (median 6). "Maximum 10" alone produced a median of 9.
-- **Running at scale:** chunks of ~75 rows (one subagent cannot hold ~300);
-  compact one-line rows, examples folded in (44% fewer tokens than pretty JSON);
-  run one chunk and look at it first. **The prompt is advisory** — subagents are
-  read-only, and `--check` gates `--apply` (missing index, over length, a code
-  fence, an HTML fragment).
+The scraper writes the raw text; `compress.js` turns it into the teaser; `sweep_compressed.csv` is the
+file she imports. Every rule, its design and evidence: `docs/compression.md` — finished and signed off,
+do not re-plan it.
 
 ---
 
@@ -342,7 +324,8 @@ alongside the real text).
 
 A venue with two galleries running one show keeps both rows, the city in each
 title; `noteTravellingRuns()` adds "The same exhibition is also shown at …".
-Never de-duplication. Opt in by listing its galleries on its register entry (`read.places`, and
+Never de-duplication. **A gallery with several locations gets the identical setup to Acquavella and
+Lévy Gorvy Dayan** (her decision): its galleries listed once on its register entry (`read.places`, and
 `read.placeOwner` for its own name written before a gallery) — nothing else. The gallery goes in the
 title only for a show run in both within six months (`placeTravellingRuns`); a gallery tacked onto a
 title after a dash leaves it (`withoutPlaceTail`); compression asks once for the pair; a description
@@ -376,9 +359,7 @@ so how its listing card marks the gallery is unproven until a sweep). VR-020–V
    again; the next attempt is hers to call.
 
 **Its facts go in the venue register, never the recipe** (`venues/register.js`): names, city, country,
-language, shop, date order, its galleries. The recipe says only how it is swept. **A gallery with
-several locations gets the identical setup to Acquavella and Lévy Gorvy Dayan** (her decision): its
-places listed once in the register (`read.places`, `read.placeOwner`), nothing else (§11).
+language, shop, date order, its galleries (§11). The recipe says only how it is swept.
 
 **Reading the page alone (`pageOnly`) — Ashmolean only.** Only for a venue
 whose PAGES HANG (the stall report: the page answered, its files did not): she

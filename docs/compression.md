@@ -34,6 +34,11 @@ earlier compressed CSV (run_ and stitch_ folders, newest first;
 - **A `null` answer is a recorded decision** ("not a description" — e.g. a bare
   link); the summary stays empty and the skip is remembered, re-asked only if the
   venue writes something real. A MISSING answer stops everything.
+- **Identical text within one file is asked once** (`groupIdenticalRaw`), or two
+  wordings reach her as a conflict.
+- **Her 110 seed summaries are memory** (`seedMemory`), matched by URL slug, never
+  retired. **They fill gaps, never overrule** (`mergeSeedMemory`); `--seed-wins` is a
+  one-time repair flag, never a standing rule — as a rule it is a revert machine.
 - **Travelling pairs are found in code** (`groupTravellingRuns()`), asked once,
   answer written to both rows. Told to match wording itself, the model copied one
   city's artist count onto the other. The city list is mirrored in
@@ -70,7 +75,7 @@ fabricated less. Haiku scored 14 of 14 on the staleness judgement.
 
 Her 110 seed summaries: minimum 3 words, **median 6**, maximum 10, all ending
 in a full stop, noun phrases. Cap ten, aim six; longer is refused, never cut.
-**The prompt is examples, not rules**: `--examples` builds ~29 pairs of raw text
+"Maximum 10" alone produced a median of 9. **The prompt is examples, not rules**: `--examples` builds ~29 pairs of raw text
 → her approved summary, automatically, from the seed. Two written rules only:
 never state anything not in the raw text; refuse text that is not a
 description.
@@ -88,6 +93,11 @@ description.
   fails "keep everything" (7/14). Haiku scored 14/14; the answers were not
   committed. **She declined to re-run it just to save them — settled.** If it is
   ever run again, commit the answers.
+
+**Running at scale:** chunks of ~75 rows (one subagent cannot hold ~300); compact
+one-line rows, examples folded in (44% fewer tokens than pretty JSON); run one chunk
+and look at it first. `--check` gates `--apply` (missing index, over length, a code
+fence, an HTML fragment).
 
 ## "Probably not for you" — topic labels on new shows
 

@@ -6,25 +6,20 @@ The app handles unreadable links itself; no scraper-side reader. Why it exists: 
 
 ## Code or Claude — the four buckets (her decision)
 
-**Why code first.** The sweep went to a scraper, not a session told to go and fetch the shows, for two reasons: code is
-plainly right or plainly wrong, while Claude needs instructions, checking and can make things up; and many pages need a
-headless browser Claude cannot run. So code does the work, and Claude is the backup for what code cannot do. Never start by
-handing a job to Claude.
-
-**Where the line falls — what the text arrives as:**
-1. **A venue the app already knows** (the 28, or a link venue a session has already fixed): code, by the shared rules and that
-   venue's own. This bucket grows with every fix, so imports come in right more and more often.
-2. **A venue the app has never seen, by Links or Pages:** code, today. About half need a session's fix (title or dates
-   misread); each fix adds a shared or venue rule, so the reader covers more over time. **Her option to flip it:** if the fixes
-   never end or the code becomes a tangle, Claude reads the title and dates for every never-seen venue instead, with code
-   checking them as Paste does. Not built; hers to call.
-3. **Someone else's page** (a blog, a library, a magazine): Claude, built. The text is about a show held elsewhere, so code
-   would read it as the site's own — Claude names the venue and the title ("Someone else's page", below).
-4. **Paste: Claude for title and dates, always** (built at 56). Pasted text has no page layout for the reader to work with,
-   and a paste can be her own tidied copy or scraps from several sources dumped in — code cannot tell which, and does not know
-   when it has picked the wrong first line. Claude reads both kinds as easily. Code keeps the guard: Claude's title must be in
-   the text word for word, and Claude copies the date words, which code checks are there and reads into dates. No extra
-   call — the same one that writes the description.
+**Why code first:** code is plainly right or plainly wrong, while Claude needs instructions and checking and can make
+things up; and many pages need a headless browser Claude cannot run. So code does the work and Claude is the backup for
+what code cannot do — never start by handing a job to Claude. Where the line falls depends on what the text arrives as:
+1. **A venue the app already knows** (the 28, or a link venue a session has fixed): code, by the shared rules and that
+   venue's own. This bucket grows with every fix.
+2. **A venue never seen, by Links or Pages:** code, today. About half need a session's fix (title or dates misread);
+   each fix adds a shared or venue rule. **Her option to flip it:** if the fixes never end or the code becomes a
+   tangle, Claude reads the title and dates for every never-seen venue, code checking them as Paste does. Hers to call.
+3. **Someone else's page** (a blog, a library, a magazine): Claude, built — code would read the show as the site's own
+   ("Someone else's page", below).
+4. **Paste: Claude for title and dates, always** (built at 56). Pasted text has no layout, and may be her tidied copy
+   or scraps from several sources — code cannot tell which, nor know when it took the wrong first line. Code keeps the
+   guard: Claude's title must be in the text word for word, and Claude copies the date words, which code checks are
+   there and reads into dates. No extra call — the same one that writes the description.
 
 ## The design
 
@@ -34,16 +29,16 @@ handing a job to Claude.
 - **Then the shop screen** (her design): with a card going in from a venue outside her 28 whose shop is unconfirmed, the
   review's last button is **Next** → one card per such venue: **Confirm · Look again · No shop · Add**, always that order.
   **Add** (her ask) opens an empty box; her link, taken on Enter or on leaving the box, is the confirmed section (Escape
-  closes it; words that are not a link are not taken); its search is worked out at the venue's first lookup. AL-080. Only a
-  venue with a card going in is asked (her decision; `venuesGoingIn`, AL-046). **The ledger moves only when every one is
+  closes it; words that are not a link are not taken); its search is worked out at the venue's first lookup. Only a
+  venue with a card going in is asked (her decision; `venuesGoingIn`). **The ledger moves only when every one is
   answered.** Back returns to the review. Confirmed once, never asked again. An answer is stored only for a venue with a
-  show going in (her decision; `answeredOnly`, `beforeAnswer`; AL-009o2, AL-046f).
+  show going in (her decision; `answeredOnly`, `beforeAnswer`).
 - **The ordinary review:** each link becomes a pro forma row fed to the existing intake (Add / Fill / Change / Reject /
   quarantine). **An import she does not finish keeps NOTHING** (new venues, shops, answers, a CSV's sweep log): Cancel import
   drops them, Back keeps them; a file or Read with nothing to propose counts as finished.
 - **A link it cannot read is a line, never a card** — the full link and why. Unread links stay in the paste box (stored when
   the import finishes) until read or cleared ("Clear" empties box and store). **Links come back to the box** (her decision):
-  a rejected card's, an undecided card's after a partial apply, and on Cancel import every link the Read took (AL-012c, AL-024).
+  a rejected card's, an undecided card's after a partial apply, and on Cancel import every link the Read took.
 - **No lookback cutoff** for anything added by link (her decision). **Chip: one "Occasional"** for every venue added this way
   (her decision), each venue keeping its own name and shop behind it. A link to a venue already swept files under that venue.
 - **One entry per venue — the venue register, `venues/register.js`** (her decision; docs/restructure.md, 4A): chip and group,
@@ -53,28 +48,25 @@ handing a job to Claude.
   latest word; her names are never replaced by Claude's; `recordOf`); the page clears a waiting record the register already
   holds when it opens (`tidyOccasional`); each publish files the rest in (`node build/file_venues.js <store file>`). Never a
   second table for one of these facts (`build/fact_check.js` fails on one). Store: `venues/occasional` and `links/pending`
-  (the box). A ledger row whose venue a page's store has not met shows under its
-  web address, shop "not found".
+  (the box). A ledger row whose venue a page's store has not met shows under its web address, shop "not found".
 - **A venue not met before is named by Claude** (her decision), on its first link only, in the same call as its description:
-  full name, other names (acronym, own-language), city and country, a short card name in her style (AL-053); `englishSpeaking`
+  full name, other names (acronym, own-language), city and country, a short card name in her style; `englishSpeaking`
   and `gallery` are asked with every link and kept. A venue stored by address only is asked once more (`namedByAddress`,
-  `needsFacts`). Never written in by session except by the rename below.
+  `needsFacts`). Changed only through her review page (below).
 - **The card name shows wherever a venue is named** (her decision): `names.card`, never the long search name; a chip keeps
-  its own label (`names.chip`). **Search name long,
-  card name short** (her decision): the shop search uses full name, other names, city, country (`venueSearchName`).
-- **Renaming a link venue Claude named — a session's job, and Claude learns from it** (her decision: no editing in the app).
-  Write its register entry: her `names.card`, the name it replaces added to `names.replaced`, `names.hers` true; the chip
-  label and full name stay as they are, so chips and shop searches do not move. Renames go into Claude's question as "for
-  <full name>: <her name>, not <Claude's>" (`SHORT_NAME_RENAMES`, AL-066). **Her style** (her review of every link venue, 56.2):
-  the venue's own name first, then its city ("Städel Frankfurt", "Reina Sofía Madrid"), never a comma, every accent the venue
-  uses. To review again: a page listing each venue (card, full names, city, a box for hers) — her rename page,
-  `https://claude.ai/artifact/RmSC86pu1rkBxsZDtfdA1J`, its store `renames`.
-- **Christie's press site is Christie's** (her decision, 56.2): `press.christies.com` links file under `occ-christies-com`
-  (`sites`); rows already in stay under the press venue (her decision: no ledger move). AL-066b.
-- **The Royal Collection's venue (`rct.uk`) holds every Queen's Gallery**: her name "Queen's Gallery Edinburgh" heads its
-  London shows too (AL-052d).
+  its own label (`names.chip`). **Search name long, card name short** (her decision): the shop search uses full name, other names, city, country (`venueSearchName`).
+- **Renaming a venue — on her venue review page, never in the app** (her decision;
+  https://claude.ai/artifact/RmSC86pu1rkBxsZDtfdA1J, `docs/restructure.md`, "4A"). The publish files her name into the
+  register entry: `names.card`, the name it replaces in `names.replaced`, `names.hers` true; chip label and full name
+  stay, so chips and shop searches do not move. Claude learns from it: renames go into its question as "for <full
+  name>: <her name>, not <Claude's>" (`SHORT_NAME_RENAMES`). **Her style** (her review of every link venue):
+  the venue's own name first, then its city ("Städel Frankfurt", "Reina Sofía Madrid"), never a comma, every accent
+  the venue uses.
+- **Christie's press site is Christie's** (her decision): `press.christies.com` links file under `occ-christies-com`
+  (`sites`); rows already in stay under the press venue (her decision: no ledger move).
+- **The Royal Collection's venue (`rct.uk`) holds every Queen's Gallery**: its one card name heads its London shows too.
 - **A Wayback Machine copy files under the museum it copied** (her decision): the venue, its shop and the title's site name come from
-  the address inside the copy; the copy is what is read and linked (`siteUrlOf`; AL-037).
+  the address inside the copy; the copy is what is read and linked (`siteUrlOf`).
 - **A new venue's shop** (her decision): the **exhibition-catalogues section**, else the museum's publications, else books — never
   one book, a post, or a section mixing books with other goods (a mixed section is opened and a books-only section inside it
   taken); the front page only when it sells books and there is no books section (the shop finder, rule 3). Nothing found is stored
@@ -90,15 +82,15 @@ handing a job to Claude.
    **One request for the whole import** (her decision; Links, Pages and Paste alike): the sweep's opening, its full current
    examples and the rules once, then each page as an item with its own extra questions (`linkBatchPrompt`, `linkItem`). A new
    venue is named by its first page only. An import too big for one request is split (`LINK_BATCH_BYTES`, `LINK_BATCH_ITEMS`).
-   Each page keeps its own lookup-log record, holding every request it was in. AL-003a, AL-053, AL-094. **Any non-English
+   Each page keeps its own lookup-log record, holding every request it was in. **Any non-English
    page comes out in English; a non-English title gets its translation first** (`In English: "…".`, every language, her
-   decision), recased as the title is (`cardTitle`, AP-012b).
+   decision), recased as the title is (`cardTitle`).
 5. **Claude's answer is checked as the compressor's** (`answerFaults`, shared `scraper/answer_check.js`): shape, and every claim
    word and number on the page. Only the pages refused, or missing from a reply cut short, are asked again — together, the
    refused ones shown their answer and reason — twice at most (`LINK_ASK_AGAIN`, `readLinkBatch`); never the whole import (her
    decision). A call refused outright (declined, rate-limited) is not repeated. One that
    never passes leaves the link unread: "Claude's description failed check and re-attempt multiple times (…)", faults in the
-   brackets (her wording; AL-062).
+   brackets (her wording).
 6. No note — a link is not a sweep; `swept_at` blank, sweep log untouched.
 
 ## The shop finder — her design
@@ -113,7 +105,7 @@ handing a job to Claude.
    search. Only when the shop truly has no catalogues section is the best section seen taken, and the screen says **"Shop found,
    but not its catalogues section"** (her wording; one line for every such case, nothing about what was taken instead).
 3. **No books section but the front page sells books → the front page is the shop** (the gallery path's rule, carried to museums
-   at her decision), confirmable (`shelfKind: "front"`; AL-078). A front page selling only gifts or tickets stays as in 4.
+   at her decision), confirmable (`shelfKind: "front"`). A front page selling only gifts or tickets stays as in 4.
 4. **Where it cannot work it says so** ("Shop found, but not its books section"): a menu drawn by script, a page Parallel
    cannot fetch (bot check, 202, "301 Moved"). Else "No museum shop found." / "Search failed." — **a miss is a finder bug, fixed
    in code: she never pastes a shop link** (her decision).
@@ -122,33 +114,32 @@ handing a job to Claude.
 
 Rules built in: **an exhibition-catalogues section that also sells the shows' goods counts** (her decision; Thyssen's
 "Exposiciones": two priced books suffice; every other section stays books-only). A pick is opened and must read as books with
-prices, or its first product must read as one book with a price (her decision, lists of titles only: `firstProductIsBook`,
-AL-042, YS-001–005). A Shopify section under a translated address is found by its number in the shop's section list and read
-there; a Shopify section with no books on its page is judged on `products.json` (`shopifyShelfIsBooks`, AL-033); a list of 250
+prices, or its first product must read as one book with a price (her decision, lists of titles only: `firstProductIsBook`). A Shopify section under a translated address is found by its number in the shop's section list and read
+there; a Shopify section with no books on its page is judged on `products.json` (`shopifyShelfIsBooks`); a list of 250
 sections is read on to four pages. A shelf whose label is the museum's own name is its publications (KMSKA). A section whose page
-returns no books counts when the shop shows two of its books elsewhere (`booksUnder`, AL-072). A page linked as the shop with no
-section links gives way to the shop's front page, never when it has sections (Yale on a shared site, AL-042a). The museum's own
-Shop page pointing elsewhere is followed (`shopElsewhere`, AL-034); a Shop button vouches for that page, never the whole site;
+returns no books counts when the shop shows two of its books elsewhere (`booksUnder`). A page linked as the shop with no
+section links gives way to the shop's front page, never when it has sections (Yale on a shared site). The museum's own
+Shop page pointing elsewhere is followed (`shopElsewhere`); a Shop button vouches for that page, never the whole site;
 a book's address in a menu stands for its section (`menuLinks`). A shop on a shared site (Yale/Touchnet) is read on the exact
 page the museum links; a shop page that is one line is reopened once with `page=1` (`openShopPage`); a short page of several
 lines never (Louvre, LG-); menu labels read by their first six words. The shared word lists (`SHELF_CATALOGUES`, `SHELF_BOOKS`, `BOOK_WORD`) include German, Danish and Scandinavian
-words and franc/crown prices (AL-059). Ranking: an exhibitions' catalogues section first (`SHELF_EXHIBITIONS`, AL-070); "/products/" after a section word is a
+words and franc/crown prices. Ranking: an exhibitions' catalogues section first (`SHELF_EXHIBITIONS`); "/products/" after a section word is a
 section; a shop on the museum's own sub-address is the shop. A section found on a later page is kept by its first (her decision;
-`firstPageOf`, AL-063).
+`firstPageOf`).
 
 **The English version — her design** (a foreign-language shop must not hide the English one). For a venue in a country that does
 not speak English: (1) search for the English shop first ("<name> English language shop exhibition catalogues"), the English
 result taken, no stacked searches (her decision); (2) landed on a foreign shop, look for its English version — a language link,
 else English addresses (`/en/`, `/en-int/`, `/en-gb/`, `/en-us/`, `en.`) in one call — and walk it as the shop was; (3) the English
-search finds no shop → the plain search, then step 2; no English version → the foreign section stands. AL-073–073f.
-**Known gap — Belvedere stays German** (CLAUDE.md §5.4).
+search finds no shop → the plain search, then step 2; no English version → the foreign section stands.
+**Known gap — Belvedere stays German** (CLAUDE.md §2.2.11).
 
 **Right answers, her decisions:** Thyssen — "Exposiciones", not the collection guides she once confirmed; Antwerp — the KMSKA
 shelf under Books, as confirmed. **The standing check is strict** (one right answer per venue): `docs/shop_check.json`,
 `docs/testing.md`. Evidence: `docs/link_pages/shop_search/`.
 
 **Shelf AND whole-shop search, as the 28 (her decision).** A search is kept only if it finds a book the finder saw
-(`proveShopSearch`; AL-008k, AL-014). **Three fallbacks, every venue** (her decision; AL-044): a book whose price sits a few lines
+(`proveShopSearch`). **Three fallbacks, every venue** (her decision): a book whose price sits a few lines
 below its title link (not a button, not an empty basket); Shopware's two searches (`search?search=`, `search?sSearch=`) in a second
 call; the book found in the results by its title when its address differs — only on a page for that book alone (a page that ignores
 the words proves nothing). `SEARCH_RULE`-less venues are proved at their next lookup. **Look again** skips only the pages she turned
@@ -178,39 +169,37 @@ opened; a shop with no books-only list → its front page if it sells books (Men
 version by the page's own language link, with the section's own filter, taken when it carries the same titles. Karsten Greve's
 Catalogues tab (`?filter=C`) is the whole list read live (the site filters in the browser); it holds the catalogues. **Never "no
 shop" for a site that could not be read**: "Search failed". Shared lookup rule: a list of titles without prices is proved books by
-its first book under its own address (GK-001–002). Tests AL-076–076j. Right on all 15 galleries.
+its first book under its own address. Right on all 15 galleries.
 
 **A shop drawn by script — her decision.** The finder meets it as a front page only. When she brings one: (1) prove the cause from
 the shop page's own code (empty frame and a script → by script; books in the code → our reading is at fault, fix the finder);
 (2) write in the best section on the venue's register entry (`shop.home`, `shop.catalogues`) with `shop.unseen: "script"` — a
 hard-coded answer, say so to her; (3) its lookups read "The museum shop contents cannot be seen — JS-rendering", search the web,
-and the card's "Museum shop" link is the written-in section (`shopLink`, `shopButtonUrl`; BS-004), Re-check the same; (4) if she
+and the card's "Museum shop" link is the written-in section (`shopLink`, `shopButtonUrl`), Re-check the same; (4) if she
 already answered No shop, reset the store's record with her yes (`shop: "found"`, the section, `foundBy: "the venue's rule"`,
 unconfirmed); a written-in section is never asked on the shop screen (`shopWrittenIn`, AL-092; Basel was asked again before it).
-Her own link by **Add** is stored confirmed, so it is never asked again either (AL-080d). **Basel** (`occ-kunstmuseumbasel-ch`) is the first: section `shop.kunstmuseumbasel.ch/en/merchandise?category=Exhibition+Catalogues`
-(BS-001–003).
+Her own link by **Add** is stored confirmed, so it is never asked again either. **Basel** (`occ-kunstmuseumbasel-ch`) is the first: section `shop.kunstmuseumbasel.ch/en/merchandise?category=Exhibition+Catalogues`.
 
 ## The general reader — shared rules, venue rules only where needed
 
 Built as the scraper is: one shared reader, a venue entry only for what differs (her decision). **Where the sweep has met a case
 and she has decided it, Links and Pages follow the sweep's rule — the same code (`dates.js`), never a rule of their own** (her
 decision). Before writing a reader rule, look for the sweep's. A general rule ships only if no proof page gets worse. Code:
-`readShowPage`, `splitPageTitle`, `cardTitle`, `DATES.findDateRange`. Tests DS-005–006, AL-054–058, AL-064–065.
+`readShowPage`, `splitPageTitle`, `cardTitle`, `DATES.findDateRange`. Tests
 
 - **R1 Site in the page title** — a dash tail that is the site's address is the site (KHM); a separator with no site after it is
-  dropped (AL-047); a bar title with the site first takes the other part (AL-057).
+  dropped; a bar title with the site first takes the other part.
 - **R2 The heading is the name** — as the scraper (`titleFromPage`). The page title adds only what the page backs: its spelling
   when it reads the same; the line under the heading when the title's extra words are all on it; its subtitle after ". " or ": ".
   Never its dates, site name or another spelling. A heading of generic words, the site's name, or sharing no word with the page
-  title gives way to it — unless the page title names the site and the heading does not (AL-056a). AL-056.
-- **R2a Generic label** ("Exhibition", "Mostra", "Ausstellung") before the name leaves it (AL-054).
+  title gives way to it — unless the page title names the site and the heading does not.
+- **R2a Generic label** ("Exhibition", "Mostra", "Ausstellung") before the name leaves it.
 - **R2b The venue's name alone is never the title** (her decision) unless the show's dates sit under it; with no other candidate
   the link fails, never a card (`venueNamesFor`, AL-075a–b). A "##"/"###" heading that is part of the tab title is a title
-  candidate before any plain line (AL-075). **Tours are never added** (her decision).
+  candidate before any plain line. **Tours are never added** (her decision).
 - **R2c Capitals** — a title wholly in capitals is recased unless one short word (`cardTitle`). A swept venue that types titles in
-  capitals takes the sweep's rule (`DATES.sweptVenueTitle`, `SWEPT_CAPS_TITLES`): the Borghese's em dash between name and subtitle
-  (AL-068). The Italian "e" stays small, as "di".
-- **R3 Closing-only dates** ("Through …", "Until …", "fino al …", "Now–…") after the ranges, so a range wins (DS-002).
+  capitals takes the sweep's rule (`DATES.sweptVenueTitle`, `SWEPT_CAPS_TITLES`): the Borghese's em dash between name and subtitle. The Italian "e" stays small, as "di".
+- **R3 Closing-only dates** ("Through …", "Until …", "fino al …", "Now–…") after the ranges, so a range wins.
 - **R5 Title line** — first `# `; else first `##`/`###` holding the show's title; else first line holding it; else first short line
   (2+ words, ≤80 characters) that is a whole-word piece of it; the heading is the first with dates under it.
 - **R6 Sixty lines** of dates under the title (`LINK_DATE_LINES`). **R4** a date line over 150 characters stays in the passage.
@@ -220,21 +209,21 @@ decision). Before writing a reader rule, look for the sweep's. A general rule sh
 - **R10 Heading over two lines** is one heading and the title, over the tab title; a date line is never the second half (Munich's
   house line). **R11 Range over three lines** — date, "to"/dash, date.
 - **R12 Date forms** — an ordinal set apart by a space ("September 29 th 2012"); a month-first range with no comma before either
-  year (DS-010); dotted dates with the year on the closing side only or two-digit (DS-005); a slashed range; an all-number date in
+  year; dotted dates with the year on the closing side only or two-digit; a slashed range; an all-number date in
   the order its numbers settle, else its venue's in `DATE_ORDER`, else the order-unknown note; the blanket "dots are day first"
-  rule was never hers (`docs/scraper.md` §3; DS-006, DS-009); "22.05.2008 | 14.08.2008" (AL-065).
-- **R13 Dates around the heading** — an opening date over "Until …"/"to …" read together (AL-077b); a run the page says closed
-  early ends that day (`DATES.closedEarly`, shared; AL-077); a paragraph's one-sided date waits six lines (AL-054); with none under
-  any title line, the two lines above the heading (AL-055).
-- **R14** Under a top heading, dates stop at the next top heading; a lower heading never stops them (AL-065).
+  rule was never hers (`docs/scraper.md` §3); "22.05.2008 | 14.08.2008".
+- **R13 Dates around the heading** — an opening date over "Until …"/"to …" read together; a run the page says closed
+  early ends that day (`DATES.closedEarly`, shared); a paragraph's one-sided date waits six lines; with none under
+  any title line, the two lines above the heading.
+- **R14** Under a top heading, dates stop at the next top heading; a lower heading never stops them.
 - **R15 No usable dates** — as the sweep: undated, a day never invented. Months only/season/no year → the sweep's note quoting the
   page (`DATES.shownOnlyNote`); nothing → `DATES.NO_DATES_NOTE`; one copy each in `dates.js`. AL-064, AP-002, AP-006b–c.
 - **R16 A bot check is never a show** — stays unread with "The venue's site answered with a bot check instead of the page."
-  (`scraper/bot_check.js`; AL-069).
+  (`scraper/bot_check.js`).
 
 **The passage — what Claude is handed** (`takePassage`, AL-061; shared rules first, her decision). The page is read by structure:
 paragraphs joined (a line per few words; a sentence wrapped over paragraphs); never a list, quotation, table, non-prose paragraph
-(under eight words, no sentence end), caption (`isCaption`; "detail" marks one only outside a long paragraph of prose — MoMA's Matisse, AL-061k), the title again or a shouted line; junk sentences go one at a time
+(under eight words, no sentence end), caption (`isCaption`; "detail" marks one only outside a long paragraph of prose — MoMA's Matisse), the title again or a shouted line; junk sentences go one at a time
 (`scraper/boilerplate.js` `BOILERPLATE` and `LINK_JUNK`; `sentencesOf` ignores an initial's full stop). It ends at four paragraphs
 or 2,000 characters (her decision), or at a heading for other matter (`OTHER_MATTER`), or a box heading (`LINK_BOX`) after 600
 characters; "Related …" above the text is skipped; an online feature's section ("Online special") is passed over. Each proof
@@ -247,82 +236,68 @@ Proof pages for every rule: `docs/link_proof_pages.json`.
 
 ## Venue link rules
 
-**Order and chips** are the register's order (`venues/register.js`; Occasional venues by country, then that order). **A venue's
-rule is that venue's** (her decision).
-- **A gallery with several locations gets the identical setup to Acquavella and Lévy Gorvy Dayan** (her decision): its places
-  listed once in the register (`read.places`, `read.placeOwner`), nothing else. A link's description never opens with the
-  gallery its title names in brackets (`withoutPlaceOpener`, shared with the sweep); a city on the list is never "another
-  showing" in the catalogue lookup (`versionNote`).
-
-- **Moderna Museet** (`occ-modernamuseet-se`): cards and chip "Stockholm Moderna" (her name, city first); dates
-  day.month with the year after a space ("16.2–26.5 2013", "8.10 2011–15.1 2012"), read at this venue only
-  (`SPACED_YEAR_VENUES`, `dates.js`; DS-012). Its Malmö pages share the site, so they file here too (unbuilt).
-
-- **Louisiana** (`occ-louisiana-dk`): cards and chip "Denmark Louisiana" (her name, country first). A retired show's address
-  opens the "Past Exhibitions" list (Louise Bourgeois, 2016): refused with the Parallel fault line, as a 202 is — she saves the
-  page (`listingPage`, AL-091a). A heading line ending in a comma runs on to the next, no colon ("Diane Arbus Photographs, 1956-1971";
-  `headingCommaJoin`, AL-091). Day first (`DATE_ORDER`).
-
-- **MoMA** (`moma`): a space typed before a comma ("Toyo Ito , SANAA") is dropped, so the heading matches the tab title and wins
-  over the title repeated in the events list (her decision: MoMA only; `spaceBeforeComma`, AL-061l).
-
-- **Galerie de la Présidence** (`occ-presidence-fr`): " : Exhibition" leaves its show headings (her decision; `titleDrop`,
-  AP-015). **Tate library** (`occ-library-tate-org-uk`): Claude is handed the record's Summary (`from`, `fromLast`; AP-014).
-
-- **San Marco** (`occ-museitoscana-cultura-gov-it`): card "San Marco Florence" (`card`), lookups search "Museo di San Marco" (`name`;
-  AL-046d); titles are the press-release headline's first sentence, without "Mostra" and the quotation marks, capitals recased
-  (her decision; `firstSentence`, `titleDrop`, `unquote`, `capsTitles`); shop: none (her answer).
-- **Palazzo Ducale Genova** (`occ-palazzoducale-genova-it`), **Palazzo Reale Milano** (`occ-palazzorealemilano-it`): her names
-  written in, second and third under Occasional; Milan's heading "I Brueghel - Palazzo Reale Milano" → `titleDrop` + `nameInLines`
-  (AL-048). The city's site refuses Parallel (403) — Pages only.
-- **Łazienki** (`occ-lazienki-krolewskie-pl`, her decision): title from the page title less " - Events" (`tabTitle`; AL-086).
-  **Getty** (`occ-getty-edu`, her decision): "Museum Collection" pages take their heading as title (`tabNotName`; AL-087); Getty's
-  dates are drawn by script (data.getty.edu), so its links come in undated (reading them from there is unbuilt). **A link with no
-  dates whose page holds a script's unfilled placeholder** gets "Dates cannot be seen — JS-rendering." (her wording, shared;
-  `SCRIPT_DATES_NOTE`, AL-088). HTML codes in a heading are decoded (AL-086a).
-- **The Correr's archive** (`occ-archivio-correr-visitmuve-it`): the title is the "# " heading after "Section menu" / "Menù di
-  sezione" (`titleAfter`, AL-089); capitals recased each side of a full stop (her decision; `capsStops`, AL-089b).
-- **NGA** (`occ-nga-gov`, her decision): own chip "NG Washington", cards say so; a leading "Exhibition:" dropped (`linkRead`;
-  AL-030). **Mia**: chip "Mia", cards "MIA", the "–– Minneapolis Institute of Art" tail dropped (her decision; AL-032). **Yale CBA**
-  (`occ-britishart-yale-edu`): chip and cards "Yale CBA", after Cincinnati; lookups search the full name (her decision; AL-039);
-  clock times dropped from dates (`CLOCK_TIME`, DS-003); shop = Publications on Touchnet. **NGV**: two-digit years read as 20YY at
-  NGV only (`shortYear`, `withLongYears`; AL-038); goes last in Occasional; cards "National Gallery Victoria" (her decision).
-  **Jacquemart-André**: the line under the heading is the subtitle (`subtitleUnderHeading`). **Boston MFA** (`occ-mfa-org`): chip
-  "Boston", cards "Boston MFA" (her decision).
-- **Berlin** (`occ-smb-museum`): chip "Berlin" after KHM, cards "Berlin Gemäldegalerie" (her decision), shop searched as "Staatliche
-  Museen zu Berlin"; dots, day first (`DATE_ORDER`, DS-004). **Berlin Alte NG** (`occ-alte-nationalgalerie`) and **Berlin Neue NG**
-  (`occ-neue-nationalgalerie`) (her decision): second and third venues under the chip, filed by path
-  (`/museums-institutions/alte-nationalgalerie/`, `/museums-institutions/neue-nationalgalerie/`) or the house line just under the dates (`afterDates`); other smb.museum pages stay under the
-  Gemäldegalerie (`linkVenue`). Shop found by the finder at its first link (AL-074, AL-074a).
-- **Munich** — three venues, one chip "Munich", the Alte first, before Berlin (her decision; `group`, `chipKey`): Alte Pinakothek
-  (`occ-alte-pinakothek`), der Moderne (`occ-pinakothek-der-moderne`), Sammlung Schack (`occ-sammlung-schack`); the Neue is left out
-  (her decision). Capitals recased per part (`capsTitles`, `capsTitleParts`; CT-001); "Venezia 500<<" is the museum's own title.
-  Filed by the house line between title and dates (`sites` with a house `line`, `linkVenue`), never offered as a subtitle; a page
-  naming none is a line. Schack has no shop (AL-043h). **Shops: CEDON**, a section per house, searched in German, one query per
-  house (`shopQueries`, `shopNamed`, `namesVenue`); on for these two venues only (a general rule needs every link venue's search
-  re-checked live); CEDON's search `search?search=` (AL-044); its German/English one-page editions are an open lookup fault
-  (`docs/catalogue_versions.md`, cases 10–11). AL-043.
-- **Dresden** (`occ-gemaeldegalerie-skd-museum`): chip "Dresden" after Berlin, cards "Dresden Gemäldegalerie" (her decision); title
-  is the heading after "Active page:" (`titleAfter`); dates day first; the site line never reaches Claude (`skip`, her decision);
-  shop.skd.museum sells tickets and gifts only → she answers **No shop** once (her decision). AL-045.
-- **Chantilly** (`occ-chateaudechantilly-fr`): chip "Chantilly" after Jacquemart, cards "Chantilly Musée Condé" (her decision;
-  AL-081). **The Prado** (`occ-museodelprado-es`): chip "Prado" after KHM, cards "Prado Madrid", month first (`DATE_ORDER`; her
-  decision; AL-085, DS-006); a touring show's other house on its date line still files here. **Cini** (her decision): three venues
-  under one chip "Cini" after Capo — foundation (`occ-cini-it`), Le Stanze del Vetro, Le Stanze della Fotografia — Claude decides
-  the venue as for any new one, and answers the Cini house only on first meeting cini.it, so a later Stanze show files under the
-  foundation (her accepted outcome; AL-084). **Moretti** (`occ-morettigallery-com`, her decision: a Moretti rule): the place after
-  " : " leaves the title, title recased, capitals description kept (`capsText`), passage ends at "Manage cookies" (AL-083).
-- **Frankfurt** (the Städel, `occ-staedelmuseum-de`): chip "Frankfurt" after Dresden, cards "Städel Frankfurt" (her decision;
-  AL-049). Its shop (`liebieghaus.ticketfritz.de/Shop/Index/staedel-publikationen/43885`): Parallel's reading stops after the menu
-  (neither JS-rendered nor blocked). **Two facts written in, her decision:** the section (`shopCatalogues`, AL-049a) and
-  `shopUnseen: "parallel"` — a shop page with no priced line says "The museum shop contents cannot be seen — Parallel fault"
-  (FS-001–005); the rule stays until removed.
-- **A link to a quarantined show** reads "Read 1 link, but nothing to add — already in your quarantine." when every show read is
-  quarantined (her wording; AL-080); otherwise "…your ledger already matches it". A
-  page with no year gets the sweep's note (`unusableDateText`, shared; her decision; AL-082).
-- **The swept venues' link options** (met, frick, menil, acq, louvre, artic, cincinnati, brit) are on their register entries
-  (`read.link`). Her decisions among them: acq's `##` "In collaboration with" is a credit, not part of the title; cincinnati's
-  "Now–May 30, 2021" is a closing date only.
+**Names, chips and order are on each venue's register entry** (`venues/register.js`; Occasional venues by country,
+then register order) — the code is the one copy, with her names from her review page; never retype them here. **A
+venue's rule is that venue's** (her decision). Below: the rules, and her decisions behind them.
+- **Several galleries:** the identical setup to Acquavella and Lévy Gorvy Dayan (her decision; `docs/scraper.md` §11).
+  A link's description never opens with the gallery its title names (`withoutPlaceOpener`); a city on the list is
+  never "another showing" in the catalogue lookup (`versionNote`).
+- **Moderna Museet** (`occ-modernamuseet-se`): "16.2–26.5 2013", "8.10 2011–15.1 2012" read at this venue only
+  (`SPACED_YEAR_VENUES`, `dates.js`). Its Malmö pages share the site, so they file here too (unbuilt).
+- **Louisiana** (`occ-louisiana-dk`): a retired show's address opens the "Past Exhibitions" list (Louise Bourgeois,
+  2016) — refused with the Parallel fault line, as a 202 is; she saves the page (`listingPage`). A heading
+  line ending in a comma runs on to the next, no colon (`headingCommaJoin`). Day first (`DATE_ORDER`).
+- **MoMA** (`moma`): a space typed before a comma ("Toyo Ito , SANAA") is dropped, so the heading wins over the
+  events list's repeat (her decision: MoMA only; `spaceBeforeComma`).
+- **Galerie de la Présidence** (`occ-presidence-fr`): " : Exhibition" leaves its show headings (her decision; `titleDrop`).
+  **Tate library**: Claude is handed the record's Summary (`from`, `fromLast`).
+- **San Marco**: lookups search "Museo di San Marco"; titles are the press-release headline's first
+  sentence, without "Mostra" and the quotation marks, capitals recased (her decision; `firstSentence`, `titleDrop`,
+  `unquote`, `capsTitles`); shop: none (her answer).
+- **Palazzo Reale Milano**: "I Brueghel - Palazzo Reale Milano" → `titleDrop` + `nameInLines`; the city's
+  site refuses Parallel (403) — Pages only (below).
+- **Łazienki** (`occ-lazienki-krolewskie-pl`, her decision): title from the page title less " - Events" (`tabTitle`). **Getty** (`occ-getty-edu`, her
+  decision): "Museum Collection" pages take their heading as title (`tabNotName`); its dates are drawn by
+  script (data.getty.edu), so its links come in undated (reading them there is unbuilt). **A link with no dates whose
+  page holds a script's unfilled placeholder** gets "Dates cannot be seen — JS-rendering." (her wording, shared;
+  `SCRIPT_DATES_NOTE`). HTML codes in a heading are decoded.
+- **The Correr's archive**: the title is the "# " heading after "Section menu" / "Menù di sezione" (`titleAfter`); capitals recased each side of a full stop (her decision; `capsStops`).
+- **NGA** (`occ-nga-gov`): a leading "Exhibition:" dropped (`linkRead`). **Mia**: the "–– Minneapolis Institute of Art" tail dropped (her
+  decision). **Yale CBA** (`occ-britishart-yale-edu`): lookups search the full name (her decision); clock times dropped from dates
+  (`CLOCK_TIME`); shop = Publications on Touchnet. **NGV**: two-digit years read as 20YY at NGV only
+  (`shortYear`, `withLongYears`). **Jacquemart-André**: the line under the heading is the subtitle
+  (`subtitleUnderHeading`).
+- **Berlin** (`occ-smb-museum`, her decision): shop searched as "Staatliche Museen zu Berlin"; dots, day first
+  (`DATE_ORDER`). The Alte (`occ-alte-nationalgalerie`) and Neue Nationalgalerie (`occ-neue-nationalgalerie`) are further venues under the chip, filed by path
+  (`/museums-institutions/alte-nationalgalerie/`, `/museums-institutions/neue-nationalgalerie/`) or the house line
+  just under the dates (`afterDates`); other smb.museum pages stay under the Gemäldegalerie (`linkVenue`). Shop
+  found by the finder at its first link.
+- **Munich** — three venues under one chip, the Alte Pinakothek first (her decision; `group`, `chipKey`): Alte
+  Pinakothek, Pinakothek der Moderne, Sammlung Schack; the Neue is left out (her decision). Capitals recased per part
+  (`capsTitles`, `capsTitleParts`); "Venezia 500<<" is the museum's own title. Filed by the house line
+  between title and dates (`sites` with a house `line`, `linkVenue`), never a subtitle; a page naming none is a line.
+  Schack has no shop. **Shops: CEDON**, a section per house, searched in German, one query per house
+  (`shopQueries`, `shopNamed`, `namesVenue`); on for these two venues only (a general rule needs every link venue's
+  search re-checked live); CEDON's search `search?search=`; its German/English one-page editions are an open
+  lookup fault (`docs/catalogue_versions.md`, cases 10–11).
+- **Dresden** (`occ-gemaeldegalerie-skd-museum`, her decision): title is the heading after "Active page:" (`titleAfter`); dates day first; the site
+  line never reaches Claude (`skip`); shop.skd.museum sells tickets and gifts only → she answers **No shop** once.
+- **Chantilly** (`occ-chateaudechantilly-fr`): its names and chip place are hers (her decision). **The Prado**
+  (`occ-museodelprado-es`, her decision): month first (`DATE_ORDER`); a touring
+  show's other house on its date line still files here. **Cini** (her decision): three venues under one chip —
+  the foundation (`occ-cini-it`), Le Stanze del Vetro, Le Stanze della Fotografia; Claude decides the venue as for
+  any new one, and answers the Cini house only on first meeting cini.it, so a later Stanze show files under the
+  foundation (her accepted outcome). **Moretti** (`occ-morettigallery-com`, her decision: a Moretti rule): the place after " : " leaves
+  the title, title recased, capitals description kept (`capsText`), passage ends at "Manage cookies".
+- **Frankfurt** (the Städel, `occ-staedelmuseum-de`, her decision): its shop (`liebieghaus.ticketfritz.de/Shop/Index/staedel-publikationen/43885`)
+  is cut off by Parallel after the menu (neither JS-rendered nor blocked). **Two facts written in:** the section and `shopUnseen: "parallel"` — a shop page with no priced line says "The museum shop contents cannot be
+  seen — Parallel fault"; the rule stays until removed.
+- **A link to a quarantined show** reads "Read 1 link, but nothing to add — already in your quarantine." when every
+  show read is quarantined (her wording); otherwise "…your ledger already matches it". A page with no year
+  gets the sweep's note (`unusableDateText`, shared; her decision).
+- **The swept venues' link options** (met, frick, menil, acq, louvre, artic, cincinnati, brit) are on their register
+  entries (`read.link`). Her decisions among them: acq's `##` "In collaboration with" is a credit, not part of the
+  title; cincinnati's "Now–May 30, 2021" is a closing date only.
 
 ## Saved pages — the Pages button
 
@@ -363,7 +338,7 @@ under the museum Claude names when that museum is on that site (`ownMuseumNamed`
 under its own museum (a Tate Modern record under Tate Modern). A sister site on a shared domain (cultura.gov.it) is not "under".
 **"Tate Gallery"** (pre-2000 records) names neither Tate, so it is its own venue (her decision); its shop must be the Tate's
 current shop. Its records' text for Claude is the one under their "Summary" heading, below the copies list (her saved Reynolds and
-Pre-Raphaelite pages; venue rule `from` with `fromLast`, AP-014). No listed proof page can reach the rule (every page on her museums' sites files by address first). Tests PS-006, PS-025.
+Pre-Raphaelite pages; venue rule `from` with `fromLast`). No listed proof page can reach the rule (every page on her museums' sites files by address first). Tests
 
 ## Someone else's page — a show held elsewhere
 
@@ -372,13 +347,13 @@ A last resort (her decision): a show so old its venue's page is gone, read off a
   date line (the showing the card is for) and asked which museum it names and whether the address is that museum's own site. **Only
   when it says not** is a second question asked (`elsewherePrompt`): the museum's website and the show's full title. Code files it
   (`heldElsewhere`): one of hers by name or site, else a new Occasional venue under its site. The site Claude gives is its
-  knowledge, not read off the page. AL-052g.
-- **The title is Claude's too** (her decision), from the text; the 2,000-character cut applies (AL-052h). A label before the show
+  knowledge, not read off the page.
+- **The title is Claude's too** (her decision), from the text; the 2,000-character cut applies. A label before the show
   ("Exhibition | …") is dropped, and a dash-led site tail read first (`splitPageTitle`, `TITLE_LABEL`); tracking tails leave a
-  saved page's link (`withoutTracking`). Tests AL-050–052 (`docs/link_pages/elsewhere/`).
+  saved page's link (`withoutTracking`).
 - **The Borghese's archive site** (approfondimentimostre.com) files under her Borghese by this route, nothing written in (her
   decision: test Claude first). Parallel answers 202 for most of its pages: "The page contents cannot be seen — Parallel fault.
-  Import the full saved page." (`pageUnreadWhy`, AL-067) — those come in by Pages. Her way: the Borghese's own page first, the
+  Import the full saved page." (`pageUnreadWhy`) — those come in by Pages. Her way: the Borghese's own page first, the
   archive page by Pages only when the own page lacks what she needs.
 
 ## Left as is, and what a session must not change (her decisions)
@@ -403,4 +378,4 @@ A last resort (her decision): a show so old its venue's page is gone, read off a
   Tates by path). A new venue's shop is looked for once per Read, never once per link.
 - **Claude reads relevant passages, not the first N characters** (`pickPassages`); a link labelled "catalog" onto the venue's shop
   in web results is taken in code (`catalogueLinkOn`). Titles from a page title: the show is the first part of a barred title, a
-  bar inside the show's name is kept (AL-015).
+  bar inside the show's name is kept.

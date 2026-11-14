@@ -1,147 +1,137 @@
 {
-  "status": "done",
-  "baseCommit": "c13f0ad947b7039e05976386fc4117e8da52fd15",
-  "startedAt": "2026-10-30T02:34:23.969Z",
-  "currentStep": 11,
+  "status": "editor_done",
+  "phase": "editor_done",
+  "baseCommit": "67d7974ff06ce7f73280d7009274afaa3807902c",
+  "startedAt": "2026-11-14T20:51:12.833Z",
   "stamps": {
     "0": {
-      "at": "2026-10-30T02:37:19.730Z",
-      "info": ""
-    },
-    "1": {
-      "at": "2026-10-30T02:37:21.658Z",
-      "info": ""
-    },
-    "2": {
-      "at": "2026-10-30T02:37:25.437Z",
-      "info": ""
-    },
-    "3": {
-      "at": "2026-10-30T02:37:57.422Z",
-      "info": ""
-    },
-    "4": {
-      "at": "2026-10-30T02:38:04.848Z",
+      "at": "2026-11-14T21:00:35.757Z",
       "info": ""
     },
     "5": {
-      "at": "2026-10-30T02:38:36.476Z",
+      "at": "2026-11-14T21:00:59.957Z",
       "info": ""
     },
     "6": {
-      "at": "2026-10-30T02:39:32.828Z",
-      "info": "1 diary compressed (publishing.md 28 → 33); 2 overturned rules fixed (publishing.md, venues.md)"
-    },
-    "7": {
-      "at": "2026-10-30T02:39:36.418Z",
-      "info": "6 fixed (CLAUDE.md, add_by_link.md, library.md, publishing.md, scraper.md, venues.md)"
-    },
-    "8": {
-      "at": "2026-10-30T02:39:45.821Z",
-      "info": "1 — your call:<br>1. CLAUDE.md – \"Catalogue-search rebuild: published on the test page (41.1).\" – git log -S on the phrase shows only 3e9c512 (26 Oct) rewording it; the app is 53.11 and no 41.1 test page is named in docs/publishing.md or docs/branches.md, though fixture WL-060 exists. Is the Hammershoi edition check still pending, or finished?"
-    },
-    "9": {
-      "at": "2026-10-30T02:39:46.253Z",
+      "at": "2026-11-14T21:01:43.220Z",
       "info": ""
     },
+    "7": {
+      "at": "2026-11-14T21:03:10.584Z",
+      "info": "3 diaries fixed; 7 out-of-date rules fixed — see What changed"
+    },
     "10": {
-      "at": "2026-10-30T02:39:49.954Z",
+      "at": "2026-11-14T21:03:55.974Z",
       "info": ""
     }
   },
   "files": {
     "CLAUDE.md": {
-      "linesBefore": 619,
+      "linesBefore": 689,
       "probes": [
         {
-          "line": 156,
-          "text": "book, a shop line true for whichever book she picks, Re-check for the picked book (`docs/catalogue_versions.md`)."
+          "line": 171,
+          "text": "No row carries a credit line, star rating, ticket price, funder list, opening"
         },
         {
-          "line": 313,
-          "text": "| `docs/periods.md` | The Period sort: her design, the period list and its order, the theme labels, every rule Claude follows | Any Period work |"
+          "line": 337,
+          "text": "| `docs/cloud_storage.md` | The cloud ledger: what the page's store holds, Save and the safety copies, the opening switch, the safety proofs, the read-only lock for a second copy | Changing anything about saving to the page's own store |"
         },
         {
-          "line": 455,
-          "text": "> (the sweep log, quarantine and lookup log — they survive a Reset). A publish"
+          "line": 501,
+          "text": "  browsing stays out of this, and the Morgan checks her own browser every visit"
         },
         {
-          "line": 617,
-          "text": "- **Library — purchase tracking and a Library tab** (`docs/library.md`): future consideration, never"
-        }
-      ],
-      "diagnosis": "mixed",
-      "finding": "Rijksmuseum empty-summary count said three, the 15 Oct rows show four; a stale 'below' pointer; the finished 2.2.4 import story sat in open work; 5.4 held open items and a version number inside a schematic.",
-      "action": "fixed",
-      "remaining": "nothing",
-      "overturned": "none",
-      "contradictions": "Rijksmuseum 404 count of three disagreed with the four empty rows in the 15 Oct run and venue_status; corrected to four.",
-      "smellOk": {
-        "runOn": {
-          "quote": "never `networkidle`; wrap `route.fulfill`/`abort`; a 404 is not a loaded page; retry a detail page once.",
-          "why": "Line 51 is one decision of hers on Parallel use; the Scraper mechanics line is a merged list of short lessons, each from a real failure, already at one clause apiece."
-        }
-      }
-    },
-    "docs/add_by_link.md": {
-      "linesBefore": 313,
-      "probes": [
-        {
-          "line": 78,
-          "text": "   her pick reads **\"The museum shop contents cannot be seen — unconfirmed page problem\"** (her wording; that scenario only)."
-        },
-        {
-          "line": 159,
-          "text": "  when it reads the same; the line under the heading when the title's extra words are all on it; its subtitle after \". \" or \": \"."
-        },
-        {
-          "line": 235,
-          "text": "  (her decision). Capitals recased per part (`capsTitles`, `capsTitleParts`; CT-001); \"Venezia 500<<\" is the museum's own title."
-        },
-        {
-          "line": 312,
-          "text": "  bar inside the show's name is kept (AL-015)."
-        }
-      ],
-      "diagnosis": "clean",
-      "finding": "Reviewed in full this morning; one stale count only: the shop screen said venues outside her 27, the repo lists 28 venue codes (shop_addresses.js).",
-      "action": "fixed",
-      "remaining": "nothing",
-      "overturned": "none",
-      "contradictions": "The count of 27 contradicted CLAUDE.md and venue_status (28 venues); corrected to 28.",
-      "smellOk": {
-        "idSoup": {
-          "quote": "venue with a card going in is asked (her decision; `venuesGoingIn`, AL-046).",
-          "why": "Each id names the fixture that protects one of her decisions, as docs/doc_rules.md requires; the ids are references, not narrated test output."
-        }
-      }
-    },
-    "docs/app.md": {
-      "linesBefore": 612,
-      "probes": [
-        {
-          "line": 145,
-          "text": "`english:false` venues \"…, publisher and English edition…\"), \"Looking for the"
-        },
-        {
-          "line": 285,
-          "text": "- **The book's page is read whenever the ISBN OR the publisher is blank** — the"
-        },
-        {
-          "line": 454,
-          "text": "- Every import stamps **one shared time for the batch**. New rows get `addedAt`;"
-        },
-        {
-          "line": 611,
-          "text": "  compressed pieces (a 352-row ledger is one piece) and reads back identical."
+          "line": 688,
+          "text": "  and spot she searched from, as she left it (`docs/app.md`, \"Search selected words\")."
         }
       ],
       "diagnosis": "duplicate",
-      "finding": "The Buy next period/date ordering and the Search-again-is-a-fresh-lookup decision were each written twice in the same doc; kept one copy and pointed from the other.",
+      "finding": "The trunk repeated side-doc content: the scraper's recipe traps and description cut, the manual-import mechanics, the Period details, the access notes, and kept finished lookup items (catalogue blocks, MoMA In Stock).",
+      "action": "compressed",
+      "overturned": "The Detroit search fault was listed as open though restructure 4A fixed it on main (every venue now searched by its full name); now said so, live at her next publish.",
+      "contradictions": "",
+      "plain": [
+        "The main guide repeated detail kept in the scraper, period and manual-import docs; those passages are now one-line pointers, and finished catalogue items are cut to their result.",
+        "The Detroit search fault was still listed as open; the main guide now says it is fixed and reaches your app at your next publish."
+      ],
+      "pass2": {
+        "note": "On a second look the main guide's manual-import status line was cut to one sentence; everything left is rules, open work and pointers every session needs."
+      }
+    },
+    "docs/add_by_link.md": {
+      "linesBefore": 407,
+      "probes": [
+        {
+          "line": 100,
+          "text": "   never passes leaves the link unread: \"Claude's description failed check and re-attempt multiple times (…)\", faults in the"
+        },
+        {
+          "line": 204,
+          "text": "  Never its dates, site name or another spelling. A heading of generic words, the site's name, or sharing no word with the page"
+        },
+        {
+          "line": 304,
+          "text": "  (`docs/catalogue_versions.md`, cases 10–11). AL-043."
+        },
+        {
+          "line": 406,
+          "text": "  bar inside the show's name is kept (AL-015)."
+        }
+      ],
+      "diagnosis": "mixed",
+      "finding": "Dense design text, but it hand-copied every link venue's card and chip names, which had drifted from the venue register (Louisiana, the Prado), carried a pile of test ids, and still described renaming through an old page and store.",
+      "action": "compressed",
+      "overturned": "Renaming was described as a session writing the entry, its page's store called renames; her venue review page now does it and the publish files her names (store names/<id>).",
+      "contradictions": "",
+      "leanNote": "Design and decisions for manual import (Links, Pages, Paste), the shop finder and per-venue reading rules. Its hand-typed venue names copied the register and had drifted; cut to pointers. Still dense but in the right home.",
+      "plain": [
+        "The manual-import doc typed out every venue's card and chip names, and several no longer matched what the app uses; it now points to the venue list in the code instead.",
+        "Renaming a venue is now described as your venue review page, filed in at each publish, instead of the old rename page.",
+        "Test reference numbers that cluttered the manual-import doc were taken out; they are still findable in the tests."
+      ],
+      "dropped": {
+        "NG Washington": "Card and chip names live on the venue's register entry, the code's one copy; the doc's typed copies had drifted.",
+        "National Gallery Victoria": "Card and chip names live on the venue's register entry, the code's one copy; the doc's typed copies had drifted.",
+        "Chantilly Musée Condé": "Card and chip names live on the venue's register entry, the code's one copy; the doc's typed copies had drifted.",
+        "- **Dresden** (`occ-gemaeldegalerie-skd-": "Only the chip and card names went (on the register entry); the rules and her decisions stay in the Dresden line.",
+        "- **Frankfurt** (the Städel, `occ-staedel": "Only the chip and card names went (on the register entry); the two written-in facts and her decision stay.",
+        "- **Renaming a link venue Claude named —": "Overturned: renaming now goes through her venue review page, filed at publish; the new paragraph says so."
+      },
+      "pass2": {
+        "note": "On a second look a sentence broken by the test-number removal was mended; the rest is dense design text with its decisions, each written once."
+      }
+    },
+    "docs/app.md": {
+      "linesBefore": 624,
+      "probes": [
+        {
+          "line": 148,
+          "text": "unchanged. A session reads it: ArtifactData `list` of `lookups`, then of"
+        },
+        {
+          "line": 288,
+          "text": "  the two results about the book are opened whole). \"Sold by …\" is the shop, never the"
+        },
+        {
+          "line": 459,
+          "text": "86 already matching ledger = 320 entries considered for import"
+        },
+        {
+          "line": 623,
+          "text": "  compressed pieces (a 352-row ledger is one piece) and reads back identical."
+        }
+      ],
+      "diagnosis": "dense",
+      "finding": "Dense signed-off evidence; a few lines were stale: a self-pointer, the cloud screen said 'the branch code', three function names no longer in the code, and it called the publisher map declined though it is now on her roadmap.",
       "action": "fixed",
-      "remaining": "nothing",
-      "overturned": "none",
-      "contradictions": "none"
+      "overturned": "Said a map of publisher websites was declined; her roadmap now holds it and it will replace the short list. Three function names had been replaced in the code.",
+      "contradictions": "",
+      "leanNote": "The app's evidence and signed-off behaviours: lookup route, saving, intake, quarantine, sweep log, cloud screen. Took the facts that were only in the publishing log; nothing in it belongs elsewhere.",
+      "plain": [
+        "The app doc said a list of publisher websites was turned down; it now says the list is on your roadmap and the short list stays until then.",
+        "The app doc now holds the Search button's position, the Art Watch name and the counts line, which had only been written in the version log."
+      ]
     },
     "docs/artic_pages/README.md": {
       "linesBefore": 29,
@@ -164,11 +154,11 @@
         }
       ],
       "diagnosis": "clean",
-      "finding": "Read in full; every line is a present-tense fact, decision or pointer and the pointers and counts match the repo, so it is fine as written (README.md).",
+      "finding": "Short evidence for saved pages, each line what a file settled. Read in full; nothing to cut.",
       "action": "none",
-      "remaining": "nothing",
       "overturned": "none",
-      "contradictions": "none"
+      "contradictions": "",
+      "leanNote": "Says what each saved Art Institute page settled; evidence beside the pages, belongs here, not a dump."
     },
     "docs/ashmolean_pages/raw/README.md": {
       "linesBefore": 16,
@@ -191,11 +181,11 @@
         }
       ],
       "diagnosis": "clean",
-      "finding": "Read in full; every line is a present-tense fact, decision or pointer and the pointers and counts match the repo, so it is fine as written (README.md).",
+      "finding": "Short evidence for the bare pages and their test. Read in full; nothing to cut.",
       "action": "none",
-      "remaining": "nothing",
       "overturned": "none",
-      "contradictions": "none"
+      "contradictions": "",
+      "leanNote": "Says what the bare Ashmolean pages are and the test that uses them; belongs beside the files."
     },
     "docs/borghese_pages/README.md": {
       "linesBefore": 9,
@@ -218,38 +208,38 @@
         }
       ],
       "diagnosis": "clean",
-      "finding": "Read in full; every line is a present-tense fact, decision or pointer and the pointers and counts match the repo, so it is fine as written (README.md).",
+      "finding": "One entry, what her saves settled. Read in full; nothing to cut.",
       "action": "none",
-      "remaining": "nothing",
       "overturned": "none",
-      "contradictions": "none"
+      "contradictions": "",
+      "leanNote": "Says what her Borghese saves settled (titles in capitals); short evidence beside the files."
     },
     "docs/branches.md": {
-      "linesBefore": 37,
+      "linesBefore": 40,
       "probes": [
         {
           "line": 15,
           "text": "| `claude/theme-shelf` | **The Theme Shelf prototype** (`Theme_Shelf.jsx`, its build and tests), kept off `main` until she decides (docs/themes.md) |"
         },
         {
-          "line": 22,
-          "text": "| `claude/blissful-knuth-snbqci`, `claude/design-questions-87gj6w`, `claude/headless-chromium-claude-code-wl94l0` | Dead — early 7–10 Sep work from before `main` was the trunk (no shared history with it); superseded, do not merge. Kept on GitHub, her decision — never raise deleting them |"
+          "line": 23,
+          "text": "| `ccr-60c7f62c-s3etqx` | A session's own branch, last commit 13 Oct (\"Version 43.1: Mia's link titles and chip\"); not a working branch — what is wanted from it is on `main` or `parked` |"
         },
         {
-          "line": 30,
+          "line": 32,
           "text": "  it. It waits for a message from the named session (cross-session"
         },
         {
-          "line": 36,
+          "line": 39,
           "text": "  the work is on `main`."
         }
       ],
       "diagnosis": "clean",
-      "finding": "Read in full; every line is a present-tense fact, decision or pointer and the pointers and counts match the repo, so it is fine as written (branches.md).",
+      "finding": "Branch table and procedure, compact; the branch list itself is checked separately. Read in full; nothing to cut.",
       "action": "none",
-      "remaining": "nothing",
       "overturned": "none",
-      "contradictions": "none"
+      "contradictions": "",
+      "leanNote": "The branch table and holding a push for another session; procedures only, nothing belonging elsewhere."
     },
     "docs/brera_pages/README.md": {
       "linesBefore": 7,
@@ -272,38 +262,41 @@
         }
       ],
       "diagnosis": "clean",
-      "finding": "Read in full; every line is a present-tense fact, decision or pointer and the pointers and counts match the repo, so it is fine as written (README.md).",
+      "finding": "One entry, what her save settled. Read in full; nothing to cut.",
       "action": "none",
-      "remaining": "nothing",
       "overturned": "none",
-      "contradictions": "none"
+      "contradictions": "",
+      "leanNote": "Says what her Brera save settled (the bold label skipped); short evidence beside the file."
     },
     "docs/catalogue_versions.md": {
-      "linesBefore": 133,
+      "linesBefore": 135,
       "probes": [
         {
-          "line": 34,
-          "text": "for the picked book; the Publisher button only where that book's publisher page was found (the publisher step runs for the first"
+          "line": 35,
+          "text": "book only). **Re-check museum shop** checks the picked book only and keeps that book's stored answer."
         },
         {
-          "line": 69,
-          "text": "  no ISBN; Claude's facts round took the language off the German shop page, and nothing checks it against the ISBN's own records"
+          "line": 70,
+          "text": "  (Amazon, the Rijksmuseum library record say English). **Must fix:** a book's language comes from its ISBN's records, never the"
         },
         {
-          "line": 98,
-          "text": "  read rejects it for \"Email When Available\" and no Add to cart (likely drawn by script — a guess). Her choice:"
+          "line": 99,
+          "text": "  and no Add to cart. Her saved *Labrouste* page shows Add to Cart, so the button is drawn by script and the fetched page"
         },
         {
-          "line": 131,
+          "line": 133,
           "text": "English first; an English-language venue — the card's own showing first, a book in the venue's shop first of all; the rest as \"The"
         }
       ],
-      "diagnosis": "clean",
-      "finding": "Read in full; every line is a present-tense fact, decision or pointer and the pointers and counts match the repo, so it is fine as written (catalogue_versions.md).",
-      "action": "none",
-      "remaining": "nothing",
-      "overturned": "none",
-      "contradictions": "none"
+      "diagnosis": "mixed",
+      "finding": "The closed MoMA case was told as a long story inside the cases list, and the Detroit fault was still described as open though fixed on main.",
+      "action": "compressed",
+      "overturned": "The short-card-name search fault was described as open; restructure 4A fixed it on main.",
+      "contradictions": "",
+      "leanNote": "The catalogue-versions design, her agreed cases and the open search rebuild. The closed MoMA case was cut to its result; the rest is the record a search session needs.",
+      "plain": [
+        "The finished Museum of Modern Art shop case is cut to its result and what is still unproven, and the short-name search fault is marked fixed, live at your next publish."
+      ]
     },
     "docs/cincinnati_pages/README.md": {
       "linesBefore": 25,
@@ -326,11 +319,11 @@
         }
       ],
       "diagnosis": "clean",
-      "finding": "Read in full; every line is a present-tense fact, decision or pointer and the pointers and counts match the repo, so it is fine as written (README.md).",
+      "finding": "Short table of what each saved page settled. Read in full; nothing to cut.",
       "action": "none",
-      "remaining": "nothing",
       "overturned": "none",
-      "contradictions": "none"
+      "contradictions": "",
+      "leanNote": "Says what each saved Cincinnati page settled; evidence beside the files."
     },
     "docs/cloud_storage.md": {
       "linesBefore": 45,
@@ -353,11 +346,11 @@
         }
       ],
       "diagnosis": "clean",
-      "finding": "Read in full; every line is a present-tense fact, decision or pointer and the pointers and counts match the repo, so it is fine as written (cloud_storage.md).",
+      "finding": "Compact description of the cloud ledger and its decisions, nothing stale found. Read in full; nothing to cut.",
       "action": "none",
-      "remaining": "nothing",
       "overturned": "none",
-      "contradictions": "none"
+      "contradictions": "",
+      "leanNote": "What the cloud ledger stores, how saving and safety copies work, the read-only lock; nothing in it belongs elsewhere."
     },
     "docs/code-review.md": {
       "linesBefore": 33,
@@ -380,65 +373,71 @@
         }
       ],
       "diagnosis": "clean",
-      "finding": "Read in full; every line is a present-tense fact, decision or pointer and the pointers and counts match the repo, so it is fine as written (code-review.md).",
+      "finding": "A findings table per review; dates are the review's own record. Read in full; nothing to cut.",
       "action": "none",
-      "remaining": "nothing",
       "overturned": "none",
-      "contradictions": "none"
+      "contradictions": "",
+      "leanNote": "Log of code-review findings and what was decided; one table per review, belongs here."
     },
     "docs/compression.md": {
-      "linesBefore": 125,
+      "linesBefore": 134,
       "probes": [
         {
-          "line": 32,
-          "text": "- **A reuse caused by a failed page says so in `notes`.**"
+          "line": 34,
+          "text": "- **A `null` answer is a recorded decision** (\"not a description\" — e.g. a bare"
         },
         {
-          "line": 63,
-          "text": "- **Reached by subagent**, one per job (or chunk), never per row — a session"
+          "line": 71,
+          "text": "Her 110 seed summaries: minimum 3 words, **median 6**, maximum 10, all ending"
         },
         {
-          "line": 95,
-          "text": "Asian art wins over any other label; the Met's rotations are never labelled (her decisions). Code writes"
+          "line": 105,
+          "text": "- **Every answer is checked by one shared copy, `scraper/answer_check.js`** (her decision), which Add by"
         },
         {
-          "line": 124,
+          "line": 133,
           "text": "- A word-overlap threshold in code deciding whether a change matters."
         }
       ],
-      "diagnosis": "clean",
-      "finding": "Read in full; every line is a present-tense fact, decision or pointer and the pointers and counts match the repo, so it is fine as written (compression.md).",
-      "action": "none",
-      "remaining": "nothing",
+      "diagnosis": "misplaced",
+      "finding": "Its own rules were complete except a few the scraper doc kept separately (identical text asked once, seed memory, running at scale); those moved in so the compression rules live in one doc.",
+      "action": "moved",
       "overturned": "none",
-      "contradictions": "none"
+      "contradictions": "",
+      "leanNote": "Compression's design, model split, evidence, enforcement and rejected ideas; now also holds the running rules the scraper doc used to repeat.",
+      "plain": [
+        "The compression doc now holds the few running rules the scraper doc kept a second copy of, so they live in one place."
+      ]
     },
     "docs/doc_rules.md": {
-      "linesBefore": 93,
+      "linesBefore": 89,
       "probes": [
         {
-          "line": 25,
-          "text": "- **Every file has a line budget** — `node scraper/doc_budget.js` (her decision;"
+          "line": 23,
+          "text": "  place, then move it. A side doc holds evidence a future session will need,"
         },
         {
-          "line": 47,
-          "text": "Long dated comments (\"her ruling, 22 Sep…\", \"WHAT BROKE…\", \"DO NOT PUT IT"
+          "line": 45,
+          "text": "hold on every branch, `claude/ledger-cloud` included."
         },
         {
-          "line": 70,
-          "text": "**Protect her decisions with tests, not prose.** When she decides how something"
+          "line": 67,
+          "text": "behaves, add or update a fixture that fails if it is undone, named after the"
         },
         {
-          "line": 92,
+          "line": 88,
           "text": "Never edit the block directly (§5.4)."
         }
       ],
-      "diagnosis": "clean",
-      "finding": "Read in full; every line is a present-tense fact, decision or pointer and the pointers and counts match the repo, so it is fine as written (doc_rules.md).",
-      "action": "none",
-      "remaining": "nothing",
-      "overturned": "none",
-      "contradictions": "none"
+      "diagnosis": "mixed",
+      "finding": "Described the guide review as one session following one skill, and pointed test anchors at a guide section that does not exist; also named the scraper's venue list where the venue register now feeds the page.",
+      "action": "fixed",
+      "overturned": "The guide review is now two sessions (editor then housekeeper); the venue facts come from the venue register, not the scraper's list.",
+      "contradictions": "",
+      "leanNote": "How to edit the guide, side docs and code comments; a procedures doc, nothing misplaced.",
+      "plain": [
+        "The doc rules now describe the guide review as its two parts, and a pointer to a missing section now points to the testing doc."
+      ]
     },
     "docs/import-repair-320.md": {
       "linesBefore": 63,
@@ -460,12 +459,12 @@
           "text": "first so the new venue codes were known."
         }
       ],
-      "diagnosis": "clean",
-      "finding": "Read in full; every line is a present-tense fact, decision or pointer and the pointers and counts match the repo, so it is fine as written (import-repair-320.md).",
+      "diagnosis": "dense",
+      "finding": "A kept record of one-off repairs, already compressed to lineage and lessons. Read in full; nothing to cut.",
       "action": "none",
-      "remaining": "nothing",
       "overturned": "none",
-      "contradictions": "none"
+      "contradictions": "",
+      "leanNote": "How her first two big import files were built and repaired; a kept record by design, already compressed."
     },
     "docs/import_csv.md": {
       "linesBefore": 75,
@@ -487,12 +486,12 @@
           "text": "this one alone. `stitch` and `compress` carry it untouched."
         }
       ],
-      "diagnosis": "misplaced",
-      "finding": "The heading called the file 'the pro forma contract'; her word is import csv, never the contract.",
-      "action": "fixed",
-      "remaining": "nothing",
+      "diagnosis": "clean",
+      "finding": "The import csv's rules, each once, compact. Read in full; nothing to cut.",
+      "action": "none",
       "overturned": "none",
-      "contradictions": "none"
+      "contradictions": "",
+      "leanNote": "The import csv's columns, the lookback, never de-duplicating, notes and swept_at; the one home for these rules."
     },
     "docs/khm_pages/README.md": {
       "linesBefore": 12,
@@ -515,11 +514,11 @@
         }
       ],
       "diagnosis": "clean",
-      "finding": "Read in full; every line is a present-tense fact, decision or pointer and the pointers and counts match the repo, so it is fine as written (README.md).",
+      "finding": "Three entries, what each save settled. Read in full; nothing to cut.",
       "action": "none",
-      "remaining": "nothing",
       "overturned": "none",
-      "contradictions": "none"
+      "contradictions": "",
+      "leanNote": "Says what her KHM saves settled (the since-date); evidence beside the files."
     },
     "docs/ledger_2026-09-24/README.md": {
       "linesBefore": 10,
@@ -542,65 +541,68 @@
         }
       ],
       "diagnosis": "clean",
-      "finding": "Read in full; every line is a present-tense fact, decision or pointer and the pointers and counts match the repo, so it is fine as written (README.md).",
+      "finding": "Two short paragraphs on the kept test file. Read in full; nothing to cut.",
       "action": "none",
-      "remaining": "nothing",
       "overturned": "none",
-      "contradictions": "none"
+      "contradictions": "",
+      "leanNote": "Says what the kept ledger is and that it must never be loaded into her app; belongs beside the file."
     },
     "docs/library.md": {
-      "linesBefore": 101,
+      "linesBefore": 102,
       "probes": [
         {
           "line": 26,
-          "text": "- **Each book has \"Exhibition →\"**, jumping to its card and opening it. If"
+          "text": "  not yet bought, shown as greyed covers."
         },
         {
-          "line": 50,
+          "line": 51,
           "text": "- A sweep Import must never touch them."
         },
         {
-          "line": 75,
+          "line": 76,
           "text": "- **Whether exported ledger files carry covers** is undecided (it would make"
         },
         {
-          "line": 100,
+          "line": 101,
           "text": "- Later, maybe: what the catalogue costs now on AbeBooks against what she paid."
         }
       ],
-      "diagnosis": "clean",
-      "finding": "Pointers named §4 and §5.1 for rules that live in CLAUDE.md §5.1 and §4.2; venue count said 27 where the repo has 28.",
+      "diagnosis": "duplicate",
+      "finding": "Restated the store's limits with a different document count from the scalability doc (5,000 against 25,000).",
       "action": "fixed",
-      "remaining": "nothing",
       "overturned": "none",
-      "contradictions": "The venue count of 27 disagreed with 28 venue codes in the repo; corrected."
+      "contradictions": "",
+      "leanNote": "Purchase tracking, a roadmap idea with her agreed design and open questions; store limits now point to scalability.",
+      "plain": [
+        "The purchase-tracking doc gave a different store limit from the scalability doc; it now points there, where the limits are kept once."
+      ]
     },
     "docs/link_pages/README.md": {
-      "linesBefore": 46,
+      "linesBefore": 50,
       "probes": [
         {
           "line": 11,
           "text": "  the Courtauld page, the \"More exhibitions\" strips."
         },
         {
-          "line": 24,
-          "text": "product list (`products.json`), the connector's live answer cut to its first eight"
+          "line": 25,
+          "text": "products by code. The shelf page itself comes back as a menu only (AL-033)."
         },
         {
-          "line": 35,
-          "text": "`shop_search/moma_popup_live.json` (19 Oct): MoMA's catalogue shelf as the connector returned it in her"
+          "line": 39,
+          "text": "`brancusi_neue_ng_live.json` (26 Oct) is the free Parallel server's answer byte for byte for the Neue"
         },
         {
-          "line": 45,
-          "text": "\"to 26 may 2014\" (AL-077)."
+          "line": 49,
+          "text": "record's Summary (`from`/`fromLast`, AP-013)."
         }
       ],
       "diagnosis": "clean",
-      "finding": "Read in full; every line is a present-tense fact, decision or pointer and the pointers and counts match the repo, so it is fine as written (README.md).",
+      "finding": "What each saved reply is and which test uses it; dated as evidence. Read in full; nothing to cut.",
       "action": "none",
-      "remaining": "nothing",
       "overturned": "none",
-      "contradictions": "none"
+      "contradictions": "",
+      "leanNote": "Says what each saved or fetched link page settled and which tests use it; evidence beside the files."
     },
     "docs/listing_pages/README.md": {
       "linesBefore": 13,
@@ -623,11 +625,11 @@
         }
       ],
       "diagnosis": "clean",
-      "finding": "Read in full; every line is a present-tense fact, decision or pointer and the pointers and counts match the repo, so it is fine as written (README.md).",
+      "finding": "Short table of what each saved listing settled. Read in full; nothing to cut.",
       "action": "none",
-      "remaining": "nothing",
       "overturned": "none",
-      "contradictions": "none"
+      "contradictions": "",
+      "leanNote": "Says what each saved listing page settled; evidence beside the files."
     },
     "docs/met_pages/README.md": {
       "linesBefore": 11,
@@ -650,11 +652,11 @@
         }
       ],
       "diagnosis": "clean",
-      "finding": "Read in full; every line is a present-tense fact, decision or pointer and the pointers and counts match the repo, so it is fine as written (README.md).",
+      "finding": "Two entries, what each kept page tests. Read in full; nothing to cut.",
       "action": "none",
-      "remaining": "nothing",
       "overturned": "none",
-      "contradictions": "none"
+      "contradictions": "",
+      "leanNote": "Says what the kept Met pages test (the P.S. Art exclusion); evidence beside the files."
     },
     "docs/moma_pages/README.md": {
       "linesBefore": 69,
@@ -676,12 +678,12 @@
           "text": "decision — no more pages saved by hand). Images stripped; the page text is whole."
         }
       ],
-      "diagnosis": "clean",
-      "finding": "Read in full; every line is a present-tense fact, decision or pointer and the pointers and counts match the repo, so it is fine as written (README.md).",
+      "diagnosis": "dense",
+      "finding": "Evidence of MoMA's markup with the date shapes; already compressed. Read in full; nothing to cut.",
       "action": "none",
-      "remaining": "nothing",
       "overturned": "none",
-      "contradictions": "none"
+      "contradictions": "",
+      "leanNote": "Says what the saved MoMA pages settled, its date shapes and description block; evidence beside the files."
     },
     "docs/morgan_pages/README.md": {
       "linesBefore": 54,
@@ -704,11 +706,11 @@
         }
       ],
       "diagnosis": "clean",
-      "finding": "Read in full; every line is a present-tense fact, decision or pointer and the pointers and counts match the repo, so it is fine as written (README.md).",
+      "finding": "Evidence of the Morgan's markup; compact. Read in full; nothing to cut.",
       "action": "none",
-      "remaining": "nothing",
       "overturned": "none",
-      "contradictions": "none"
+      "contradictions": "",
+      "leanNote": "Says what the saved Morgan pages settled about its markup; evidence beside the files."
     },
     "docs/ng_pages/README.md": {
       "linesBefore": 8,
@@ -731,65 +733,139 @@
         }
       ],
       "diagnosis": "clean",
-      "finding": "Read in full; every line is a present-tense fact, decision or pointer and the pointers and counts match the repo, so it is fine as written (README.md).",
+      "finding": "One entry, what her saves settled. Read in full; nothing to cut.",
       "action": "none",
-      "remaining": "nothing",
       "overturned": "none",
-      "contradictions": "none"
+      "contradictions": "",
+      "leanNote": "Says what her National Gallery saves settled (the real description block); evidence beside the files."
     },
     "docs/periods.md": {
       "linesBefore": 84,
       "probes": [
         {
           "line": 27,
-          "text": "  Sort line and a filter on the Showing line after Dismissed: bands \"This labelling\", \"Earlier labellings\", \"Stage 1\", \"Not"
+          "text": "- **The list's order is her centre-of-gravity rule:** Italy first only where two periods compete (Northern Renaissance after Early,"
         },
         {
           "line": 46,
-          "text": "  start date; long periods overlap later ones), c. 1485–1714; Georgian Britain starts at 1714. A show about an artist's English"
+          "text": "  ruler of every period in view at once, rows 15.5px apart, nothing scrolling inside; the picked name bulges in place (18px, bold, dark"
         },
         {
           "line": 65,
-          "text": "  Sculpture, Animals (mythical creatures included), Nature (trees, plants, botanical drawings, gardens, clouds — not landscape, still"
+          "text": "  (told to Claude and added in code; her decision; PS-019). A decorative-arts show naming its kinds gets each kind's theme. Interior was"
         },
         {
           "line": 83,
           "text": "  or how many were not and why; each Label, import labelling and Relabel is one lookup-log record."
         }
       ],
-      "diagnosis": "clean",
-      "finding": "Fine as written; one decision (every question to Claude asked afresh, PR-037) that lived only in the publishing version log was added to Claude's-reason bullet before that log was cut.",
-      "action": "fixed",
-      "remaining": "nothing",
+      "diagnosis": "dense",
+      "finding": "Dense list of her Period decisions and rules, each once. Read in full; nothing to cut.",
+      "action": "none",
       "overturned": "none",
-      "contradictions": "none"
+      "contradictions": "",
+      "leanNote": "The Period sort: her design, the order, themes and every rule Claude follows; the one home for Period work."
     },
     "docs/publishing.md": {
-      "linesBefore": 28,
+      "linesBefore": 80,
       "probes": [
         {
-          "line": 7,
-          "text": "  Bump it only when a publish is under way — never turn by turn while one"
+          "line": 15,
+          "text": "whether the committed shell still matches."
         },
         {
-          "line": 13,
-          "text": "parses, writes `build/dist/index.html`. `--shell-from <saved live page>` says"
+          "line": 32,
+          "text": "import is split (AL-003a, AL-053, AL-094). Never the title reworded, one shared rule and check for every way in (AC-007,"
         },
         {
-          "line": 19,
-          "text": "viewed — sometimes with a saved copy to read in full first — then once more as resent unchanged;"
+          "line": 56,
+          "text": "Owned, a Digital catalogue chip last in Acquiring?; \"✓ Catalogue + digital\" on a card with both (DG-006–007)."
         },
         {
-          "line": 27,
-          "text": "Seed\" and \"Reset cards\" (clears one card's lookup). Older numbers are in git."
+          "line": 79,
+          "text": "Reset to Seed always asks (it is unwired from her page, drawn only for tests); the counts line is Watched · Wanted · Owned · Closing Window (Yes-wanted catalogues closed 3–12 months ago, `inClosingWindow`), Tracked and Dismissed inside \"Details\"; \"Reset cards\" clears one card's lookup. Older numbers are in git."
+        }
+      ],
+      "diagnosis": "diary",
+      "finding": "A version-by-version log ('Before that 57.3 … Before that 53.9') of twenty entries.",
+      "action": "compressed",
+      "overturned": "none",
+      "contradictions": "",
+      "leanNote": "Version numbering, building and the publish steps, plus what is live. Its version-by-version diary was cut to the live version and pointers to where each decision lives.",
+      "plain": [
+        "The publishing doc's long version-by-version log is cut to what is live and a short list of where each version's decisions now live."
+      ],
+      "dropped": {
+        "Stockholm Moderna Museet": "A superseded card name from an older version; the current name is on the venue's register entry."
+      }
+    },
+    "docs/restructure.md": {
+      "linesBefore": 449,
+      "probes": [
+        {
+          "line": 116,
+          "text": "  the join to take the rules from the scraper's own files (`dates.js`, `compress_prompt.md`,"
+        },
+        {
+          "line": 221,
+          "text": "| 5a | Screens: theme, period scrubber, ledger card and the main screen moved whole into `app/screens/` | `claude/restructure-L5a` | **moved only** — page identical, 23 of 23 suites |"
+        },
+        {
+          "line": 338,
+          "text": "   saved ledgers and safety copies (on `main` since round 1)."
+        },
+        {
+          "line": 447,
+          "text": "record up to date, commit, push, and tell her to start a new session and type **\"Continue the"
+        }
+      ],
+      "diagnosis": "diary",
+      "finding": "A long handover diary and done-work record (layers 0 to 5a table, per-item reports, layer 0 wiring, designs of finished items) around the live plan.",
+      "action": "compressed",
+      "overturned": "Its design list still named items and code (the old venue lists) that 4A deleted, and the layer 5b plan it says item 5 replaced.",
+      "contradictions": "",
+      "leanNote": "The restructure's plan, her decisions, checks and handover. Its long done-work diary and layer table were cut to results, keeping every decision and noted fault.",
+      "plain": [
+        "The restructure doc's diary of finished layers and items is cut to their results, keeping every decision, the noted faults and what is left to do."
+      ],
+      "pass2": {
+        "note": "On a second look three passages of the restructure doc were tightened; the rest is the live plan, her decisions and the checks a resuming session needs."
+      }
+    },
+    "docs/restructure/duplicates.md": {
+      "linesBefore": 121,
+      "probes": [
+        {
+          "line": 30,
+          "text": "  store (`shopFromRule` → read job). The card's shop button reads the entry; the lookup reads the store;"
+        },
+        {
+          "line": 55,
+          "text": "  types its targets (brit's selector differs from its recipe)."
+        },
+        {
+          "line": 86,
+          "text": "  `artistKey`; the scraper's `titleKey` folds none. Any change is checked against her real quarantine."
+        },
+        {
+          "line": 119,
+          "text": "the app; swept-venue addresses (`exBase`/`listUrl`, 5 venues) agree with the scraper's and are a"
         }
       ],
       "diagnosis": "history",
-      "finding": "'What is live now' was a version-by-version log back to 53.3 plus a jumbled tail naming a footer Reset to Seed that is no longer on her page; cut to the last three versions, older ones pointed to git.",
-      "action": "fixed",
-      "remaining": "nothing",
-      "overturned": "The tail said the footer carries 'Reset to Seed'; the code draws it only for tests (Cat_Watch.jsx, her decision, docs/app.md). Prose corrected.",
-      "contradictions": "publishing.md said the footer shows Reset to Seed while docs/app.md says it is unwired; the code agrees with app.md, so publishing.md was corrected."
+      "finding": "The 4A findings, all fixed, still filled half the audit, and its opening said where venue facts live was undecided.",
+      "action": "compressed",
+      "overturned": "Said whether the register lives in the code or the store was not yet decided; she decided the code.",
+      "contradictions": "",
+      "leanNote": "The audit behind items 4A to 4F. The finished 4A findings were cut to one line; the rest is evidence for the coming items.",
+      "plain": [
+        "The audit's finished venue findings are cut to one line, and its opening no longer says where venue facts live is undecided."
+      ],
+      "dropped": {
+        "Register": "The definition is now the venue register itself, described in the restructure doc's 4A section.",
+        "Pompidou Paris": "A 4A finding, fixed by the venue register; the evidence stays in git.",
+        "for 13 the screens that show `short` (rev": "A 4A finding, fixed by the venue register (her names win on every screen); evidence in git."
+      }
     },
     "docs/rijks_pages/README.md": {
       "linesBefore": 16,
@@ -812,11 +888,11 @@
         }
       ],
       "diagnosis": "clean",
-      "finding": "Read in full; every line is a present-tense fact, decision or pointer and the pointers and counts match the repo, so it is fine as written (README.md).",
+      "finding": "Short list of what her saves settled. Read in full; nothing to cut.",
       "action": "none",
-      "remaining": "nothing",
       "overturned": "none",
-      "contradictions": "none"
+      "contradictions": "",
+      "leanNote": "Says what her Rijksmuseum saves settled (the venue rewrote its pages); evidence beside the files."
     },
     "docs/scalability.md": {
       "linesBefore": 74,
@@ -838,12 +914,15 @@
           "text": "   saves plus one a month after that."
         }
       ],
-      "diagnosis": "clean",
-      "finding": "Read in full; every line is a present-tense fact, decision or pointer and the pointers and counts match the repo, so it is fine as written (scalability.md).",
-      "action": "none",
-      "remaining": "nothing",
+      "diagnosis": "mixed",
+      "finding": "States the store's document cap as 25,000 while the library doc said 5,000; neither has a source in the repo.",
+      "action": "fixed",
       "overturned": "none",
-      "contradictions": "none"
+      "contradictions": "",
+      "leanNote": "What grows with the ledger, measured, and parked options; the store limits now kept here only.",
+      "plain": [
+        "The scalability doc now says the store's document cap was written down two ways and neither is confirmed."
+      ]
     },
     "docs/scraper-verification-2026-09-12.md": {
       "linesBefore": 54,
@@ -865,39 +944,58 @@
           "text": "- **Her count is the only check that can say \"your number is wrong.\"**"
         }
       ],
-      "diagnosis": "clean",
-      "finding": "Two uses of 'her ruling' for her choices, against the house wording; changed to 'her decision'.",
-      "action": "fixed",
-      "remaining": "nothing",
+      "diagnosis": "dense",
+      "finding": "Her review record, already compressed to findings and lessons. Read in full; nothing to cut.",
+      "action": "none",
       "overturned": "none",
-      "contradictions": "none"
+      "contradictions": "",
+      "leanNote": "Her review of the original venues, a kept record; already compressed, nothing to move.",
+      "placeOk": {
+        "Per venue": {
+          "quote": "| `frick` | 10 (0 current, 3 upcoming, 7 past) | Nothing.",
+          "why": "Her own review record per venue; the scraper doc holds the rules, this holds what she found and when."
+        }
+      }
     },
     "docs/scraper.md": {
-      "linesBefore": 468,
+      "linesBefore": 479,
       "probes": [
         {
-          "line": 116,
-          "text": "Saturday 23 May - Sunday 29 Nov 2026    weekday before each date"
+          "line": 119,
+          "text": "Mar 8, 2025–ongoing                  still open"
         },
         {
-          "line": 225,
-          "text": "| `ERR_FAILED` | the venue's site did not respond |"
+          "line": 230,
+          "text": "| `ERR_NAME_NOT_RESOLVED` | the venue's web address could not be found |"
         },
         {
-          "line": 343,
-          "text": "A venue with two galleries running one show keeps both rows, the city in each"
+          "line": 350,
+          "text": "reads its gallery from the card's parts; Lévy Gorvy Dayan from the card line that is one of its"
         },
         {
-          "line": 467,
+          "line": 478,
           "text": "   \"van\", \"de\", \"di\" stay small mid-name, CT-001). A change of capitals is a Change card (her decision)."
         }
       ],
       "diagnosis": "duplicate",
-      "finding": "The archive-old-runs rule was written here and in sweep_operation.md; kept it in sweep_operation and pointed. Section 15 pointed at CLAUDE.md 5.1 for the Italian-titles rule, which lives in docs/app.md.",
-      "action": "fixed",
-      "remaining": "nothing",
+      "finding": "Its compression section repeated the compression doc, and the several-galleries decision was written twice in it.",
+      "action": "compressed",
       "overturned": "none",
-      "contradictions": "Section 15 named CLAUDE.md 5.1 as holding the Italian-title rule, which it does not; pointer corrected to docs/app.md."
+      "contradictions": "",
+      "leanNote": "The scraper's evidence and design by area. Its copy of the compression rules moved to the compression doc, leaving a pointer.",
+      "placeOk": {
+        "6. The engine / recipe split": {
+          "quote": "**`yearArchive` never writes the years down** — `expandYearArchive()` derives",
+          "why": "The rule lives here; the verification record only mentions the same function as her finding, not the rule."
+        },
+        "17. Known limits": {
+          "quote": "**Nothing filters out non-exhibitions generally** — only URL shape.",
+          "why": "A scraper-wide limit; venues.md holds each venue's own labels and decisions, this the general rule they illustrate."
+        }
+      },
+      "plain": [
+        "The scraper doc's copy of the compression rules is replaced by a pointer, and the several-galleries decision is written once."
+      ]
     },
     "docs/search_engines.md": {
       "linesBefore": 58,
@@ -920,11 +1018,11 @@
         }
       ],
       "diagnosis": "clean",
-      "finding": "Read in full; every line is a present-tense fact, decision or pointer and the pointers and counts match the repo, so it is fine as written (search_engines.md).",
+      "finding": "Options with how and concerns, one case behind them; compact. Read in full; nothing to cut.",
       "action": "none",
-      "remaining": "nothing",
       "overturned": "none",
-      "contradictions": "none"
+      "contradictions": "",
+      "leanNote": "Search-engine options for later, with how and the concerns; a future consideration, belongs here."
     },
     "docs/shop_pages/README.md": {
       "linesBefore": 25,
@@ -947,11 +1045,11 @@
         }
       ],
       "diagnosis": "clean",
-      "finding": "Read in full; every line is a present-tense fact, decision or pointer and the pointers and counts match the repo, so it is fine as written (README.md).",
+      "finding": "Two entries on saved shop pages and what they proved. Read in full; nothing to cut.",
       "action": "none",
-      "remaining": "nothing",
       "overturned": "none",
-      "contradictions": "none"
+      "contradictions": "",
+      "leanNote": "Says what her saved shop pages settled for Re-check and the ISBN read; evidence beside the files."
     },
     "docs/store_backup_2026-09-21/README.md": {
       "linesBefore": 21,
@@ -974,11 +1072,34 @@
         }
       ],
       "diagnosis": "clean",
-      "finding": "Read in full; every line is a present-tense fact, decision or pointer and the pointers and counts match the repo, so it is fine as written (README.md).",
+      "finding": "Short note on a kept snapshot. Read in full; nothing to cut.",
       "action": "none",
-      "remaining": "nothing",
       "overturned": "none",
-      "contradictions": "none"
+      "contradictions": "",
+      "leanNote": "Says what the store snapshot is and that it is insurance only; belongs beside the files."
+    },
+    "docs/store_backup_2026-11-06/README.md": {
+      "linesBefore": 6,
+      "probes": [
+        {
+          "line": 3,
+          "text": "`venues_occasional.json`: her app's `venues/occasional` record exactly as read, before 4A moves every"
+        },
+        {
+          "line": 4,
+          "text": "venue's facts into the register and the leftover store records are cleared once (her yes). Insurance"
+        },
+        {
+          "line": 5,
+          "text": "only. Her ledger is never committed."
+        }
+      ],
+      "diagnosis": "clean",
+      "finding": "Short note on a kept backup. Read in full; nothing to cut.",
+      "action": "none",
+      "overturned": "none",
+      "contradictions": "",
+      "leanNote": "Says what the venue-record backup before 4A is; insurance only, belongs beside the file."
     },
     "docs/sweep_operation.md": {
       "linesBefore": 210,
@@ -1000,12 +1121,12 @@
           "text": "the grouping; the same report for container and home runs; unchanged venues"
         }
       ],
-      "diagnosis": "clean",
-      "finding": "Read in full; every line is a present-tense fact, decision or pointer and the pointers and counts match the repo, so it is fine as written (sweep_operation.md).",
+      "diagnosis": "dense",
+      "finding": "Commands and operating rules, each once; dense but not a diary. Read in full; nothing to cut.",
       "action": "none",
-      "remaining": "nothing",
       "overturned": "none",
-      "contradictions": "none"
+      "contradictions": "",
+      "leanNote": "Running the scraper: commands, files, machines, headed venues, pacing, robots, the routine; nothing misplaced."
     },
     "docs/tate_pages/README.md": {
       "linesBefore": 16,
@@ -1028,18 +1149,18 @@
         }
       ],
       "diagnosis": "clean",
-      "finding": "Read in full; every line is a present-tense fact, decision or pointer and the pointers and counts match the repo, so it is fine as written (README.md).",
+      "finding": "Three entries, what each save settled. Read in full; nothing to cut.",
       "action": "none",
-      "remaining": "nothing",
       "overturned": "none",
-      "contradictions": "none"
+      "contradictions": "",
+      "leanNote": "Says what her Tate saves settled; evidence beside the files."
     },
     "docs/testing.md": {
       "linesBefore": 76,
       "probes": [
         {
-          "line": 21,
-          "text": "## Watched runs (her decision: hard-wired)"
+          "line": 23,
+          "text": "Every run goes through `scraper/run_tests.js` (one suite: `--only <part of its command>`; expected time: `--estimate`): it prints the"
         },
         {
           "line": 41,
@@ -1055,11 +1176,11 @@
         }
       ],
       "diagnosis": "clean",
-      "finding": "Read in full; every line is a present-tense fact, decision or pointer and the pointers and counts match the repo, so it is fine as written (testing.md).",
+      "finding": "The testing procedure, compact, nothing duplicated. Read in full; nothing to cut.",
       "action": "none",
-      "remaining": "nothing",
       "overturned": "none",
-      "contradictions": "none"
+      "contradictions": "",
+      "leanNote": "Which tests to run, watched runs, failures, live proof pages and how suites are built; the one testing procedure."
     },
     "docs/themes.md": {
       "linesBefore": 69,
@@ -1082,11 +1203,11 @@
         }
       ],
       "diagnosis": "clean",
-      "finding": "Read in full; every line is a present-tense fact, decision or pointer and the pointers and counts match the repo, so it is fine as written (themes.md).",
+      "finding": "Her Themes brief and the prototype as built, compact. Read in full; nothing to cut.",
       "action": "none",
-      "remaining": "nothing",
       "overturned": "none",
-      "contradictions": "none"
+      "contradictions": "",
+      "leanNote": "Themes, her brief and decisions and the Theme Shelf prototype as built; the one home for Themes work."
     },
     "docs/title_case_pages/README.md": {
       "linesBefore": 28,
@@ -1109,11 +1230,11 @@
         }
       ],
       "diagnosis": "clean",
-      "finding": "Read in full; every line is a present-tense fact, decision or pointer and the pointers and counts match the repo, so it is fine as written (README.md).",
+      "finding": "What her saved listings settled about capitals. Read in full; nothing to cut.",
       "action": "none",
-      "remaining": "nothing",
       "overturned": "none",
-      "contradictions": "none"
+      "contradictions": "",
+      "leanNote": "Says what her saved listings settled about titles in capitals; evidence beside the files."
     },
     "docs/va_pages/README.md": {
       "linesBefore": 11,
@@ -1136,104 +1257,109 @@
         }
       ],
       "diagnosis": "clean",
-      "finding": "Read in full; every line is a present-tense fact, decision or pointer and the pointers and counts match the repo, so it is fine as written (README.md).",
+      "finding": "One entry, what her save settled. Read in full; nothing to cut.",
       "action": "none",
-      "remaining": "nothing",
       "overturned": "none",
-      "contradictions": "none"
+      "contradictions": "",
+      "leanNote": "Says what her V&A save settled (the Display badge); evidence beside the file."
     },
     "docs/venues.md": {
-      "linesBefore": 258,
+      "linesBefore": 259,
       "probes": [
         {
-          "line": 63,
+          "line": 64,
           "text": "| Gatekeeper | Looks like | Venues |"
         },
         {
-          "line": 124,
+          "line": 125,
           "text": "  a file, even a wrong one. *Giovanni Bellini's \"Pietà\" Restored*: the listing's"
         },
         {
-          "line": 192,
+          "line": 193,
           "text": "- **Titles typed in capitals everywhere** (her saves, `docs/borghese_pages/`): code writes"
         },
         {
-          "line": 257,
+          "line": 258,
           "text": "sites that build their pages with JavaScript look empty to a tool that doesn't run it."
         }
       ],
-      "diagnosis": "clean",
-      "finding": "Cincinnati said 'Never swept yet' but venue_status shows 31 rows swept 15 Oct; Rijksmuseum said three 404 pages, the run shows four.",
+      "diagnosis": "dense",
+      "finding": "Dense venue evidence; two table rows were run-on and the several-galleries row restated the scraper doc's rule.",
       "action": "fixed",
-      "remaining": "nothing",
-      "overturned": "'Never swept yet' for Cincinnati is overturned by the 15 Oct container run (31 rows, her count); corrected.",
-      "contradictions": "Cincinnati never swept versus 31 rows swept 15 Oct in venue_status; Rijksmuseum three 404s versus four; both corrected.",
-      "smellOk": {
-        "runOn": {
-          "quote": "Not swept — added by link only** (her decision): `route: 'none'`, recipe kept",
-          "why": "Table rows 32 and 42 carry her counts and exclusions for one venue each, already compressed; the table form needs one row per venue."
-        }
-      }
+      "overturned": "none",
+      "contradictions": "",
+      "leanNote": "Her decisions per venue and per-venue evidence; the one home for venue judgement, nothing to move.",
+      "plain": [
+        "Two long venue rows were shortened, the several-galleries row now points to the rule in the scraper doc."
+      ]
     }
   },
   "openWork": {
+    "2.2.1": {
+      "verdict": "",
+      "evidence": ""
+    },
     "2.2.2": {
-      "verdict": "open",
-      "evidence": "No sweep since the 15 Oct run (scraper/output/stitch_20261015_0920); commit 14965d7 is the latest scraper change and none of these fixes has been seen in a sweep, so each check is still pending."
+      "verdict": "",
+      "evidence": ""
     },
     "2.2.3": {
-      "verdict": "open",
-      "evidence": "docs/catalogue_versions.md still lists cases 10-13 and the MoMA Brancusi fault as not fixed; no lookup commit since 53.11 (be0fcdf) touches them, so every item here is still open."
+      "verdict": "",
+      "evidence": ""
     },
     "2.2.5": {
-      "verdict": "open",
-      "evidence": "docs/scalability.md keeps the stickiness item open and nothing in git since 4b32935 closes the Hammershoi check (WL-060 in scraper/fixtures); the comment tidy and the two scraper tests have no fixture yet."
+      "verdict": "",
+      "evidence": ""
     },
     "2.2.7": {
-      "verdict": "open",
-      "evidence": "docs/compression.md Probably-not-for-you section: it is checked by her next monthly import, which has not happened since 15 Oct (stitch_20261015_0920)."
+      "verdict": "",
+      "evidence": ""
     },
     "2.2.8": {
-      "verdict": "open",
-      "evidence": "docs/themes.md lists what is unproven on the prototype; branch claude/theme-shelf is still unmerged in docs/branches.md."
+      "verdict": "",
+      "evidence": ""
     },
     "2.2.9": {
-      "verdict": "open",
-      "evidence": "docs/periods.md Open section still holds Metamorphoses and Hidden Faces; commit 6ebe994 opened them and none has closed them."
+      "verdict": "",
+      "evidence": ""
     },
     "2.2.10": {
-      "verdict": "open",
-      "evidence": "Commits 14965d7 and be0fcdf (53.11) are the latest; the Memling re-ask, Reina Sofia shop, Getty dates and the to-confirm imports are described in docs/add_by_link.md and are not closed in git."
-    },
-    "2.2.18": {
-      "verdict": "open",
-      "evidence": "docs/branches.md still lists claude/paste-import as unmerged and held; commit f0322b8 queued both items and nothing since has done them."
-    },
-    "2.2.6": {
-      "verdict": "open",
-      "evidence": "docs/testing.md says failures are recorded here; the unit group freeze and cloud suites item have no later commit closing them (scraper/test_times.json unchanged)."
+      "verdict": "",
+      "evidence": ""
     },
     "2.2.11": {
-      "verdict": "updated",
-      "evidence": "Moved here from CLAUDE.md 5.4 unchanged; docs/add_by_link.md and docs/catalogue_versions.md still list the Belvedere gap and the others as open, nothing in git (c13f0ad) closes them."
+      "verdict": "",
+      "evidence": ""
+    },
+    "2.2.18": {
+      "verdict": "",
+      "evidence": ""
+    },
+    "2.2.6": {
+      "verdict": "",
+      "evidence": ""
     }
   },
   "trunk": {
     "House rules": {
       "kind": "rule",
-      "reason": "How she wants every session to behave, needed before any area is known."
+      "reason": "Her house rules for how every session works and reports; every session needs them first."
+    },
+    "The logs — read them before answering (her decision)": {
+      "kind": "rule",
+      "reason": "Her decision to read the logs before answering, with where each log is; needed before any answer."
     },
     "Put it in code — her decision": {
       "kind": "rule",
-      "reason": "Her standing test for code versus Claude, applies to all work."
+      "reason": "Her decision that one-right-answer work is code; governs every task a session takes."
     },
     "Procedures — in side docs": {
       "kind": "pointer",
-      "reason": "Points to the four procedure docs a session reads before editing, branching, publishing or testing."
+      "reason": "Points to the procedure docs a session must read before branching, publishing, testing or editing docs."
     },
     "Run the script, do not read a table": {
       "kind": "pointer",
-      "reason": "Names the status script and a few standing facts about access, pointing at docs/venues.md."
+      "reason": "Standing state of the sweeps and venues, with the script that prints it and pointers to the evidence."
     },
     "Her decisions, per venue — `docs/venues.md`": {
       "kind": "pointer",
@@ -1241,122 +1367,130 @@
     },
     "2.2 Open work": {
       "kind": "open",
-      "reason": "Heading and the rule that unlisted work is finished."
+      "reason": "Says how open work is kept: everything not listed is finished."
+    },
+    "2.2.1 The restructure — under way (her decision)": {
+      "kind": "open",
+      "reason": "The restructure in progress, with the phrase that resumes it and where its plan lives."
     },
     "2.2.2 Fixes not yet checked in the cases they were written for": {
       "kind": "open",
-      "reason": "Open: the 15 Oct fixes her next sweep checks."
+      "reason": "Sweep fixes in code that her next sweep must confirm."
     },
     "2.2.3 Catalogue lookup generally": {
       "kind": "open",
-      "reason": "Open lookup items with their backstory and pointers to docs/catalogue_versions.md."
+      "reason": "Open lookup work, the pause on patches, and the cases a search session must fix."
     },
     "2.2.5 Queued next": {
       "kind": "open",
-      "reason": "Open queued items."
+      "reason": "Queued work: the ledger-size follow-ups, a live check and the scraper tidy."
     },
     "2.2.7 \"Probably not for you\" — published at 46; her next monthly import checks it": {
       "kind": "open",
-      "reason": "Open: her next import checks the topic labels."
+      "reason": "What her next monthly import must confirm about the topic labels."
     },
     "2.2.8 Theme Shelf — prototype 3 published, her review": {
       "kind": "open",
-      "reason": "Open prototype awaiting her review, pointer to docs/themes.md."
+      "reason": "The Theme Shelf prototype awaiting her review, with its doc."
     },
     "2.2.9 Period sort — merged into her app at 51": {
       "kind": "open",
-      "reason": "Open period items, pointer to docs/periods.md."
+      "reason": "The Period sort, with the check her ledger load still confirms and its doc."
     },
     "2.2.10 Published since 51 — her next links, lookups and use confirm": {
       "kind": "open",
-      "reason": "Open items awaiting her confirmation."
-    },
-    "2.2.18 Queued — her asks": {
-      "kind": "open",
-      "reason": "Open asks queued for later sessions."
-    },
-    "2.2.6 Tests that failed — recorded, not investigated": {
-      "kind": "open",
-      "reason": "Where failing suites are recorded, open items."
-    },
-    "3. Where the rest lives": {
-      "kind": "pointer",
-      "reason": "The index of every side doc."
-    },
-    "4.1 Lessons — mistakes not to repeat": {
-      "kind": "lesson",
-      "reason": "The do-not-repeat lessons, each from a real failure."
-    },
-    "4.2 Rejected — do not re-propose": {
-      "kind": "rule",
-      "reason": "Her rejected ideas, kept so they are not re-proposed."
-    },
-    "5.1 The app itself": {
-      "kind": "rule",
-      "reason": "The app address, republish rule and the four capabilities every publish must restate."
-    },
-    "The mental model, load-bearing": {
-      "kind": "schematic",
-      "reason": "What the ledger, sweep log and quarantine are, and where each lives."
-    },
-    "Ledger row shape": {
-      "kind": "schematic",
-      "reason": "The ledger's field list every session touching data must know."
-    },
-    "What is built and signed off, and the lookup's route — `docs/app.md`": {
-      "kind": "pointer",
-      "reason": "Points to docs/app.md for signed-off behaviour and the lookup."
-    },
-    "5.2 Import csv": {
-      "kind": "schematic",
-      "reason": "The CSV columns and the lookback, with a pointer to docs/import_csv.md."
-    },
-    "Why it exists": {
-      "kind": "schematic",
-      "reason": "Why a headless browser is used and what the scraper outputs."
-    },
-    "Running the scraper — `docs/sweep_operation.md`": {
-      "kind": "pointer",
-      "reason": "Points to docs/sweep_operation.md before running a sweep."
-    },
-    "Adding a venue — `docs/scraper.md` §12": {
-      "kind": "pointer",
-      "reason": "Points to the venue intake in docs/scraper.md."
-    },
-    "Then hand her the file — `docs/sweep_operation.md`": {
-      "kind": "pointer",
-      "reason": "Points to what to send her when a sweep ends."
-    },
-    "How it is organised": {
-      "kind": "schematic",
-      "reason": "One engine, one recipe per venue, and the two traps."
-    },
-    "5.4 Add by link": {
-      "kind": "schematic",
-      "reason": "What Add by link is and its open items, with pointers to docs/add_by_link.md."
-    },
-    "6. Future considerations": {
-      "kind": "open",
-      "reason": "Ideas not yet built, parked here per the shape rules."
+      "reason": "Recent releases her use still confirms."
     },
     "2.2.11 Add by link — open items": {
       "kind": "open",
-      "reason": "Add by link open items with their backstory, moved from 5.4 so the schematic stays short."
+      "reason": "Open manual-import items, each with enough backstory to pick up cold."
+    },
+    "2.2.18 Queued — her asks": {
+      "kind": "open",
+      "reason": "Her queued asks, with the known fault in the import-complete line and her limits on its fix."
+    },
+    "2.2.6 Tests that failed — recorded, not investigated": {
+      "kind": "open",
+      "reason": "Failing suites recorded, not investigated, as testing.md asks."
+    },
+    "3. Where the rest lives": {
+      "kind": "pointer",
+      "reason": "The index of every side doc and when to read it."
+    },
+    "4.1 Lessons — mistakes not to repeat": {
+      "kind": "lesson",
+      "reason": "Lessons from real failures, one line each."
+    },
+    "4.2 Rejected — do not re-propose": {
+      "kind": "rule",
+      "reason": "Her rejected ideas, never to be proposed again."
+    },
+    "5. The app": {
+      "kind": "schematic",
+      "reason": "The four ways in and why each exists, in a few sentences."
+    },
+    "5.1 The app itself": {
+      "kind": "pointer",
+      "reason": "Her app's address, its capabilities and the live version, with the publishing pointer."
+    },
+    "The mental model, load-bearing": {
+      "kind": "schematic",
+      "reason": "The ledger as her document and the three containers; every session touching data needs it."
+    },
+    "Ledger row shape": {
+      "kind": "schematic",
+      "reason": "The ledger's field list, which every app change must keep."
+    },
+    "What is built and signed off, and the lookup's route — `docs/app.md`": {
+      "kind": "pointer",
+      "reason": "Points to what she signed off and the lookup's route before changing either."
+    },
+    "5.2 Import csv": {
+      "kind": "rule",
+      "reason": "The import csv's columns and the permanent lookback, the coupling between scraper and app."
+    },
+    "Why it exists": {
+      "kind": "schematic",
+      "reason": "Why there is a scraper at all, in a few sentences."
+    },
+    "Running the scraper — `docs/sweep_operation.md`": {
+      "kind": "pointer",
+      "reason": "Points to how a sweep is run."
+    },
+    "Adding a venue — `docs/scraper.md` §12": {
+      "kind": "pointer",
+      "reason": "Points to her intake steps for a new venue."
+    },
+    "Then hand her the file — `docs/sweep_operation.md`": {
+      "kind": "pointer",
+      "reason": "Points to what a sweep sends her at the end."
+    },
+    "How it is organised": {
+      "kind": "schematic",
+      "reason": "One engine, one recipe per venue, with the pointer to the scraper doc."
+    },
+    "5.4 Add by link": {
+      "kind": "schematic",
+      "reason": "What manual import is and how it works, a few sentences, with its pointers."
+    },
+    "6. Future considerations": {
+      "kind": "pointer",
+      "reason": "Ideas on her roadmap, not open work, with their docs."
     }
   },
   "lessons": {
-    "merged": 0,
-    "note": "Read all 28 lessons in 4.1; each is already one lesson on one line, no entry added since the last review illustrates another, so nothing was merged and none dropped."
+    "note": "",
+    "merged": null
   },
-  "untraceable": [
-    {
-      "file": "CLAUDE.md",
-      "phrase": "Catalogue-search rebuild: published on the test page (41.1).",
-      "searched": "git log -S on the phrase shows only 3e9c512 (26 Oct) rewording it; the app is 53.11 and no 41.1 test page is named in docs/publishing.md or docs/branches.md, though fixture WL-060 exists. Is the Hammershoi edition check still pending, or finished?"
-    }
-  ],
-  "untraceableChecked": "Searched git log -S for the phrase, WL-060, 41.1 and the comment-tidy item; found WL-060 in scraper/fixtures/catalogue_route.js but no commit that closes or names the live check.",
+  "untraceable": [],
+  "untraceableChecked": "",
   "dupOk": {},
   "fyi": [],
-  "finishedAt": "2026-10-30T02:39:58.533Z"
+  "pass": 2,
+  "sentBack": {
+    "CLAUDE.md": "4d1f6addd51ec9ede5282e7f8413c2a9c144937ef8ecd564464d240828e5b6ec",
+    "docs/add_by_link.md": "23d14ffa920d2df647c4a54678ac32645ecaf3f96808b632c931c64667cd1bc2",
+    "docs/restructure.md": "2a59ae4ed6ac109136d2cbd6f62e480953760a9429c3405c4eab7d37ff5b7159"
+  },
+  "finishedAt": "2026-11-14T21:04:56.530Z"
 }

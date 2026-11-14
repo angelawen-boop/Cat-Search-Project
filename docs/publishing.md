@@ -29,51 +29,23 @@ the next goes through. Later ones go straight through.
 
 **Live: 58 in her app**: Links, Pages and Paste send the whole import to Claude in one request, with the sweep's own
 opening, full current examples and rules (re-taken at every build); only pages refused or missing are asked again; a large
-import is split (AL-003a, AL-053, AL-094). Never the title reworded, one shared rule and check for every way in (AC-007,
-AC-008, AL-062d). A shop written into a venue's entry is never asked on the shop screen (Basel; AL-092).
+import is split. Never the title reworded, one shared rule and check for every way in. A shop written into a venue's
+entry is never asked on the shop screen (Basel). Their tests and design: `docs/add_by_link.md`, `docs/compression.md`.
 
-Before that 57.3: Louisiana — a link that opens its Past Exhibitions list says "The page contents cannot be seen — Parallel fault. Import the full saved page." (AL-091a); its two-line heading ending in a comma runs on (Arbus, AL-091); cards "Denmark Louisiana"; Moderna Museet's cards "Stockholm Moderna".
+The versions before it, newest first — each one's decisions now live in its area's doc:
+- **57.3** Louisiana's Past Exhibitions page refused with the Parallel fault line, its comma heading run on; Louisiana's
+  and Moderna Museet's card names (`docs/add_by_link.md`, "Venue link rules").
+- **57.2** the Links, Pages and Paste read asks the `complex` tier (her decision; `docs/app.md` §1, "Which model");
+  Moderna Museet's spaced-year dates.
+- **57.1, 57** Search selected words and the Art Watch name (`docs/app.md`, "What is built and signed off").
+- **56.7 back to 53.9** periods (`docs/periods.md`); MoMA's In Stock rule, "detail," captions and space before a
+  comma, link-venue names, Christie's press site, the Correr, Łazienki, Getty, the script-placeholder dates note, day
+  or month first (`docs/add_by_link.md`, `docs/catalogue_versions.md`, `docs/scraper.md` §3); Paste and its
+  description (`docs/add_by_link.md`, "Pasted pages"); Digital catalogue, Buy next and the Acquiring row
+  (`docs/app.md`); the shop screen's Add (`docs/add_by_link.md`).
+- **53.8 back to 46** (UI adjustments, gallery shops, the Add-by-link redesign, the shop finder, the STORE NOT READ
+  banner, the Period merge, Pages, Berlin/Munich/Dresden/Städel by link, Buy next dragging, the cloud ledger at 46):
+  their decisions are in CLAUDE.md §2.2 and §5.4 and the side docs.
 
-Before that 57.2: the Links, Pages and Paste read (one Claude call: description, subtitle, English title, venue; Paste's title and dates) asks the `complex` tier, every other read stays on `default` (her decision; AL-090); Moderna Museet's "16.2–26.5 2013" and "8.10 2011–15.1 2012" dates read (a Moderna Museet rule, `SPACED_YEAR_VENUES`; DS-012); its cards say "Stockholm Moderna Museet" (her name).
-
-Before that 57.1: the Search button sits 32px under the LAST line of the selection, below Android's handles — a handle over the button took her tap, so nothing happened (her report). Not proven from a log: nothing records taps on it.
-
-Before that 57: words selected anywhere on the page (never in a box she types in) get a **Search** button under them, filled as the "Recently opened" tag and edged in the action green, both themes; a tap searches them exactly as typed and lands at the start of the cards. The app renamed **Art Watch** (page title, small header line, footer, read-only line); the big line stays "Before it goes out of print" (her decision, for now).
-
-Before that 56.7: Postwar America's description names assemblage, collage and film (Bruce Conner had gone to Pop); Postwar Europe moved to just before Abstract Expressionism.
-
-Before that 56.6: MoMA's store — a book page whose status line says "In Stock" is for sale (its Add to Cart is drawn by script; `inStock` on the MoMA entry, a MoMA rule, her decision; C-099a–e).
-
-Before that 56.5: a long paragraph saying "detail," is no longer taken for a picture's caption (MoMA's Matisse; AL-061k); MoMA's space before a comma dropped, so its heading is the title, not the events list's repeat (`spaceBeforeComma`, AL-061l).
-
-Before that 56.4: Postwar Europe described to Claude as a time-and-place period, not a movement (`docs/periods.md`).
-
-Before that 56.3: "Do not regroup" next to Relabel, after a Relabel that regrouped a show with its artist's other shows (`docs/periods.md`).
-
-Before that 56.2: her names for the link venues (`docs/add_by_link.md`, "Renaming a link venue"); Christie's press site files under Christie's.
-
-Before that 56.1: Paste's description from the rest of the text, never the title reworded (PS-004c); Buy next after
-Owned, a Digital catalogue chip last in Acquiring?; "✓ Catalogue + digital" on a card with both (DG-006–007).
-
-Before that 56: Paste read by Claude — title and date words from Claude, checked word for word against the text by code;
-any length of text; any year (`docs/add_by_link.md`, "Pasted pages"; PS-001–004b).
-
-Before that 55: Digital catalogue — her link to a PDF or online catalogue on any searched card (`docs/app.md`, DG-001–006).
-
-Before that 54.3: the shop screen's fourth button, **Add** — her own shop link (AL-080).
-
-Before that 54.2: German dates read (DS-011); Galerie de la Présidence's " : Exhibition" leaves the title (AP-015).
-
-Before that 54.1: the Tate library's records hand Claude their Summary (`from`/`fromLast`, AP-014); card links wrap; the import pop-up fits a phone; Clear all in the row with + and Read, centred; the empty Pages list says nothing.
-
-Before that 54: Import → Paste; the own-site rule for Links, Pages and Paste; the Change card says "Link" (`docs/add_by_link.md`, "Pasted pages").
-
-Before that 53.11: the Correr's archive — title after its section menu, capitals recased, spaced ordinals and comma-less month-first ranges read (DS-010, AL-089).
-
-Before that 53.10: a link with no dates whose page holds a script's unfilled placeholder says "Dates cannot be seen — JS-rendering." (AL-088); Łazienki's title from its page title, Getty's collection pages from their heading (AL-086–087).
-
-Before that 53.9: dates in numbers read day first or month first per venue (`DATE_ORDER`), else the order-unknown note; the Prado chip (DS-004, DS-006, DS-009, AL-085).
-
-Older versions (53.8 and back to 50: UI adjustments, gallery shops, the Add-by-link redesign, the shop finder, the STORE NOT READ banner, the Period merge, Pages, Berlin/Munich/Dresden/Städel by link, Buy next dragging, the cloud ledger at 46): their decisions are in CLAUDE.md §2.2 and §5.4 and the side docs; the version-by-version text is in git (`git log -p -- docs/publishing.md`). The search work after 43 is on `parked`, her decision.
-
-Reset to Seed always asks (it is unwired from her page, drawn only for tests); the counts line is Watched · Wanted · Owned · Closing Window (Yes-wanted catalogues closed 3–12 months ago, `inClosingWindow`), Tracked and Dismissed inside "Details"; "Reset cards" clears one card's lookup. Older numbers are in git.
+The version-by-version text is in git (`git log -p -- docs/publishing.md`). The search work after 43 is on `parked`,
+her decision.

@@ -26,10 +26,11 @@ time. It once grew to 2,905 lines, mostly run-by-run stories. The rules:
   fails): every `docs/` path named anywhere exists, every `§` pointer lands on a real heading,
   every side doc is in the §3 index, the guide's sections are present and in order. Run it after
   moving, renaming or renumbering anything.
-- **The clean-up is the "Guide review" routine** — a fresh session on the 15th
-  and 30th (28th in February — a second routine), 7:50am Sydney, push to her; it follows
-  `.claude/skills/guide-review/SKILL.md` (fix what has one answer, ask her
-  about her decisions and anything untraceable). She can also ask for it any time.
+- **The clean-up is the "Guide review" routine** — on the 15th and 30th (28th in February — a second routine),
+  7:50am Sydney, pushed to `main`, her report at the end. Two parts, each a cold session: the editor rewrites
+  (`.claude/skills/guide-review-editor/`), then the housekeeper checks and reports
+  (`.claude/skills/guide-review-housekeeper/`); both follow `.claude/skills/guide-review/SKILL.md` (fix what has
+  one answer, ask her about her decisions and anything untraceable). She can also ask for it any time.
 - **Anything derivable from the repo is printed by a script, not typed here**
   (`scraper/venue_status.js` replaced the venue table).
 - **Put the trigger next to the code, not in an index here.** A comment above the
@@ -69,8 +70,8 @@ case ("Morgan Tarot: sold out beats Add to cart"). A comment can be overlooked;
 a failing test cannot.
 
 **Test anchors.** The harness finds its place in the JSX by comment text
-(`// URGENCY COLOURS, ONE SET PER THEME`, `// WHAT A QUARANTINE REMEMBERS.`; §4
-"Tests"). Before removing or rewording a comment, grep `scraper/fixtures/` for
+(`// URGENCY COLOURS, ONE SET PER THEME`, `// WHAT A QUARANTINE REMEMBERS.`; `docs/testing.md`,
+"How the suites are built"). Before removing or rewording a comment, grep `scraper/fixtures/` for
 it. Keep an anchor as a short label, or move the test to a new anchor in the
 same change — never leave a test pointing at nothing.
 
@@ -83,6 +84,6 @@ change in behaviour.
 
 **Exceptions:** the numbering rule beside `APP_VERSION` stays, as short as
 possible. The SHARED block's comments come from the scraper (`dates.js`,
-`compress_prompt.md`, `compress.js`, `sweep_prototype.js`'s `VENUES`): apply
+`compress_prompt.md`, `compress.js`, the venue register `venues/register.js`): apply
 these rules there, run `node build/app_join.js`, then the full `npm test`.
 Never edit the block directly (§5.4).

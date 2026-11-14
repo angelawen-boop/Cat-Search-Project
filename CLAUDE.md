@@ -2,22 +2,20 @@
 
 **Repo:** `angelawen-boop/Cat-Search-Project`
 
-She collects art-exhibition catalogues. They go out of print fast once a show
-closes, then resale prices climb. **Art Watch** tracks temporary exhibitions at 28
-museums and galleries and shows how close each catalogue is to its likely
-out-of-print window, so she can buy before it is too late.
+She collects art-exhibition catalogues. They go out of print fast once a show closes, then resale prices climb. **Art Watch**
+tracks temporary exhibitions at 28 museums and galleries and shows how close each catalogue is to its likely out-of-print
+window, so she can buy before it is too late.
 
 Two components, and they are **coupled**:
 
-1. **The app** — `Cat_Watch.jsx`, a React page published on her Claude account. It is edited in its parts under `app/`
-   (by feature: foundations, connections, saving, logs, ledger, periods, import, shop_finder, lookup, screens — each
-   part opening with a one-line note; `grep -rn` under `app/` finds a piece), then `node build/app_join.js` writes
-   `Cat_Watch.jsx`; never edit `Cat_Watch.jsx` by hand.
+1. **The app** — `Cat_Watch.jsx`, a React page published on her Claude account. It is edited in its parts under `app/` (by
+   feature: foundations, connections, saving, logs, ledger, periods, import, shop_finder, lookup, screens — each part opening
+   with a one-line note; `grep -rn` under `app/` finds a piece), then `node build/app_join.js` writes `Cat_Watch.jsx`; never
+   edit `Cat_Watch.jsx` by hand.
 2. **The scraper** — `scraper/`, which produces the CSV the app eats.
 
-They agree on the pro forma CSV columns (§5.2). If the scraper changes what it
-writes, the app has to agree in the same breath. That coupling — not tidiness —
-is why they live in one repo, on one branch.
+They agree on the pro forma CSV columns (§5.2). If the scraper changes what it writes, the app has to agree in the same
+breath. That coupling — not tidiness — is why they live in one repo, on one branch.
 
 ---
 
@@ -28,40 +26,42 @@ is why they live in one repo, on one branch.
 - **Plain English, ELI5.**
 - **Short and concise.**
 - **Examples are abstracted, never specifics (her decision).** To illustrate a point, describe the kind of case ("the store
-  holds a web address where your chosen name should be"; "one venue's record is really another venue's"), never the
-  venue names, addresses or counts. Specifics only when she asks for them.
-- **Reporting style — after a task is completed (her decision):** tell her what matters, in plain words, short — what
-  got done / what changed, what is left. Never a re-itemization, no counts, no method, no file paths.
-- **Reporting style — when a matter is being investigated (her decision):** tell her what matters, short, use
-  abstraction — what's the cause, what's the fix. No code, no file paths, no weeds.
+  holds a web address where your chosen name should be"; "one venue's record is really another venue's"), never the venue
+  names, addresses or counts. Specifics only when she asks for them.
+- **Reporting style — after a task is completed (her decision):** tell her what matters, in plain words, short — what got
+  done / what changed, what is left. Never a re-itemization, no counts, no method, no file paths.
+- **Reporting style — when a matter is being investigated (her decision):** tell her what matters, short, use abstraction —
+  what's the cause, what's the fix. No code, no file paths, no weeds.
 - **Work quietly (her decision):** no interim output. Report only at the end, or when you must stop to ask her a question.
 - **Destructive actions need a confirmed backup or an explicit yes.**
-- **Publishing — her go-ahead is the safety check.** When she says to publish ("u can publish", "publish",
-  "go ahead and publish"), publish at once, even if a screenshot shows the page open or mid-import — she has
-  judged it safe. Do not ask again or warn about unsaved work. Ask before publishing only when she has NOT said
-  to publish this change in this conversation (republishing in the background can lose unsaved work).
+- **Publishing — her go-ahead is the safety check.** When she says to publish ("u can publish", "publish", "go ahead and
+  publish"), publish at once, even if a screenshot shows the page open or mid-import — she has judged it safe. Do not ask
+  again or warn about unsaved work. Ask before publishing only when she has NOT said to publish this change in this
+  conversation (republishing in the background can lose unsaved work).
 - **Her report and output first** - update the guide only after you have responded to the rest of her request.
 - **Applying to the scraper and scraper-related work only — test conservatively.** Every page a sweep fetches counts towards the venue's rate limit. Use saved pages first, with no network. Never a blanket re-sweep.
 - **For work not relating to the scraper and which uses Parallel's features — testing is always against the live internet**, ie. pages fetched live through Parallel, never saved or invented pages. How, and what never to re-fetch: `docs/testing.md`.
 - **Raise a past decision by describing the context, not by reference to a date.** She keeps no log and a date tells her nothing. Say it as: "Because of X, you decided Y. Would you like to reconsider? / If this changes your decision, we can do Z." Call it her decision or her judgement call — never a "ruling" or a "rule".
 - **Never end a response fishing for a go** (her decision).
 - **A question gets an answer first.** "Talk to me about X" means discuss; nothing is built until she says.
-- **Any question or challenge in her message means answer only (her decision).** If any part of a message
-  holds a question or a challenge, do not write, edit or touch any code — answer the questions. A "yes" or
-  "ok" elsewhere in the same message is not a go-ahead. **This rule never stops reading, searching or checking
-  logs:** investigate first, then answer.
-- **No instruction lines on any page** — no how-to sentences, no text inside a box, no line telling her
-  what she already knows (her biggest peeve).
+- **Any question or challenge in her message means answer only (her decision).** If any part of a message holds a question or
+  a challenge, do not write, edit or touch any code — answer the questions. A "yes" or "ok" elsewhere in the same message is
+  not a go-ahead. **This rule never stops reading, searching or checking logs:** investigate first, then answer.
+- **No instruction lines on any page** — no how-to sentences, no text inside a box, no line telling her what she already
+  knows (her biggest peeve).
 - **Respect UI simplicity and specific UI instructions.** Build what she named, nothing added. "Add a copy icon" = an icon, not an icon plus the word "Copy". "Copy this line for case X and Y" = the same line with only the words naming X and Y swapped, never a new, longer line.
-- **DO NOT SPECULATE IF A LOG OR DIAGNOSTICS EXIST THAT PROVIDE THE ANSWER (her decision).** Read the log first (§1,
-  "The logs"), then answer. Never write "the log would settle it" or "her next lookup confirms" when the log can be
-  read now. Reading a log is not touching code, so the "answer only" rule never stops it. **If reviewing the logs cannot
-  settle it and the answer is only a guess, say so clearly.**
-- **Never hide a hard-coded answer.** If a fix writes the answer into the app (an address, a value, a
-  venue rule) instead of making the feature work it out, say so plainly and up front, never as
-  "fixed". If the app could reach the answer itself, tell her how, and discuss it with her before
-  building either way.
-- **Parallel:** a session's own calls use the free "Parallel Search". Her keyed "Parallel Search Key" needs her yes — ask up front, with the reason, when the work will clearly need it. Once she has said yes, switch to the key as soon as the free tier refuses - no need to hang the task hoping for the free tier to resume access. Later in the same session, after time has passed, try the free tier again first. A sub-agent cannot spend the key (permissions block it), so the main session does keyed fetches; a large reply is saved to a file — extract it by script, never retype.
+- **DO NOT SPECULATE IF A LOG OR DIAGNOSTICS EXIST THAT PROVIDE THE ANSWER (her decision).** Read the log first (§1, "The
+  logs"), then answer. Never write "the log would settle it" or "her next lookup confirms" when the log can be read now.
+  Reading a log is not touching code, so the "answer only" rule never stops it. **If reviewing the logs cannot settle it and
+  the answer is only a guess, say so clearly.**
+- **Never hide a hard-coded answer.** If a fix writes the answer into the app (an address, a value, a venue rule) instead of
+  making the feature work it out, say so plainly and up front, never as "fixed". If the app could reach the answer itself,
+  tell her how, and discuss it with her before building either way.
+- **Parallel:** a session's own calls use the free "Parallel Search". Her keyed "Parallel Search Key" needs her yes — ask up
+  front, with the reason, when the work will clearly need it. Once she has said yes, switch to the key as soon as the free
+  tier refuses - no need to hang the task hoping for the free tier to resume access. Later in the same session, after time
+  has passed, try the free tier again first. A sub-agent cannot spend the key (permissions block it), so the main session
+  does keyed fetches; a large reply is saved to a file — extract it by script, never retype.
 - **`/orch` runs only when she types it** (her decision). No session routes work through it, or follows its steps, unless she has typed `/orch` in that session.
 - **`/close` ends a session** (her design): guide update, clear up, a fixed four-part summary. Never archives the session. Runs only when she types it.
   **A fix she has had published and then closes is closed (her decision):** never record it as an open item or a
@@ -83,8 +83,8 @@ Every question about what the app, Claude or a sweep did has a record. Read it; 
 | **Sweep run** — `scraper/output/run_*/` | `log_<stamp>.txt` per invocation (refusals, reply labels, timeouts), one CSV per venue | Read the files; `node scraper/venue_status.js`, `node scraper/qc.js` |
 
 **Reading the lookup log — three steps** (`<dir>` is a folder in the scratchpad):
-1. ArtifactData `list`, collection `lookups`, `out_dir` `<dir>`: the index, one file per record (action, time, title,
-   venue, version). Find the record by its title and time.
+1. ArtifactData `list`, collection `lookups`, `out_dir` `<dir>`: the index, one file per record (action, time, title, venue,
+   version). Find the record by its title and time.
 2. ArtifactData `list`, collection `lookups/<id>/pieces`, the same `out_dir`: that record's contents.
 3. `node build/lookup_log.js <dir> <id>`: the whole lookup written out — every call, Claude's prompt and answer, the card
    before and after.
@@ -98,30 +98,27 @@ tool: load it with ToolSearch. Reading is safe; never write to her store without
 
 > **Does the task have exactly one correct answer, derivable from the inputs?**
 
-- **One correct answer → code.** Merging files, choosing which venues still need
-  running, validating a date, resolving a link, rebuilding a lost cache. Never
-  prose rules a session re-derives — that is how a CSV gets mangled, invisibly.
-- **Many acceptable answers, or judgement about the outside world → Claude.**
-  Compressing curatorial prose into a six-word teaser.
-- **Even then, Claude touches strings, never files.** A script owns the CSV and
-  asks for a value; Claude never sees a comma or a column.
-- **Imports — four buckets** (her decision): a venue the app knows → code; a never-seen venue by Links or Pages →
-  code for now (her option: flip it to Claude if the fixes never end); someone else's page → Claude; Paste → Claude
-  for title and dates, code checking both are in the text. The reasoning: `docs/add_by_link.md`, "Code or Claude —
-  the four buckets".
+- **One correct answer → code.** Merging files, choosing which venues still need running, validating a date, resolving a
+  link, rebuilding a lost cache. Never prose rules a session re-derives — that is how a CSV gets mangled, invisibly.
+- **Many acceptable answers, or judgement about the outside world → Claude.** Compressing curatorial prose into a six-word
+  teaser.
+- **Even then, Claude touches strings, never files.** A script owns the CSV and asks for a value; Claude never sees a comma
+  or a column.
+- **Imports — four buckets** (her decision): a venue the app knows → code; a never-seen venue by Links or Pages → code for
+  now (her option: flip it to Claude if the fixes never end); someone else's page → Claude; Paste → Claude for title and
+  dates, code checking both are in the text. The reasoning: `docs/add_by_link.md`, "Code or Claude — the four buckets".
 
 ### Procedures — in side docs
 
 `main` is the trunk and the source of truth for app, scraper and this guide; work there.
 
-- **Editing this guide or a side doc, and the rules for code comments and decision history:**
-  `docs/doc_rules.md`. **Read it before editing this guide or any code comment.**
-- **Branches, and holding a push for another session:** `docs/branches.md`. **Read it before
-  creating, merging or pushing a branch.**
-- **Publishing the app** (version numbers, building, the publish steps): `docs/publishing.md`.
-  **Read it before publishing.**
-- **Tests** (which group to run for the work in hand, where a failure is recorded, the live proof pages,
-  test anchors, JSX validation): `docs/testing.md`. **Read it before running or writing tests.**
+- **Editing this guide or a side doc, and the rules for code comments and decision history:** `docs/doc_rules.md`. **Read it
+  before editing this guide or any code comment.**
+- **Branches, and holding a push for another session:** `docs/branches.md`. **Read it before creating, merging or pushing a
+  branch.**
+- **Publishing the app** (version numbers, building, the publish steps): `docs/publishing.md`. **Read it before publishing.**
+- **Tests** (which group to run for the work in hand, where a failure is recorded, the live proof pages, test anchors, JSX
+  validation): `docs/testing.md`. **Read it before running or writing tests.**
 
 ---
 
@@ -135,47 +132,35 @@ tool: load it with ToolSearch. Reading is safe; never write to her store without
 node scraper/venue_status.js
 ```
 
-Per venue: rows from the last run that brought any, the last run that held the
-venue at all, which machine sweeps it, and — read from the marker rows — why the
-last attempt brought nothing. When the two runs differ, that venue has stopped
-answering. **Every venue has returned rows at least once.**
-**`ashmolean` is no longer swept** — added by link only (her decision; `docs/venues.md`).
+Per venue: rows from the last run that brought any, the last run that held the venue at all, which machine sweeps it, and —
+read from the marker rows — why the last attempt brought nothing. When the two runs differ, that venue has stopped answering.
+**Every venue has returned rows at least once.** **`ashmolean` is no longer swept** — added by link only (her decision;
+`docs/venues.md`).
 
-**Access and pace — settled for the four Cloudflare venues.** A blank browser
-profile is refused; a visible Chrome on a profile she has browsed in gets in
-(`probe_headed.js`). Firing pages back to back gets challenged, and the
-judgement follows to the next Cloudflare venue. Paced sweeps from her laptop in
-mode B have been clean at all four (`docs/sweep_operation.md`). Evidence: `docs/venues.md`,
-"The headed venues".
+**Access and pace — settled for the four Cloudflare venues:** paced sweeps from her laptop, in a visible Chrome on a profile
+she has browsed in, are clean at all four (`docs/venues.md`, "The headed venues"; `docs/sweep_operation.md`).
 
 #### Her decisions, per venue — `docs/venues.md`
 
-What is excluded or kept at each venue, her counts, and the Capodimonte arrangement are in
-`docs/venues.md`, "Her decisions, per venue". **Read it before touching a venue's recipe, rows or
-counts** — her counts are always what should reach the app.
+What is excluded or kept at each venue, her counts, and the Capodimonte arrangement are in `docs/venues.md`, "Her decisions,
+per venue". **Read it before touching a venue's recipe, rows or counts** — her counts are always what should reach the app.
 
-**All 28 have a recipe**, blocked ones included: a refusal costs half a second,
-leaves marker rows on the approval pile, and turns every sweep into a standing
-monitor. **Blocks are not permanent facts** — venues have gone down and come
-back within days.
+**All 28 have a recipe**, blocked ones included; blocks come and go (`docs/scraper.md` §14).
 
-**The original venues were reviewed by her against the live site and re-swept**
-— `docs/scraper-verification-2026-09-12.md`. Read it before touching a venue listed
-there. The nine venues added since were checked against her counts at intake.
+**The original venues were reviewed by her against the live site and re-swept** — `docs/scraper-verification-2026-09-12.md`.
+Read it before touching a venue listed there. The nine venues added since were checked against her counts at intake.
 
-**The last import is 15 Oct** (`stitch_20261015_0920`, 536 rows): the container run passed her test, her home sweep
-(met, artic, mad only — she checks the headed four by eye and sweeps them only for new shows) was QC'd, both stitched and
-compressed as swept. 5 Oct was a test, not imported (`sweep_diff.js` works out each change's cause; the skill asks only
-for the UNEXPLAINED pile). The faults found are fixed in code (§2.2.2).
+**The last import is 15 Oct** (`stitch_20261015_0920`, 536 rows): the container run passed her test, her home sweep (met,
+artic, mad only — she checks the headed four by eye and sweeps them only for new shows) was QC'd, both stitched and
+compressed as swept. 5 Oct was a test, not imported (`sweep_diff.js` works out each change's cause; the skill asks only for
+the UNEXPLAINED pile). The faults found are fixed in code (§2.2.2).
 
-No row carries a credit line, star rating, ticket price, funder list, opening
-hours, breadcrumb or cookie notice. Empty summaries: four Rijksmuseum rows whose
-pages return 404, plus occasional page timeouts — which say so on the row.
+No row carries a credit line, star rating, ticket price, funder list, opening hours, breadcrumb or cookie notice. Empty
+summaries: four Rijksmuseum rows whose pages return 404, plus occasional page timeouts — which say so on the row.
 
 ### 2.2 Open work
 
-Everything not listed here is finished. Do not reopen a closed item without a
-new fact.
+Everything not listed here is finished. Do not reopen a closed item without a new fact.
 
 #### 2.2.1 The restructure — under way (her decision)
 
@@ -186,16 +171,14 @@ refreshed and filed at each publish: https://claude.ai/artifact/RmSC86pu1rkBxsZD
 
 #### 2.2.2 Fixes not yet checked in the cases they were written for
 
-**The 15 Oct sweep's fixes — in code for the next sweep; this month's runs were imported as the
-scraper wrote them (her decision: a fix never changes a run already swept).** Her next sweep checks
-each: the Met's excluded series (P.S. Art, Scholastic, commissions, Burdick, crèche) stay out, now
-checked on the name the show's page gives; no credit lines at Met, Art Institute, MAD, Rijksmuseum
-(the Rijksmuseum rule has no saved page to test on); no "page couldn't be read" card for an empty
-Art Institute page 2; Brera keeps bold words mid-sentence and stops before its info block; Borghese
-titles arrive in ordinary capitals with an em dash between name and subtitle — one round of title
-Change cards against her hand-corrected 7; Acquavella's "– Acquavella Palm Beach" leaves the title
-(she accepts that Change card); Tate Britain's listing page 2 is read; the report names every
-refused or empty page. Expect ~45 one-time compression re-checks.
+**The 15 Oct sweep's fixes — in code for the next sweep; this month's runs were imported as the scraper wrote them (her
+decision: a fix never changes a run already swept).** Her next sweep checks each: the Met's excluded series (P.S. Art,
+Scholastic, commissions, Burdick, crèche) stay out, now checked on the name the show's page gives; no credit lines at Met,
+Art Institute, MAD, Rijksmuseum (the Rijksmuseum rule has no saved page to test on); no "page couldn't be read" card for an
+empty Art Institute page 2; Brera keeps bold words mid-sentence and stops before its info block; Borghese titles arrive in
+ordinary capitals with an em dash between name and subtitle — one round of title Change cards against her hand-corrected 7;
+Acquavella's "– Acquavella Palm Beach" leaves the title (she accepts that Change card); Tate Britain's listing page 2 is
+read; the report names every refused or empty page. Expect ~45 one-time compression re-checks.
 
 #### 2.2.3 Catalogue lookup generally
 
@@ -207,28 +190,25 @@ build with `parked` Stage 1/1b). Today the first read names one book and throws 
 Hemessen fix), and other versions are listed only after a book passes — *Victorian Radicals* lost both its books. Full record:
 `docs/catalogue_versions.md`, "Search: every catalogue of the exhibition" — read it before any search work.
 
-**Done — the catalogue blocks, live at 47.1** (her call: done unless she finds bugs): her order, the first book picked, one block per
-book, a shop line true for whichever book she picks, Re-check for the picked book (`docs/catalogue_versions.md`).
+**Done — the catalogue blocks, live at 47.1** (her call: done unless she finds bugs): her order, the first book picked, one block
+per book, a shop line true for the picked book (`docs/catalogue_versions.md`).
 
 **PAUSED — no lookup patches until the redesign is agreed** (her decision: past the third-patch limit — `lookupCatalogue` changed 10
 times in three days). The redesign (find → choose → tell, every version kept, her starting-pick rules) and its nine agreed cases are in
 `docs/catalogue_versions.md`; every later change is checked against them. Awaiting her approval to build; no code before. She is
 noting issues as she uses it, for a later debugging session.
-- **OPEN — a link venue is searched under its short card name** ("Detroit"), not the long name; any search work fixes it
-  (`docs/catalogue_versions.md`, "Fault to fix").
+- **A link venue searched under its short card name ("Detroit")** — fixed on `main` by restructure 4A (every venue searched
+  by its full name); reaches her app at her next publish.
 - **OPEN — three cases any search debugging must fix** (her decision; `docs/catalogue_versions.md`, cases 10–12; case 13, Beato
   Angelico, is her report, not yet agreed): Munich's CEDON shop sells German and English editions on ONE page with a language choice
   (*Venezia 500*, *Jacobus Vrel*), and junk text is written as the publisher (Vrel, Dresden's *Paradise on Earth*, Correggio).
 - **Shops tested by her in the app:** `brit`, `morgan`, `mad`, `orsay`, `louvre`, `moma`. `uffizi`'s shop sells no books — settled.
-- **MoMA: a book page whose status line says "In Stock" is for sale** (56.6, a MoMA-only rule; *Labrouste* reads in the
-  museum shop live). `docs/catalogue_versions.md`, "MoMA *Brancusi*".
 - **OPEN — the publisher step's verdict is not stable.** *Metamorphoses* (Hannibal), two fresh lookups, same code: "Publisher's
   section", then "Publisher" (right). Cause unproven (a different candidate page, the page empty — `pageIsShell`, or the read judging a
   page differently); read its lookup-log record (gone once 50 newer lookups have run).
 - **OPEN — 40.10's fixes, unchecked in the app.** Read the lookup log for her lookups since: *Hammershøi* (Jacquemart-André) finds *Hammershøi : le
   maître de la peinture danoise*, ISBN 978-9462302495; *Watteau* no longer reads the shop as blocked; *Canaletto - Guardi*'s English
   line names the publisher's page; a MoMA lookup still reads its shop as blocked under the whole-page test.
-- **Diagnose a lookup from its record, never a pasted panel** (`docs/app.md` §1, "The lookup log").
 - **OPEN — 42.6–42.9 fixes (Hubert Robert at NGA and the Louvre, Vasari) — read the lookup log for her re-runs:** a catalogue found with no title or
   ISBN goes on to the facts round, a reply holding two answers takes Claude's last, and the English-edition and versions rebuild
   (`docs/app.md` §1, "The route").
@@ -239,18 +219,17 @@ noting issues as she uses it, for a later debugging session.
   "Confirm save?" (49.1) are live; her use confirms. **OPEN:** a slight stickiness left after "Save now"
   — she watches it; if it persists, run Save's two store reads at once (her decision). Whether to clear old Cloud Saves — `docs/scalability.md`; agree with her before building.
 
-- **Catalogue-search rebuild: published on the test page (41.1).** Open: her live
-  check of Hammershøi — the edition read now sees every result, so the library
-  record (978-0847899289) that came tenth should give the English edition (WL-060).
-- **Then:** the comment tidy for the rest of `scraper/`, and tests for two scraper
-  decisions — MoMA's visitor notices dropped; the Wallace keeps displays and trails.
+- **Catalogue-search rebuild: published on the test page (41.1).** Open: her live check of Hammershøi — the edition read now
+  sees every result, so the library record (978-0847899289) that came tenth should give the English edition (WL-060).
+- **Then:** the comment tidy for the rest of `scraper/`, and tests for two scraper decisions — MoMA's visitor notices
+  dropped; the Wallace keeps displays and trails.
 
 #### 2.2.7 "Probably not for you" — published at 46; her next monthly import checks it
 
 New shows in a topic she always quarantines are labelled by compression and set aside, pre-set to Never add
 (`docs/compression.md`, "Probably not for you").
-- **OPEN — her next monthly import:** are too many wanted shows pre-set to Never add (contemporary the likeliest), and
-  does any always-quarantined show slip through? Narrow a group only if she says.
+- **OPEN — her next monthly import:** are too many wanted shows pre-set to Never add (contemporary the likeliest), and does
+  any always-quarantined show slip through? Narrow a group only if she says.
 
 #### 2.2.8 Theme Shelf — prototype 3 published, her review
 
@@ -259,15 +238,14 @@ design and what is unproven: `docs/themes.md`. Read it before any Themes work.
 
 #### 2.2.9 Period sort — merged into her app at 51
 
-Every exhibition in art-period order (dividers, scrubber, theme chips; Label, Relabel, Recently labelled). Design, decisions and
-every rule: `docs/periods.md` — read it before any Period work. Her load of the test page's ledger into 51 confirms. Her view, kept
-for later: both Misc bins should ultimately go. Do not regroup, beside Relabel (56.3; `docs/periods.md`). Postwar Europe is told to Claude as a time-and-place period (56.4). Postwar Europe sits just before Abstract Expressionism, and
-Postwar America's description names assemblage, collage and film (56.7; Bruce Conner had gone to Pop).
+Every exhibition in art-period order (dividers, scrubber, theme chips; Label, Relabel, Recently labelled). Design, decisions,
+her views kept for later and every rule: `docs/periods.md` — read it before any Period work. Her load of the test page's
+ledger into 51 confirms.
 
 #### 2.2.10 Published since 51 — her next links, lookups and use confirm
 
-What each version changed: `docs/publishing.md`; the behaviours decided since (Buy next, Occasional chips, shared date
-rules, Cini, Prado, Correr): `docs/app.md`, `docs/add_by_link.md`.
+What each version changed: `docs/publishing.md`; the behaviours decided since (Buy next, Occasional chips, shared date rules,
+Cini, Prado, Correr): `docs/app.md`, `docs/add_by_link.md`.
 - **Live at 55, her use confirms — Digital catalogue** (her link to a PDF or online catalogue on a searched card;
   `docs/app.md`). **Live at 54.3 — the shop screen's Add** (her own shop link; `docs/add_by_link.md`).
 
@@ -277,11 +255,8 @@ rules, Cini, Prado, Correr): `docs/app.md`, `docs/add_by_link.md`.
   since 57.2 (her decision; `docs/app.md` §1, "Which model"). Her verdict: they try harder, but extra detail is not richness —
   some now say things no one would go to a show for. Her test: would you go to see the exhibition on that byline? Her case
   (Louisiana): *Louise Bourgeois* → "Bourgeois's Cells, begun when she was almost eighty." Agree any change with her first.
-- **Live at 58, her next import confirms — one request to Claude for the whole Links, Pages or Paste import** (her
-  decision), with the sweep's own opening, full current examples and rules; only pages refused or missing are asked again
-  (`docs/add_by_link.md`, step 4). **Never the title reworded**, one shared rule and check for every way in, the sweep
-  included (`docs/compression.md`, "Enforcement"). **A shop written into a venue's entry is never asked on the shop
-  screen** (Basel; AL-092).
+- **Live at 58, her next import confirms** — one request to Claude for the whole Links, Pages or Paste import; never the
+  title reworded; a written-in shop never asked on the shop screen (`docs/publishing.md`, "What is live now").
 - **OPEN — Belvedere stays German** (lookup log L1792752998011063a): the English search found `belvedere.at/en/museum-shop`, whose
   shop link points to the German `belvedere.at/shop`, and the app followed it; the English-version step tried only English FRONT
   pages, never the English version of the shop page. Its English shop's address is not known. The shop check passed it because a
@@ -313,21 +288,20 @@ rules, Cini, Prado, Correr): `docs/app.md`, `docs/add_by_link.md`.
 
 A session records each failing suite here and does not investigate it (`docs/testing.md`).
 
-**OPEN, watching — `cloud_app.js` and `cloud_two_copies.js` failed when the test machine was crowded**:
-checks waiting 8 seconds for an automatic save (CA-002, CA-005d, CA-006, TC-001) gave up. The cloud suites
-now run alone (her decision; the 8 seconds kept). If one still fails when run alone, record it here — that
-is a real fault, not crowding.
+**OPEN, watching — `cloud_app.js` and `cloud_two_copies.js` failed when the test machine was crowded**: checks waiting 8
+seconds for an automatic save (CA-002, CA-005d, CA-006, TC-001) gave up. The cloud suites now run alone (her decision; the 8
+seconds kept). If one still fails when run alone, record it here — that is a real fault, not crowding.
 
-**OPEN — the scraper's unit group (`node --test scraper/date.test.js …`, `pacing.test.js` in it) freezes now and then
-when other suites run beside it**; three times so far, each time passing in seconds alone. It recurred, so it needs
-investigation. The runner now stops it and re-runs it alone (`docs/testing.md`), so it costs about a minute, never her wait.
+**OPEN — the scraper's unit group (`node --test scraper/date.test.js …`, `pacing.test.js` in it) freezes now and then when
+other suites run beside it**; three times so far, each time passing in seconds alone. It recurred, so it needs investigation.
+The runner now stops it and re-runs it alone (`docs/testing.md`), so it costs about a minute, never her wait.
 
 ---
 
 ## 3. Where the rest lives
 
-Every side doc is one step from this guide. A doc may name another as a "see also", but nothing
-a session needs lives only behind such a link. Read the one for the work in hand.
+Every side doc is one step from this guide. A doc may name another as a "see also", but nothing a session needs lives only
+behind such a link. Read the one for the work in hand.
 
 **App** — the page, how it saves, and how it scales
 
@@ -336,6 +310,7 @@ a session needs lives only behind such a link. Read the one for the work in hand
 | `docs/app.md` | The app's evidence: catalogue lookup, shop addresses, saving, intake bands, quarantine, sweep log, seed, the cloud ledger's screen | Changing anything in the app |
 | `docs/cloud_storage.md` | The cloud ledger: what the page's store holds, Save and the safety copies, the opening switch, the safety proofs, the read-only lock for a second copy | Changing anything about saving to the page's own store |
 | `docs/store_backup_2026-09-21/` | A read-out of the page's store, as insurance | Only if the store is lost AND `sweep_log.js` cannot rebuild it |
+| `docs/store_backup_2026-11-06/` | Her app's `venues/occasional` record before restructure 4A, as insurance | Only if the one-time clear of old venue records goes wrong |
 | `docs/ledger_2026-09-24/` | Her real ledger as exported on 24 Sep, kept as test data for the cloud-store and scalability work — **never load it into her published app** | Testing saving or sizing against a real ledger |
 | `docs/scalability.md` | What grows as the ledger grows, measured; parked work for when she acts | The list feels slow, the store fills, or she raises the size |
 
@@ -400,8 +375,7 @@ a session needs lives only behind such a link. Read the one for the work in hand
 | `docs/scraper-verification-2026-09-12.md` | Her venue-by-venue review of the original venues | Before touching a reviewed venue |
 | `docs/import-repair-320.md` | How her first big import files (the 320-card import and the new-venues import) were repaired and built | Touching those files, or explaining their dates |
 
-Git holds the full text of everything compressed out of this guide —
-`git log -- CLAUDE.md`.
+Git holds the full text of everything compressed out of this guide — `git log -- CLAUDE.md`.
 
 ---
 
@@ -411,9 +385,8 @@ Git holds the full text of everything compressed out of this guide —
 
 Each line came from a real failure. Details are in git history and `docs/`.
 
-- **Tests can pass and prove nothing.** Check the exit code and grep the output
-  for the new test's own name; a suite can be skipped silently (code after
-  `process.exit`, a missing harness, an early `return` — use `await`).
+- **Tests can pass and prove nothing.** Check the exit code and grep the output for the new test's own name; a suite can be
+  skipped silently (code after `process.exit`, a missing harness, an early `return` — use `await`).
 - **A command chain that pushes must stop on a failed test** — `grep` of the test output succeeds either way; gate the push on the test's own exit code (`R=$?; [ $R = 0 ] && git push`).
 - **Render the page** (`page_renders.js`). `tsc`, unit tests and string greps can all pass on a blank page.
 - **Test the real thing.** A fixture must serve the address the recipe asks for now, and must run the step that writes the output. Name a test for what the code does.
@@ -428,85 +401,79 @@ Each line came from a real failure. Details are in git history and `docs/`.
 - **Run the whole chain end to end** (stitch → compress → app). Match on the key the data carries (URL, not title). A repair is a flag, not a rule that always wins. Inserting a check into a block can split it; the unit suite has no browser.
 - **Where the listing labels a thing, filter on the listing** rather than opening every page.
 - **When a tool is swapped, the route must not change with it.** A better source is not a complete one; open a candidate before filing it; go to an address you can build rather than tuning searches. Change one thing at a time.
-- **Scraper mechanics:** never `networkidle`; wrap `route.fulfill`/`abort`; a 404 is not a loaded page; retry a detail page once. `normalizeUrl` lowercases scheme and host only; resolve hrefs, never join by hand; keep every link to an address. Dates: never build strings by hand; every month spelling (`Sept.`, Italian `set`); normalise dashes; the year can sit on the closing side only. Listings: read every page and stop at the lookback floor; a load-more click must not follow its href. Titles: noise stripping is case-exact; never strip a location that tells two shows apart. `resolveChromium()` needs both halves. A blanket find-and-replace can eat definitions you just added.
+- **Scraper mechanics:** never `networkidle`; wrap `route.fulfill`/`abort`; a 404 is not a loaded page; retry a detail page
+  once. `normalizeUrl` lowercases scheme and host only; resolve hrefs, never join by hand; keep every link to an address.
+  Dates: never build strings by hand; every month spelling (`Sept.`, Italian `set`); normalise dashes; the year can sit on
+  the closing side only. Listings: read every page and stop at the lookback floor; a load-more click must not follow its
+  href. Titles: noise stripping is case-exact; never strip a location that tells two shows apart. `resolveChromium()` needs
+  both halves. A blanket find-and-replace can eat definitions you just added.
 - **A container dry run with `--home` keeps the network bridge on.** Stub every venue it names.
 - **One owner per fact.** Two steps looking for the same thing contradict each other on the card (Canaletto): one step finds it, code decides it, one sentence says it.
 - **An excerpt is what matches the query, not the page.** Short excerpts are not an empty page; judge emptiness on the whole page (Watteau).
 - **Subagents:** send only the rows and fields the question needs. Wording is not a control — remove the tool or check the answer.
-- **A venue's fault gets that venue's rule, not a shared one (her decision).** Past pages passing proves nothing
-  about future ones; shared rules pile up for every later import to wrestle with. Build a shared rule only when she asks.
-- **Build only what she named, nothing beside it** — asked for a Cini chip, a session also made Claude re-decide the
-  venue on every link, which split one series three ways. A side effect you foresee goes to her as a sentence, not code.
+- **A venue's fault gets that venue's rule, not a shared one (her decision).** Past pages passing proves nothing about future
+  ones; shared rules pile up for every later import to wrestle with. Build a shared rule only when she asks.
+- **Build only what she named, nothing beside it** — asked for a Cini chip, a session also made Claude re-decide the venue on
+  every link, which split one series three ways. A side effect you foresee goes to her as a sentence, not code.
 - **A general rule ships only if no page gets worse.** Try it against every live page in hand, old reader beside new; a rule that fixes ten and breaks one is a venue rule, not a general one.
-- **Before resetting stored data, trace every path that reads it** (Yale's shop, cleared, left every Yale card
-  shopless until a link was read). **Copy a fixture's reply shape from a live reply, never assume it**, and search
-  for every copy of a rule before calling it fixed (the lookup kept its own "books need prices" check).
+- **Before resetting stored data, trace every path that reads it** (Yale's shop, cleared, left every Yale card shopless until
+  a link was read). **Copy a fixture's reply shape from a live reply, never assume it**, and search for every copy of a rule
+  before calling it fixed (the lookup kept its own "books need prices" check).
 - **A search is proved only by a page for that book alone** — a page that ignores the words (a home page, a fixed listing) shows the book too (Berlin, CEDON). Run a venue's whole chain live, not one step: Berlin's cut-short titles showed only then.
-- **A page that extends Art Watch copies its controls one for one** — placement, wording, layout, pop-ups —
-  not just its colours; render both side by side before showing her (Theme Shelf drew its own look twice).
+- **A page that extends Art Watch copies its controls one for one** — placement, wording, layout, pop-ups — not just its
+  colours; render both side by side before showing her (Theme Shelf drew its own look twice).
 - **Never say "it works" before the check that proves it has run** (Wallraf's title fix, said to work before Claude was asked on it). Never guess what she would or would not add: the test pages stand for faults any museum can show.
 - **No test run is left unwatched — hard-wired, her decision** (`scraper/test_watch.js`, the Bash hook
-  `.claude/hooks/test-guard.js`): tests only through `scraper/run_tests.js` (`--only <name>` for one suite); one run
-  at a time; a run of a minute or more starts only after the session has written her its "Expected test run: …" line,
-  then nothing until it ends; a suite well past its usual time is stopped and re-run alone; a live check stops after
-  six minutes without an answer. The hook's refusal says what to do — do it, never work round it.
-- **A test link goes to her only after it is read live, end to end, the way she will run it** (Louisiana's page never
-  read; Parallel's 202). **A check's right answer must test what the design requires** — Belvedere's "no books
-  section" passed in German under the English-shop design; the gallery path's right answers were set by its own
-  "widest list" rule, so every gallery passed while Karsten Greve's Catalogues tab was passed over.
-- **Every sentence shown on screen goes to her word for word before it is built, and nothing is called her
-  design or her wording that she did not give** — "Shop found, but not its exhibition catalogues section — its
-  publications" and a publications-then-books order were written in as "her design" and never shown to her.
-- **Run only the live checks the change can reach, and do only what she asked** — work out which proof pages a rule
-  can change before fetching (five pages, not the whole list); her Confirm ask was first answered with an unasked
-  front-page rule and a shop dig she never requested, while the button stayed greyed.
+  `.claude/hooks/test-guard.js`): tests only through `scraper/run_tests.js` (`--only <name>` for one suite); one run at a
+  time; a run of a minute or more starts only after the session has written her its "Expected test run: …" line, then nothing
+  until it ends; a suite well past its usual time is stopped and re-run alone; a live check stops after six minutes without
+  an answer. The hook's refusal says what to do — do it, never work round it.
+- **A test link goes to her only after it is read live, end to end, the way she will run it** (Louisiana's page never read;
+  Parallel's 202). **A check's right answer must test what the design requires** — Belvedere's "no books section" passed in
+  German under the English-shop design; the gallery path's right answers were set by its own "widest list" rule, so every
+  gallery passed while Karsten Greve's Catalogues tab was passed over.
+- **Every sentence shown on screen goes to her word for word before it is built, and nothing is called her design or her
+  wording that she did not give** — "Shop found, but not its exhibition catalogues section — its publications" and a
+  publications-then-books order were written in as "her design" and never shown to her.
+- **Run only the live checks the change can reach, and do only what she asked** — work out which proof pages a rule can
+  change before fetching (five pages, not the whole list); her Confirm ask was first answered with an unasked front-page rule
+  and a shop dig she never requested, while the button stayed greyed.
 - **Read the log before answering anything about what the app, Claude or a sweep did** (§1, "The logs") — a session
   guessed from the prompt instead (Chagall, Postwar Europe), and sessions kept writing "the log would settle it" without reading it.
-- **A stand-in Claude does not predict hers** — Sonnet said Baroque, her app's Claude Surveys (*Metamorphoses*); her
-  own run's record decides. A repeat ask through `sample` is replayed unless `cache:false`.
+- **A stand-in Claude does not predict hers** — Sonnet said Baroque, her app's Claude Surveys (*Metamorphoses*); her own
+  run's record decides. A repeat ask through `sample` is replayed unless `cache:false`.
 - **Capability on one machine is not on both** (pacing was laptop-only), and "the shared path is built" is not "every venue is ready" — say it per venue.
 
 ### 4.2 Rejected — do not re-propose
 
 **Proposing "drop the feature" as a fix — rejected as an approach entirely.**
 
-- **Announcing "this row used to have a catalogue"** when a later lookup finds
-  none anywhere.
-- **Storage and saving:** the sweep log inside her export. Google Drive auto-load
-  on open. Automatic saving to Drive (a button is on the table, §6). The app
-  gathering its own exhibition data. Auto-save to her FILE on every change (the
-  cloud ledger's live save is a different thing, `docs/cloud_storage.md`). A confirm-tap after
-  download. A backup in the browser's own storage. A snapshot on closing the page.
-- **The intake:** bulk-approve. In-app field editing. Confirm-and-continue past
-  undecided cards. Remembering rejections. Ticking nothing on a date conflict.
-- **Data:** Excel as the sweep format. Merging the two Tates. Stripping the 110
-  seed. The separate readout doc.
-- **Process:** watching the sweeper and interrupting it. Firing a new JSX
-  mid-discussion. A "GPT scrapes, Claude compresses" role split.
-- **Catalogue lookup:** splitting it from drawer output. (A map of publisher
-  websites is no longer rejected — her roadmap, §6.) A background shop check on every click. Linking straight to an
-  Amazon product page from an ISBN-10. Pointing the shop link at an ISBN search.
-  **Asking a Shopify shop directly whether a book is for sale**:
-  `.js` refused, `.oembed` 429, a product's `.json` has no availability; the
-  search answer's `available` counts pre-orders and omits the sold-out Tarot.
-  **Reading the exhibition's own page for a catalogue when the shop is blocked**
-  — a model read and a new step for two shops (KHM, MAM); the card already links
-  the shop's search.
-- **Scraper:** blocking scripts and trackers in the bridge (IR-13). Splitting the
-  scraper into modules (IR-14). **Fetching several pages at once within one
-  venue (IR-15) — never.** Dropping an undated row because its start date is old
-  (IR-18). A default wait on top of robots.txt in the container.
-- **Blocked venues:** **sweeping in her everyday Chrome on her own profile**
-  — Chrome refuses a program attaching to its main profile, her personal
-  browsing stays out of this, and the Morgan checks her own browser every visit
-  while the seeded profile is not checked. **Fetching a blocked venue through the
-  Parallel connector** — no more new methods to chase a venue.
+- **Announcing "this row used to have a catalogue"** when a later lookup finds none anywhere.
+- **Storage and saving:** the sweep log inside her export. Google Drive auto-load on open. Automatic saving to Drive (a
+  button is on the table, §6). The app gathering its own exhibition data. Auto-save to her FILE on every change (the cloud
+  ledger's live save is a different thing, `docs/cloud_storage.md`). A confirm-tap after download. A backup in the browser's
+  own storage. A snapshot on closing the page.
+- **The intake:** bulk-approve. In-app field editing. Confirm-and-continue past undecided cards. Remembering rejections.
+  Ticking nothing on a date conflict.
+- **Data:** Excel as the sweep format. Merging the two Tates. Stripping the 110 seed. The separate readout doc.
+- **Process:** watching the sweeper and interrupting it. Firing a new JSX mid-discussion. A "GPT scrapes, Claude compresses"
+  role split.
+- **Catalogue lookup:** splitting it from drawer output. (A map of publisher websites is no longer rejected — her roadmap,
+  §6.) A background shop check on every click. Linking straight to an Amazon product page from an ISBN-10. Pointing the shop
+  link at an ISBN search. **Asking a Shopify shop directly whether a book is for sale**: `.js` refused, `.oembed` 429, a
+  product's `.json` has no availability; the search answer's `available` counts pre-orders and omits the sold-out Tarot.
+  **Reading the exhibition's own page for a catalogue when the shop is blocked** — a model read and a new step for two shops
+  (KHM, MAM); the card already links the shop's search.
+- **Scraper:** blocking scripts and trackers in the bridge (IR-13). Splitting the scraper into modules (IR-14). **Fetching
+  several pages at once within one venue (IR-15) — never.** Dropping an undated row because its start date is old (IR-18). A
+  default wait on top of robots.txt in the container.
+- **Blocked venues:** **sweeping in her everyday Chrome on her own profile** — Chrome refuses a program attaching to its main
+  profile, her personal browsing stays out of this, and the Morgan checks her own browser every visit while the seeded
+  profile is not checked. **Fetching a blocked venue through the Parallel connector** — no more new methods to chase a venue.
   **Splitting one venue across days, or a slower pace**.
 
-**Corrected along the way:** Chat can **not** fetch any URL cold. The Italian
-venues are four different situations. The AbeBooks link is
-`/servlet/SearchResults?ds=30&dym=on&kn=…&rollup=on&sortby=17` (lowest total
-price, her decision).
+**Corrected along the way:** Chat can **not** fetch any URL cold. The Italian venues are four different situations. The
+AbeBooks link is `/servlet/SearchResults?ds=30&dym=on&kn=…&rollup=on&sortby=17` (lowest total price, her decision).
 
 ---
 
@@ -515,12 +482,12 @@ price, her decision).
 **Four ways in, each for a job the one before cannot do (her design):**
 
 1. **Sweep (CSV)** — venues she follows closely and long term, keeping more shows than she dismisses. §5.2–5.3.
-2. **Links** — a handful of shows: cherry-picked from far back in a followed venue's archive (a sweep would be
-   wasteful), or ad hoc from a venue she does not track. Fetched through Parallel. §5.4.
+2. **Links** — a handful of shows: cherry-picked from far back in a followed venue's archive (a sweep would be wasteful), or
+   ad hoc from a venue she does not track. Fetched through Parallel. §5.4.
 3. **Pages** — a link Parallel cannot fetch (bot-blocked) or brings back as junk or empty: she saves the whole page.
-4. **Paste** — mostly-text pages where saving each is slow (the Tate library's records): the text pasted beside its
-   link. Also her last resort for manual entry — details from several sources typed in, under a link to any page
-   useful for that show. No link, no import. Claude reads its title and dates, code checks them (56; §2.2.18).
+4. **Paste** — mostly-text pages where saving each is slow (the Tate library's records): the text pasted beside its link.
+   Also her last resort for manual entry — details from several sources typed in, under a link to any page useful for that
+   show. No link, no import. Claude reads its title and dates, code checks them (56; §2.2.18).
 
 Links, Pages and Paste are one road — the same Claude read, shop finder and review; Links and Pages share the page
 reader, Paste skips it (her decision). A third-party page (press, blog, library record) goes the same road: the venue is read from the text, never
@@ -544,10 +511,10 @@ bot-blocked, so Pages and Paste only) is a fact about that venue, never a limit 
 
 #### The mental model, load-bearing
 
-**Her file is still the document; the page's store now keeps a live copy of it.** The app is
-the *tool*, the ledger the *document*, like a word processor and a file. Opening the link gives
-an empty page until she Loads (her decision); from then on every change is saved to the store as
-well (`docs/cloud_storage.md`). She works in ONE tab on ONE device; a second copy is read only.
+**Her file is still the document; the page's store now keeps a live copy of it.** The app is the *tool*, the ledger the
+*document*, like a word processor and a file. Opening the link gives an empty page until she Loads (her decision); from then
+on every change is saved to the store as well (`docs/cloud_storage.md`). She works in ONE tab on ONE device; a second copy is
+read only.
 
 Losing or silently corrupting the ledger is the worst outcome the design guards
 against; it holds every tracked exhibition plus her marks (watching / dismissed /
@@ -561,8 +528,8 @@ want-catalogue / acquired / catalogue details). **She keeps a real ledger** — 
 | **The sweep log** | the page's own store | A FACT ABOUT THE WORLD — must not roll back. Any sweep file rebuilds it |
 | **The quarantine** | the store AND her export | A fact about the world derivable from nothing — so both, with one merge rule |
 
-**Do not propose moving any of the three** (the cloud ledger is her own
-reopening, now live — `docs/cloud_storage.md`). Reasoning and the two rejected arguments: `docs/app.md` §4–5.
+**Do not propose moving any of the three** (the cloud ledger is her own reopening, now live — `docs/cloud_storage.md`).
+Reasoning and the two rejected arguments: `docs/app.md` §4–5.
 
 #### Ledger row shape
 
@@ -590,21 +557,19 @@ The only file the app ingests, with columns exactly in this order:
 venue_code, title, start_date, end_date, summary, url, notes, swept_at
 ```
 
-**Sweep lookback is 1 July 2024, permanently.** The rest of the import csv — what the lookback
-means, the scraper must never de-duplicate, the notes column, `swept_at` — is in
-`docs/import_csv.md`. **Read it before changing what the scraper writes or what the app reads.**
+**Sweep lookback is 1 July 2024, permanently.** The rest of the import csv — what the lookback means, the scraper must never
+de-duplicate, the notes column, `swept_at` — is in `docs/import_csv.md`. **Read it before changing what the scraper writes or
+what the app reads.**
 
 ### 5.3 The scraper
 
 #### Why it exists
 
-Chat Claude's fetch tool **retrieves a page before its JavaScript runs**; museum
-sites are shell-plus-database, so it sees an empty frame. Architectural — no
-prompt fixes it. **A headless browser fixes it at the root.**
+Chat Claude's fetch tool **retrieves a page before its JavaScript runs**; museum sites are shell-plus-database, so it sees an
+empty frame. Architectural — no prompt fixes it. **A headless browser fixes it at the root.**
 
-**Target output:** the pro forma CSV, **summary carrying the raw curatorial
-text**. Compression turns that into her teaser. Keeping the raw text is what
-makes fabrication structurally impossible.
+**Target output:** the pro forma CSV, **summary carrying the raw curatorial text**. Compression turns that into her teaser.
+Keeping the raw text is what makes fabrication structurally impossible.
 
 #### Running the scraper — `docs/sweep_operation.md`
 
@@ -615,52 +580,32 @@ runs.**
 
 #### Adding a venue — `docs/scraper.md` §12
 
-The intake, in order, is in `docs/scraper.md` §12, "Her rules for wiring a venue". **Read it
-before wiring a new venue.**
+The intake, in order, is in `docs/scraper.md` §12, "Her rules for wiring a venue". **Read it before wiring a new venue.**
 
 #### Then hand her the file — `docs/sweep_operation.md`
 
-When a sweep finishes, what to send her and how is in `docs/sweep_operation.md`. **Read it before
-ending a sweep run.**
+When a sweep finishes, what to send her and how is in `docs/sweep_operation.md`. **Read it before ending a sweep run.**
 
 #### How it is organised
 
-**One engine, one recipe per venue.** Universal logic in the engine — fetching,
-counters, the URL guard, the lookback, structured-data-first, date parsing,
-writing the CSV. Per venue in `VENUES` — which pages, which links are
-exhibitions, where title and dates sit, what boilerplate to strip. **There is no
-clever general rule for the second list; every attempt has cost us.** A venue
-writes down only what differs. Each recipe option is documented where it is
-defined in `sweep_prototype.js`.
-
-**The 4-paragraph / 2,000-character description cut stays — her decision.**
-Tested on a 3,360-character page: the cut and the full text gave the same teaser
-in substance; raising it would send every long row back for a model review.
-
-**Two recipe options carry a trap:** `notATitle` must be checked in the heading
-branch too, and **`yearArchive` never writes the years down** —
-`expandYearArchive()` derives them at run time, or a 2028 sweep is quietly
-missing two years.
-
-**Everything else — reading a listing, pagination and load-more, the date parser,
-junk in summaries, failure handling, compression, the blocked venues — is in
-`docs/scraper.md`.** Read the relevant section before changing that area.
+**One engine, one recipe per venue** (`VENUES` in `sweep_prototype.js`): the engine holds what helps every venue, a recipe
+only what differs — **there is no clever general rule for the recipe list; every attempt has cost us.** The recipe options'
+traps, the description cut (her decision) and everything else — listings, pagination, dates, junk in summaries, failure
+handling, compression, blocked venues — are in `docs/scraper.md`. Read the relevant section before changing that area.
 
 ### 5.4 Add by link
 
 Design, decisions, the store, the shop finder, the shelf rule and the venue link rules: `docs/add_by_link.md`; the live proof
 pages: `docs/link_proof_pages.json`.
 
-**Status: stable** — signed off on her 10 links. **One weak spot: a link from a venue the app has never seen needs a
-fix about half the time** (exhibition info misread, shop not found).
+**Status: stable**, signed off on her 10 links. **Weak spot: a never-seen venue's link needs a fix about half the time.**
 
-**How it works** (her design): Import opens a small pop-up — CSV · Links · Pages · Paste; **nothing added to the page itself**. Each link
-is read once by code (title, dates); then one request to the model for the whole import (prose, always English); then the same
-intake as a sweep; no lookback. New
-venues file under an "Occasional" chip; shop sections are confirmed on a screen after the review. **The date reader and summary
-rules are the scraper's own**, written into `Cat_Watch.jsx` by the join (`node build/app_join.js`) from the scraper's own files; the part under `app/` holds only a directive line and the summary examples — edit the scraper, then join.
-Every venue fact, its link rules included, lives in the venue register, `venues/register.js` (docs/restructure.md, 4A); the join writes it into the page and the scraper requires it. The shop is searched live only, no saved
-copies (her decision; `docs/testing.md`). The decisions, the shop finder's design and the cases are all in `docs/add_by_link.md`.
+**How it works** (her design): Import opens a small pop-up — CSV · Links · Pages · Paste; **nothing added to the page
+itself**. Each link is read once by code (title, dates); then one request to the model for the whole import (prose, always
+English); then the same intake as a sweep; no lookback. New venues file under "Occasional"; shop sections are confirmed on a
+screen after the review. **The date reader and summary rules are the scraper's own**, joined into the page from the scraper's
+files (edit the scraper, then `node build/app_join.js`); every venue fact lives in the venue register, `venues/register.js`.
+The shop is searched live only, no saved copies (her decision; `docs/testing.md`).
 
 Open items: §2.2.11.
 
@@ -668,21 +613,18 @@ Open items: §2.2.11.
 
 Ideas not yet built — none is open work, and none is proposed unless she raises it.
 
-- **Parked — cards for dismissed exhibitions.** A sweep gives dismissed shows Fill
-  and Change cards like any other, unmarked (the intake never reads `interested`).
-  Her choice: if her next import brings a bothersome number, build "Dismissed" on
+- **Parked — cards for dismissed exhibitions.** A sweep gives dismissed shows Fill and Change cards like any other, unmarked
+  (the intake never reads `interested`). Her choice: if her next import brings a bothersome number, build "Dismissed" on
   those cards, grouped last in each venue — nothing skipped, nothing auto-applied.
-- **Roadmap — a list of publishers and their websites** (her ask), so the card stops
-  saying "Couldn't work out the publisher's own website" (Somogy, Hubert Robert).
-  It replaces her decision to keep `PUBLISHER_SITES` short and never fill it ahead
-  (§4.2); how the list is built is to be agreed with her first.
-- **The search engine** — a search returns 10 results and ranking changes minute to minute; a book that
-  does not rank is missed (her conclusion: roulette; no more search steps). Options, each with how and
-  the concerns, in `docs/search_engines.md`: more results on her keyed connector, another engine
-  (Exa, Tavily, Brave, Firecrawl…), Google's Gemini with search grounding. Nothing built until she says.
-- **Google Drive backup by button** — on the table, never automatic; through a Google Drive
-  connector (`docs/app.md`).
-- **Roadmap — purchase tracking** (her ask; `docs/library.md`). Not the Theme Shelf. Open, hers: a Library tab, the
-  card flipping to show its purchases on the back with an all-purchases view, or both.
-- **Roadmap — Search selected words gets a Back** (her ask): after the results show, Back returns her to the screen
-  and spot she searched from, as she left it (`docs/app.md`, "Search selected words").
+- **Roadmap — a list of publishers and their websites** (her ask), so the card stops saying "Couldn't work out the
+  publisher's own website" (Somogy, Hubert Robert). It replaces her decision to keep `PUBLISHER_SITES` short and never fill
+  it ahead (§4.2); how the list is built is to be agreed with her first.
+- **The search engine** — a search returns 10 results and ranking changes minute to minute; a book that does not rank is
+  missed (her conclusion: roulette; no more search steps). Options, each with how and the concerns, in
+  `docs/search_engines.md`: more results on her keyed connector, another engine (Exa, Tavily, Brave, Firecrawl…), Google's
+  Gemini with search grounding. Nothing built until she says.
+- **Google Drive backup by button** — on the table, never automatic; through a Google Drive connector (`docs/app.md`).
+- **Roadmap — purchase tracking** (her ask; `docs/library.md`). Not the Theme Shelf. Open, hers: a Library tab, the card
+  flipping to show its purchases on the back with an all-purchases view, or both.
+- **Roadmap — Search selected words gets a Back** (her ask): after the results show, Back returns her to the screen and spot
+  she searched from, as she left it (`docs/app.md`, "Search selected words").

@@ -6,12 +6,16 @@ screen, quarantine, the sweep log or saving.** The full history is in git. The a
 
 ## What is built and signed off
 
-Confirmed by her on real files, not only by fixtures. **Design and evidence:
-`docs/app.md`.**
+Confirmed by her on real files, not only by fixtures.
 
 - **Search selected words** (her design, live at 57): select any words on the page and a "Search" button under them
-  puts them in the search bar exactly as typed (not artist-aware — her decision), then lands at the start of the cards.
-  A web page cannot add to Android's own text menu, so the button is the app's own (`selPick`, `searchPick`).
+  (filled as the "Recently opened" tag, edged in the action green) puts them in the search bar exactly as typed (not artist-aware — her decision), then lands at the start of the cards.
+  A web page cannot add to Android's own text menu, so the button is the app's own (`selPick`, `searchPick`). It sits 32px
+  under the LAST line of the selection, below Android's handles (a handle over it once took her tap; nothing logs taps).
+- **The name, Art Watch** (live at 57): page title, small header line, footer, read-only line; the big line stays
+  "Before it goes out of print" (her decision, for now).
+- **The counts line:** Watched · Wanted · Owned · Closing Window (Yes-wanted catalogues closed 3–12 months ago,
+  `inClosingWindow`), with Tracked and Dismissed inside "Details". "Reset cards" clears one card's lookup.
 
 - **Loading and saving, refreshing, reading a stitched file:** §2 and §3 below. **Never put back a click-triggered green tick**
   (§2).
@@ -101,7 +105,7 @@ wrote back the whole ledger as it stood at the start (LC-001–005).
    shows the link — same house as the original or the venue named
    (`sameCatalogue`), the original's ISBN, or a linking phrase ("originally
    published", "édition anglaise"…) with every key word of the original title
-   (`englishEditionOf`). The card then carries it, `originalEdition` the
+   (`editionsOf`, `EDITION_LINK`). The card then carries it, `originalEdition` the
    original. ED-001 to ED-005. **Her three cases (Hubert Robert):** the
    venue's own English edition (same house) wins; a pure translation published
    elsewhere counts only when there is none; a different book never crosses
@@ -123,7 +127,7 @@ pages than the catalogue is a booklet — another ISBN printed with the catalogu
 count replaces it, else none is filed (`notABooklet`; Hubert Robert's album; BK-).
 Two versions of one book (same key words, page counts agreeing): hardcover leads,
 else an outside publisher over a museum's own imprint; the other is named after the
-ISBN, "also 978-… (paperback, X)" (`otherVersionOf`, `leadsOver`; Vasari; VS-);
+ISBN, "also 978-… (paperback, X)" (`printingsOf`; Vasari; VS-);
 with a page count missing, only the very same title words count. Publisher labels
 are read with links reduced to their words; a co-edition's site is found by any one
 house, outside houses first (`siteOfHouses`; R8-). Publisher: read off the ISBN's results
@@ -191,11 +195,10 @@ text handed to it, so it can never report a page that was not found.
   editions, university dropped). A page on that site already found and
   carrying the title or ISBN is opened directly; else a search inside the
   domain, ranked in code (`rankPublisherPages`), Claude only when code finds
-  none. C-046 to C-051. A map of publisher websites was declined; a short list of
-  joint publishers whose name is not in their address is hers
-  (`PUBLISHER_SITES`: Rizzoli Electa, DelMonico · Prestel), used only when the
-  name finds no site. Grown only when her card says "Couldn't work out the
-  publisher's own website" for one that has a site, and she asks. PS-001 to PS-006.
+  none. C-046 to C-051. A short list of joint publishers whose name is not in
+  their address is hers (`PUBLISHER_SITES`: Rizzoli Electa, DelMonico · Prestel),
+  used only when the name finds no site, and kept short until the publishers list
+  on her roadmap (CLAUDE.md §6) replaces it. PS-001 to PS-006.
 - **"Checked the publisher's site" only when read** (Canaletto): fetched, not
   empty, and the page the card links (`pubPageRead`). For a foreign book the
   judging read also lists the editions the page shows — a publisher lists every
@@ -376,7 +379,7 @@ The app names no model. It asks the viewer's Claude through `sample`; every
 lookup read passes `modelTier: default`. **The one exception: the Links, Pages and Paste read asks `complex`**
 (her decision, after its descriptions turned flat on `default`; `LINK_READ_TIER`, AL-090) — one request for the whole
 import (`docs/add_by_link.md`), so the cost is per import, not per link. **Which model answered is not recorded:** the app reads
-`sample.json`, which hides `modelTierApplied`, so the lookup log cannot show whether `complex` was served. Measured on her
+`sample.json`, which hides the tier applied, so the lookup log cannot show whether `complex` was served. Measured on her
 Palazzo Strozzi links: the old rules echoed the title on Opus and Sonnet alike, so the model was not the cause. Her verdict on 57.2: better, not necessarily good (CLAUDE.md §2.2.11). `quick` risks exactly the misreadings
 this route was rebuilt to fix; `complex` costs more; nothing has misread, so
 there is nothing to tune against. Only one `.jsx` has ever existed in this repo
@@ -484,7 +487,7 @@ Quarantine adds a "you'd said never to add" term. **Every term stays.**
   decision). Europe's order: UK, Germany, Belgium, France, Switzerland, Italy, Spain, Netherlands.
   A venue's country is on its register entry (`venues/register.js`), else the address's country ending (OC-001–002).
 - Search ignores accents ("Bocklin" finds Böcklin); the When line reads Current, Past, Announced. "Reset to Seed"
-  is unwired from her page (drawn only when a test sets `window.__catWatchTest`).
+  always asks, and is unwired from her page (drawn only when a test sets `window.__catWatchTest`).
 
 ### Screen decisions
 
@@ -577,7 +580,7 @@ So the app is kept, the data layer is swappable underneath, and neither
 
 ## 9. The cloud ledger — what's on screen
 
-Her wording and order. The branch code holds the exact strings.
+Her wording and order. The code holds the exact strings.
 
 - **Times** read "Sep 26, 2026 1:22pm" (`localReadable` = `fmtRefresh`); file
   names keep the sortable stamp.

@@ -24,7 +24,7 @@ year across 28 venues. Her second full sweep's Add count gives the real rate.
 | Export / Load | Fine — ~1.3 MB file | |
 | Cloud live ledger | Fine — 2 pieces per save, old pieces deleted | `cloudSaveLive` |
 | **Cloud Saves** | **Grow without end** | Never pruned (her decision); each a whole copy, ~270 KB at 2,000 |
-| Store documents | Fine | Cap 25,000 documents per page |
+| Store documents | Fine | 256 KiB per document; a cap on documents per page exists — written down once as 5,000 and once as 25,000, neither confirmed |
 | Store total size | **Unknown** | The platform caps it but publishes no number. Full → saves fail with "The page's store is full" (`cloudTrouble`); nothing lost silently |
 | Lookups / Parallel | Not tied to ledger size | Paid per click; no bulk lookup |
 

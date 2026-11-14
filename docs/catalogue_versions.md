@@ -90,26 +90,21 @@ checked against them. ● = starts picked; a card with one version looks as it d
   (L1792314758291e049); the third kept the two right books (L1792315089744hdab). Every search used the press-release headline as
   the title.
 
-- **MoMA *Brancusi*: a book in stock reads "not in the museum shop" (49.3; *Labrouste* again at 56.4) — fixed at 56.6** (lookup logs L17924993786826e6v, L1793455188219n9b2). The shop is not
-  blocked: the shelf's five pages open; only the search page answers 403. **(1)** On *Brancusi* the shelf's whole page
-  carried the "Become a Member" pop-up's prices (Explore $200, Access $110, Annual Pass $75), so `readWhole` took it for
-  books; B-007's fixture used the short excerpt. Proposed: prices inside a membership offer do not count as books
-  (general); refit B-007 on the real page. Not seen on *Labrouste* or *Matisse* (the shelf held real books). **(2)** The
-  web search finds the book's own page ("In Stock", a price), but the for-sale read rejects it for "Email When Available"
-  and no Add to cart. Her saved *Labrouste* page shows Add to Cart, so the button is drawn by script and the fetched page
-  lacks it. **Built at 56.6, her decision: a MoMA-only rule** — on `store.moma.org/products/…`, served at the address asked,
-  the status line "Item# … In Stock" is for sale whatever Claude read (`inStock` on the MoMA entry, `inStockByRule`;
-  C-099a–e). Live at 56.6: *Labrouste* reads in the museum shop (L1793460080983x8a1). Matisse is correctly not in
-  the shop (her check). Unknown: whether a sold-out MoMA book's status line ever still says In Stock.
+- **MoMA *Brancusi* — a book in stock read "not in the museum shop" (49.3, *Labrouste* at 56.4): fixed at 56.6** (lookup logs
+  L17924993786826e6v, L1793455188219n9b2). The shop is not blocked: the shelf's five pages open, only the search page answers 403.
+  Her decision, a MoMA-only rule: on `store.moma.org/products/…`, served at the address asked, the status line "Item# … In Stock"
+  is for sale whatever Claude read — the Add to Cart button is drawn by script (`inStock` on the MoMA entry, `inStockByRule`;
+  C-099a–e); live, *Labrouste* reads in the shop (L1793460080983x8a1), Matisse correctly not. **Still proposed, not built:**
+  prices inside the "Become a Member" pop-up (Explore $200, Access $110, Annual Pass $75) are not books — `readWhole` took them
+  for books on *Brancusi*; refit B-007 on the real page. Unknown: whether a sold-out MoMA book's status line ever says In Stock.
 
 ## Search: every catalogue of the exhibition — OPEN, not built
 
 Her decision. Search logic, kept apart from the display work: it is built with the Stage 1/1b search on `parked`
 (`docs/handover_search_stage1.md` there), never as a patch on today's search on `main`.
 
-**Fault to fix: a link venue is searched under its short card name.** For a venue Add by link met (no `lookupName` of her own) the
-lookup searches "Detroit", "Antwerp KMSKA" (`occVenue` sets `lookupName` from the store's `short`), not the long name the shop search
-uses (`venueSearchName`). Her decision: search names long, card names short.
+**Fixed on `main`, live at her next publish: a link venue searched under its short card name** ("Detroit", "Antwerp KMSKA").
+Restructure 4A makes every venue's `lookupName` its full name (her decision: search names long, card names short).
 
 **What the search is for:** every catalogue of this exhibition, at any showing, whoever printed it — this venue's, another's, a
 tour's shared one, and their other printings, bindings and languages. Which venue a book belongs to never decides whether it is

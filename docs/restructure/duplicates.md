@@ -1,60 +1,16 @@
 # One copy of every fact — the audit behind items 4A–4F
 
 Read-only audit of the app's parts, the scraper, build and test files, and copies of her store records
-and ledger as they stood on 5 Nov (her store unchanged since round 1). Each finding is a fact kept in
-more than one place. The work items that remove them are in `docs/restructure.md`, item 4. Numbers are
-as found; re-check each against the code and her store before fixing it (the store changes as she works).
+and ledger as they stood on 5 Nov. Each finding is a fact kept in more than one place; the work items that
+remove them are in `docs/restructure.md`, item 4. Numbers are as found: re-check each against the code and
+her store before fixing it (the store changes as she works). "Manual import" = Links, Pages and Paste
+together (her name). Her ledger is never changed (her decision).
 
-"Manual import" = Links, Pages and Paste together (her name). "Register" = the one home for venue facts item 4A builds; whether it is in the code or the store is her decision, not yet made. Her ledger is never changed (her decision).
+## 4A — venue facts: done
 
-## 4A — venue facts
-
-- **D1 — a manual-import venue's names, in `LINK_VENUES` (41 entries) and the store's `venues/occasional`
-  (61).** `occVenue` lets the code entry win; `needsFacts`/`namedByAddress` read only the store.
-  - `name` in both for 17: 8 clash — Munich ×3 (store "pinakothek.de", no short, no city), Neue
-    Nationalgalerie (the store record is the Kupferstichkabinett, short "Berlin Kupferstichkabinett"),
-    KMSKA, Museo di San Marco (store "Direzione regionale Musei nazionali Toscana"), Palazzo Ducale Genova
-    (store "palazzoducale.genova.it"), Palazzo Reale Milano (store "Comune di Milano").
-  - `short` in both for 6: 4 clash — Neue NG, Prado ("Prado Madrid"/"Madrid Prado"), Moderna, Louisiana.
-  - `card` vs the short name used elsewhere differs for 20; for 13 the screens that show `short` (review
-    headings, Reset list, quarantine list, CSV venue name) show the name she rejected (Présidence shows
-    "Paris Présidence"; also Basel, Cini, Stanze della Fotografia, Łazienki, Correr, Pompidou, Emil
-    Schumacher, Chagall, Reina Sofía, Valkhof, Wallach; NGV and RCT get the store's full name).
-  - `notCard` (16 entries) is itself a copy of the store's short name; 2 match nothing (KMSKA, Moderna).
-  - `lookupName` falls through to the store's short name for 35 venues — the "Detroit" search fault
-    (CLAUDE.md §2.2.3); for 13 it is the rejected name (Pompidou searched as "Pompidou Paris").
-  - The shop search name mixes both copies (Neue NG: "…Kupferstichkabinett Museum of Prints and Drawings
-    SMB…"); the store's `occ-smb-museum` aka holds "Old National Gallery".
-  - The Munich three count as unnamed, so they are asked again on every import.
-- **D2 — a manual-import venue's shop section** for Städel and Basel: in `LINK_VENUES` and copied into the
-  store (`shopFromRule` → read job). The card's shop button reads the entry; the lookup reads the store;
-  `shopWrittenIn` keeps them off the shop screen, so the store copy is never refreshed. Agree today.
-- **D3 — Christie's, two store records:** `occ-christies-com` (1 row, confirmed) and
-  `occ-press-christies-com` (0 rows, unconfirmed, gallery:true, different aka); the orphan is still
-  registered as a venue.
-- **D4 — country:** `OCC_COUNTRY` (23) and the store; `occCountry` lets the code win, its comment says the
-  store wins. 10 agree, 12 have no store country, 1 is Ashmolean. Read by the Occ chips and ordering.
-- **D8 — swept-venue names:** `MUSEUMS` and the scraper's `VENUES` differ for 24 of 28 (20 by ", City";
-  ng, louvre, brit, capo in the name itself). The scraper's name is used only by its log header and
-  `venue_status.js`. LGD's city "New York / London" vs "New York and London".
-- **D10 — Acquavella's two locations:** `VENUES.acq.locations`, `compress.js TRAVELLING_LOCATIONS`,
-  `MUSEUMS.acq.linkRead.places`. Agree.
-- **D14 — a swept venue's language:** `english:false`, `VENUE_LANGUAGE`, `CATALOGUE_WORDS` — 12 each,
-  agree. Manual-import venues (store `english` false for 35) are in none.
-- **D15 — own chip, label, order:** `LINK_VENUES.ownChip` and `VENUE_ORDER` (17, agree); the chip label
-  repeated per group member (Munich, Berlin, Cini); Ashmolean's place under Occasional in three lists.
-- **D16 — a venue's shop fields listed four times** with different contents (`SHOP_FIELDS` 10, the read
-  job's reset 7, two lists in the main screen 8 + shop/confirmed).
-- **D23 — a venue's set of names built five ways** (find, page reader, museum shop finder,
-  heldElsewhere/ownMuseumNamed, lookup).
-- **D24 — date order for 14 manual-import venues** in the scraper's `DATE_ORDER` / `SPACED_YEAR_VENUES`;
-  every other reading rule is in `LINK_VENUES`. `occ-kunsthaus-ch` and `occ-approfondimentimostre-com`
-  have no entry and no store record.
-- **D20 (venue part) — test copies:** `docs/shop_check.json` Thyssen shelf differs from the store;
-  `docs/gallery_shop_check.json` Acquavella `/frontpage` vs `MUSEUMS` `/all`; `scraper/probe_headed.js`
-  types its targets (brit's selector differs from its recipe).
-- **Asides:** Lévy Gorvy Dayan has no `card`, so cards show "Levy" though the code's note says "Lévy Gorvy
-  Dayan"; `occVenue` passes on `country` but not `city`, so a manual-import venue's city is blank.
+Every 4A finding (D1–D4, D8, D10, D14–D16, D20's venue copies, D23, D24 and the asides) was fixed by the
+venue register (`docs/restructure.md`, "4A"); the old evidence is in git. Left from it: Christie's orphan
+press record (`occ-press-christies-com`) is deleted at the one-time clear after her first real publish.
 
 ## 4B — saving
 
