@@ -182,6 +182,21 @@ to the first save identical, old and new (add it to the side-by-side check befor
 The coordinator re-runs every gate and reads the diff; after each run it rebuilds the cross-reference and
 checks the signs of a wrong cut above. Her test round 3 follows C7.
 
+## 5 — the runs: each design as written before the run, then its record
+
+### Run A1 — card marks (design)
+
+Branch `claude/restructure-5-a1`. A new part, `app/ledger/marks.jsx` (features level, no React): one plain
+function per mark, each `(rows, id, …) → rows`, handing back the SAME `rows` when nothing changes. The marks:
+dismiss, restore (also the undo), watch on and off, acquiring (with its rule that leaving Yes clears Buy
+next and its rank), Buy next on and off (a new one goes to the top), the Buy next move after a drag (it
+takes the shown order as a plain list of ids, never the screen's `view`), the catalogue pick (it names
+`pickRow` in the lookup part: one more listed feature-to-feature reference), the digital link (takes the
+link already checked) and "keep this period". The time goes in as an argument; no function reads the clock.
+**The screen keeps:** `commit(mark(rows, id))`, the undo bar and its timer, the read-only stop, whether the
+digital box is open, and "not a link, so the box stays open". `keepPeriod`'s sentence stays on the screen
+until A3 moves it to the periods part. Nothing else in the screen is touched.
+
 ## 4A — the venue register (merged)
 
 **Her decisions (made; the code-or-store question is closed):**
