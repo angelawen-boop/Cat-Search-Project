@@ -679,6 +679,11 @@
   "markPick",
   "markDigital",
   "markKeepPeriod",
+  "filtersClear",
+  "listMode",
+  "listView",
+  "listCounts",
+  "scrubGroupsOf",
   "App"
  ]
 }

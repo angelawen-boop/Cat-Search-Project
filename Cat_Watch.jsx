@@ -8862,6 +8862,85 @@ function markPick(rows,id,i,now){ const r=rows.find(x=>x.id===id); const next=r&
 function markDigital(rows,id,href,now){ const r=rows.find(x=>x.id===id); return r&&r.digitalUrl!==href?rows.map(x=>x.id===id?{...x,digitalUrl:href,editedAt:now}:x):rows; }
 // Do not regroup: Claude's answer stands for this show until its next Relabel (her design).
 function markKeepPeriod(rows,id,now){ return markRow(rows,id,x=>({...x,periodKeep:true,editedAt:now})); }
+// Every filter at "all clear". A NEW object each call, so the list starts again from the top after every clear.
+function filtersClear(){return{venueF:new Set(),themeF:new Set(),timeF:new Set(),acqWanted:false,acqOwned:false,acq3mo:false,acq6mo:false,acqHasCat:false,acqNoCat:false,acqDigital:false,acqBuyNext:false,bnPeriod:false,bnDate:false,showAll:false,dismissedOnly:false,labelledF:false,watchedF:false,search:""};}
+// Which mode the list is in. `sort` is {sortBy, dateReversed, pinTouched, refreshTouched}.
+function listMode(filters,sort){
+  const{acqBuyNext,acqOwned,bnPeriod}=filters,{sortBy,pinTouched}=sort;
+  const bnOnly=acqBuyNext&&!acqOwned;   // Buy next alone: her dragged order; with Owned it is an ordinary list
+  // Buy next by period (her design): Period in the Buy next view switches between her dragged
+  // order and the period order with its dividers; she drags only in her own order.
+  const periodView=bnOnly?bnPeriod:(sortBy==="period"&&!pinTouched);
+  return{bnOnly,periodView};
+}
+// The list: filtered, searched and sorted.
+function listView(rows,filters,sort,byArtist){
+  const{venueF,themeF,timeF,acqWanted,acqOwned,acq3mo,acq6mo,acqHasCat,acqNoCat,acqDigital,acqBuyNext,bnPeriod,bnDate,showAll,dismissedOnly,labelledF,watchedF,search}=filters;
+  const{sortBy,dateReversed,pinTouched,refreshTouched}=sort;
+  const{bnOnly,periodView}=listMode(filters,sort);
+    const sq=foldText(search).trim();
+    // Each row's tier, worked out once: the sort below asks for it thousands of times.
+    const tiers=new Map();
+    const tierOf=r=>{let t=tiers.get(r);if(t===undefined){t=tierFor(r);tiers.set(r,t);}return t;};
+    const newestRun=labelledF?rows.reduce((m,r)=>r.labelledAt&&r.labelledAt>m?r.labelledAt:m,""):"";
+    let out=rows.filter(r=>{
+      // The search narrows; it does not end the check, so every other filter applies. It reads what the
+      // card prints: title, description, the venue's card name (her decision). Accents count as plain
+      // letters both ways ("Bocklin" finds Böcklin; her ask).
+      if(sq&&![r.title,r.summary,MU[r.museumId]?.card].some(t=>foldText(t).includes(sq)))return false;
+      // Dismissed narrows too. A search still finds a dismissed show unless Dismissed
+      // is on.
+      if(dismissedOnly){ if(r.interested)return false; }
+      else if(!r.interested&&!showAll&&!sq)return false;
+      if(themeF.size>0&&!themeMatch(r,themeF))return false;
+      if(venueF.size>0&&!venueF.has(chipKey(r.museumId))&&!(hasNoChip(r.museumId)&&venueF.has("occ:"+occRegion(r.museumId))))return false;
+      const t=tierOf(r),ts=TIERS[t]?.time||"current";
+      if(timeF.size>0){let match=timeF.has(ts);if(timeF.has("recent")&&t==="recent")match=true;if(timeF.has("current")&&t==="recent")match=true;if(!match)return false;}
+      if(watchedF&&!r.watching)return false;
+      // Recently labelled: the shows of the newest Label run or import; a Relabel keeps its show in its run.
+      if(labelledF&&(!newestRun||r.labelledAt!==newestRun))return false;
+      // Period shows only labelled shows.
+      if(periodView&&!periodLabelled(r))return false;
+      // Acquiring filters stack as AND across the axes, OR within an axis. Owned beside Wanted or Buy next shows
+      // both lists, as two venues do (her decision); Buy next is the part of Wanted she has put in her order.
+      if(acqWanted||acqOwned||acqBuyNext){if(!((acqOwned&&r.acquiring==="acquired")||(acqWanted&&r.acquiring==="yes"&&(!acqBuyNext||isBuyNext(r)))||(acqBuyNext&&!acqWanted&&isBuyNext(r))))return false;}
+      if(acq3mo||acq6mo){if(!((acq3mo&&t==="closing")||(acq6mo&&(t==="urgent"||t==="lapsed"))))return false;}
+      // Has, No and Digital catalogue widen one another: a card shows when it matches any one chosen.
+      if(acqHasCat||acqNoCat||acqDigital){if(!((acqHasCat&&r.looked&&r.hasCatalogue==="yes")||(acqNoCat&&r.looked&&r.hasCatalogue==="no")||(acqDigital&&r.digitalUrl)))return false;}
+      return true;
+    });
+    out.sort((a,b)=>{
+      // Buy next is in her own dragged order; the sort chips and the pinned group step aside.
+      // Buy next alone is in her own dragged order; with Owned the list sorts like any other.
+      if(bnOnly&&bnPeriod)return(dateReversed?-1:1)*periodCompare(a,b,byArtist);
+      const sb=bnOnly&&bnDate?"date":sortBy;   // Buy next by date sorts like the Date chip
+      if(bnOnly&&!bnDate){const ka=Number.isFinite(a.buyRank)?a.buyRank:-Infinity,kb=Number.isFinite(b.buyRank)?b.buyRank:-Infinity;if(ka!==kb)return kb>ka?1:-1;}
+      if(pinTouched&&!bnOnly){const aT=refreshTouched.includes(a.id)?0:1,bT=refreshTouched.includes(b.id)?0:1;if(aT!==bT)return aT-bT;}
+      if(sb==="added"){const d=String(b.addedAt||"").localeCompare(String(a.addedAt||""));if(d!==0)return d;}
+      if(sb==="labelled"){const d=String(lastLabel(b)).localeCompare(String(lastLabel(a)));if(d!==0)return d;const aL=periodLabelled(a)?1:0,bL=periodLabelled(b)?1:0;if(aL!==bL)return bL-aL;}
+      if(sb==="edited"){const d=String(b.editedAt||"").localeCompare(String(a.editedAt||""));if(d!==0)return d;if(!a.editedAt&&!b.editedAt){const aH=a.addedAt?1:0,bH=b.addedAt?1:0;if(aH!==bH)return bH-aH;}}
+      if(sb==="venue"){const d=venueRank(a.museumId)-venueRank(b.museumId);if(d!==0)return d;}
+      // A second tap on Date or Period turns this whole order upside down, Wanted view included.
+      const flip=(sb==="date"||sb==="period")&&dateReversed?-1:1;
+      if(sb==="period")return flip*periodCompare(a,b,byArtist);
+      const ta=tierOf(a),tb=tierOf(b);
+      if(acqWanted&&(ta==="upcoming")!==(tb==="upcoming"))return flip*(ta==="upcoming"?1:-1); // Wanted view: Announced drops to the bottom (nothing to buy yet)
+      const oa=TIERS[ta]?.ord??9,ob=TIERS[tb]?.ord??9;
+      if(oa!==ob)return flip*(oa-ob);
+      const da=a.startDate||a.endDate||"",db=b.startDate||b.endDate||"";
+      if(ta==="upcoming")return flip*da.localeCompare(db);
+      return flip*db.localeCompare(da);
+    });
+    return out;
+}
+function listCounts(rows){const c={total:rows.length,dismissed:0,watched:0,wanted:0,owned:0,pressing:0};for(const r of rows){if(!r.interested){c.dismissed++;continue;}if(r.watching)c.watched++;if(r.acquiring==="yes")c.wanted++;if(r.acquiring==="acquired")c.owned++;if(inClosingWindow(r))c.pressing++;}return c;}
+// The scrubber's periods: the view's groups in order, each with its first card's place.
+function scrubGroupsOf(view,periodView,byArtist){
+    if(!periodView)return [];
+    const out=[];
+    view.forEach((r,i)=>{const k=periodOf(r,byArtist); if(!out.length||out[out.length-1].key!==k)out.push({key:k,name:PERIOD_NAME[k],at:i});});
+    return out;
+}
 
 export default function App(){
   const[rows,setRows]=useState([]);
@@ -8989,28 +9068,11 @@ export default function App(){
   const[,setTick]=useState(0);
   const[sortBy,setSortBy]=useState("date");
   const[dateReversed,setDateReversed]=useState(false);
-  const[venueF,setVenueF]=useState(new Set());
-  const[themeF,setThemeF]=useState(new Set());
-  const[timeF,setTimeF]=useState(new Set());
-  const[acqWanted,setAcqWanted]=useState(false);
-  const[acqOwned,setAcqOwned]=useState(false);
-  const[acq3mo,setAcq3mo]=useState(false);
-  const[acq6mo,setAcq6mo]=useState(false);
-  const[acqHasCat,setAcqHasCat]=useState(false);
-  const[acqNoCat,setAcqNoCat]=useState(false);
-  const[acqDigital,setAcqDigital]=useState(false);
-  const[acqBuyNext,setAcqBuyNext]=useState(false);
-  const bnOnly=acqBuyNext&&!acqOwned;   // Buy next alone: her dragged order; with Owned it is an ordinary list
+  // Every filter in ONE object (filtersClear is the all-clear value); set by name with setFilters(f=>({...f,x:…})).
+  const[filters,setFilters]=useState(filtersClear);
+  const{venueF,themeF,timeF,acqWanted,acqOwned,acq3mo,acq6mo,acqHasCat,acqNoCat,acqDigital,acqBuyNext,bnPeriod,bnDate,showAll,dismissedOnly,labelledF,watchedF,search}=filters;
   const[drag,setDrag]=useState(null); // the card being dragged in the Buy next view
-  const[bnPeriod,setBnPeriod]=useState(false);
-  const[bnDate,setBnDate]=useState(false);   // Buy next alone, sorted by date: the same taps as Period
-  const dragOn=bnOnly&&!bnPeriod&&!bnDate&&!readOnly;
-  const[showAll,setShowAll]=useState(false);
-  const[dismissedOnly,setDismissedOnly]=useState(false);
-  const[labelledF,setLabelledF]=useState(false);
-  const[watchedF,setWatchedF]=useState(false);
   const[showSearch,setShowSearch]=useState(false);
-  const[search,setSearch]=useState("");
   const[openCards,setOpenCards]=useState({});
   const[undo,setUndo]=useState(null);
   const undoTimer=useRef(null);
@@ -9034,9 +9096,9 @@ export default function App(){
   const[refreshDone,setRefreshDone]=useState(null); // {added,filled,changed} after applying
   const[refreshTouched,setRefreshTouched]=useState([]); // ids added/changed in the last refresh
   const[pinTouched,setPinTouched]=useState(false); // pin those ids to the top this session
-  // Buy next by period (her design): Period in the Buy next view switches between her dragged
-  // order and the period order with its dividers; she drags only in her own order.
-  const periodView=bnOnly?bnPeriod:(sortBy==="period"&&!pinTouched);
+  const sort={sortBy,dateReversed,pinTouched,refreshTouched};
+  const{bnOnly,periodView}=listMode(filters,sort);
+  const dragOn=bnOnly&&!bnPeriod&&!bnDate&&!readOnly;
   const[showTop,setShowTop]=useState(false); // show the return-to-top button once scrolled down
   // Light or dark: remembered in browser storage (a per-device convenience, wrapped —
   // storage can throw). First visit follows the machine; her pick then wins there.
@@ -9087,7 +9149,7 @@ export default function App(){
   },[]);
   const searchPick=()=>{
     if(!selPick)return;
-    setSearch(selPick.text); setShowSearch(true); setSelPick(null);
+    setFilters(f=>({...f,search:selPick.text})); setShowSearch(true); setSelPick(null);
     try{window.getSelection().removeAllRanges();}catch{}
     // Lands at the start of the cards (her ask), once the list has redrawn.
     setTimeout(()=>{const el=document.querySelector("[data-card-list]");window.scrollTo({top:el?el.getBoundingClientRect().top+window.scrollY-8:0});},60);
@@ -9241,8 +9303,8 @@ export default function App(){
     if(line!==null)setSnapWhy(line);
   }
 
-  const toggleSet=(setter,val)=>setter(prev=>{const n=new Set(prev);if(n.has(val))n.delete(val);else n.add(val);return n;});
-  const clearFilters=()=>{setVenueF(new Set());setThemeF(new Set());setTimeF(new Set());setAcqWanted(false);setAcqOwned(false);setAcq3mo(false);setAcq6mo(false);setAcqHasCat(false);setAcqNoCat(false);setAcqDigital(false);setAcqBuyNext(false);setBnPeriod(false);setBnDate(false);setShowAll(false);setDismissedOnly(false);setWatchedF(false);setLabelledF(false);setSearch("");setShowSearch(false);};
+  const toggleSet=(name,val)=>setFilters(f=>{const n=new Set(f[name]);if(n.has(val))n.delete(val);else n.add(val);return{...f,[name]:n};});
+  const clearFilters=()=>{setFilters(filtersClear());setShowSearch(false);};
 
   // The sweep log is written when the import FINISHES (her decision: an unfinished
   // import keeps nothing); held in seenInFile until then. A file with nothing to
@@ -9470,9 +9532,7 @@ export default function App(){
     setShopScreen(null); setShopAdding(null); setReadVenues([]);
     setProposals(null); setDecisions({}); setSeenInFile(null); setRefreshDone(out.done);
     setRefreshTouched(out.touched); setPinTouched(out.touched.length>0); // float just-changed entries to the top, this session
-    setVenueF(new Set()); setThemeF(new Set()); setTimeF(new Set()); setWatchedF(false); setLabelledF(false);
-    setAcqWanted(false); setAcqOwned(false); setAcq3mo(false); setAcq6mo(false); setAcqHasCat(false); setAcqNoCat(false); setAcqDigital(false); setAcqBuyNext(false); setBnPeriod(false); setBnDate(false);
-    setDismissedOnly(false); setShowAll(false); setSearch("");
+    setFilters(filtersClear());
   }
   // Cancel import after a Read puts every link (or page) it read back (pendingAfterCancel), stored.
   function cancelRefresh(){
@@ -9480,7 +9540,7 @@ export default function App(){
     if(p){ setPending(p.kind,p.value); writePending(p.kind,p.value); linksAtRead.current=null; }
     dropHeldVenues(); setShopScreen(null); setShopAdding(null); setReadVenues([]); setProposals(null); setDecisions({}); setCoverage([]); setTally(null); setSeenInFile(null); }
   // A second tap on Date reverses it; a third goes back to the usual order.
-  const pickSort=k=>{if(bnOnly){if(k==="period"||k==="date"){const cur=bnPeriod?"period":bnDate?"date":"";if(cur!==k){setBnPeriod(k==="period");setBnDate(k==="date");setDateReversed(false);}else if(!dateReversed)setDateReversed(true);else{setBnPeriod(false);setBnDate(false);setDateReversed(false);}}return;}setDateReversed((k==="date"||k==="period")&&sortBy===k&&!pinTouched&&!dateReversed);setSortBy(k);setPinTouched(false);}; // manual sort releases the pinned refresh group
+  const pickSort=k=>{if(bnOnly){if(k==="period"||k==="date"){const cur=bnPeriod?"period":bnDate?"date":"";if(cur!==k){setFilters(f=>({...f,bnPeriod:k==="period",bnDate:k==="date"}));setDateReversed(false);}else if(!dateReversed)setDateReversed(true);else{setFilters(f=>({...f,bnPeriod:false,bnDate:false}));setDateReversed(false);}}return;}setDateReversed((k==="date"||k==="period")&&sortBy===k&&!pinTouched&&!dateReversed);setSortBy(k);setPinTouched(false);}; // manual sort releases the pinned refresh group
 
 
 
@@ -9695,67 +9755,12 @@ export default function App(){
 
   // One artist, one group: worked out from every labelled show, dismissed ones included.
   const byArtist=useMemo(()=>artistPeriods(rows),[rows]);
-  const view=useMemo(()=>{
-    const sq=foldText(search).trim();
-    // Each row's tier, worked out once: the sort below asks for it thousands of times.
-    const tiers=new Map();
-    const tierOf=r=>{let t=tiers.get(r);if(t===undefined){t=tierFor(r);tiers.set(r,t);}return t;};
-    const newestRun=labelledF?rows.reduce((m,r)=>r.labelledAt&&r.labelledAt>m?r.labelledAt:m,""):"";
-    let out=rows.filter(r=>{
-      // The search narrows; it does not end the check, so every other filter applies. It reads what the
-      // card prints: title, description, the venue's card name (her decision). Accents count as plain
-      // letters both ways ("Bocklin" finds Böcklin; her ask).
-      if(sq&&![r.title,r.summary,MU[r.museumId]?.card].some(t=>foldText(t).includes(sq)))return false;
-      // Dismissed narrows too. A search still finds a dismissed show unless Dismissed
-      // is on.
-      if(dismissedOnly){ if(r.interested)return false; }
-      else if(!r.interested&&!showAll&&!sq)return false;
-      if(themeF.size>0&&!themeMatch(r,themeF))return false;
-      if(venueF.size>0&&!venueF.has(chipKey(r.museumId))&&!(hasNoChip(r.museumId)&&venueF.has("occ:"+occRegion(r.museumId))))return false;
-      const t=tierOf(r),ts=TIERS[t]?.time||"current";
-      if(timeF.size>0){let match=timeF.has(ts);if(timeF.has("recent")&&t==="recent")match=true;if(timeF.has("current")&&t==="recent")match=true;if(!match)return false;}
-      if(watchedF&&!r.watching)return false;
-      // Recently labelled: the shows of the newest Label run or import; a Relabel keeps its show in its run.
-      if(labelledF&&(!newestRun||r.labelledAt!==newestRun))return false;
-      // Period shows only labelled shows.
-      if(periodView&&!periodLabelled(r))return false;
-      // Acquiring filters stack as AND across the axes, OR within an axis. Owned beside Wanted or Buy next shows
-      // both lists, as two venues do (her decision); Buy next is the part of Wanted she has put in her order.
-      if(acqWanted||acqOwned||acqBuyNext){if(!((acqOwned&&r.acquiring==="acquired")||(acqWanted&&r.acquiring==="yes"&&(!acqBuyNext||isBuyNext(r)))||(acqBuyNext&&!acqWanted&&isBuyNext(r))))return false;}
-      if(acq3mo||acq6mo){if(!((acq3mo&&t==="closing")||(acq6mo&&(t==="urgent"||t==="lapsed"))))return false;}
-      // Has, No and Digital catalogue widen one another: a card shows when it matches any one chosen.
-      if(acqHasCat||acqNoCat||acqDigital){if(!((acqHasCat&&r.looked&&r.hasCatalogue==="yes")||(acqNoCat&&r.looked&&r.hasCatalogue==="no")||(acqDigital&&r.digitalUrl)))return false;}
-      return true;
-    });
-    out.sort((a,b)=>{
-      // Buy next is in her own dragged order; the sort chips and the pinned group step aside.
-      // Buy next alone is in her own dragged order; with Owned the list sorts like any other.
-      if(bnOnly&&bnPeriod)return(dateReversed?-1:1)*periodCompare(a,b,byArtist);
-      const sb=bnOnly&&bnDate?"date":sortBy;   // Buy next by date sorts like the Date chip
-      if(bnOnly&&!bnDate){const ka=Number.isFinite(a.buyRank)?a.buyRank:-Infinity,kb=Number.isFinite(b.buyRank)?b.buyRank:-Infinity;if(ka!==kb)return kb>ka?1:-1;}
-      if(pinTouched&&!bnOnly){const aT=refreshTouched.includes(a.id)?0:1,bT=refreshTouched.includes(b.id)?0:1;if(aT!==bT)return aT-bT;}
-      if(sb==="added"){const d=String(b.addedAt||"").localeCompare(String(a.addedAt||""));if(d!==0)return d;}
-      if(sb==="labelled"){const d=String(lastLabel(b)).localeCompare(String(lastLabel(a)));if(d!==0)return d;const aL=periodLabelled(a)?1:0,bL=periodLabelled(b)?1:0;if(aL!==bL)return bL-aL;}
-      if(sb==="edited"){const d=String(b.editedAt||"").localeCompare(String(a.editedAt||""));if(d!==0)return d;if(!a.editedAt&&!b.editedAt){const aH=a.addedAt?1:0,bH=b.addedAt?1:0;if(aH!==bH)return bH-aH;}}
-      if(sb==="venue"){const d=venueRank(a.museumId)-venueRank(b.museumId);if(d!==0)return d;}
-      // A second tap on Date or Period turns this whole order upside down, Wanted view included.
-      const flip=(sb==="date"||sb==="period")&&dateReversed?-1:1;
-      if(sb==="period")return flip*periodCompare(a,b,byArtist);
-      const ta=tierOf(a),tb=tierOf(b);
-      if(acqWanted&&(ta==="upcoming")!==(tb==="upcoming"))return flip*(ta==="upcoming"?1:-1); // Wanted view: Announced drops to the bottom (nothing to buy yet)
-      const oa=TIERS[ta]?.ord??9,ob=TIERS[tb]?.ord??9;
-      if(oa!==ob)return flip*(oa-ob);
-      const da=a.startDate||a.endDate||"",db=b.startDate||b.endDate||"";
-      if(ta==="upcoming")return flip*da.localeCompare(db);
-      return flip*db.localeCompare(da);
-    });
-    return out;
-  },[rows,byArtist,sortBy,venueF,themeF,timeF,acqWanted,acqOwned,acq3mo,acq6mo,acqHasCat,acqNoCat,acqDigital,acqBuyNext,bnPeriod,bnDate,periodView,showAll,dismissedOnly,watchedF,labelledF,search,pinTouched,refreshTouched,dateReversed]);
+  const view=useMemo(()=>listView(rows,filters,sort,byArtist),[rows,byArtist,sortBy,filters,pinTouched,refreshTouched,dateReversed]);
 
   // DRAWN AS SHE SCROLLS: the first DRAW_STEP cards, then DRAW_STEP more each time the end
   // of the drawn list nears the screen. A new filter, sort or search starts again from the
   // top (viewToken). Jump to bottom draws the rest first. No IntersectionObserver → all.
-  const viewToken=useMemo(()=>({}),[sortBy,venueF,themeF,timeF,acqWanted,acqOwned,acq3mo,acq6mo,acqHasCat,acqNoCat,acqDigital,acqBuyNext,bnPeriod,bnDate,showAll,dismissedOnly,watchedF,labelledF,search,pinTouched,dateReversed]);
+  const viewToken=useMemo(()=>({}),[sortBy,filters,pinTouched,dateReversed]);
   const[drawn,setDrawn]=useState({token:null,n:DRAW_STEP});
   const drawLimit=typeof IntersectionObserver==="undefined"?Infinity:drawn.token===viewToken?drawn.n:DRAW_STEP;
   const moreRef=useRef(null);
@@ -9769,12 +9774,7 @@ export default function App(){
   },[viewToken,drawLimit,view.length]);
   useEffect(()=>{ if(wantBottom.current){ wantBottom.current=false; window.scrollTo({top:document.documentElement.scrollHeight,behavior:"smooth"}); } });
   // The scrubber's periods: the view's groups in order, each with its first card's place.
-  const scrubGroups=useMemo(()=>{
-    if(!periodView)return [];
-    const out=[];
-    view.forEach((r,i)=>{const k=periodOf(r,byArtist); if(!out.length||out[out.length-1].key!==k)out.push({key:k,name:PERIOD_NAME[k],at:i});});
-    return out;
-  },[view,periodView,byArtist]);
+  const scrubGroups=useMemo(()=>scrubGroupsOf(view,periodView,byArtist),[view,periodView,byArtist]);
   const wantPeriod=useRef(null);
   const scrollToPeriod=k=>{
     const el=document.querySelector("[data-period=\""+k+"\"]");
@@ -9791,7 +9791,7 @@ export default function App(){
     else window.scrollTo({top:document.documentElement.scrollHeight,behavior:"smooth"});
   };
 
-  const counts=useMemo(()=>{const c={total:rows.length,dismissed:0,watched:0,wanted:0,owned:0,pressing:0};for(const r of rows){if(!r.interested){c.dismissed++;continue;}if(r.watching)c.watched++;if(r.acquiring==="yes")c.wanted++;if(r.acquiring==="acquired")c.owned++;if(inClosingWindow(r))c.pressing++;}return c;},[rows]);
+  const counts=useMemo(()=>listCounts(rows),[rows]);
 
   const C=PALETTES[theme];
   // TH, chip, pBtn and lnk keep their identity between renders, so LedgerCard can skip redrawing.
@@ -10052,11 +10052,11 @@ export default function App(){
           <span><b style={{color:C.ink}}>{counts.wanted}</b> Wanted</span>
           <span><b style={{color:C.owned}}>{counts.owned}</b> Owned</span>
           <span><b style={{color:TH.urgent.ink}}>{counts.pressing}</b> Closing Window</span>
-          <button onClick={()=>{if(showSearch)setSearch("");setShowSearch(v=>!v);setTimeout(()=>searchRef.current?.focus(),100);}} style={{marginLeft:"auto",background:"none",border:"none",cursor:"pointer",fontSize:16,color:C.soft,padding:0,lineHeight:1}} title="Search">{"\uD83D\uDD0D"}</button>
+          <button onClick={()=>{if(showSearch)setFilters(f=>({...f,search:""}));setShowSearch(v=>!v);setTimeout(()=>searchRef.current?.focus(),100);}} style={{marginLeft:"auto",background:"none",border:"none",cursor:"pointer",fontSize:16,color:C.soft,padding:0,lineHeight:1}} title="Search">{"\uD83D\uDD0D"}</button>
         </div>
         {/* The cross clears what she typed (her ask): right-aligned, shown while there is text. */}
-        {showSearch&&<div style={{marginTop:6,position:"relative"}}><input ref={searchRef} value={search} onChange={e=>setSearch(e.target.value)} style={{width:"100%",padding:"7px 30px 7px 10px",border:"1px solid "+C.rule,borderRadius:4,background:C.card,color:C.ink,fontSize:12.5,fontFamily:"inherit",boxSizing:"border-box"}}/>
-          {search&&<button onClick={()=>{setSearch("");if(searchRef.current)searchRef.current.focus();}} aria-label="Clear search" title="Clear"
+        {showSearch&&<div style={{marginTop:6,position:"relative"}}><input ref={searchRef} value={search} onChange={e=>{const v=e.target.value;setFilters(f=>({...f,search:v}));}} style={{width:"100%",padding:"7px 30px 7px 10px",border:"1px solid "+C.rule,borderRadius:4,background:C.card,color:C.ink,fontSize:12.5,fontFamily:"inherit",boxSizing:"border-box"}}/>
+          {search&&<button onClick={()=>{setFilters(f=>({...f,search:""}));if(searchRef.current)searchRef.current.focus();}} aria-label="Clear search" title="Clear"
             style={{position:"absolute",right:6,top:"50%",transform:"translateY(-50%)",background:"none",border:"none",color:C.soft,fontSize:16,lineHeight:1,cursor:"pointer",padding:"2px 4px"}}>{"\u00d7"}</button>}</div>}
       </header>
 
@@ -10068,34 +10068,34 @@ export default function App(){
         </div>
         <div style={{display:"flex",gap:4,flexWrap:"wrap",alignItems:"center"}}>
           <span style={{fontSize:9,letterSpacing:"0.12em",textTransform:"uppercase",color:C.soft,marginRight:2}}>When</span>
-          {[["current","Current"],["past","Past"],["upcoming","Announced"],["recent","Recently opened"]].map(([k,l])=><button key={k} onClick={()=>toggleSet(setTimeF,k)} style={chip(timeF.has(k))}>{l}</button>)}
+          {[["current","Current"],["past","Past"],["upcoming","Announced"],["recent","Recently opened"]].map(([k,l])=><button key={k} onClick={()=>toggleSet("timeF",k)} style={chip(timeF.has(k))}>{l}</button>)}
         </div>
         <div style={{display:"flex",gap:4,flexWrap:"wrap",alignItems:"center"}}>
           <span style={{fontSize:9,letterSpacing:"0.12em",textTransform:"uppercase",color:C.soft,marginRight:2}}>Venue</span>
-          {chipVenues().map(id=><button key={chipKey(id)} onClick={()=>toggleSet(setVenueF,chipKey(id))} style={chip(venueF.has(chipKey(id)))}>{REG[id].names.chip}</button>)}
-          {OCC_CHIPS.map(([k,l])=><button key={k} onClick={()=>toggleSet(setVenueF,k)} style={chip(venueF.has(k))}>{l}</button>)}
+          {chipVenues().map(id=><button key={chipKey(id)} onClick={()=>toggleSet("venueF",chipKey(id))} style={chip(venueF.has(chipKey(id)))}>{REG[id].names.chip}</button>)}
+          {OCC_CHIPS.map(([k,l])=><button key={k} onClick={()=>toggleSet("venueF",k)} style={chip(venueF.has(k))}>{l}</button>)}
         </div>
         <div style={{display:"flex",gap:4,flexWrap:"wrap",alignItems:"center"}}>
           <span style={{fontSize:9,letterSpacing:"0.12em",textTransform:"uppercase",color:C.soft,marginRight:2}}>Theme</span>
-          {THEME_CHIPS.map(([k,l])=><button key={k} onClick={()=>toggleSet(setThemeF,k)} style={chip(themeF.has(k))}>{l}</button>)}
+          {THEME_CHIPS.map(([k,l])=><button key={k} onClick={()=>toggleSet("themeF",k)} style={chip(themeF.has(k))}>{l}</button>)}
         </div>
         <div style={{display:"flex",gap:4,flexWrap:"wrap",alignItems:"center"}}>
           <span style={{fontSize:9,letterSpacing:"0.12em",textTransform:"uppercase",color:C.soft,marginRight:2}}>Acquiring?</span>
-          <button onClick={()=>setAcqWanted(v=>!v)} style={chip(acqWanted)}>Wanted</button>
-          <button onClick={()=>{setAcqOwned(v=>!v);if(acqBuyNext){setBnPeriod(false);setBnDate(false);setDateReversed(false);}}} style={chip(acqOwned)}>Owned</button>
-          <button onClick={()=>{setAcqBuyNext(v=>!v);setBnPeriod(false);setBnDate(false);}} style={chip(acqBuyNext)}>Buy next</button>
-          <button onClick={()=>setAcq3mo(v=>!v)} style={chip(acq3mo)}>3+ mos</button>
-          <button onClick={()=>setAcq6mo(v=>!v)} style={chip(acq6mo)}>6+ mos closing window</button>
-          <button onClick={()=>setAcqHasCat(v=>!v)} style={chip(acqHasCat)}>Has catalogue</button>
-          <button onClick={()=>setAcqNoCat(v=>!v)} style={chip(acqNoCat)}>No catalogue</button>
-          <button onClick={()=>setAcqDigital(v=>!v)} style={chip(acqDigital)}>Digital catalogue</button>
+          <button onClick={()=>setFilters(f=>({...f,acqWanted:!f.acqWanted}))} style={chip(acqWanted)}>Wanted</button>
+          <button onClick={()=>{setFilters(f=>({...f,acqOwned:!f.acqOwned,...(acqBuyNext?{bnPeriod:false,bnDate:false}:{})}));if(acqBuyNext){setDateReversed(false);}}} style={chip(acqOwned)}>Owned</button>
+          <button onClick={()=>setFilters(f=>({...f,acqBuyNext:!f.acqBuyNext,bnPeriod:false,bnDate:false}))} style={chip(acqBuyNext)}>Buy next</button>
+          <button onClick={()=>setFilters(f=>({...f,acq3mo:!f.acq3mo}))} style={chip(acq3mo)}>3+ mos</button>
+          <button onClick={()=>setFilters(f=>({...f,acq6mo:!f.acq6mo}))} style={chip(acq6mo)}>6+ mos closing window</button>
+          <button onClick={()=>setFilters(f=>({...f,acqHasCat:!f.acqHasCat}))} style={chip(acqHasCat)}>Has catalogue</button>
+          <button onClick={()=>setFilters(f=>({...f,acqNoCat:!f.acqNoCat}))} style={chip(acqNoCat)}>No catalogue</button>
+          <button onClick={()=>setFilters(f=>({...f,acqDigital:!f.acqDigital}))} style={chip(acqDigital)}>Digital catalogue</button>
         </div>
         <div style={{display:"flex",gap:4,flexWrap:"wrap",alignItems:"center"}}>
           <span style={{fontSize:9,letterSpacing:"0.12em",textTransform:"uppercase",color:C.soft,marginRight:2}}>Showing</span>
-          <button onClick={()=>setWatchedF(v=>!v)} style={chip(watchedF)}>Watched</button>
-          <button onClick={()=>{setDismissedOnly(v=>!v);setShowAll(false);}} style={chip(dismissedOnly)}>Dismissed</button>
-          <button onClick={()=>setLabelledF(v=>!v)} style={chip(labelledF)}>Recently labelled</button>
-          <button onClick={()=>{setShowAll(v=>!v);setDismissedOnly(false);}} style={chip(showAll)}>Show all</button>
+          <button onClick={()=>setFilters(f=>({...f,watchedF:!f.watchedF}))} style={chip(watchedF)}>Watched</button>
+          <button onClick={()=>setFilters(f=>({...f,dismissedOnly:!f.dismissedOnly,showAll:false}))} style={chip(dismissedOnly)}>Dismissed</button>
+          <button onClick={()=>setFilters(f=>({...f,labelledF:!f.labelledF}))} style={chip(labelledF)}>Recently labelled</button>
+          <button onClick={()=>setFilters(f=>({...f,showAll:!f.showAll,dismissedOnly:false}))} style={chip(showAll)}>Show all</button>
           <button onClick={clearFilters} style={{...chip(false),color:C.muted,borderColor:C.muted}}>Clear all</button>
         </div>
       </div>

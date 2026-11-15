@@ -130,6 +130,13 @@
    "files": {
     "ledger/marks.jsx": "What each mark on a card does to the ledger: dismiss, restore, watch, acquiring, Buy next and its order, the catalogue pick, the digital link, keep this period."
    }
+  },
+  {
+   "id": "5-a2",
+   "name": "Main screen, stage A2: the list (filters as one object, the list, its counts, the scrubber's groups) as plain functions out of the screen",
+   "files": {
+    "ledger/list_view.jsx": "The list on the main screen: the one filters object and its all-clear value, the list mode, the filtered and sorted list, its counts and the scrubber's groups."
+   }
   }
  ],
  "pieces": {
@@ -630,7 +637,6 @@
   "markPick": "ledger/marks.jsx",
   "markDigital": "ledger/marks.jsx",
   "markKeepPeriod": "ledger/marks.jsx",
-
   "UNREAD_OCC,UNREAD_LINKS,UNREAD_PAGES,UNREAD_PASTES,UNREAD_SWEEPS,UNREAD_QUAR": "connections/store.jsx",
   "SHOP_WORD": "shop_finder/museum_shop.jsx",
   "SHOP_WORDS": "shop_finder/museum_shop.jsx",
@@ -812,6 +818,11 @@
   "pageRawBlock": "import/claude_read.jsx",
   "isbnDigits": "foundations/isbn.jsx",
   "ISBN13_STANDALONE": "foundations/isbn.jsx",
-  "withoutWww": "foundations/text.jsx"
+  "withoutWww": "foundations/text.jsx",
+  "filtersClear": "ledger/list_view.jsx",
+  "listMode": "ledger/list_view.jsx",
+  "listView": "ledger/list_view.jsx",
+  "listCounts": "ledger/list_view.jsx",
+  "scrubGroupsOf": "ledger/list_view.jsx"
  }
 }
