@@ -103,7 +103,7 @@
    "pageShop": "https://tienda.museothyssen.org/en",
    "shop": "https://tienda.museothyssen.org/en/collections/exhibitions",
    "case": "a Shopify shop whose search holds only single books: its list of sections",
-   "truth": "hers: \"Exposiciones\" (catalogues and guides of its exhibitions); the collection guides once confirmed are wrong by her order, her app keeps them (no hand edits)",
+   "truth": "hers: \"Exposiciones\" (catalogues and guides of its exhibitions), written into its register entry (her decision); the collection guides once confirmed stay only on the filed record",
    "lastGood": [
     {
      "step": "search",

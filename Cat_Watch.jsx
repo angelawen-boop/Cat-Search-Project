@@ -85,7 +85,7 @@ const VENUES = [
   { id: "acq", kind: "swept",
     names: { card: "Acquavella", chip: "Acquavella", group: null, full: "Acquavella Galleries", inEnglish: null, aka: [], replaced: [], hers: true },
     city: "New York", country: "United States", english: true, language: null,
-    shop: { home: "https://acquavellagalleries.myshopify.com/", catalogues: "https://acquavellagalleries.myshopify.com/collections/all", search: "https://acquavellagalleries.myshopify.com/search?q=", unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
+    shop: { home: "https://acquavellagalleries.myshopify.com/", catalogues: "https://acquavellagalleries.myshopify.com/collections/frontpage", search: "https://acquavellagalleries.myshopify.com/search?q=", unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
     read: { link: { title: "subtitle", credit: /^In collaboration with\b/i, dashAfterColon: true, from: /^Press Release$/, minLine: 60, skip: /^Gallery Hours:|\bImage Courtesy\b/, skipEntities: true, cleanLink: true }, sites: [], dateOrder: null, spacedYear: false, places: ["New York", "Palm Beach"], placeOwner: "Acquavella", titleCaps: null, subtitleUnderHeading: false },
     sweep: { exBase: "https://www.acquavellagalleries.com/exhibitions/", listUrl: "https://www.acquavellagalleries.com/exhibitions" },
     filed: null },
@@ -802,7 +802,7 @@ const VENUES = [
   { id: "occ-museothyssen-org", kind: "manual",
     names: { card: "Thyssen-Bornemisza", chip: null, group: null, full: "Museo Nacional Thyssen-Bornemisza", inEnglish: null, aka: ["Museo Thyssen-Bornemisza", "Thyssen-Bornemisza National Museum", "Museo Thyssen"], replaced: [], hers: false },
     city: "Madrid", country: "Spain", english: false, language: null,
-    shop: { home: null, catalogues: null, search: null, unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
+    shop: { home: "https://tienda.museothyssen.org/", catalogues: "https://tienda.museothyssen.org/en/collections/exhibitions", search: null, unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
     read: { link: null, sites: [], dateOrder: null, spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
     sweep: { exBase: null, listUrl: null },
     filed: { addedAt: "2026-10-04T01:00:56.784Z", aka: ["Museo Thyssen-Bornemisza", "Thyssen-Bornemisza National Museum", "Museo Thyssen"], city: "Madrid", confirmed: true, country: "Spain", english: false, finder: 2, foundBy: "a search", gallery: false, host: "www.museothyssen.org", id: "occ-museothyssen-org", name: "Museo Nacional Thyssen-Bornemisza", pageShop: "https://tienda.museothyssen.org/en", rejected: [], shelfKind: "catalogues", shop: "found", shopCatalogues: "https://tienda.museothyssen.org/en/collections/guias-y-catalogos-del-museo", shopHome: "https://tienda.museothyssen.org/", shopSearch: "https://tienda.museothyssen.org/search?q=", short: "Thyssen-Bornemisza", turnedDown: [], why: null } },
@@ -3508,6 +3508,9 @@ const SEARCH_SHAPES=["search?q=","search.php?search_query=","catalogsearch/resul
 // made only when the first proves nothing — one call carries 20 addresses at most.
 const SEARCH_SHAPES_LATER=["search?search=","search?sSearch="];
 const PRICE_ONE=new RegExp(PRICE.source,"i");
+// A price anywhere on a shop page, as the catalogue lookup asks of a whole page (shopStep): any price
+// above, or a whole number before the euro sign or a currency code ("39 \u20ac", "45 EUR").
+const PRICE_ON_PAGE=new RegExp(PRICE.source+"|\\d\\s?(?:\u20ac|(?:eur|usd|gbp)\\b)","i");
 const NOT_A_BOOK_LINK=/cart|wishlist|account|login/i;
 const BLOCK_LINES=6;   // lines of a link's block read for its price
 // A shop's buttons beside a price are not books (Cleveland's filter "Reset", the RA's "Shop now").
@@ -6397,8 +6400,6 @@ function publisherLinkOf(u,publisher,dom,museumId){
 // Text a fetched page must carry before we believe we saw it — measured: Hannibal's
 // script-drawn section returns 110 characters, a real shelf thousands.
 const SHELL_CHARS=400;
-// A price on a shop page: a shelf of books always shows them (shopStep).
-const SHOP_PRICE=/(?:[\u20ac$\u00a3]\s?\d|\d(?:[.,]\d{1,2})?\s?(?:\u20ac|(?:EUR|USD|GBP)\b))/;
 
 // The page's own text: the full copy when one was asked for, else excerpts.
 function oneText(r){
@@ -7248,7 +7249,7 @@ async function shopStep(row,io){
   const readWhole=async()=>{
     const whole=await io.fetch(shopPages,SHOP_BOOKS_ASK,null,{full:true});
     if(!whole.ok)return{out:{ran:true,ok:false,detail:s1.detail+"\n"+whole.detail,data:null}};
-    let books=whole.results.filter(r=>!pageIsShell([r])&&SHOP_PRICE.test(oneText(r)));
+    let books=whole.results.filter(r=>!pageIsShell([r])&&PRICE_ON_PAGE.test(oneText(r)));
     // No price on any page: a list of titles is books when its first product is one
     // (firstProductIsBook, Yale's Publications), or its first book under its own address (Galerie Karsten Greve).
     const listed=books.length?null:whole.results.find(r=>!pageIsShell([r]));
