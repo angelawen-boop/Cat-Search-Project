@@ -669,6 +669,16 @@
   "LedgerCard",
   "CatalogueBox",
   "CatalogueNone",
+  "markRow",
+  "markDismiss",
+  "markRestore",
+  "markWatch",
+  "markAcquiring",
+  "markBuyNext",
+  "markBuyNextMove",
+  "markPick",
+  "markDigital",
+  "markKeepPeriod",
   "App"
  ]
 }

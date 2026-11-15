@@ -293,6 +293,65 @@ async function snapshot(jsxFile, outFile, liveFile) {
     click([...doc.querySelector('article').querySelectorAll('button')].find(b => b.textContent.trim() === 'Hide')); await steady();
   });
 
+  // The walk (stage A of the main screen): card marks, every sort, every chip. Each capture is the
+  // screen's fingerprint and the cards in order, so a difference says which card moved.
+  const brief = () => require('crypto').createHash('sha1').update(screen()).digest('hex') + '\n' +
+    [...doc.querySelectorAll('article')].map(a => a.textContent.slice(0, 70)).join('\n');
+  const cardBtn = (n, find) => { const a = doc.querySelectorAll('article')[n]; return a && [...a.querySelectorAll('button')].find(find); };
+  const walk = async (name, el) => {
+    await step(name, async () => { const was = screen(); const had = click(el); const ok = had && await until(() => screen() !== was, 4000);
+      await steady(); capture(name, ok, brief); });
+  };
+  await walk('mark-watch', cardBtn(0, b => b.title === 'Watch'));
+  await walk('mark-unwatch', cardBtn(0, b => b.title === 'Unwatch'));
+  await walk('mark-watch-2', cardBtn(7, b => b.title === 'Watch'));
+  await walk('mark-yes', cardBtn(0, b => b.textContent === 'Yes'));
+  await walk('mark-buynext', cardBtn(0, b => b.title === 'Buy next'));
+  await walk('mark-yes-2', cardBtn(2, b => b.textContent === 'Yes'));
+  await walk('mark-buynext-2', cardBtn(2, b => b.title === 'Buy next'));
+  await walk('mark-yes-3', cardBtn(3, b => b.textContent === 'Yes'));
+  await walk('mark-buynext-3', cardBtn(3, b => b.title === 'Buy next'));
+  await walk('mark-buynext-3-off', cardBtn(3, b => b.title === 'Not buying next'));
+  await walk('mark-no', cardBtn(3, b => b.textContent === 'No'));
+  await walk('mark-acquired', cardBtn(4, b => b.textContent === 'Acquired'));
+  await walk('mark-dismiss', cardBtn(5, b => b.title === 'Not interested'));
+  await walk('mark-undo', button(/^Undo$/));
+  await walk('mark-dismiss-2', cardBtn(6, b => b.title === 'Not interested'));
+  await step('marks-store', async () => { await steady(); capture('marks-store', true, storeText); });
+  const chipRow = async (label, tag) => {
+    const n = rowOf(label).length; if (!n) { missed[tag] = true; screens[tag] = ''; return; }
+    for (let i = 0; i < n; i++) { const t = rowOf(label)[i].textContent.trim(); if (/^Clear all$/.test(t)) continue;
+      await walk(tag + '-' + t, rowOf(label)[i]);
+      if (label === 'Sort' && /^(Date|Period)/.test(t)) await walk(tag + '-' + t + '-again', rowOf(label)[i]);
+      else { click(rowOf(label)[i]); await steady(); } }
+  };
+  await chipRow('Sort', 'sort');
+  click(rowOf('Sort')[0]); await steady();
+  for (const label of ['When', 'Venue', 'Theme', 'Acquiring?', 'Showing']) await chipRow(label, 'chip-' + label);
+  // Combinations: Wanted beside Owned; Buy next in her order, by period, by date and reversed; Dismissed; a search; Clear all.
+  const acq = t => rowOf('Acquiring?').find(b => b.textContent.trim() === t), sortBtn = re => rowOf('Sort').find(b => re.test(b.textContent));
+  await walk('mix-wanted', acq('Wanted'));
+  await walk('mix-wanted-owned', acq('Owned'));
+  await walk('mix-wanted-owned-buynext', acq('Buy next'));
+  click(acq('Wanted')); click(acq('Owned')); await steady();
+  await step('mix-buynext', async () => { capture('mix-buynext', lit(acq('Buy next')), brief); });
+  await walk('mix-buynext-period', sortBtn(/^Period/));
+  await walk('mix-buynext-period-again', sortBtn(/^Period/));
+  await walk('mix-buynext-date', sortBtn(/^Date/));
+  await walk('mix-buynext-date-again', sortBtn(/^Date/));
+  await walk('mix-buynext-date-off', sortBtn(/^Date/));
+  await walk('mix-clear', rowOf('Showing').find(b => /^Clear all$/.test(b.textContent.trim())));
+  await step('mix-search', async () => {
+    const was = screen(); click(doc.querySelector('button[aria-label="Search"]') || [...doc.querySelectorAll('button')].find(b => /search/i.test(b.title || b.getAttribute('aria-label') || '')));
+    const ok = await until(() => !!doc.querySelector('input:not([type=file])') && screen() !== was, 4000);
+    const box = [...doc.querySelectorAll('input:not([type=file])')][0]; if (box) type(box, 'bocklin van');
+    await steady(); capture('mix-search-none', ok, brief);
+    if (box) type([...doc.querySelectorAll('input:not([type=file])')][0], 'van');
+    await steady(); capture('mix-search', ok, brief);
+  });
+  await walk('mix-search-dismissed', rowOf('Showing').find(b => b.textContent.trim() === 'Dismissed'));
+  await walk('mix-clear-2', rowOf('Showing').find(b => /^Clear all$/.test(b.textContent.trim())));
+
   // Save now: the screen, every store record, the file handed over.
   await step('saveNow', async () => {
     click(button(/^Save$/));
