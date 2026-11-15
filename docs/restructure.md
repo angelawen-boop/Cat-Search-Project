@@ -222,6 +222,48 @@ Branch `claude/restructure-5-a2`. A new part, `app/ledger/list_view.jsx` (featur
   `filters` in place of the sixteen.
 - **Must come out the same:** every list in every sort, chip and combination the check walks.
 
+**A2 — done, merged.** `app/ledger/list_view.jsx` (`filtersClear`, `listMode`, `listView`, `listCounts`,
+`scrubGroupsOf`); the screen holds the filters as one object, set by name; both clears are one call.
+
+### Run A3-0 — the check learns the jobs (design; a tool run, no app change)
+
+Branch `claude/restructure-5-a3-check`. A3 and all of stage C move the jobs the side-by-side check never
+presses, so the check is taught them first, against unchanged app code (old = new = `main`: it must come out
+identical, and each new step must be shown to fail on a one-word break). *Opus, medium.* New steps, each
+with fixed stand-in replies from the web and from Claude and every call recorded:
+- Label (the toolbar's button) on the loaded ledger; Relabel on one card, and "keep this period" where the
+  card offers it; the store after each.
+- Find catalogue on a card not yet looked up; Search again on it; Re-check museum shop; a digital link
+  typed into a card; the catalogue pick where a card has versions. The card, the banner, the diagnostic box
+  and the store after each.
+- A Paste read that meets a venue outside her list, through the review to the shop screen: Confirm, No
+  shop, her own link, Look again, Back, then Apply; and once more ending in Cancel import. Screen and store.
+- **The store's sequence:** every read, write, delete and list the page makes on its store, in order, from
+  opening to the first save, compared as its own record (stage C's proof).
+
+### Run A3a — what a lookup or a labelling found and what to say (design)
+
+Branch `claude/restructure-5-a3a`. *Opus, medium.*
+- **Lookup part:** the Find catalogue / Search again job and the Re-check job, shaped like the Read job:
+  the row and the lookup's hooks in; out comes what to land on the card (through `landOnCard`, on the
+  ledger as it stands when the answer arrives), the line for the card, the banner sentence, the diagnostic.
+  The lookup-log record is started and saved by the job. Every sentence moves with it, word for word.
+- **Periods part:** Label, Relabel and Label-import-cards as jobs (inputs in; labels, sentence and
+  diagnostic out; progress through a callback; the lookup-log record kept by the job), the plain function
+  that puts labels onto rows (it still skips a row labelled meanwhile), and "keep this period"'s sentence.
+- **The screen keeps:** the read-only stop, the busy flags and progress line, and putting what a job
+  hands back into memory, in the same order as today.
+
+### Run A3b — a venue's shop answers (design)
+
+Branch `claude/restructure-5-a3b`. *Opus, medium.*
+- **Shop finder part:** a link venue's shop search worked out at its first lookup (`fillShopSearch`): the
+  venue's record in, the record's additions out (or nothing when a call died). The screen stores them.
+- **Link-venue part:** the shop screen's answers as `(venues, id, …) → venues`: confirm (with the English
+  pick), no shop, her own link, and what Look again found (the search itself is a job: venue in, shop out).
+- **The screen keeps:** the working copy and the stored copy of the venues, which box is open, which venue
+  is being looked for, and the store write.
+
 ## 4A — the venue register (merged)
 
 **Her decisions (made; the code-or-store question is closed):**
@@ -548,7 +590,7 @@ word) and item 5's cutting plan in full, then:
 
 ## Handover record — updated after every step
 
-**Where we are:** item 5 is under way: A1 is merged (see "5 — the runs"); A2 is next, its design written. Item 4 is finished and on `main`: steps 1 to 5 of "This run" (59 published; the app-side
+**Where we are:** item 5 is under way: A1 and A2 are merged (see "5 — the runs"); next is A3-0 (the check learns the jobs), then A3a and A3b, their designs written. Item 4 is finished and on `main`: steps 1 to 5 of "This run" (59 published; the app-side
 and scraper-side rounds, the price rule and the two venues, the keys round). Step 6, the main screen's
 cutting plan, is written (item 5). `main` passes the app's suites, the join, structure and fact checks. What waits for her is under "Parked for her" and "Start here", 5.
 
