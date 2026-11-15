@@ -123,7 +123,10 @@ Shop page pointing elsewhere is followed (`shopElsewhere`); a Shop button vouche
 a book's address in a menu stands for its section (`menuLinks`). A shop on a shared site (Yale/Touchnet) is read on the exact
 page the museum links; a shop page that is one line is reopened once with `page=1` (`openShopPage`); a short page of several
 lines never (Louvre, LG-); menu labels read by their first six words. The shared word lists (`SHELF_CATALOGUES`, `SHELF_BOOKS`, `BOOK_WORD`) include German, Danish and Scandinavian
-words and franc/crown prices. Ranking: an exhibitions' catalogues section first (`SHELF_EXHIBITIONS`); "/products/" after a section word is a
+words and franc/crown prices. **One price rule** for the finder, the lookup and the galleries (`pricesIn`, `hasPrice`): an
+amount with its currency, cents or none; never a zero (an empty basket's "0,00 €", Berlin), a filter by price (a range as a list item,
+link or with a count, or from zero; "and above", "orders over £50") or a link's hover title; a book's own span ("$40.00 - $65.00", the
+Met) is its price. A filter by price still marks a priced list for the shelf test (KMSKA's shelf came back without prices). Ranking: an exhibitions' catalogues section first (`SHELF_EXHIBITIONS`); "/products/" after a section word is a
 section; a shop on the museum's own sub-address is the shop. A section found on a later page is kept by its first (her decision;
 `firstPageOf`).
 

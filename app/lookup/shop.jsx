@@ -356,7 +356,7 @@ async function shopStep(row,io){
   if(!s1.results.length)return{ran:true,ok:true,detail:s1.detail,data:null};
   // A venue whose books Parallel drops (the Städel), a shop drawn by script (Basel), or a section she confirmed
   // unread (Berlin's English one): no priced line, even read whole, is "parallel", "script" or "unconfirmed".
-  const priced=r=>pageTextOf(r.results).split("\n").some(realPrice);
+  const priced=r=>hasPrice(pageTextOf(r.results));
   if(mu&&(mu.shopUnseen==="parallel"||mu.shopUnseen==="script"||mu.shopUnseen==="unconfirmed")&&!priced(s1)){
     const whole=await io.fetch(shopPages,SHOP_BOOKS_ASK,null,{full:true});
     if(!whole.ok)return{ran:true,ok:false,detail:s1.detail+"\n"+whole.detail,data:null};
@@ -371,7 +371,7 @@ async function shopStep(row,io){
   const readWhole=async()=>{
     const whole=await io.fetch(shopPages,SHOP_BOOKS_ASK,null,{full:true});
     if(!whole.ok)return{out:{ran:true,ok:false,detail:s1.detail+"\n"+whole.detail,data:null}};
-    let books=whole.results.filter(r=>!pageIsShell([r])&&PRICE_ON_PAGE.test(oneText(r)));
+    let books=whole.results.filter(r=>!pageIsShell([r])&&hasPrice(oneText(r)));
     // No price on any page: a list of titles is books when its first product is one
     // (firstProductIsBook, Yale's Publications), or its first book under its own address (Galerie Karsten Greve).
     const listed=books.length?null:whole.results.find(r=>!pageIsShell([r]));
@@ -398,7 +398,7 @@ async function shopStep(row,io){
   // Nothing found on pages that show no book at all — no price, no product link (MoMA's
   // member pop-up, too long to count as empty): read whole, and with no books on them
   // the shop could not be seen, never "not in the museum shop" (her decision; B-007).
-  const showsBook=r=>oneText(r).split("\n").some(realPrice)||productLinksOn(oneText(r),hostOf(r.url)).length>0;
+  const showsBook=r=>hasPrice(oneText(r))||productLinksOn(oneText(r),hostOf(r.url)).length>0;
   if(!(r1.data&&r1.data.found)&&shop===s1&&s1.results.every(r=>!showsBook(r))){
     const w=await readWhole();
     if(w.out&&w.out.blocked)return w.out;

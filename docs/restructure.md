@@ -380,13 +380,6 @@ every item across before sending it to her.
 - One Italian venue's full name is the English one (her choice on the review page), so its Italian-language
   catalogue search now reads English name + Italian words. Every other non-English venue searches under its
   own-language name.
-- **The shop finder does not count a whole-number euro price ("39 €", no cents) as a price; the lookup
-  does.** Left so on purpose: counting it in the finder adds real prices at one shop and a price-filter link
-  ("7 € - 15 €") at another, so it is a behaviour change to agree with her, not a tidy-up. The
-  currencies themselves are now one list (`PRICE`); the lookup's whole-page test is that list plus the
-  whole-number form (`PRICE_ON_PAGE`).
-- **One shop's shelf page counts as "has prices" only because of its empty basket's "0,00 €"** (the
-  lookup's whole-page test has never excluded a basket total; the finder's line test does). Unchanged.
 - **Thyssen and Acquavella are hard-coded answers** (her decision): their shop sections are written into the
   register, so the shop screen no longer asks about the Thyssen.
 - From the scraper-side round, seen and not touched: the sweep log can record an empty "tried" date for a

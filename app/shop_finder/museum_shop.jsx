@@ -149,16 +149,53 @@ function rankShelves(cands,ownName){
 // A SHELF OF BOOKS, READ OFF ITS TEXT: book words and prices, both plural. German joins
 // its words ("Ausstellungskataloge", Berlin).
 const BOOK_WORD=/\bisbn\b|\bhard(?:cover|back)\b|\bpaperback\b|\bsoftcover\b|\bpages\b|\bcatalog(?:ue|o|us)?s?\b|\bcatalogi\b|kataloge?\b|\bbooks?\b|\bboek(?:en)?\b|\blibros?\b|\blivres?\b|\bbuch\b|\bbu(?:e)?cher\b|\bbok\b|\bbocker\b|\bpublikation(?:en|er)?\b|\bseiten\b|\bsidor\b|\btapa (?:dura|blanda)\b/g;
-//@piece PRICE
+//@piece PRICE_AMOUNT
 
-// Swiss francs and Scandinavian crowns count too (Beyeler "CHF 45.00", Nationalmuseum "SEK 345"), and a
-// currency code before the number (Albertina "EUR 24,90").
-const PRICE=/[$€£]\s?\d|\b(?:chf|sek|dkk|nok|kr\.?|eur|usd|gbp|aud|cad)\s?\d|\d[.,]\d{2}\s?(?:€|eur\b|usd\b|gbp\b|chf\b|\$|£)|\d\s?(?:sek|dkk|nok|kr)\b/g;
+// A PRICE: an amount with its currency, symbol or code, before or after it, cents or none, any case —
+// "CHF 45.00" (Beyeler), "SEK 345" (Nationalmuseum), "EUR 24,90" (Albertina), "80 €" (Karsten Greve),
+// "1.250,00 €", "$1,250". A currency between two numbers goes with the one that has no other ("1600 - 1815
+// £25", a V&A title; "0,00€ 12,00€", Thyssen).
+const PRICE_AMOUNT=/(?:[$€£]|\b(?:chf|sek|dkk|nok|kr\.?|eur|usd|gbp|aud|cad))[^\S\n]?(\d{1,3}(?:[.,'\u2019\u00a0\u202f]\d{3})+(?:[.,]\d{1,2})?|\d+(?:[.,]\d{1,2})?)(?!\d)|(?<![\d.,])(\d{1,3}(?:[.,'\u2019\u00a0\u202f]\d{3})+(?:[.,]\d{1,2})?|\d+(?:[.,]\d{1,2})?)(?!\d)[^\S\n]?(?:[$€£]|(?:chf|sek|dkk|nok|kr|eur|usd|gbp|aud|cad)\b)(?![^\S\n]?(?=(\d[\d.,'\u2019\u00a0\u202f]*))\3(?![^\S\n]?(?:[$€£]|(?:chf|sek|dkk|nok|kr|eur|usd|gbp|aud|cad)\b)))/gi;
+//@piece priceMarks
+
+// Every amount in a text, each marked when it is a shop's filter by price, never a thing's price: two amounts
+// joined low to high as a list item, a link or with a count ("7 € - 15 €" Prado, "* £10 - £20 (5)" V&A,
+// "£0.00 \- £20.00 23 items" National Gallery), or from zero (KMSKA's "€ 0 \- € 90"); one end of one ("€40.00 and
+// above", Guggenheim Bilbao; "Over $300"). Standing alone, low to high, it is a book's price span ("$40.00 -
+// $65.00", the Met; Ashmolean). A link's hover title repeats the link and is not read ("Refine by price: 1 - £9.99", Tate).
+function priceMarks(text){
+  const t=String(text||"").replace(/(\]\([^)\s]+)\s+"[^"\n]*"\)/g,"$1)");
+  const value=n=>{ const m=n.match(/^(.*?)(?:[.,](\d{1,2}))?$/); return parseFloat(m[1].replace(/\D/g,"")+"."+(m[2]||"0")); };
+  const all=[...t.matchAll(PRICE_AMOUNT)].map(m=>({text:m[0].trim(),at:m.index,end:m.index+m[0].length,value:value(m[1]||m[2])}));
+  const line=(from,to)=>[t.slice(t.lastIndexOf("\n",from-1)+1,from),t.slice(to).split("\n")[0]];
+  const joined=/^(?:[^\S\n]*\\?[-\u2010-\u2015~][^\S\n]*|[^\S\n]+(?:to|bis|au|til|a|\u00e0)[^\S\n]+)$/i;
+  all.forEach((p,i)=>{
+    const q=all[i+1], [before,after]=line(p.at,(q||p).end);
+    if(q&&joined.test(t.slice(p.end,q.at))&&p.value<=q.value){
+      if(p.value===0||/^[^\S\n]*(?:\(\d+\)|\d+\b)/.test(after)
+        ||(/^\s*(?:(?:[*+\-]|\d+\.)\s+\[?|\[)[^\S\n]*$/.test(before)&&/^[^\S\n]*(?:\]\(|$)/.test(after)))p.filter=q.filter=true;
+      else q.span=true;
+    }
+    const [b1,a1]=line(p.at,p.end);
+    if(/\b(?:under|below|over|above|less than|more than)[^\S\n]*$/i.test(b1)||/^[^\S\n]*(?:and|&|or)[^\S\n]+(?:above|over|up|more|less|under|below)\b/i.test(a1))p.filter=true;
+  });
+  return all.filter(p=>!p.span);
+}
+//@piece pricesIn
+
+// Every real price in a text — one rule for the shop finder, the lookup and the galleries: an amount, not a
+// filter by price, and not zero (an empty basket's total, "0,00 €", Berlin's "Merkzettel").
+const pricesIn=text=>priceMarks(text).filter(p=>!p.filter&&p.value>0).map(p=>p.text);
+//@piece hasPrice
+
+const hasPrice=text=>pricesIn(text).length>0;
 //@piece looksLikeBookShelf
 
+// Prices, or a filter by price, which only a priced list carries (KMSKA's shelf came back with its slider
+// and not its prices).
 function looksLikeBookShelf(text){
-  const t=foldText(text);
-  return (t.match(BOOK_WORD)||[]).length>=3&&(t.match(PRICE)||[]).length>=2;
+  const t=foldText(text), marks=priceMarks(t);
+  return (t.match(BOOK_WORD)||[]).length>=3&&(marks.filter(p=>!p.filter&&p.value>0).length>=2||marks.some(p=>p.filter));
 }
 //@piece PRODUCT_LINK
 
@@ -170,7 +207,7 @@ function productLinksOn(text,host){ return [...new Set(mdLinks(text).filter(l=>h
 
 function looksLikeOneBook(text){
   const t=foldText(text);
-  return /\bisbn\b|\bhard(?:cover|back)\b|\bpaperback\b|\bsoftcover\b/.test(t)&&new RegExp(PRICE.source).test(t);
+  return /\bisbn\b|\bhard(?:cover|back)\b|\bpaperback\b|\bsoftcover\b/.test(t)&&hasPrice(t);
 }
 //@piece titleOnly
 
@@ -353,14 +390,6 @@ const SEARCH_SHAPES=["search?q=","search.php?search_query=","catalogsearch/resul
 // Shopware's two searches (CEDON "search?search=", Berlin "search?sSearch="): a second call,
 // made only when the first proves nothing — one call carries 20 addresses at most.
 const SEARCH_SHAPES_LATER=["search?search=","search?sSearch="];
-//@piece PRICE_ONE
-
-const PRICE_ONE=new RegExp(PRICE.source,"i");
-//@piece PRICE_ON_PAGE
-
-// A price anywhere on a shop page, as the catalogue lookup asks of a whole page (shopStep): any price
-// above, or a whole number before the euro sign or a currency code ("39 \u20ac", "45 EUR").
-const PRICE_ON_PAGE=new RegExp(PRICE.source+"|\\d\\s?(?:\u20ac|(?:eur|usd|gbp)\\b)","i");
 //@piece NOT_A_BOOK_LINK
 
 const NOT_A_BOOK_LINK=/cart|wishlist|account|login/i;
@@ -371,10 +400,6 @@ const BLOCK_LINES=6;
    // lines of a link's block read for its price
 // A shop's buttons beside a price are not books (Cleveland's filter "Reset", the RA's "Shop now").
 const BUTTON_LABEL=/^(?:reset|clear(?: all)?|shop(?: now| all)?|details|view(?: all| more)?|more|quick view|add to (?:cart|basket|bag)|buy(?: now)?|zum produkt|jetzt bestellen|optionen w\u00e4hlen|in den warenkorb)$/i;
-//@piece realPrice
-
-// "0,00 €" is an empty basket's total, never a book's price (Berlin's "Merkzettel").
-const realPrice=l=>PRICE_ONE.test(l)&&!/(?:^|[^\d.,])0[.,]00\s?(?:€|eur\b)|[$£€]\s?0[.,]00\b/i.test(l);
 //@piece booksSeenOn
 
 // A book on the shop's pages: a link with its price right after it; failing that, a link
@@ -388,7 +413,7 @@ function booksSeenOn(text,host,both){
     seen.add(path); out.push({label:stripMd(label),path});
   };
   for(const m of String(text||"").matchAll(/\[([^\]\[]{3,160})\]\((https?:\/\/[^)\s]+)\)([^\[\n]{0,40})/g)){
-    if(PRICE_ONE.test(m[3])&&hostOf(m[2])===host)add(m[1],m[2]);
+    if(hasPrice(m[3])&&hostOf(m[2])===host)add(m[1],m[2]);
   }
   if(out.length&&!both)return out;
   const links=[...String(text||"").matchAll(/\[([^\]\[]{3,160})\]\((https?:\/\/[^)\s]+)(?:\s+"[^"]*")?\)/g)].filter(m=>hostOf(m[2])===host);
@@ -399,7 +424,7 @@ function booksSeenOn(text,host,both){
     const end=i+1<links.length?links[i+1].index:undefined;
     const block=String(text).slice(m.index+m[0].length,end).split("\n").map(l=>l.trim()).filter(Boolean).slice(0,BLOCK_LINES);
     let p=""; try{ p=new URL(m[2]).pathname; }catch{}
-    if(!BUTTON_LABEL.test(stripMd(m[1]).trim())&&block.some(realPrice))add(full.get(p)||m[1],m[2]);
+    if(!BUTTON_LABEL.test(stripMd(m[1]).trim())&&block.some(hasPrice))add(full.get(p)||m[1],m[2]);
   });
   return out;
 }
@@ -603,7 +628,7 @@ async function tryShelves(sf,cands,how,inside){
     if(await firstProductIsBook(fetchPage,t,hostOf(c.url)))return{...c,how};
     sf.failed.add(k);
     // An exhibition-catalogues section whose page came back with no price at all: unread, not proved empty.
-    if(c.target&&!String(t).split("\n").some(realPrice))sf.unread.push(c.url);
+    if(c.target&&!hasPrice(t))sf.unread.push(c.url);
   }
   if(inside||!ranked.mixed.length)return null;
   const m=ranked.mixed[0];

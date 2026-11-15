@@ -1494,13 +1494,22 @@ function runtime() {
       && rd.cardTitle('KMSKA x YOUNG FASHION DESIGNERS', 'occ-x') === 'KMSKA x YOUNG FASHION DESIGNERS',
       'AL-058: a title typed wholly in capitals is recased; one short word and a title mixing cases are left alone');
     // ── AL-059: the shop finder's shared words, from the new-museum run ─
-    const sf = new Function('React', 'window', 'document', 'localStorage', code + '\n;return {SHOP_PATH,SHOP_WORDS,SHOP_HOST,PRICE,rankShelves,notAShop,foldText};')(React, win, win.document, win.localStorage);
-    const prices = t => (sf.foldText(t).match(sf.PRICE) || []).length;
+    const sf = new Function('React', 'window', 'document', 'localStorage', code + '\n;return {SHOP_PATH,SHOP_WORDS,SHOP_HOST,pricesIn,looksLikeBookShelf,rankShelves,notAShop,foldText};')(React, win, win.document, win.localStorage);
+    const prices = t => sf.pricesIn(t).length;
     ok(sf.SHOP_PATH.test('/en/museum/louisiana-butik') && sf.SHOP_PATH.test('/en/kmskashop-and-coffee-bar') && !sf.SHOP_PATH.test('/en/workshops') && !sf.SHOP_PATH.test('/en/restoration')
       && sf.SHOP_WORDS.test('KMSKAShop') && !sf.SHOP_WORDS.test('Workshop') && sf.SHOP_HOST.test('www.kmskashop.be'),
       'AL-059: shop words in other languages and run into a name (Louisiana "butik", "KMSKAShop"), never "workshop"');
     ok(prices('Katalog | Tanzbild EUR 24,90 Katalog | Daumier EUR 34,90') === 2 && prices('CHF 45.00 and CHF 38.00') === 2 && prices('SEK 345') === 1,
       'AL-059a:  prices with the currency code first (Albertina "EUR 24,90") and in francs and crowns count');
+    ok(prices('80 €') === 1 && prices('Prix actuel 39 €') === 1 && prices('1.250,00 €') === 1 && prices('$1,250') === 1
+      && prices('Merkzettel 0,00 €') === 0 && prices('Regular price 0,00€ 12,00€') === 1
+      && prices('+ [7 € - 15 €](https://tiendaprado.com/en/758)') === 0 && prices('* £10 - £20 (5)') === 0 && prices('2. $25 - $50 14') === 0
+      && prices('€ 0 \\- € 90') === 0 && prices('€40.00 and above') === 0 && prices('Free delivery on orders over £50') === 0
+      && prices('[£1 - £9.99](https://shop.tate.org.uk/x "Refine by price: 1 - £9.99")') === 0
+      && prices('$40.00 - $65.00') === 1 && prices('Europe 1600 - 1815 £25') === 1,
+      'AL-059d:  one price rule: a price with no cents counts ("80 €", Karsten Greve); an empty basket\'s zero, a filter by price and a delivery threshold never do; a book\'s own span is its price (the Met)');
+    ok(sf.looksLikeBookShelf('Books\nZaal Z Hardcover catalogue\nPrice maximum value\n€ 0 \\- € 90\n29 products'),
+      'AL-059e:  a filter by price shows a priced list: a shelf whose prices did not come back is still a shelf (KMSKA)');
     const r = sf.rankShelves([{ url: 'https://shop.albertina.at/de/produkte/publikationen/', words: 'HIER BLÄTTERN de produkte publikationen' },
       { url: 'https://www.biderundtanner.ch/buchhandlung/feminismus-buecher/detail/ISBN-9783832166298/Endler', words: 'Das Patriarchat buecher' }]);
     ok(r.length === 1 && r[0].kind === 'publications' && /publikationen/.test(r[0].url),
