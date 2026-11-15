@@ -134,8 +134,7 @@ function partialApplyWords({acceptedCount,undecidedCount}){
 //@piece makeLedgerRow
 
 function makeLedgerRow(c,now){
-  const base=c.museumId+"-"+normalizeTitle(c.title).replace(/[^a-z0-9]+/g,"").slice(0,50);
-  return {id:base,museumId:c.museumId,title:c.title,startDate:c.startDate||null,endDate:c.endDate||null,summary:c.summary||"",exUrl:c.exUrl||(MU[c.museumId]?.listUrl||""),interested:true,watching:false,acquiring:null,looked:false,hasCatalogue:"unknown",catalogueTitle:null,isbn13:null,publisher:null,publisherUrl:null,publisherResult:null,shopUrl:null,shopState:null,shopChange:null,addedAt:now,editedAt:null,
+  return {id:showId(c.museumId,c.title),museumId:c.museumId,title:c.title,startDate:c.startDate||null,endDate:c.endDate||null,summary:c.summary||"",exUrl:c.exUrl||(MU[c.museumId]?.listUrl||""),interested:true,watching:false,acquiring:null,looked:false,hasCatalogue:"unknown",catalogueTitle:null,isbn13:null,publisher:null,publisherUrl:null,publisherResult:null,shopUrl:null,shopState:null,shopChange:null,addedAt:now,editedAt:null,
     ...(labelDone(c)?{period:c.period,periodYear:c.periodYear,periodResponse:!!c.periodResponse,periodArtist:c.periodArtist||"",themes:c.themes,labelledAt:c.labelledAt||now}:{})};
 }
 //@piece withChoices

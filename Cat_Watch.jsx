@@ -976,8 +976,27 @@ const orderOf=id=>{ if(!hasNoChip(id))return id in CHIP_RANK?CHIP_RANK[id]:1e6;
 const lookupName=mu=>mu.lookupName;
 const MU = Object.fromEntries(MUSEUMS.map(m=>[m.id,m]));
 
-// ===== SHARED WITH THE SCRAPER — the join writes the rules below from the scraper's own files (scraper/dates.js, compress_prompt.md, compress.js, boilerplate.js, bot_check.js, answer_check.js, pro_forma.js, VENUES); never edit between these markers. Edit the scraper, then run `node build/app_join.js`. =====
+// ===== SHARED WITH THE SCRAPER — the join writes the rules below from the scraper's own files (scraper/dates.js, compress_prompt.md, compress.js, boilerplate.js, bot_check.js, answer_check.js, pro_forma.js, keys.js, VENUES); never edit between these markers. Edit the scraper, then run `node build/app_join.js`. =====
+const KEYS=(()=>{
+// Same address = same exhibition: scheme and host lowercased, the path never folded (folding it
+// merged two exhibitions differing only in capitals). A trailing slash and a #fragment are not part
+// of identity, so a site's root keys without its slash. An address that cannot be read keys as "".
+function normalizeUrlKey(u) {
+  try {
+    const x = new URL(String(u || '').trim());
+    x.hash = '';
+    const path = x.pathname.replace(/\/+$/, '');
+    return x.protocol.toLowerCase() + '//' + x.host.toLowerCase() + path + x.search;
+  } catch { return ''; }
+}
+
+// Accent marks dropped ("é" → "e"). Letters that are not accented ones (ø, æ, ß…) stay as they are.
+const stripAccents = s => String(s).normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+return { normalizeUrlKey, stripAccents };
+})();
 const DATES=(()=>{
+const { stripAccents } = KEYS;
+
 // ── Date helpers ──────────────────────────────────────────────────────────────
 // Every month spelling a venue has used, one list (docs/scraper.md §3): per language, its full names
 // then its short forms, each with its month number. MONTHS, MONTH_PATTERN and GERMAN_DAY_DOT are all
@@ -1755,7 +1774,7 @@ function capsTitleRule(code) {
 // A venue with several galleries (read.places on its register entry): a gallery tacked onto the title
 // after a dash ("… – Acquavella Palm Beach", "… – Lévy Gorvy Dayan, London") is not part of the title
 // (her decision). A gallery in brackets, the sweep's mark of a show run in two, stays.
-const foldPlace = s => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+const foldPlace = s => stripAccents(String(s || '')).toLowerCase();
 function withoutPlaceTail(code, title) {
   const e = REGISTER.find(v => v.id === code);
   if (!e || !e.read.places.length || !title) return title;
@@ -1799,6 +1818,8 @@ const VENUE_SITES=[{"id":"met","host":"metmuseum.org"},{"id":"ng","host":"nation
 const BOILERPLATE=["technical storage or access","legitimate purpose of storing preferences","subscriber or user","consent to the use of cookies","we use cookies","this website uses cookies","accept all cookies","privacy policy","sign up to our newsletter","★★","©","admission charge","members go free","free for members","tickets bookable","members enjoy free entry","become a member","tickets for this","no need to book","include entry to the","installation view","courtesy the artist","courtesy of the artist","generously provided by","generously supported by","major funding","leadership support","additional support","support is provided by","supported in part by","entitled to a discount","ticket office","ticket purchase","proof of membership","subscribe to","to stay updated","opening hours","admission is free","book your visit","buy tickets","for visit info","download of this image is authorised","higher image resolution","image licensing policies"];
 const CHALLENGE_TITLE=/^\s*(just a moment|attention required|performing security verification|access denied|pardon our interruption|one more step|making sure you['’]re not a bot)/i;const BOT_CHECK_SAID="the venue’s site answered with a bot check instead of the page";
 const ANSWER_CHECK=(()=>{
+const { stripAccents } = KEYS;
+
 // Measured from all 110 seed summaries: min 3, median 6, max 10, and every one
 // ends with a full stop. The data wins over any number written elsewhere.
 const MAX_WORDS = 10;
@@ -1862,7 +1883,7 @@ const CLAIMS = [
   { en: ['unprecedented'], page: ['unprecedented', 'precedenti', 'inedito', 'inedita', 'inédit', 'inédite', 'précédent', 'beispiellos', 'beispiellose', 'ongekend', 'ongekende', 'precedentes', 'hidtil'] },
 ];
 
-const fold = s => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+const fold = s => stripAccents(String(s || '')).toLowerCase();
 // Words, accents folded, each hyphened word both closed up and in its parts ("first-ever" →
 // "firstever", "first", "ever").
 const wordsOf = s => [...(fold(s).replace(/[-‐–]/g, '').match(/[a-zøæåß]+/g) || []), ...(fold(s).match(/[a-zøæåß]+/g) || [])];
@@ -2096,6 +2117,8 @@ function siteUrlOf(u){
   try{ new URL(orig); return orig; }catch{ return u; }
 }
 function originOf(u){ try{ return new URL(u).origin+"/"; }catch{ return ""; } }
+// Accent marks dropped: the scraper's own strip (scraper/keys.js).
+const stripAccents=KEYS.stripAccents;
 // A link she typed or pasted, "https://" added when left off; null when it is not a web address.
 function typedLink(text){
   const t=String(text||"").trim(); if(!t)return null;
@@ -2105,7 +2128,7 @@ function typedLink(text){
 // Accents dropped, and the letters that are not accented ones folded too: ø, æ, œ, ß, ł,
 // đ, ð, þ and dotless ı ("Hammershøi" matches "Hammershoi"). One fold for all matching.
 const LETTER_FOLD={"\u00f8":"o","\u00e6":"ae","\u0153":"oe","\u00df":"ss","\u0142":"l","\u0111":"d","\u00f0":"d","\u00fe":"th","\u0131":"i"};
-const foldText=s=>String(s||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[\u00f8\u00e6\u0153\u00df\u0142\u0111\u00f0\u00fe\u0131]/g,c=>LETTER_FOLD[c]);
+const foldText=s=>stripAccents(String(s||"").toLowerCase()).replace(/[\u00f8\u00e6\u0153\u00df\u0142\u0111\u00f0\u00fe\u0131]/g,c=>LETTER_FOLD[c]);
 
 // The connector hands back the page as markdown. One line of it, as words.
 function stripMd(line){
@@ -4307,17 +4330,8 @@ function proFormaCsv(rows){
 // ---- Pro forma helpers (pure) ----
 const KNOWN_VENUES = new Set(MUSEUMS.map(m=>m.id));
 function isValidYMD(s){ if(!/^\d{4}-\d{2}-\d{2}$/.test(s))return false; const d=new Date(s+"T00:00:00"); return !isNaN(d.getTime()); }
-// Same address = same exhibition: scheme and host lowercased, the path never folded
-// (folding it merged two exhibitions differing only in capitals). A trailing slash
-// and a #fragment are not part of identity.
-function normalizeUrlKey(u){
-  try{
-    const x=new URL(String(u||"").trim());
-    x.hash="";
-    const path=x.pathname.replace(/\/+$/,"");
-    return x.protocol.toLowerCase()+"//"+x.host.toLowerCase()+path+x.search;
-  }catch{ return ""; }
-}
+// Same address = same exhibition: the scraper's own key (scraper/keys.js).
+const normalizeUrlKey=KEYS.normalizeUrlKey;
 
 function urlLooksValid(u){ if(!u)return false; try{ const url=new URL(String(u).trim()); if(!/^https?:$/.test(url.protocol))return false; if(!/^[a-z0-9.-]+$/i.test(url.hostname))return false; if(!url.hostname.includes("."))return false; return true; }catch{ return false; } }
 // The scraper's reader, after every line ending is made \n; blank lines are left out.
@@ -4329,8 +4343,7 @@ function csvParse(text){
 const ignoreKeyFor=(venueId,url,title)=>
   venueId+"|"+(url?normalizeUrlKey(url):"t:"+normalizeTitle(title));
 // Conservative duplicate matching for incoming refresh results.
-const normalizeTitle = v => String(v||"")
-  .normalize("NFD").replace(/[\u0300-\u036f]/g,"")
+const normalizeTitle = v => stripAccents(String(v||""))
   .toLowerCase()
   .replace(/&/g," and ").replace(/\+/g," and ")
   .replace(/[’‘`]/g,"'").replace(/['"]/g,"")
@@ -4669,7 +4682,7 @@ const miscFor=y=>y<1900?"mischistoric":"miscmodern";
 
 // One artist, one group (her decision): shows about one artist take the group most of
 // them were given; a tie goes to the earlier group. A response show keeps its own.
-const artistKey=a=>String(a||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/[^a-z]+/g," ").trim();
+const artistKey=a=>stripAccents(String(a||"")).toLowerCase().replace(/[^a-z]+/g," ").trim();
 function artistPeriods(rows){
   const tally=new Map();
   for(const r of rows){
@@ -4873,8 +4886,7 @@ function partialApplyWords({acceptedCount,undecidedCount}){
   };
 }
 function makeLedgerRow(c,now){
-  const base=c.museumId+"-"+normalizeTitle(c.title).replace(/[^a-z0-9]+/g,"").slice(0,50);
-  return {id:base,museumId:c.museumId,title:c.title,startDate:c.startDate||null,endDate:c.endDate||null,summary:c.summary||"",exUrl:c.exUrl||(MU[c.museumId]?.listUrl||""),interested:true,watching:false,acquiring:null,looked:false,hasCatalogue:"unknown",catalogueTitle:null,isbn13:null,publisher:null,publisherUrl:null,publisherResult:null,shopUrl:null,shopState:null,shopChange:null,addedAt:now,editedAt:null,
+  return {id:showId(c.museumId,c.title),museumId:c.museumId,title:c.title,startDate:c.startDate||null,endDate:c.endDate||null,summary:c.summary||"",exUrl:c.exUrl||(MU[c.museumId]?.listUrl||""),interested:true,watching:false,acquiring:null,looked:false,hasCatalogue:"unknown",catalogueTitle:null,isbn13:null,publisher:null,publisherUrl:null,publisherResult:null,shopUrl:null,shopState:null,shopChange:null,addedAt:now,editedAt:null,
     ...(labelDone(c)?{period:c.period,periodYear:c.periodYear,periodResponse:!!c.periodResponse,periodArtist:c.periodArtist||"",themes:c.themes,labelledAt:c.labelledAt||now}:{})};
 }
 // Apply whatever she picked where the stitched file disagreed with itself.
@@ -5382,8 +5394,13 @@ const S=[
 ["acq","Tom Sachs: Bronze","2024-11-07","2024-12-13","New York. Bricolage in bronze.","tom-sachs3"],
 ["acq","Jacob El Hanani: Drawing on Canvas","2024-09-10","2024-10-18","New York. Microscopically fine line drawing.","jacob-el-hanani"],
 ];
+// Starter shows that keep an ID showId would spell otherwise (accented letters dropped, not folded),
+// written out by venue and title: an ID never changes, and mergeSeedInto matches on it.
+const SEED_IDS={"met|Christmas Tree and Neapolitan Crèche":"met-christmastreeandneapolitancrche","ng|Zurbarán":"ng-zurbarn","ng|Waldmüller: Landscapes":"ng-waldmllerlandscapes","ng|José María Velasco":"ng-josmaravelasco","acq|Joan Miró | Jean Paul Riopelle":"acq-joanmirjeanpaulriopelle","acq|Miquel Barceló":"acq-miquelbarcel"};
+// A new show's ID: its venue, then its title as matched, letters and digits only, cut at 50.
+function showId(museumId,title){ return museumId+"-"+normalizeTitle(title).replace(/[^a-z0-9]+/g,"").slice(0,50); }
 
-function buildSeed(){return S.map(([m,t,s,e,d,sl])=>{const id=m+"-"+t.toLowerCase().replace(/[^a-z0-9]+/g,"").slice(0,50);const mu=MU[m];return{id,museumId:m,title:t,startDate:s||null,endDate:e||null,summary:d,exUrl:sl?(mu.exBase+sl):mu.listUrl,interested:true,watching:false,acquiring:null,looked:false,hasCatalogue:"unknown",catalogueTitle:null,isbn13:null,publisher:null,publisherUrl:null,publisherResult:null,shopUrl:null,shopState:null,shopChange:null};});}
+function buildSeed(){return S.map(([m,t,s,e,d,sl])=>{const id=SEED_IDS[m+"|"+t]||showId(m,t);const mu=MU[m];return{id,museumId:m,title:t,startDate:s||null,endDate:e||null,summary:d,exUrl:sl?(mu.exBase+sl):mu.listUrl,interested:true,watching:false,acquiring:null,looked:false,hasCatalogue:"unknown",catalogueTitle:null,isbn13:null,publisher:null,publisherUrl:null,publisherResult:null,shopUrl:null,shopState:null,shopChange:null};});}
 
 function mergeSeedInto(existing){const byId=new Map(existing.map(r=>[r.id,r]));for(const s of buildSeed()){const p=byId.get(s.id);if(p)byId.set(s.id,{...p,startDate:p.startDate||s.startDate,endDate:p.endDate||s.endDate,summary:p.summary||s.summary,exUrl:p.exUrl||s.exUrl,watching:p.watching||false});else byId.set(s.id,s);}return Array.from(byId.values());}
 // Reset's job: the built-in starter set and the two sentences about it — the one on the screen's

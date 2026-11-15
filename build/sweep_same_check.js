@@ -77,7 +77,9 @@ function monthsOf(tree) {
   const src = sources(tree)('scraper/dates.js');
   const body = src.slice(src.indexOf("'use strict';") + 13, src.indexOf('\nmodule.exports'))
     .replace(/^const REGISTER = require\('\.\.\/venues\/register\.js'\)\.VENUES; \/\/@register$/m, 'const REGISTER = [];');
-  return new Function(body + '\nreturn { MONTHS, MONTH_PATTERN, GERMAN_DAY_DOT };')();
+  // Its keys line (`require('./keys.js')`) reads that tree's own scraper/keys.js.
+  const req = f => require(path.join(tree, 'scraper', f));
+  return new Function('require', body + '\nreturn { MONTHS, MONTH_PATTERN, GERMAN_DAY_DOT };')(req);
 }
 
 const T = tree => ({
@@ -192,12 +194,19 @@ function copyTree(tree, label) {
   // dates.js outside the month block: the text before the weekday rule, and from the month pattern to monthNum, cut out.
   const cut = (t, from, to) => { const a = t.indexOf(from), b = t.indexOf(to, a); if (a < 0 || b < 0) throw new Error('dates.js: ' + from + ' gone'); return t.slice(0, a) + t.slice(b); };
   const keepOut = t => cut(cut(t, '// ── Date helpers', '/**\n * A weekday in front'), '// One month pattern for every parser', '// Month name to number, tolerating');
-  same('dates.js outside the month block', keepOut(O.text('scraper/dates.js')), keepOut(N.text('scraper/dates.js')))
+  // The code from 'use strict' on, the keys round's shared accent strip read as the text it stands for
+  // (scraper/keys.js stripAccents: the keys line gone, each call written out).
+  const code = t => t.slice(t.indexOf("'use strict';"));
+  const keysRead = t => t.replace(/^const \{ stripAccents \} = require\('\.\/keys\.js'\);\n/m, '')
+    .replace(/stripAccents\((String\(s \|\| ''\))\)/g, "$1.normalize('NFD').replace(/[\\u0300-\\u036f]/g, '')");
+  same('dates.js outside the month block', keepOut(code(O.text('scraper/dates.js'))), keepOut(code(keysRead(N.text('scraper/dates.js')))))
     && pass('dates.js: the same code outside the month block');
 
   const PF = require(path.join(NEW, 'scraper', 'pro_forma.js'));
+  // An old tree from after the scraper-side round writes these in its own scraper/pro_forma.js.
+  const OPF = fs.existsSync(path.join(OLD, 'scraper', 'pro_forma.js')) ? require(path.join(OLD, 'scraper', 'pro_forma.js')) : null;
   // The column list, wherever the old tree wrote it.
-  const oldCols = [
+  const oldCols = OPF ? [['pro_forma.js CSV_HEADER', OPF.CSV_HEADER], ['pro_forma.js COLUMNS', OPF.COLUMNS.join(',')], ["the app's proFormaCsv", O.app.proFormaCsv([]).trim()]] : [
     ['compress.js CSV_HEADER', (O.text('scraper/compress.js').match(/const CSV_HEADER = '([^']+)'/) || [])[1]],
     ['sweep_prototype.js CSV_HEADER', (O.text('scraper/sweep_prototype.js').match(/const CSV_HEADER = '([^']+)'/) || [])[1]],
     ['stitch.js COLS', ((O.text('scraper/stitch.js').match(/const COLS = \[([^\]]+)\]/) || [])[1] || '').replace(/['\s]/g, '')],
@@ -209,14 +218,15 @@ function copyTree(tree, label) {
   same("the app's proFormaCsv header", O.app.proFormaCsv([]), N.app.proFormaCsv([]));
 
   // The marker sentence, wherever the old tree wrote it.
-  const oldMarkers = ['scraper/qc.js', 'scraper/routine_window.js', 'scraper/sweep_diff.js']
+  const oldMarkers = OPF ? [['pro_forma.js MARKER_SENTINEL', OPF.MARKER_SENTINEL]] : ['scraper/qc.js', 'scraper/routine_window.js', 'scraper/sweep_diff.js']
     .map(f => [f, (O.text(f).match(/const MARKER_SENTINEL = '([^']+)'/) || [])[1]])
     .concat([["the app's isMarkerRow", (O.text('Cat_Watch.jsx').match(/const MARKER_SENTINEL = "([^"]+)"/) || [])[1]]]);
   const badM = oldMarkers.filter(([, v]) => v !== PF.MARKER_SENTINEL);
   badM.length ? fail('the marker sentence differs from ' + badM.map(b => b[0]).join(', ')) : pass('the marker sentence: the same as in all ' + oldMarkers.length + ' old constants');
   // The sweep's five marker notes: the old lines with the sentence named are the new lines.
   const lit = ' ' + PF.MARKER_SENTINEL + '`';
-  const oldLines = O.text('scraper/sweep_prototype.js').split('\n').filter(l => l.includes(lit)).map(l => l.split(lit).join(' ${MARKER_SENTINEL}`'));
+  const oldLines = OPF ? O.text('scraper/sweep_prototype.js').split('\n').filter(l => l.includes(' ${MARKER_SENTINEL}`'))
+    : O.text('scraper/sweep_prototype.js').split('\n').filter(l => l.includes(lit)).map(l => l.split(lit).join(' ${MARKER_SENTINEL}`'));
   const newLines = N.text('scraper/sweep_prototype.js').split('\n').filter(l => l.includes(' ${MARKER_SENTINEL}`'));
   same("the sweep's marker notes", oldLines.join('\n'), newLines.join('\n')) && oldLines.length && pass('the sweep\'s ' + oldLines.length + ' marker notes: the same sentence');
   // Every marker test on every note on disk, and some made up.

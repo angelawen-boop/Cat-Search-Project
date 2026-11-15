@@ -118,6 +118,11 @@
    "id": "4-scraper",
    "name": "Round scraper side: the pro forma's columns, marker sentence, Topic note, reader, cell quoting and sweep-log merge, and the month spellings, each kept once in the scraper's files and written into the app by the join",
    "files": {}
+  },
+  {
+   "id": "4-keys",
+   "name": "Round keys: the web-address key and the accent strip kept once in scraper/keys.js and written into the app by the join; one rule for a new show's ID",
+   "files": {}
   }
  ],
  "pieces": {
@@ -145,6 +150,7 @@
   "hostOf": "foundations/text.jsx",
   "siteUrlOf": "foundations/text.jsx",
   "originOf": "foundations/text.jsx",
+  "stripAccents": "foundations/text.jsx",
   "LETTER_FOLD": "foundations/text.jsx",
   "foldText": "foundations/text.jsx",
   "stripMd": "foundations/text.jsx",
@@ -219,6 +225,8 @@
   "labelSlug": "saving/file.jsx",
   "snapTitle": "saving/file.jsx",
   "S": "saving/seed.jsx",
+  "SEED_IDS": "saving/seed.jsx",
+  "showId": "saving/seed.jsx",
   "buildSeed": "saving/seed.jsx",
   "mergeSeedInto": "saving/seed.jsx",
   "resetSeed": "saving/seed.jsx",
@@ -329,7 +337,7 @@
   "proFormaCsv": "import/csv.jsx",
   "csvParse": "import/csv.jsx",
   "ignoreKeyFor": "import/csv.jsx",
-  "normalizeTitle": "import/csv.jsx",
+  "normalizeTitle": "foundations/text.jsx",
   "dateMs": "import/csv.jsx",
   "dateRangesOverlap": "import/csv.jsx",
   "sameExhibition": "import/csv.jsx",

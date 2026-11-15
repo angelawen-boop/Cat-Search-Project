@@ -115,10 +115,19 @@ const S=[
 ["acq","Tom Sachs: Bronze","2024-11-07","2024-12-13","New York. Bricolage in bronze.","tom-sachs3"],
 ["acq","Jacob El Hanani: Drawing on Canvas","2024-09-10","2024-10-18","New York. Microscopically fine line drawing.","jacob-el-hanani"],
 ];
+//@piece SEED_IDS
+
+// Starter shows that keep an ID showId would spell otherwise (accented letters dropped, not folded),
+// written out by venue and title: an ID never changes, and mergeSeedInto matches on it.
+const SEED_IDS={"met|Christmas Tree and Neapolitan Crèche":"met-christmastreeandneapolitancrche","ng|Zurbarán":"ng-zurbarn","ng|Waldmüller: Landscapes":"ng-waldmllerlandscapes","ng|José María Velasco":"ng-josmaravelasco","acq|Joan Miró | Jean Paul Riopelle":"acq-joanmirjeanpaulriopelle","acq|Miquel Barceló":"acq-miquelbarcel"};
+//@piece showId
+
+// A new show's ID: its venue, then its title as matched, letters and digits only, cut at 50.
+function showId(museumId,title){ return museumId+"-"+normalizeTitle(title).replace(/[^a-z0-9]+/g,"").slice(0,50); }
 //@piece buildSeed
 
 
-function buildSeed(){return S.map(([m,t,s,e,d,sl])=>{const id=m+"-"+t.toLowerCase().replace(/[^a-z0-9]+/g,"").slice(0,50);const mu=MU[m];return{id,museumId:m,title:t,startDate:s||null,endDate:e||null,summary:d,exUrl:sl?(mu.exBase+sl):mu.listUrl,interested:true,watching:false,acquiring:null,looked:false,hasCatalogue:"unknown",catalogueTitle:null,isbn13:null,publisher:null,publisherUrl:null,publisherResult:null,shopUrl:null,shopState:null,shopChange:null};});}
+function buildSeed(){return S.map(([m,t,s,e,d,sl])=>{const id=SEED_IDS[m+"|"+t]||showId(m,t);const mu=MU[m];return{id,museumId:m,title:t,startDate:s||null,endDate:e||null,summary:d,exUrl:sl?(mu.exBase+sl):mu.listUrl,interested:true,watching:false,acquiring:null,looked:false,hasCatalogue:"unknown",catalogueTitle:null,isbn13:null,publisher:null,publisherUrl:null,publisherResult:null,shopUrl:null,shopState:null,shopChange:null};});}
 //@piece mergeSeedInto
 
 
