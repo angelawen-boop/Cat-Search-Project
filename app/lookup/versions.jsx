@@ -57,7 +57,7 @@ function differentBook(a,b){ return !!(a&&b&&Math.abs(a-b)/Math.max(a,b)>0.15); 
 // ISBN, their counts agreeing; else null. Every valid 978/979 number in a result counts.
 function isbnsIn(x){
   const t=resultText(x).replace(/(\d)[\u2010-\u2015-](?=\d)/g,"$1");
-  return new Set([...t.matchAll(/(?<![0-9])(97[89]\d{10})(?![0-9])/g)].map(m=>m[1]).filter(isbn13Checks));
+  return new Set([...t.matchAll(ISBN13_STANDALONE)].map(m=>m[1]).filter(isbn13Checks));
 }
 //@piece pagesOfIsbn
 
@@ -463,8 +463,12 @@ function pickRow(row,i,now){
 // One block per version, in her order, on a card with two or more; a card with one looks
 // as it always has. Notes are decided here, first rule that fits. VB-001 to VB-010.
 function sourceOf(u){
-  try{ const h=new URL(String(u||"")).hostname.replace(/^www\./,""); return h?{url:String(u),host:h}:null; }catch{ return null; }
+  try{ const h=withoutWww(new URL(String(u||"")).hostname); return h?{url:String(u),host:h}:null; }catch{ return null; }
 }
+//@piece ENGLISH_LATER
+
+// The note on an English edition published after the show opened; the block reads it back to add the year.
+const ENGLISH_LATER="the English edition, published later";
 //@piece versionNote
 
 function versionNote(vs,i,row){
@@ -485,7 +489,7 @@ function versionNote(vs,i,row){
   if(english&&hasOriginal){
     if(venuePrinting(v.publisher,id))return "this venue's English edition";
     const start=parseInt(String(row.startDate||"").slice(0,4),10);
-    return v.year&&start&&v.year>start?"the English edition, published later":"the English edition";
+    return v.year&&start&&v.year>start?ENGLISH_LATER:"the English edition";
   }
   return null;
 }
@@ -497,7 +501,7 @@ function versionNote(vs,i,row){
 function versionBlock(vs,i,row){
   const v=vs[i], mu=venueNamedIn(v.publisher)||MU[row.museumId];
   const note=versionNote(vs,i,row);
-  const later=note==="the English edition, published later"&&v.year;
+  const later=note===ENGLISH_LATER&&v.year;
   const bind=v.binding==="hardcover"?"Hardcover":v.binding==="paperback"?"Paperback":null;
   const facts=[v.lang,bind,v.pages?v.pages+" pp":null].filter(Boolean).join(" \u00b7 ");
   return{i,picked:row.editionPick===i,title:v.title||null,

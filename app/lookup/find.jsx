@@ -76,7 +76,7 @@ function isbnsLabelled(text){
   const re=/\b(?:ISBN|EAN)(?:[\s-]?13)?\b[^0-9]{0,15}(97[89](?:[\s\u2010-\u2013-]?\d){10})(?!\d)/gi;
   let m;
   while((m=re.exec(String(text||"")))){
-    const d=m[1].replace(/\D/g,"");
+    const d=isbnDigits(m[1]);
     if(isbn13Checks(d))found.add(d);
   }
   return found;
@@ -105,7 +105,7 @@ function isbnInResults(results,bookTitle){
   const found=new Set();
   for(const r of resultsCarrying(results,bookTitle)){
     for(const d of isbnsLabelled(oneText(r)))found.add(d);
-    for(const m of String((r&&r.url)||"").matchAll(/(?:^|[^0-9])(97[89]\d{10})(?![0-9])/g))
+    for(const m of String((r&&r.url)||"").matchAll(ISBN13_STANDALONE))
       if(isbn13Checks(m[1]))found.add(m[1]);
   }
   return found.size===1?[...found][0]:null;
@@ -225,6 +225,24 @@ function localCatalogueQuery(mu,row){
   const year=/^\d{4}/.test(String(row.startDate||""))?" "+String(row.startDate).slice(0,4):"";
   return head?[head+" "+lookupName(mu)+" "+word+year]:[];
 }
+//@piece SOLD_BY_RULE
+
+// The instruction that a "Sold by" line names the shop; every prompt that reads a book's page or search
+// results carries it (Orsay; docs/app.md).
+const SOLD_BY_RULE=
+  "\"Sold by …\" (“vendu par”, “venduto da”) names the SHOP, never the publisher — "
+ +"the Orsay’s shop says “Sold by GrandPalaisRmn” for books Hazan printed. Never report it as publisher.\n";
+//@piece REPLY_JSON_ONLY
+
+// The line that opens the shape of the reply every lookup prompt asks for.
+const REPLY_JSON_ONLY="\nReply with ONLY this JSON object and nothing else:\n";
+//@piece bookPageAsk
+
+// What Claude is asked to read from a book's own page.
+function bookPageAsk(title){
+  return "The ISBN-13, the publisher, and any link to the publisher’s own page for the book "
+    +"“"+title+"”, including any details or specification panel on the page.";
+}
 //@piece READ_RULES
 
 
@@ -247,8 +265,7 @@ const READ_RULES=
  +"a textbook. The catalogue is the one tied to THIS exhibition at THIS venue.\n"
  +"publisherUrl is the PUBLISHER'S OWN page for this book — the art-book house that printed it, "
  +"not the museum shop, not a bookseller. Give it only if a result actually shows it; null otherwise.\n"
- +"\"Sold by …\" (“vendu par”, “venduto da”) names the SHOP, never the publisher — "
- +"the Orsay’s shop says “Sold by GrandPalaisRmn” for books Hazan printed. Never report it as publisher.\n"
+ +SOLD_BY_RULE
  +"thisVenue is true ONLY when a result says this book is the catalogue of the show AT THIS VENUE: "
  +"the venue's own page, shop or press release names it, or a publisher or bookseller says it "
  +"accompanies the exhibition at this venue. A catalogue of a show at ANOTHER venue is false — "
@@ -268,7 +285,7 @@ const READ_RULES_FOREIGN=READ_RULES.replace(/If the same catalogue is sold in mo
 
 
 const READ_SHAPE=
-  "\nReply with ONLY this JSON object and nothing else:\n"
+  REPLY_JSON_ONLY
  +'{"found": true|false, "catalogueTitle": string|null, "isbn13": string|null, '
  +'"publisher": string|null, "publisherUrl": string|null, "shopUrl": string|null, "thisVenue": true|false}\n'
  +'Example: {"found":true,"catalogueTitle":"Metamorphoses: Ovid and the Arts","isbn13":"9789493416543",'
@@ -291,12 +308,11 @@ const PAGE_RULES=
  +"publisherUrl is a link to the PUBLISHER'S OWN page for this book, if this page shows one. "
  +"A link to this shop, to Amazon or to another bookseller is NOT it — answer null.\n"
  +"If this page is not about the book named below, set every field null.\n"
- +"\"Sold by …\" (“vendu par”, “venduto da”) names the SHOP, never the publisher — "
- +"the Orsay’s shop says “Sold by GrandPalaisRmn” for books Hazan printed. Never report it as publisher.\n";
+ +SOLD_BY_RULE;
 //@piece PAGE_SHAPE
 
 const PAGE_SHAPE=
-  "\nReply with ONLY this JSON object and nothing else:\n"
+  REPLY_JSON_ONLY
  +'{"isbn13": string|null, "publisher": string|null, "publisherUrl": string|null}\n'
  +'Example: {"isbn13":"9781588398130","publisher":"The Metropolitan Museum of Art",'
  +'"publisherUrl":null}';
@@ -325,8 +341,7 @@ function factsPrompt(q){
       :"“"+q.book+"”"+(q.isbn?", ISBN "+q.isbn:"")+", the catalogue of the exhibition “"+q.show+"” at "+q.venue)+".\n"
     +"Use ONLY what the text below says. Never use outside knowledge, never guess an ISBN and never invent a link.\n"
     +"Give every ISBN EXACTLY as printed — a 10-digit one as it stands, never converted.\n"
-    +"\"Sold by …\" (“vendu par”, “venduto da”) names the SHOP, never the publisher — "
-    +"the Orsay’s shop says “Sold by GrandPalaisRmn” for books Hazan printed. Never report it as publisher.\n"
+    +SOLD_BY_RULE
     +"isbn13: this book's own ISBN, or null.\n"
     +"pages: the number of pages the text prints for THIS book (\"544 pages\", \"281 pp.\"), digits only, or null.\n"
     +"versions: other printings of THIS SAME book in the SAME language that the text shows with their own ISBN — "
@@ -360,7 +375,7 @@ function factsPrompt(q){
     // The first web search's results, read again (Hubert Robert: its English book was there).
     +(q.earlier&&q.earlier.length?"\nSECTION D — earlier web search results about this exhibition's catalogue.\n"
       +resultsForPrompt(q.earlier,2000,{words:[q.book,q.show,"edition","catalogue"]},q.earlier.length)+"\n":"")
-    +"\nReply with ONLY this JSON object and nothing else:\n"+shape;
+    +REPLY_JSON_ONLY+shape;
 }
 //@piece composeRow
 

@@ -36,12 +36,16 @@ async function cloudLetGo(){
   if(cloudReadOnly)return;
   try{ const snap=await storeRead(CLOUD_SESSION_DOC); if(snap.exists&&(snap.data||{}).id===CLOUD_SESSION_ID)await storeDelete(CLOUD_SESSION_DOC,{claim:true}); }catch{}
 }
+//@piece STORE_UNREACHED_NOT_SAVING
+
+// The sentence for a viewer with no store, said where it means no cloud copy is being written.
+const STORE_UNREACHED_NOT_SAVING=STORE_UNREACHED.replace(/\.$/,"")+", so nothing is being saved to the cloud copy.";
 //@piece cloudOpenRead
 
 // The cloud copy, read on open. Hands back `live` for the readout ({rec,data} / {rec:null} /
 // {why}); `off`, why nothing is being saved; `open` when the page opens it by itself (CLOUD_OPENS).
 async function cloudOpenRead(tr){
-  if(!await storeReached())return {live:{why:"This viewer can’t reach the page’s store."},off:"This viewer can’t reach the page’s store, so nothing is being saved to the cloud copy."};
+  if(!await storeReached())return {live:{why:STORE_UNREACHED},off:STORE_UNREACHED_NOT_SAVING};
   try{
     const {rec,text}=await cloudReadLive();
     if(!rec)return {live:{rec:null}};
@@ -65,7 +69,7 @@ async function cloudSaveLatest(tr,latest,tell){
   if(tr.busy){ tr.again=true; return null; }
   // Another copy took over while this one slept? Then nothing is written.
   if(await cloudOtherEditing())return {readOnly:true};
-  if(!await storeReached())return {off:"This viewer can’t reach the page’s store, so nothing is being saved to the cloud copy."};
+  if(!await storeReached())return {off:STORE_UNREACHED_NOT_SAVING};
   tr.busy=true;
   try{
     do{
@@ -161,7 +165,7 @@ async function cloudReadToOpen(open){
 
 // SNAPSHOTS. Cloud Saves' list, newest first, and why it is empty when it could not be read.
 async function cloudSavesRead(){
-  if(!await storeReached())return {snaps:[],why:"This viewer can’t reach the page’s store."};
+  if(!await storeReached())return {snaps:[],why:STORE_UNREACHED};
   try{ return {snaps:await cloudListSnapshots(),why:null}; }
   catch(e){ return {snaps:[],why:"Couldn’t read the cloud saves ("+cloudTrouble(e,"read")+")."}; }
 }
@@ -187,7 +191,7 @@ async function cloudRollback(tr,s,all,{current,started}){
     const d=current();
     if(d){ curText=JSON.stringify({rows:d.rows,ignored:d.ignored,lastRun:d.lastRun,savedAt:new Date().toISOString()}); curRows=d.rows.length; curQ=d.ignored.length; }
     else{ const live=await cloudReadLive(); if(live.rec){ curText=live.text; const cd=JSON.parse(live.text); curRows=cd.rows.length; curQ=(cd.ignored||[]).length; tr.prev=live.rec; } }
-    if(curText)await cloudTakeSnapshot(curText,{label:"Safety snapshot before roll-back to snapshot of "+localReadable(s.at),kind:"safety",rows:curRows,quarantined:curQ});
+    if(curText)await cloudTakeSnapshot(curText,{label:rollbackSafetyLabel(s.at),kind:"safety",rows:curRows,quarantined:curQ});
     const data=JSON.parse(await cloudReadSnapshot(s));
     return {rows:(data.rows||[]).map(r=>({...r,watching:r.watching||false})),lastRun:data.lastRun||null,
       info:"Rolled back to the cloud save “"+snapTitle(s,all)+"” from "+localReadable(s.at)+" — "+(data.rows||[]).length+" exhibitions.",

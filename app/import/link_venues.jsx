@@ -75,8 +75,8 @@ function elsewherePrompt(page,url,a){
   return "You are reading a page about a museum exhibition, published by someone other than the museum that held it. Your ONLY output is one JSON object.\n\n"
     +"PAGE ADDRESS: "+url+"\n"
     +"THE MUSEUM THAT HELD IT: "+JSON.stringify([a.venue,a.venueCity,a.venueCountry].filter(Boolean).join(", "))+"\n"
-    +"EXHIBITION TITLE, as the page gives it: "+JSON.stringify(page.base)+"\n"
-    +"RAW TEXT (the page under the title, dates taken out):\n\"\"\"\n"+page.raw+"\n\"\"\"\n\n"
+    +pageTitleLine(page)
+    +pageRawBlock(page)+"\n\n"
     +"Answer with exactly these keys:\n"
     +"\"venueSite\": that museum's own website, the domain only (\"example.org\"), if you know it; \"\" if not.\n"
     +"\"title\": the exhibition's full name as the text states it, with its subtitle, copied exactly as written (\"Turner and Constable: Rivals and Originals\"). Never a heading that only names the artist when the text gives the full name, never a label such as \"Exhibition\" or \"Review\", never the site's name.";
@@ -105,7 +105,7 @@ function maybeElsewhere(a,pageHost){
 // when Claude knows no site). Null when the page is the venue's own. AL-052.
 function heldElsewhere(a,pageHost){
   if(!maybeElsewhere(a,pageHost))return null;
-  const site=hostOf(/^https?:\/\//i.test(a.venueSite||"")?a.venueSite:"https://"+(a.venueSite||"")).replace(/^www\./,"");
+  const site=withoutWww(hostOf(/^https?:\/\//i.test(a.venueSite||"")?a.venueSite:"https://"+(a.venueSite||"")));
   // The page's own site names the venue (Claude's "not its own page" misread): not elsewhere.
   if(site&&baseDomain(site)===baseDomain(pageHost))return null;
   const mine=Object.values(MU).find(m=>m&&!m.occasional&&venueNames(m).some(x=>flatName(x)===flatName(a.venue)));
@@ -137,7 +137,7 @@ function ownMuseumNamed(a,pageHost){
 
 
 function occVenueId(host){
-  return "occ-"+String(host||"").toLowerCase().replace(/^www\./,"").replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"");
+  return "occ-"+withoutWww(String(host||"").toLowerCase()).replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"");
 }
 //@piece siteVenues
 
@@ -145,7 +145,7 @@ function occVenueId(host){
 // The venues whose `sites` (read.sites) take this address → [[id, line]] (line: the house line, or none).
 function siteVenues(url){
   let u; try{ u=new URL(siteUrlOf(url)); }catch{ return []; }
-  const h=u.hostname.toLowerCase().replace(/^www\./,"");
+  const h=withoutWww(u.hostname.toLowerCase());
   const out=[];
   for(const e of VENUE_REGISTER)
     for(const s of e.read.sites) if(s.host===h&&(!s.path||s.path.test(u.pathname)))out.push([e.id,s.line||null]);
@@ -194,7 +194,7 @@ function linkReadVenue(url){
 // recipes (VENUE_SITES, written by the join from the scraper); the Tates are told apart by path.
 function knownVenueFor(url){
   const site=siteUrlOf(url);
-  const h=hostOf(site).replace(/^www\./,"");
+  const h=withoutWww(hostOf(site));
   if(!h)return null;
   let path="";
   try{ path=new URL(site).pathname; }catch{}
@@ -220,7 +220,7 @@ const namedByAddress=v=>!!v&&!v.short&&bareHost(v.name)===bareHost(v.host);
 const needsFacts=v=>!v||namedByAddress(v)||!v.city;
 //@piece bareHost
 
-const bareHost=h=>String(h||"").toLowerCase().replace(/^www\./,"");
+const bareHost=h=>withoutWww(String(h||"").toLowerCase());
 //@piece venueSearchName
 
 // The name a venue's shop is searched under: long and identifying (her decision; three National
@@ -256,7 +256,7 @@ function registerOccasional(map){
 function registerUnseenOccasional(rows){
   for(const r of rows||[]){
     if(!isOcc(r.museumId)||MU[r.museumId])continue;
-    MU[r.museumId]=occVenue(r.museumId,null,hostOf(r.exUrl).replace(/^www\./,"")||r.museumId.slice(4));
+    MU[r.museumId]=occVenue(r.museumId,null,withoutWww(hostOf(r.exUrl))||r.museumId.slice(4));
     KNOWN_VENUES.add(r.museumId);
   }
 }

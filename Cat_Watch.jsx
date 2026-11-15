@@ -1992,6 +1992,8 @@ function withoutTracking(u){
   }catch{ return u; }
 }
 function hostOf(u){ try{ return new URL(u).hostname.toLowerCase(); }catch{ return ""; } }
+// A host without its leading "www.".
+const withoutWww=h=>h.replace(/^www\./,"");
 // A Wayback Machine copy files under the museum it copied: the original address is
 // the venue's site; the copy is still what is read and linked (Sargent and the Sea, RA).
 function siteUrlOf(u){
@@ -2042,7 +2044,7 @@ function splitPageTitle(t,host){
   if(m){
     const h=foldText(host);
     const flat=x=>foldText(x).replace(/[^a-z0-9]/g,"");
-    const bare=h.replace(/^www\./,"");
+    const bare=withoutWww(h);
     if(foldText(m[2]).split(/[^a-z0-9]+/).some(w=>w.length>=4&&h.includes(w))||flat(m[2])===flat(bare)||flat(m[2])===flat(bare.split(".")[0])){ s=m[1].trim(); site=m[2].trim(); }
   }
   // Several bars: the show is named first, the site last ("Venice: Canaletto and
@@ -2057,6 +2059,8 @@ function splitPageTitle(t,host){
   return{show:parts[0]||s,site};
 }
 const TITLE_LABEL=/^(?:exhibitions?|mostra|ausstellung|exposition|exposición|tentoonstelling)$/i;
+// Why a page is refused when no title can be read from it.
+const NO_TITLE_ON_PAGE="Couldn’t find the show’s title on the page.";
 // Words too general to name a show.
 const GENERIC_TITLE_WORDS=new Set(["exhibition","exhibitions","mostra","ausstellung","exposition","tentoonstelling","the","a","an","and","of"]);
 
@@ -2239,7 +2243,7 @@ function readShowPage(res,url,vc,rules){
   joinHeadingOverTwoLines(pg);
   showFromCrumb(pg);
   titleCandidates(pg);
-  if(!pg.cands.length){ pg.rule("fail:no-title"); return{ok:false,why:"Couldn’t find the show’s title on the page."}; }
+  if(!pg.cands.length){ pg.rule("fail:no-title"); return{ok:false,why:NO_TITLE_ON_PAGE}; }
   const fail=findDates(pg);
   if(fail)return fail;
   settleName(pg);
@@ -2354,7 +2358,7 @@ function titleCandidates(pg){
 // it (her decision; Brancusi's "Neue Nationalgalerie" line under the dates).
 function venueNamesFor(pg){
   const{vc,host,site,words}=pg;
-  const h=String(host||"").replace(/^www\./,"");
+  const h=withoutWww(String(host||""));
   const houses=VENUE_REGISTER.filter(e=>e.kind==="manual"&&(e.id===vc||e.read.sites.some(x=>x.host===h)));
   const names=[site,...venueNames(MU[vc]),...houses.flatMap(e=>venueNames(venueView(e)))];
   return new Set(names.filter(Boolean).map(words).filter(Boolean));
@@ -2419,7 +2423,7 @@ function findDates(pg){
   if(found)rule("title:"+candRule[cands.indexOf(h)]+(h===cands[0]?"":"-not-first"));
   if(!found){
     const h0=cands.find(i=>!nameOnly(i));
-    if(h0===undefined){ rule("fail:venue-name-only"); return{ok:false,why:"Couldn’t find the show’s title on the page."}; }
+    if(h0===undefined){ rule("fail:venue-name-only"); return{ok:false,why:NO_TITLE_ON_PAGE}; }
     const near=[];
     for(let k=h0+1;k<lines.length&&near.length<LINK_DATE_LINES;k++){ const l=stripMd(lines[k]); if(!l)continue; if(lr&&lr.datesUntil&&lr.datesUntil.test(l.trim()))break; near.push([k,l]); }
     // A date the page prints but that is not one (months only, a season, no year), else none at all:
@@ -2645,7 +2649,7 @@ function pageResult(pg){
   let tracked=false; try{ tracked=[...new URL(url).searchParams.keys()].some(k=>TRACKING_PARAM.test(k)); }catch{}
   const link=lr&&lr.cleanLink?String(url).split(/[?#]/)[0]:tracked?withoutTracking(url):url;
   if(link!==url)rule(lr&&lr.cleanLink?"cleanLink":"tracking");
-  return{ok:true,base:pg.base,between:pg.between,under,afterDates,start:range.start||"",end:range.end||"",raw:pg.raw.slice(0,LINK_RAW_CHARS),site:site||(REG[vc]&&REG[vc].names.full)||host.replace(/^www\./,""),link,noDates:!!found.noDates,scriptDates:!!found.scriptDates,orderUnknown:!!found.orderUnknown,shown:found.shown||"",shownWhy:found.shownWhy||"",dateLine:found.noDates&&!found.shown?"":pg.dateLine,dateNote:DATES.closedEarlyNote(range)};
+  return{ok:true,base:pg.base,between:pg.between,under,afterDates,start:range.start||"",end:range.end||"",raw:pg.raw.slice(0,LINK_RAW_CHARS),site:site||(REG[vc]&&REG[vc].names.full)||withoutWww(host),link,noDates:!!found.noDates,scriptDates:!!found.scriptDates,orderUnknown:!!found.orderUnknown,shown:found.shown||"",shownWhy:found.shownWhy||"",dateLine:found.noDates&&!found.shown?"":pg.dateLine,dateNote:DATES.closedEarlyNote(range)};
 }
 
 // A venue's title from its own headings (linkRead.title). "pieces": the heading is the "##"
@@ -2694,6 +2698,10 @@ const SHORT_NAME_EXAMPLES=()=>VENUE_REGISTER.filter(e=>e.kind==="manual"&&e.name
 // The full name is the entry's, else the one Claude gave, as the store holds it (MU).
 const SHORT_NAME_RENAMES=()=>VENUE_REGISTER.filter(e=>e.kind==="manual"&&e.names.hers&&e.names.replaced.length)
   .map(e=>"for "+JSON.stringify(e.names.full||e.names.card)+": "+JSON.stringify(e.names.card)+", not "+e.names.replaced.map(x=>JSON.stringify(x)).join(" or "));
+// The title line a prompt gives Claude for a page read in code.
+const pageTitleLine=page=>"EXHIBITION TITLE, as the page gives it: "+JSON.stringify(page.base)+"\n";
+// The page's raw text, fenced, as a prompt gives it to Claude.
+const pageRawBlock=page=>"RAW TEXT (the page under the title, dates taken out):\n\"\"\"\n"+page.raw+"\n\"\"\"";
 // ONE REQUEST FOR THE WHOLE IMPORT (her decision): every page of a Links, Pages or Paste import goes
 // to Claude in one request — the opening, the examples and the rules once, as the sweep's compressor
 // sends them, then each page as an item. A page's own questions (a pasted box's title and dates, a
@@ -2716,9 +2724,9 @@ function linkItem(page,askVenue,url,vc){
     +(museum?"THE MUSEUM THIS CARD IS FOR: "+JSON.stringify(museum)+"\n":"")
     +(askVenue&&page.dateLine?"THE SHOWING THIS CARD IS FOR, as the page prints it: "+JSON.stringify(page.dateLine)+"\n":"")
     +(page.pasted?"RAW TEXT (pasted or typed by hand, from one source or several; its order and layout can be anything):\n\"\"\"\n"+page.raw+"\n\"\"\""
-    :"EXHIBITION TITLE, as the page gives it: "+JSON.stringify(page.base)+"\n"
+    :pageTitleLine(page)
     +(page.between.length?"LINES BETWEEN THE TITLE AND THE DATES: "+JSON.stringify(page.between)+"\n":"")
-    +"RAW TEXT (the page under the title, dates taken out):\n\"\"\"\n"+page.raw+"\n\"\"\"")
+    +pageRawBlock(page))
     +(keys.length?"\n\nTHIS ITEM'S ANSWER ALSO HAS THESE KEYS:\n"+keys.join("\n"):"");
 }
 // Every item's answer has these keys.
@@ -2855,8 +2863,8 @@ function elsewherePrompt(page,url,a){
   return "You are reading a page about a museum exhibition, published by someone other than the museum that held it. Your ONLY output is one JSON object.\n\n"
     +"PAGE ADDRESS: "+url+"\n"
     +"THE MUSEUM THAT HELD IT: "+JSON.stringify([a.venue,a.venueCity,a.venueCountry].filter(Boolean).join(", "))+"\n"
-    +"EXHIBITION TITLE, as the page gives it: "+JSON.stringify(page.base)+"\n"
-    +"RAW TEXT (the page under the title, dates taken out):\n\"\"\"\n"+page.raw+"\n\"\"\"\n\n"
+    +pageTitleLine(page)
+    +pageRawBlock(page)+"\n\n"
     +"Answer with exactly these keys:\n"
     +"\"venueSite\": that museum's own website, the domain only (\"example.org\"), if you know it; \"\" if not.\n"
     +"\"title\": the exhibition's full name as the text states it, with its subtitle, copied exactly as written (\"Turner and Constable: Rivals and Originals\"). Never a heading that only names the artist when the text gives the full name, never a label such as \"Exhibition\" or \"Review\", never the site's name.";
@@ -2877,7 +2885,7 @@ function maybeElsewhere(a,pageHost){
 // when Claude knows no site). Null when the page is the venue's own. AL-052.
 function heldElsewhere(a,pageHost){
   if(!maybeElsewhere(a,pageHost))return null;
-  const site=hostOf(/^https?:\/\//i.test(a.venueSite||"")?a.venueSite:"https://"+(a.venueSite||"")).replace(/^www\./,"");
+  const site=withoutWww(hostOf(/^https?:\/\//i.test(a.venueSite||"")?a.venueSite:"https://"+(a.venueSite||"")));
   // The page's own site names the venue (Claude's "not its own page" misread): not elsewhere.
   if(site&&baseDomain(site)===baseDomain(pageHost))return null;
   const mine=Object.values(MU).find(m=>m&&!m.occasional&&venueNames(m).some(x=>flatName(x)===flatName(a.venue)));
@@ -2901,13 +2909,13 @@ function ownMuseumNamed(a,pageHost){
 }
 
 function occVenueId(host){
-  return "occ-"+String(host||"").toLowerCase().replace(/^www\./,"").replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"");
+  return "occ-"+withoutWww(String(host||"").toLowerCase()).replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"");
 }
 
 // The venues whose `sites` (read.sites) take this address → [[id, line]] (line: the house line, or none).
 function siteVenues(url){
   let u; try{ u=new URL(siteUrlOf(url)); }catch{ return []; }
-  const h=u.hostname.toLowerCase().replace(/^www\./,"");
+  const h=withoutWww(u.hostname.toLowerCase());
   const out=[];
   for(const e of VENUE_REGISTER)
     for(const s of e.read.sites) if(s.host===h&&(!s.path||s.path.test(u.pathname)))out.push([e.id,s.line||null]);
@@ -2948,7 +2956,7 @@ function linkReadVenue(url){
 // recipes (VENUE_SITES, written by the join from the scraper); the Tates are told apart by path.
 function knownVenueFor(url){
   const site=siteUrlOf(url);
-  const h=hostOf(site).replace(/^www\./,"");
+  const h=withoutWww(hostOf(site));
   if(!h)return null;
   let path="";
   try{ path=new URL(site).pathname; }catch{}
@@ -2966,7 +2974,7 @@ const namedByAddress=v=>!!v&&!v.short&&bareHost(v.name)===bareHost(v.host);
 // A link venue whose name and place Claude has not yet given: asked on its next link (her
 // decision), her own names and rules kept.
 const needsFacts=v=>!v||namedByAddress(v)||!v.city;
-const bareHost=h=>String(h||"").toLowerCase().replace(/^www\./,"");
+const bareHost=h=>withoutWww(String(h||"").toLowerCase());
 // The name a venue's shop is searched under: long and identifying (her decision; three National
 // Galleries in three countries) — its full name, the other names it goes by, its city and its
 // country, each where the words so far lack it. Proved live: "Palazzo Ducale" alone found Venice's;
@@ -2992,7 +3000,7 @@ function registerOccasional(map){
 function registerUnseenOccasional(rows){
   for(const r of rows||[]){
     if(!isOcc(r.museumId)||MU[r.museumId])continue;
-    MU[r.museumId]=occVenue(r.museumId,null,hostOf(r.exUrl).replace(/^www\./,"")||r.museumId.slice(4));
+    MU[r.museumId]=occVenue(r.museumId,null,withoutWww(hostOf(r.exUrl))||r.museumId.slice(4));
     KNOWN_VENUES.add(r.museumId);
   }
 }
@@ -3153,7 +3161,7 @@ function pastedPageReply(url,text){
 // 2,000-character cut applies); title and dates are filled from Claude's answer (pasteDates).
 function pastedPage(text,url){
   return{ok:true,pasted:true,text,base:"",between:[],under:"",afterDates:String(text).split("\n").filter(Boolean),start:"",end:"",
-    raw:String(text).slice(0,LINK_RAW_CHARS),site:hostOf(siteUrlOf(url)).replace(/^www\./,""),link:url,noDates:true,dateLine:""};
+    raw:String(text).slice(0,LINK_RAW_CHARS),site:withoutWww(hostOf(siteUrlOf(url))),link:url,noDates:true,dateLine:""};
 }
 // Claude's copy is checked word for word against the text: capitals, punctuation and line breaks aside.
 const pasteWords=t=>" "+foldText(String(t||"")).replace(/[^\p{L}\p{N}]+/gu," ").trim()+" ";
@@ -3254,7 +3262,7 @@ function mdLinks(text){
 // "shop.courtauld.ac.uk" → "courtauld.ac.uk". Two labels, three behind a
 // country's own second level (ac.uk, org.uk, com.au…).
 function baseDomain(h){
-  const p=String(h||"").toLowerCase().replace(/^www\./,"").split(".").filter(Boolean);
+  const p=withoutWww(String(h||"").toLowerCase()).split(".").filter(Boolean);
   if(p.length<=2)return p.join(".");
   const two=p.slice(-2).join(".");
   return /^(?:ac|co|org|gov|com|net|edu)\.[a-z]{2}$/.test(two)?p.slice(-3).join("."):two;
@@ -3276,10 +3284,10 @@ const isFileUrl=u=>/\.(?:jpe?g|png|gif|webp|svg|pdf|mp4)(?:$|[?#])/i.test(String
 const NOT_SHOP_HOST=/(?:^|\.)(?:play\.google|apps\.apple|itunes\.apple|facebook|instagram|twitter|x|tiktok|youtube|linkedin|pinterest|wikipedia)\.[a-z.]+$/i;
 const notAShop=u=>isFileUrl(u)||NOT_SHOP_HOST.test(hostOf(u));
 function isShopPlace(u,museumHost,pageShopHost){
-  const h=hostOf(u).replace(/^www\./,"");
+  const h=withoutWww(hostOf(u));
   if(!h)return false;
   if(notAShop(u))return false;
-  if(pageShopHost&&h===pageShopHost.replace(/^www\./,""))return true;
+  if(pageShopHost&&h===withoutWww(pageShopHost))return true;
   const b=baseDomain(museumHost), hb=baseDomain(h), label=b.split(".")[0], hl=hb.split(".")[0];
   if(hb===b){ let path=""; try{ path=new URL(u).pathname; }catch{} return SHOP_HOST.test(h)||SHOP_PATH.test(path); }
   return label.length>=3&&hl!==label&&hl.includes(label)&&SHOP_HOST.test(hl);
@@ -3384,7 +3392,7 @@ async function openShopPage(open,url,objective,queries,opts){
 function itemsUnder(text,host,list){
   let base=""; try{ base=new URL(list).pathname.replace(/\/?$/,"/"); }catch{ return []; }
   if(base==="/")return [];
-  const bare=h=>String(h||"").replace(/^www\./,"");
+  const bare=h=>withoutWww(String(h||""));
   return [...new Set(mdLinks(text).filter(l=>{ if(bare(hostOf(l.url))!==bare(host)||NOT_A_BOOK_LINK.test(l.url))return false; let p=""; try{ p=new URL(l.url).pathname; }catch{ return false; } return p.startsWith(base)&&p.length>base.length+1; }).map(l=>l.url.split("#")[0]))];
 }
 async function firstProductIsBook(open,text,host,list){
@@ -3431,6 +3439,11 @@ function shopifyShelfIsBooks(text,target){
 function shopifyProductsUrl(u){
   try{ const x=new URL(u); return new RegExp("^\\/(?:"+LANG_PART+"\\/)?collections\\/[^/]+\\/?$","i").test(x.pathname)?x.origin+x.pathname.replace(/\/$/,"")+"/products.json?limit=8":""; }catch{ return ""; }
 }
+// What Claude is asked to read from a shop section's page (a section's books, or a Shopify section's products).
+const SHOP_BOOKS_ASK="The books in this section of the shop, with their prices.";
+const SHOP_PRODUCTS_ASK="The products in this section: titles, types and prices.";
+// The product count a Shopify section's text gives, as digits, or undefined when it gives none.
+function shopifyCountIn(text){ return (text.match(/"products_count"\s*:\s*(\d+)/)||[])[1]; }
 // A Shopify shop's sections, read as text (a long list can come back cut short); empty
 // ones skipped; ranked on the TITLE her menu shows, never the handle.
 function shopifySections(text,root){
@@ -3438,7 +3451,7 @@ function shopifySections(text,root){
   for(const chunk of String(text||"").split(/\{\s*"id"\s*:/).slice(1)){
     const t=(chunk.match(/"title"\s*:\s*"((?:[^"\\]|\\.)*)"/)||[])[1];
     const h=(chunk.match(/"handle"\s*:\s*"([^"]+)"/)||[])[1];
-    const n=(chunk.match(/"products_count"\s*:\s*(\d+)/)||[])[1];
+    const n=shopifyCountIn(chunk);
     const id=(chunk.match(/^\s*(\d+)/)||[])[1]||"";
     if(!t||!h||n==="0")continue;
     let title=t; try{ title=JSON.parse('"'+t+'"'); }catch{}
@@ -3690,14 +3703,14 @@ async function tryShelves(sf,cands,how,inside){
     if(t==null){
       if(sf.opens>=SHELF_OPENS)return null;
       sf.opens++; sf.opened.add(c.url);
-      const f=await openShopPage(fetchPage,c.url,"The books in this section of the shop, with their prices.",null,{full:true});
+      const f=await openShopPage(fetchPage,c.url,SHOP_BOOKS_ASK,null,{full:true});
       if(!f.ok){ sf.died=f.detail; sf.failed.add(k); continue; }
       t=pageTextOf(f.results); sf.texts.set(k,t); sf.seenText+="\n"+t;
     }
     if(looksLikeBookShelf(t))return{...c,how};
     const pj=shopifyProductsUrl(c.url);
     if(pj){
-      const j=await fetchPage(pj,"The products in this section: titles, types and prices.",null,{full:true});
+      const j=await fetchPage(pj,SHOP_PRODUCTS_ASK,null,{full:true});
       const jt=j.ok?pageTextOf(j.results):"";
       if(shopifyShelfIsBooks(jt,c.target))return{...c,how};
       // A section under a translated address ("/en/collections/exhibitions", Thyssen's "exposiciones") lists no
@@ -3816,7 +3829,7 @@ async function shopifySectionList(sf){
       }
       const same=id&&home.find(x=>x.id===id);
       if(!same)continue;
-      const j=await fetchPage(originOf(sf.root)+"collections/"+same.handle+"/products.json?limit=8","The products in this section: titles, types and prices.",null,{full:true});
+      const j=await fetchPage(originOf(sf.root)+"collections/"+same.handle+"/products.json?limit=8",SHOP_PRODUCTS_ASK,null,{full:true});
       if(j.ok&&shopifyShelfIsBooks(pageTextOf(j.results),true))sf.consider(c);
     }
   }
@@ -3881,7 +3894,7 @@ async function englishVersion(sf){
   const host=hostOf(at), own=[...sf.texts].filter(([k])=>hostOf(k)===host).map(([,t])=>t).join("\n");
   const said=pageLanguage(at,(sf.pick||sf.best||{}).proof||own);
   if(said==="en"){ sf.note("english",{at,already:true}); return; }
-  const o=originOf(at), bare=host.replace(/^www\./,""), b=baseDomain(host);
+  const o=originOf(at), bare=withoutWww(host), b=baseDomain(host);
   const links=mdLinks(own).filter(l=>EN_LABEL.test(foldText(l.label).trim())&&baseDomain(hostOf(l.url))===b).map(l=>l.url);
   const tries=[...new Set([...links,...EN_PATHS.map(p=>o+p),"https://en."+bare+"/"])].filter(u=>normalizeUrlKey(u)!==normalizeUrlKey(at)).slice(0,8);
   const f=await fetchPage(tries,"The shop's front page and its menu, in English.",null,{full:true});
@@ -3916,7 +3929,7 @@ async function shopResult(sf){
     // A pick taken on its search excerpt has no book links to prove a search with: its page
     // is opened once, unless already opened (CEDON; AL-044).
     if(!search&&!booksSeenOn(seen,hostOf(home)).length&&!sf.opened.has(pick.url)){
-      const f=await openShopPage(fetchPage,pick.url,"The books in this section of the shop, with their prices.",null,{full:true});
+      const f=await openShopPage(fetchPage,pick.url,SHOP_BOOKS_ASK,null,{full:true});
       if(f.ok)seen+="\n"+pageTextOf(f.results);
     }
     // A section in another language taken, its English one found but unread (Berlin): both go to her shop screen.
@@ -3952,6 +3965,8 @@ const GALLERY_OPENS=14;
 const GALLERY_WAY_WORD="shop|store|boutique|bookshop|bookstore|books?|publications?|publishing|library|librairie|livres|publikationen|bucher|buecher|libreria|libri|pubblicazioni|publicaciones|libros|tienda|negozio|winkel|butik|webshop";
 const GALLERY_WAY=new RegExp("^(?:the\\s+|our\\s+|online\\s+|alle\\s+)*(?:"+GALLERY_WAY_WORD+")(?:\\s+online)?$");
 const GALLERY_WAY_PATH=new RegExp("^\\/(?:"+LANG_PART+"\\/)?(?:"+GALLERY_WAY_WORD+")\\/?$","i");
+// What Claude is asked to read from a gallery's home page.
+const SITE_MENU_ASK="The site's menu and footer links: shop, books, publications, library.";
 const GALLERY_BUY=/^(?:purchase|buy(?: now)?|add to (?:cart|bag|basket)|shop now|order|acheter|kaufen|in den warenkorb|comprar|acquista)$/;
 const GALLERY_SHOP_IN=/\b(?:shop|store|boutique)\b/;
 const GALLERY_NOT_PAGE=/\/(?:cart|basket|checkout|account|login|wishlist)\b|ticket/i;
@@ -4071,7 +4086,7 @@ async function galleryShop(page,museumHost,venueName,turnedDown,trace,foreign){
       if(/"collections"\s*:/.test(t)){
         // A list of 250 is read on (Perrotin's "Perrotin Editions - Books" is on its second page).
         for(let page=2,last=t;page<=SHOPIFY_LIST_PAGES&&(last.match(/"handle"\s*:/g)||[]).length>=250&&g.opens<GALLERY_OPENS;page++){ g.opens++; const n=await fetchPage(o+"collections.json?limit=250&page="+page,"The shop's lists: titles and handles.",null,{full:true}); last=n.ok?pageTextOf(n.results):""; t+="\n"+last; }
-        const lists=shopifySections(t,o).map(c=>({...c,count:+((t.split('"handle":"'+c.handle+'"')[1]||"").match(/"products_count"\s*:\s*(\d+)/)||[])[1]||0}));
+        const lists=shopifySections(t,o).map(c=>({...c,count:+shopifyCountIn(t.split('"handle":"'+c.handle+'"')[1]||"")||0}));
         const r=await pick(lists,"the shop's lists");
         if(r)return r;
         if(g.opens<GALLERY_OPENS){ g.opens++; const j=await fetchPage(o+"collections/all/products.json?limit=8","The products in this shop: titles, types and prices.",null,{full:true}); if(j.ok&&shopifyShelfIsBooks(pageTextOf(j.results),false))return{url:o+"collections/all",how:"the shop's whole list"}; }
@@ -4144,9 +4159,9 @@ async function galleryShop(page,museumHost,venueName,turnedDown,trace,foreign){
   if(page.page)hit=await tryAll(waysIn(page.page),"show-page");
   // 2. The home page, a redirect followed (kamelmennour.com → mennour.com).
   if(!hit){
-    let home="https://"+g.host+"/", t=await open(home,"The site's menu and footer links: shop, books, publications, library.");
+    let home="https://"+g.host+"/", t=await open(home,SITE_MENU_ASK);
     const moved=t&&t.trim().length<SHELL_CHARS&&/redirect/i.test(t)?mdLinks(t).find(l=>!own(l.url))||(t.match(/<(https?:\/\/[^>\s]+)>/)?{url:t.match(/<(https?:\/\/[^>\s]+)>/)[1]}:null):null;
-    if(moved){ g.host=hostOf(moved.url); home=originOf(moved.url); t=await open(home,"The site's menu and footer links: shop, books, publications, library."); }
+    if(moved){ g.host=hostOf(moved.url); home=originOf(moved.url); t=await open(home,SITE_MENU_ASK); }
     g.home=t||"";
     if(!t||t.trim().length<SHELL_CHARS)g.unread="The gallery's site could not be read.";
     note("home",{home,read:!!t,chars:(t||"").length});
@@ -4301,6 +4316,10 @@ function foldDuplicateRows(raws){
   }
   return out;
 }
+// The note on a card whose file date is not YYYY-MM-DD; `which` is "Start" or "End".
+function unreadableDateNote(which,value){
+  return which+" date \u201c"+value+"\u201d couldn't be read (needs YYYY-MM-DD) \u2014 left blank.";
+}
 // `rows` is her ledger as it stands; the cards are what the file would change in it.
 function analyzeProForma(text,rows,ignoredKeys,opts){
   const table=csvParse(text);
@@ -4346,8 +4365,8 @@ function analyzeProForma(text,rows,ignoredKeys,opts){
     if(!vc||!KNOWN_VENUES.has(vc)){ faults.push("line "+line+": venue code "+(vc?("\u201c"+vc+"\u201d"):"is blank")+(vc?" isn\u2019t one of the venues":"")); continue; }
     if(!title){ faults.push("line "+line+": no exhibition title"+(get(r,"url")?" \u2014 "+get(r,"url"):"")); continue; }
     let sd=get(r,"start_date"), ed=get(r,"end_date"), url=get(r,"url");
-    if(sd&&!isValidYMD(sd)){notes.push("Start date \u201c"+sd+"\u201d couldn't be read (needs YYYY-MM-DD) \u2014 left blank.");sd="";}
-    if(ed&&!isValidYMD(ed)){notes.push("End date \u201c"+ed+"\u201d couldn't be read (needs YYYY-MM-DD) \u2014 left blank.");ed="";}
+    if(sd&&!isValidYMD(sd)){notes.push(unreadableDateNote("Start",sd));sd="";}
+    if(ed&&!isValidYMD(ed)){notes.push(unreadableDateNote("End",ed));ed="";}
     if(url&&!urlLooksValid(url)){notes.push("Exhibition link \u201c"+url+"\u201d looks garbled \u2014 left blank.");url="";}
     // Quarantined: dropped before anything else sees it. Counted, never silent.
     if(ignoredKeys&&ignoredKeys.has(ignoreKeyFor(vc,url,title))){ blocked++; continue; }
@@ -5307,7 +5326,9 @@ function resetSeed(){
     debug:"Reset: loaded the built-in starter set ("+rows.length+" exhibitions). It isn't in any file \u2014 Save if you want one."};
 }
 
-const cleanIsbn=v=>{if(!v)return null;const d=String(v).replace(/[^0-9]/g,"");return d.length===13?d:null;};
+const cleanIsbn=v=>{if(!v)return null;const d=isbnDigits(v);return d.length===13?d:null;};
+// The digits of an ISBN as typed or printed, hyphens and spaces gone.
+const isbnDigits=v=>String(v||"").replace(/\D/g,"");
 const fmtIsbn=v=>{const c=cleanIsbn(v);return c?c.slice(0,3)+"-"+c.slice(3):null;};
 
 // ISBN-10 is taken, not thrown away (her decision): converted to 13 for her screen,
@@ -5335,7 +5356,7 @@ function isbn10to13(v){
 // it is taken only if its digits, 13 or 10, are printed there — a read cannot invent
 // one. cleanIsbn stays as it is: it also shows ISBNs already in her ledger.
 const toIsbn13=(v,seen)=>{
-  const d=String(v||"").replace(/[^0-9]/g,"");
+  const d=isbnDigits(v);
   const isbn=d.length===13?(isbn13Checks(d)?d:null):isbn10to13(v);
   if(!isbn||seen===undefined)return isbn;
   return isbnInText(isbn,seen)?isbn:null;
@@ -5351,12 +5372,14 @@ function isbn13to10(d){
 // Printed in the text: the 13 or the 10, hyphens or spaces between its digits allowed,
 // never as part of a longer number.
 function isbnInText(isbn,text){
-  const d=String(isbn||"").replace(/\D/g,"");
+  const d=isbnDigits(isbn);
   if(d.length!==13)return false;
   const a=String(text||"").replace(/(\d)[\u2010-\u2015-](?=[\dXx])/g,"$1");
   const b=a.replace(/(\d) (?=[\dXx])/g,"$1");
   return [d,isbn13to10(d)].filter(Boolean).some(f=>{ const re=new RegExp("(?<![0-9])"+f+"(?![0-9Xx])","i"); return re.test(a)||re.test(b); });
 }
+// A 13-digit 978/979 number with no digit beside it; group 1 is the number.
+const ISBN13_STANDALONE=/(?<![0-9])(97[89]\d{10})(?![0-9])/g;
 const MON3=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 const fmtDate=d=>{if(!d)return null;const x=new Date(d+"T00:00:00");if(isNaN(x))return d;return x.getDate()+" "+MON3[x.getMonth()]+" "+x.getFullYear();};
 function fmtRefresh(iso){if(!iso)return"never";const d=new Date(iso);if(isNaN(d))return"never";const mon=MON3[d.getMonth()];let h=d.getHours();const ap=h<12?"am":"pm";h=h%12;if(h===0)h=12;const mm=String(d.getMinutes()).padStart(2,"0");return mon+" "+d.getDate()+", "+d.getFullYear()+" "+h+":"+mm+ap;}
@@ -5871,10 +5894,12 @@ function storeRef(db,path){
   for(let i=2;i+1<s.length;i+=2)r=r.collection(s[i]).doc(s[i+1]);
   return r;
 }
+// The sentence for a viewer with no store.
+const STORE_UNREACHED="This viewer can\u2019t reach the page\u2019s store.";
 function storeNo(code){
   return code==="read_only"?{code,message:"This copy is read only."}
     :code==="unread"?{code,message:"This part of the store could not be read, so it is not written."}
-    :{code,message:"This viewer can\u2019t reach the page\u2019s store."};
+    :{code,message:STORE_UNREACHED};
 }
 // True when the store is reached and, with {part}, that part is not unread: a write may go ahead.
 async function storeReached(o){
@@ -5958,10 +5983,12 @@ async function cloudLetGo(){
   if(cloudReadOnly)return;
   try{ const snap=await storeRead(CLOUD_SESSION_DOC); if(snap.exists&&(snap.data||{}).id===CLOUD_SESSION_ID)await storeDelete(CLOUD_SESSION_DOC,{claim:true}); }catch{}
 }
+// The sentence for a viewer with no store, said where it means no cloud copy is being written.
+const STORE_UNREACHED_NOT_SAVING=STORE_UNREACHED.replace(/\.$/,"")+", so nothing is being saved to the cloud copy.";
 // The cloud copy, read on open. Hands back `live` for the readout ({rec,data} / {rec:null} /
 // {why}); `off`, why nothing is being saved; `open` when the page opens it by itself (CLOUD_OPENS).
 async function cloudOpenRead(tr){
-  if(!await storeReached())return {live:{why:"This viewer can’t reach the page’s store."},off:"This viewer can’t reach the page’s store, so nothing is being saved to the cloud copy."};
+  if(!await storeReached())return {live:{why:STORE_UNREACHED},off:STORE_UNREACHED_NOT_SAVING};
   try{
     const {rec,text}=await cloudReadLive();
     if(!rec)return {live:{rec:null}};
@@ -5983,7 +6010,7 @@ async function cloudSaveLatest(tr,latest,tell){
   if(tr.busy){ tr.again=true; return null; }
   // Another copy took over while this one slept? Then nothing is written.
   if(await cloudOtherEditing())return {readOnly:true};
-  if(!await storeReached())return {off:"This viewer can’t reach the page’s store, so nothing is being saved to the cloud copy."};
+  if(!await storeReached())return {off:STORE_UNREACHED_NOT_SAVING};
   tr.busy=true;
   try{
     do{
@@ -6069,7 +6096,7 @@ async function cloudReadToOpen(open){
 }
 // SNAPSHOTS. Cloud Saves' list, newest first, and why it is empty when it could not be read.
 async function cloudSavesRead(){
-  if(!await storeReached())return {snaps:[],why:"This viewer can’t reach the page’s store."};
+  if(!await storeReached())return {snaps:[],why:STORE_UNREACHED};
   try{ return {snaps:await cloudListSnapshots(),why:null}; }
   catch(e){ return {snaps:[],why:"Couldn’t read the cloud saves ("+cloudTrouble(e,"read")+")."}; }
 }
@@ -6091,7 +6118,7 @@ async function cloudRollback(tr,s,all,{current,started}){
     const d=current();
     if(d){ curText=JSON.stringify({rows:d.rows,ignored:d.ignored,lastRun:d.lastRun,savedAt:new Date().toISOString()}); curRows=d.rows.length; curQ=d.ignored.length; }
     else{ const live=await cloudReadLive(); if(live.rec){ curText=live.text; const cd=JSON.parse(live.text); curRows=cd.rows.length; curQ=(cd.ignored||[]).length; tr.prev=live.rec; } }
-    if(curText)await cloudTakeSnapshot(curText,{label:"Safety snapshot before roll-back to snapshot of "+localReadable(s.at),kind:"safety",rows:curRows,quarantined:curQ});
+    if(curText)await cloudTakeSnapshot(curText,{label:rollbackSafetyLabel(s.at),kind:"safety",rows:curRows,quarantined:curQ});
     const data=JSON.parse(await cloudReadSnapshot(s));
     return {rows:(data.rows||[]).map(r=>({...r,watching:r.watching||false})),lastRun:data.lastRun||null,
       info:"Rolled back to the cloud save “"+snapTitle(s,all)+"” from "+localReadable(s.at)+" — "+(data.rows||[]).length+" exhibitions.",
@@ -6258,7 +6285,7 @@ function publisherDomainFrom(results,name){
     const flat=host.replace(/[^a-z0-9]/g,"");
     if(words.length&&words.every(w=>flat.includes(w)))return host;
   }
-  const bare=h=>h.replace(/^www\./,"");
+  const bare=h=>withoutWww(h);
   if(listed)for(const r of (results||[])){ const h=hostOf(String(r&&r.url||"")); if(h&&bare(h)===bare(listed))return h; }
   return null;
 }
@@ -6429,7 +6456,7 @@ function isbnsLabelled(text){
   const re=/\b(?:ISBN|EAN)(?:[\s-]?13)?\b[^0-9]{0,15}(97[89](?:[\s\u2010-\u2013-]?\d){10})(?!\d)/gi;
   let m;
   while((m=re.exec(String(text||"")))){
-    const d=m[1].replace(/\D/g,"");
+    const d=isbnDigits(m[1]);
     if(isbn13Checks(d))found.add(d);
   }
   return found;
@@ -6452,7 +6479,7 @@ function isbnInResults(results,bookTitle){
   const found=new Set();
   for(const r of resultsCarrying(results,bookTitle)){
     for(const d of isbnsLabelled(oneText(r)))found.add(d);
-    for(const m of String((r&&r.url)||"").matchAll(/(?:^|[^0-9])(97[89]\d{10})(?![0-9])/g))
+    for(const m of String((r&&r.url)||"").matchAll(ISBN13_STANDALONE))
       if(isbn13Checks(m[1]))found.add(m[1]);
   }
   return found.size===1?[...found][0]:null;
@@ -6545,6 +6572,8 @@ const shopUnreadHead=s=>s==="script"?SHOP_SCRIPT_HEAD:s==="parallel"?SHOP_PARALL
 const shopUnreadSaid=s=>s==="script"?"contents cannot be seen — JS-rendering":s==="parallel"?"contents cannot be seen — Parallel fault":s==="unconfirmed"?"contents cannot be seen — unconfirmed page problem":"is blocked";
 const SHOP_BLOCKED_FOUND_REST=" — search it manually. The catalogue is stocked elsewhere.";
 const SHOP_BLOCKED_NONE_REST=". The catalogue also does not appear to exist elsewhere. Search manually to confirm.";
+// What a catalogue block shows when its book has no ISBN.
+const ISBN_UNCONFIRMED="ISBN not confirmed \u2014 verify before buying";
 
 // A ticket is never a catalogue (her decision, KHM Canaletto & Bellotto): a link with
 // /ticket/ or /tickets/ in its path is never taken as the book. L-001 to L-019.
@@ -6666,7 +6695,7 @@ function houseWords(n){
   return normPublisher(n).split(" ").filter(w=>w.length>2&&!PUBLISHER_WORDS.has(w)&&!["fonds","editions","ed","sa","srl","gmbh"].includes(w));
 }
 function publisherGroups(results,isbn){
-  const d=String(isbn||"").replace(/\D/g,"");
+  const d=isbnDigits(isbn);
   if(d.length!==13)return [];
   const groups=[];
   for(const r of (results||[])){
@@ -6727,6 +6756,18 @@ function localCatalogueQuery(mu,row){
   const head=String(row.title||"").split(/\s*:\s*/)[0].trim();
   const year=/^\d{4}/.test(String(row.startDate||""))?" "+String(row.startDate).slice(0,4):"";
   return head?[head+" "+lookupName(mu)+" "+word+year]:[];
+}
+// The instruction that a "Sold by" line names the shop; every prompt that reads a book's page or search
+// results carries it (Orsay; docs/app.md).
+const SOLD_BY_RULE=
+  "\"Sold by …\" (“vendu par”, “venduto da”) names the SHOP, never the publisher — "
+ +"the Orsay’s shop says “Sold by GrandPalaisRmn” for books Hazan printed. Never report it as publisher.\n";
+// The line that opens the shape of the reply every lookup prompt asks for.
+const REPLY_JSON_ONLY="\nReply with ONLY this JSON object and nothing else:\n";
+// What Claude is asked to read from a book's own page.
+function bookPageAsk(title){
+  return "The ISBN-13, the publisher, and any link to the publisher’s own page for the book "
+    +"“"+title+"”, including any details or specification panel on the page.";
 }
 
 // The English-edition line on a foreign book: how far an English edition was looked
@@ -6864,7 +6905,7 @@ async function readShopPage(book,url,io,opened){
    +"category, search results, a ticket or a different product. That is what a pulled page redirecting looks like.\n"
    +"\nBook: "+book+"\nAddress on file: "+url+"\nAddress served: "+(served||"(not given)")+"\n\n"
    +pageTextOf(f.results).slice(0,PAGE_CHARS)
-   +'\n\nReply with ONLY this JSON object and nothing else:\n{"forSale": true|false, "why": string}\n'
+   +"\n"+REPLY_JSON_ONLY+'{"forSale": true|false, "why": string}\n'
    +'Example: {"forSale":false,"why":"The page says Sold out."}');
   if(!rd.ok)return{kind:"noread",detail:f.detail+"\n"+rd.detail,why:rd.detail.split("[")[0].trim()};
   const d=rd.data||{};
@@ -7043,8 +7084,7 @@ const READ_RULES=
  +"a textbook. The catalogue is the one tied to THIS exhibition at THIS venue.\n"
  +"publisherUrl is the PUBLISHER'S OWN page for this book — the art-book house that printed it, "
  +"not the museum shop, not a bookseller. Give it only if a result actually shows it; null otherwise.\n"
- +"\"Sold by …\" (“vendu par”, “venduto da”) names the SHOP, never the publisher — "
- +"the Orsay’s shop says “Sold by GrandPalaisRmn” for books Hazan printed. Never report it as publisher.\n"
+ +SOLD_BY_RULE
  +"thisVenue is true ONLY when a result says this book is the catalogue of the show AT THIS VENUE: "
  +"the venue's own page, shop or press release names it, or a publisher or bookseller says it "
  +"accompanies the exhibition at this venue. A catalogue of a show at ANOTHER venue is false — "
@@ -7060,7 +7100,7 @@ const READ_RULES_FOREIGN=READ_RULES.replace(/If the same catalogue is sold in mo
  +"an English edition is checked separately.\n");
 
 const READ_SHAPE=
-  "\nReply with ONLY this JSON object and nothing else:\n"
+  REPLY_JSON_ONLY
  +'{"found": true|false, "catalogueTitle": string|null, "isbn13": string|null, '
  +'"publisher": string|null, "publisherUrl": string|null, "shopUrl": string|null, "thisVenue": true|false}\n'
  +'Example: {"found":true,"catalogueTitle":"Metamorphoses: Ovid and the Arts","isbn13":"9789493416543",'
@@ -7081,10 +7121,9 @@ const PAGE_RULES=
  +"publisherUrl is a link to the PUBLISHER'S OWN page for this book, if this page shows one. "
  +"A link to this shop, to Amazon or to another bookseller is NOT it — answer null.\n"
  +"If this page is not about the book named below, set every field null.\n"
- +"\"Sold by …\" (“vendu par”, “venduto da”) names the SHOP, never the publisher — "
- +"the Orsay’s shop says “Sold by GrandPalaisRmn” for books Hazan printed. Never report it as publisher.\n";
+ +SOLD_BY_RULE;
 const PAGE_SHAPE=
-  "\nReply with ONLY this JSON object and nothing else:\n"
+  REPLY_JSON_ONLY
  +'{"isbn13": string|null, "publisher": string|null, "publisherUrl": string|null}\n'
  +'Example: {"isbn13":"9781588398130","publisher":"The Metropolitan Museum of Art",'
  +'"publisherUrl":null}';
@@ -7196,7 +7235,7 @@ async function shopStep(row,io){
   // unread (Berlin's English one): no priced line, even read whole, is "parallel", "script" or "unconfirmed".
   const priced=r=>pageTextOf(r.results).split("\n").some(realPrice);
   if(mu&&(mu.shopUnseen==="parallel"||mu.shopUnseen==="script"||mu.shopUnseen==="unconfirmed")&&!priced(s1)){
-    const whole=await io.fetch(shopPages,"The books in this section of the shop, with their prices.",null,{full:true});
+    const whole=await io.fetch(shopPages,SHOP_BOOKS_ASK,null,{full:true});
     if(!whole.ok)return{ran:true,ok:false,detail:s1.detail+"\n"+whole.detail,data:null};
     if(!priced(whole))
       return{ran:true,ok:true,blocked:mu.shopUnseen,detail:s1.detail+"\n"+whole.detail+(mu.shopUnseen==="parallel"?"\nParallel brought back this shop’s pages without their books, so it could not be searched.":"\nThe shop’s pages came back without their books, so it could not be searched."),data:null};
@@ -7207,7 +7246,7 @@ async function shopStep(row,io){
   let shop=s1;
   // The pages read whole: {whole} with books on them, or the step's answer when none.
   const readWhole=async()=>{
-    const whole=await io.fetch(shopPages,"The books in this section of the shop, with their prices.",null,{full:true});
+    const whole=await io.fetch(shopPages,SHOP_BOOKS_ASK,null,{full:true});
     if(!whole.ok)return{out:{ran:true,ok:false,detail:s1.detail+"\n"+whole.detail,data:null}};
     let books=whole.results.filter(r=>!pageIsShell([r])&&SHOP_PRICE.test(oneText(r)));
     // No price on any page: a list of titles is books when its first product is one
@@ -7303,8 +7342,7 @@ async function readBookPage(hit,venue,dom,io){
   io.phase("page");
   // The venue's own shop page gets the blank-page retry (openShopPage); a publisher's does not.
   const f=await (shopLinkOf({shopUrl:hit.pageUrl},dom)?(...a)=>openShopPage(io.fetch,...a):io.fetch)(hit.pageUrl,
-    "The ISBN-13, the publisher, and any link to the publisher’s own page for the book "
-      +"“"+book+"”, including any details or specification panel on the page.",
+    bookPageAsk(book),
     [book+" ISBN publisher details"],{full:true});
   let detail=hit.detail+"\n"+f.detail;
   if(!f.ok)return{...hit,detail,trouble:f.detail};
@@ -7367,7 +7405,7 @@ function differentBook(a,b){ return !!(a&&b&&Math.abs(a-b)/Math.max(a,b)>0.15); 
 // ISBN, their counts agreeing; else null. Every valid 978/979 number in a result counts.
 function isbnsIn(x){
   const t=resultText(x).replace(/(\d)[\u2010-\u2015-](?=\d)/g,"$1");
-  return new Set([...t.matchAll(/(?<![0-9])(97[89]\d{10})(?![0-9])/g)].map(m=>m[1]).filter(isbn13Checks));
+  return new Set([...t.matchAll(ISBN13_STANDALONE)].map(m=>m[1]).filter(isbn13Checks));
 }
 function pagesOfIsbn(results,isbn){
   const counts=[];
@@ -7700,8 +7738,10 @@ function pickRow(row,i,now){
 // One block per version, in her order, on a card with two or more; a card with one looks
 // as it always has. Notes are decided here, first rule that fits. VB-001 to VB-010.
 function sourceOf(u){
-  try{ const h=new URL(String(u||"")).hostname.replace(/^www\./,""); return h?{url:String(u),host:h}:null; }catch{ return null; }
+  try{ const h=withoutWww(new URL(String(u||"")).hostname); return h?{url:String(u),host:h}:null; }catch{ return null; }
 }
+// The note on an English edition published after the show opened; the block reads it back to add the year.
+const ENGLISH_LATER="the English edition, published later";
 function versionNote(vs,i,row){
   const v=vs[i], mu=MU[row.museumId], id=row.museumId;
   const vc=v.city||(venueNamedIn(v.publisher,id)||{}).city||null;
@@ -7720,7 +7760,7 @@ function versionNote(vs,i,row){
   if(english&&hasOriginal){
     if(venuePrinting(v.publisher,id))return "this venue's English edition";
     const start=parseInt(String(row.startDate||"").slice(0,4),10);
-    return v.year&&start&&v.year>start?"the English edition, published later":"the English edition";
+    return v.year&&start&&v.year>start?ENGLISH_LATER:"the English edition";
   }
   return null;
 }
@@ -7730,7 +7770,7 @@ function versionNote(vs,i,row){
 function versionBlock(vs,i,row){
   const v=vs[i], mu=venueNamedIn(v.publisher)||MU[row.museumId];
   const note=versionNote(vs,i,row);
-  const later=note==="the English edition, published later"&&v.year;
+  const later=note===ENGLISH_LATER&&v.year;
   const bind=v.binding==="hardcover"?"Hardcover":v.binding==="paperback"?"Paperback":null;
   const facts=[v.lang,bind,v.pages?v.pages+" pp":null].filter(Boolean).join(" \u00b7 ");
   return{i,picked:row.editionPick===i,title:v.title||null,
@@ -7797,8 +7837,7 @@ function factsPrompt(q){
       :"“"+q.book+"”"+(q.isbn?", ISBN "+q.isbn:"")+", the catalogue of the exhibition “"+q.show+"” at "+q.venue)+".\n"
     +"Use ONLY what the text below says. Never use outside knowledge, never guess an ISBN and never invent a link.\n"
     +"Give every ISBN EXACTLY as printed — a 10-digit one as it stands, never converted.\n"
-    +"\"Sold by …\" (“vendu par”, “venduto da”) names the SHOP, never the publisher — "
-    +"the Orsay’s shop says “Sold by GrandPalaisRmn” for books Hazan printed. Never report it as publisher.\n"
+    +SOLD_BY_RULE
     +"isbn13: this book's own ISBN, or null.\n"
     +"pages: the number of pages the text prints for THIS book (\"544 pages\", \"281 pp.\"), digits only, or null.\n"
     +"versions: other printings of THIS SAME book in the SAME language that the text shows with their own ISBN — "
@@ -7832,7 +7871,7 @@ function factsPrompt(q){
     // The first web search's results, read again (Hubert Robert: its English book was there).
     +(q.earlier&&q.earlier.length?"\nSECTION D — earlier web search results about this exhibition's catalogue.\n"
       +resultsForPrompt(q.earlier,2000,{words:[q.book,q.show,"edition","catalogue"]},q.earlier.length)+"\n":"")
-    +"\nReply with ONLY this JSON object and nothing else:\n"+shape;
+    +REPLY_JSON_ONLY+shape;
 }
 
 // The trust order for a publisher: read off the ISBN's results, then printed on the
@@ -7848,7 +7887,7 @@ function sameHouse(a,b){
 function siteOfHouses(results,pub,museumId){
   const whole=publisherDomainFrom(results,pub);
   if(whole)return whole;
-  const parts=String(pub||"").split(/\s*(?:\/|;|&|\s+and\s+|\s+with\s+)\s*/i).map(x=>x.trim()).filter(Boolean);
+  const parts=String(pub||"").split(HOUSE_SPLIT).map(x=>x.trim()).filter(Boolean);
   if(parts.length<2)return null;
   parts.sort((a,b)=>museumImprintOnly(a,museumId)-museumImprintOnly(b,museumId));
   for(const p of parts){ const h=publisherDomainFrom(results,p); if(h)return h; }
@@ -7916,7 +7955,7 @@ async function findPublisherPage(F,c){
          +"\nBook: "+book+(isbn?"\nISBN: "+isbn:"")+"\nPublisher: "+pub
          +"\nExhibition venue: "+venue+"\n\n"
          +resultsForPrompt(onSite,3000,{words:[book,isbn||""]})
-         +"\nReply with ONLY this JSON object and nothing else:\n"
+         +REPLY_JSON_ONLY
          +'{"candidates": [string]}\n'
          +'Example: {"candidates":["https://hannibalbooks.be/en/fine-art","https://hannibalbooks.be/en/new"]}');
         log.push(rd.detail);
@@ -7966,7 +8005,7 @@ async function findPublisherPage(F,c){
        +"An empty list if none.\n":"")
      +"\nBook: "+book+(isbn?"\nISBN: "+isbn:"")+"\nPublisher: "+pub+"\n\n"
      +pageForPrompt(res)
-     +"\nReply with ONLY this JSON object and nothing else:\n"
+     +REPLY_JSON_ONLY
      +'{"kind": "book"|"listing"|"other", "bookUrl": string|null'
      +(c.wantEditions?', "editions": [{"title": string, "isbn13": string, "language": string, "url": string|null}]':'')+'}\n'
      +'Example: {"kind":"listing","bookUrl":"https://hannibalbooks.be/en/metamorfosen-ovidius-en-de-kunsten#102642"}');
@@ -8136,8 +8175,7 @@ async function lookupCatalogue(row,hooks){
     else{
       // The venue's own shop page gets the blank-page retry (openShopPage); a publisher's does not.
       const f=await (shopLinkOf({shopUrl:hit.pageUrl},dom)?(...a)=>openShopPage(io.fetch,...a):io.fetch)(hit.pageUrl,
-        "The ISBN-13, the publisher, and any link to the publisher’s own page for the book "
-          +"“"+(F.title||title)+"”, including any details or specification panel on the page.",
+        bookPageAsk(F.title||title),
         [(F.title||title)+" ISBN publisher details"],{full:true});
       log.push(f.detail);
       if(!f.ok)fault(f.detail);
@@ -8358,6 +8396,8 @@ const LEDGER_PREFIX="art-watch-ledger-";
 // Local 24hr timestamp (browser's timezone), e.g. 2026-08-23-2230 = 10:30pm local.
 // A description, as it goes into a file name: lower case, words joined by hyphens.
 function labelSlug(label){return String(label||"").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"").slice(0,40);}
+// The label of the safety copy kept before a roll-back to the save made at `at`.
+function rollbackSafetyLabel(at){return "Safety snapshot before roll-back to snapshot of "+localReadable(at);}
 // A cloud save's name in the list (her wording): a Save's copy 'Export: "description"';
 // a safety copy, its own label. Older labels are renamed on screen, never in the store.
 function snapTitle(s,all){
@@ -8371,7 +8411,7 @@ function snapTitle(s,all){
   if(m){
     const was=m[1].replace(/^Cloud copy before /,"Safety snapshot before ");
     const hits=(all||[]).filter(o=>o&&o!==s&&o.at<s.at&&snapTitle(o)===was);
-    return hits.length===1?"Safety snapshot before roll-back to snapshot of "+localReadable(hits[0].at)
+    return hits.length===1?rollbackSafetyLabel(hits[0].at)
       :"Safety snapshot before roll-back to \u201c"+was+"\u201d";
   }
   return l.replace(/^Cloud copy before /,"Safety snapshot before ").replace(/^(Safety snapshot before roll-back to )(?!snapshot of )/,"$1snapshot of ")||"Safety snapshot";
@@ -8649,7 +8689,7 @@ function CatalogueBox({r,mu,C,TH,lnk,isAcq,noShop,vl,picked,onPick,actions}){
                 {b.publisher&&<div style={{fontSize:11,color:C.soft,marginBottom:2,lineHeight:1.4}}>{b.publisher}</div>}
                 <div style={{fontSize:11.5,fontFamily:"ui-monospace,monospace",lineHeight:1.5,color:b.isbn?C.ink:C.soft}}>
                   {b.isbn?<>ISBN <span style={{whiteSpace:"nowrap"}}>{b.isbn}</span>{b.also&&<>; <span style={{whiteSpace:"nowrap"}}>{b.also.isbn}</span> ({b.also.whose})</>}</>
-                    :"ISBN not confirmed \u2014 verify before buying"}
+                    :ISBN_UNCONFIRMED}
                 </div>
                 {b.facts&&<div style={{fontSize:11,color:C.soft,marginTop:2,marginBottom:2,lineHeight:1.4}}>{b.facts}</div>}
                 {(b.why||b.source)&&<div style={{fontSize:11,color:C.soft,marginTop:3,lineHeight:1.45}}>
@@ -8663,7 +8703,7 @@ function CatalogueBox({r,mu,C,TH,lnk,isAcq,noShop,vl,picked,onPick,actions}){
         {r.catalogueTitle&&<div style={{fontFamily:"'Fraunces',Georgia,serif",fontSize:14.5,fontWeight:500,marginBottom:2,lineHeight:1.3}}>{r.catalogueTitle}</div>}
         {r.publisher&&<div style={{fontSize:11,color:C.soft,marginBottom:2}}>{r.publisher}</div>}
         <div style={{fontSize:11.5,fontFamily:"ui-monospace,monospace",marginBottom:englishLine(r)?2:10,color:r.isbn13?C.ink:C.soft}}>
-          {r.isbn13?"ISBN "+fmtIsbn(r.isbn13)+(r.alsoVersion?" \u00b7 "+alsoLine(r.alsoVersion):""):"ISBN not confirmed \u2014 verify before buying"}
+          {r.isbn13?"ISBN "+fmtIsbn(r.isbn13)+(r.alsoVersion?" \u00b7 "+alsoLine(r.alsoVersion):""):ISBN_UNCONFIRMED}
         </div>
         {englishLine(r)&&<div style={{fontSize:11,color:C.soft,marginBottom:10}}>{englishLine(r)}</div>}
       </>)}
@@ -9346,7 +9386,7 @@ export default function App(){
     const v=occVenues[id]||occSaved.current[id];
     if(!v||(v.finder>=3&&v.searchRule>=SEARCH_RULE))return;
     let found;
-    const f=mu.shopCatalogues?await fetchPage(mu.shopCatalogues,"The books in this section of the shop, with their prices.",null,{full:true}):{ok:true,results:[]};
+    const f=mu.shopCatalogues?await fetchPage(mu.shopCatalogues,SHOP_BOOKS_ASK,null,{full:true}):{ok:true,results:[]};
     if(f.ok)found=await proveShopSearch(pageTextOf(f.results),mu.shopCatalogues||mu.shopHome);
     if(found===undefined||!f.ok)return;   // a call that died is not an answer
     const add=x=>x?{...x,shopSearch:found,finder:3,searchRule:SEARCH_RULE}:x;

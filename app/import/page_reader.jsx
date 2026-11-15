@@ -46,7 +46,7 @@ function splitPageTitle(t,host){
   if(m){
     const h=foldText(host);
     const flat=x=>foldText(x).replace(/[^a-z0-9]/g,"");
-    const bare=h.replace(/^www\./,"");
+    const bare=withoutWww(h);
     if(foldText(m[2]).split(/[^a-z0-9]+/).some(w=>w.length>=4&&h.includes(w))||flat(m[2])===flat(bare)||flat(m[2])===flat(bare.split(".")[0])){ s=m[1].trim(); site=m[2].trim(); }
   }
   // Several bars: the show is named first, the site last ("Venice: Canaletto and
@@ -63,6 +63,10 @@ function splitPageTitle(t,host){
 //@piece TITLE_LABEL
 
 const TITLE_LABEL=/^(?:exhibitions?|mostra|ausstellung|exposition|exposición|tentoonstelling)$/i;
+//@piece NO_TITLE_ON_PAGE
+
+// Why a page is refused when no title can be read from it.
+const NO_TITLE_ON_PAGE="Couldn’t find the show’s title on the page.";
 //@piece GENERIC_TITLE_WORDS
 
 // Words too general to name a show.
@@ -287,7 +291,7 @@ function readShowPage(res,url,vc,rules){
   joinHeadingOverTwoLines(pg);
   showFromCrumb(pg);
   titleCandidates(pg);
-  if(!pg.cands.length){ pg.rule("fail:no-title"); return{ok:false,why:"Couldn’t find the show’s title on the page."}; }
+  if(!pg.cands.length){ pg.rule("fail:no-title"); return{ok:false,why:NO_TITLE_ON_PAGE}; }
   const fail=findDates(pg);
   if(fail)return fail;
   settleName(pg);
@@ -412,7 +416,7 @@ function titleCandidates(pg){
 // it (her decision; Brancusi's "Neue Nationalgalerie" line under the dates).
 function venueNamesFor(pg){
   const{vc,host,site,words}=pg;
-  const h=String(host||"").replace(/^www\./,"");
+  const h=withoutWww(String(host||""));
   const houses=VENUE_REGISTER.filter(e=>e.kind==="manual"&&(e.id===vc||e.read.sites.some(x=>x.host===h)));
   const names=[site,...venueNames(MU[vc]),...houses.flatMap(e=>venueNames(venueView(e)))];
   return new Set(names.filter(Boolean).map(words).filter(Boolean));
@@ -479,7 +483,7 @@ function findDates(pg){
   if(found)rule("title:"+candRule[cands.indexOf(h)]+(h===cands[0]?"":"-not-first"));
   if(!found){
     const h0=cands.find(i=>!nameOnly(i));
-    if(h0===undefined){ rule("fail:venue-name-only"); return{ok:false,why:"Couldn’t find the show’s title on the page."}; }
+    if(h0===undefined){ rule("fail:venue-name-only"); return{ok:false,why:NO_TITLE_ON_PAGE}; }
     const near=[];
     for(let k=h0+1;k<lines.length&&near.length<LINK_DATE_LINES;k++){ const l=stripMd(lines[k]); if(!l)continue; if(lr&&lr.datesUntil&&lr.datesUntil.test(l.trim()))break; near.push([k,l]); }
     // A date the page prints but that is not one (months only, a season, no year), else none at all:
@@ -717,7 +721,7 @@ function pageResult(pg){
   let tracked=false; try{ tracked=[...new URL(url).searchParams.keys()].some(k=>TRACKING_PARAM.test(k)); }catch{}
   const link=lr&&lr.cleanLink?String(url).split(/[?#]/)[0]:tracked?withoutTracking(url):url;
   if(link!==url)rule(lr&&lr.cleanLink?"cleanLink":"tracking");
-  return{ok:true,base:pg.base,between:pg.between,under,afterDates,start:range.start||"",end:range.end||"",raw:pg.raw.slice(0,LINK_RAW_CHARS),site:site||(REG[vc]&&REG[vc].names.full)||host.replace(/^www\./,""),link,noDates:!!found.noDates,scriptDates:!!found.scriptDates,orderUnknown:!!found.orderUnknown,shown:found.shown||"",shownWhy:found.shownWhy||"",dateLine:found.noDates&&!found.shown?"":pg.dateLine,dateNote:DATES.closedEarlyNote(range)};
+  return{ok:true,base:pg.base,between:pg.between,under,afterDates,start:range.start||"",end:range.end||"",raw:pg.raw.slice(0,LINK_RAW_CHARS),site:site||(REG[vc]&&REG[vc].names.full)||withoutWww(host),link,noDates:!!found.noDates,scriptDates:!!found.scriptDates,orderUnknown:!!found.orderUnknown,shown:found.shown||"",shownWhy:found.shownWhy||"",dateLine:found.noDates&&!found.shown?"":pg.dateLine,dateNote:DATES.closedEarlyNote(range)};
 }
 //@piece venueTitle
 

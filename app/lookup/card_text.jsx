@@ -97,6 +97,10 @@ const SHOP_BLOCKED_FOUND_REST=" — search it manually. The catalogue is stocked
 //@piece SHOP_BLOCKED_NONE_REST
 
 const SHOP_BLOCKED_NONE_REST=". The catalogue also does not appear to exist elsewhere. Search manually to confirm.";
+//@piece ISBN_UNCONFIRMED
+
+// What a catalogue block shows when its book has no ISBN.
+const ISBN_UNCONFIRMED="ISBN not confirmed \u2014 verify before buying";
 //@piece englishLine
 
 
