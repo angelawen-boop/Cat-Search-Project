@@ -143,7 +143,11 @@ function main() {
     if (writeRules) want.rules = rules;
     if (writePassages && got.ok) want.passage = passageOf(row.raw);
     want._rules = rules;
-    const bad = ['venue', 'title', 'start', 'end'].filter(k => (k === 'venue' ? venue : row[k]) !== want[k]);
+    // A page the reader refuses is filed nowhere, so its venue is not compared: a page listed as refused
+    // (no title; Louisiana's retired show, the known Parallel fault) is as listed while it is still refused
+    // for the same reason (its `rules`, reported above when they move).
+    const bad = ['venue', 'title', 'start', 'end'].filter(k => (k === 'venue' ? (got.ok ? venue : want.venue) : row[k]) !== want[k]);
+    if (!got.ok && !want.title && want.rules && want.rules.join(' ') !== rules.join(' ')) bad.push('why');
     if (!got.ok && want.title) bad.push('why');
     if (want.noDescription && row.raw) bad.push('description');
     if (want.passage !== undefined && got.ok && passageOf(row.raw) !== want.passage) bad.push('passage');
