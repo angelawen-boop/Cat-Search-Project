@@ -359,7 +359,43 @@ every item across before sending it to her.
   new (two Prado passages end elsewhere, one Getty page now gives dates, Louisiana's page is the known
   Parallel fault): the sites or Parallel's replies changed, not the reader. The list was not updated.
 
-### Round "app side" — design (4B, 4C, the same-text items of 4E and 4F)
+### Round "scraper side" — design (4D's same-text items)
+
+Branch `claude/restructure-4-scraper`. Facts the sweep's tools and the app each hold their own copy of,
+brought to one home in the scraper's files and written into the app by the join (as the date and summary
+rules already are: `build/shared_from_scraper.js`). Nothing a sweep writes and nothing the app reads may
+change.
+- **The marker sentence** ("Marker row, not an exhibition."): one constant; `sweep_prototype.js`, `qc.js`,
+  `routine_window.js`, `sweep_diff.js` and the app's `isMarkerRow` name it.
+- **The column list:** one list; `proFormaCsv` in the app and the writers in `sweep_prototype.js`,
+  `compress.js`, `stitch.js`, `reread_kept.js` name it. `sweep_fetch.js` and `probe_morgan.js` are
+  superseded and kept as the record (`docs/sweep_operation.md`): not touched.
+- **The sweep-file readers:** `compress.parseCsv` and `show_tags.readCsv` become one where they read the
+  same way; the app's `csvParse` joins them only if all three give the same rows for every sweep file on
+  disk — otherwise it stays and the difference is listed for the coordinator.
+- **The "Topic:" note:** written by `compress.js`, read by the app's `topicOf`: one pattern, shared.
+- **The sweep-log merge:** the app's and `scraper/sweep_log.js`'s become one function, shared.
+- **The month spellings:** `MONTHS`, `MONTH_PATTERN` and `GERMAN_DAY_DOT` built from one list in `dates.js`.
+- **`build/blocks_check.js`'s hand-typed show IDs:** read from the data it tests, or made by the app's rule.
+- **Not in this round:** show IDs, accent rules, web-address tidying (their own round, with its proof);
+  the unused last-import date in her ledger (stays).
+- **The proof:** the gates; the scraper's test group and the app's; every sweep CSV on disk read by old
+  reader and new gives the same rows; the scraper re-reading its kept pages, old code beside new, changes
+  no field (`scraper/reread_kept.js`, the eight venues with kept pages); every date string in the date
+  tests reads the same; and a run file written by the old writer and the new from the same rows is the
+  same file, byte for byte.
+
+### Round "app side" — done
+
+Merged. Every repeated sentence, prompt line and pattern in the app's parts is written once
+(`build/fact_check.js` lists none and fails on a new one); `build/same_text_check.js` proves each text and
+pattern comes out as before; the store's record names are read by the check scripts and two fixtures from
+the app's own constants (`build/store_names.js`). The side-by-side check now notes, not fails, a newly
+named text or pattern when changes are allowed. **Left, the copies differ:** the labelled-ISBN pattern, the
+ISBN pair pattern, the 978-only converter and the anchored check — four different rules, not one written
+four times. Store paths typed in the other fixtures are test data and stay.
+
+### Round "app side" — design (as written before the round) (4B, 4C, the same-text items of 4E and 4F)
 
 Branch `claude/restructure-4-app`. Every item is the same text or pattern written more than once in the
 app's parts, brought to one piece that the other places name. Nothing the app does or says may change: the
@@ -401,13 +437,11 @@ and compares them (`build/same_text_check.js`, kept).
 
 ## Handover record — updated after every step
 
-**Where we are:** step 1 of "This run" is done — 4A's three checks passed and 59 is published. The checks:
-the scraper, old code beside new, on the kept pages of the eight venues that have them (no field changed)
-and every venue's recipe compared (identical but for the names and galleries moved to the register); the
-page reader on all 105 live proof pages, old beside new (identical); the catalogue search wording of every
-non-English venue (read, one note parked). The publish filed her newer waiting venues into the register;
-VR-001 now tests "a store already filed writes nothing" instead of comparing against the ageing backup.
-Next: step 2, the app-side round (design under "This run").
+**Where we are:** steps 1 and 2 of "This run" are done (59 published; the app-side round merged), and
+step 6's cutting plan is written (item 5 above; re-check it against the code once the item-4 rounds are in).
+`build/keys_compare.js` (step 5's proof) is built and proven on branch `claude/restructure-4-keys`: it passes
+on the code as it stands against her ledger and quarantine (read from her store into the scratchpad, never
+committed) and fails on a changed title rule. Next: step 3, the scraper-side round.
 
 **Open problems:** a sub-agent cannot start the watched test run — the test hook reads the coordinator's
 transcript for the "Expected test run" line — so the coordinator runs gate 2 itself. The hook often refuses
