@@ -336,7 +336,7 @@ const VENUES = [
 
   // Its all-number dates: "From 18/06/2025 to 28/09/2025".
   { id: "uffizi", kind: "swept",
-    names: { card: "Uffizi", chip: "Uffizi", group: null, full: "Uffizi Galleries", inEnglish: null, aka: [], replaced: [], hers: true },
+    names: { card: "Uffizi", chip: "Uffizi", group: null, full: "Gallerie degli Uffizi", inEnglish: "Uffizi Galleries", aka: [], replaced: [], hers: true },
     city: "Florence", country: "Italy", english: false, language: "Italian",
     shop: { home: "https://shop.uffizi.it/en/", catalogues: null, search: "https://shop.uffizi.it/en/?s=", unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
     read: { link: null, sites: [], dateOrder: "day", spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
@@ -2050,10 +2050,11 @@ const later = (a, b) => (!a || (b && b > a)) ? b : a;
 
 // The sweep log merged with what a file showed (`seen`: {attempted, returned}, venue → stamp). A venue's
 // dates move only for a later time, so an old file cannot drag them back; tried and brought-rows move
-// independently.
+// independently. A venue seen with no sweep time adds nothing: the file says nothing about when it was tried.
 function mergeSweepLog(prev, seen) {
   const out = { ...(prev || {}) };
   for (const v of Object.keys((seen && seen.attempted) || {})) {
+    if (!seen.attempted[v]) continue;
     const was = out[v] || {};
     out[v] = {
       attempted: later(was.attempted, seen.attempted[v]),
@@ -7594,15 +7595,22 @@ function proofOf(onV,given){
   return String((g||onV[0]||{}).url||"")||null;
 }
 // The venue's own house: its imprint (isVenueImprint), or a name carrying every
-// distinctive word of the venue's short name ("Louvre éditions").
+// distinctive word of the venue's full or English name ("Louvre éditions").
 const VENUE_GENERIC=new Set(["national","art","arts","fine","modern","royal","musee","museum","museo","museu",
   "gallery","galleria","galerie","collection","the"]);
+// Does this text (already through normPublisher) carry every distinctive word of the
+// venue's full name, or of its English name where it has one?
+function venueNameIn(mu,text){
+  const n=" "+text+" ";
+  return [lookupName(mu),mu.nameInEnglish].some(nm=>{
+    const w=nm?normPublisher(nm).split(" ").filter(t=>t.length>2&&!VENUE_GENERIC.has(t)):[];
+    return w.length>0&&w.every(t=>n.includes(" "+t+" "));
+  });
+}
 function venueHouse(name,museumId){
   if(isVenueImprint(name,museumId))return true;
   const mu=MU[museumId];
-  const v=mu?normPublisher(lookupName(mu)).split(" ").filter(t=>t.length>2&&!VENUE_GENERIC.has(t)):[];
-  const n=" "+normPublisher(name)+" ";
-  return v.length>0&&v.every(t=>n.includes(" "+t+" "));
+  return !!mu&&venueNameIn(mu,normPublisher(name));
 }
 const HOUSE_SPLIT=/\s*(?:\/|;|&|\s+and\s+|\s+with\s+)\s*/i;
 function venuePrinting(name,museumId){
@@ -7641,14 +7649,13 @@ function cityOf(said,pub,results,museumId){
   return m&&m.city||null;
 }
 // One of her venues named as a publisher: its whole name, or every distinctive word of
-// its short name ("Musée du Louvre"); never a name merely containing another's
+// its full or English name ("Musée du Louvre"); never a name merely containing another's
 // ("National Gallery of Art" is not the National Gallery).
 function venueNamedIn(pub,except){
   const parts=String(pub||"").split(HOUSE_SPLIT).map(normPublisher).filter(Boolean);
   for(const m of Object.values(MU)){
     if(!m||m.id===except)continue;
-    const w=normPublisher(lookupName(m)).split(" ").filter(t=>t.length>2&&!VENUE_GENERIC.has(t));
-    if(parts.some(p=>p===normPublisher(m.name)||(w.length&&w.every(t=>(" "+p+" ").includes(" "+t+" ")))))return m;
+    if(parts.some(p=>p===normPublisher(m.name)||venueNameIn(m,p)))return m;
   }
   return null;
 }

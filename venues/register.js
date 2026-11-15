@@ -378,7 +378,7 @@ const VENUES = [
 
   // Its all-number dates: "From 18/06/2025 to 28/09/2025".
   { id: "uffizi", kind: "swept",
-    names: { card: "Uffizi", chip: "Uffizi", group: null, full: "Uffizi Galleries", inEnglish: null, aka: [], replaced: [], hers: true },
+    names: { card: "Uffizi", chip: "Uffizi", group: null, full: "Gallerie degli Uffizi", inEnglish: "Uffizi Galleries", aka: [], replaced: [], hers: true },
     city: "Florence", country: "Italy", english: false, language: "Italian",
     shop: { home: "https://shop.uffizi.it/en/", catalogues: null, search: "https://shop.uffizi.it/en/?s=", unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
     read: { link: null, sites: [], dateOrder: "day", spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },

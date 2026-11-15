@@ -41,12 +41,13 @@ function newestRunWith(venue) {
   return runs.length ? path.join(OUTPUT_DIR, runs[runs.length - 1]) : null;
 }
 
-// The pro forma's own reader (pro_forma.js); rows whose cell count differs from the header's are left out.
+// The pro forma's own reader (pro_forma.js); rows whose cell count differs from the header's are left out, and said so on stderr.
 function readCsv(file) {
   const rows = parseCsv(fs.readFileSync(file, 'utf8'));
   const head = rows.shift();
-  return rows.filter(r => r.length === head.length)
-             .map(r => Object.fromEntries(head.map((h, i) => [h, r[i]])));
+  const kept = rows.filter(r => r.length === head.length);
+  if (kept.length < rows.length) console.error(`${rows.length - kept.length} row(s) dropped from ${file}: cell count differs from the header's`);
+  return kept.map(r => Object.fromEntries(head.map((h, i) => [h, r[i]])));
 }
 
 (async () => {

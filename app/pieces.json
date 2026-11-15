@@ -608,6 +608,7 @@
   "onIsbn",
   "proofOf",
   "VENUE_GENERIC",
+  "venueNameIn",
   "venueHouse",
   "HOUSE_SPLIT",
   "venuePrinting",

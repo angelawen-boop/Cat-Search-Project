@@ -162,17 +162,26 @@ function proofOf(onV,given){
 //@piece VENUE_GENERIC
 
 // The venue's own house: its imprint (isVenueImprint), or a name carrying every
-// distinctive word of the venue's short name ("Louvre éditions").
+// distinctive word of the venue's full or English name ("Louvre éditions").
 const VENUE_GENERIC=new Set(["national","art","arts","fine","modern","royal","musee","museum","museo","museu",
   "gallery","galleria","galerie","collection","the"]);
+//@piece venueNameIn
+
+// Does this text (already through normPublisher) carry every distinctive word of the
+// venue's full name, or of its English name where it has one?
+function venueNameIn(mu,text){
+  const n=" "+text+" ";
+  return [lookupName(mu),mu.nameInEnglish].some(nm=>{
+    const w=nm?normPublisher(nm).split(" ").filter(t=>t.length>2&&!VENUE_GENERIC.has(t)):[];
+    return w.length>0&&w.every(t=>n.includes(" "+t+" "));
+  });
+}
 //@piece venueHouse
 
 function venueHouse(name,museumId){
   if(isVenueImprint(name,museumId))return true;
   const mu=MU[museumId];
-  const v=mu?normPublisher(lookupName(mu)).split(" ").filter(t=>t.length>2&&!VENUE_GENERIC.has(t)):[];
-  const n=" "+normPublisher(name)+" ";
-  return v.length>0&&v.every(t=>n.includes(" "+t+" "));
+  return !!mu&&venueNameIn(mu,normPublisher(name));
 }
 //@piece HOUSE_SPLIT
 
@@ -227,14 +236,13 @@ function cityOf(said,pub,results,museumId){
 //@piece venueNamedIn
 
 // One of her venues named as a publisher: its whole name, or every distinctive word of
-// its short name ("Musée du Louvre"); never a name merely containing another's
+// its full or English name ("Musée du Louvre"); never a name merely containing another's
 // ("National Gallery of Art" is not the National Gallery).
 function venueNamedIn(pub,except){
   const parts=String(pub||"").split(HOUSE_SPLIT).map(normPublisher).filter(Boolean);
   for(const m of Object.values(MU)){
     if(!m||m.id===except)continue;
-    const w=normPublisher(lookupName(m)).split(" ").filter(t=>t.length>2&&!VENUE_GENERIC.has(t));
-    if(parts.some(p=>p===normPublisher(m.name)||(w.length&&w.every(t=>(" "+p+" ").includes(" "+t+" ")))))return m;
+    if(parts.some(p=>p===normPublisher(m.name)||venueNameIn(m,p)))return m;
   }
   return null;
 }
