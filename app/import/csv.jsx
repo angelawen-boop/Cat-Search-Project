@@ -23,8 +23,7 @@ const ignoreKeyFor=(venueId,url,title)=>
 //@piece normalizeTitle
 
 // Conservative duplicate matching for incoming refresh results.
-const normalizeTitle = v => String(v||"")
-  .normalize("NFD").replace(/[\u0300-\u036f]/g,"")
+const normalizeTitle = v => stripAccents(String(v||""))
   .toLowerCase()
   .replace(/&/g," and ").replace(/\+/g," and ")
   .replace(/[’‘`]/g,"'").replace(/['"]/g,"")

@@ -12,6 +12,7 @@
  * claim is matched against its words in each.
  */
 'use strict';
+const { stripAccents } = require('./keys.js');
 
 // Measured from all 110 seed summaries: min 3, median 6, max 10, and every one
 // ends with a full stop. The data wins over any number written elsewhere.
@@ -76,7 +77,7 @@ const CLAIMS = [
   { en: ['unprecedented'], page: ['unprecedented', 'precedenti', 'inedito', 'inedita', 'inédit', 'inédite', 'précédent', 'beispiellos', 'beispiellose', 'ongekend', 'ongekende', 'precedentes', 'hidtil'] },
 ];
 
-const fold = s => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+const fold = s => stripAccents(String(s || '')).toLowerCase();
 // Words, accents folded, each hyphened word both closed up and in its parts ("first-ever" →
 // "firstever", "first", "ever").
 const wordsOf = s => [...(fold(s).replace(/[-‐–]/g, '').match(/[a-zøæåß]+/g) || []), ...(fold(s).match(/[a-zøæåß]+/g) || [])];

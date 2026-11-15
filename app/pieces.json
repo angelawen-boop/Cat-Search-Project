@@ -38,6 +38,7 @@
   "withoutWww",
   "siteUrlOf",
   "originOf",
+  "stripAccents",
   "typedLink",
   "LETTER_FOLD",
   "foldText",

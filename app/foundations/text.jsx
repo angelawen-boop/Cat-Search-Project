@@ -34,6 +34,10 @@ function siteUrlOf(u){
 //@piece originOf
 
 function originOf(u){ try{ return new URL(u).origin+"/"; }catch{ return ""; } }
+//@piece stripAccents
+
+// Accent marks dropped: the scraper's own strip (scraper/keys.js).
+const stripAccents=KEYS.stripAccents;
 //@piece LETTER_FOLD
 
 // Accents dropped, and the letters that are not accented ones folded too: ø, æ, œ, ß, ł,
@@ -41,7 +45,7 @@ function originOf(u){ try{ return new URL(u).origin+"/"; }catch{ return ""; } }
 const LETTER_FOLD={"\u00f8":"o","\u00e6":"ae","\u0153":"oe","\u00df":"ss","\u0142":"l","\u0111":"d","\u00f0":"d","\u00fe":"th","\u0131":"i"};
 //@piece foldText
 
-const foldText=s=>String(s||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[\u00f8\u00e6\u0153\u00df\u0142\u0111\u00f0\u00fe\u0131]/g,c=>LETTER_FOLD[c]);
+const foldText=s=>stripAccents(String(s||"").toLowerCase()).replace(/[\u00f8\u00e6\u0153\u00df\u0142\u0111\u00f0\u00fe\u0131]/g,c=>LETTER_FOLD[c]);
 //@piece stripMd
 
 

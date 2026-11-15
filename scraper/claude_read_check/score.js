@@ -4,7 +4,8 @@ const [,,ansDir,jsx]=process.argv;
 const A=require('./load.js')(jsx,['linkAnswer','linkTitle','cardTitle','composeSummary','nameInLines','maybeElsewhere','hostOf','siteUrlOf']);
 const truth=require('./truth.js');
 const STOP=new Set('the a an and of in on at to for from with by its his her their as is are was this that into over between across through new first more most own one two three four five six seven eight nine ten than about'.split(' '));
-const fold=s=>String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase();
+const {stripAccents}=require('../keys.js');
+const fold=s=>stripAccents(String(s||'')).toLowerCase();
 const fail={summary:0,subtitle:0,english:0,es:0}; let n=0; const rows=[];
 for(const f of fs.readdirSync('q').filter(x=>x.endsWith('.page.json')).sort()){
   const nn=f.slice(0,2), af=path.join(ansDir,nn+'.json'); if(!fs.existsSync(af)){console.log(nn,'NO ANSWER');continue;}
