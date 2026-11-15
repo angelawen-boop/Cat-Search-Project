@@ -202,12 +202,12 @@ const VENUES = [
     filed: null },
 
   { id: "occ-nationalgalleries-org", kind: "manual",
-    names: { card: "NG Scotland", chip: "NG Scotland", group: null, full: "National Galleries of Scotland", inEnglish: null, aka: [], replaced: [], hers: true },
+    names: { card: "NG Scotland", chip: "NG Scotland", group: null, full: "National Galleries of Scotland", inEnglish: null, aka: ["National Galleries of Scotland: Modern", "Modern Two"], replaced: [], hers: true },
     city: "Edinburgh", country: "United Kingdom", english: true, language: null,
     shop: { home: null, catalogues: null, search: null, unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
     read: { link: null, sites: [], dateOrder: null, spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
     sweep: { exBase: null, listUrl: null },
-    filed: { addedAt: "2026-10-13T12:48:23.190Z", confirmed: true, english: true, finder: 3, foundBy: "a search", host: "www.nationalgalleries.org", id: "occ-nationalgalleries-org", name: "National Galleries of Scotland", pageShop: "https://shop.nationalgalleries.org/", shelfKind: "books", shop: "found", shopCatalogues: "https://shop.nationalgalleries.org/collection-exhibitions/exhibition-books/", shopHome: "https://shop.nationalgalleries.org/", shopSearch: "https://shop.nationalgalleries.org/search?q=", turnedDown: [], why: null } },
+    filed: { addedAt: "2026-10-13T12:48:23.190Z", aka: ["National Galleries of Scotland: Modern", "Modern Two"], city: "Edinburgh", confirmed: true, country: "United Kingdom", english: true, finder: 3, foundBy: "a search", gallery: false, host: "www.nationalgalleries.org", id: "occ-nationalgalleries-org", name: "National Galleries of Scotland", pageShop: "https://shop.nationalgalleries.org/", shelfKind: "books", shop: "found", shopCatalogues: "https://shop.nationalgalleries.org/collection-exhibitions/exhibition-books/", shopHome: "https://shop.nationalgalleries.org/", shopSearch: "https://shop.nationalgalleries.org/search?q=", turnedDown: [], why: null } },
 
   { id: "louvre", kind: "swept",
     names: { card: "Louvre", chip: "Louvre", group: null, full: "Louvre", inEnglish: null, aka: [], replaced: [], hers: true },
@@ -572,6 +572,14 @@ const VENUES = [
     sweep: { exBase: null, listUrl: null },
     filed: { addedAt: "2026-11-01T14:52:10.663Z", aka: ["Whitney", "The Whitney"], city: "New York", confirmed: true, country: "United States", english: true, englishPicked: false, finder: 3, foundBy: "her link", gallery: false, host: "whitney.org", id: "occ-whitney-org", name: "Whitney Museum of American Art", pageShop: "", searchRule: null, shelfKind: null, shop: "found", shopAdded: true, shopCatalogues: "https://shop.whitney.org/collections/exhibition-catalogues", shopEnglishUnread: null, shopHome: "https://shop.whitney.org/", shopSearch: null, short: "Whitney", turnedDown: [], why: null } },
 
+  { id: "occ-pacegallery-com", kind: "manual",
+    names: { card: "Pace New York", chip: null, group: null, full: "Pace Gallery", inEnglish: null, aka: ["Pace", "PaceWildenstein"], replaced: [], hers: false },
+    city: "New York", country: "United States", english: true, language: null,
+    shop: { home: null, catalogues: null, search: null, unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
+    read: { link: null, sites: [], dateOrder: null, spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
+    sweep: { exBase: null, listUrl: null },
+    filed: { addedAt: "2026-11-12T13:05:23.753Z", aka: ["Pace", "PaceWildenstein"], city: "New York", confirmed: true, country: "United States", english: true, englishPicked: false, finder: 3, foundBy: "the shop's lists", gallery: true, host: "www.pacegallery.com", id: "occ-pacegallery-com", name: "Pace Gallery", pageShop: "https://shop.pacegallery.com/", searchRule: 2, shelfKind: "books", shop: "found", shopAdded: false, shopCatalogues: "https://shop.pacegallery.com/collections/publications", shopEnglishUnread: null, shopHome: "https://shop.pacegallery.com/", shopSearch: "https://shop.pacegallery.com/search?q=", short: "Pace New York", turnedDown: [], why: null } },
+
   // NGV writes two-digit years ("4 Sep 26 – 31 Jan 27").
   { id: "occ-ngv-vic-gov-au", kind: "manual",
     names: { card: "National Gallery Victoria", chip: null, group: null, full: "National Gallery of Victoria", inEnglish: null, aka: [], replaced: [], hers: true },
@@ -582,12 +590,12 @@ const VENUES = [
     filed: { addedAt: "2026-10-14T11:34:36.828Z", confirmed: true, english: true, finder: 3, foundBy: "a search", host: "www.ngv.vic.gov.au", id: "occ-ngv-vic-gov-au", name: "NGV", pageShop: "https://store.ngv.vic.gov.au/", shelfKind: "books", shop: "found", shopCatalogues: "https://store.ngv.vic.gov.au/collections/books", shopHome: "https://store.ngv.vic.gov.au/", shopSearch: "https://store.ngv.vic.gov.au/search?q=", turnedDown: [], why: null } },
 
   { id: "occ-courtauld-ac-uk", kind: "manual",
-    names: { card: "Courtauld", chip: null, group: null, full: "The Courtauld Gallery", inEnglish: null, aka: [], replaced: [], hers: true },
+    names: { card: "Courtauld", chip: null, group: null, full: "The Courtauld Gallery", inEnglish: null, aka: ["The Courtauld"], replaced: [], hers: true },
     city: "London", country: "United Kingdom", english: true, language: null,
     shop: { home: null, catalogues: null, search: null, unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
     read: { link: null, sites: [], dateOrder: null, spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
     sweep: { exBase: null, listUrl: null },
-    filed: { addedAt: "2026-10-04T01:01:19.607Z", confirmed: true, english: true, finder: 2, foundBy: "a search", host: "courtauld.ac.uk", id: "occ-courtauld-ac-uk", name: "Courtauld", pageShop: "https://shop.courtauld.ac.uk/", rejected: [], shelfKind: "catalogues", shop: "found", shopCatalogues: "https://shop.courtauld.ac.uk/collections/courtauld-catalogues", shopHome: "https://shop.courtauld.ac.uk/", shopSearch: "https://shop.courtauld.ac.uk/search?q=", turnedDown: [], why: null } },
+    filed: { addedAt: "2026-10-04T01:01:19.607Z", aka: ["The Courtauld"], city: "London", confirmed: true, country: "United Kingdom", english: true, finder: 2, foundBy: "a search", gallery: false, host: "courtauld.ac.uk", id: "occ-courtauld-ac-uk", name: "Courtauld", pageShop: "https://shop.courtauld.ac.uk/", rejected: [], shelfKind: "catalogues", shop: "found", shopCatalogues: "https://shop.courtauld.ac.uk/collections/courtauld-catalogues", shopHome: "https://shop.courtauld.ac.uk/", shopSearch: "https://shop.courtauld.ac.uk/search?q=", turnedDown: [], why: null } },
 
   { id: "occ-royalacademy-org-uk", kind: "manual",
     names: { card: "Royal Academy UK", chip: null, group: null, full: "Royal Academy of Arts", inEnglish: null, aka: [], replaced: [], hers: true },
@@ -620,7 +628,23 @@ const VENUES = [
     shop: { home: null, catalogues: null, search: null, unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
     read: { link: null, sites: [], dateOrder: null, spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
     sweep: { exBase: null, listUrl: null },
-    filed: { addedAt: "2026-11-06T04:45:19.374Z", aka: [], city: "Chichester", confirmed: true, country: "United Kingdom", english: true, englishPicked: false, finder: 3, foundBy: "the shop's menu", gallery: false, host: "pallant.org.uk", id: "occ-pallant-org-uk", name: "Pallant House Gallery", pageShop: "https://pallant.org.uk/your-visit/shop/", searchRule: 2, shelfKind: "publications", shop: "found", shopAdded: false, shopCatalogues: "https://pallantbookshop.com/product-category/books/pallant-publications/", shopEnglishUnread: null, shopHome: "https://pallantbookshop.com/", shopSearch: "https://pallantbookshop.com/search?q=", short: "Pallant House Chichester", turnedDown: [], why: null } },
+    filed: { addedAt: "2026-11-12T14:55:33.642Z", aka: [], city: "Chichester", confirmed: true, country: "United Kingdom", english: true, englishPicked: false, finder: 3, foundBy: "the shop's menu", gallery: false, host: "pallant.org.uk", id: "occ-pallant-org-uk", name: "Pallant House Gallery", pageShop: "https://pallant.org.uk/your-visit/shop/", searchRule: 2, shelfKind: "publications", shop: "found", shopAdded: false, shopCatalogues: "https://pallantbookshop.com/product-category/books/pallant-publications/", shopEnglishUnread: null, shopHome: "https://pallantbookshop.com/", shopSearch: "https://pallantbookshop.com/search?q=", short: "Pallant House Chichester", turnedDown: [], why: null } },
+
+  { id: "occ-hepworthwakefield-org", kind: "manual",
+    names: { card: "Hepworth Wakefield", chip: null, group: null, full: "The Hepworth Wakefield", inEnglish: null, aka: [], replaced: [], hers: false },
+    city: "Wakefield", country: "United Kingdom", english: true, language: null,
+    shop: { home: null, catalogues: null, search: null, unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
+    read: { link: null, sites: [], dateOrder: null, spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
+    sweep: { exBase: null, listUrl: null },
+    filed: { addedAt: "2026-11-12T14:56:25.103Z", aka: [], city: "Wakefield", confirmed: true, country: "United Kingdom", english: true, englishPicked: false, finder: 3, foundBy: "a search", gallery: false, host: "hepworthwakefield.org", id: "occ-hepworthwakefield-org", name: "The Hepworth Wakefield", pageShop: "https://shop.hepworthwakefield.org/", searchRule: 2, shelfKind: "publications", shop: "found", shopAdded: false, shopCatalogues: "https://shop.hepworthwakefield.org/collections/our-publications", shopEnglishUnread: null, shopHome: "https://shop.hepworthwakefield.org/", shopSearch: "https://shop.hepworthwakefield.org/search?q=", short: "Hepworth Wakefield", turnedDown: [], why: null } },
+
+  { id: "occ-stalbansmuseums-org-uk", kind: "manual",
+    names: { card: "St Albans Museum + Gallery", chip: null, group: null, full: "St Albans Museum + Gallery", inEnglish: null, aka: [], replaced: [], hers: false },
+    city: "St Albans", country: "United Kingdom", english: true, language: null,
+    shop: { home: null, catalogues: null, search: null, unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
+    read: { link: null, sites: [], dateOrder: null, spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
+    sweep: { exBase: null, listUrl: null },
+    filed: { addedAt: "2026-11-12T13:26:10.388Z", aka: [], city: "St Albans", confirmed: true, country: "United Kingdom", english: true, englishPicked: false, finder: 3, gallery: false, host: "www.stalbansmuseums.org.uk", id: "occ-stalbansmuseums-org-uk", name: "St Albans Museum + Gallery", pageShop: "http://maltingsshoppingcentre.co.uk/", searchRule: 2, shelfKind: null, shop: "none", shopAdded: false, shopCatalogues: null, shopEnglishUnread: null, shopHome: null, shopSearch: null, short: "St Albans Museum + Gallery", turnedDown: [], why: null } },
 
   { id: "occ-hlmd-de", kind: "manual",
     names: { card: "Darmstadt Landesmuseum", chip: null, group: null, full: "Hessisches Landesmuseum Darmstadt", inEnglish: null, aka: ["HLMD"], replaced: [], hers: false },
@@ -707,6 +731,14 @@ const VENUES = [
     sweep: { exBase: null, listUrl: null },
     filed: { addedAt: "2026-10-29T14:14:26.847Z", aka: ["Centre national d'art et de culture Georges-Pompidou"], city: "Paris", confirmed: true, country: "France", english: false, englishPicked: false, finder: 3, foundBy: "the shop's menu", gallery: false, host: "www.centrepompidou.fr", id: "occ-centrepompidou-fr", name: "Centre Pompidou", pageShop: "", searchRule: 2, shelfKind: "catalogues", shop: "found", shopCatalogues: "https://boutique.centrepompidou.fr/en/products/2267-exhibition-catalogs-and-monographs/", shopEnglishUnread: null, shopHome: "https://boutique.centrepompidou.fr/", shopSearch: "https://boutique.centrepompidou.fr/search?q=", short: "Pompidou Paris", turnedDown: [], why: null } },
 
+  { id: "occ-musee-rodin-fr", kind: "manual",
+    names: { card: "Rodin Museum Paris", chip: null, group: null, full: "Mus\u00e9e Rodin", inEnglish: null, aka: ["Rodin Museum"], replaced: [], hers: false },
+    city: "Paris", country: "France", english: false, language: null,
+    shop: { home: null, catalogues: null, search: null, unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
+    read: { link: null, sites: [], dateOrder: null, spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
+    sweep: { exBase: null, listUrl: null },
+    filed: { addedAt: "2026-11-12T14:56:24.821Z", aka: ["Rodin Museum"], city: "Paris", confirmed: true, country: "France", english: false, englishPicked: false, finder: 3, foundBy: "a search", gallery: false, host: "www.musee-rodin.fr", id: "occ-musee-rodin-fr", name: "Mus\u00e9e Rodin", pageShop: "https://boutique.musee-rodin.fr/en/", searchRule: 2, shelfKind: "catalogues", shop: "found", shopAdded: false, shopCatalogues: "https://boutique.musee-rodin.fr/en/25-exhibition-catalogues", shopEnglishUnread: null, shopHome: "https://boutique.musee-rodin.fr/", shopSearch: null, short: "Rodin Museum Paris", turnedDown: [], why: null } },
+
   // Written in, her decision: a shop drawn by script (its page's code holds no books, only a frame and a
   // script) gets its best section written in and `shopUnseen` "script": a lookup there reads "contents
   // cannot be seen — JS-rendering" and goes to the web (docs/add_by_link.md, "A shop drawn by script").
@@ -772,7 +804,7 @@ const VENUES = [
     shop: { home: null, catalogues: null, search: null, unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
     read: { link: null, sites: [], dateOrder: null, spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
     sweep: { exBase: null, listUrl: null },
-    filed: { addedAt: "2026-11-05T01:15:20.459Z", aka: ["Palazzo Strozzi"], city: "Florence", confirmed: true, country: "Italy", english: false, englishPicked: false, finder: 3, foundBy: "her link", gallery: false, host: "www.palazzostrozzi.org", id: "occ-palazzostrozzi-org", name: "Fondazione Palazzo Strozzi", pageShop: "", searchRule: null, shelfKind: null, shop: "found", shopAdded: true, shopCatalogues: "https://www.palazzostrozzi.org/en/cataloghi-libri/", shopEnglishUnread: null, shopHome: "https://www.palazzostrozzi.org/", shopSearch: null, short: "Palazzo Strozzi Florence", turnedDown: [], why: null } },
+    filed: { addedAt: "2026-11-05T01:15:20.459Z", aka: ["Palazzo Strozzi"], city: "Florence", confirmed: true, country: "Italy", english: false, englishPicked: false, finder: 3, foundBy: "her link", gallery: false, host: "www.palazzostrozzi.org", id: "occ-palazzostrozzi-org", name: "Fondazione Palazzo Strozzi", pageShop: "", searchRule: 2, shelfKind: null, shop: "found", shopAdded: true, shopCatalogues: "https://www.palazzostrozzi.org/en/cataloghi-libri/", shopEnglishUnread: null, shopHome: "https://www.palazzostrozzi.org/", shopSearch: null, short: "Palazzo Strozzi Florence", turnedDown: [], why: null } },
 
   // The Correr's archive site (that site only): each show has several pages, its tab title the
   // page's own name ("Project", "Mostra"); the show's name is the heading after "Section menu" ("Menù di sezione").
@@ -784,6 +816,30 @@ const VENUES = [
     read: { link: { titleAfter: /^(?:Section menu|Men\u00f9 di sezione)$/, capsTitles: true, capsStops: true }, sites: [], dateOrder: null, spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
     sweep: { exBase: null, listUrl: null },
     filed: { addedAt: "2026-10-29T10:34:02.443Z", aka: ["Museum Correr", "Correr Museum"], city: "Venice", confirmed: true, country: "Italy", english: false, englishPicked: false, finder: 3, gallery: false, host: "archivio-correr.visitmuve.it", id: "occ-archivio-correr-visitmuve-it", name: "Museo Correr", pageShop: "", searchRule: 2, shelfKind: null, shop: "none", shopCatalogues: null, shopEnglishUnread: null, shopHome: null, shopSearch: null, short: "Venice Correr", turnedDown: [], why: null } },
+
+  { id: "occ-complessopilotta-it", kind: "manual",
+    names: { card: "Pilotta Parma", chip: null, group: null, full: "Complesso Monumentale della Pilotta", inEnglish: null, aka: ["Monumental Complex of the Pilotta", "Pilotta"], replaced: [], hers: false },
+    city: "Parma", country: "Italy", english: false, language: null,
+    shop: { home: null, catalogues: null, search: null, unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
+    read: { link: null, sites: [], dateOrder: null, spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
+    sweep: { exBase: null, listUrl: null },
+    filed: { addedAt: "2026-11-12T15:11:15.007Z", aka: ["Monumental Complex of the Pilotta", "Pilotta"], city: "Parma", confirmed: true, country: "Italy", english: false, englishPicked: false, finder: 3, gallery: false, host: "complessopilotta.it", id: "occ-complessopilotta-it", name: "Complesso Monumentale della Pilotta", pageShop: "", shelfKind: null, shop: "none", shopAdded: false, shopCatalogues: null, shopEnglishUnread: null, shopHome: null, shopSearch: null, short: "Pilotta Parma", turnedDown: [], why: null } },
+
+  { id: "occ-museicapitolini-org", kind: "manual",
+    names: { card: "Capitolini Rome", chip: null, group: null, full: "Musei Capitolini", inEnglish: null, aka: ["Capitoline Museums"], replaced: [], hers: false },
+    city: "Rome", country: "Italy", english: false, language: null,
+    shop: { home: null, catalogues: null, search: null, unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
+    read: { link: null, sites: [], dateOrder: null, spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
+    sweep: { exBase: null, listUrl: null },
+    filed: { addedAt: "2026-11-12T14:07:15.348Z", aka: ["Capitoline Museums"], city: "Rome", confirmed: true, country: "Italy", english: false, englishPicked: false, finder: 3, foundBy: "her link", gallery: false, host: "www.museicapitolini.org", id: "occ-museicapitolini-org", name: "Musei Capitolini", pageShop: "", searchRule: 2, shelfKind: null, shop: "found", shopAdded: true, shopCatalogues: "https://www.museicapitolini.org/en/librerie_museali/acquista_guide_e_cataloghi", shopEnglishUnread: null, shopHome: "https://www.museicapitolini.org/", shopSearch: null, short: "Capitolini Rome", turnedDown: [], why: null } },
+
+  { id: "occ-parmaitaly-it", kind: "manual",
+    names: { card: "Galleria Nazionale Parma", chip: null, group: null, full: "Galleria Nazionale di Parma", inEnglish: null, aka: ["National Gallery of Parma"], replaced: [], hers: false },
+    city: "Parma", country: "Italy", english: false, language: null,
+    shop: { home: null, catalogues: null, search: null, unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
+    read: { link: null, sites: [], dateOrder: null, spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
+    sweep: { exBase: null, listUrl: null },
+    filed: { addedAt: "2026-11-12T15:07:54.734Z", aka: ["National Gallery of Parma"], city: "Parma", confirmed: true, country: "Italy", english: false, englishPicked: false, finder: 3, gallery: false, host: "www.parmaitaly.it", id: "occ-parmaitaly-it", name: "Galleria Nazionale di Parma", pageShop: "", shelfKind: null, shop: "none", shopAdded: false, shopCatalogues: null, shopEnglishUnread: null, shopHome: null, shopSearch: null, short: "Galleria Nazionale Parma", turnedDown: [], why: null } },
 
   { id: "occ-museothyssen-org", kind: "manual",
     names: { card: "Thyssen-Bornemisza", chip: null, group: null, full: "Museo Nacional Thyssen-Bornemisza", inEnglish: null, aka: ["Museo Thyssen-Bornemisza", "Thyssen-Bornemisza National Museum", "Museo Thyssen"], replaced: [], hers: false },
@@ -896,6 +952,6 @@ const VENUES = [
 
 // When her review page's names were last filed: a name she typed before this is already in the
 // entries above (or was replaced by a later word of hers), so a publish files only newer ones.
-const NAMES_FILED_AT = "2026-11-06T06:17:50.698Z";
+const NAMES_FILED_AT = "2026-11-15T10:23:16.303Z";
 
 module.exports = { VENUES, NAMES_FILED_AT };

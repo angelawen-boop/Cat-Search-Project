@@ -285,13 +285,9 @@ and compares them (`build/same_text_check.js`, kept).
 ## Start here — the next session's job
 
 **What is left, in order (her plan):**
-1. **Finish 4A** — the checks still to run, as agreed with her: the scraper, old code beside new, on saved
-   pages only (no network); manual import's page reading, live proof pages old reader beside new; the
-   catalogue search wording for every non-English venue. Then, when she says, publish (`docs/publishing.md`):
-   her store's old venue records should all clear on opening; then the one-time clear of the leftover
-   `venues/occasional` records and Christie's orphan press record (her yes given; backup in
-   `docs/store_backup_2026-11-06/`). The publish also brings the `art-watch-` file names for saved ledgers
-   and safety copies.
+1. **4A is published (59).** Left, for when she is back: she opens her app once (its old venue records
+   clear themselves), then the one-time clear of the leftover `venues/occasional` records and Christie's
+   orphan press record (her yes given; backup in `docs/store_backup_2026-11-06/`).
 2. **4B to 4F**, in order. Per item: write its design here first (the one home, what is deleted, what she
    will see change), then one branch (`claude/restructure-4b` …), one sub-agent, the gates, merge. Her test
    after 4E. A change to her store needs her yes and a backup first. **Her ledger is never changed.**
@@ -300,16 +296,13 @@ and compares them (`build/same_text_check.js`, kept).
 
 ## Handover record — updated after every step
 
-**Where we are:** 4A merged into `main` and checked item by item against the code, her store and ledger
-(after her catch that Detroit was never fixed); the misses fixed (`claude/restructure-4a-fixes`): full names
-in Find catalogue; the search box reads title, description and the card's venue name (her decision); a
-group's chip label written once; six full names corrected; Getty and Louisiana renamed. Gates re-run: side by side differs only where intended (her
-names, the register's new values, one Milan page no longer asking Claude to name a venue it knows); 23 of
-23 suites. **The waiting room, proved live on the test page (her test):** a new venue (Pallant House)
-filed by the build, then cleared by the page on opening, a fresh Find catalogue taking its shop from the
-code; a changed fact waiting in the store shows over the code and is not cleared; a changed fact filed by
-the build reaches the page and is cleared on opening (the test name kept off `main`, on
-`claude/restructure-4a-case3`). Next: the checks under "Start here", 1.
+**Where we are:** step 1 of "This run" is done — 4A's three checks passed and 59 is published. The checks:
+the scraper, old code beside new, on the kept pages of the eight venues that have them (no field changed)
+and every venue's recipe compared (identical but for the names and galleries moved to the register); the
+page reader on all 105 live proof pages, old beside new (identical); the catalogue search wording of every
+non-English venue (read, one note parked). The publish filed her newer waiting venues into the register;
+VR-001 now tests "a store already filed writes nothing" instead of comparing against the ageing backup.
+Next: step 2, the app-side round (design under "This run").
 
 **Open problems:** a sub-agent cannot start the watched test run — the test hook reads the coordinator's
 transcript for the "Expected test run" line — so the coordinator runs gate 2 itself. The hook often refuses

@@ -27,12 +27,16 @@ the next goes through. Later ones go straight through.
 
 ## What is live now
 
-**Live: 58 in her app**: Links, Pages and Paste send the whole import to Claude in one request, with the sweep's own
-opening, full current examples and rules (re-taken at every build); only pages refused or missing are asked again; a large
-import is split. Never the title reworded, one shared rule and check for every way in. A shop written into a venue's
-entry is never asked on the shop screen (Basel). Their tests and design: `docs/add_by_link.md`, `docs/compression.md`.
+**Live: 59 in her app**: the venue register (restructure 1A–4A): every venue's facts in one home in the code, her
+names wherever a venue is named, Find catalogue searching each venue by its full name, the `art-watch-` file names
+for saved ledgers and safety copies; the venues waiting in her store filed into the code at the publish
+(`docs/restructure.md`, 4A).
 
 The versions before it, newest first — each one's decisions now live in its area's doc:
+- **58** Links, Pages and Paste send the whole import to Claude in one request, with the sweep's own
+opening, full current examples and rules (re-taken at every build); only pages refused or missing are asked again; a large
+  import is split. Never the title reworded, one shared rule and check for every way in. A shop written into a venue's
+  entry is never asked on the shop screen (Basel). Their tests and design: `docs/add_by_link.md`, `docs/compression.md`.
 - **57.3** Louisiana's Past Exhibitions page refused with the Parallel fault line, its comma heading run on; Louisiana's
   and Moderna Museet's card names (`docs/add_by_link.md`, "Venue link rules").
 - **57.2** the Links, Pages and Paste read asks the `complex` tier (her decision; `docs/app.md` §1, "Which model");

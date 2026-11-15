@@ -196,8 +196,8 @@ Hemessen fix), and other versions are listed only after a book passes — *Victo
 times in three days). The redesign (find → choose → tell, every version kept, her starting-pick rules) and its nine agreed cases are in
 `docs/catalogue_versions.md`; every later change is checked against them. Awaiting her approval to build; no code before. She is
 noting issues as she uses it, for a later debugging session.
-- **A link venue searched under its short card name ("Detroit")** — fixed on `main` by restructure 4A (every venue searched
-  by its full name); reaches her app at her next publish.
+- **A link venue searched under its short card name ("Detroit")** — fixed by restructure 4A (every venue searched
+  by its full name), live at 59.
 - **OPEN — three cases any search debugging must fix** (her decision; `docs/catalogue_versions.md`, cases 10–12; case 13, Beato
   Angelico, is her report, not yet agreed): Munich's CEDON shop sells German and English editions on ONE page with a language choice
   (*Venezia 500*, *Jacobus Vrel*), and junk text is written as the publisher (Vrel, Dresden's *Paradise on Earth*, Correggio).
@@ -505,7 +505,7 @@ bot-blocked, so Pages and Paste only) is a fact about that venue, never a limit 
 > restating `capabilities` must restate all four; omitting it carries them
 > forward. **Renaming the connector means restating them.**
 
-**Live: 58 in her app** (the app is named **Art Watch** on screen since 57; the header's big line is unchanged), with the cloud ledger (merged at 46). What each recent version changed is in
+**Live: 59 in her app** (the app is named **Art Watch** on screen since 57; the header's big line is unchanged), with the cloud ledger (merged at 46). What each recent version changed is in
 `docs/publishing.md`, "What is live now".
 
 #### The mental model, load-bearing
