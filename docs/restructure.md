@@ -246,7 +246,41 @@ every item across before sending it to her.
   4 the price rule and the two venues · 5 show IDs, accents, addresses · 6 the cutting plan · then the main
   screen, her test round, 60.
 
-**Parked for her:** (nothing yet)
+**Parked for her:**
+- One Italian venue's full name is the English one (her choice on the review page), so its Italian-language
+  catalogue search now reads English name + Italian words. Every other non-English venue searches under its
+  own-language name.
+- Four live proof pages read differently from the signed-off list, identically under the old code and the
+  new (two Prado passages end elsewhere, one Getty page now gives dates, Louisiana's page is the known
+  Parallel fault): the sites or Parallel's replies changed, not the reader. The list was not updated.
+
+### Round "app side" — design (4B, 4C, the same-text items of 4E and 4F)
+
+Branch `claude/restructure-4-app`. Every item is the same text or pattern written more than once in the
+app's parts, brought to one piece that the other places name. Nothing the app does or says may change: the
+side-by-side check must come out identical with no `--changes-allowed` differences in what is shown or stored,
+and every sentence sent to Claude or shown to her must be the same character for character — proved by a
+small script that builds each changed prompt and sentence from the old page and the new on the same inputs
+and compares them (`build/same_text_check.js`, kept).
+- **Where the one copy lives:** in the part of the feature that owns the sentence, at the lowest level
+  that uses it (a part may not name a part above it; `build/structure_check.js`). A sentence the screen also
+  uses is named by the screen, never retyped there.
+- **4B:** the store-unreachable sentence and its "so nothing is being saved" form; the roll-back safety
+  label (made in one place, the saving part); the store record names in `build/test_page_check.js`,
+  `build/lookup_log.js` and the fixtures read from the app's own constants through one helper.
+- **4C:** the `www.` strip written inline becomes one piece in the text foundations; `bareHost` uses it.
+  Each place is replaced only where the result is the same for every input.
+- **4E (same text only):** the "Sold by" rule; "Reply with ONLY this JSON object…"; "The ISBN-13, the
+  publisher, and any link…"; "The books in this section of the shop, with their prices."; "The products in
+  this section…"; "the English edition, published later" (compared as text in a second place — one named
+  value); the publisher-splitting pattern; the ISBN dash removal. **The four ISBN patterns are merged only
+  where two are the same rule; any that differ are listed for the coordinator, not changed.**
+- **4F (same text only):** the title and raw-text lines of the two Claude prompts; "Couldn't find the
+  show's title on the page."; the Shopify section-count reading; "The site's menu and footer links…"; the
+  two found by the fact check (the unreadable-date note, "ISBN not confirmed — verify before buying").
+- **Not in this round:** the price rules, Thyssen and Acquavella (their own round), anything that changes
+  what the app does.
+- **Done when:** `build/fact_check_known.json` holds none of these, so the fact check fails if one returns.
 
 ## Start here — the next session's job
 
