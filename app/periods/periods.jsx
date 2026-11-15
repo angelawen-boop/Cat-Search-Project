@@ -142,7 +142,7 @@ const miscFor=y=>y<1900?"mischistoric":"miscmodern";
 
 // One artist, one group (her decision): shows about one artist take the group most of
 // them were given; a tie goes to the earlier group. A response show keeps its own.
-const artistKey=a=>stripAccents(String(a||"")).toLowerCase().replace(/[^a-z]+/g," ").trim();
+const artistKey=a=>foldText(a).replace(/[^a-z]+/g," ").trim();
 //@piece artistPeriods
 
 function artistPeriods(rows){

@@ -158,7 +158,6 @@
   "siteUrlOf": "foundations/text.jsx",
   "originOf": "foundations/text.jsx",
   "stripAccents": "foundations/text.jsx",
-  "LETTER_FOLD": "foundations/text.jsx",
   "foldText": "foundations/text.jsx",
   "stripMd": "foundations/text.jsx",
   "HTML_ENTITIES": "foundations/text.jsx",

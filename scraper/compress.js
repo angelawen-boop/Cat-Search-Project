@@ -82,6 +82,7 @@ const ANSWERS_JSON   = 'compress_answers.json';
 const { MAX_WORDS, wordCount, validateAnswer, validateEnglish, withoutPlaceOpener } = require('./answer_check');
 // Data only: each venue's galleries and show addresses (venues/register.js).
 const REGISTER = require('../venues/register.js').VENUES;
+const { foldLetters } = require('./keys.js');
 const PF = require('./pro_forma.js');
 const placesOf = code => (REGISTER.find(v => v.id === code) || { read: { places: [] } }).read.places;
 
@@ -334,7 +335,7 @@ const exactKey = row => urlKey(row, { exact: true });
 const memoryKeys = r => [exactKey(r), urlKey(r), titleKey(r)];
 
 function titleKey(row) {
-  const t = String(row.title || '').toLowerCase().replace(/[^a-z0-9]+/g, '');
+  const t = foldLetters(row.title).replace(/[^a-z0-9]+/g, '');
   return t ? `${row.venue_code}|title|${t}` : null;
 }
 

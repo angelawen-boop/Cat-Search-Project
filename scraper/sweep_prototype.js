@@ -33,7 +33,7 @@ const path = require('path');
 const { seenOn, listingNote } = require('./listing_note.js');
 const { windowFrom, outsideWindow, recordWindow } = require('./routine_window.js');
 const { CSV_HEADER, MARKER_SENTINEL, sweepCell, csvText } = require('./pro_forma.js');
-const { normalizeUrlKey: normalizeUrl, stripAccents } = require('./keys.js');
+const { normalizeUrlKey: normalizeUrl, foldLetters } = require('./keys.js');
 
 // ── Proxy setup ───────────────────────────────────────────────────────────────
 const PROXY_URL = process.env.HTTPS_PROXY || process.env.https_proxy;
@@ -2485,7 +2485,7 @@ async function readCardPieces(link, rule) {
 }
 // A gallery may be written with the venue's own name in front ("Acquavella Palm Beach", "Lévy Gorvy
 // Dayan, London"): the register's placeOwner, carried on the list by placesOf(). Accents and case aside.
-const foldPlace = s => stripAccents(String(s || '')).toLowerCase().trim();
+const foldPlace = s => foldLetters(s).trim();
 const isPlace = (text, locations) => {
   let t = foldPlace(text);
   const own = foldPlace(locations && locations.owner);

@@ -990,12 +990,20 @@ function normalizeUrlKey(u) {
   } catch { return ''; }
 }
 
-// Accent marks dropped ("é" → "e"). Letters that are not accented ones (ø, æ, ß…) stay as they are.
+// Accent marks dropped ("é" → "e"). Letters that are not accented ones (ø, æ, ß…) stay as they are;
+// foldLetters folds those too.
 const stripAccents = s => String(s).normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-return { normalizeUrlKey, stripAccents };
+
+// Letters that are not accented ones, folded to plain letters ("Hammershøi" matches "Hammershoi").
+const LETTER_FOLD = { 'ø': 'o', 'æ': 'ae', 'œ': 'oe', 'ß': 'ss', 'ł': 'l', 'đ': 'd', 'ð': 'd', 'þ': 'th', 'ı': 'i' };
+
+// The one fold wherever a title or name is simplified to be compared or searched: lowercase,
+// accents dropped, special letters folded.
+const foldLetters = s => stripAccents(String(s || '').toLowerCase()).replace(/[øæœßłđðþı]/g, c => LETTER_FOLD[c]);
+return { normalizeUrlKey, stripAccents, foldLetters };
 })();
 const DATES=(()=>{
-const { stripAccents } = KEYS;
+const { foldLetters } = KEYS;
 
 // ── Date helpers ──────────────────────────────────────────────────────────────
 // Every month spelling a venue has used, one list (docs/scraper.md §3): per language, its full names
@@ -1774,7 +1782,7 @@ function capsTitleRule(code) {
 // A venue with several galleries (read.places on its register entry): a gallery tacked onto the title
 // after a dash ("… – Acquavella Palm Beach", "… – Lévy Gorvy Dayan, London") is not part of the title
 // (her decision). A gallery in brackets, the sweep's mark of a show run in two, stays.
-const foldPlace = s => stripAccents(String(s || '')).toLowerCase();
+const foldPlace = s => foldLetters(s);
 function withoutPlaceTail(code, title) {
   const e = REGISTER.find(v => v.id === code);
   if (!e || !e.read.places.length || !title) return title;
@@ -2125,10 +2133,8 @@ function typedLink(text){
   let u=null; try{ u=new URL(/^https?:\/\//i.test(t)?t:"https://"+t); }catch{}
   return u&&/^https?:$/.test(u.protocol)&&u.hostname.includes(".")?u.href:null;
 }
-// Accents dropped, and the letters that are not accented ones folded too: ø, æ, œ, ß, ł,
-// đ, ð, þ and dotless ı ("Hammershøi" matches "Hammershoi"). One fold for all matching.
-const LETTER_FOLD={"\u00f8":"o","\u00e6":"ae","\u0153":"oe","\u00df":"ss","\u0142":"l","\u0111":"d","\u00f0":"d","\u00fe":"th","\u0131":"i"};
-const foldText=s=>stripAccents(String(s||"").toLowerCase()).replace(/[\u00f8\u00e6\u0153\u00df\u0142\u0111\u00f0\u00fe\u0131]/g,c=>LETTER_FOLD[c]);
+// Accents dropped and the special letters folded (ø, æ, ß…): the one fold for all matching (scraper/keys.js).
+const foldText=KEYS.foldLetters;
 
 // The connector hands back the page as markdown. One line of it, as words.
 function stripMd(line){
@@ -4343,8 +4349,7 @@ function csvParse(text){
 const ignoreKeyFor=(venueId,url,title)=>
   venueId+"|"+(url?normalizeUrlKey(url):"t:"+normalizeTitle(title));
 // Conservative duplicate matching for incoming refresh results.
-const normalizeTitle = v => stripAccents(String(v||""))
-  .toLowerCase()
+const normalizeTitle = v => foldText(v)
   .replace(/&/g," and ").replace(/\+/g," and ")
   .replace(/[’‘`]/g,"'").replace(/['"]/g,"")
   .replace(/[^a-z0-9]+/g," ").replace(/\s+/g," ").trim();
@@ -4682,7 +4687,7 @@ const miscFor=y=>y<1900?"mischistoric":"miscmodern";
 
 // One artist, one group (her decision): shows about one artist take the group most of
 // them were given; a tie goes to the earlier group. A response show keeps its own.
-const artistKey=a=>stripAccents(String(a||"")).toLowerCase().replace(/[^a-z]+/g," ").trim();
+const artistKey=a=>foldText(a).replace(/[^a-z]+/g," ").trim();
 function artistPeriods(rows){
   const tally=new Map();
   for(const r of rows){

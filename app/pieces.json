@@ -40,7 +40,6 @@
   "originOf",
   "stripAccents",
   "typedLink",
-  "LETTER_FOLD",
   "foldText",
   "stripMd",
   "splitPageTitle",
