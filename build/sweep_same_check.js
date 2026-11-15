@@ -284,7 +284,11 @@ function copyTree(tree, label) {
     if (so) lo = O.app.mergeSweepLog(lo, so);
     if (sn) ln = N.app.mergeSweepLog(ln, sn);
   }
-  same("the app's log after importing every file", J(lo), J(ln)) && pass("the app's log after importing all " + FILES.length + ' files in turn: the same');
+  // Venue by venue: the log is a map, and a file with no sweep time no longer adds a blank entry first
+  // (mergeSweepLog), so the venues can be met in another order. A venue left with a blank "tried" date
+  // by the old merge would show here as a difference.
+  const byVenue = m => J(Object.keys(m).sort().map(k => [k, m[k]]));
+  same("the app's log after importing every file", byVenue(lo), byVenue(ln)) && pass("the app's log after importing all " + FILES.length + ' files in turn: the same');
 }
 
 // ── (e) the Topic note ────────────────────────────────────────────────────────
