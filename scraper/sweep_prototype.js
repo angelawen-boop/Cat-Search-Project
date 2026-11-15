@@ -33,6 +33,7 @@ const path = require('path');
 const { seenOn, listingNote } = require('./listing_note.js');
 const { windowFrom, outsideWindow, recordWindow } = require('./routine_window.js');
 const { CSV_HEADER, MARKER_SENTINEL, sweepCell, csvText } = require('./pro_forma.js');
+const { normalizeUrlKey: normalizeUrl } = require('./keys.js');
 
 // ── Proxy setup ───────────────────────────────────────────────────────────────
 const PROXY_URL = process.env.HTTPS_PROXY || process.env.https_proxy;
@@ -2990,21 +2991,6 @@ function withoutQuery(u, names) {
     for (const n of names) x.searchParams.delete(n);
     return x.toString();
   } catch { return u; }
-}
-
-function normalizeUrl(u) {
-  try {
-    const x = new URL(String(u).trim());
-    const p = x.pathname.replace(/\/+$/, '');
-    // Lowercase the SCHEME AND HOST ONLY. Host names are case-insensitive by
-    // spec; paths and query values are not. Folding the whole address meant two
-    // exhibitions whose slugs differed only in capitalisation were treated as
-    // one, and the second vanished — counted as a "duplicate" in the coverage
-    // table, so it looked accounted for rather than lost.
-    return `${x.protocol.toLowerCase()}//${x.host.toLowerCase()}${p || '/'}${x.search}`;
-  } catch {
-    return String(u || '').trim().replace(/\/+$/, '');
-  }
 }
 
 /**

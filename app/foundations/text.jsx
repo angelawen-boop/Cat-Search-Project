@@ -119,17 +119,8 @@ const isFileUrl=u=>/\.(?:jpe?g|png|gif|webp|svg|pdf|mp4)(?:$|[?#])/i.test(String
 function isValidYMD(s){ if(!/^\d{4}-\d{2}-\d{2}$/.test(s))return false; const d=new Date(s+"T00:00:00"); return !isNaN(d.getTime()); }
 //@piece normalizeUrlKey
 
-// Same address = same exhibition: scheme and host lowercased, the path never folded
-// (folding it merged two exhibitions differing only in capitals). A trailing slash
-// and a #fragment are not part of identity.
-function normalizeUrlKey(u){
-  try{
-    const x=new URL(String(u||"").trim());
-    x.hash="";
-    const path=x.pathname.replace(/\/+$/,"");
-    return x.protocol.toLowerCase()+"//"+x.host.toLowerCase()+path+x.search;
-  }catch{ return ""; }
-}
+// Same address = same exhibition: the scraper's own key (scraper/keys.js).
+const normalizeUrlKey=KEYS.normalizeUrlKey;
 //@piece urlLooksValid
 
 

@@ -976,7 +976,24 @@ const orderOf=id=>{ if(!hasNoChip(id))return id in CHIP_RANK?CHIP_RANK[id]:1e6;
 const lookupName=mu=>mu.lookupName;
 const MU = Object.fromEntries(MUSEUMS.map(m=>[m.id,m]));
 
-// ===== SHARED WITH THE SCRAPER — the join writes the rules below from the scraper's own files (scraper/dates.js, compress_prompt.md, compress.js, boilerplate.js, bot_check.js, answer_check.js, pro_forma.js, VENUES); never edit between these markers. Edit the scraper, then run `node build/app_join.js`. =====
+// ===== SHARED WITH THE SCRAPER — the join writes the rules below from the scraper's own files (scraper/dates.js, compress_prompt.md, compress.js, boilerplate.js, bot_check.js, answer_check.js, pro_forma.js, keys.js, VENUES); never edit between these markers. Edit the scraper, then run `node build/app_join.js`. =====
+const KEYS=(()=>{
+// Same address = same exhibition: scheme and host lowercased, the path never folded (folding it
+// merged two exhibitions differing only in capitals). A trailing slash and a #fragment are not part
+// of identity, so a site's root keys without its slash. An address that cannot be read keys as "".
+function normalizeUrlKey(u) {
+  try {
+    const x = new URL(String(u || '').trim());
+    x.hash = '';
+    const path = x.pathname.replace(/\/+$/, '');
+    return x.protocol.toLowerCase() + '//' + x.host.toLowerCase() + path + x.search;
+  } catch { return ''; }
+}
+
+// Accent marks dropped ("é" → "e"). Letters that are not accented ones (ø, æ, ß…) stay as they are.
+const stripAccents = s => String(s).normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+return { normalizeUrlKey, stripAccents };
+})();
 const DATES=(()=>{
 // ── Date helpers ──────────────────────────────────────────────────────────────
 // Every month spelling a venue has used, one list (docs/scraper.md §3): per language, its full names
@@ -4307,17 +4324,8 @@ function proFormaCsv(rows){
 // ---- Pro forma helpers (pure) ----
 const KNOWN_VENUES = new Set(MUSEUMS.map(m=>m.id));
 function isValidYMD(s){ if(!/^\d{4}-\d{2}-\d{2}$/.test(s))return false; const d=new Date(s+"T00:00:00"); return !isNaN(d.getTime()); }
-// Same address = same exhibition: scheme and host lowercased, the path never folded
-// (folding it merged two exhibitions differing only in capitals). A trailing slash
-// and a #fragment are not part of identity.
-function normalizeUrlKey(u){
-  try{
-    const x=new URL(String(u||"").trim());
-    x.hash="";
-    const path=x.pathname.replace(/\/+$/,"");
-    return x.protocol.toLowerCase()+"//"+x.host.toLowerCase()+path+x.search;
-  }catch{ return ""; }
-}
+// Same address = same exhibition: the scraper's own key (scraper/keys.js).
+const normalizeUrlKey=KEYS.normalizeUrlKey;
 
 function urlLooksValid(u){ if(!u)return false; try{ const url=new URL(String(u).trim()); if(!/^https?:$/.test(url.protocol))return false; if(!/^[a-z0-9.-]+$/i.test(url.hostname))return false; if(!url.hostname.includes("."))return false; return true; }catch{ return false; } }
 // The scraper's reader, after every line ending is made \n; blank lines are left out.
