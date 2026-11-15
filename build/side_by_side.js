@@ -23,7 +23,8 @@
  *
  * --changes-allowed: a function's text may differ; every other top-level value (tables, lists,
  * regexes, strings, numbers, a table's own values with its functions set aside) must not; a name in
- * one version only is allowed only if it is a function there. Every screen and store record must
+ * one version only is allowed only if it is a function there, or, new only, a named text or pattern or
+ * a block of functions and named texts (namedTexts). Every screen and store record must
  * still be identical.
  */
 'use strict';
@@ -456,6 +457,13 @@ async function run(oldFile, newFile, { changesAllowed, live }) {
   process.exit(diffs ? 1 : 0);
 }
 
+// An object (as shown, functions set aside) holding only functions, texts, patterns and lists of texts.
+function namedTexts(shown) {
+  let v; try { v = JSON.parse(shown); } catch { return false; }
+  return !!v && typeof v === 'object' && !Array.isArray(v)
+    && Object.values(v).every(x => typeof x === 'string' || (Array.isArray(x) && x.every(y => typeof y === 'string')));
+}
+
 // Old against new, two snapshots; prints each value and screen, returns the number of differences.
 function compare(o, n, changesAllowed) {
   let diffs = 0;
@@ -470,6 +478,9 @@ function compare(o, n, changesAllowed) {
         // A text or pattern that was written inline and now has a name: new, and nothing old is gone.
         // What it changes, if anything, shows in the screens and records compared below.
         if (!inO && (kind === 'string' || /^"\/.*\/[a-z]*"$/.test(n.plain[k]))) { console.log(`NOTE  value ${k}: a named text or pattern only in the new version (allowed)`); continue; }
+        // A shared block the join writes from the scraper (PRO_FORMA): functions, and texts, patterns and lists of
+        // texts that were written inline before. Allowed on the same terms.
+        if (!inO && kind === 'object' && namedTexts(n.plain[k])) { console.log(`NOTE  value ${k}: a shared block of functions and named texts only in the new version (allowed)`); continue; }
         diffs++; console.log(`DIFF  value ${k}: only in the ${inO ? 'old' : 'new'} version, and it is not a function (${kind})`); continue;
       }
       compared++;
