@@ -197,6 +197,31 @@ link already checked) and "keep this period". The time goes in as an argument; n
 digital box is open, and "not a link, so the box stays open". `keepPeriod`'s sentence stays on the screen
 until A3 moves it to the periods part. Nothing else in the screen is touched.
 
+**A1 — done, merged.** `app/ledger/marks.jsx`: ten plain functions (`markDismiss` … `markKeepPeriod`, over
+one helper, `markRow`); the screen's handlers call one and commit what comes back. The side-by-side check
+now walks the card marks (watch, Yes, No, Acquired, Buy next on and off, dismiss, undo), every sort and its
+second tap, every chip of every row, the Buy next view by period and date, a search and Clear all, and
+compares the store after the marks; proven on four deliberate breaks, each caught. Not walked (read by the
+coordinator instead): the catalogue pick, the digital link, "keep this period" and the drag.
+
+### Run A2 — the list (design)
+
+Branch `claude/restructure-5-a2`. A new part, `app/ledger/list_view.jsx` (features level, no React):
+- `filtersClear()` hands back a NEW all-clear filters object each time (venues, themes and times as sets;
+  the acquiring, Buy next period/date, show-all, dismissed, watched and recently-labelled switches; the
+  search words). A new object each call, so the list still starts again from the top after every clear.
+- `listMode(filters, sort)` → `{bnOnly, periodView}`; `listView(rows, filters, sort, byArtist)` → the list
+  (the whole body of today's `view`, moved, not retyped); `listCounts(rows)`; `scrubGroupsOf(view,
+  periodView, byArtist)`. `sort` is `{sortBy, dateReversed, pinTouched, refreshTouched}` as the screen holds
+  them today.
+- **The screen:** the sixteen separate filter memories become ONE (`filters`), set by name
+  (`setFilters(f=>({...f, acqWanted:!f.acqWanted}))`); Clear all is `setFilters(filtersClear())` plus closing
+  the search box, and the clear after an import is the same call (the search box stays as it is, as today).
+  Whether the search box is open, the sort, the reversal and the pinned cards stay separate memories until
+  C1. The memos stay in the screen and call the functions; the draw-from-the-top token depends on
+  `filters` in place of the sixteen.
+- **Must come out the same:** every list in every sort, chip and combination the check walks.
+
 ## 4A — the venue register (merged)
 
 **Her decisions (made; the code-or-store question is closed):**
@@ -523,10 +548,9 @@ word) and item 5's cutting plan in full, then:
 
 ## Handover record — updated after every step
 
-**Where we are:** item 4 is finished and on `main`: steps 1 to 5 of "This run" (59 published; the app-side
+**Where we are:** item 5 is under way: A1 is merged (see "5 — the runs"); A2 is next, its design written. Item 4 is finished and on `main`: steps 1 to 5 of "This run" (59 published; the app-side
 and scraper-side rounds, the price rule and the two venues, the keys round). Step 6, the main screen's
-cutting plan, is written (item 5). `main` passes all 42 suites, the join, structure and fact checks. Nothing
-of item 5 has been started. What waits for her is under "Parked for her" and "Start here", 5.
+cutting plan, is written (item 5). `main` passes the app's suites, the join, structure and fact checks. What waits for her is under "Parked for her" and "Start here", 5.
 
 **Open problems:** a sub-agent cannot start the watched test run — the test hook reads the coordinator's
 transcript for the "Expected test run" line — so the coordinator runs gate 2 itself. The hook often refuses
