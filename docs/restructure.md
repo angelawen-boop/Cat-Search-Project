@@ -214,6 +214,40 @@ every item across before sending it to her.
 > clear message. Report: the gates' last lines, the test run's result line, every file you changed outside
 > `app/`, and anything you could not do. Do not merge, push to `main` or publish.
 
+## This run — her decisions (made while she is away; a session picking up cold follows them)
+
+- **One coordinating session, sub-agents one at a time.** Model by the judgement the job needs, never the
+  highest by default: Sonnet at medium for contained work the side-by-side check proves; Opus at medium for
+  the scraper side, the keys her stored data depends on, and the main screen's tangled pieces; nothing at
+  low effort, nothing on Haiku, never Fable. Small jobs (a few lines) the coordinator does itself.
+- **The mechanical duplicates go in two rounds, not five:** app side (4B, 4C and the same-text items of 4E
+  and 4F), then scraper side (4D's same-text items). An item that changes behaviour keeps its own round.
+- **Nothing is parked for being risky (her decision).** Three items she ruled "do":
+  - **The price rules (4E):** the lookup's whole-shop search recognises the shop finder's currencies; checked
+    live on the four shops, old rule beside new, before merging. An expansion, not a lookup redesign.
+  - **Thyssen and Acquavella (4F):** the register takes the shop check's right answers (Thyssen its
+    exhibitions section, Acquavella its Publications list). A link she adds by hand is filed into the
+    register the same way, so this is the same kind of fact.
+  - **Show IDs, accent rules, web-address tidying (4D):** done, proved by (1) an exact comparison — every
+    show in her ledger, her quarantine and every sweep file on disk, its matching key under the old rules
+    and the new, every difference listed; (2) her whole ledger and her sweep files re-imported, old code
+    beside new: no new cards, the same changes. Read-only on a copy of her ledger. The coordinator builds
+    the comparison first, against the old code; a sub-agent makes the change. Not merged while the list is
+    not empty. A label already in her ledger stays; the one rule is for shows from now on.
+- **Surprises are parked, never chased:** anything odd, or code whose purpose cannot be told, goes on the
+  "Parked for her" list below and the work carries on.
+- **Publishing:** 59 = the venue work, published unattended once its three checks pass (her yes given).
+  60 = the whole restructure, when she says. Her keyed Parallel: yes given.
+- **Her updates:** a short line at each quarter of a step and at each step's end, a time estimate where there is one.
+- **Handing over to a new session:** only once the main screen's cutting plan is written here in full, and
+  only if the chat is heavy; then for the main-screen work alone. The plan says, per piece: what it holds,
+  what it owns of the page's memory, what passes in and out, why the cut is there, and its model.
+- **The steps of this run:** 1 close 4A and publish 59 · 2 app-side duplicates · 3 scraper-side duplicates ·
+  4 the price rule and the two venues · 5 show IDs, accents, addresses · 6 the cutting plan · then the main
+  screen, her test round, 60.
+
+**Parked for her:** (nothing yet)
+
 ## Start here — the next session's job
 
 **What is left, in order (her plan):**
