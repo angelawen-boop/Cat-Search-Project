@@ -92,6 +92,111 @@ screens; its design written here first (which screens become components, what ea
 between them). Items 1A–5 change code text, not what the app does: gates run with `--changes-allowed`.
 **After it (not part of it until she says):** the "words" list — every sentence a feature shows her, in one place.
 
+## 5 — the main screen: the cutting plan
+
+**What is there now.** The main screen is one block (`app/screens/app.jsx`, the piece `App`). It holds about a
+hundred things the page remembers, sixty functions, fourteen effects and a 700-line layout. Three kinds of
+thing are mixed in it: **rules** (what a mark does to a card, how the list is filtered and ordered, what to
+say after a lookup or a labelling, how a shop answer changes a venue's record), **memory** (what the page
+remembers while she works) and **layout**. The cut follows a cross-reference of every remembered thing
+against every section and function that reads or writes it (rebuild it before each stage; the numbers move).
+
+**The order, and why.** Rules out first, then layout, then memory. Each stage shrinks what the next has to
+reason about. The first two are proved by the side-by-side check with nothing subtle in them; only the
+third touches the order things happen in, so it comes last, on the smallest block.
+
+**The rules of the cut (what "not cutting it wrong" means here).**
+- **A boundary is where the cross-reference shows one.** A thing read and written inside one section moves
+  into it. A thing two sections share stays with the screen or in the one hook both use. Never the reverse.
+- **No shared global memory** (no React context, no store object every piece reaches into). The screen stays
+  the one place that says what is called in what order and who is handed what; everything is passed by name.
+  A hidden shared memory is the same tangle made invisible.
+- **A piece never gets another piece's raw setter.** It gets a named action ("clear the filters", "a ledger
+  was loaded"). If a piece needs three or more of another's setters, the two belong together — merge, do not
+  wire.
+- **Import, review and the shop screen are one session**, with one memory; they are three layouts over it.
+- **The signs of a wrong cut — stop and park it for her, do not push through:** a layout piece taking more
+  than about fifteen things; two hooks that each need the other; a rule that has to know a screen exists;
+  the opening reads changing order.
+- **Wording stays with its feature**: a sentence shown after a job is made by the job, in its feature part.
+
+### Stage A — the rules leave the screen (plain functions in feature parts, no React)
+
+- **A1 — card marks** → `app/ledger/marks.jsx`. Dismiss, restore, watch, acquiring, Buy next on and off and
+  its ranking, the catalogue pick, the digital link, "keep this period": each `(rows, id, …) → rows`. The
+  screen keeps `commit(mark(rows,id))`, the undo timer and nothing else. *Sonnet, medium: lift and call;
+  the side-by-side check marks cards and compares the store.*
+- **A2 — the list** → `app/ledger/list_view.jsx`. The body of `view` (filters, search, the three sorts, the
+  pinned just-imported cards, Buy next order), `counts`, `byArtist`, the scrubber's groups: `(rows, filters,
+  …) → list`. The filters become ONE plain object with one "all clear" value (today the clear is typed out
+  twice, at Clear and after an import). *Sonnet, medium: the body moves whole, the list must come out the
+  same in every sort and chip the check walks.*
+- **A3 — what a job found and what to say** *(Opus, medium: judgement about where a job ends and the
+  screen begins)*:
+  - Find catalogue, Search again, Re-check shop → the lookup part: one function that takes the lookup's
+    answer and hands back the row to land, the line for the card, the banner sentence, the diagnostic.
+  - Label, Relabel, Label import cards → the periods part, as jobs shaped like the Read job (inputs in;
+    rows or labels, sentence, diagnostic out; progress reported through a callback).
+  - A link venue's shop search worked out at its first lookup (`fillShopSearch`, which fetches a page from
+    inside the screen) → the shop finder part: venue record in, venue record out.
+  - The shop screen's answers (confirm, English, no shop, her own link, look again) → the link-venue part:
+    `(venues, id, …) → venues`.
+- **After A**, every function left in the screen does one thing: call a job, put what it hands back into
+  memory.
+
+### Stage B — the layout becomes pieces (memory stays where it is)
+
+Each section of the 700-line layout becomes its own component in `app/screens/`, taking what it shows and
+the named actions it calls; the look-and-feel values (colours, the button and chip styles) travel as one
+`ui` object, as the card already takes them. *Sonnet, medium, two runs: every screen must draw identically.*
+- **Run B1:** `header.jsx` (the toolbar, the Save panel, the status lines, the banners and the diagnostic
+  box, the sweep-log line and drawer, the search row) · `chips.jsx` · `card_list.jsx` (the empty state, the
+  period dividers, the cards) · `drawers.jsx` (the tools row, Cloud Saves, the quarantine list, Reset cards)
+  · `floating.jsx` (search-selected-words button, top and bottom, the undo bar, the confirm box, the footer).
+- **Run B2:** `import_popup.jsx` · `review_panel.jsx` (with the proposal card as a component of its own) ·
+  `shop_screen.jsx`.
+- **Memory that moves in this stage:** only what the cross-reference shows is read and written inside one
+  section and nowhere else (today: whether the diagnostic box is open and its "copied" mark, whether the
+  sweep-log drawer is open, which review bands and venues are open). Everything else waits for stage C.
+
+### Stage C — the memory, grouped by what it is the memory of (hooks in `app/screens/`)
+
+One hook per run, in this order — the cleanest first, the one that touches all the others last.
+*Opus, medium, every run: this is where the order of effects and of the opening reads can change.*
+- **C1 `use_filters`** — the filter and sort object from A2, clear, pick-a-sort, pin-the-touched; hands
+  back the list. Read by the chips and the card list; told "an import was applied" and "a ledger was loaded".
+- **C2 `use_list_drawing`** (how much of the list is drawn, the jumps to a period and to the bottom) and
+  **`use_buy_next_drag`** (the drag gesture). Both self-contained.
+- **C3 `use_sweep_log`** — the freshness record and its "why it could not be read" line; small.
+- **C4 `use_ledger_document`** — the ledger itself: rows, the last-import stamp, the quarantine, changed-
+  since-saved; Save now, the automatic save, read-only, the heartbeat, the safety copies, Load, Reset, the
+  cloud copy's opening. Hands out `commit`, `load`, `latest()`, `readOnlyStop()`, and tells the screen
+  "a ledger was loaded".
+- **C5 `use_card_actions`** — the marks (A1) and the jobs on one card (A3): which card is busy, its progress
+  line, what the last job said, the undo.
+- **C6 `use_link_venues`** — the manual-import venues held and saved, the shop answers; used by the import
+  session AND by the lookup, which is why it is not inside C7.
+- **C7 `use_import_session`** — the pop-up's inputs, the Read, the proposals and decisions, the shop
+  screen's turn, Apply and Cancel. It is handed, by name: commit, add-to-quarantine, record-the-sweep,
+  and "applied — these cards changed"; it never clears a filter itself.
+- **What stays in the screen:** the theme and the `ui` object, the confirm box, the one "a job is running"
+  flag and its progress line (labelling, lookups and the Read share it by design: one job at a time), the
+  error and diagnostic lines, search-selected-words, and the layout order. Target: the screen under about
+  250 lines, no file in `app/screens/` over about 400.
+- **The opening.** Today one effect starts every read at once, in this order: the sweep log, the
+  quarantine, the cloud copy (another copy editing? → the venue waiting-room tidy → the read), the link
+  venues, the pending links, pages and pastes. Each hook takes its own reads; the hooks are called in that
+  same order, and the proof below compares the order of the store's reads, old and new.
+
+### The proof, per run
+
+The gates as for every item (`--changes-allowed`), plus: `build/structure_check.js`; for stage A, the
+side-by-side check's marks, sorts and chips must give the same lists and store records; for stage B, every
+screen it draws identical; for stage C, also the stand-in store's sequence of reads and writes from opening
+to the first save identical, old and new (add it to the side-by-side check before C1 if it is not there).
+The coordinator re-runs every gate and reads the diff; after each run it rebuilds the cross-reference and
+checks the signs of a wrong cut above. Her test round 3 follows C7.
+
 ## 4A — the venue register (merged)
 
 **Her decisions (made; the code-or-store question is closed):**
