@@ -58,30 +58,15 @@ shows; the machinery never knows a screen exists. Never mix the two again.
   panel's "File name:" preview is worked out on the screen without the save's trim and 80-character cut.
 - **4A — venue facts** (merged; her test passed — see the handover record).
 
-**Still to do — 4: one copy of every fact (her decision).** An audit found facts kept in more than one
-place (code, store, scraper, her ledger), some with a "which copy wins" rule papering over the clash. Each
-is brought to one home and the other copy deleted, no precedence rule left behind. One round each, in this
-order, each its own branch, side-by-side check and test run; her test after 4A and after 4E (her screens or
-data change). Every one passes before 5 starts. The evidence, with numbers and examples:
-`docs/restructure/duplicates.md` — re-check each finding against the code and her store first.
-- **4B — saving.** The store's error sentences and safety-copy labels written two or three times; the
-  store record names typed into test and check scripts.
-- **4C — the web-address clean-up** retyped 17 times becomes one shared piece.
-- **4D — the sweep import.** The marker sentence (nine copies); the column list (six copies, one tool
-  writing seven columns); the three sweep-file readers; the "Topic:" note; the three ways of standardising
-  web addresses; the sweep-log merge written twice; the unused last-import date in her ledger (stays — her
-  ledger is never changed); show IDs made by two rules and the three accent rules, checked against her real
-  quarantine; the scraper's month spelling lists; the test with hand-typed show IDs.
-- **4E — catalogue lookup.** The seller rule written three times; its repeated instructions to Claude; the
-  four ISBN patterns; the publisher-splitting pattern retyped; the "English edition, published later"
-  sentence; the publisher held twice in her ledger (both copies stay, the seven mangled publishers
-  included); the two price rules, checked on the four shops' live pages (Basel, Beyeler, Louisiana,
-  Moderna Museet), old rule beside new.
-- **4F — manual import and the shop finder.** Their repeated instructions to Claude; the "couldn't find
-  the show's title" sentence written twice; the shop-page reading written twice. Also two venues whose
-  register shop section differs from the shop check's right answer — Thyssen (the register holds the
-  collection guides once confirmed; her answer is the exhibitions section) and Acquavella (every product;
-  the check's answer is its "Publications" list, the same books today): settle each in the register.
+- **4B to 4F — one copy of every fact** (merged, in four rounds; each round's record is under "This run"):
+  the app's repeated sentences, prompt lines and patterns; the sweep file's columns, marker sentence, topic
+  note, readers, sweep-log merge and the month spellings (`scraper/pro_forma.js`, `dates.js`); one currency
+  list for prices; Thyssen's and Acquavella's shop sections; one web-address key, one accent strip and one
+  show-ID rule (`scraper/keys.js`, `showId`). The audit: `docs/restructure/duplicates.md`. The standing
+  proofs: `build/fact_check.js` (fails on a sentence, list or rule written twice), `build/same_text_check.js`,
+  `build/sweep_same_check.js --old <tree>`, `build/keys_compare.js` (her ledger and quarantine).
+
+**Decided with item 4 (her decisions):**
 - **Stays (her decision):** the quarantine kept in both the store and her saved file.
 - **Her ledger is never changed (her decision) — banned outright, not "with her yes".** No item may
   alter, correct, migrate, add or remove anything in her ledger rows or saved file, and no session asks
@@ -369,11 +354,27 @@ every item across before sending it to her.
   a row whose cell count differs from the header's; re-reading the kept pages of two venues with today's
   recipes changes some fields (the same under old code and new: the fixes made since those sweeps, which
   her decision keeps out of runs already swept); `build/blocks_check.js` still types its show IDs by hand.
+- **The special letters (ø, æ, ß, ł…) are still folded only by the search box.** Matching titles
+  treats "ø" as a gap, compression's title key drops it. Giving them one folding changes the title key of
+  five shows in her ledger and three sweep rows (no quarantine entry, no starter ID, and her re-import
+  offered the same cards in the trial) — a listed difference, so by her decision it was not merged. Hers to
+  decide: accept those eight changed keys and unify, or leave it.
+- Rules that look alike and are different, left alone: compression's looser address key (it decodes and
+  drops listing segments); the sweep-diff's fold (NFKD); the publisher step's own address strip; the
+  "-2, -3" suffix that keeps a new ID unique, written twice inside the import's apply.
 - Four live proof pages read differently from the signed-off list, identically under the old code and the
   new (two Prado passages end elsewhere, one Getty page now gives dates, Louisiana's page is the known
   Parallel fault): the sites or Parallel's replies changed, not the reader. The list was not updated.
 
-### Round "keys" — design (4D: show IDs, accent folding, web-address tidying)
+### Round "keys" — done
+
+Merged. `scraper/keys.js` holds the one web-address key and the one accent strip, written into the app as
+`KEYS`; `showId` is the one rule for a new show's ID, and six starter shows whose ID it would spell
+otherwise carry theirs written out (`SEED_IDS`). `build/keys_compare.js` against her 1,350-row ledger, her
+89 quarantine entries, the 110 starter shows and every sweep row on disk: no key changed, and her ledger
+and every stitched sweep re-imported offer the same cards, none she holds offered as new.
+
+### Round "keys" — design (as written before the round)
 
 Branch `claude/restructure-4-keys` (it holds `build/keys_compare.js`, the proof, built and proven before
 any change). Her stored data carries the results of the rules as they are, so **the round merges only what
@@ -471,23 +472,46 @@ and compares them (`build/same_text_check.js`, kept).
 
 ## Start here — the next session's job
 
-**What is left, in order (her plan):**
-1. **4A is published (59).** Left, for when she is back: she opens her app once (its old venue records
-   clear themselves), then the one-time clear of the leftover `venues/occasional` records and Christie's
-   orphan press record (her yes given; backup in `docs/store_backup_2026-11-06/`).
-2. **4B to 4F**, in order. Per item: write its design here first (the one home, what is deleted, what she
-   will see change), then one branch (`claude/restructure-4b` …), one sub-agent, the gates, merge. Her test
-   after 4E. A change to her store needs her yes and a backup first. **Her ledger is never changed.**
-3. **5**, then **her test round 3**.
-4. **Publish to her app when she says.**
+**Item 4 is finished. What is left is item 5, the main screen, then her test and 60.** Read "This run — her
+decisions" (they hold for you: the models, parking surprises, her updates, nothing published without her
+word) and item 5's cutting plan in full, then:
+1. **Rebuild the cross-reference** (`node build/screen_xref.js`) and read the main screen's block against the
+   plan. The plan was written before rounds 2 to 5; they changed two lines of the screen, so expect it to hold.
+2. **Stage A, then B, then C, in the plan's order, one run at a time:** write the run's design here first (a
+   few lines: the pieces, what moves, what the screen keeps), one branch (`claude/restructure-5-a1` …), one
+   sub-agent of the model the plan names, the gates with `--changes-allowed`, the watched test run yourself
+   (a sub-agent cannot start one), read the diff, merge, update this file. Before C1, make the side-by-side
+   check compare the order of the store's reads and writes from opening to the first save, and prove it
+   catches a swapped order.
+3. **After every run:** rebuild the cross-reference and check the plan's "signs of a wrong cut". One that
+   shows is parked for her with what you saw; the work moves to the next piece that does not depend on it.
+4. **After C7 — her test round 3:** set the test page up as "Her tests" says (her store's records copied
+   into the test page's store, her current ledger loaded), publish it with `node build/build_app.js
+   --test-page`, and give her the link and her checklist. **60 is published to her app only when she says.**
+5. **Left for her from 4A:** she opens her app once (59 clears its old venue records itself), then the
+   one-time clear of the leftover `venues/occasional` records and Christie's orphan press record (her yes
+   given; backup in `docs/store_backup_2026-11-06/`).
+
+**The coordinator's lessons from this run (keep):**
+- An Opus sub-agent can stop on the account's usage limit: its work is saved; when the limit resets, send it
+  a message to continue, never start a second one.
+- A sub-agent that reports while its own background check still runs will report again: wait for the
+  second, final report before reviewing.
+- Never `git add -A` in a worktree that holds a `node_modules` link: the link was committed, and merging it
+  replaced the real folder (`npm install --no-audit --no-fund` puts it back).
+- `git checkout main` fails while another worktree holds `main`: use a detached worktree for an old-code copy.
+- A test that lifts one function out of the page by its text breaks when that function starts naming a new
+  helper: give the test the helper too (`cloud_ledger.js`, `add_by_link.js`).
+- Publishing to her app: the first try is refused as not viewed and saves the live page; prove by script
+  that the live page is the repo's own build of the version before, read a few lines of the saved copy, send
+  again (refused once more as unchanged), send again.
 
 ## Handover record — updated after every step
 
-**Where we are:** steps 1 to 4 of "This run" are done and on `main` (59 published; app side, scraper side,
-the price rule and the two venues merged), and step 6's cutting plan is written (item 5; re-check it against
-the code once step 5 is in). Next: step 5, the keys round — its proof `build/keys_compare.js` is on
-`claude/restructure-4-keys`; her ledger and quarantine for it are read from her store into the scratchpad
-(read-only; `ledger/live` → `ledgerParts/<id>-<n>` joined, base64, gunzip) and never committed.
+**Where we are:** item 4 is finished and on `main`: steps 1 to 5 of "This run" (59 published; the app-side
+and scraper-side rounds, the price rule and the two venues, the keys round). Step 6, the main screen's
+cutting plan, is written (item 5). `main` passes all 42 suites, the join, structure and fact checks. Nothing
+of item 5 has been started. What waits for her is under "Parked for her" and "Start here", 5.
 
 **Open problems:** a sub-agent cannot start the watched test run — the test hook reads the coordinator's
 transcript for the "Expected test run" line — so the coordinator runs gate 2 itself. The hook often refuses
