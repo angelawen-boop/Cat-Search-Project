@@ -33,17 +33,17 @@ const path = require('path');
 const C = require('./compress.js');
 const { pagesFromNote, archiveYear } = require('./listing_note.js');
 const W = require('./routine_window.js');
+const { isMarkerNote } = require('./pro_forma.js');
 
 const OUTPUT_DIR = path.join(__dirname, 'output');
 const RAW_CSV = 'sweep.csv';
-const MARKER_SENTINEL = 'Marker row, not an exhibition.';
 
 // The venue codes the app will accept: her swept venues, read from the venue register
 // (venues/register.js) — the list the app's MUSEUMS and its intake are built from. Not
 // imported from the scraper, so this runs against a stitched file the scraper never produced.
 const KNOWN_VENUES = new Set(require('../venues/register.js').VENUES.filter(v => v.kind === 'swept').map(v => v.id));
 
-const isMarker = r => String(r.notes || '').trim().endsWith(MARKER_SENTINEL);
+const isMarker = r => isMarkerNote(r.notes);
 
 /** Every fatal row in one file, with the line number a session can go and read. */
 function fatalRows(rows) {

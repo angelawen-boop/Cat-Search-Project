@@ -113,6 +113,11 @@
    "id": "4-app",
    "name": "Round app side: the repeated sentences, prompt lines and patterns each made one piece, in the part of the feature that owns it",
    "files": {}
+  },
+  {
+   "id": "4-scraper",
+   "name": "Round scraper side: the pro forma's columns, marker sentence, Topic note, reader, cell quoting and sweep-log merge, and the month spellings, each kept once in the scraper's files and written into the app by the join",
+   "files": {}
   }
  ],
  "pieces": {

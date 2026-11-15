@@ -18,6 +18,8 @@
  *   scraper/boilerplate.js     → BOILERPLATE, the phrases a description drops (Add by link too)
  *   scraper/bot_check.js       → CHALLENGE_TITLE, BOT_CHECK_SAID
  *   scraper/answer_check.js    → ANSWER_CHECK, the checks on every description Claude writes
+ *   scraper/pro_forma.js       → PRO_FORMA: the CSV's columns, marker sentence, "Topic:" note, cell
+ *                                 quoting, table reader and the sweep-log merge
  *   sweep_prototype.js VENUES  → VENUE_SITES: each venue's site (and, where two venues share one,
  *                                 its showPath), so a link from one of her 28 files under it
  *
@@ -39,7 +41,7 @@ const DEFAULT_ROOT = path.join(__dirname, '..');
 const DIRECTIVE = '//@from-scraper';
 const REGISTER_DIRECTIVE = '//@venue-register';
 const REGISTER_LINE = /^const REGISTER = require\('\.\.\/venues\/register\.js'\)\.VENUES; \/\/@register$/m;
-const OPEN = '// ===== SHARED WITH THE SCRAPER — the join writes the rules below from the scraper\'s own files (scraper/dates.js, compress_prompt.md, compress.js, boilerplate.js, bot_check.js, answer_check.js, VENUES); never edit between these markers. Edit the scraper, then run `node build/app_join.js`. =====';
+const OPEN = '// ===== SHARED WITH THE SCRAPER — the join writes the rules below from the scraper\'s own files (scraper/dates.js, compress_prompt.md, compress.js, boilerplate.js, bot_check.js, answer_check.js, pro_forma.js, VENUES); never edit between these markers. Edit the scraper, then run `node build/app_join.js`. =====';
 const CLOSE = '// ===== END SHARED =====';
 
 function die(m) { throw new Error(m); }
@@ -111,6 +113,16 @@ function answerCheckBlock(root = DEFAULT_ROOT) {
   return 'const ANSWER_CHECK=(()=>{\n' + src.slice(start + "'use strict';".length, end).trim() + '\nreturn { MAX_WORDS, validateAnswer, validateEnglish, stringFaults, unsupportedClaims, rewordsTitle, REWORDS_TITLE, withoutPlaceOpener };\n})();';
 }
 
+function proFormaBlock(root = DEFAULT_ROOT) {
+  const src = read(root, 'pro_forma.js');
+  const start = src.indexOf("'use strict';");
+  const end = src.indexOf('\nmodule.exports');
+  if (start < 0 || end < 0) die('scraper/pro_forma.js has lost its \'use strict\' line or its module.exports');
+  // Wrapped so its names (later, parseCsv…) cannot collide with the app's.
+  const names = Object.keys(require(path.join(root, 'scraper', 'pro_forma.js'))).join(', ');
+  return 'const PRO_FORMA=(()=>{\n' + src.slice(start + "'use strict';".length, end).trim() + '\nreturn { ' + names + ' };\n})();';
+}
+
 function boilerplateBlock(root = DEFAULT_ROOT) {
   return 'const BOILERPLATE=' + JSON.stringify(require(path.join(root, 'scraper', 'boilerplate.js')).BOILERPLATE) + ';';
 }
@@ -140,7 +152,7 @@ function examplesBlock(root = DEFAULT_ROOT) {
 
 // Everything the directive stands for, in the order the page carries it (examples come after, stored).
 function rulesText(root = DEFAULT_ROOT) {
-  return [datesBlock(root), rulesBlock(root), composeBlock(root), sitesBlock(root), boilerplateBlock(root), botCheckBlock(root), answerCheckBlock(root)].join('\n') + '\n';
+  return [datesBlock(root), rulesBlock(root), composeBlock(root), sitesBlock(root), boilerplateBlock(root), botCheckBlock(root), answerCheckBlock(root), proFormaBlock(root)].join('\n') + '\n';
 }
 
 // A piece's text with its directive line replaced: the scraper's rules, or the venue register. A piece
@@ -159,4 +171,4 @@ function expandShared(text, root = DEFAULT_ROOT) {
 }
 
 module.exports = { DIRECTIVE, REGISTER_DIRECTIVE, OPEN, CLOSE, expandShared, rulesText, examplesBlock, registerBlock,
-  datesBlock, rulesBlock, composeBlock, sitesBlock, boilerplateBlock, botCheckBlock, answerCheckBlock };
+  datesBlock, rulesBlock, composeBlock, sitesBlock, boilerplateBlock, botCheckBlock, answerCheckBlock, proFormaBlock };

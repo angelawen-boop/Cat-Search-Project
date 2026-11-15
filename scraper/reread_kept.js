@@ -97,9 +97,8 @@ function runStartOf(runDir) {
 }
 
 function writeRows(csv, rows) {
-  const cols = ['venue_code', 'title', 'start_date', 'end_date', 'summary', 'url', 'notes', 'swept_at'];
-  const q = v => { const s = String(v ?? ''); return /[",\n\r]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
-  fs.writeFileSync(csv, [cols.join(','), ...rows.map(r => cols.map(c => q(r[c])).join(','))].join('\n') + '\n', 'utf8');
+  const { csvText, quoteCell } = require('./pro_forma.js');
+  fs.writeFileSync(csv, csvText(rows, quoteCell), 'utf8');
 }
 
 module.exports = { reread, writeRows, runStartOf };

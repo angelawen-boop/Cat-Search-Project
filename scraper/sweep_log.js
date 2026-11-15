@@ -18,12 +18,10 @@
 // carries a swept_at column. Files older than 20 Sep do not have the column
 // and are skipped — they cannot contribute and cannot corrupt.
 //
-// THE RULE IS THE APP'S OWN, DELIBERATELY. mergeSweepLog() in the JSX takes
-// the LATER of what it holds and what it reads, per venue and per fact
-// independently. So scanning every file in any order lands on one answer, and
-// an old file can never push a newer date back. Restating the rule here rather
-// than importing it is the drift risk this repo keeps being bitten by, so
-// fixtures S-001 to S-006 assert the two agree.
+// THE RULE IS THE APP'S OWN: mergeSweepLog() in pro_forma.js, which the join
+// writes into the app. It takes the LATER of what it holds and what it reads,
+// per venue and per fact independently. So scanning every file in any order
+// lands on one answer, and an old file can never push a newer date back.
 //
 // TRIED vs BROUGHT ROWS. Tried is the latest swept_at on ANY row of that
 // venue, marker rows included — a refusal is still an attempt, which is the
@@ -38,12 +36,9 @@ const fs = require('fs');
 const path = require('path');
 const C = require('./compress.js');
 const { isMarker, KNOWN_VENUES } = require('./qc.js');
+const { later, mergeSweepLog } = require('./pro_forma.js');
 
 const OUTPUT_DIR = path.join(__dirname, 'output');
-
-// Only the later of two stamps ever wins, and a missing stamp never displaces
-// a real one. Mirrors mergeSweepLog() in the JSX.
-const later = (a, b) => (!a || (b && b > a)) ? b : a;
 
 function csvFilesUnder(dir) {
   const out = [];
@@ -83,21 +78,15 @@ function hasSweptAt(file) {
  * whose whole job is dates.
  */
 function fold(rows, into) {
-  const venues = { ...(into || {}) };
+  let venues = { ...(into || {}) };
   let contributed = 0;
   for (const r of rows) {
     const v = String(r.venue_code || '').trim();
     const at = String(r.swept_at || '').trim();
     if (!v || !at || !KNOWN_VENUES.has(v)) continue;
-    const was = venues[v] || { attempted: null, returned: null };
-    venues[v] = {
-      attempted: later(was.attempted, at),
-      // A MARKER ROW IS AN ATTEMPT BUT NOT A ROW. That is the entire reason
-      // the drawer carries two dates instead of one: Borghese was tried at
-      // 2:27pm and last brought rows at 2:04am, and that gap is the line
-      // that says re-run this venue on its own.
-      returned:  later(was.returned, isMarker(r) ? null : at),
-    };
+    // A marker row is an attempt but not a row: it moves "tried" only. The gap
+    // between the two dates is the line that says re-run this venue on its own.
+    venues = mergeSweepLog(venues, { attempted: { [v]: at }, returned: isMarker(r) ? {} : { [v]: at } });
     contributed++;
   }
   return { venues, contributed };

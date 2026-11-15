@@ -16,7 +16,10 @@
  *     titles, the cloud jobs with no store, Claude's prompts for a page and for the facts round, the
  *     version notes, the unreadable-date note, the ISBN readers and the host clean-up.
  * Pieces whose join differs on purpose (the ISBN patterns merged into one, written with a look-behind, and
- * the web-address strip) are in BY_CALLS and are held to way 2 only.
+ * the web-address strip) are in BY_CALLS and are held to way 2 only. The pieces the scraper-side round made
+ * name scraper/pro_forma.js, and the date reader whose month lists it builds from one list, are in
+ * BY_SWEEP_CHECK and are held by build/sweep_same_check.js, which calls old and new on the sweep files on disk.
+ * A member of a new shared object (`PRO_FORMA.later`) is read as what it holds.
  */
 'use strict';
 const fs = require('fs');
@@ -84,11 +87,24 @@ function literals(node, page) {
   };
   const wanted = n => ts.isIdentifier(n) && (only.has(n.text) || INLINE_BOTH.has(n.text)) && decls.has(n.text)
     && !(n.parent.name === n && (ts.isVariableDeclaration(n.parent) || ts.isFunctionDeclaration(n.parent)));
+  // A member of a shared object: a function by the literals of its own source, a value as itself.
+  const member = v => {
+    if (typeof v !== 'function') { out += v instanceof RegExp ? patternText(v.source) + v.flags : String(v); return; }
+    const f = ts.createSourceFile('m.js', '(' + v.toString() + ')', ts.ScriptTarget.Latest, true, ts.ScriptKind.JS);
+    const visit = n => {
+      if (ts.isStringLiteralLike(n)) out += n.text;
+      else if (ts.isTemplateExpression(n)) { out += n.head.text; for (const t of n.templateSpans) { visit(t.expression); out += t.literal.text; } return; }
+      else if (ts.isRegularExpressionLiteral(n)) out += patternText(n.text.replace(/\/[a-z]*$/, '').slice(1)) + (n.text.match(/\/([a-z]*)$/) || [])[1];
+      ts.forEachChild(n, visit);
+    };
+    visit(f);
+  };
   const literals1 = (root, seen) => {
     const visit = n => {
       if (ts.isStringLiteralLike(n)) out += n.text;
       else if (ts.isTemplateExpression(n)) { out += n.head.text; for (const t of n.templateSpans) { visit(t.expression); out += t.literal.text; } return; }
       else if (ts.isRegularExpressionLiteral(n)) out += patternText(n.text.replace(/\/[a-z]*$/, '').slice(1)) + (n.text.match(/\/([a-z]*)$/) || [])[1];
+      else if (ts.isPropertyAccessExpression(n) && wanted(n.expression) && !isFn(decls.get(n.expression.text))) { member(get(n.expression.text)[n.name.text]); return; }
       else if (wanted(n)) { take(n.text, seen); return; }
       else if (ts.isCallExpression(n) && ts.isIdentifier(n.expression) && wanted(n.expression)) { n.arguments.forEach(visit); take(n.expression.text, seen); return; }
       ts.forEachChild(n, visit);
@@ -103,11 +119,12 @@ const pageA = { ...A, get: n => O(n), only: new Set() }, pageB = { ...B, get: n 
 
 // The ISBN patterns merged into one, written with a look-behind, and the new helper itself: by calls only.
 const BY_CALLS = new Set(['isbnInResults', 'isbnsIn', 'withoutWww']);
+const BY_SWEEP_CHECK = new Set(['DATES', 'proFormaCsv', 'csvParse', 'isMarkerRow', 'topicOf', 'mergeSweepLog']);
 let same = 0;
 for (const [name, a] of A.decls) {
   const b = B.decls.get(name);
   if (!b) { fail('piece "' + name + '" is gone from the new page'); continue; }
-  if (BY_CALLS.has(name)) continue;
+  if (BY_CALLS.has(name) || BY_SWEEP_CHECK.has(name)) continue;
   const x = literals(a, pageA), y = literals(b, pageB);
   if (x === y) same++;
   else {
@@ -139,7 +156,9 @@ const sameCall = async (label, f) => {
   for (const s of snaps) await sameCall('snapTitle ' + show(s.label), g => g('snapTitle')(s, snaps));
   const oldLabel = /label:\s*"([^"]*)"\s*\+\s*localReadable/.exec(oldCode);
   const at = '2026-10-01T10:00:00Z';
-  oldLabel && N('rollbackSafetyLabel')(at) === oldLabel[1] + O('localReadable')(at) ? pass('a roll-back\'s safety label') : fail('a roll-back\'s safety label differs');
+  // Against a base that already makes the label in rollbackSafetyLabel, the two are called side by side.
+  const oldMade = oldLabel ? oldLabel[1] + O('localReadable')(at) : (() => { try { return O('rollbackSafetyLabel')(at); } catch { return null; } })();
+  oldMade && N('rollbackSafetyLabel')(at) === oldMade ? pass('a roll-back\'s safety label') : fail('a roll-back\'s safety label differs');
   await sameCall('cloudOpenRead with no store', g => g('cloudOpenRead')({}));
   await sameCall('cloudSavesRead with no store', g => g('cloudSavesRead')());
   await sameCall('cloudSaveLatest with no store', g => g('cloudSaveLatest')({ busy: false }, () => ({ rows: [], ignored: [] }), () => {}));
