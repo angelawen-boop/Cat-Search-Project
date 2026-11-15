@@ -17,6 +17,10 @@ const GALLERY_WAY=new RegExp("^(?:the\\s+|our\\s+|online\\s+|alle\\s+)*(?:"+GALL
 //@piece GALLERY_WAY_PATH
 
 const GALLERY_WAY_PATH=new RegExp("^\\/(?:"+LANG_PART+"\\/)?(?:"+GALLERY_WAY_WORD+")\\/?$","i");
+//@piece SITE_MENU_ASK
+
+// What Claude is asked to read from a gallery's home page.
+const SITE_MENU_ASK="The site's menu and footer links: shop, books, publications, library.";
 //@piece GALLERY_BUY
 
 const GALLERY_BUY=/^(?:purchase|buy(?: now)?|add to (?:cart|bag|basket)|shop now|order|acheter|kaufen|in den warenkorb|comprar|acquista)$/;
@@ -164,7 +168,7 @@ async function galleryShop(page,museumHost,venueName,turnedDown,trace,foreign){
       if(/"collections"\s*:/.test(t)){
         // A list of 250 is read on (Perrotin's "Perrotin Editions - Books" is on its second page).
         for(let page=2,last=t;page<=SHOPIFY_LIST_PAGES&&(last.match(/"handle"\s*:/g)||[]).length>=250&&g.opens<GALLERY_OPENS;page++){ g.opens++; const n=await fetchPage(o+"collections.json?limit=250&page="+page,"The shop's lists: titles and handles.",null,{full:true}); last=n.ok?pageTextOf(n.results):""; t+="\n"+last; }
-        const lists=shopifySections(t,o).map(c=>({...c,count:+((t.split('"handle":"'+c.handle+'"')[1]||"").match(/"products_count"\s*:\s*(\d+)/)||[])[1]||0}));
+        const lists=shopifySections(t,o).map(c=>({...c,count:+shopifyCountIn(t.split('"handle":"'+c.handle+'"')[1]||"")||0}));
         const r=await pick(lists,"the shop's lists");
         if(r)return r;
         if(g.opens<GALLERY_OPENS){ g.opens++; const j=await fetchPage(o+"collections/all/products.json?limit=8","The products in this shop: titles, types and prices.",null,{full:true}); if(j.ok&&shopifyShelfIsBooks(pageTextOf(j.results),false))return{url:o+"collections/all",how:"the shop's whole list"}; }
@@ -237,9 +241,9 @@ async function galleryShop(page,museumHost,venueName,turnedDown,trace,foreign){
   if(page.page)hit=await tryAll(waysIn(page.page),"show-page");
   // 2. The home page, a redirect followed (kamelmennour.com → mennour.com).
   if(!hit){
-    let home="https://"+g.host+"/", t=await open(home,"The site's menu and footer links: shop, books, publications, library.");
+    let home="https://"+g.host+"/", t=await open(home,SITE_MENU_ASK);
     const moved=t&&t.trim().length<SHELL_CHARS&&/redirect/i.test(t)?mdLinks(t).find(l=>!own(l.url))||(t.match(/<(https?:\/\/[^>\s]+)>/)?{url:t.match(/<(https?:\/\/[^>\s]+)>/)[1]}:null):null;
-    if(moved){ g.host=hostOf(moved.url); home=originOf(moved.url); t=await open(home,"The site's menu and footer links: shop, books, publications, library."); }
+    if(moved){ g.host=hostOf(moved.url); home=originOf(moved.url); t=await open(home,SITE_MENU_ASK); }
     g.home=t||"";
     if(!t||t.trim().length<SHELL_CHARS)g.unread="The gallery's site could not be read.";
     note("home",{home,read:!!t,chars:(t||"").length});

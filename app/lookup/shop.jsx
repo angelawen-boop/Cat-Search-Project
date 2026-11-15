@@ -37,10 +37,6 @@ function shopPagesFor(mu,title){
 
 
 function shopDomain(mu){if(!mu||!mu.shopHome)return null;try{return new URL(mu.shopHome).hostname;}catch{return null;}}
-//@piece SHOP_PRICE
-
-// A price on a shop page: a shelf of books always shows them (shopStep).
-const SHOP_PRICE=/(?:[\u20ac$\u00a3]\s?\d|\d(?:[.,]\d{1,2})?\s?(?:\u20ac|(?:EUR|USD|GBP)\b))/;
 //@piece isTicketLink
 
 
@@ -171,7 +167,7 @@ async function readShopPage(book,url,io,opened){
    +"category, search results, a ticket or a different product. That is what a pulled page redirecting looks like.\n"
    +"\nBook: "+book+"\nAddress on file: "+url+"\nAddress served: "+(served||"(not given)")+"\n\n"
    +pageTextOf(f.results).slice(0,PAGE_CHARS)
-   +'\n\nReply with ONLY this JSON object and nothing else:\n{"forSale": true|false, "why": string}\n'
+   +"\n"+REPLY_JSON_ONLY+'{"forSale": true|false, "why": string}\n'
    +'Example: {"forSale":false,"why":"The page says Sold out."}');
   if(!rd.ok)return{kind:"noread",detail:f.detail+"\n"+rd.detail,why:rd.detail.split("[")[0].trim()};
   const d=rd.data||{};
@@ -362,7 +358,7 @@ async function shopStep(row,io){
   // unread (Berlin's English one): no priced line, even read whole, is "parallel", "script" or "unconfirmed".
   const priced=r=>pageTextOf(r.results).split("\n").some(realPrice);
   if(mu&&(mu.shopUnseen==="parallel"||mu.shopUnseen==="script"||mu.shopUnseen==="unconfirmed")&&!priced(s1)){
-    const whole=await io.fetch(shopPages,"The books in this section of the shop, with their prices.",null,{full:true});
+    const whole=await io.fetch(shopPages,SHOP_BOOKS_ASK,null,{full:true});
     if(!whole.ok)return{ran:true,ok:false,detail:s1.detail+"\n"+whole.detail,data:null};
     if(!priced(whole))
       return{ran:true,ok:true,blocked:mu.shopUnseen,detail:s1.detail+"\n"+whole.detail+(mu.shopUnseen==="parallel"?"\nParallel brought back this shop’s pages without their books, so it could not be searched.":"\nThe shop’s pages came back without their books, so it could not be searched."),data:null};
@@ -373,9 +369,9 @@ async function shopStep(row,io){
   let shop=s1;
   // The pages read whole: {whole} with books on them, or the step's answer when none.
   const readWhole=async()=>{
-    const whole=await io.fetch(shopPages,"The books in this section of the shop, with their prices.",null,{full:true});
+    const whole=await io.fetch(shopPages,SHOP_BOOKS_ASK,null,{full:true});
     if(!whole.ok)return{out:{ran:true,ok:false,detail:s1.detail+"\n"+whole.detail,data:null}};
-    let books=whole.results.filter(r=>!pageIsShell([r])&&SHOP_PRICE.test(oneText(r)));
+    let books=whole.results.filter(r=>!pageIsShell([r])&&PRICE_ON_PAGE.test(oneText(r)));
     // No price on any page: a list of titles is books when its first product is one
     // (firstProductIsBook, Yale's Publications), or its first book under its own address (Galerie Karsten Greve).
     const listed=books.length?null:whole.results.find(r=>!pageIsShell([r]));
@@ -473,8 +469,7 @@ async function readBookPage(hit,venue,dom,io){
   io.phase("page");
   // The venue's own shop page gets the blank-page retry (openShopPage); a publisher's does not.
   const f=await (shopLinkOf({shopUrl:hit.pageUrl},dom)?(...a)=>openShopPage(io.fetch,...a):io.fetch)(hit.pageUrl,
-    "The ISBN-13, the publisher, and any link to the publisher’s own page for the book "
-      +"“"+book+"”, including any details or specification panel on the page.",
+    bookPageAsk(book),
     [book+" ISBN publisher details"],{full:true});
   let detail=hit.detail+"\n"+f.detail;
   if(!f.ok)return{...hit,detail,trouble:f.detail};

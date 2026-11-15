@@ -48,12 +48,16 @@ function storeRef(db,path){
   for(let i=2;i+1<s.length;i+=2)r=r.collection(s[i]).doc(s[i+1]);
   return r;
 }
+//@piece STORE_UNREACHED
+
+// The sentence for a viewer with no store.
+const STORE_UNREACHED="This viewer can\u2019t reach the page\u2019s store.";
 //@piece storeNo
 
 function storeNo(code){
   return code==="read_only"?{code,message:"This copy is read only."}
     :code==="unread"?{code,message:"This part of the store could not be read, so it is not written."}
-    :{code,message:"This viewer can\u2019t reach the page\u2019s store."};
+    :{code,message:STORE_UNREACHED};
 }
 //@piece storeReached
 

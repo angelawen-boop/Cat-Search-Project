@@ -6,24 +6,13 @@
 // door as a sweep. swept_at stays blank: a link is not a sweep, and the
 // freshness drawer is about sweeps.
 function proFormaCsv(rows){
-  const cell=v=>{const s=String(v==null?"":v);return /[",\n\r]/.test(s)?"\""+s.replace(/"/g,"\"\"")+"\"":s;};
-  const cols=["venue_code","title","start_date","end_date","summary","url","notes","swept_at"];
-  return [cols.join(",")].concat(rows.map(r=>cols.map(c=>cell(r[c])).join(","))).join("\n")+"\n";
+  return PRO_FORMA.csvText(rows,PRO_FORMA.quoteCell);
 }
 //@piece csvParse
 
+// The scraper's reader, after every line ending is made \n; blank lines are left out.
 function csvParse(text){
-  const out=[]; let i=0,field="",row=[],inQ=false; text=String(text).replace(/\r\n?/g,"\n");
-  const pushF=()=>{row.push(field);field="";}; const pushR=()=>{out.push(row);row=[];};
-  while(i<text.length){ const c=text[i];
-    if(inQ){ if(c==='"'){ if(text[i+1]==='"'){field+='"';i+=2;continue;} inQ=false;i++;continue;} field+=c;i++;continue; }
-    if(c==='"'){inQ=true;i++;continue;}
-    if(c===','){pushF();i++;continue;}
-    if(c==='\n'){pushF();pushR();i++;continue;}
-    field+=c;i++;
-  }
-  if(field.length>0||row.length>0){pushF();pushR();}
-  return out.filter(r=>r.some(c=>String(c).trim()!==""));
+  return PRO_FORMA.parseCsv(String(text).replace(/\r\n?/g,"\n")).filter(r=>r.some(c=>String(c).trim()!==""));
 }
 //@piece ignoreKeyFor
 
@@ -77,10 +66,7 @@ const sameExhibition = (a,b) => {
 // applies until she says. Unusable data becomes a note on the card, never dropped.
 // Marker rows (a listing page the sweep could not read) are matched on the scraper's
 // notes sentence, never on a bracketed title, and go to the coverage panel.
-const isMarkerRow = note => {
-  const MARKER_SENTINEL = "Marker row, not an exhibition.";
-  return String(note||"").trim().endsWith(MARKER_SENTINEL);
-};
+const isMarkerRow = PRO_FORMA.isMarkerNote;
 //@piece fuller
 
 // Which of two values to offer first when a stitched file disagrees with itself: the
@@ -118,6 +104,12 @@ function foldDuplicateRows(raws){
   }
   return out;
 }
+//@piece unreadableDateNote
+
+// The note on a card whose file date is not YYYY-MM-DD; `which` is "Start" or "End".
+function unreadableDateNote(which,value){
+  return which+" date \u201c"+value+"\u201d couldn't be read (needs YYYY-MM-DD) \u2014 left blank.";
+}
 //@piece analyzeProForma
 
 // `rows` is her ledger as it stands; the cards are what the file would change in it.
@@ -134,7 +126,7 @@ function analyzeProForma(text,rows,ignoredKeys,opts){
   // Which venues this file touched (attempted) and gave rows (returned), dated by the
   // rows' swept_at, the latest per venue — never by the moment of import.
   const attempted={}, returned={};
-  const later=(a,b)=>(!a||(b&&b>a))?b:a;
+  const later=PRO_FORMA.later;
   // Counts she can reconcile: every row read is accounted for (docs/app.md §3
   // "Counts that reconcile").
   let silent=0, blocked=0;
@@ -165,8 +157,8 @@ function analyzeProForma(text,rows,ignoredKeys,opts){
     if(!vc||!KNOWN_VENUES.has(vc)){ faults.push("line "+line+": venue code "+(vc?("\u201c"+vc+"\u201d"):"is blank")+(vc?" isn\u2019t one of the venues":"")); continue; }
     if(!title){ faults.push("line "+line+": no exhibition title"+(get(r,"url")?" \u2014 "+get(r,"url"):"")); continue; }
     let sd=get(r,"start_date"), ed=get(r,"end_date"), url=get(r,"url");
-    if(sd&&!isValidYMD(sd)){notes.push("Start date \u201c"+sd+"\u201d couldn't be read (needs YYYY-MM-DD) \u2014 left blank.");sd="";}
-    if(ed&&!isValidYMD(ed)){notes.push("End date \u201c"+ed+"\u201d couldn't be read (needs YYYY-MM-DD) \u2014 left blank.");ed="";}
+    if(sd&&!isValidYMD(sd)){notes.push(unreadableDateNote("Start",sd));sd="";}
+    if(ed&&!isValidYMD(ed)){notes.push(unreadableDateNote("End",ed));ed="";}
     if(url&&!urlLooksValid(url)){notes.push("Exhibition link \u201c"+url+"\u201d looks garbled \u2014 left blank.");url="";}
     // Quarantined: dropped before anything else sees it. Counted, never silent.
     if(ignoredKeys&&ignoredKeys.has(ignoreKeyFor(vc,url,title))){ blocked++; continue; }

@@ -2,7 +2,11 @@
 //@piece cleanIsbn
 
 
-const cleanIsbn=v=>{if(!v)return null;const d=String(v).replace(/[^0-9]/g,"");return d.length===13?d:null;};
+const cleanIsbn=v=>{if(!v)return null;const d=isbnDigits(v);return d.length===13?d:null;};
+//@piece isbnDigits
+
+// The digits of an ISBN as typed or printed, hyphens and spaces gone.
+const isbnDigits=v=>String(v||"").replace(/\D/g,"");
 //@piece fmtIsbn
 
 const fmtIsbn=v=>{const c=cleanIsbn(v);return c?c.slice(0,3)+"-"+c.slice(3):null;};
@@ -36,7 +40,7 @@ function isbn10to13(v){
 // it is taken only if its digits, 13 or 10, are printed there — a read cannot invent
 // one. cleanIsbn stays as it is: it also shows ISBNs already in her ledger.
 const toIsbn13=(v,seen)=>{
-  const d=String(v||"").replace(/[^0-9]/g,"");
+  const d=isbnDigits(v);
   const isbn=d.length===13?(isbn13Checks(d)?d:null):isbn10to13(v);
   if(!isbn||seen===undefined)return isbn;
   return isbnInText(isbn,seen)?isbn:null;
@@ -56,12 +60,16 @@ function isbn13to10(d){
 // Printed in the text: the 13 or the 10, hyphens or spaces between its digits allowed,
 // never as part of a longer number.
 function isbnInText(isbn,text){
-  const d=String(isbn||"").replace(/\D/g,"");
+  const d=isbnDigits(isbn);
   if(d.length!==13)return false;
   const a=String(text||"").replace(/(\d)[\u2010-\u2015-](?=[\dXx])/g,"$1");
   const b=a.replace(/(\d) (?=[\dXx])/g,"$1");
   return [d,isbn13to10(d)].filter(Boolean).some(f=>{ const re=new RegExp("(?<![0-9])"+f+"(?![0-9Xx])","i"); return re.test(a)||re.test(b); });
 }
+//@piece ISBN13_STANDALONE
+
+// A 13-digit 978/979 number with no digit beside it; group 1 is the number.
+const ISBN13_STANDALONE=/(?<![0-9])(97[89]\d{10})(?![0-9])/g;
 //@piece isbn13Checks
 
 

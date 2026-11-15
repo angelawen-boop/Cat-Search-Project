@@ -39,7 +39,8 @@ async function snapshot(jsxFile, storeDir, ledgerFile, outFile) {
   const dom = new JSDOM('<!doctype html><html><body><div id="root"></div></body></html>', { pretendToBeVisual: true, url: 'https://claude.ai/' });
   const win = dom.window, doc = win.document;
   const store = fakeStore();
-  for (const p of ['venues/occasional', 'quarantine/rows', 'sweeps/venues']) {
+  const STORE = require('./store_names.js').storeNames();
+  for (const p of [STORE.occasional, STORE.quarantine, STORE.sweeps]) {
     const f = path.join(storeDir, p + '.json');
     if (!fs.existsSync(f)) throw new Error('missing copy of her store record ' + p);
     const d = JSON.parse(fs.readFileSync(f, 'utf8'));

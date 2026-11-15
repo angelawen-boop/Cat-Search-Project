@@ -643,7 +643,7 @@ export default function App(){
     const v=occVenues[id]||occSaved.current[id];
     if(!v||(v.finder>=3&&v.searchRule>=SEARCH_RULE))return;
     let found;
-    const f=mu.shopCatalogues?await fetchPage(mu.shopCatalogues,"The books in this section of the shop, with their prices.",null,{full:true}):{ok:true,results:[]};
+    const f=mu.shopCatalogues?await fetchPage(mu.shopCatalogues,SHOP_BOOKS_ASK,null,{full:true}):{ok:true,results:[]};
     if(f.ok)found=await proveShopSearch(pageTextOf(f.results),mu.shopCatalogues||mu.shopHome);
     if(found===undefined||!f.ok)return;   // a call that died is not an answer
     const add=x=>x?{...x,shopSearch:found,finder:3,searchRule:SEARCH_RULE}:x;

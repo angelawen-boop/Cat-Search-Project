@@ -23,7 +23,7 @@ function publisherDomainFrom(results,name){
     const flat=host.replace(/[^a-z0-9]/g,"");
     if(words.length&&words.every(w=>flat.includes(w)))return host;
   }
-  const bare=h=>h.replace(/^www\./,"");
+  const bare=h=>withoutWww(h);
   if(listed)for(const r of (results||[])){ const h=hostOf(String(r&&r.url||"")); if(h&&bare(h)===bare(listed))return h; }
   return null;
 }
@@ -185,7 +185,7 @@ function houseWords(n){
 //@piece publisherGroups
 
 function publisherGroups(results,isbn){
-  const d=String(isbn||"").replace(/\D/g,"");
+  const d=isbnDigits(isbn);
   if(d.length!==13)return [];
   const groups=[];
   for(const r of (results||[])){
@@ -281,7 +281,7 @@ function sameHouse(a,b){
 function siteOfHouses(results,pub,museumId){
   const whole=publisherDomainFrom(results,pub);
   if(whole)return whole;
-  const parts=String(pub||"").split(/\s*(?:\/|;|&|\s+and\s+|\s+with\s+)\s*/i).map(x=>x.trim()).filter(Boolean);
+  const parts=String(pub||"").split(HOUSE_SPLIT).map(x=>x.trim()).filter(Boolean);
   if(parts.length<2)return null;
   parts.sort((a,b)=>museumImprintOnly(a,museumId)-museumImprintOnly(b,museumId));
   for(const p of parts){ const h=publisherDomainFrom(results,p); if(h)return h; }
@@ -351,7 +351,7 @@ async function findPublisherPage(F,c){
          +"\nBook: "+book+(isbn?"\nISBN: "+isbn:"")+"\nPublisher: "+pub
          +"\nExhibition venue: "+venue+"\n\n"
          +resultsForPrompt(onSite,3000,{words:[book,isbn||""]})
-         +"\nReply with ONLY this JSON object and nothing else:\n"
+         +REPLY_JSON_ONLY
          +'{"candidates": [string]}\n'
          +'Example: {"candidates":["https://hannibalbooks.be/en/fine-art","https://hannibalbooks.be/en/new"]}');
         log.push(rd.detail);
@@ -401,7 +401,7 @@ async function findPublisherPage(F,c){
        +"An empty list if none.\n":"")
      +"\nBook: "+book+(isbn?"\nISBN: "+isbn:"")+"\nPublisher: "+pub+"\n\n"
      +pageForPrompt(res)
-     +"\nReply with ONLY this JSON object and nothing else:\n"
+     +REPLY_JSON_ONLY
      +'{"kind": "book"|"listing"|"other", "bookUrl": string|null'
      +(c.wantEditions?', "editions": [{"title": string, "isbn13": string, "language": string, "url": string|null}]':'')+'}\n'
      +'Example: {"kind":"listing","bookUrl":"https://hannibalbooks.be/en/metamorfosen-ovidius-en-de-kunsten#102642"}');

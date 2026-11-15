@@ -23,6 +23,7 @@ const fs = require('fs');
 const path = require('path');
 const { chromium } = require('playwright');
 const { installNetworkBridge, resolveChromium, safeGoto } = require('./sweep_prototype.js');
+const { parseCsv } = require('./pro_forma.js');
 
 const OUTPUT_DIR = path.join(__dirname, 'output');
 
@@ -40,23 +41,9 @@ function newestRunWith(venue) {
   return runs.length ? path.join(OUTPUT_DIR, runs[runs.length - 1]) : null;
 }
 
-// Minimal CSV reader: the pro forma's own quoting rules, nothing more.
+// The pro forma's own reader (pro_forma.js); rows whose cell count differs from the header's are left out.
 function readCsv(file) {
-  const text = fs.readFileSync(file, 'utf8');
-  const rows = [];
-  let row = [], cell = '', quoted = false;
-  for (let i = 0; i < text.length; i++) {
-    const c = text[i];
-    if (quoted) {
-      if (c === '"' && text[i + 1] === '"') { cell += '"'; i++; }
-      else if (c === '"') quoted = false;
-      else cell += c;
-    } else if (c === '"') quoted = true;
-    else if (c === ',') { row.push(cell); cell = ''; }
-    else if (c === '\n') { row.push(cell); rows.push(row); row = []; cell = ''; }
-    else if (c !== '\r') cell += c;
-  }
-  if (cell || row.length) { row.push(cell); rows.push(row); }
+  const rows = parseCsv(fs.readFileSync(file, 'utf8'));
   const head = rows.shift();
   return rows.filter(r => r.length === head.length)
              .map(r => Object.fromEntries(head.map((h, i) => [h, r[i]])));

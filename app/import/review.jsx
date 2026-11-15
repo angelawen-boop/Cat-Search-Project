@@ -17,13 +17,11 @@ function isUndecidedCard(p,dec){
 
 // ===== "PROBABLY NOT FOR YOU" — her design (CLAUDE.md §2.2.7) =====
 // Compression labels a NEW show in a topic she always quarantines, writing one
-// sentence into the row's notes ("Topic: Asian art."; TOPICS in scraper/compress.js).
+// sentence into the row's notes ("Topic: Asian art."; TOPICS in scraper/compress.js, the
+// sentence and its reading in scraper/pro_forma.js).
 // Such a new show, with nothing odd about it, goes in its own section, pre-set to
 // Never add; she clicks Add to keep one. Odd cases stay odd: they need her eye.
-function topicOf(note){
-  const m=/(?:^|\s)Topic: ([^.]+)\./.exec(String(note||""));
-  return m?m[1]:null;
-}
+const topicOf=PRO_FORMA.topicOf;
 //@piece isTopicCard
 
 function isTopicCard(p){

@@ -17,6 +17,10 @@ function withoutTracking(u){
 //@piece hostOf
 
 function hostOf(u){ try{ return new URL(u).hostname.toLowerCase(); }catch{ return ""; } }
+//@piece withoutWww
+
+// A host without its leading "www.".
+const withoutWww=h=>h.replace(/^www\./,"");
 //@piece siteUrlOf
 
 // A Wayback Machine copy files under the museum it copied: the original address is
@@ -98,7 +102,7 @@ function mdLinks(text){
 // "shop.courtauld.ac.uk" → "courtauld.ac.uk". Two labels, three behind a
 // country's own second level (ac.uk, org.uk, com.au…).
 function baseDomain(h){
-  const p=String(h||"").toLowerCase().replace(/^www\./,"").split(".").filter(Boolean);
+  const p=withoutWww(String(h||"").toLowerCase()).split(".").filter(Boolean);
   if(p.length<=2)return p.join(".");
   const two=p.slice(-2).join(".");
   return /^(?:ac|co|org|gov|com|net|edu)\.[a-z]{2}$/.test(two)?p.slice(-3).join("."):two;

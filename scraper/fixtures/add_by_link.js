@@ -23,6 +23,7 @@
  *   node scraper/fixtures/add_by_link.js
  */
 'use strict';
+const STORE = require('../../build/store_names.js').storeNames();
 const { batchReply } = require('./batch_reply.js');
 const batchState = {};
 const fs = require('fs');
@@ -40,7 +41,9 @@ const prepared = 'const { useState, useEffect, useMemo, useCallback, useRef } = 
       .replace(/^export default function App\(\)\{/m, 'function App(){')
       // These cases start from a store that has met no venue: the register's names and rules stay, the
       // records its entries were filed from go (venues/register.js, `filed`).
-      .replace(/^const REG=/m, 'for(const e of VENUE_REGISTER)e.filed=null;\nconst REG=');
+      // The Thyssen is these cases' venue whose shop the finder must find and she must confirm, so
+      // the section written into its entry goes too.
+      .replace(/^const REG=/m, 'for(const e of VENUE_REGISTER){e.filed=null;if(e.id==="occ-museothyssen-org")e.shop={...e.shop,home:null,catalogues:null};}\nconst REG=');
 fs.writeFileSync(path.join(tmp, 'app.tsx'), prepared);
 try {
   execFileSync('npx', ['tsc', path.join(tmp, 'app.tsx'), '--jsx', 'react',
@@ -237,7 +240,7 @@ const calls = [];
 const store = new Map();
 // DIA already met, with her short name, its shop set aside ("Wrong shop"):
 // the next link looks for the shop again and must keep her name.
-store.set('venues/occasional', { venues: { 'occ-dia-org': { id: 'occ-dia-org', name: 'Detroit Institute of Arts Museum',
+store.set(STORE.occasional, { venues: { 'occ-dia-org': { id: 'occ-dia-org', name: 'Detroit Institute of Arts Museum',
   short: 'Detroit', host: 'dia.org', shop: 'unknown', confirmed: false, rejected: [], addedAt: '2026-10-04T00:00:00.000Z' } } });
 function runtime() {
   const doc = key => ({
@@ -784,11 +787,11 @@ function runtime() {
     ok(text.includes(REFUSED + ' — The museum refused the page (403).'), 'AL-007: a refused page is a line naming the link and why');
     ok(text.includes(EMPTY + ' — The page came back empty.'), 'AL-007a:  so is an empty one');
     ok(win.document.querySelector('textarea').value === REFUSED + '\n' + EMPTY, 'AL-007b:  and the box now holds exactly those two links', JSON.stringify(win.document.querySelector('textarea').value));
-    ok(!store.has('links/pending'), 'AL-007c:  not stored yet — the import has not finished (her rule, 4 Oct)');
+    ok(!store.has(STORE.linksPending), 'AL-007c:  not stored yet — the import has not finished (her rule, 4 Oct)');
   }
 
   // ── AL-012: an import she does not finish keeps nothing (her rule, 4 Oct) ─
-  const occStored = () => ((store.get('venues/occasional') || {}).venues) || {};
+  const occStored = () => ((store.get(STORE.occasional) || {}).venues) || {};
   const before12 = JSON.stringify(occStored());
   ok(Object.keys(occStored()).length === 1, 'AL-012: the Read stores no venue and no shop — only what was there before', Object.keys(occStored()).join(', '));
   {
@@ -804,7 +807,7 @@ function runtime() {
     {
       const want = [...new Set(showFetches.map(c => c.args.urls[0]))];
       const box = win.document.querySelector('textarea').value.split('\n').filter(Boolean);
-      ok(want.length === 12 && want.every(u => box.includes(u)) && (store.get('links/pending') || {}).text === box.join('\n'),
+      ok(want.length === 12 && want.every(u => box.includes(u)) && (store.get(STORE.linksPending) || {}).text === box.join('\n'),
         'AL-012c:  Cancel import puts every link read back in the box, and stores it (her decision, 9 Oct)', JSON.stringify(box));
     }
     // The same links again, from the start: every venue is asked about again.
@@ -1205,7 +1208,7 @@ function runtime() {
   ok(footer() === 'Go ahead and update the ledger', 'AL-009k:  every shop answered, the ledger may move', footer());
   await click([...shops().querySelectorAll('button')].pop());
   ok(!shops() && ledgerCards() > cardsBefore, 'AL-009l:  and does');
-  ok((store.get('links/pending') || {}).text === REFUSED + '\n' + EMPTY + '\n' + urlOf('ra_guggenheim'), 'AL-007d:  the import finished, the two unread links are stored, so closing the page loses nothing', JSON.stringify(store.get('links/pending')));
+  ok((store.get(STORE.linksPending) || {}).text === REFUSED + '\n' + EMPTY + '\n' + urlOf('ra_guggenheim'), 'AL-007d:  the import finished, the two unread links are stored, so closing the page loses nothing', JSON.stringify(store.get(STORE.linksPending)));
   {
     const v = id => occStored()[id] || {};
     ok(Object.keys(occStored()).length === 6 && Object.values(occStored()).every(x => x.confirmed === (x.id !== 'occ-royalacademy-org-uk'))
@@ -1237,7 +1240,7 @@ function runtime() {
 
   const dia = arts.find(a => a.textContent.includes('Caravaggio'));
   ok(dia && /^Detroit/.test(dia.textContent) && !/^Detroit Institute/.test(dia.textContent), 'AL-011: a venue\'s short name, hers, heads its cards', dia && dia.textContent.slice(0, 40));
-  ok((((store.get('venues/occasional') || {}).venues || {})['occ-dia-org'] || {}).short === 'Detroit', 'AL-011a:   and survives its shop being looked for again');
+  ok((((store.get(STORE.occasional) || {}).venues || {})['occ-dia-org'] || {}).short === 'Detroit', 'AL-011a:   and survives its shop being looked for again');
   ok(!arts.some(a => a.textContent.includes('NGA Chip Show')), 'AL-030: NGA: an NGA show is not in the Occasional pile');
   for (const c of occChips) await click(c);
   const nga = buttons(/^NG Washington$/)[0];
@@ -1269,8 +1272,8 @@ function runtime() {
     const clear = inDialog('Clear');
     ok(!!clear && box3.parentElement.contains(clear), 'AL-020a:  a "Clear" sits inside the box');
     if (clear) await click(clear);
-    ok(dialog().querySelector('textarea').value === '' && (store.get('links/pending') || {}).text === '',
-      'AL-020b:  pressed, the box is empty and stays empty — the store emptied too', JSON.stringify(store.get('links/pending')));
+    ok(dialog().querySelector('textarea').value === '' && (store.get(STORE.linksPending) || {}).text === '',
+      'AL-020b:  pressed, the box is empty and stays empty — the store emptied too', JSON.stringify(store.get(STORE.linksPending)));
     ok(!inDialog('Clear'), 'AL-020c:  and with nothing in the box, no Clear');
     await act(async () => { setter.call(dialog().querySelector('textarea'), REFUSED + '\n' + EMPTY); dialog().querySelector('textarea').dispatchEvent(new win.Event('input', { bubbles: true })); });
     await settle();
@@ -1311,13 +1314,13 @@ function runtime() {
       await settle(10);
     };
     await feed();
-    ok(buttons(/Add new entry$/).length === 1 && !store.has('sweeps/venues'), 'AL-013: a CSV read: its card shown, the sweep log not stored yet');
+    ok(buttons(/Add new entry$/).length === 1 && !store.has(STORE.sweeps), 'AL-013: a CSV read: its card shown, the sweep log not stored yet');
     await click(buttons(/^Cancel import$/)[0]);
-    ok(!store.has('sweeps/venues'), 'AL-013a:  Cancel import: the sweep log still not stored');
+    ok(!store.has(STORE.sweeps), 'AL-013a:  Cancel import: the sweep log still not stored');
     await feed();
     await click(buttons(/Add new entry$/)[0]);
     await click(buttons(/^Go ahead and update the ledger$/)[0]);
-    ok(!!((store.get('sweeps/venues') || {}).venues || {}).met, 'AL-013b:  the import finished: the sweep log stored', JSON.stringify(store.get('sweeps/venues')));
+    ok(!!((store.get(STORE.sweeps) || {}).venues || {}).met, 'AL-013b:  the import finished: the sweep log stored', JSON.stringify(store.get(STORE.sweeps)));
   }
   // ── AL-014: a venue met before searches were proved gets one ────────────
   // Her store as it stood 6 Oct: Detroit confirmed on 4 Oct with its shelf and
@@ -1326,7 +1329,7 @@ function runtime() {
   // out from the shelf, stores it, and searches the whole shop.
   {
     await act(async () => { root.unmount(); });
-    store.set('venues/occasional', { venues: { 'occ-dia-org': { id: 'occ-dia-org', name: 'Detroit Institute of Arts Museum', short: 'Detroit',
+    store.set(STORE.occasional, { venues: { 'occ-dia-org': { id: 'occ-dia-org', name: 'Detroit Institute of Arts Museum', short: 'Detroit',
       host: 'www.dia.org', english: true, shop: 'found', confirmed: true, finder: 2, shelfKind: 'publications',
       shopHome: 'https://diashop.org/', shopCatalogues: 'https://diashop.org/dia-publications/', shopSearch: null,
       turnedDown: [], addedAt: '2026-10-04T00:00:00.000Z' } } });
@@ -1345,7 +1348,7 @@ function runtime() {
     const again = buttons(/^Search again$/)[0];
     ok(!!again, 'AL-014: the O\'Keeffe card, looked up before, offers Search again');
     if (again) { await click(again); await settle(20); }
-    const dia = ((store.get('venues/occasional') || {}).venues || {})['occ-dia-org'] || {};
+    const dia = ((store.get(STORE.occasional) || {}).venues || {})['occ-dia-org'] || {};
     ok(dia.shopSearch === 'https://diashop.org/search.php?search_query=' && dia.finder === 3 && dia.short === 'Detroit' && dia.confirmed === true,
       'AL-014a:  its search worked out from its own shelf and stored; her name and her Confirm kept', JSON.stringify(dia));
     const shopCall = calls.find(c => c.kind === 'mcp' && c.tool === 'web_fetch' && c.args.urls.includes('https://diashop.org/dia-publications/?page=2'));
@@ -1366,7 +1369,7 @@ function runtime() {
     const ra2 = 'https://www.royalacademy.org.uk/exhibition/another-show';
     for (const u of jq) P[u] = { ...page('jacquemart_watteau'), url: u };
     P[ra2] = { ...P[urlOf('ra_guggenheim')], url: ra2 };
-    store.delete('venues/occasional');   // the RA unmet: its shop not found, twice over
+    store.delete(STORE.occasional);   // the RA unmet: its shop not found, twice over
     await click(importBtn());
     await click(inDialog('Links'));
     const box2 = dialog().querySelector('textarea');
@@ -1400,7 +1403,7 @@ function runtime() {
       for (const b of [...scr().querySelectorAll('button')].filter(b => b.textContent === 'No shop')) await click(b);
       await click([...scr().querySelectorAll('button')].pop());
     }
-    const kept = ((store.get('links/pending') || {}).text || '').split('\n').filter(Boolean);
+    const kept = ((store.get(STORE.linksPending) || {}).text || '').split('\n').filter(Boolean);
     ok(ledgerCards() === before24 + 1 && kept.length === 8,
       'AL-024: one accepted, one rejected, seven undecided: the ledger gains one, the box keeps the other eight links', JSON.stringify(kept));
   }

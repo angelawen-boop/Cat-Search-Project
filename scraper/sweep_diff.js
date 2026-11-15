@@ -26,9 +26,9 @@ const W = require('./routine_window.js');
 const OUTPUT_DIR = path.join(__dirname, 'output');
 const RAW_CSV = 'sweep.csv';
 const FLOOR = '2024-07-01';                         // docs/import_csv.md, the lookback
-const MARKER_SENTINEL = 'Marker row, not an exhibition.';
+const { MARKER_SENTINEL, isMarkerNote } = require('./pro_forma.js');
 
-const isMarker = r => String(r.notes || '').trim().endsWith(MARKER_SENTINEL);
+const isMarker = r => isMarkerNote(r.notes);
 const s = v => String(v == null ? '' : v).trim();
 /** Letters and digits only, lowercased: "Commission: X" vs "Tate Britain Commission: X". */
 const squash = t => s(t).toLowerCase().normalize('NFKD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '');

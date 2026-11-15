@@ -82,6 +82,7 @@ const ANSWERS_JSON   = 'compress_answers.json';
 const { MAX_WORDS, wordCount, validateAnswer, validateEnglish, withoutPlaceOpener } = require('./answer_check');
 // Data only: each venue's galleries and show addresses (venues/register.js).
 const REGISTER = require('../venues/register.js').VENUES;
+const PF = require('./pro_forma.js');
 const placesOf = code => (REGISTER.find(v => v.id === code) || { read: { places: [] } }).read.places;
 
 /**
@@ -246,54 +247,17 @@ function groupIdenticalRaw(rows) {
 }
 
 // ── CSV ──────────────────────────────────────────────────────────────────────
-// The scraper only ever WRITES csv, so it has no parser. This one has to
-// handle quoted cells containing commas and newlines, because curatorial text
-// is full of both.
-
-function parseCsv(text) {
-  const rows = [];
-  let field = '', row = [], inQuotes = false;
-  for (let i = 0; i < text.length; i++) {
-    const c = text[i];
-    if (inQuotes) {
-      if (c === '"') {
-        if (text[i + 1] === '"') { field += '"'; i++; }   // escaped quote
-        else inQuotes = false;
-      } else field += c;
-    } else if (c === '"') inQuotes = true;
-    else if (c === ',') { row.push(field); field = ''; }
-    else if (c === '\n') { row.push(field); rows.push(row); row = []; field = ''; }
-    else if (c !== '\r') field += c;
-  }
-  if (field !== '' || row.length) { row.push(field); rows.push(row); }
-  return rows;
-}
-
-// swept_at — when the row's venue finished being read. Added 20 Sep 2026 so
-// the app can date its freshness drawer by the SWEEP rather than by the moment
-// she pressed Import. Compression never looks at it; it is carried so the fact
-// survives the step, which readProForma would otherwise drop on the floor —
-// the column list is what it keeps, and anything absent from it is discarded
-// silently.
-const CSV_HEADER = 'venue_code,title,start_date,end_date,summary,url,notes,swept_at';
-const COLUMNS = CSV_HEADER.split(',');
-
-function csvCell(val) {
-  if (val == null || val === '') return '';
-  const s = String(val).trim();
-  return (s.includes(',') || s.includes('\n') || s.includes('"'))
-    ? '"' + s.replace(/"/g, '""') + '"'
-    : s;
-}
+// The reader, the columns and the cell quoting are the pro forma's own (pro_forma.js).
+// readProForma keeps only the columns on the list, swept_at among them, so the
+// sweep's stamp survives compression untouched.
 
 function writeCsv(file, rows) {
-  const lines = [CSV_HEADER, ...rows.map(r => COLUMNS.map(c => csvCell(r[c])).join(','))];
-  fs.writeFileSync(file, lines.join('\n') + '\n', 'utf8');
+  fs.writeFileSync(file, PF.csvText(rows, PF.sweepCell), 'utf8');
 }
 
 /** Read a pro forma CSV into plain objects, tolerating column reordering. */
 function readProForma(file) {
-  const table = parseCsv(fs.readFileSync(file, 'utf8'));
+  const table = PF.parseCsv(fs.readFileSync(file, 'utf8'));
   if (!table.length) return [];
   const header = table[0].map(h => h.trim().toLowerCase());
   const out = [];
@@ -301,7 +265,7 @@ function readProForma(file) {
     const r = table[i];
     if (!r || r.every(c => c.trim() === '')) continue;
     const obj = {};
-    for (const col of COLUMNS) {
+    for (const col of PF.COLUMNS) {
       const j = header.indexOf(col);
       obj[col] = j >= 0 ? String(r[j] ?? '').trim() : '';
     }
@@ -571,7 +535,7 @@ const TOPICS = {
   notashow:     'Gallery or display, not a show',
 };
 const NO_TOPIC = 'none';
-const TOPIC_PREFIX = 'Topic: ';
+const TOPIC_PREFIX = PF.TOPIC_PREFIX;
 // Her decision: she reviews the Met's rotations and acquisitions by hand.
 const TOPIC_EXEMPT = { met: new Set(['rotation']) };
 
@@ -583,7 +547,7 @@ function resolveTopic(value, venue) {
   if (TOPIC_EXEMPT[venue] && TOPIC_EXEMPT[venue].has(k)) return { ok: true, note: '' };
   return { ok: true, note: topicNote(k) };
 }
-const topicNote = k => `${TOPIC_PREFIX}${TOPICS[k]}.`;
+const topicNote = k => PF.topicSentence(TOPICS[k]);
 
 /** The topic job: one compact line per show, title and text only. */
 function topicJobLines(rows) {
@@ -906,7 +870,7 @@ function rebuildInOrder(rows, parts) {
 
 module.exports = {
   rebuildInOrder,
-  parseCsv, readProForma, writeCsv, urlKey, exactKey, titleKey, indexPrevious, looksLikeADifferentEdition,
+  parseCsv: PF.parseCsv, readProForma, writeCsv, urlKey, exactKey, titleKey, indexPrevious, looksLikeADifferentEdition,
   mergeSeedMemory,
   findPrevious, mayCarry, decide, validateAnswer, normalizeRaw, wordCount, addNote,
   completedCompressions, loadMemory, memoryRows, dirInstant, titleJudgedIn, MEMORY_CSVS, RUN_TZ, seedMemory, MAX_WORDS, SKIP_NOTE,

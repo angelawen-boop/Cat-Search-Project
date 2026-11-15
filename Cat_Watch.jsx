@@ -85,7 +85,7 @@ const VENUES = [
   { id: "acq", kind: "swept",
     names: { card: "Acquavella", chip: "Acquavella", group: null, full: "Acquavella Galleries", inEnglish: null, aka: [], replaced: [], hers: true },
     city: "New York", country: "United States", english: true, language: null,
-    shop: { home: "https://acquavellagalleries.myshopify.com/", catalogues: "https://acquavellagalleries.myshopify.com/collections/all", search: "https://acquavellagalleries.myshopify.com/search?q=", unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
+    shop: { home: "https://acquavellagalleries.myshopify.com/", catalogues: "https://acquavellagalleries.myshopify.com/collections/frontpage", search: "https://acquavellagalleries.myshopify.com/search?q=", unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
     read: { link: { title: "subtitle", credit: /^In collaboration with\b/i, dashAfterColon: true, from: /^Press Release$/, minLine: 60, skip: /^Gallery Hours:|\bImage Courtesy\b/, skipEntities: true, cleanLink: true }, sites: [], dateOrder: null, spacedYear: false, places: ["New York", "Palm Beach"], placeOwner: "Acquavella", titleCaps: null, subtitleUnderHeading: false },
     sweep: { exBase: "https://www.acquavellagalleries.com/exhibitions/", listUrl: "https://www.acquavellagalleries.com/exhibitions" },
     filed: null },
@@ -802,7 +802,7 @@ const VENUES = [
   { id: "occ-museothyssen-org", kind: "manual",
     names: { card: "Thyssen-Bornemisza", chip: null, group: null, full: "Museo Nacional Thyssen-Bornemisza", inEnglish: null, aka: ["Museo Thyssen-Bornemisza", "Thyssen-Bornemisza National Museum", "Museo Thyssen"], replaced: [], hers: false },
     city: "Madrid", country: "Spain", english: false, language: null,
-    shop: { home: null, catalogues: null, search: null, unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
+    shop: { home: "https://tienda.museothyssen.org/", catalogues: "https://tienda.museothyssen.org/en/collections/exhibitions", search: null, unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
     read: { link: null, sites: [], dateOrder: null, spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
     sweep: { exBase: null, listUrl: null },
     filed: { addedAt: "2026-10-04T01:00:56.784Z", aka: ["Museo Thyssen-Bornemisza", "Thyssen-Bornemisza National Museum", "Museo Thyssen"], city: "Madrid", confirmed: true, country: "Spain", english: false, finder: 2, foundBy: "a search", gallery: false, host: "www.museothyssen.org", id: "occ-museothyssen-org", name: "Museo Nacional Thyssen-Bornemisza", pageShop: "https://tienda.museothyssen.org/en", rejected: [], shelfKind: "catalogues", shop: "found", shopCatalogues: "https://tienda.museothyssen.org/en/collections/guias-y-catalogos-del-museo", shopHome: "https://tienda.museothyssen.org/", shopSearch: "https://tienda.museothyssen.org/search?q=", short: "Thyssen-Bornemisza", turnedDown: [], why: null } },
@@ -976,32 +976,43 @@ const orderOf=id=>{ if(!hasNoChip(id))return id in CHIP_RANK?CHIP_RANK[id]:1e6;
 const lookupName=mu=>mu.lookupName;
 const MU = Object.fromEntries(MUSEUMS.map(m=>[m.id,m]));
 
-// ===== SHARED WITH THE SCRAPER — the join writes the rules below from the scraper's own files (scraper/dates.js, compress_prompt.md, compress.js, boilerplate.js, bot_check.js, answer_check.js, VENUES); never edit between these markers. Edit the scraper, then run `node build/app_join.js`. =====
+// ===== SHARED WITH THE SCRAPER — the join writes the rules below from the scraper's own files (scraper/dates.js, compress_prompt.md, compress.js, boilerplate.js, bot_check.js, answer_check.js, pro_forma.js, VENUES); never edit between these markers. Edit the scraper, then run `node build/app_join.js`. =====
 const DATES=(()=>{
 // ── Date helpers ──────────────────────────────────────────────────────────────
-// Every month spelling a venue has used, in one shared map (docs/scraper.md §3).
-const MONTHS = { january:1,february:2,march:3,april:4,may:5,june:6,
-  july:7,august:8,september:9,october:10,november:11,december:12,
-  jan:1,feb:2,mar:3,apr:4,jun:6,jul:7,aug:8,sep:9,sept:9,oct:10,nov:11,dec:12,
+// Every month spelling a venue has used, one list (docs/scraper.md §3): per language, its full names
+// then its short forms, each with its month number. MONTHS, MONTH_PATTERN and GERMAN_DAY_DOT are all
+// built from it. A spelling an earlier language already has is listed again only where the German
+// day needs it ("30. April"). English is written capitalised, as the pattern carries it.
+const MONTH_SPELLINGS = [
+  { lang: 'en',
+    long: { January:1, February:2, Feburary:2 /* a venue's own misspelling (Jacquemart-André) */, March:3, April:4, May:5,
+      June:6, July:7, August:8, September:9, October:10, November:11, December:12 },
+    short: { Sept:9, Jan:1, Feb:2, Mar:3, Apr:4, Jun:6, Jul:7, Aug:8, Sep:9, Oct:10, Nov:11, Dec:12 } },
 
-  // Italian, for the five Italian venues ("11 maggio-12 giugno 2025"). gennaio/giugno
-  // and marzo/maggio differ late, so abbreviations stay long enough to be unambiguous.
-  gennaio:1, febbraio:2, marzo:3, aprile:4, maggio:5, giugno:6,
-  luglio:7, agosto:8, settembre:9, ottobre:10, novembre:11, dicembre:12,
-  genn:1, febbr:2, magg:5, giu:6, lug:7, ago:8, sett:9, ott:10, dic:12,
-
-  // Three-letter Italian forms ("10 set 2026 - 22 nov 2026", the Accademia).
-  set:9, gen:1, mag:5,
+  // Italian, for the five Italian venues ("11 maggio-12 giugno 2025"). gennaio/giugno and marzo/maggio
+  // differ late, so short forms stay long enough to be unambiguous; the three-letter forms are the
+  // Accademia's ("10 set 2026 - 22 nov 2026"). Longest first: sett before set, genn before gen.
+  { lang: 'it',
+    long: { gennaio:1, febbraio:2, marzo:3, aprile:4, maggio:5, giugno:6,
+      luglio:7, agosto:8, settembre:9, ottobre:10, novembre:11, dicembre:12 },
+    short: { genn:1, febbr:2, magg:5, giu:6, lug:7, ago:8, sett:9, ott:10, dic:12, set:9, gen:1, mag:5 } },
 
   // French ("Du 2 mars au 19 mai 2024", Chantilly), with and without accents.
-  janvier:1, février:2, fevrier:2, mars:3, avril:4, mai:5, juin:6, juillet:7, août:8, aout:8,
-  septembre:9, octobre:10, décembre:12, decembre:12, janv:1, févr:2, fevr:2, avr:4, juil:7, déc:12,
+  { lang: 'fr',
+    long: { janvier:1, février:2, fevrier:2, mars:3, avril:4, mai:5, juin:6, juillet:7, août:8, aout:8,
+      septembre:9, octobre:10, décembre:12, decembre:12 },
+    short: { janv:1, févr:2, fevr:2, avr:4, juil:7, déc:12 } },
 
   // German ("30. Juni 2024 – 5. Januar 2025", Emil Schumacher Museum), Austrian "Jänner" too.
-  januar:1, jänner:1, februar:2, märz:3, maerz:3, juni:6, juli:7, oktober:10, dezember:12, okt:10, dez:12,
+  { lang: 'de',
+    long: { januar:1, jänner:1, februar:2, märz:3, maerz:3, april:4, mai:5, juni:6, juli:7, august:8,
+      september:9, oktober:10, november:11, dezember:12 },
+    short: { okt:10, dez:12 } },
+];
 
-  // A venue's own misspelling (Jacquemart-André, "Feburary").
-  feburary:2 };
+// Month name (lower case) to number.
+const MONTHS = Object.fromEntries(MONTH_SPELLINGS.flatMap(l => [...Object.entries(l.long), ...Object.entries(l.short)])
+  .map(([name, n]) => [name.toLowerCase(), n]));
 
 /**
  * A weekday in front of a date. Longest alternative first ("sat" before "saturday"
@@ -1016,21 +1027,29 @@ const WEEKDAY_PREFIX_SRC =
 // (a saint, a street) stays.
 const ORDINAL_SUFFIX = /\b(\d{1,2})(?:[sS][tT]|[nN][dD]|[rR][dD]|[tT][hH]|[eE][rR]| (?:st|nd|rd|th))\b/g;
 
-// One month pattern for every parser; long names first, a trailing full stop allowed
-// ("Sept."). The (?![A-Za-z]) is load-bearing: without it "7 November 2025" can match
-// as "7 Nov" + "ember 2025", silently defeating any lookahead after it.
-const MONTH_PATTERN =
-  '(?:January|February|Feburary|March|April|May|June|July|August|September|October|November|December' +
-  '|gennaio|febbraio|marzo|aprile|maggio|giugno|luglio|agosto|settembre|ottobre|novembre|dicembre'
-  + '|janvier|février|fevrier|mars|avril|mai|juin|juillet|août|aout|septembre|octobre|décembre|decembre' +
-  '|januar|jänner|februar|märz|maerz|juni|juli|oktober|dezember' +
-  '|Sept|Jan|Feb|Mar|Apr|Jun|Jul|Aug|Sep|Oct|Nov|Dec' +
-  // Longest first within each language: sett before set, genn before gen, magg before mag.
-  '|genn|febbr|magg|giu|lug|ago|sett|ott|dic|set|gen|mag|janv|févr|fevr|avr|juil|déc|okt|dez)\\.?(?![A-Za-z])';
+// One month pattern for every parser: every language's full names, then every short form, each
+// spelling once; a trailing full stop allowed ("Sept."). The (?![A-Za-z]) is load-bearing: without it
+// "7 November 2025" can match as "7 Nov" + "ember 2025", silently defeating any lookahead after it.
+const MONTH_PATTERN = (() => {
+  const seen = new Set(), out = [];
+  for (const kind of ['long', 'short']) {
+    for (const l of MONTH_SPELLINGS) {
+      for (const name of Object.keys(l[kind])) {
+        if (seen.has(name.toLowerCase())) continue;
+        seen.add(name.toLowerCase());
+        out.push(name);
+      }
+    }
+  }
+  return '(?:' + out.join('|') + ')\\.?(?![A-Za-z])';
+})();
 
 // A German day is written with a full stop ("30. Juni"): the stop leaves before a month name.
-const GERMAN_DAY_DOT = new RegExp('(?<![\\d.])(\\d{1,2})\\.\\s*(?=(?:januar|jänner|februar|märz|maerz|april|mai|juni|juli|august'
-  + '|september|oktober|november|dezember|okt|dez)\\.?(?![A-Za-zäöü]))', 'gi');
+const GERMAN_DAY_DOT = (() => {
+  const de = MONTH_SPELLINGS.find(l => l.lang === 'de');
+  const names = [...Object.keys(de.long), ...Object.keys(de.short)].join('|');
+  return new RegExp('(?<![\\d.])(\\d{1,2})\\.\\s*(?=(?:' + names + ')\\.?(?![A-Za-zäöü]))', 'gi');
+})();
 
 // Month name to number, tolerating the trailing full stop the pattern allows.
 function monthNum(name) {
@@ -1942,6 +1961,80 @@ function withoutPlaceOpener(text, title, places) {
 }
 return { MAX_WORDS, validateAnswer, validateEnglish, stringFaults, unsupportedClaims, rewordsTitle, REWORDS_TITLE, withoutPlaceOpener };
 })();
+const PRO_FORMA=(()=>{
+// The columns, in this order (docs/import_csv.md).
+const COLUMNS = ['venue_code', 'title', 'start_date', 'end_date', 'summary', 'url', 'notes', 'swept_at'];
+const CSV_HEADER = COLUMNS.join(',');
+
+// The sentence that ends a marker row's notes: a listing page the sweep could not read, not a show.
+const MARKER_SENTINEL = 'Marker row, not an exhibition.';
+const isMarkerNote = note => String(note || '').trim().endsWith(MARKER_SENTINEL);
+
+// "Probably not for you": compression writes one sentence into the notes ("Topic: Asian art."),
+// the app reads the label back out of it.
+const TOPIC_PREFIX = 'Topic: ';
+const topicSentence = label => `${TOPIC_PREFIX}${label}.`;
+const TOPIC_NOTE = new RegExp('(?:^|\\s)' + TOPIC_PREFIX + '([^.]+)\\.');
+function topicOf(note) {
+  const m = TOPIC_NOTE.exec(String(note || ''));
+  return m ? m[1] : null;
+}
+
+// A cell written as given, quoted when it holds a comma, quote or line break.
+const quoteCell = v => { const s = String(v == null ? '' : v); return /[",\n\r]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
+
+// A cell as the sweep and compression write it: trimmed first, then quoted as above but for a lone \r.
+function sweepCell(val) {
+  if (val == null || val === '') return '';
+  const s = String(val).trim();
+  return (s.includes(',') || s.includes('\n') || s.includes('"'))
+    ? '"' + s.replace(/"/g, '""') + '"'
+    : s;
+}
+
+// A whole pro forma file from row objects, each cell written by `cell`.
+const csvText = (rows, cell) => [CSV_HEADER, ...rows.map(r => COLUMNS.map(c => cell(r[c])).join(','))].join('\n') + '\n';
+
+// The table in a CSV text, quoted cells holding commas and line breaks. A \r outside quotes is dropped;
+// blank lines come back as rows.
+function parseCsv(text) {
+  const rows = [];
+  let field = '', row = [], inQuotes = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (inQuotes) {
+      if (c === '"') {
+        if (text[i + 1] === '"') { field += '"'; i++; }   // escaped quote
+        else inQuotes = false;
+      } else field += c;
+    } else if (c === '"') inQuotes = true;
+    else if (c === ',') { row.push(field); field = ''; }
+    else if (c === '\n') { row.push(field); rows.push(row); row = []; field = ''; }
+    else if (c !== '\r') field += c;
+  }
+  if (field !== '' || row.length) { row.push(field); rows.push(row); }
+  return rows;
+}
+
+// The later of two swept_at stamps; a missing stamp never displaces a real one.
+const later = (a, b) => (!a || (b && b > a)) ? b : a;
+
+// The sweep log merged with what a file showed (`seen`: {attempted, returned}, venue → stamp). A venue's
+// dates move only for a later time, so an old file cannot drag them back; tried and brought-rows move
+// independently.
+function mergeSweepLog(prev, seen) {
+  const out = { ...(prev || {}) };
+  for (const v of Object.keys((seen && seen.attempted) || {})) {
+    const was = out[v] || {};
+    out[v] = {
+      attempted: later(was.attempted, seen.attempted[v]),
+      returned:  later(was.returned,  (seen.returned || {})[v] || null),
+    };
+  }
+  return out;
+}
+return { COLUMNS, CSV_HEADER, MARKER_SENTINEL, isMarkerNote, TOPIC_PREFIX, topicSentence, TOPIC_NOTE, topicOf, quoteCell, sweepCell, csvText, parseCsv, later, mergeSweepLog };
+})();
 const SUMMARY_EXAMPLES="RAW: From clapping hands and tapping feet to beatboxing and whistling, the human body is a musical instrument. Musical instruments, in turn, often draw their form and decoration from our bodies. Around the world and across time, instruments emerge as powerful vehicles that represent our voices, actions, and identity not only in music but throughout the visual arts, literature, religion, pop culture, and mythology. Musical Bodies is the first major exhibition to explore the relationship between musical instruments and the body by bringing together some 130 instruments, paintings, sculptures, drawings, and more to illuminate how we express who we are, what we value, and what we believe. With works from The Met collection and institutions and collectors around the world, the exhibition explores 4,000 years of art and music history, from ancient Egyptian rattles and musical masterpieces by Titian and Degas to instrument-inspired apparel and one of Prince’s most notable guitars. Musical Bodies will resonate with visitors of all ages, whether you are a musician, a devoted listener, or simply curious about human expression. The exhibition is made possible by Barbara Tober, the Diane W. and James E. Burke Fund, the William Randolph Hearst Foundation, and the Gail and Parker Gilbert Fund. The catalogue is made possible by the Mary C. and James W. Fosburgh Publications Fund.\n  →  Instruments as sculptural and bodily objects from the Met's collection.\n\nRAW: The Costume Institute’s spring 2026 exhibition explores depictions of the dressed body across The Met’s vast collection, pairing garments with artworks to reveal the inherent relationship between clothing and the body. Focusing primarily on Western art from prehistory to the present, Costume Art presents connections between garments from The Costume Institute and objects from the Museum’s other collecting areas. Pairings between fashions and artworks will present a spectrum of connections and experiences: from the formal to the conceptual, the aesthetic to the political, the individual to the universal, the illustrative to the symbolic, and the playful to the profound. These pairings are organized into a series of thematic body types that reflect their pervasiveness and endurance through time and cultures. Costume Art is the inaugural exhibition in the new, nearly 12,000-square-foot galleries adjacent to the Great Hall. This space will display The Costume Institute’s annual spring show and, at times, shows from the Museum’s other curatorial departments, including those that explore the intersection of fashion and art. To access a large-print version of the exhibition text, click here\n  →  Costume Institute spring show. Inaugurates new fashion galleries.\n\nRAW: In co-organization with the Fondation Giacometti, this presentation brings together for the first time at The Met the work of Alberto Giacometti (1901–1966) in one of New York's most iconic spaces. The installation of 14 works in bronze and plaster, emblematic pieces from the collection of the Fondation Giacometti in Paris together with three from The Met collection, places the work of one of the great sculptors of the 20th century in dialogue with the ancient civilization that strongly influenced his art and his practice. Throughout his career, Giacometti showed a particular fascination for the art of ancient Egypt. The Egyptian statues he saw in Italy as a young artist made a lasting impression on his visual repertoire, and after he moved to Paris, he regularly visited the Egyptian galleries of the Louvre. His formal dialogue with Egypt can be seen in sketches of walking figures in profile, which were later realized in such works as Walking Woman (I) (1932). At The Met, this elegant figure will be installed in the entrance hall of the Temple of Dendur. The Temple of Dendur was completed in 10 BCE as a commission by Caesar Augustus shortly after he became emperor of Rome. Gifted from Egypt to the United States in 1965, it has been one of the most beloved works of art at The Met since it opened to the public in 1978. In ancient Egypt, the terrace before the temple functioned as an open meeting place between the deity and larger crowds. At The Met, Giacometti's figures will stand alone or in groups on the temple platform—a presentation that echoes the artist's own compositions of figures as well as the life around the temple. The exhibition is made possible by the Kate W. Cassidy Foundation.\n  →  Giacometti's elongated figures alongside the Egyptian temple.\n\nRAW: The word Orient is derived from the Latin Oriens, which means the direction of the rising sun—the east. Orientalism: Between Fact and Fantasy explores notions of “the East” in the 19th century, when globalism, shaped by colonialism and imperialism, fueled unprecedented encounters, connections, and exchanges in Europe and the Middle East. “Hard power” mingled with “soft power,” as accelerated travel, rapid technological change, and shifting geopolitics hastened artistic exchange between distant regions and different cultures. Beginning with Napoleon’s conquest of Egypt in 1798 and culminating in the paintings of Ottoman renaissance man Osman Hamdi Bey, this exhibition tells the story of how Islamic works of art made their way to European dealers, collectors, international expositions, and museums, introducing a new visual language to artists, architects, and designers. Deep admiration for the sophisticated techniques and visual language of Islamic art led Owen Jones and other influential figures to transform architecture and design in Europe and America. Artists such as Jean Auguste Dominique Ingres, Eugène Delacroix, and Jean-Léon Gérôme visited lands and people across the Mediterranean or imagined them from afar. They sometimes depicted what they saw and at other times conjured distant places through memory and imagination, often using Islamic objects to stage their paintings. Orientalism: Between Fact and Fantasy is the first exhibition at The Met to explore Orientalism as its central focus, presenting not only easel paintings but also drawings, photographs, illustrated books, architecture, arms and armor, textiles, garments, glassware, ceramics, and metalwork. Highlighting The Met collection, it features approximately 180 objects from 12 Met departments along with rarely seen loans from the U.S. and abroad. Displayed across four galleries that straddle the departments of European Paintings and Islamic Art, the presentation invites visitors to approach the exhibit\n  →  Nineteenth-century European depictions of the Middle East and North Africa.\n\nRAW: Renaissance sculpture in Florence was forever changed around 1440 when Luca della Robbia created a secret formula for making glazed terracotta reliefs and statuary. Luca and his heirs, Andrea and Giovanni, daringly perfected these techniques. Over the next century, the family workshop transformed local clay and colored glazes into peerless sculptures that gleamed with light. Praised during the Renaissance as “almost eternal,” today Della Robbia sculptures are often as vibrantly luminous as when they emerged from the kiln five hundred years ago. The Met has the largest, most significant collection of Della Robbia glazed terracottas in America. Most have remained in storage for decades. For the first time, Rediscovering Della Robbia at The Met features in a single gallery 12 of the Museum’s masterworks by three generations of the Della Robbia family. Rescued from storage, revived through conservation, and reattributed through fresh research, these sculptures are shown with two important loans from a private collector. Another two works are exciting sculptures by Giovanni della Robbia from the Dick Wolf Collection that complement existing works in the Museum’s collection—one is a promised gift and the other, the Mystic Mandorla lunette, recently was gifted to the Museum. Together, the exhibited sculptures span monumental reliefs composed of many interlocking pieces to small statuettes, signaling the scope of the Della Robbias’ art. Collaboration within the Della Robbia workshop fostered innovation. Rediscovering Della Robbia at The Met itself results from a collaborative exchange among curators, conservators, and digital specialists. Highlights include the exhibition’s centerpiece featuring 33 newly conserved interlocking pieces of a 10-foot-tall altarpiece that has been off view for 70 years. These are shown alongside a large, animated virtual reconstruction that uses 3D-scanning technology to suggest how the entire altar originally was assembled. Rediscovering Della\n  →  Glazed terracotta from the Della Robbia workshop.\n\nRAW: This special installation marks the 250th anniversary of the Declaration of Independence, the founding document of the United States of America. Featured works from across The Met offer a wide view of the roots, course, and aftermath of the Revolutionary War (1775–1783)—from early conflicts between colonists and Indigenous peoples to George Washington’s voluntary retirement, in 1797, from his two-term presidency. Rarely seen prints reveal the transatlantic circulation of news about the struggle for independence during a fractious political period. This window into the era’s print culture highlights the global dimensions of the rebellion, the contested ideas about liberty that shaped it, and its consequential outcomes. Also on view are American and European works of art that depict a range of significant individuals. These include the Wampanoag chief Metacomet, whose battles with early colonists laid the groundwork for revolution; the African American poet Phillis Wheatley, who raised her voice against an expansive tyranny in her call for emancipation; patriots and presidents such as Paul Revere and George Washington; the Mohawk leader Thayendanegea, who allied with the British in an effort to retain Indigenous sovereignty; and iconic contributors to the Declaration of Independence John Adams, Benjamin Franklin, and Thomas Jefferson. Together, these artworks acknowledge multiple complex and intertwined histories that continue to resonate in the United States and beyond, some two and half centuries later. This special installation is made possible by Kimba Wood and Frank Richardson.\n  →  Prints and visual material around revolutionary upheaval.\n\nRAW: This special installation, which features some of The Met’s most iconic European paintings, examines how human and nonhuman histories are fundamentally intertwined—and how this fact has been understood over time. Discover how artists such as Pieter Bruegel the Elder and Nicolas Poussin explored humanity’s complex relationship with nature. The paintings on view reveal that people cannot exist outside of natural ecosystems but are profoundly interdependent with the rest of the natural world. Dating from around 1525 to 1775, these paintings trace a shift in European representations of nature from expressions of embeddedness toward assertions of dominance, showing how our conceptions of nature are themselves not “natural” but instead are culturally constructed. The artists’ depictions shape viewers’ experiences of the environments they portray. Overlapping themes include ancient myths that personify natural forces; the relationship between art and science through direct observation of nature; and idealizations of agricultural labor that upheld class, gender, and colonial power structures. As physical objects, paintings alter natural resources like flax, wood, and rare minerals; in turn, these materials continue to have lives of their own. This special installation is made possible by the Sherman Fairchild Foundation.\n  →  Painting through landscape, environment and material relations.\n\nRAW: Most objects are displayed to show their “best” angle meant to impress, sometimes hiding intriguing details. Flip Sides: Seeing Korean Art Anew invites close looking and offers multiple views of the inside, reverse, or hard-to-see aspects of objects. Bringing together approximately 50 objects from The Met collection, with more than half displayed for the first time, this exhibition, with a rotation, shows treasured Korean traditions. By presenting them in ways that give us a fuller picture into each object’s unique form, Flip Sides provides insight into the construction and function of works in metal, wood, ceramic, textiles, and lacquer. A Buddhist sculpture that held offerings inside, a porcelain jar of striking openwork that conceals an inner chamber, a bronze mirror with a delicately incised image, and a king’s lacquer letter box with linings featuring impressive calligraphy are among the featured objects in Flip Sides. During the exhibition, a selection of artworks will come off view and be replaced by new works: Rotation 1: March 16–October 18, 2026 Rotation 2: October 31, 2026–May 31, 2027 The exhibition is made possible by The Kun-Hee Lee Fund for Korean Art.\n  →  Korean objects revealing their reverse or hard-to-see aspects.\n\nRAW: From the earliest hand-built figurines rooted in spiritual beliefs to the vibrant works that define today’s contemporary ceramic art scene, Japanese pottery reflects exceptional creativity and a refined sense of beauty. Its distinctiveness arises from the ingenuity and mastery of the potters, as well as the wide range of wares that have long supported daily life. This exhibition explores Japan’s extensive and rich history of ceramic art through approximately 350 extraordinary works presented in themes that offer fresh perspectives on the diverse forms and functions, from everyday tableware to vessels created for tea masters and elite households to modern sculptural compositions. Japan’s earliest pottery dates back more than 12,000 years, when makers shaped and fired clay vessels for cooking and storage—objects that bear the traces of these early potters’ hands. Expertise transmitted from China and Korea in medieval times facilitated the development of new Japanese techniques and wares. Over time, the reverence for prized ceramics led to finding beauty even through damage. Japanese artisans developed kintsugi, the art of repairing broken ceramics with gold lacquer, restoring the damaged object’s function while making it even more precious and valuable. Japanese cuisine and dining aesthetics inspired vessels designed to harmonize with the color and texture of food. Many porcelains from the Edo period (1615–1868) are embellished with motifs drawn from the natural world or symbols of happiness, longevity, and good fortune. Featuring refined ceramics and other artworks from the Museum’s Harry G. C. Packard Collection, this exhibition celebrates the 50th anniversary of this landmark acquisition that established the foundation of The Met’s Japanese art holdings. By placing ceramics in dialogue with related art forms—including lacquers, textiles, paintings, and woodblock prints—the display inspires curiosity about the multiverse of Japanese ceramics and its broader cultural\n  →  Japanese ceramic traditions across technique, glaze and form.\n\nRAW: Artists and artisans have been intrigued and inspired by the topic of death and visions of life thereafter for millennia. Afterlives: Contemporary Art in the Byzantine Crypt brings together modern-day works that reckon with death and visualize the afterlife and Byzantine Egyptian funerary art and artifacts in part of the Mary and Michael Jaharis Galleries known as the Byzantine Crypt (Gallery 302). The intimate and enchanting gallery with exposed brick walls and arched portals was unveiled in the year 2000 after a renovation that reclaimed the space beneath the Museum’s Grand Staircase. In this transhistorical presentation, the Byzantine Crypt’s religious and secular jewelry, textiles, ivory objects, vessels, and architectural sculpture from Early Christian and Coptic monastic sites are complemented and enriched by contemporary sculptures, works on paper, and installations from the 1960s to present day that similarly serve as memorials, reliquaries, and tokens to ward off evil. As part of the exhibition, Adrian Piper’s editioned work Everything #4 invites viewers to contemplate its otherworldly statement and their reflection in a variety of contexts. It will be installed in the heart of the Byzantine Crypt and five other spaces across The Met Fifth Avenue and The Met Cloisters, listed below. The exhibition is made possible by The Jaharis Family Foundation.\n  →  Contemporary work in the Byzantine galleries.\n\nRAW: The traditional East Asian lunar calendar marks time through a twelve-year cycle, each year represented by the animals of the Chinese zodiac: rat, ox, tiger, rabbit, dragon, snake, horse, ram, monkey, rooster, dog, and pig. First associated with the Chinese calendar in the third century BCE and firmly established by the first century CE, these symbolic creatures are believed to embody certain traits that are manifested in the personalities of people born in that animal’s year. February 17, 2026, marks the beginning of the Year of the Horse, a creature symbolizing power, strength, and vitality. Celebrating the Year of the Horse brings together works from The Met collection to explore the horse’s enduring nature and vital place in Chinese civilization. Domesticated in prehistoric times, this animal has shaped nearly every facet of life—from agriculture and transportation to trade, warfare, sport, and entertainment. In ancient China, horse-drawn chariots transported military commanders and the social elite, while in the Tang dynasty (618–907), tall and robust horses came to embody the strength of the state and cosmopolitan spirit of the empire. In Chinese popular culture, horses are among the most celebrated animals, and in the spiritual realm they serve as noble mounts for divine guardians believed to bring joy, protection, and prosperity to the household. This presentation, featuring a range of expressive works in ceramics, glass, jade, and metal, and woodblock prints, illuminates these roles while celebrating the horse’s power, vitality, and spirit.\n  →  Asian works for the lunar new year.\n\nRAW: In 1668, King Louis XIV of France commissioned the Paris-based Savonnerie manufactory to create the largest carpet ever woven. Composed of 92 individual pieces, the carpet was intended to cover the full span of the Grande Galerie of the Louvre, measuring 440 meters, six times the length of the Hall of Mirrors at Versailles. Not only was it a bold and unprecedented undertaking, but a unique chapter in the history of art. The first ever exhibition about the Savonnerie in the United States, A King’s Carpet sheds new light on The Met’s three carpets made as part of this ambitious scheme. Held in the iconic Wrightsman Galleries, it will explore the tumultuous history of these Baroque masterpieces from their conception and the harsh realities of their production to their dispersal after the French Revolution. A project of unheard-of scale, the weaving of the 92 carpets necessitated the establishment of massive workshops and an expendable workforce of orphans and adolescents with sharp eyesight and nimble fingers. Woven over 20 years, the carpets were never rolled out in the space for which they were intended, Louis XIV having turned his attention away from the Louvre to Versailles. During the Revolution, many were stripped of their royal emblems or sold, some eventually finding new homes with prominent American collectors such as J. P. Morgan and Alva Vanderbilt. This exhibition will present four complete carpets along with a selection of fragments, attesting to the scheme’s segmentation and dispersal. In addition, visitors will be able to observe textile conservators at work in an in-gallery temporary conservation studio as they repair and strengthen one of these monumental textiles.\n  →  Savonnerie carpets and French court display.\n\nRAW: Sublime symbols of changing weather, clouds have long been a source of fascination for artists and scientists alike. In the early 1800s, landscape painters used clouds as visual proof of their ability to capture the fleeting effects of nature in sketches made outdoors, or en plein air, while meteorologists began to study and, for the first time, classify clouds. Beginning in the 1830s, photography promised to capture the sky with unprecedented immediacy and detail, yet early technical limitations fell short of that promise. Photographers responded by painting in skies or manually combining negatives, until chemical and optical advances at the start of the 20th century made possible cloudscape photographs that rivaled paintings. Chasing Clouds follows the remarkable story of how the sky was represented during this period, tracing the depiction of clouds in works that balanced changing artistic conventions with scientific discoveries and new technologies. Opening with oil sketches from the start of the 19th century, and including paintings, drawings, and photographs from the following decades, it comes full circle in the 1920s with American photographer Alfred Stieglitz’s Equivalents, a series of cloud studies that reconciles poetic feeling and naturalistic depiction. The exhibition is made possible by The Robert Mapplethorpe Foundation, Inc.\n  →  Cloud studies across painting, drawing and photography.\n\nRAW: Multidisciplinary artist David Hartt (Canadian, born 1967) transforms John Vanderlyn's immersive historical painting, Panoramic View of the Palace and Gardens of Versailles (1818–19), into a dynamic contemporary installation, offering viewers the opportunity to explore questions of place and perspective. Vanderlyn’s highly detailed rendering of Versailles—among the largest surviving panoramas in the United States—is activated by Hartt’s architectural intervention, bringing past and present into conversation. For this site-specific commission—consisting of two Direct View LED screens and echoing imagery from the panorama itself—Hartt draws on direct documentation of Versailles, the cinematic language of French New Wave Cinema, and photographs of the palace grounds by Eugene Atget to reshape the experience of The Met’s circular gallery space housing the work. Filmed at locations from Versailles to the Boulevard Périphérique and throughout the center of Paris, Peripheries explores the constant reinvention of the French capital. Hartt’s installation reconfigures movement and angles of vision, augmented through an original score by composer and musician Jeff Parker. Visitors are visually lured away from established centers within the city toward the margins—or the “peripheries”—where alternative perspectives and histories are often relegated. By engaging directly with Vanderlyn's panorama, Hartt has created a space to reconsider not only the historical painting itself but also examine ideas of representation and cultural memory within a living environment. The exhibition is made possible by Jan and Warren Adelson in honor of Eugénie Prendergast, and The Modern Circle.\n  →  Architecture, migration and the edges of cities.\n\nRAW: The Parade is an epic cycle of 63 charcoal, pencil, and ink drawings conceived by Si Lewen (1918–2016) in the aftermath of World War II. The work unfolds a visual narrative on war, memory, and the human condition that is informed by the artist's extraordinary life. Born in Poland to Jewish parents and raised in Germany, Lewen fled Nazi persecution with his family in 1933 before immigrating to the United States. While serving in the U.S. Army as one of the Ritchie Boys, a specialized unit of German-speaking soldiers, Lewen arrived at the Buchenwald concentration camp shortly after its liberation in 1945. The Parade is rooted in the artist’s experience of these events as well as his coming of age during the tumultuous years when, as he reflected later, the parades after World War I gave way to the death marches of World War II. Experienced together as a sequence, the drawings carry viewers from military pageantry to conflict, devastation, and mourning through the cumulative force of their imagery. The power of The Parade lies not only in its historical origins but in its ability to speak across generations with urgency, asking viewers to confront the persistent cycles of violence that continue to shape our world. The exhibition's title, There Are No Words, is inspired by Lewen's own description of the format of The Parade as a wordless novel in which he explained: \"there are no words . . . just the picture itself is the narrative.\" At the same time, the title reflects his conviction that the horrors of war ultimately defy language and description.\n  →  Wordless picture sequence on war.\n\nRAW: Lee Krasner (1908–1984) and Jackson Pollock (1912–1956) met as emerging artists in New York in the winter of 1941. They married in 1945 and moved to Springs, Long Island, where they remained entwined personally, artistically, and professionally until Pollock’s untimely death. While Pollock’s reputation historically eclipsed Krasner’s, today, both artists’ practices are rightly recognized as central to the innovations of art from the mid-20th century onwards. This exhibition continues and amplifies this reevaluation, on their own terms and in dynamic relation to each other. Drawing its subtitle, Past Continuous, from a 1976 painting by Krasner, the exhibition traces parallel lives and practices—forged first by lived experience, then shadowed by memory. Krasner, born in Brooklyn to Jewish immigrant parents from what is now Ukraine, and Pollock, raised in Los Angeles and the American West, brought specific geographies and inheritances into a shared artistic context. Their early paths traced distinct strands of American modernism that would ultimately converge in the rupture known as Abstract Expressionism, a movement that valued the translation of inner feelings into dramatic visual action. In the wake of World War II, artists asked why art mattered and what it could be. For Pollock, his breakthrough was the “drip” technique, a radical mode of painting that flourished in a condensed but prolific period. Krasner’s varied practice was typified by ceaseless explorations of abstraction, often cued by her abiding interest in the possibilities of nature and color. Krasner and Pollock: Past Continuous is the first major New York presentation devoted to either artist in more than 20 years. Featuring over 120 works, it is the first exhibition to look at the full arc of their careers together. The exhibition is made possible by Kenneth C. Griffin and Griffin Catalyst, Marina Kellen French, and the Barrie A. and Deedee Wigmore Foundation.\n  →  Lee Krasner and Jackson Pollock, exchange and divergence.\n\nRAW: Can fashion photography be dangerous? Lillian Bassman was told as much when, in 1950, she started making photographs so abstract that you could barely see the clothes. Depicting midcentury style for the pages of magazines, she distilled gowns and girdles to their essential silhouettes; in her photographs, chance gestures and elegant lines convey the sensations of garments, as their details dissolve into atmospheric blur. What Bassman did not show she evoked in her expressive prints—products of darkroom distortion, achieved with tissues, brushes, and bleach. In an earlier era, such an approach might have precluded commercial success. Bassman’s timing, though, could not have been better; in 1941, at age 24, she took a design job at Harper’s Bazaar, where a group of artists and editors were then reimagining how the magazine should look. With them, she helped introduce an avant-garde sensibility to the American newsstand, advancing new possibilities for photography in print. In works from a remarkable gift to The Met, Lillian Bassman: Bazaar and Beyond highlights the influence and audacity of her magazine career. The exhibition flips between the New School in Manhattan and the “New Look” in Paris, charting Bassman’s course from design apprentice to art director and accomplished photographer. Its rare vintage prints, collages, and maquettes lay out an unlikely history of modernism, refashioned for the pages of the popular press. The exhibition is made possible by The Robert Mapplethorpe Foundation, Inc.\n  →  Fashion photographer for Harper's Bazaar.\n\nRAW: Dive into the artistic process of one of history’s most beloved and influential artists. A true titan of the Italian Renaissance, Raffaello di Giovanni Santi (1483–1520)—better known as Raphael—matched ambition with lyricism to create works with both intellectual heft and emotional depth, a necessary skill in the complex political landscape of Renaissance courts. In his short life of only 37 years, he achieved such profound success as a painter, designer, and architect that he was regarded as the pinnacle of artistic perfection for centuries after his death. Raphael: Sublime Poetry is the first comprehensive exhibition on Raphael in the United States, bringing together more than 170 of the artist’s greatest masterpieces and rarely seen treasures to illuminate the brilliance of Raphael’s extraordinary creativity. The son of a painter and poet, Raphael engaged with the foremost writers and thinkers of his age in Rome, displaying a poetic sensibility that captivated his peers and generations that followed. Follow the full breadth of his life and career, from his origins in Urbino to his rise in Florence, where he began to emerge as a peer of Leonardo da Vinci and Michelangelo, to his final, prolific decade at the papal court in Rome. To underscore the range of his genius, this presentation brings together important drawings, paintings, and tapestries from public and private collections across Europe and the United States, many of which have never been shown together. With particular attention to Raphael’s portrayal of women—from his use of nude female models for the first time in Western art to his tender depictions of the Madonna and Child—and recent scientific discoveries made using state-of-the-art technology, this exhibition offers a rare opportunity to experience the genius of an artist who helped shape the course of art history. Wolfe, Gilbert and Ildiko Butler, Debra and Leon Black, Mark Gorenberg and Cathrin Stickney, the Robert Lehman Foundation, Dinah Seiver\n  →  First comprehensive US presentation of Raphael.\n\nRAW: Born in Chippewa City, a remote Native American village on the shore of Lake Superior in northern Minnesota, George Morrison (Wah-wah-ta-ga-nah-gah-boo and Gwe-ki-ge-nah-gah-boo, Grand Portage Chippewa, 1919–2000) overcame innumerable challenges—poverty, a life-threatening childhood illness, social isolation, racial and cultural barriers—to become a leader of the Abstract Expressionist movement, which he collaboratively defined both publicly and behind the scenes. Morrison’s influence as an abstract expressionist painter began in 1943 when he traveled from rural Minnesota to New York City to study at the Art Students League on a scholarship. Immersing himself in the city’s vibrant cultural scenes, he studied painting and drawing, contributed to numerous exhibitions and publications, and openly challenged the mainstream art establishment of his generation. In New York, Morrison formed meaningful connections with artists including Willem de Kooning, Franz Kline, Lois Dodd, and Louise Nevelson, among others. His deep appreciation for urban life—specifically, industrial landscapes, jazz, and literature—permanently shaped his artistic practice and imagery. This exhibition explores how Morrison’s aesthetic inspiration and future trajectory drew from his love of New York, which he called a “Magical City.” Featuring 25 of his most important paintings and drawings from this early period, the exhibition culminates in his Horizon series. It also features rare archival materials that place Morrison at the heart of the Abstract Expressionist movement in 1940s and 1950s New York.\n  →  Ojibwe painter's abstract New York work.\n\nRAW: The hand-held fan was an unexpected muse for some of the most innovative artists in 19th-century Europe. Fans became hugely popular across many levels of society during this period, serving as functional and fashionable objects of adornment and communication. Well-known French Impressionists such as Edgar Degas and Camille Pissarro not only featured this feminine accessory in their work but also adopted it as an experimental format for their art. Fanmania investigates why avant-garde artists incorporated fans into their work and sheds light on themes of gender, courtship, consumerism, and appropriation. Artists were attracted to the semicircular form for myriad reasons, including fascination with fans from Asia and Spain, commercial ambition, and their interest in formal and technical innovation. Displaying more than 75 artworks from across The Met collection, this multimedia exhibition features painted and printed fans from Europe and Asia as well as artworks that depict women wielding fans to explore the phenomenon of “fanmania.”\n  →  Folding fans as fashion and display.\n\nRAW: Emily Sargent’s watercolors—recently rediscovered—capture the world with a clarity and expressiveness that were all her own. This exhibition brings her luminous work into focus, situating it within the creative, complex world of the Sargent family. This unique presentation features watercolors by Emily Sargent (1857–1936), her older brother, renowned portraitist John Singer Sargent (1856–1925), and their mother, Mary Newbold Sargent (1826–1906). As the artistic family traveled seasonally through Europe, Mary encouraged her children’s creative aspirations. The siblings had a close relationship and often sketched and painted side by side. As John Singer Sargent’s bold portraits increasingly garnered critical attention, his younger sister Emily supported his career while building a body of work of her own that remained largely unseen. Drawn entirely from The Met collection, Emily Sargent: Portrait of a Family takes a close look at their art and explores how paths diverged for daughter and son, revealing the challenges women artists faced in the late 19th century. Intended as a complement to The Met’s Sargent and Paris, this exhibition celebrates the recent gift—from the artists’ heirs—of 26 Emily Sargent watercolors, which will be making their debut. This generous gift continues a long legacy of family giving that formed the foundation of the Museum’s extensive Sargent holdings. Emily Sargent: Portrait of a Family is made possible by the William P. Rayner Fund.\n  →  Watercolours by Sargent's sister.\n\nRAW: Before the Brooklyn Bridge became an iconic symbol of New York City, it was a bold idea sketched on paper. With 11,000 drawings stored in the city’s Municipal Archives, its construction is one of the most thoroughly documented engineering projects of the 19th century. Met experts examined a selection of these extraordinary studies through The Met’s Scientific Research Partnerships program—a grant-funded initiative that provides free scientific support to art institutions nationwide. The Brooklyn Bridge Up Close presents seven of these impressive drawings for the first time in forty years, spotlighting the multiyear collaboration between The Met and the Municipal Archives as well as the Museum’s ongoing commitment to sharing resources with New York City institutions. Designed by German engineer John A. Roebling (1806–1869), a pioneer in steel-wire rope technology used for suspension bridges, the Brooklyn Bridge was completed in 1883 by his son, Washington A. Roebling (1837–1926), with help from skilled assistants. After Washington became ill, his wife, Emily Warren Roebling (1843–1903), took over supervision of the project and played a crucial role in its success. The Brooklyn Bridge Up Close offers fresh insights into the physical properties of these monumental drawings, informing future conservation treatments. It also highlights science’s vital role in uncovering new narratives and providing unprecedented access to artists’ creative processes. This special installation is made possible by the Mellon Foundation.\n  →  Bridge construction in drawings and prints.\n\nRAW: American artist Man Ray (1890–1976) was a visionary known for his radical experiments that pushed the limits of photography, painting, sculpture, and film. In the winter of 1921, he pioneered the rayograph, a new twist on a technique used to make photographs without a camera. By placing objects on or near a sheet of light-sensitive paper, which he exposed to light and developed, Man Ray turned recognizable subjects into wonderfully mysterious compositions. Introduced in the period between Dada and Surrealism, the rayographs’ transformative, magical qualities led the poet Tristan Tzara to describe them as capturing the moments “when objects dream.” The exhibition will be the first to situate this signature accomplishment in relation to Man Ray’s larger body of work of the 1910s and 1920s. Drawing from the collections of The Met and more than 50 U.S. and international lenders, the exhibition will feature approximately 60 rayographs and 100 paintings, objects, prints, drawings, films, and photographs—including some of the artist’s most iconic works—to highlight the central role of the rayograph in Man Ray’s boundary-breaking practice. “Before my eyes an image began to form, not quite a simple silhouette of the objects as in a straight photograph, but distorted and refracted … In the morning I examined the results, pinning a couple of the Rayographs—as I decided to call them—on the wall. They looked startlingly new and mysterious.” — Man Ray The exhibition is made possible by the Barrie A. and Deedee Wigmore Foundation. Goldsmith Foundation, The Daniel and Estrellita Brodsky Foundation, The International Council of The Metropolitan Museum of Art, Andrea Krantz and Harvey Sawikin, and Schiaparelli.\n  →  Photographs, rayographs across Dada and Surrealism.\n\nRAW: The traditional East Asian lunar calendar consists of a repeating twelve-year cycle, with each year corresponding to one of the twelve animals in the Chinese zodiac. The association of these creatures with the Chinese calendar began in the third century BCE and became firmly established by the first century CE. The twelve animals are, in sequence: rat, ox, tiger, rabbit, dragon, snake, horse, ram, monkey, rooster, dog, and pig. Each is believed to embody certain traits that are manifested in the personalities of people born in that year. January 29, 2025, marks the beginning of the Year of the Snake, a creature characterized as alert, calm, and smart. Celebrating the Year of the Snake presents a remarkable selection of works drawn from the Museum’s collection illustrating the significant role that the snake plays in Chinese culture, including a 3,000-year-old bronze ritual vessel with a spout formed by joined snakes’ heads, a 13th-century pottery figure of a mischievously smiling snake, and an 18th-century exquisitely painted porcelain cup portraying a scene from the “Legend of the White Snake,” a popular folktale of love and romance between humans and fantastic creatures.\n  →  Asian works featuring the snake.\n\nRAW: Casa Susanna brings together photographs and publications created by and for a community of cross-dressers who met regularly in New York City and the Catskill Mountains throughout the 1960s. Two modest resorts run by Susanna Valenti and her wife, Marie Tornell, provided safe spaces for guests to freely cross-dress en femme during an era of strictly defined gender roles. They used the camera to create and affirm their femme identities, exchanging photographs at gatherings or sharing them by mail. These snapshots—some candid, others playfully performative—were rediscovered at a Manhattan flea market in 2004 and have come to be known as the Casa Susanna photographs. The exhibition also features issues of Transvestia, an underground magazine that published the photographs along with fiction, poetry, makeup and clothing advice, and autobiographical essays by members of the community. During this period, most cross-dressers lived in isolation and shame. The exhibition presents new research into the double lives cross-dressers led as married men with established careers. The photographs also bring to light the type of woman they aimed to embody—such as the “girl next door,” the respectable housewife, the matron—a middle-class ideal of femininity that was both liberating and limiting. Casa Susanna offers insight into a significant pre-Stonewall cross-dressing scene, inviting visitors to understand this world and its connection to the lives of transgender people today. The exhibition is organized by the Art Gallery of Ontario and Les Rencontres d’Arles in collaboration with The Metropolitan Museum of Art. The exhibition is made possible by The Robert Mapplethorpe Foundation, Inc.\n  →  1950s–60s Catskills retreat photographs.\n\nRAW: In ancient Egypt, images of gods weren’t just images—they brought the gods to life. Egyptians believed that it was through their depictions in tombs, temples, and shrines that the deities could enter sacred spaces and become active participants in rituals, offering a vital connection between the human and divine worlds. Over Egypt’s long history, its belief system grew to include more than 1,500 gods with many overlapping forms and traits. Subtle visual cues like what a figure wore, how they posed, or the symbols they carried helped identify them and their roles. Divine Egypt brings together almost 250 works of art and objects, many of them on loan from institutions such as the Museum of Fine Arts, Boston, the Musée du Louvre, Paris, and the Ny Carlsberg Glyptotek, Copenhagen, to examine the imagery associated with the most important deities in ancient Egypt’s massive body of gods. Depictions of the stately falcon-headed Horus, the lion-headed Sakhmet, and the serene, shrouded Osiris reveal the striking ways the kings and people of ancient Egypt recognized and interacted with their gods. While the king had a daily direct relationship with the gods in the inner sanctuaries of great temples, people without such access found ways to connect with their gods through rituals, offerings, and objects of private devotion. This immersive look at how deities were depicted reveals the many roles they played in people’s lives, providing them with meaning in front of life’s uncertainties and the permanence of death. The exhibition is made possible by The John A. Moran Charitable Trust. Cullman, Alaina and Stirling Larkin, and Norby Anderson. The catalogue is made possible by the Kelekian Fund. Cotti.\n  →  Major Egyptian exhibition on twenty deities.\n\nRAW: Ganesha, the son of Shiva and Parvati, is a Brahmanical (Hindu) diety known to clear a path to the gods and remove obstacles in everyday life. He is loved by his devotees (bhakti) for his many traits, including his insatiable appetite for sweet cakes and his role as a dispenser of magic, surprise, and laughter. However, Ganesha is also the lord of ganas (nature deities) and can take on a fearsome aspect in this guise. The seventh- to twenty-first-century works in this exhibition trace his depiction across the Indian subcontinent, the Himalayas, and Southeast Asia. Featuring 24 works across sculptures, paintings, musical instruments, ritual implements, and photography, the exhibition emphasizes the vitality and exuberance of Ganesha as the bringer of new beginnings. The exhibition is made possible by the Florence and Herbert Irving Fund for Asian Art Exhibitions. During the exhibition, a selection of artworks will come off view and be replaced by new works: Rotation 1: November 19, 2022–June 11, 2023 Rotation 2: June 17, 2023–June 11, 2024 Rotation 3: June 13, 2024–January 4, 2026\n  →  Depictions of Ganesha across Asian art.\n\nRAW: Enter the spellbinding world of visionary Spanish painter Francisco de Zurbarán. Spend time with his paintings, celebrated for their vivid naturalism and deep emotional power. Move between soaring altarpieces and exquisite still lifes in the first major UK exhibition of this great artist from Baroque Seville. A peer of Murillo and Velázquez, Zurbarán stands out for his drama, mystery and vision. From the rind of a lemon to the timeless gaze of a saint, he finds an intensity in the ordinary. Strong light and deep shadow bring real faces, soft fabrics, fresh fruit and flowers to life. His paintings unite stillness, focus and faith. The exhibition brings together works from major galleries across Europe and the US that span Zurbarán’s career from his first religious commissions to paintings made for private devotion. Stand in front of monumental works that can still move and inspire us today. ‘Zurbarán’ is at the National Gallery, Sainsbury Wing between 2 May and 23 August 2026. Tickets are required. The exhibition is organised by the National Gallery, London, Musée du Louvre, Paris and the Art Institute of Chicago.\n  →  First UK exhibition of Zurbarán.\n\nRAW: See the reunion of two of Impressionism's most celebrated paintings In the summer of 1869, Monet and Renoir – then young, ambitious artists and close friends – set up their easels side by side at La Grenouillère, a fashionable riverside resort just outside Paris. Working 'en plein air’ (out-of-doors), the artists painted the same lively scene of fashionable Parisians at leisure – though their artworks reveal remarkably different approaches. For the first time in nearly twenty years, the National Gallery is reuniting two of these celebrated paintings created at La Grenouillère, side by side once more. Look closely at each brushstroke and compare the artists' individual Impressionist style and witness a close friendship that helped shape one of the most influential movements in Western art. The free display will remain on view until mid-September, before Renoir's painting is incorporated into the 'Renoir and Love' (3 October 2026 – 31 January 2027) exhibition at the National Gallery. The reunion of the two paintings has been made possible thanks to the generous loan of Renoir's ‘La Grenouillère’ from Nationalmuseum, Stockholm.\n  →  Two Impressionist paintings at the same motif.\n\nRAW: Discover the breathtaking landscapes of one of Austria’s greatest painters, Ferdinand Georg Waldmüller (1793–1865). Stroll through forests, scale rugged peaks and marvel at majestic skies across Austria and Sicily. Take in the great trees of Vienna’s Prater Park, the magnificent lakes and mountains of the Salzkammergut region and the tranquil hills and ruins of Sicily. Pause, reflect and wonder at pictures alive with intense colour and light. See why Waldmüller’s work can be compared to the Pre-Raphaelites. Admire the precise brushstrokes which shape each leaf, twig and flower. Explore how he found beauty in nature’s imperfections, through his images of aged trunks and bare branches. Find serenity in the heart of London at this first-ever exhibition dedicated to Waldmüller's landscapes.\n  →  First UK exhibition of Waldmüller.\n\nRAW: Celebrate children's creativity in this exhibition of artworks by UK primary schools As part of our annual Take One Picture programme, children from across the UK have made artworks inspired by ‘A Regatta on the Grand Canal’ by Canaletto. The painting shows a colourful boat race taking place in Venice. Crowds of people cheer on the gondolas as they race towards the finish line. Children have made a wide range of imaginative projects, all coming from their own questions and ideas about the painting. Who is going to win the race? What’s under the water? Why do the boats look like dragons? This year’s exhibition features artworks from 35 primary schools and is on display in the Roden Centre for Creative Learning.\n  →  Children's artworks inspired by Canaletto.\n\nRAW: Fall in love with Renoir and his Impressionist paintings at the National Gallery. Discover Renoir’s gift for showing love, friendship, and everyday emotion in this Impressionist exhibition. See couples waltzing in the summer air and lovers stealing a glance, families sharing a quiet moment and friends raising a glass, all through the eyes of an artist unmatched in capturing the complexities of how people connect. Experience Renoir at his peak in the 1860s to 1880s, experimenting with style and theme to become an innovator of Impressionism. Walk with him through Montmartre in his iconic painting 'Bal au Moulin de la Galette' (1876) from the Musée d’Orsay, Paris, on display in the UK for the first time. Explore the sun-dappled gardens and swirling dance halls of Paris through 40 paintings, brought together from collections across the world. Linked through friendship and love, enjoy the tenderness and joy of some of Renoir’s most modern, uplifting and admired paintings.\n  →  Renoir gathered around the theme of love.\n\nRAW: For the first time in history, see all of Jan van Eyck’s portraits together. Only once, only at the National Gallery. Portraiture as we know it begins with van Eyck. His vision and skill launched painting into a new era of unrivalled realism. Watchful eyes, a hint of stubble, wrinkles, flushed cheeks. Van Eyck captured his subjects in all their intimate details. Though these people sat for their portraits 600 years ago, they feel alive today. ‘Van Eyck: The Portraits’ brings together from across Europe all nine of the artist’s known painted portraits, making up half of his surviving works worldwide. Breathing life into van Eyck’s world, the exhibition introduces the men and women he spent his life around. They are not kings, queens and aristocrats; they are successful craftsmen, merchants and the artist’s relatives. This is a story of people. This is the moment when access to art widened. The exhibition marks the first and only time these works can be brought together. And this incredible display can only happen here, at the Gallery. Join us in autumn 2026 for this once-in-a-lifetime exhibition.\n  →  All of Van Eyck's portraits together.\n\nRAW: Across Germany’s major cities, a new generation of artists emerged between 1900 and 1918 to change the rules of painting. They were the German Expressionists. Made up of two pioneering groups – Die Brücke (The Bridge) and Der Blaue Reiter (The Blue Rider) – these young artists painted raw emotions on canvas with a new intensity. Die Brücke was formed by a group of self-taught artists. Rebelling against conservative society, they lived and worked together in the bohemian corners of Dresden and other cities, before moving to Berlin, Germany’s rapidly modernising capital. For them, colour became a way to defy tradition and express themselves in new ways. Der Blaue Reiter came together in Munich around the painters Wassily Kandinsky and Gabriele Münter. The group divided their time between the bustling Munich streets and the lush landscapes around rural Murnau, 40 miles south of the city. There, the lakes and mountains fed their creative vision, full of bright colours and striking shapes.\n  →  Fifty German Expressionist works.\n\nRAW: See the works of the master of horse painting, George Stubbs Step into the world of George Stubbs, the visionary British painter. Marvel at his monumental portrait of a rearing racehorse, ‘Scrub’. In the 1750s, Stubbs spent 18 months in a remote barn in Horkstow, Lincolnshire. Hidden away, he devoted his time to studying and drawing the anatomy of horses. What resulted was the most thorough study on the subject for over a hundred years. Incredibly, Stubbs’s pictures of horses are still some of the most accurate ever painted, all while capturing their unique characters. In this exhibition, you’ll meet one of these horses, Scrub. Painted by Stubbs around 1762, we see Scrub rearing in a landscape backdrop — notably without a rider. In a nearby room is another monumental horse painting by Stubbs, this time of Scrub’s now famous contemporary, ‘Whistlejacket’. Painted around the same time, these are two of the first life-size portraits to depict horses without a human presence in British history. The paintings changed the spirit of equine art forever. ‘Stubbs: Portrait of a Horse’ will focus on the creation of ‘Scrub’, which will be joined by other paintings and drawings by the artist. Join us in spring 2026 to get a closer look at Stubbs’s groundbreaking work.\n  →  George Stubbs, master of horse painting.\n\nRAW: In an interplay of light and darkness, Joseph Wright of Derby conjures sublime pictures of discovery and learning. 'Wright of Derby: From the Shadows' is the first major exhibition dedicated to the British artist’s ‘candlelight’ paintings. We celebrate and look again at his most admired works. Illuminated faces gather around a variety of objects – from classical sculptures and scientific instruments to bones, bladders and animals. Through his unflinching scenes of people watching, Wright of Derby proposes moral questions about acts of looking. The strong light and deep shadows create drama, reminding us of great painters from earlier centuries like Caravaggio. Challenging the traditionally held view of Wright of Derby as a figurehead of the Enlightenment, this exhibition contributes to the ongoing re-evaluation of the artist, portraying him not merely as a ‘painter of light’. More than virtuoso scenes of dramatic light and shade, Wright of Derby used the night-time to explore deeper and more sombre themes, including death, melancholy, morality, scepticism and the sublime. With over twenty works, including other paintings, mezzotints, works on paper and objects the exhibition explores both Wright of Derby’s artistic practice and the historic context of scientific and artistic development in which they were made. Watch, along with the people he paints, as his scenes of spectacle and wonder unfold.\n  →  Joseph Wright of Derby's candlelight paintings.\n\nRAW: The sower, the woodcutter, a shepherd girl. These are the subjects that made French artist Jean-Francois Millet famous. Marking the 150th anniversary of his death, this is an opportunity to see some of Millet’s best-loved paintings and drawings. Born into a farming family in Normandy, Millet moved to the village of Barbizon in 1849 where he put the people who spent their life working on the land, often the poorest of the poor in 19th-century France, at the heart of his work. He knew these people and his realistic, unsentimental approach to painting them was completely new. See his iconic 'L’Angelus' (1859) from the Musée d’Orsay, Paris, a painting typical of the dignified way he captured the working people of his age. A husband and wife stand with their heads bowed. Lit by an almost ethereal, filtered light, they’ve stopped working in the fields to say the Angelus prayer. Admired and copied by Vincent van Gogh, he inspired Impressionists and Post-Impressionist artists including Edgas Degas and Camille Pissarro. His combination of subject and effects of light and tone saw his popularity soar at the end of the 19th and beginning of the 20th century. Experience the beauty and quiet power of Millet’s work – an artist who created some of the most realist yet timeless paintings of the 19th century.\n  →  The subjects that made Millet famous.\n\nRAW: See the painting 'The Courtyard of a House in Delft' by Pieter de Hooch through the eyes of a child. Take One Picture is the National Gallery's programme for primary schools. Each year, children make and exhibit artworks in response to one painting in our collection. This year’s painting, by 17th-century Dutch artist de Hooch, has inspired a wide range of projects, from wicker sculptures and cardboard houses to clay tiles and baked apple pies! Presented across three sites in and around the National Gallery, this year's exhibition can be enjoyed as artwork displays and as a digital augmented reality trail.\n  →  Children's artworks inspired by de Hooch.\n\nRAW: See the first UK exhibition of Mexico’s much-loved artist, José María Velasco. Velasco, working in Mexico in the 19th century, was a man of many interests. He was fascinated by advances in geology, the archaeology of his home country, the study of local flora, and the increasing presence of industrialisation. He painted the sweeping landscapes of the Valley of Mexico, the home of modern-day Mexico City, with exquisite detail. His impressive panoramic views of the valley reveal allusions to Mexico's historic past and its rapidly modernising present. Velasco was keenly aware of his country’s industrialisation, capturing expanding train lines and factories alongside botanically accurate studies of plants. His scientific eye inspired his art, and his love of geology is clear to see in his detailed depictions of rocks and volcanoes.\n  →  Mexico's landscape painter.\n\nRAW: Be blown away by Van Gogh’s most spectacular paintings in our once-in-a-century exhibition. Walk with a pair of lovers beneath a starry night. Look up at swirling clouds and cypress trees swaying in the wind. Stay a little while in Van Gogh’s favourite park, the ‘Poet’s Garden’, or under a shady tree in Saint-Rémy. We’re bringing together your most loved of Van Gogh’s paintings from across the globe, some of which are rarely seen in public. They will be paired together with his extraordinary drawings. Over just two years in the south of France, Van Gogh revolutionised his style in a symphony of poetic colour and texture. He was inspired by poets, writers and artists. We look at this time in Arles and Saint-Rémy as a decisive period in his career. His desire to tell stories produced a landscape of poetic imagination and romantic love on an ambitious scale. See up-close his ‘Starry Night over the Rhône’ (1888, Musée d’Orsay) and ‘The Yellow House’ (1888, Van Gogh Museum), as well as our own ‘Sunflowers’ (1888) and ‘Van Gogh's Chair’ (1889), among many others. Join us in celebrating our 200th birthday with Van Gogh’s ‘Poets and Lovers’.\n  →  Once-in-a-century Van Gogh exhibition.\n\nRAW: Immerse yourself in 200 years of extraordinary National Gallery stories. From a resident family of 14 and an intrepid travelling agent to ground-breaking scientists and a wartime pianist, NG Stories tells the history of the National Gallery through the people who made us what we are today. There’s a slate mine in Wales where paintings were safely stored during the Second World War. A guard dog who became a member of staff. And a Keeper’s family, with 14 children, who lived in the building and kept diaries. You’ll discover some of the untold personal stories of the Gallery and the special memories we have been privileged to help create for our visitors. From childhood adventures to life-changing first art encounters, our visitors have always been at the heart of what we do. Through magical soundscapes and immersive digital interactions, you'll experience the work of the many people here at the Gallery who help to care for the paintings and see how this work has changed over the years. This experience, both online and in the Gallery, uses digital technology to tell you the unexpected human stories which have shaped the past and present of our 200-year history.\n  →  Two hundred years of Gallery history.\n\nRAW: David Hockney, in his own words, has always been a looker. Throughout his career, Hockney has found inspiration in the work of other artists. He never tires of looking at paintings. For him, there’s magic in it every time, whether that’s enjoying a picture in a gallery or a much-loved poster at home. This very personal show brings together two Hockney paintings, one showing his mother and father and the other depicting his friend, curator Henry Geldzahler. They are displayed with the thread that ties them together, Piero della Francesca’s ‘The Baptism of Christ’. ‘My Parents’ and ‘Looking at Pictures on a Screen’ both include images of paintings from the National Gallery, a place Hockney knows and has loved throughout his long career. The artists whose portraits and landscapes line the walls are to him, his contemporaries. Their paintings inspire him today as much as any other influence on his work. The exhibition, part of our Bicentenary celebrations, is a chance to slow down, to take in what’s in front of us and enjoy life-enhancing art in the Gallery. Just like Hockney’s parents and friend Geldzahler, let’s take a longer look.\n  →  Hockney against Piero della Francesca.\n\nRAW: A cyclist cheekily sticking out her tongue, tough youths on Amsterdam's Nieuwendijk, young women in miniskirts. From The Netherlands to Cuba and Japan, Ed van der Elsken chased the same unfiltered energy. Different streets, a different time - and yet you recognise it. From his first steps as a photojournalist to the design of his final photo book With handwritten notes, contact prints, experiments from the darkroom Who was the man behind the camera? A journey through his work and life\n  →  Unfiltered street energy across decades.\n\nRAW: 150 drawings by the illustrator who gave post-war Netherlands a visual language all of its own Jip and Janneke, Pim and Pom, Pluk van de Petteflet. This summer the Rijksmuseum brings together some 150 original drawings by illustrator Fiep Westendorp. From early sketches to the illustrations that have stayed with generations of children.\n  →  150 original drawings by the illustrator.\n\nRAW: This summer, the Rijksmuseum Gardens are home to the work of Carel Visser, the most influential Dutch sculptor of the twentieth century.\n  →  Most influential Dutch sculptor of the twentieth century.\n\nRAW: In this intimate fashion presentation, 24 worn, altered and reused garments take centre stage. Signs of wear, repair and craftsmanship tell their story: from 17th-century embroidered mules to a dress worn for generations by the Six family.\n  →  Dress and textiles: garments from 1640 to 1930.\n\nRAW: One hundred years ago, Willem de Kooning left the Netherlands for a new life in New York, where he became one of the most influential artists of the 20th century. This autumn, he returns, with a major retrospective of his drawings, complemented by a selection of celebrated paintings and sculptures. Alongside the exhibition, two of his most iconic paintings will be displayed in the Gallery of Honour. This exhibition is made possible through the generous support of The Willem de Kooning Foundation, The Friends Lottery, Ammodo Art, Art Mentor Foundation Lucerne, Blockbusterfonds, Rijksmuseum International Circle, Rijksmuseum Friends and the Ministry of Education, Culture and Science.\n  →  120 works tracing De Kooning's process.\n\nRAW: Kadir van Lohuizen photographs the energy transition on and around the North Sea From offshore wind farms in the open sea to heavily secured data centers, the energy transition is taking place on a scale that is almost impossible to comprehend, largely beyond our view. Photographer and filmmaker Kadir van Lohuizen shows how the North Sea and the surrounding countries are changing at a breakneck speed due to the rising demand for energy. The exhibition is made possible in part by Floor Fonds/Rijksmuseum Fonds and Rijksmuseum NEXT.\n  →  Annual commission to a Dutch photographer.\n\nRAW: Passion, desire, lust, jealousy, cunning and deceit. The Rijksmuseum takes you on a journey into one of the greatest and most important sources of inspiration for artists: The Metamorphoses by the poet Ovid.\n  →  Ovid: Bernini, Titian to Rodin, Magritte, Bourgeois.\n\nRAW: At a time when AI is becoming increasingly sophisticated, you may ask yourself: when is a photograph real or fake? Yet images have been manipulated, often with surprising ease, since the very beginnings of photography. In FAKE! you will explore 50 historical images from our collection that reveal creative and deceptive visual illusions.\n  →  Early photocollages and photomontages.\n\nRAW: The Rijksmuseum presents two versions of Steve McQueen’s 34-hour video artwork, Occupied City.\n  →  Amsterdam under occupation, Steve McQueen.\n\nRAW: What was life really like in the 17th century? That’s the museum’s most-asked question. Now, the time has come to find out. At Home in the 17th Century offers an up-close experience of daily life 400 years ago. Immerse yourself in a full day of the 17th century as you walk among the nine diorama-style displays that make up this exhibition — packed with personal stories and unique objects.\n  →  Domestic life with Rembrandt, Hals, Vermeer.\n\nRAW: Discover how colonial and contemporary perspectives converge in photographs from the Indian subcontinent. Past meets present in the Crossings exhibition.\n  →  Photography from the Indian subcontinent.\n\nRAW: Internationally acclaimed artist Fiona Tan is given carte blanche at the Rijksmuseum. Step into the world of Monomania.\n  →  The artist's view on the collection.\n\nRAW: From Shiva and the Buddha to wine casks and weapons. Everything about bronze triggers your senses. For centuries, this material has played a central role in the traditions of Asia. Now you too can experience the beauty of bronze art at last.\n  →  Four thousand years of Asian bronze.\n\nRAW: Across the Netherlands, major music festivals draw vast, exuberant crowds. In this series, Eddo Hartmann photographs the individual festivalgoer, both one with the throng and lost against the backdrop of the Dutch events industry.\n  →  Dutch festivals photographed.\n\nRAW: “I made sculpture because what interested me in painting was the clarification of my ideas. I changed medium and worked in clay as a respite from painting when I had done absolutely all that I could for the moment. Which is to say that it was always for the purpose of organization. It was done to give order to my feelings, to seek a method that completely suited me. When I found it in sculpture, it helped me in painting.” Acquavella Galleries is pleased to present Matisse: The Pursuit of Harmony, an exhibition featuring fifty paintings, works on paper, and sculpture by Henri Matisse on loan from museums, foundations, and private collections. On view from April 9 through May 22, 2026, the exhibition traces Matisse’s investigation of form in two and three dimensions, from paintings and sculptures made at the start of the 20th century through the next five decades of his career. Although Acquavella has dealt in exceptional works by Matisse for over sixty years, this marks the gallery’s first exhibition devoted to the French artist since 1973. Henri Matisse (1869–1954) is widely regarded as the unparalleled modernist master of color, having revolutionized art with his luminous palette and lyrical color harmonies, but his experimentation with form was equally central to his artistic pursuits. In each chapter of his career, Matisse worked to refine and essentialize his approach to form and the figure. In his own words: “A work of art must be harmonious in its entirety: any superfluous detail would replace some other essential detail in the mind of the spectator.” Simplified, rhythmic forms, often inspired by the graceful, flowing lines of the arabesque, were integral to Matisse’s lifelong pursuit of harmony and balance in his art. The presentation begins with two early sculptures, The Serf (1900–04) and Madeleine I (1901), and his closely related painting Male Model (1900) and drawing Study for Madeleine (c. 1901). Of the more than eighty sculptures Matisse created, more\n  →  New York. Matisse's investigation of form.\n\nRAW: The exhibition brings together an expansive dialogue of artists, from Impressionist and modern masters to leading contemporary figures including Jules de Balincourt, Fernando Botero, Will Cotton, Giorgio de Chirico, Edgar Degas, Raoul Dufy, Derek Fordjour, Lucian Freud, Marino Marini, Tomokazu Matsuyama, Joel Mesler, Sarah Miska, Pablo Picasso, Roy Lichtenstein, Robert Longo, Tom Otterness, Susan Rothenberg, Laurie Simmons, Hank Willis Thomas, and Summer Wheat. Acquavella Galleries is pleased to present Soft Reins, a group exhibition exploring the enduring significance of the horse as a powerful symbol and artistic muse, highlighting how the animal has inspired art, mythology, and storytelling throughout art history. Guest curated by the artist Tomokazu Matsuyama, Soft Reins will be on view at Acquavella’s Palm Beach gallery from February 6 through March 22, 2026. An opening reception and panel discussion will also be held at the gallery on the evening of February 6th. The title Soft Reins refers to a dynamic between a horse and its rider: when drawing gently on the reins, the horse responds naturally and without resistance. This intuitive ability and connection between horse and rider mirrors the dynamic between the artist and muse, presenting the horse as an enigmatic source of inspiration across cultures and histories. By presenting a diverse array of artists and media, Soft Reins underscores the horse's lasting impact on the artistic imagination. It highlights its capacity to convey profound messages across distinct cultures and eras, making it a dynamic subject for ever-changing times. The exhibition brings together an expansive dialogue of artists, from Impressionist and modern masters to leading contemporary figures including Jules de Balincourt, Fernando Botero, Will Cotton, Giorgio de Chirico, Edgar Degas, Raoul Dufy, Derek Fordjour, Lucian Freud, Marino Marini, Tomokazu Matsuyama, Joel Mesler, Sarah Miska, Pablo Picasso, Roy Lichtenstein, Robert Longo, Tom\n  →  Palm Beach. Horse and equestrian.\n\nRAW: “I think good paintings are moving images, because they’re not static. Great paintings move.” To read Sarah Messerschmidt's catalogue essay, please click here. Acquavella Galleries is pleased to present All the Way, Nicole Wittenberg’s second solo exhibition with the gallery and her first at Acquavella’s New York location. The exhibition will be on view from October 16 through December 5, 2025. A reception for the artist will be held the evening of Wednesday, October 29, from 5:00 to 7:00 pm. Wittenberg’s return to Acquavella this fall follows the artist’s three solo museum exhibitions over this summer: Maison La Roche, Fondation Le Corbusier, Paris; the Ogunquit Museum of American Art, Ogunquit, Maine; and the Center for Maine Contemporary Art, Rockland, Maine. Several works from Wittenberg’s museum exhibitions in Rockland and Ogunquit will appear in All the Way. All the Way explores painting’s ability to capture the sensation of a singular moment extended over time. Nicole Wittenberg's painting practice takes scenes, elements, and encounters with the natural world as its subject matter. Her landscapes and twisting florals explore the medium’s ability to capture temporal moments as impressions that retain the energy of the experience.\n  →  New York. First solo.\n\nRAW: \"Everything is connected, and everything is one. Painting, for me, is a way of knowing who I am. Tracing that history back, it became clear to me that I, too, am made of stardust; and that realization felt profoundly natural. The primeval landscapes I have encountered in my life, too, if traced back far enough, were once stardust.\" Acquavella Galleries is pleased to present Stardust, a solo exhibition of fifteen paintings by the Japanese artist Yuka Kashihara in its Palm Beach gallery, on view from October 15 through December 8, 2025. This suite of acrylic and oil paintings on canvas marks a continuation of the artist’s interest in imagining the otherworldly, while looking even farther to the cosmos. Her work is often sparked by instigating moments and views observed while traveling or walking, which she then blends with conjured vistas. In her new paintings, Kashihara explores our connection with the ancient and cosmic, combining the two ideas by exploring the origin of all organic matter, beginning deep in space. Kashihara cites Marcus Chown’s book, The Magic Furnace, as an inspiration for her new work. He states: “Every atom in our bodies has an extraordinary history. Our blood, our food, our books, our clothes–everything contains atoms forged in blistering furnaces deep inside stars, which were blown into space by those stars’ cataclysmic explosions and deaths…The birth of every atom was marked by cosmic events on an enormous scale, against a backdrop of unimaginable heat and cold, brightness and darkness, space and time.” The artist’s newest body of work draws on this idea of celestial kinship.\n  →  Palm Beach. Recent paintings.\n\nRAW: \"Painting is an urge that swallows you whole. You don't know exactly where you're going. You lose yourself completely and you end up doing something you had forgotten, or something you wanted to do without knowing how you got there. A miracle that repeats itself differently each time. It's a primitive thing, a vital thing. I felt it right away when I was painting beside my mother at twelve years old.\" Acquavella Galleries is pleased to present Miquel Barceló, the renowned Spanish artist’s fourth solo exhibition with the gallery. The exhibition presents over two dozen new paintings and a selection of recent ceramic works, featuring the artist’s signature use of layered materiality, vivid color, and richly textured surfaces. The exhibition is on view April 24 to May 30, 2025 at Acquavella’s New York location. Over the past four and a half decades, the Spanish artist Miquel Barceló (b. 1957) has explored a diverse range of media, including painting, works on paper, ceramic, bronze sculpture, large-scale installation, and performance. In addition to his deep-rooted connection to Spain and his native Mallorca, Barceló draws inspiration from his global travels, continuously experimenting with new materials and techniques influenced by ancient and contemporary cultural traditions. Throughout his practice, the artist’s fascination with the natural world has been central, resulting in textured canvases filled with earthly materiality, tactile surfaces, and compositions inspired by the effects of light and ever-changing colors of the sea. In his latest series of paintings, Barceló deepens his engagement with organic subject matter, drawing inspiration from the sea surrounding Mallorca, where he lives and works in addition to Paris. In densely layered surfaces, Barceló’s new “still life” paintings feature scenes filled with tropical fish, crabs, shells, crustaceans, and marine vegetation that emerge from layers of muted chromatic grays in brilliant hues of red and blue. Traces\n  →  New York. Recent work.\n\nRAW: \"Picasso: the word is synonymous with art. For years, I’ve studied so many systems. McDonald’s, architecture of Le Corbusier and the Bauhaus, military-industrial systems. For me, it was a way of trying to understand Picasso the way I would understand a battleship or a skyscraper. To understand how something is made. So, working with Picassos and understanding them is a way of taking them apart.\" New York, NY (October 7, 2024) – Acquavella Galleries is pleased to present our fifth solo exhibition with Tom Sachs. Titled Bronze, the exhibition features new and recent bronze sculptures by the artist and will be on view at our New York gallery from November 7—December 13, 2024. In this exhibition, Sachs continues his formal investigation and exploration of the modernist canon. Guided by the iconoclastic spirit and wit of Marcel Duchamp’s iconic “readymades,” Sachs employs his signature bricolage technique to reimagine sculptures by Pablo Picasso and Constantin Brâncuși. Drawing on an interplay between technical production and quotidian materials, these sculptures question traditional conceptions of what constitutes a work of art. Previous bodies of work have also engaged the annals of modernism, including Sachs’s take on Piet Mondrian’s abstractions in the 1990s, recreated out of duct tape and plywood; foamcore interpretations of Le Corbusier's housing complexes in the aughts; and, more recently, the reimagining of Picasso’s paintings, particularly from the so-called “war years” period between 1937 and 1945. Bronze features twelve sculptures, each constructed from a bricolage of found, everyday objects, which have been cast in bronze and painted with enamel. Drawing from Picasso’s sculpted oeuvre, Sachs’s new works are in dialogue with sculptures the Spanish artist created from the 1930s through the early 1950s, many of which were also assemblage sculptures constructed out of found materials.\n  →  New York. Bricolage in bronze.\n\nRAW: “It is a personal challenge to bring drawing to the extreme and see how far my eyes and fingers can go.” New York, NY­­–July 24th, 2024– Acquavella Galleries is pleased to present Drawing on Canvas, an exhibition of new and recent works by the artist Jacob El Hanani. In his fifth solo exhibition with the gallery, El Hanani displays a masterful dedication to the craft that he has honed over the past 50 years. Constructing abstract pen and ink drawings that involve the artist applying thousands of marks by hand, El Hanani continues his trademark practice in Drawing on Canvas while incorporating his recent shift from working on paper to working on gessoed canvas on a much larger scale. The subtle, amorphous surfaces of these canvases upon closer inspection reveal dense webs of lines and patterns, built from repeated, rudimentary marks—often simple lines or circles. As the elemental forms grow into increasingly complex patterns, the entire canvas transforms into something much more than a summation of its parts. Day by day, El Hanani slowly creates these drawings over the course of months, his ceaseless labor equally as impressive as the resulting artworks. El Hanani’s work is informed by the meditative rigor found in the Jewish practices and traditions in which he was raised. Most clearly, the artist is in dialogue with micrography, an ancient art of calligrams that once decorated Hebrew Bibles and religious manuscripts. Like these historic drawings, each small mark on El Hanani’s canvases is a gesture in storytelling and world-building.\n  →  New York. Microscopically fine line drawing.\n";
 // ===== END SHARED =====
 
@@ -1992,6 +2085,8 @@ function withoutTracking(u){
   }catch{ return u; }
 }
 function hostOf(u){ try{ return new URL(u).hostname.toLowerCase(); }catch{ return ""; } }
+// A host without its leading "www.".
+const withoutWww=h=>h.replace(/^www\./,"");
 // A Wayback Machine copy files under the museum it copied: the original address is
 // the venue's site; the copy is still what is read and linked (Sargent and the Sea, RA).
 function siteUrlOf(u){
@@ -2042,7 +2137,7 @@ function splitPageTitle(t,host){
   if(m){
     const h=foldText(host);
     const flat=x=>foldText(x).replace(/[^a-z0-9]/g,"");
-    const bare=h.replace(/^www\./,"");
+    const bare=withoutWww(h);
     if(foldText(m[2]).split(/[^a-z0-9]+/).some(w=>w.length>=4&&h.includes(w))||flat(m[2])===flat(bare)||flat(m[2])===flat(bare.split(".")[0])){ s=m[1].trim(); site=m[2].trim(); }
   }
   // Several bars: the show is named first, the site last ("Venice: Canaletto and
@@ -2057,6 +2152,8 @@ function splitPageTitle(t,host){
   return{show:parts[0]||s,site};
 }
 const TITLE_LABEL=/^(?:exhibitions?|mostra|ausstellung|exposition|exposición|tentoonstelling)$/i;
+// Why a page is refused when no title can be read from it.
+const NO_TITLE_ON_PAGE="Couldn’t find the show’s title on the page.";
 // Words too general to name a show.
 const GENERIC_TITLE_WORDS=new Set(["exhibition","exhibitions","mostra","ausstellung","exposition","tentoonstelling","the","a","an","and","of"]);
 
@@ -2239,7 +2336,7 @@ function readShowPage(res,url,vc,rules){
   joinHeadingOverTwoLines(pg);
   showFromCrumb(pg);
   titleCandidates(pg);
-  if(!pg.cands.length){ pg.rule("fail:no-title"); return{ok:false,why:"Couldn’t find the show’s title on the page."}; }
+  if(!pg.cands.length){ pg.rule("fail:no-title"); return{ok:false,why:NO_TITLE_ON_PAGE}; }
   const fail=findDates(pg);
   if(fail)return fail;
   settleName(pg);
@@ -2354,7 +2451,7 @@ function titleCandidates(pg){
 // it (her decision; Brancusi's "Neue Nationalgalerie" line under the dates).
 function venueNamesFor(pg){
   const{vc,host,site,words}=pg;
-  const h=String(host||"").replace(/^www\./,"");
+  const h=withoutWww(String(host||""));
   const houses=VENUE_REGISTER.filter(e=>e.kind==="manual"&&(e.id===vc||e.read.sites.some(x=>x.host===h)));
   const names=[site,...venueNames(MU[vc]),...houses.flatMap(e=>venueNames(venueView(e)))];
   return new Set(names.filter(Boolean).map(words).filter(Boolean));
@@ -2419,7 +2516,7 @@ function findDates(pg){
   if(found)rule("title:"+candRule[cands.indexOf(h)]+(h===cands[0]?"":"-not-first"));
   if(!found){
     const h0=cands.find(i=>!nameOnly(i));
-    if(h0===undefined){ rule("fail:venue-name-only"); return{ok:false,why:"Couldn’t find the show’s title on the page."}; }
+    if(h0===undefined){ rule("fail:venue-name-only"); return{ok:false,why:NO_TITLE_ON_PAGE}; }
     const near=[];
     for(let k=h0+1;k<lines.length&&near.length<LINK_DATE_LINES;k++){ const l=stripMd(lines[k]); if(!l)continue; if(lr&&lr.datesUntil&&lr.datesUntil.test(l.trim()))break; near.push([k,l]); }
     // A date the page prints but that is not one (months only, a season, no year), else none at all:
@@ -2645,7 +2742,7 @@ function pageResult(pg){
   let tracked=false; try{ tracked=[...new URL(url).searchParams.keys()].some(k=>TRACKING_PARAM.test(k)); }catch{}
   const link=lr&&lr.cleanLink?String(url).split(/[?#]/)[0]:tracked?withoutTracking(url):url;
   if(link!==url)rule(lr&&lr.cleanLink?"cleanLink":"tracking");
-  return{ok:true,base:pg.base,between:pg.between,under,afterDates,start:range.start||"",end:range.end||"",raw:pg.raw.slice(0,LINK_RAW_CHARS),site:site||(REG[vc]&&REG[vc].names.full)||host.replace(/^www\./,""),link,noDates:!!found.noDates,scriptDates:!!found.scriptDates,orderUnknown:!!found.orderUnknown,shown:found.shown||"",shownWhy:found.shownWhy||"",dateLine:found.noDates&&!found.shown?"":pg.dateLine,dateNote:DATES.closedEarlyNote(range)};
+  return{ok:true,base:pg.base,between:pg.between,under,afterDates,start:range.start||"",end:range.end||"",raw:pg.raw.slice(0,LINK_RAW_CHARS),site:site||(REG[vc]&&REG[vc].names.full)||withoutWww(host),link,noDates:!!found.noDates,scriptDates:!!found.scriptDates,orderUnknown:!!found.orderUnknown,shown:found.shown||"",shownWhy:found.shownWhy||"",dateLine:found.noDates&&!found.shown?"":pg.dateLine,dateNote:DATES.closedEarlyNote(range)};
 }
 
 // A venue's title from its own headings (linkRead.title). "pieces": the heading is the "##"
@@ -2694,6 +2791,10 @@ const SHORT_NAME_EXAMPLES=()=>VENUE_REGISTER.filter(e=>e.kind==="manual"&&e.name
 // The full name is the entry's, else the one Claude gave, as the store holds it (MU).
 const SHORT_NAME_RENAMES=()=>VENUE_REGISTER.filter(e=>e.kind==="manual"&&e.names.hers&&e.names.replaced.length)
   .map(e=>"for "+JSON.stringify(e.names.full||e.names.card)+": "+JSON.stringify(e.names.card)+", not "+e.names.replaced.map(x=>JSON.stringify(x)).join(" or "));
+// The title line a prompt gives Claude for a page read in code.
+const pageTitleLine=page=>"EXHIBITION TITLE, as the page gives it: "+JSON.stringify(page.base)+"\n";
+// The page's raw text, fenced, as a prompt gives it to Claude.
+const pageRawBlock=page=>"RAW TEXT (the page under the title, dates taken out):\n\"\"\"\n"+page.raw+"\n\"\"\"";
 // ONE REQUEST FOR THE WHOLE IMPORT (her decision): every page of a Links, Pages or Paste import goes
 // to Claude in one request — the opening, the examples and the rules once, as the sweep's compressor
 // sends them, then each page as an item. A page's own questions (a pasted box's title and dates, a
@@ -2716,9 +2817,9 @@ function linkItem(page,askVenue,url,vc){
     +(museum?"THE MUSEUM THIS CARD IS FOR: "+JSON.stringify(museum)+"\n":"")
     +(askVenue&&page.dateLine?"THE SHOWING THIS CARD IS FOR, as the page prints it: "+JSON.stringify(page.dateLine)+"\n":"")
     +(page.pasted?"RAW TEXT (pasted or typed by hand, from one source or several; its order and layout can be anything):\n\"\"\"\n"+page.raw+"\n\"\"\""
-    :"EXHIBITION TITLE, as the page gives it: "+JSON.stringify(page.base)+"\n"
+    :pageTitleLine(page)
     +(page.between.length?"LINES BETWEEN THE TITLE AND THE DATES: "+JSON.stringify(page.between)+"\n":"")
-    +"RAW TEXT (the page under the title, dates taken out):\n\"\"\"\n"+page.raw+"\n\"\"\"")
+    +pageRawBlock(page))
     +(keys.length?"\n\nTHIS ITEM'S ANSWER ALSO HAS THESE KEYS:\n"+keys.join("\n"):"");
 }
 // Every item's answer has these keys.
@@ -2855,8 +2956,8 @@ function elsewherePrompt(page,url,a){
   return "You are reading a page about a museum exhibition, published by someone other than the museum that held it. Your ONLY output is one JSON object.\n\n"
     +"PAGE ADDRESS: "+url+"\n"
     +"THE MUSEUM THAT HELD IT: "+JSON.stringify([a.venue,a.venueCity,a.venueCountry].filter(Boolean).join(", "))+"\n"
-    +"EXHIBITION TITLE, as the page gives it: "+JSON.stringify(page.base)+"\n"
-    +"RAW TEXT (the page under the title, dates taken out):\n\"\"\"\n"+page.raw+"\n\"\"\"\n\n"
+    +pageTitleLine(page)
+    +pageRawBlock(page)+"\n\n"
     +"Answer with exactly these keys:\n"
     +"\"venueSite\": that museum's own website, the domain only (\"example.org\"), if you know it; \"\" if not.\n"
     +"\"title\": the exhibition's full name as the text states it, with its subtitle, copied exactly as written (\"Turner and Constable: Rivals and Originals\"). Never a heading that only names the artist when the text gives the full name, never a label such as \"Exhibition\" or \"Review\", never the site's name.";
@@ -2877,7 +2978,7 @@ function maybeElsewhere(a,pageHost){
 // when Claude knows no site). Null when the page is the venue's own. AL-052.
 function heldElsewhere(a,pageHost){
   if(!maybeElsewhere(a,pageHost))return null;
-  const site=hostOf(/^https?:\/\//i.test(a.venueSite||"")?a.venueSite:"https://"+(a.venueSite||"")).replace(/^www\./,"");
+  const site=withoutWww(hostOf(/^https?:\/\//i.test(a.venueSite||"")?a.venueSite:"https://"+(a.venueSite||"")));
   // The page's own site names the venue (Claude's "not its own page" misread): not elsewhere.
   if(site&&baseDomain(site)===baseDomain(pageHost))return null;
   const mine=Object.values(MU).find(m=>m&&!m.occasional&&venueNames(m).some(x=>flatName(x)===flatName(a.venue)));
@@ -2901,13 +3002,13 @@ function ownMuseumNamed(a,pageHost){
 }
 
 function occVenueId(host){
-  return "occ-"+String(host||"").toLowerCase().replace(/^www\./,"").replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"");
+  return "occ-"+withoutWww(String(host||"").toLowerCase()).replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"");
 }
 
 // The venues whose `sites` (read.sites) take this address → [[id, line]] (line: the house line, or none).
 function siteVenues(url){
   let u; try{ u=new URL(siteUrlOf(url)); }catch{ return []; }
-  const h=u.hostname.toLowerCase().replace(/^www\./,"");
+  const h=withoutWww(u.hostname.toLowerCase());
   const out=[];
   for(const e of VENUE_REGISTER)
     for(const s of e.read.sites) if(s.host===h&&(!s.path||s.path.test(u.pathname)))out.push([e.id,s.line||null]);
@@ -2948,7 +3049,7 @@ function linkReadVenue(url){
 // recipes (VENUE_SITES, written by the join from the scraper); the Tates are told apart by path.
 function knownVenueFor(url){
   const site=siteUrlOf(url);
-  const h=hostOf(site).replace(/^www\./,"");
+  const h=withoutWww(hostOf(site));
   if(!h)return null;
   let path="";
   try{ path=new URL(site).pathname; }catch{}
@@ -2966,7 +3067,7 @@ const namedByAddress=v=>!!v&&!v.short&&bareHost(v.name)===bareHost(v.host);
 // A link venue whose name and place Claude has not yet given: asked on its next link (her
 // decision), her own names and rules kept.
 const needsFacts=v=>!v||namedByAddress(v)||!v.city;
-const bareHost=h=>String(h||"").toLowerCase().replace(/^www\./,"");
+const bareHost=h=>withoutWww(String(h||"").toLowerCase());
 // The name a venue's shop is searched under: long and identifying (her decision; three National
 // Galleries in three countries) — its full name, the other names it goes by, its city and its
 // country, each where the words so far lack it. Proved live: "Palazzo Ducale" alone found Venice's;
@@ -2992,7 +3093,7 @@ function registerOccasional(map){
 function registerUnseenOccasional(rows){
   for(const r of rows||[]){
     if(!isOcc(r.museumId)||MU[r.museumId])continue;
-    MU[r.museumId]=occVenue(r.museumId,null,hostOf(r.exUrl).replace(/^www\./,"")||r.museumId.slice(4));
+    MU[r.museumId]=occVenue(r.museumId,null,withoutWww(hostOf(r.exUrl))||r.museumId.slice(4));
     KNOWN_VENUES.add(r.museumId);
   }
 }
@@ -3153,7 +3254,7 @@ function pastedPageReply(url,text){
 // 2,000-character cut applies); title and dates are filled from Claude's answer (pasteDates).
 function pastedPage(text,url){
   return{ok:true,pasted:true,text,base:"",between:[],under:"",afterDates:String(text).split("\n").filter(Boolean),start:"",end:"",
-    raw:String(text).slice(0,LINK_RAW_CHARS),site:hostOf(siteUrlOf(url)).replace(/^www\./,""),link:url,noDates:true,dateLine:""};
+    raw:String(text).slice(0,LINK_RAW_CHARS),site:withoutWww(hostOf(siteUrlOf(url))),link:url,noDates:true,dateLine:""};
 }
 // Claude's copy is checked word for word against the text: capitals, punctuation and line breaks aside.
 const pasteWords=t=>" "+foldText(String(t||"")).replace(/[^\p{L}\p{N}]+/gu," ").trim()+" ";
@@ -3254,7 +3355,7 @@ function mdLinks(text){
 // "shop.courtauld.ac.uk" → "courtauld.ac.uk". Two labels, three behind a
 // country's own second level (ac.uk, org.uk, com.au…).
 function baseDomain(h){
-  const p=String(h||"").toLowerCase().replace(/^www\./,"").split(".").filter(Boolean);
+  const p=withoutWww(String(h||"").toLowerCase()).split(".").filter(Boolean);
   if(p.length<=2)return p.join(".");
   const two=p.slice(-2).join(".");
   return /^(?:ac|co|org|gov|com|net|edu)\.[a-z]{2}$/.test(two)?p.slice(-3).join("."):two;
@@ -3276,10 +3377,10 @@ const isFileUrl=u=>/\.(?:jpe?g|png|gif|webp|svg|pdf|mp4)(?:$|[?#])/i.test(String
 const NOT_SHOP_HOST=/(?:^|\.)(?:play\.google|apps\.apple|itunes\.apple|facebook|instagram|twitter|x|tiktok|youtube|linkedin|pinterest|wikipedia)\.[a-z.]+$/i;
 const notAShop=u=>isFileUrl(u)||NOT_SHOP_HOST.test(hostOf(u));
 function isShopPlace(u,museumHost,pageShopHost){
-  const h=hostOf(u).replace(/^www\./,"");
+  const h=withoutWww(hostOf(u));
   if(!h)return false;
   if(notAShop(u))return false;
-  if(pageShopHost&&h===pageShopHost.replace(/^www\./,""))return true;
+  if(pageShopHost&&h===withoutWww(pageShopHost))return true;
   const b=baseDomain(museumHost), hb=baseDomain(h), label=b.split(".")[0], hl=hb.split(".")[0];
   if(hb===b){ let path=""; try{ path=new URL(u).pathname; }catch{} return SHOP_HOST.test(h)||SHOP_PATH.test(path); }
   return label.length>=3&&hl!==label&&hl.includes(label)&&SHOP_HOST.test(hl);
@@ -3384,7 +3485,7 @@ async function openShopPage(open,url,objective,queries,opts){
 function itemsUnder(text,host,list){
   let base=""; try{ base=new URL(list).pathname.replace(/\/?$/,"/"); }catch{ return []; }
   if(base==="/")return [];
-  const bare=h=>String(h||"").replace(/^www\./,"");
+  const bare=h=>withoutWww(String(h||""));
   return [...new Set(mdLinks(text).filter(l=>{ if(bare(hostOf(l.url))!==bare(host)||NOT_A_BOOK_LINK.test(l.url))return false; let p=""; try{ p=new URL(l.url).pathname; }catch{ return false; } return p.startsWith(base)&&p.length>base.length+1; }).map(l=>l.url.split("#")[0]))];
 }
 async function firstProductIsBook(open,text,host,list){
@@ -3431,6 +3532,11 @@ function shopifyShelfIsBooks(text,target){
 function shopifyProductsUrl(u){
   try{ const x=new URL(u); return new RegExp("^\\/(?:"+LANG_PART+"\\/)?collections\\/[^/]+\\/?$","i").test(x.pathname)?x.origin+x.pathname.replace(/\/$/,"")+"/products.json?limit=8":""; }catch{ return ""; }
 }
+// What Claude is asked to read from a shop section's page (a section's books, or a Shopify section's products).
+const SHOP_BOOKS_ASK="The books in this section of the shop, with their prices.";
+const SHOP_PRODUCTS_ASK="The products in this section: titles, types and prices.";
+// The product count a Shopify section's text gives, as digits, or undefined when it gives none.
+function shopifyCountIn(text){ return (text.match(/"products_count"\s*:\s*(\d+)/)||[])[1]; }
 // A Shopify shop's sections, read as text (a long list can come back cut short); empty
 // ones skipped; ranked on the TITLE her menu shows, never the handle.
 function shopifySections(text,root){
@@ -3438,7 +3544,7 @@ function shopifySections(text,root){
   for(const chunk of String(text||"").split(/\{\s*"id"\s*:/).slice(1)){
     const t=(chunk.match(/"title"\s*:\s*"((?:[^"\\]|\\.)*)"/)||[])[1];
     const h=(chunk.match(/"handle"\s*:\s*"([^"]+)"/)||[])[1];
-    const n=(chunk.match(/"products_count"\s*:\s*(\d+)/)||[])[1];
+    const n=shopifyCountIn(chunk);
     const id=(chunk.match(/^\s*(\d+)/)||[])[1]||"";
     if(!t||!h||n==="0")continue;
     let title=t; try{ title=JSON.parse('"'+t+'"'); }catch{}
@@ -3495,6 +3601,9 @@ const SEARCH_SHAPES=["search?q=","search.php?search_query=","catalogsearch/resul
 // made only when the first proves nothing — one call carries 20 addresses at most.
 const SEARCH_SHAPES_LATER=["search?search=","search?sSearch="];
 const PRICE_ONE=new RegExp(PRICE.source,"i");
+// A price anywhere on a shop page, as the catalogue lookup asks of a whole page (shopStep): any price
+// above, or a whole number before the euro sign or a currency code ("39 \u20ac", "45 EUR").
+const PRICE_ON_PAGE=new RegExp(PRICE.source+"|\\d\\s?(?:\u20ac|(?:eur|usd|gbp)\\b)","i");
 const NOT_A_BOOK_LINK=/cart|wishlist|account|login/i;
 const BLOCK_LINES=6;   // lines of a link's block read for its price
 // A shop's buttons beside a price are not books (Cleveland's filter "Reset", the RA's "Shop now").
@@ -3690,14 +3799,14 @@ async function tryShelves(sf,cands,how,inside){
     if(t==null){
       if(sf.opens>=SHELF_OPENS)return null;
       sf.opens++; sf.opened.add(c.url);
-      const f=await openShopPage(fetchPage,c.url,"The books in this section of the shop, with their prices.",null,{full:true});
+      const f=await openShopPage(fetchPage,c.url,SHOP_BOOKS_ASK,null,{full:true});
       if(!f.ok){ sf.died=f.detail; sf.failed.add(k); continue; }
       t=pageTextOf(f.results); sf.texts.set(k,t); sf.seenText+="\n"+t;
     }
     if(looksLikeBookShelf(t))return{...c,how};
     const pj=shopifyProductsUrl(c.url);
     if(pj){
-      const j=await fetchPage(pj,"The products in this section: titles, types and prices.",null,{full:true});
+      const j=await fetchPage(pj,SHOP_PRODUCTS_ASK,null,{full:true});
       const jt=j.ok?pageTextOf(j.results):"";
       if(shopifyShelfIsBooks(jt,c.target))return{...c,how};
       // A section under a translated address ("/en/collections/exhibitions", Thyssen's "exposiciones") lists no
@@ -3816,7 +3925,7 @@ async function shopifySectionList(sf){
       }
       const same=id&&home.find(x=>x.id===id);
       if(!same)continue;
-      const j=await fetchPage(originOf(sf.root)+"collections/"+same.handle+"/products.json?limit=8","The products in this section: titles, types and prices.",null,{full:true});
+      const j=await fetchPage(originOf(sf.root)+"collections/"+same.handle+"/products.json?limit=8",SHOP_PRODUCTS_ASK,null,{full:true});
       if(j.ok&&shopifyShelfIsBooks(pageTextOf(j.results),true))sf.consider(c);
     }
   }
@@ -3881,7 +3990,7 @@ async function englishVersion(sf){
   const host=hostOf(at), own=[...sf.texts].filter(([k])=>hostOf(k)===host).map(([,t])=>t).join("\n");
   const said=pageLanguage(at,(sf.pick||sf.best||{}).proof||own);
   if(said==="en"){ sf.note("english",{at,already:true}); return; }
-  const o=originOf(at), bare=host.replace(/^www\./,""), b=baseDomain(host);
+  const o=originOf(at), bare=withoutWww(host), b=baseDomain(host);
   const links=mdLinks(own).filter(l=>EN_LABEL.test(foldText(l.label).trim())&&baseDomain(hostOf(l.url))===b).map(l=>l.url);
   const tries=[...new Set([...links,...EN_PATHS.map(p=>o+p),"https://en."+bare+"/"])].filter(u=>normalizeUrlKey(u)!==normalizeUrlKey(at)).slice(0,8);
   const f=await fetchPage(tries,"The shop's front page and its menu, in English.",null,{full:true});
@@ -3916,7 +4025,7 @@ async function shopResult(sf){
     // A pick taken on its search excerpt has no book links to prove a search with: its page
     // is opened once, unless already opened (CEDON; AL-044).
     if(!search&&!booksSeenOn(seen,hostOf(home)).length&&!sf.opened.has(pick.url)){
-      const f=await openShopPage(fetchPage,pick.url,"The books in this section of the shop, with their prices.",null,{full:true});
+      const f=await openShopPage(fetchPage,pick.url,SHOP_BOOKS_ASK,null,{full:true});
       if(f.ok)seen+="\n"+pageTextOf(f.results);
     }
     // A section in another language taken, its English one found but unread (Berlin): both go to her shop screen.
@@ -3952,6 +4061,8 @@ const GALLERY_OPENS=14;
 const GALLERY_WAY_WORD="shop|store|boutique|bookshop|bookstore|books?|publications?|publishing|library|librairie|livres|publikationen|bucher|buecher|libreria|libri|pubblicazioni|publicaciones|libros|tienda|negozio|winkel|butik|webshop";
 const GALLERY_WAY=new RegExp("^(?:the\\s+|our\\s+|online\\s+|alle\\s+)*(?:"+GALLERY_WAY_WORD+")(?:\\s+online)?$");
 const GALLERY_WAY_PATH=new RegExp("^\\/(?:"+LANG_PART+"\\/)?(?:"+GALLERY_WAY_WORD+")\\/?$","i");
+// What Claude is asked to read from a gallery's home page.
+const SITE_MENU_ASK="The site's menu and footer links: shop, books, publications, library.";
 const GALLERY_BUY=/^(?:purchase|buy(?: now)?|add to (?:cart|bag|basket)|shop now|order|acheter|kaufen|in den warenkorb|comprar|acquista)$/;
 const GALLERY_SHOP_IN=/\b(?:shop|store|boutique)\b/;
 const GALLERY_NOT_PAGE=/\/(?:cart|basket|checkout|account|login|wishlist)\b|ticket/i;
@@ -4071,7 +4182,7 @@ async function galleryShop(page,museumHost,venueName,turnedDown,trace,foreign){
       if(/"collections"\s*:/.test(t)){
         // A list of 250 is read on (Perrotin's "Perrotin Editions - Books" is on its second page).
         for(let page=2,last=t;page<=SHOPIFY_LIST_PAGES&&(last.match(/"handle"\s*:/g)||[]).length>=250&&g.opens<GALLERY_OPENS;page++){ g.opens++; const n=await fetchPage(o+"collections.json?limit=250&page="+page,"The shop's lists: titles and handles.",null,{full:true}); last=n.ok?pageTextOf(n.results):""; t+="\n"+last; }
-        const lists=shopifySections(t,o).map(c=>({...c,count:+((t.split('"handle":"'+c.handle+'"')[1]||"").match(/"products_count"\s*:\s*(\d+)/)||[])[1]||0}));
+        const lists=shopifySections(t,o).map(c=>({...c,count:+shopifyCountIn(t.split('"handle":"'+c.handle+'"')[1]||"")||0}));
         const r=await pick(lists,"the shop's lists");
         if(r)return r;
         if(g.opens<GALLERY_OPENS){ g.opens++; const j=await fetchPage(o+"collections/all/products.json?limit=8","The products in this shop: titles, types and prices.",null,{full:true}); if(j.ok&&shopifyShelfIsBooks(pageTextOf(j.results),false))return{url:o+"collections/all",how:"the shop's whole list"}; }
@@ -4144,9 +4255,9 @@ async function galleryShop(page,museumHost,venueName,turnedDown,trace,foreign){
   if(page.page)hit=await tryAll(waysIn(page.page),"show-page");
   // 2. The home page, a redirect followed (kamelmennour.com → mennour.com).
   if(!hit){
-    let home="https://"+g.host+"/", t=await open(home,"The site's menu and footer links: shop, books, publications, library.");
+    let home="https://"+g.host+"/", t=await open(home,SITE_MENU_ASK);
     const moved=t&&t.trim().length<SHELL_CHARS&&/redirect/i.test(t)?mdLinks(t).find(l=>!own(l.url))||(t.match(/<(https?:\/\/[^>\s]+)>/)?{url:t.match(/<(https?:\/\/[^>\s]+)>/)[1]}:null):null;
-    if(moved){ g.host=hostOf(moved.url); home=originOf(moved.url); t=await open(home,"The site's menu and footer links: shop, books, publications, library."); }
+    if(moved){ g.host=hostOf(moved.url); home=originOf(moved.url); t=await open(home,SITE_MENU_ASK); }
     g.home=t||"";
     if(!t||t.trim().length<SHELL_CHARS)g.unread="The gallery's site could not be read.";
     note("home",{home,read:!!t,chars:(t||"").length});
@@ -4190,9 +4301,7 @@ async function galleryShop(page,museumHost,venueName,turnedDown,trace,foreign){
 // door as a sweep. swept_at stays blank: a link is not a sweep, and the
 // freshness drawer is about sweeps.
 function proFormaCsv(rows){
-  const cell=v=>{const s=String(v==null?"":v);return /[",\n\r]/.test(s)?"\""+s.replace(/"/g,"\"\"")+"\"":s;};
-  const cols=["venue_code","title","start_date","end_date","summary","url","notes","swept_at"];
-  return [cols.join(",")].concat(rows.map(r=>cols.map(c=>cell(r[c])).join(","))).join("\n")+"\n";
+  return PRO_FORMA.csvText(rows,PRO_FORMA.quoteCell);
 }
 
 // ---- Pro forma helpers (pure) ----
@@ -4211,18 +4320,9 @@ function normalizeUrlKey(u){
 }
 
 function urlLooksValid(u){ if(!u)return false; try{ const url=new URL(String(u).trim()); if(!/^https?:$/.test(url.protocol))return false; if(!/^[a-z0-9.-]+$/i.test(url.hostname))return false; if(!url.hostname.includes("."))return false; return true; }catch{ return false; } }
+// The scraper's reader, after every line ending is made \n; blank lines are left out.
 function csvParse(text){
-  const out=[]; let i=0,field="",row=[],inQ=false; text=String(text).replace(/\r\n?/g,"\n");
-  const pushF=()=>{row.push(field);field="";}; const pushR=()=>{out.push(row);row=[];};
-  while(i<text.length){ const c=text[i];
-    if(inQ){ if(c==='"'){ if(text[i+1]==='"'){field+='"';i+=2;continue;} inQ=false;i++;continue;} field+=c;i++;continue; }
-    if(c==='"'){inQ=true;i++;continue;}
-    if(c===','){pushF();i++;continue;}
-    if(c==='\n'){pushF();pushR();i++;continue;}
-    field+=c;i++;
-  }
-  if(field.length>0||row.length>0){pushF();pushR();}
-  return out.filter(r=>r.some(c=>String(c).trim()!==""));
+  return PRO_FORMA.parseCsv(String(text).replace(/\r\n?/g,"\n")).filter(r=>r.some(c=>String(c).trim()!==""));
 }
 // WHAT A QUARANTINE REMEMBERS. The URL where there is one; venue + title where there
 // is not (a reused title could block the wrong row — bounded, and visible on screen).
@@ -4264,10 +4364,7 @@ const sameExhibition = (a,b) => {
 // applies until she says. Unusable data becomes a note on the card, never dropped.
 // Marker rows (a listing page the sweep could not read) are matched on the scraper's
 // notes sentence, never on a bracketed title, and go to the coverage panel.
-const isMarkerRow = note => {
-  const MARKER_SENTINEL = "Marker row, not an exhibition.";
-  return String(note||"").trim().endsWith(MARKER_SENTINEL);
-};
+const isMarkerRow = PRO_FORMA.isMarkerNote;
 // Which of two values to offer first when a stitched file disagrees with itself: the
 // FULLER one, marked as a guess, both shown (her decision).
 const fuller = (a,b) => (String(b||"").trim().length > String(a||"").trim().length) ? b : a;
@@ -4301,6 +4398,10 @@ function foldDuplicateRows(raws){
   }
   return out;
 }
+// The note on a card whose file date is not YYYY-MM-DD; `which` is "Start" or "End".
+function unreadableDateNote(which,value){
+  return which+" date \u201c"+value+"\u201d couldn't be read (needs YYYY-MM-DD) \u2014 left blank.";
+}
 // `rows` is her ledger as it stands; the cards are what the file would change in it.
 function analyzeProForma(text,rows,ignoredKeys,opts){
   const table=csvParse(text);
@@ -4315,7 +4416,7 @@ function analyzeProForma(text,rows,ignoredKeys,opts){
   // Which venues this file touched (attempted) and gave rows (returned), dated by the
   // rows' swept_at, the latest per venue — never by the moment of import.
   const attempted={}, returned={};
-  const later=(a,b)=>(!a||(b&&b>a))?b:a;
+  const later=PRO_FORMA.later;
   // Counts she can reconcile: every row read is accounted for (docs/app.md §3
   // "Counts that reconcile").
   let silent=0, blocked=0;
@@ -4346,8 +4447,8 @@ function analyzeProForma(text,rows,ignoredKeys,opts){
     if(!vc||!KNOWN_VENUES.has(vc)){ faults.push("line "+line+": venue code "+(vc?("\u201c"+vc+"\u201d"):"is blank")+(vc?" isn\u2019t one of the venues":"")); continue; }
     if(!title){ faults.push("line "+line+": no exhibition title"+(get(r,"url")?" \u2014 "+get(r,"url"):"")); continue; }
     let sd=get(r,"start_date"), ed=get(r,"end_date"), url=get(r,"url");
-    if(sd&&!isValidYMD(sd)){notes.push("Start date \u201c"+sd+"\u201d couldn't be read (needs YYYY-MM-DD) \u2014 left blank.");sd="";}
-    if(ed&&!isValidYMD(ed)){notes.push("End date \u201c"+ed+"\u201d couldn't be read (needs YYYY-MM-DD) \u2014 left blank.");ed="";}
+    if(sd&&!isValidYMD(sd)){notes.push(unreadableDateNote("Start",sd));sd="";}
+    if(ed&&!isValidYMD(ed)){notes.push(unreadableDateNote("End",ed));ed="";}
     if(url&&!urlLooksValid(url)){notes.push("Exhibition link \u201c"+url+"\u201d looks garbled \u2014 left blank.");url="";}
     // Quarantined: dropped before anything else sees it. Counted, never silent.
     if(ignoredKeys&&ignoredKeys.has(ignoreKeyFor(vc,url,title))){ blocked++; continue; }
@@ -4449,13 +4550,11 @@ function isUndecidedCard(p,dec){
 
 // ===== "PROBABLY NOT FOR YOU" — her design (CLAUDE.md §2.2.7) =====
 // Compression labels a NEW show in a topic she always quarantines, writing one
-// sentence into the row's notes ("Topic: Asian art."; TOPICS in scraper/compress.js).
+// sentence into the row's notes ("Topic: Asian art."; TOPICS in scraper/compress.js, the
+// sentence and its reading in scraper/pro_forma.js).
 // Such a new show, with nothing odd about it, goes in its own section, pre-set to
 // Never add; she clicks Add to keep one. Odd cases stay odd: they need her eye.
-function topicOf(note){
-  const m=/(?:^|\s)Topic: ([^.]+)\./.exec(String(note||""));
-  return m?m[1]:null;
-}
+const topicOf=PRO_FORMA.topicOf;
 function isTopicCard(p){
   return !!(p&&p.type==="add"&&p.topic&&!p.merged&&!p.choices&&p.cand&&p.cand.exUrl);
 }
@@ -5053,19 +5152,8 @@ function pickedPages(pages,files,parse){
 }
 
 // Merge, never replace: a venue's dates move only for a LATER time, so an old sweep
-// file cannot drag them backwards. Tried and brought-rows move independently.
-function mergeSweepLog(prev,seen){
-  const out={...(prev||{})};
-  const later=(a,b)=>(!a||(b&&b>a))?b:a;
-  for(const v of Object.keys((seen&&seen.attempted)||{})){
-    const was=out[v]||{};
-    out[v]={
-      attempted: later(was.attempted, seen.attempted[v]),
-      returned:  later(was.returned,  (seen.returned||{})[v]||null),
-    };
-  }
-  return out;
-}
+// file cannot drag them backwards. Tried and brought-rows move independently (scraper/pro_forma.js).
+const mergeSweepLog=PRO_FORMA.mergeSweepLog;
 
 // ── QUARANTINE — in the page's store AND her export (docs/app.md §4) ────────
 // It is her judgement, derivable from nothing, so it cannot live only in the store;
@@ -5307,7 +5395,9 @@ function resetSeed(){
     debug:"Reset: loaded the built-in starter set ("+rows.length+" exhibitions). It isn't in any file \u2014 Save if you want one."};
 }
 
-const cleanIsbn=v=>{if(!v)return null;const d=String(v).replace(/[^0-9]/g,"");return d.length===13?d:null;};
+const cleanIsbn=v=>{if(!v)return null;const d=isbnDigits(v);return d.length===13?d:null;};
+// The digits of an ISBN as typed or printed, hyphens and spaces gone.
+const isbnDigits=v=>String(v||"").replace(/\D/g,"");
 const fmtIsbn=v=>{const c=cleanIsbn(v);return c?c.slice(0,3)+"-"+c.slice(3):null;};
 
 // ISBN-10 is taken, not thrown away (her decision): converted to 13 for her screen,
@@ -5335,7 +5425,7 @@ function isbn10to13(v){
 // it is taken only if its digits, 13 or 10, are printed there — a read cannot invent
 // one. cleanIsbn stays as it is: it also shows ISBNs already in her ledger.
 const toIsbn13=(v,seen)=>{
-  const d=String(v||"").replace(/[^0-9]/g,"");
+  const d=isbnDigits(v);
   const isbn=d.length===13?(isbn13Checks(d)?d:null):isbn10to13(v);
   if(!isbn||seen===undefined)return isbn;
   return isbnInText(isbn,seen)?isbn:null;
@@ -5351,12 +5441,14 @@ function isbn13to10(d){
 // Printed in the text: the 13 or the 10, hyphens or spaces between its digits allowed,
 // never as part of a longer number.
 function isbnInText(isbn,text){
-  const d=String(isbn||"").replace(/\D/g,"");
+  const d=isbnDigits(isbn);
   if(d.length!==13)return false;
   const a=String(text||"").replace(/(\d)[\u2010-\u2015-](?=[\dXx])/g,"$1");
   const b=a.replace(/(\d) (?=[\dXx])/g,"$1");
   return [d,isbn13to10(d)].filter(Boolean).some(f=>{ const re=new RegExp("(?<![0-9])"+f+"(?![0-9Xx])","i"); return re.test(a)||re.test(b); });
 }
+// A 13-digit 978/979 number with no digit beside it; group 1 is the number.
+const ISBN13_STANDALONE=/(?<![0-9])(97[89]\d{10})(?![0-9])/g;
 const MON3=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 const fmtDate=d=>{if(!d)return null;const x=new Date(d+"T00:00:00");if(isNaN(x))return d;return x.getDate()+" "+MON3[x.getMonth()]+" "+x.getFullYear();};
 function fmtRefresh(iso){if(!iso)return"never";const d=new Date(iso);if(isNaN(d))return"never";const mon=MON3[d.getMonth()];let h=d.getHours();const ap=h<12?"am":"pm";h=h%12;if(h===0)h=12;const mm=String(d.getMinutes()).padStart(2,"0");return mon+" "+d.getDate()+", "+d.getFullYear()+" "+h+":"+mm+ap;}
@@ -5871,10 +5963,12 @@ function storeRef(db,path){
   for(let i=2;i+1<s.length;i+=2)r=r.collection(s[i]).doc(s[i+1]);
   return r;
 }
+// The sentence for a viewer with no store.
+const STORE_UNREACHED="This viewer can\u2019t reach the page\u2019s store.";
 function storeNo(code){
   return code==="read_only"?{code,message:"This copy is read only."}
     :code==="unread"?{code,message:"This part of the store could not be read, so it is not written."}
-    :{code,message:"This viewer can\u2019t reach the page\u2019s store."};
+    :{code,message:STORE_UNREACHED};
 }
 // True when the store is reached and, with {part}, that part is not unread: a write may go ahead.
 async function storeReached(o){
@@ -5958,10 +6052,12 @@ async function cloudLetGo(){
   if(cloudReadOnly)return;
   try{ const snap=await storeRead(CLOUD_SESSION_DOC); if(snap.exists&&(snap.data||{}).id===CLOUD_SESSION_ID)await storeDelete(CLOUD_SESSION_DOC,{claim:true}); }catch{}
 }
+// The sentence for a viewer with no store, said where it means no cloud copy is being written.
+const STORE_UNREACHED_NOT_SAVING=STORE_UNREACHED.replace(/\.$/,"")+", so nothing is being saved to the cloud copy.";
 // The cloud copy, read on open. Hands back `live` for the readout ({rec,data} / {rec:null} /
 // {why}); `off`, why nothing is being saved; `open` when the page opens it by itself (CLOUD_OPENS).
 async function cloudOpenRead(tr){
-  if(!await storeReached())return {live:{why:"This viewer can’t reach the page’s store."},off:"This viewer can’t reach the page’s store, so nothing is being saved to the cloud copy."};
+  if(!await storeReached())return {live:{why:STORE_UNREACHED},off:STORE_UNREACHED_NOT_SAVING};
   try{
     const {rec,text}=await cloudReadLive();
     if(!rec)return {live:{rec:null}};
@@ -5983,7 +6079,7 @@ async function cloudSaveLatest(tr,latest,tell){
   if(tr.busy){ tr.again=true; return null; }
   // Another copy took over while this one slept? Then nothing is written.
   if(await cloudOtherEditing())return {readOnly:true};
-  if(!await storeReached())return {off:"This viewer can’t reach the page’s store, so nothing is being saved to the cloud copy."};
+  if(!await storeReached())return {off:STORE_UNREACHED_NOT_SAVING};
   tr.busy=true;
   try{
     do{
@@ -6069,7 +6165,7 @@ async function cloudReadToOpen(open){
 }
 // SNAPSHOTS. Cloud Saves' list, newest first, and why it is empty when it could not be read.
 async function cloudSavesRead(){
-  if(!await storeReached())return {snaps:[],why:"This viewer can’t reach the page’s store."};
+  if(!await storeReached())return {snaps:[],why:STORE_UNREACHED};
   try{ return {snaps:await cloudListSnapshots(),why:null}; }
   catch(e){ return {snaps:[],why:"Couldn’t read the cloud saves ("+cloudTrouble(e,"read")+")."}; }
 }
@@ -6091,7 +6187,7 @@ async function cloudRollback(tr,s,all,{current,started}){
     const d=current();
     if(d){ curText=JSON.stringify({rows:d.rows,ignored:d.ignored,lastRun:d.lastRun,savedAt:new Date().toISOString()}); curRows=d.rows.length; curQ=d.ignored.length; }
     else{ const live=await cloudReadLive(); if(live.rec){ curText=live.text; const cd=JSON.parse(live.text); curRows=cd.rows.length; curQ=(cd.ignored||[]).length; tr.prev=live.rec; } }
-    if(curText)await cloudTakeSnapshot(curText,{label:"Safety snapshot before roll-back to snapshot of "+localReadable(s.at),kind:"safety",rows:curRows,quarantined:curQ});
+    if(curText)await cloudTakeSnapshot(curText,{label:rollbackSafetyLabel(s.at),kind:"safety",rows:curRows,quarantined:curQ});
     const data=JSON.parse(await cloudReadSnapshot(s));
     return {rows:(data.rows||[]).map(r=>({...r,watching:r.watching||false})),lastRun:data.lastRun||null,
       info:"Rolled back to the cloud save “"+snapTitle(s,all)+"” from "+localReadable(s.at)+" — "+(data.rows||[]).length+" exhibitions.",
@@ -6258,7 +6354,7 @@ function publisherDomainFrom(results,name){
     const flat=host.replace(/[^a-z0-9]/g,"");
     if(words.length&&words.every(w=>flat.includes(w)))return host;
   }
-  const bare=h=>h.replace(/^www\./,"");
+  const bare=h=>withoutWww(h);
   if(listed)for(const r of (results||[])){ const h=hostOf(String(r&&r.url||"")); if(h&&bare(h)===bare(listed))return h; }
   return null;
 }
@@ -6370,8 +6466,6 @@ function publisherLinkOf(u,publisher,dom,museumId){
 // Text a fetched page must carry before we believe we saw it — measured: Hannibal's
 // script-drawn section returns 110 characters, a real shelf thousands.
 const SHELL_CHARS=400;
-// A price on a shop page: a shelf of books always shows them (shopStep).
-const SHOP_PRICE=/(?:[\u20ac$\u00a3]\s?\d|\d(?:[.,]\d{1,2})?\s?(?:\u20ac|(?:EUR|USD|GBP)\b))/;
 
 // The page's own text: the full copy when one was asked for, else excerpts.
 function oneText(r){
@@ -6429,7 +6523,7 @@ function isbnsLabelled(text){
   const re=/\b(?:ISBN|EAN)(?:[\s-]?13)?\b[^0-9]{0,15}(97[89](?:[\s\u2010-\u2013-]?\d){10})(?!\d)/gi;
   let m;
   while((m=re.exec(String(text||"")))){
-    const d=m[1].replace(/\D/g,"");
+    const d=isbnDigits(m[1]);
     if(isbn13Checks(d))found.add(d);
   }
   return found;
@@ -6452,7 +6546,7 @@ function isbnInResults(results,bookTitle){
   const found=new Set();
   for(const r of resultsCarrying(results,bookTitle)){
     for(const d of isbnsLabelled(oneText(r)))found.add(d);
-    for(const m of String((r&&r.url)||"").matchAll(/(?:^|[^0-9])(97[89]\d{10})(?![0-9])/g))
+    for(const m of String((r&&r.url)||"").matchAll(ISBN13_STANDALONE))
       if(isbn13Checks(m[1]))found.add(m[1]);
   }
   return found.size===1?[...found][0]:null;
@@ -6545,6 +6639,8 @@ const shopUnreadHead=s=>s==="script"?SHOP_SCRIPT_HEAD:s==="parallel"?SHOP_PARALL
 const shopUnreadSaid=s=>s==="script"?"contents cannot be seen — JS-rendering":s==="parallel"?"contents cannot be seen — Parallel fault":s==="unconfirmed"?"contents cannot be seen — unconfirmed page problem":"is blocked";
 const SHOP_BLOCKED_FOUND_REST=" — search it manually. The catalogue is stocked elsewhere.";
 const SHOP_BLOCKED_NONE_REST=". The catalogue also does not appear to exist elsewhere. Search manually to confirm.";
+// What a catalogue block shows when its book has no ISBN.
+const ISBN_UNCONFIRMED="ISBN not confirmed \u2014 verify before buying";
 
 // A ticket is never a catalogue (her decision, KHM Canaletto & Bellotto): a link with
 // /ticket/ or /tickets/ in its path is never taken as the book. L-001 to L-019.
@@ -6666,7 +6762,7 @@ function houseWords(n){
   return normPublisher(n).split(" ").filter(w=>w.length>2&&!PUBLISHER_WORDS.has(w)&&!["fonds","editions","ed","sa","srl","gmbh"].includes(w));
 }
 function publisherGroups(results,isbn){
-  const d=String(isbn||"").replace(/\D/g,"");
+  const d=isbnDigits(isbn);
   if(d.length!==13)return [];
   const groups=[];
   for(const r of (results||[])){
@@ -6727,6 +6823,18 @@ function localCatalogueQuery(mu,row){
   const head=String(row.title||"").split(/\s*:\s*/)[0].trim();
   const year=/^\d{4}/.test(String(row.startDate||""))?" "+String(row.startDate).slice(0,4):"";
   return head?[head+" "+lookupName(mu)+" "+word+year]:[];
+}
+// The instruction that a "Sold by" line names the shop; every prompt that reads a book's page or search
+// results carries it (Orsay; docs/app.md).
+const SOLD_BY_RULE=
+  "\"Sold by …\" (“vendu par”, “venduto da”) names the SHOP, never the publisher — "
+ +"the Orsay’s shop says “Sold by GrandPalaisRmn” for books Hazan printed. Never report it as publisher.\n";
+// The line that opens the shape of the reply every lookup prompt asks for.
+const REPLY_JSON_ONLY="\nReply with ONLY this JSON object and nothing else:\n";
+// What Claude is asked to read from a book's own page.
+function bookPageAsk(title){
+  return "The ISBN-13, the publisher, and any link to the publisher’s own page for the book "
+    +"“"+title+"”, including any details or specification panel on the page.";
 }
 
 // The English-edition line on a foreign book: how far an English edition was looked
@@ -6864,7 +6972,7 @@ async function readShopPage(book,url,io,opened){
    +"category, search results, a ticket or a different product. That is what a pulled page redirecting looks like.\n"
    +"\nBook: "+book+"\nAddress on file: "+url+"\nAddress served: "+(served||"(not given)")+"\n\n"
    +pageTextOf(f.results).slice(0,PAGE_CHARS)
-   +'\n\nReply with ONLY this JSON object and nothing else:\n{"forSale": true|false, "why": string}\n'
+   +"\n"+REPLY_JSON_ONLY+'{"forSale": true|false, "why": string}\n'
    +'Example: {"forSale":false,"why":"The page says Sold out."}');
   if(!rd.ok)return{kind:"noread",detail:f.detail+"\n"+rd.detail,why:rd.detail.split("[")[0].trim()};
   const d=rd.data||{};
@@ -7043,8 +7151,7 @@ const READ_RULES=
  +"a textbook. The catalogue is the one tied to THIS exhibition at THIS venue.\n"
  +"publisherUrl is the PUBLISHER'S OWN page for this book — the art-book house that printed it, "
  +"not the museum shop, not a bookseller. Give it only if a result actually shows it; null otherwise.\n"
- +"\"Sold by …\" (“vendu par”, “venduto da”) names the SHOP, never the publisher — "
- +"the Orsay’s shop says “Sold by GrandPalaisRmn” for books Hazan printed. Never report it as publisher.\n"
+ +SOLD_BY_RULE
  +"thisVenue is true ONLY when a result says this book is the catalogue of the show AT THIS VENUE: "
  +"the venue's own page, shop or press release names it, or a publisher or bookseller says it "
  +"accompanies the exhibition at this venue. A catalogue of a show at ANOTHER venue is false — "
@@ -7060,7 +7167,7 @@ const READ_RULES_FOREIGN=READ_RULES.replace(/If the same catalogue is sold in mo
  +"an English edition is checked separately.\n");
 
 const READ_SHAPE=
-  "\nReply with ONLY this JSON object and nothing else:\n"
+  REPLY_JSON_ONLY
  +'{"found": true|false, "catalogueTitle": string|null, "isbn13": string|null, '
  +'"publisher": string|null, "publisherUrl": string|null, "shopUrl": string|null, "thisVenue": true|false}\n'
  +'Example: {"found":true,"catalogueTitle":"Metamorphoses: Ovid and the Arts","isbn13":"9789493416543",'
@@ -7081,10 +7188,9 @@ const PAGE_RULES=
  +"publisherUrl is a link to the PUBLISHER'S OWN page for this book, if this page shows one. "
  +"A link to this shop, to Amazon or to another bookseller is NOT it — answer null.\n"
  +"If this page is not about the book named below, set every field null.\n"
- +"\"Sold by …\" (“vendu par”, “venduto da”) names the SHOP, never the publisher — "
- +"the Orsay’s shop says “Sold by GrandPalaisRmn” for books Hazan printed. Never report it as publisher.\n";
+ +SOLD_BY_RULE;
 const PAGE_SHAPE=
-  "\nReply with ONLY this JSON object and nothing else:\n"
+  REPLY_JSON_ONLY
  +'{"isbn13": string|null, "publisher": string|null, "publisherUrl": string|null}\n'
  +'Example: {"isbn13":"9781588398130","publisher":"The Metropolitan Museum of Art",'
  +'"publisherUrl":null}';
@@ -7196,7 +7302,7 @@ async function shopStep(row,io){
   // unread (Berlin's English one): no priced line, even read whole, is "parallel", "script" or "unconfirmed".
   const priced=r=>pageTextOf(r.results).split("\n").some(realPrice);
   if(mu&&(mu.shopUnseen==="parallel"||mu.shopUnseen==="script"||mu.shopUnseen==="unconfirmed")&&!priced(s1)){
-    const whole=await io.fetch(shopPages,"The books in this section of the shop, with their prices.",null,{full:true});
+    const whole=await io.fetch(shopPages,SHOP_BOOKS_ASK,null,{full:true});
     if(!whole.ok)return{ran:true,ok:false,detail:s1.detail+"\n"+whole.detail,data:null};
     if(!priced(whole))
       return{ran:true,ok:true,blocked:mu.shopUnseen,detail:s1.detail+"\n"+whole.detail+(mu.shopUnseen==="parallel"?"\nParallel brought back this shop’s pages without their books, so it could not be searched.":"\nThe shop’s pages came back without their books, so it could not be searched."),data:null};
@@ -7207,9 +7313,9 @@ async function shopStep(row,io){
   let shop=s1;
   // The pages read whole: {whole} with books on them, or the step's answer when none.
   const readWhole=async()=>{
-    const whole=await io.fetch(shopPages,"The books in this section of the shop, with their prices.",null,{full:true});
+    const whole=await io.fetch(shopPages,SHOP_BOOKS_ASK,null,{full:true});
     if(!whole.ok)return{out:{ran:true,ok:false,detail:s1.detail+"\n"+whole.detail,data:null}};
-    let books=whole.results.filter(r=>!pageIsShell([r])&&SHOP_PRICE.test(oneText(r)));
+    let books=whole.results.filter(r=>!pageIsShell([r])&&PRICE_ON_PAGE.test(oneText(r)));
     // No price on any page: a list of titles is books when its first product is one
     // (firstProductIsBook, Yale's Publications), or its first book under its own address (Galerie Karsten Greve).
     const listed=books.length?null:whole.results.find(r=>!pageIsShell([r]));
@@ -7303,8 +7409,7 @@ async function readBookPage(hit,venue,dom,io){
   io.phase("page");
   // The venue's own shop page gets the blank-page retry (openShopPage); a publisher's does not.
   const f=await (shopLinkOf({shopUrl:hit.pageUrl},dom)?(...a)=>openShopPage(io.fetch,...a):io.fetch)(hit.pageUrl,
-    "The ISBN-13, the publisher, and any link to the publisher’s own page for the book "
-      +"“"+book+"”, including any details or specification panel on the page.",
+    bookPageAsk(book),
     [book+" ISBN publisher details"],{full:true});
   let detail=hit.detail+"\n"+f.detail;
   if(!f.ok)return{...hit,detail,trouble:f.detail};
@@ -7367,7 +7472,7 @@ function differentBook(a,b){ return !!(a&&b&&Math.abs(a-b)/Math.max(a,b)>0.15); 
 // ISBN, their counts agreeing; else null. Every valid 978/979 number in a result counts.
 function isbnsIn(x){
   const t=resultText(x).replace(/(\d)[\u2010-\u2015-](?=\d)/g,"$1");
-  return new Set([...t.matchAll(/(?<![0-9])(97[89]\d{10})(?![0-9])/g)].map(m=>m[1]).filter(isbn13Checks));
+  return new Set([...t.matchAll(ISBN13_STANDALONE)].map(m=>m[1]).filter(isbn13Checks));
 }
 function pagesOfIsbn(results,isbn){
   const counts=[];
@@ -7700,8 +7805,10 @@ function pickRow(row,i,now){
 // One block per version, in her order, on a card with two or more; a card with one looks
 // as it always has. Notes are decided here, first rule that fits. VB-001 to VB-010.
 function sourceOf(u){
-  try{ const h=new URL(String(u||"")).hostname.replace(/^www\./,""); return h?{url:String(u),host:h}:null; }catch{ return null; }
+  try{ const h=withoutWww(new URL(String(u||"")).hostname); return h?{url:String(u),host:h}:null; }catch{ return null; }
 }
+// The note on an English edition published after the show opened; the block reads it back to add the year.
+const ENGLISH_LATER="the English edition, published later";
 function versionNote(vs,i,row){
   const v=vs[i], mu=MU[row.museumId], id=row.museumId;
   const vc=v.city||(venueNamedIn(v.publisher,id)||{}).city||null;
@@ -7720,7 +7827,7 @@ function versionNote(vs,i,row){
   if(english&&hasOriginal){
     if(venuePrinting(v.publisher,id))return "this venue's English edition";
     const start=parseInt(String(row.startDate||"").slice(0,4),10);
-    return v.year&&start&&v.year>start?"the English edition, published later":"the English edition";
+    return v.year&&start&&v.year>start?ENGLISH_LATER:"the English edition";
   }
   return null;
 }
@@ -7730,7 +7837,7 @@ function versionNote(vs,i,row){
 function versionBlock(vs,i,row){
   const v=vs[i], mu=venueNamedIn(v.publisher)||MU[row.museumId];
   const note=versionNote(vs,i,row);
-  const later=note==="the English edition, published later"&&v.year;
+  const later=note===ENGLISH_LATER&&v.year;
   const bind=v.binding==="hardcover"?"Hardcover":v.binding==="paperback"?"Paperback":null;
   const facts=[v.lang,bind,v.pages?v.pages+" pp":null].filter(Boolean).join(" \u00b7 ");
   return{i,picked:row.editionPick===i,title:v.title||null,
@@ -7797,8 +7904,7 @@ function factsPrompt(q){
       :"“"+q.book+"”"+(q.isbn?", ISBN "+q.isbn:"")+", the catalogue of the exhibition “"+q.show+"” at "+q.venue)+".\n"
     +"Use ONLY what the text below says. Never use outside knowledge, never guess an ISBN and never invent a link.\n"
     +"Give every ISBN EXACTLY as printed — a 10-digit one as it stands, never converted.\n"
-    +"\"Sold by …\" (“vendu par”, “venduto da”) names the SHOP, never the publisher — "
-    +"the Orsay’s shop says “Sold by GrandPalaisRmn” for books Hazan printed. Never report it as publisher.\n"
+    +SOLD_BY_RULE
     +"isbn13: this book's own ISBN, or null.\n"
     +"pages: the number of pages the text prints for THIS book (\"544 pages\", \"281 pp.\"), digits only, or null.\n"
     +"versions: other printings of THIS SAME book in the SAME language that the text shows with their own ISBN — "
@@ -7832,7 +7938,7 @@ function factsPrompt(q){
     // The first web search's results, read again (Hubert Robert: its English book was there).
     +(q.earlier&&q.earlier.length?"\nSECTION D — earlier web search results about this exhibition's catalogue.\n"
       +resultsForPrompt(q.earlier,2000,{words:[q.book,q.show,"edition","catalogue"]},q.earlier.length)+"\n":"")
-    +"\nReply with ONLY this JSON object and nothing else:\n"+shape;
+    +REPLY_JSON_ONLY+shape;
 }
 
 // The trust order for a publisher: read off the ISBN's results, then printed on the
@@ -7848,7 +7954,7 @@ function sameHouse(a,b){
 function siteOfHouses(results,pub,museumId){
   const whole=publisherDomainFrom(results,pub);
   if(whole)return whole;
-  const parts=String(pub||"").split(/\s*(?:\/|;|&|\s+and\s+|\s+with\s+)\s*/i).map(x=>x.trim()).filter(Boolean);
+  const parts=String(pub||"").split(HOUSE_SPLIT).map(x=>x.trim()).filter(Boolean);
   if(parts.length<2)return null;
   parts.sort((a,b)=>museumImprintOnly(a,museumId)-museumImprintOnly(b,museumId));
   for(const p of parts){ const h=publisherDomainFrom(results,p); if(h)return h; }
@@ -7916,7 +8022,7 @@ async function findPublisherPage(F,c){
          +"\nBook: "+book+(isbn?"\nISBN: "+isbn:"")+"\nPublisher: "+pub
          +"\nExhibition venue: "+venue+"\n\n"
          +resultsForPrompt(onSite,3000,{words:[book,isbn||""]})
-         +"\nReply with ONLY this JSON object and nothing else:\n"
+         +REPLY_JSON_ONLY
          +'{"candidates": [string]}\n'
          +'Example: {"candidates":["https://hannibalbooks.be/en/fine-art","https://hannibalbooks.be/en/new"]}');
         log.push(rd.detail);
@@ -7966,7 +8072,7 @@ async function findPublisherPage(F,c){
        +"An empty list if none.\n":"")
      +"\nBook: "+book+(isbn?"\nISBN: "+isbn:"")+"\nPublisher: "+pub+"\n\n"
      +pageForPrompt(res)
-     +"\nReply with ONLY this JSON object and nothing else:\n"
+     +REPLY_JSON_ONLY
      +'{"kind": "book"|"listing"|"other", "bookUrl": string|null'
      +(c.wantEditions?', "editions": [{"title": string, "isbn13": string, "language": string, "url": string|null}]':'')+'}\n'
      +'Example: {"kind":"listing","bookUrl":"https://hannibalbooks.be/en/metamorfosen-ovidius-en-de-kunsten#102642"}');
@@ -8136,8 +8242,7 @@ async function lookupCatalogue(row,hooks){
     else{
       // The venue's own shop page gets the blank-page retry (openShopPage); a publisher's does not.
       const f=await (shopLinkOf({shopUrl:hit.pageUrl},dom)?(...a)=>openShopPage(io.fetch,...a):io.fetch)(hit.pageUrl,
-        "The ISBN-13, the publisher, and any link to the publisher’s own page for the book "
-          +"“"+(F.title||title)+"”, including any details or specification panel on the page.",
+        bookPageAsk(F.title||title),
         [(F.title||title)+" ISBN publisher details"],{full:true});
       log.push(f.detail);
       if(!f.ok)fault(f.detail);
@@ -8358,6 +8463,8 @@ const LEDGER_PREFIX="art-watch-ledger-";
 // Local 24hr timestamp (browser's timezone), e.g. 2026-08-23-2230 = 10:30pm local.
 // A description, as it goes into a file name: lower case, words joined by hyphens.
 function labelSlug(label){return String(label||"").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"").slice(0,40);}
+// The label of the safety copy kept before a roll-back to the save made at `at`.
+function rollbackSafetyLabel(at){return "Safety snapshot before roll-back to snapshot of "+localReadable(at);}
 // A cloud save's name in the list (her wording): a Save's copy 'Export: "description"';
 // a safety copy, its own label. Older labels are renamed on screen, never in the store.
 function snapTitle(s,all){
@@ -8371,7 +8478,7 @@ function snapTitle(s,all){
   if(m){
     const was=m[1].replace(/^Cloud copy before /,"Safety snapshot before ");
     const hits=(all||[]).filter(o=>o&&o!==s&&o.at<s.at&&snapTitle(o)===was);
-    return hits.length===1?"Safety snapshot before roll-back to snapshot of "+localReadable(hits[0].at)
+    return hits.length===1?rollbackSafetyLabel(hits[0].at)
       :"Safety snapshot before roll-back to \u201c"+was+"\u201d";
   }
   return l.replace(/^Cloud copy before /,"Safety snapshot before ").replace(/^(Safety snapshot before roll-back to )(?!snapshot of )/,"$1snapshot of ")||"Safety snapshot";
@@ -8649,7 +8756,7 @@ function CatalogueBox({r,mu,C,TH,lnk,isAcq,noShop,vl,picked,onPick,actions}){
                 {b.publisher&&<div style={{fontSize:11,color:C.soft,marginBottom:2,lineHeight:1.4}}>{b.publisher}</div>}
                 <div style={{fontSize:11.5,fontFamily:"ui-monospace,monospace",lineHeight:1.5,color:b.isbn?C.ink:C.soft}}>
                   {b.isbn?<>ISBN <span style={{whiteSpace:"nowrap"}}>{b.isbn}</span>{b.also&&<>; <span style={{whiteSpace:"nowrap"}}>{b.also.isbn}</span> ({b.also.whose})</>}</>
-                    :"ISBN not confirmed \u2014 verify before buying"}
+                    :ISBN_UNCONFIRMED}
                 </div>
                 {b.facts&&<div style={{fontSize:11,color:C.soft,marginTop:2,marginBottom:2,lineHeight:1.4}}>{b.facts}</div>}
                 {(b.why||b.source)&&<div style={{fontSize:11,color:C.soft,marginTop:3,lineHeight:1.45}}>
@@ -8663,7 +8770,7 @@ function CatalogueBox({r,mu,C,TH,lnk,isAcq,noShop,vl,picked,onPick,actions}){
         {r.catalogueTitle&&<div style={{fontFamily:"'Fraunces',Georgia,serif",fontSize:14.5,fontWeight:500,marginBottom:2,lineHeight:1.3}}>{r.catalogueTitle}</div>}
         {r.publisher&&<div style={{fontSize:11,color:C.soft,marginBottom:2}}>{r.publisher}</div>}
         <div style={{fontSize:11.5,fontFamily:"ui-monospace,monospace",marginBottom:englishLine(r)?2:10,color:r.isbn13?C.ink:C.soft}}>
-          {r.isbn13?"ISBN "+fmtIsbn(r.isbn13)+(r.alsoVersion?" \u00b7 "+alsoLine(r.alsoVersion):""):"ISBN not confirmed \u2014 verify before buying"}
+          {r.isbn13?"ISBN "+fmtIsbn(r.isbn13)+(r.alsoVersion?" \u00b7 "+alsoLine(r.alsoVersion):""):ISBN_UNCONFIRMED}
         </div>
         {englishLine(r)&&<div style={{fontSize:11,color:C.soft,marginBottom:10}}>{englishLine(r)}</div>}
       </>)}
@@ -9346,7 +9453,7 @@ export default function App(){
     const v=occVenues[id]||occSaved.current[id];
     if(!v||(v.finder>=3&&v.searchRule>=SEARCH_RULE))return;
     let found;
-    const f=mu.shopCatalogues?await fetchPage(mu.shopCatalogues,"The books in this section of the shop, with their prices.",null,{full:true}):{ok:true,results:[]};
+    const f=mu.shopCatalogues?await fetchPage(mu.shopCatalogues,SHOP_BOOKS_ASK,null,{full:true}):{ok:true,results:[]};
     if(f.ok)found=await proveShopSearch(pageTextOf(f.results),mu.shopCatalogues||mu.shopHome);
     if(found===undefined||!f.ok)return;   // a call that died is not an answer
     const add=x=>x?{...x,shopSearch:found,finder:3,searchRule:SEARCH_RULE}:x;

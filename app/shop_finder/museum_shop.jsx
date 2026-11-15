@@ -42,10 +42,10 @@ const notAShop=u=>isFileUrl(u)||NOT_SHOP_HOST.test(hostOf(u));
 //@piece isShopPlace
 
 function isShopPlace(u,museumHost,pageShopHost){
-  const h=hostOf(u).replace(/^www\./,"");
+  const h=withoutWww(hostOf(u));
   if(!h)return false;
   if(notAShop(u))return false;
-  if(pageShopHost&&h===pageShopHost.replace(/^www\./,""))return true;
+  if(pageShopHost&&h===withoutWww(pageShopHost))return true;
   const b=baseDomain(museumHost), hb=baseDomain(h), label=b.split(".")[0], hl=hb.split(".")[0];
   if(hb===b){ let path=""; try{ path=new URL(u).pathname; }catch{} return SHOP_HOST.test(h)||SHOP_PATH.test(path); }
   return label.length>=3&&hl!==label&&hl.includes(label)&&SHOP_HOST.test(hl);
@@ -198,7 +198,7 @@ async function openShopPage(open,url,objective,queries,opts){
 function itemsUnder(text,host,list){
   let base=""; try{ base=new URL(list).pathname.replace(/\/?$/,"/"); }catch{ return []; }
   if(base==="/")return [];
-  const bare=h=>String(h||"").replace(/^www\./,"");
+  const bare=h=>withoutWww(String(h||""));
   return [...new Set(mdLinks(text).filter(l=>{ if(bare(hostOf(l.url))!==bare(host)||NOT_A_BOOK_LINK.test(l.url))return false; let p=""; try{ p=new URL(l.url).pathname; }catch{ return false; } return p.startsWith(base)&&p.length>base.length+1; }).map(l=>l.url.split("#")[0]))];
 }
 //@piece firstProductIsBook
@@ -253,6 +253,17 @@ function shopifyShelfIsBooks(text,target){
 function shopifyProductsUrl(u){
   try{ const x=new URL(u); return new RegExp("^\\/(?:"+LANG_PART+"\\/)?collections\\/[^/]+\\/?$","i").test(x.pathname)?x.origin+x.pathname.replace(/\/$/,"")+"/products.json?limit=8":""; }catch{ return ""; }
 }
+//@piece SHOP_BOOKS_ASK
+
+// What Claude is asked to read from a shop section's page (a section's books, or a Shopify section's products).
+const SHOP_BOOKS_ASK="The books in this section of the shop, with their prices.";
+//@piece SHOP_PRODUCTS_ASK
+
+const SHOP_PRODUCTS_ASK="The products in this section: titles, types and prices.";
+//@piece shopifyCountIn
+
+// The product count a Shopify section's text gives, as digits, or undefined when it gives none.
+function shopifyCountIn(text){ return (text.match(/"products_count"\s*:\s*(\d+)/)||[])[1]; }
 //@piece shopifySections
 
 // A Shopify shop's sections, read as text (a long list can come back cut short); empty
@@ -262,7 +273,7 @@ function shopifySections(text,root){
   for(const chunk of String(text||"").split(/\{\s*"id"\s*:/).slice(1)){
     const t=(chunk.match(/"title"\s*:\s*"((?:[^"\\]|\\.)*)"/)||[])[1];
     const h=(chunk.match(/"handle"\s*:\s*"([^"]+)"/)||[])[1];
-    const n=(chunk.match(/"products_count"\s*:\s*(\d+)/)||[])[1];
+    const n=shopifyCountIn(chunk);
     const id=(chunk.match(/^\s*(\d+)/)||[])[1]||"";
     if(!t||!h||n==="0")continue;
     let title=t; try{ title=JSON.parse('"'+t+'"'); }catch{}
@@ -345,6 +356,11 @@ const SEARCH_SHAPES_LATER=["search?search=","search?sSearch="];
 //@piece PRICE_ONE
 
 const PRICE_ONE=new RegExp(PRICE.source,"i");
+//@piece PRICE_ON_PAGE
+
+// A price anywhere on a shop page, as the catalogue lookup asks of a whole page (shopStep): any price
+// above, or a whole number before the euro sign or a currency code ("39 \u20ac", "45 EUR").
+const PRICE_ON_PAGE=new RegExp(PRICE.source+"|\\d\\s?(?:\u20ac|(?:eur|usd|gbp)\\b)","i");
 //@piece NOT_A_BOOK_LINK
 
 const NOT_A_BOOK_LINK=/cart|wishlist|account|login/i;
@@ -570,14 +586,14 @@ async function tryShelves(sf,cands,how,inside){
     if(t==null){
       if(sf.opens>=SHELF_OPENS)return null;
       sf.opens++; sf.opened.add(c.url);
-      const f=await openShopPage(fetchPage,c.url,"The books in this section of the shop, with their prices.",null,{full:true});
+      const f=await openShopPage(fetchPage,c.url,SHOP_BOOKS_ASK,null,{full:true});
       if(!f.ok){ sf.died=f.detail; sf.failed.add(k); continue; }
       t=pageTextOf(f.results); sf.texts.set(k,t); sf.seenText+="\n"+t;
     }
     if(looksLikeBookShelf(t))return{...c,how};
     const pj=shopifyProductsUrl(c.url);
     if(pj){
-      const j=await fetchPage(pj,"The products in this section: titles, types and prices.",null,{full:true});
+      const j=await fetchPage(pj,SHOP_PRODUCTS_ASK,null,{full:true});
       const jt=j.ok?pageTextOf(j.results):"";
       if(shopifyShelfIsBooks(jt,c.target))return{...c,how};
       // A section under a translated address ("/en/collections/exhibitions", Thyssen's "exposiciones") lists no
@@ -708,7 +724,7 @@ async function shopifySectionList(sf){
       }
       const same=id&&home.find(x=>x.id===id);
       if(!same)continue;
-      const j=await fetchPage(originOf(sf.root)+"collections/"+same.handle+"/products.json?limit=8","The products in this section: titles, types and prices.",null,{full:true});
+      const j=await fetchPage(originOf(sf.root)+"collections/"+same.handle+"/products.json?limit=8",SHOP_PRODUCTS_ASK,null,{full:true});
       if(j.ok&&shopifyShelfIsBooks(pageTextOf(j.results),true))sf.consider(c);
     }
   }
@@ -779,7 +795,7 @@ async function englishVersion(sf){
   const host=hostOf(at), own=[...sf.texts].filter(([k])=>hostOf(k)===host).map(([,t])=>t).join("\n");
   const said=pageLanguage(at,(sf.pick||sf.best||{}).proof||own);
   if(said==="en"){ sf.note("english",{at,already:true}); return; }
-  const o=originOf(at), bare=host.replace(/^www\./,""), b=baseDomain(host);
+  const o=originOf(at), bare=withoutWww(host), b=baseDomain(host);
   const links=mdLinks(own).filter(l=>EN_LABEL.test(foldText(l.label).trim())&&baseDomain(hostOf(l.url))===b).map(l=>l.url);
   const tries=[...new Set([...links,...EN_PATHS.map(p=>o+p),"https://en."+bare+"/"])].filter(u=>normalizeUrlKey(u)!==normalizeUrlKey(at)).slice(0,8);
   const f=await fetchPage(tries,"The shop's front page and its menu, in English.",null,{full:true});
@@ -816,7 +832,7 @@ async function shopResult(sf){
     // A pick taken on its search excerpt has no book links to prove a search with: its page
     // is opened once, unless already opened (CEDON; AL-044).
     if(!search&&!booksSeenOn(seen,hostOf(home)).length&&!sf.opened.has(pick.url)){
-      const f=await openShopPage(fetchPage,pick.url,"The books in this section of the shop, with their prices.",null,{full:true});
+      const f=await openShopPage(fetchPage,pick.url,SHOP_BOOKS_ASK,null,{full:true});
       if(f.ok)seen+="\n"+pageTextOf(f.results);
     }
     // A section in another language taken, its English one found but unread (Berlin): both go to her shop screen.
