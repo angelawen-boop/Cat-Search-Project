@@ -356,6 +356,11 @@ const SEARCH_SHAPES_LATER=["search?search=","search?sSearch="];
 //@piece PRICE_ONE
 
 const PRICE_ONE=new RegExp(PRICE.source,"i");
+//@piece PRICE_ON_PAGE
+
+// A price anywhere on a shop page, as the catalogue lookup asks of a whole page (shopStep): any price
+// above, or a whole number before the euro sign or a currency code ("39 \u20ac", "45 EUR").
+const PRICE_ON_PAGE=new RegExp(PRICE.source+"|\\d\\s?(?:\u20ac|(?:eur|usd|gbp)\\b)","i");
 //@piece NOT_A_BOOK_LINK
 
 const NOT_A_BOOK_LINK=/cart|wishlist|account|login/i;
