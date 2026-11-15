@@ -304,7 +304,7 @@ async function snapshot(jsxFile, outFile, liveFile) {
   };
   await walk('mark-watch', cardBtn(0, b => b.title === 'Watch'));
   await walk('mark-unwatch', cardBtn(0, b => b.title === 'Unwatch'));
-  await walk('mark-watch-2', cardBtn(1, b => b.title === 'Watch'));
+  await walk('mark-watch-2', cardBtn(7, b => b.title === 'Watch'));
   await walk('mark-yes', cardBtn(0, b => b.textContent === 'Yes'));
   await walk('mark-buynext', cardBtn(0, b => b.title === 'Buy next'));
   await walk('mark-yes-2', cardBtn(2, b => b.textContent === 'Yes'));
@@ -322,7 +322,7 @@ async function snapshot(jsxFile, outFile, liveFile) {
     const n = rowOf(label).length; if (!n) { missed[tag] = true; screens[tag] = ''; return; }
     for (let i = 0; i < n; i++) { const t = rowOf(label)[i].textContent.trim(); if (/^Clear all$/.test(t)) continue;
       await walk(tag + '-' + t, rowOf(label)[i]);
-      if (label === 'Sort') await walk(tag + '-' + t + '-again', rowOf(label)[i]);
+      if (label === 'Sort' && /^(Date|Period)/.test(t)) await walk(tag + '-' + t + '-again', rowOf(label)[i]);
       else { click(rowOf(label)[i]); await steady(); } }
   };
   await chipRow('Sort', 'sort');
