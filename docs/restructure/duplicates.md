@@ -6,6 +6,8 @@ remove them are in `docs/restructure.md`, item 4. Numbers are as found: re-check
 her store before fixing it (the store changes as she works). "Manual import" = Links, Pages and Paste
 together (her name). Her ledger is never changed (her decision).
 
+**All of 4A–4F is done** (docs/restructure.md, "This run" holds each round's record and what was left because two rules that look alike are different). The findings below are kept as the evidence each round worked from.
+
 ## 4A — venue facts: done
 
 Every 4A finding (D1–D4, D8, D10, D14–D16, D20's venue copies, D23, D24 and the asides) was fixed by the
