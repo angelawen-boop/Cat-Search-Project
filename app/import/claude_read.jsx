@@ -19,6 +19,14 @@ const SHORT_NAME_EXAMPLES=()=>VENUE_REGISTER.filter(e=>e.kind==="manual"&&e.name
 // The full name is the entry's, else the one Claude gave, as the store holds it (MU).
 const SHORT_NAME_RENAMES=()=>VENUE_REGISTER.filter(e=>e.kind==="manual"&&e.names.hers&&e.names.replaced.length)
   .map(e=>"for "+JSON.stringify(e.names.full||e.names.card)+": "+JSON.stringify(e.names.card)+", not "+e.names.replaced.map(x=>JSON.stringify(x)).join(" or "));
+//@piece pageTitleLine
+
+// The title line a prompt gives Claude for a page read in code.
+const pageTitleLine=page=>"EXHIBITION TITLE, as the page gives it: "+JSON.stringify(page.base)+"\n";
+//@piece pageRawBlock
+
+// The page's raw text, fenced, as a prompt gives it to Claude.
+const pageRawBlock=page=>"RAW TEXT (the page under the title, dates taken out):\n\"\"\"\n"+page.raw+"\n\"\"\"";
 //@piece linkItem
 
 // ONE REQUEST FOR THE WHOLE IMPORT (her decision): every page of a Links, Pages or Paste import goes
@@ -43,9 +51,9 @@ function linkItem(page,askVenue,url,vc){
     +(museum?"THE MUSEUM THIS CARD IS FOR: "+JSON.stringify(museum)+"\n":"")
     +(askVenue&&page.dateLine?"THE SHOWING THIS CARD IS FOR, as the page prints it: "+JSON.stringify(page.dateLine)+"\n":"")
     +(page.pasted?"RAW TEXT (pasted or typed by hand, from one source or several; its order and layout can be anything):\n\"\"\"\n"+page.raw+"\n\"\"\""
-    :"EXHIBITION TITLE, as the page gives it: "+JSON.stringify(page.base)+"\n"
+    :pageTitleLine(page)
     +(page.between.length?"LINES BETWEEN THE TITLE AND THE DATES: "+JSON.stringify(page.between)+"\n":"")
-    +"RAW TEXT (the page under the title, dates taken out):\n\"\"\"\n"+page.raw+"\n\"\"\"")
+    +pageRawBlock(page))
     +(keys.length?"\n\nTHIS ITEM'S ANSWER ALSO HAS THESE KEYS:\n"+keys.join("\n"):"");
 }
 //@piece LINK_KEYS

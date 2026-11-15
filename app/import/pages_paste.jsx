@@ -116,7 +116,7 @@ function pastedPageReply(url,text){
 // 2,000-character cut applies); title and dates are filled from Claude's answer (pasteDates).
 function pastedPage(text,url){
   return{ok:true,pasted:true,text,base:"",between:[],under:"",afterDates:String(text).split("\n").filter(Boolean),start:"",end:"",
-    raw:String(text).slice(0,LINK_RAW_CHARS),site:hostOf(siteUrlOf(url)).replace(/^www\./,""),link:url,noDates:true,dateLine:""};
+    raw:String(text).slice(0,LINK_RAW_CHARS),site:withoutWww(hostOf(siteUrlOf(url))),link:url,noDates:true,dateLine:""};
 }
 //@piece pasteWords
 

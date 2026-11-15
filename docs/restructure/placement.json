@@ -108,6 +108,11 @@
    "files": {
     "import/link_venues.jsx": "Venue link rules (LINK_VENUES), Occasional venues and how a link's venue is decided."
    }
+  },
+  {
+   "id": "4-app",
+   "name": "Round app side: the repeated sentences, prompt lines and patterns each made one piece, in the part of the feature that owns it",
+   "files": {}
   }
  ],
  "pieces": {
@@ -757,6 +762,25 @@
   "heldByRegister": "import/link_venues.jsx",
   "occasionalOver": "import/link_venues.jsx",
   "herVenue": "import/link_venues.jsx",
-  "SHOP_RESET": "import/review.jsx"
+  "SHOP_RESET": "import/review.jsx",
+  "rollbackSafetyLabel": "saving/file.jsx",
+  "STORE_UNREACHED_NOT_SAVING": "saving/cloud_jobs.jsx",
+  "SITE_MENU_ASK": "shop_finder/gallery_shop.jsx",
+  "SHOP_BOOKS_ASK": "shop_finder/museum_shop.jsx",
+  "SHOP_PRODUCTS_ASK": "shop_finder/museum_shop.jsx",
+  "shopifyCountIn": "shop_finder/museum_shop.jsx",
+  "SOLD_BY_RULE": "lookup/find.jsx",
+  "REPLY_JSON_ONLY": "lookup/find.jsx",
+  "bookPageAsk": "lookup/find.jsx",
+  "ISBN_UNCONFIRMED": "lookup/card_text.jsx",
+  "ENGLISH_LATER": "lookup/versions.jsx",
+  "STORE_UNREACHED": "connections/store.jsx",
+  "unreadableDateNote": "import/csv.jsx",
+  "NO_TITLE_ON_PAGE": "import/page_reader.jsx",
+  "pageTitleLine": "import/claude_read.jsx",
+  "pageRawBlock": "import/claude_read.jsx",
+  "isbnDigits": "foundations/isbn.jsx",
+  "ISBN13_STANDALONE": "foundations/isbn.jsx",
+  "withoutWww": "foundations/text.jsx"
  }
 }

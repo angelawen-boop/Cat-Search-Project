@@ -13,6 +13,7 @@
  *   node scraper/fixtures/store_unread.js
  */
 'use strict';
+const STORE = require('../../build/store_names.js').storeNames();
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
@@ -60,31 +61,31 @@ function brokenReads(store, paths) {
   // ── SU-004/005: the write itself, lifted from the page ──
   // The section and the page's door to the store, which the two ask.
   const sec = src.slice(src.indexOf('// A STORE READ THAT FAILED'), src.indexOf('// ── PAGES:')) + doorSource(src);
-  const lift = db => new Function('useCap', 'OCC_DOC', 'cloudReadOnly', 'VENUE_REGISTER', 'REG', sec + '\nreturn {readOccasional,writeOccasional};')(async () => db, 'venues/occasional', false, [], {});
+  const lift = db => new Function('useCap', 'OCC_DOC', 'cloudReadOnly', 'VENUE_REGISTER', 'REG', sec + '\nreturn {readOccasional,writeOccasional};')(async () => db, STORE.occasional, false, [], {});
   const held = fakeStore();
-  await held.doc('venues/occasional').set({ venues: { 'occ-a': { id: 'occ-a', name: 'Museum A' }, 'occ-b': { id: 'occ-b', name: 'Museum B' } } });
-  const kept = held.docs.get('venues/occasional');
-  const L = lift(brokenReads(held, ['venues/occasional']));
+  await held.doc(STORE.occasional).set({ venues: { 'occ-a': { id: 'occ-a', name: 'Museum A' }, 'occ-b': { id: 'occ-b', name: 'Museum B' } } });
+  const kept = held.docs.get(STORE.occasional);
+  const L = lift(brokenReads(held, [STORE.occasional]));
   const got = await L.readOccasional();
   const wrote = await L.writeOccasional({ 'occ-new': { id: 'occ-new', name: 'New' } });
-  ok(Object.keys(got).length === 0 && wrote === false && held.docs.get('venues/occasional') === kept,
-    'SU-004: after a failed read the link venues are not written; the stored list keeps both venues', JSON.stringify([wrote, held.docs.get('venues/occasional')]));
+  ok(Object.keys(got).length === 0 && wrote === false && held.docs.get(STORE.occasional) === kept,
+    'SU-004: after a failed read the link venues are not written; the stored list keeps both venues', JSON.stringify([wrote, held.docs.get(STORE.occasional)]));
   const empty = fakeStore();
   const E = lift(empty);
   const none = await E.readOccasional();
-  ok(Object.keys(none).length === 0 && await E.writeOccasional({ 'occ-new': { id: 'occ-new', name: 'New' } }) === true && empty.docs.has('venues/occasional'),
+  ok(Object.keys(none).length === 0 && await E.writeOccasional({ 'occ-new': { id: 'occ-new', name: 'New' } }) === true && empty.docs.has(STORE.occasional),
     'SU-005: a store that simply holds no link venues yet is read as empty and written to as before');
 
   // ── SU-001–003: the page, opened on a store whose reads fail ──
   const dom = new JSDOM('<!doctype html><html><body><div id="root"></div></body></html>', { pretendToBeVisual: true, url: 'https://claude.ai/' });
   const win = dom.window, doc = win.document;
   const base = fakeStore();
-  await base.doc('venues/occasional').set({ venues: { 'occ-a': { id: 'occ-a', name: 'Museum A' } } });
-  await base.doc('links/pending').set({ text: 'https://example.org/show' });
-  await base.doc('sweeps/venues').set({ venues: { met: { at: '2026-10-15' } } });
-  await base.doc('quarantine/rows').set({ rows: { x: { title: 'Held' } } });
+  await base.doc(STORE.occasional).set({ venues: { 'occ-a': { id: 'occ-a', name: 'Museum A' } } });
+  await base.doc(STORE.linksPending).set({ text: 'https://example.org/show' });
+  await base.doc(STORE.sweeps).set({ venues: { met: { at: '2026-10-15' } } });
+  await base.doc(STORE.quarantine).set({ rows: { x: { title: 'Held' } } });
   const before = new Map(base.docs);
-  const store = brokenReads(base, ['venues/occasional', 'links/pending', 'links_pages', 'sweeps/venues', 'quarantine/rows']);
+  const store = brokenReads(base, [STORE.occasional, STORE.linksPending, STORE.linksPages, STORE.sweeps, STORE.quarantine]);
   win.claude = { use: async name => (name === 'db' ? store : null) };
   const globals = ['window', 'document', 'navigator', 'localStorage', 'requestAnimationFrame', 'cancelAnimationFrame', 'MutationObserver',
     'Node', 'Element', 'HTMLElement', 'Event', 'CustomEvent', 'getComputedStyle', 'FileReader', 'File', 'HTMLInputElement', 'KeyboardEvent', 'MouseEvent'];
@@ -105,7 +106,7 @@ function brokenReads(store, paths) {
       'SU-001a: the banner reads in her wording', text().slice(0, 400));
     ok(/QUARANTINE — Couldn’t read the quarantine list/.test(text()), 'SU-002: the quarantine\'s failed read keeps its own banner');
     await settle(300);
-    ok(['venues/occasional', 'links/pending', 'sweeps/venues', 'quarantine/rows'].every(k => base.docs.get(k) === before.get(k)),
+    ok([STORE.occasional, STORE.linksPending, STORE.sweeps, STORE.quarantine].every(k => base.docs.get(k) === before.get(k)),
       'SU-003: opening the page writes over nothing it could not read');
     await act(async () => { root.unmount(); });
   } catch (e) {

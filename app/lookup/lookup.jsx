@@ -238,8 +238,7 @@ async function lookupCatalogue(row,hooks){
     else{
       // The venue's own shop page gets the blank-page retry (openShopPage); a publisher's does not.
       const f=await (shopLinkOf({shopUrl:hit.pageUrl},dom)?(...a)=>openShopPage(io.fetch,...a):io.fetch)(hit.pageUrl,
-        "The ISBN-13, the publisher, and any link to the publisher’s own page for the book "
-          +"“"+(F.title||title)+"”, including any details or specification panel on the page.",
+        bookPageAsk(F.title||title),
         [(F.title||title)+" ISBN publisher details"],{full:true});
       log.push(f.detail);
       if(!f.ok)fault(f.detail);

@@ -36,6 +36,10 @@ const LEDGER_PREFIX="art-watch-ledger-";
 // Local 24hr timestamp (browser's timezone), e.g. 2026-08-23-2230 = 10:30pm local.
 // A description, as it goes into a file name: lower case, words joined by hyphens.
 function labelSlug(label){return String(label||"").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"").slice(0,40);}
+//@piece rollbackSafetyLabel
+
+// The label of the safety copy kept before a roll-back to the save made at `at`.
+function rollbackSafetyLabel(at){return "Safety snapshot before roll-back to snapshot of "+localReadable(at);}
 //@piece snapTitle
 
 // A cloud save's name in the list (her wording): a Save's copy 'Export: "description"';
@@ -51,7 +55,7 @@ function snapTitle(s,all){
   if(m){
     const was=m[1].replace(/^Cloud copy before /,"Safety snapshot before ");
     const hits=(all||[]).filter(o=>o&&o!==s&&o.at<s.at&&snapTitle(o)===was);
-    return hits.length===1?"Safety snapshot before roll-back to snapshot of "+localReadable(hits[0].at)
+    return hits.length===1?rollbackSafetyLabel(hits[0].at)
       :"Safety snapshot before roll-back to \u201c"+was+"\u201d";
   }
   return l.replace(/^Cloud copy before /,"Safety snapshot before ").replace(/^(Safety snapshot before roll-back to )(?!snapshot of )/,"$1snapshot of ")||"Safety snapshot";

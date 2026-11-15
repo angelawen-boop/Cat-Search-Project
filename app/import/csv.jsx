@@ -118,6 +118,12 @@ function foldDuplicateRows(raws){
   }
   return out;
 }
+//@piece unreadableDateNote
+
+// The note on a card whose file date is not YYYY-MM-DD; `which` is "Start" or "End".
+function unreadableDateNote(which,value){
+  return which+" date \u201c"+value+"\u201d couldn't be read (needs YYYY-MM-DD) \u2014 left blank.";
+}
 //@piece analyzeProForma
 
 // `rows` is her ledger as it stands; the cards are what the file would change in it.
@@ -165,8 +171,8 @@ function analyzeProForma(text,rows,ignoredKeys,opts){
     if(!vc||!KNOWN_VENUES.has(vc)){ faults.push("line "+line+": venue code "+(vc?("\u201c"+vc+"\u201d"):"is blank")+(vc?" isn\u2019t one of the venues":"")); continue; }
     if(!title){ faults.push("line "+line+": no exhibition title"+(get(r,"url")?" \u2014 "+get(r,"url"):"")); continue; }
     let sd=get(r,"start_date"), ed=get(r,"end_date"), url=get(r,"url");
-    if(sd&&!isValidYMD(sd)){notes.push("Start date \u201c"+sd+"\u201d couldn't be read (needs YYYY-MM-DD) \u2014 left blank.");sd="";}
-    if(ed&&!isValidYMD(ed)){notes.push("End date \u201c"+ed+"\u201d couldn't be read (needs YYYY-MM-DD) \u2014 left blank.");ed="";}
+    if(sd&&!isValidYMD(sd)){notes.push(unreadableDateNote("Start",sd));sd="";}
+    if(ed&&!isValidYMD(ed)){notes.push(unreadableDateNote("End",ed));ed="";}
     if(url&&!urlLooksValid(url)){notes.push("Exhibition link \u201c"+url+"\u201d looks garbled \u2014 left blank.");url="";}
     // Quarantined: dropped before anything else sees it. Counted, never silent.
     if(ignoredKeys&&ignoredKeys.has(ignoreKeyFor(vc,url,title))){ blocked++; continue; }

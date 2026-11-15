@@ -10,6 +10,7 @@
 const fs = require('fs');
 const path = require('path');
 const zlib = require('zlib');
+const STORE = require('./store_names.js').storeNames();
 
 // A saved document may hold its fields bare or under `data`.
 function fieldsOf(file) {
@@ -24,8 +25,8 @@ function decodeRecord(meta, pieceTexts) {
 }
 
 function readRecord(dir, id) {
-  const meta = fieldsOf(path.join(dir, 'lookups', id + '.json'));
-  const pdir = path.join(dir, 'lookups', id, 'pieces');
+  const meta = fieldsOf(path.join(dir, STORE.lookups, id + '.json'));
+  const pdir = path.join(dir, STORE.lookups, id, 'pieces');
   const texts = [];
   for (let i = 0; i < meta.pieces; i++) {
     const f = path.join(pdir, i + '.json');
@@ -36,7 +37,7 @@ function readRecord(dir, id) {
 }
 
 function listRecords(dir) {
-  const d = path.join(dir, 'lookups');
+  const d = path.join(dir, STORE.lookups);
   return fs.readdirSync(d).filter(f => f.endsWith('.json'))
     .map(f => ({ id: f.slice(0, -5), ...fieldsOf(path.join(d, f)) }))
     .sort((a, b) => String(b.at).localeCompare(String(a.at)));
