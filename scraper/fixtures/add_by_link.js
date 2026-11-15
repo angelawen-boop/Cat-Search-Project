@@ -41,7 +41,9 @@ const prepared = 'const { useState, useEffect, useMemo, useCallback, useRef } = 
       .replace(/^export default function App\(\)\{/m, 'function App(){')
       // These cases start from a store that has met no venue: the register's names and rules stay, the
       // records its entries were filed from go (venues/register.js, `filed`).
-      .replace(/^const REG=/m, 'for(const e of VENUE_REGISTER)e.filed=null;\nconst REG=');
+      // The Thyssen is these cases' venue whose shop the finder must find and she must confirm, so
+      // the section written into its entry goes too.
+      .replace(/^const REG=/m, 'for(const e of VENUE_REGISTER){e.filed=null;if(e.id==="occ-museothyssen-org")e.shop={...e.shop,home:null,catalogues:null};}\nconst REG=');
 fs.writeFileSync(path.join(tmp, 'app.tsx'), prepared);
 try {
   execFileSync('npx', ['tsc', path.join(tmp, 'app.tsx'), '--jsx', 'react',
