@@ -355,11 +355,57 @@ every item across before sending it to her.
 - One Italian venue's full name is the English one (her choice on the review page), so its Italian-language
   catalogue search now reads English name + Italian words. Every other non-English venue searches under its
   own-language name.
+- **The shop finder does not count a whole-number euro price ("39 €", no cents) as a price; the lookup
+  does.** Left so on purpose: counting it in the finder adds real prices at one shop and a price-filter link
+  ("7 € - 15 €") at another, so it is a behaviour change to agree with her, not a tidy-up. The
+  currencies themselves are now one list (`PRICE`); the lookup's whole-page test is that list plus the
+  whole-number form (`PRICE_ON_PAGE`).
+- **One shop's shelf page counts as "has prices" only because of its empty basket's "0,00 €"** (the
+  lookup's whole-page test has never excluded a basket total; the finder's line test does). Unchanged.
+- **Thyssen and Acquavella are hard-coded answers** (her decision): their shop sections are written into the
+  register, so the shop screen no longer asks about the Thyssen.
+- From the scraper-side round, seen and not touched: the sweep log can record an empty "tried" date for a
+  venue first met through a file whose rows carry no `swept_at`; `show_tags.readCsv` drops, without a word,
+  a row whose cell count differs from the header's; re-reading the kept pages of two venues with today's
+  recipes changes some fields (the same under old code and new: the fixes made since those sweeps, which
+  her decision keeps out of runs already swept); `build/blocks_check.js` still types its show IDs by hand.
 - Four live proof pages read differently from the signed-off list, identically under the old code and the
   new (two Prado passages end elsewhere, one Getty page now gives dates, Louisiana's page is the known
   Parallel fault): the sites or Parallel's replies changed, not the reader. The list was not updated.
 
-### Round "scraper side" — design (4D's same-text items)
+### Round "keys" — design (4D: show IDs, accent folding, web-address tidying)
+
+Branch `claude/restructure-4-keys` (it holds `build/keys_compare.js`, the proof, built and proven before
+any change). Her stored data carries the results of the rules as they are, so **the round merges only what
+leaves the comparison's list empty**; a corner that cannot be unified without a listed difference is left
+exactly as it is and parked for her with the list (her decision).
+- **Web addresses.** The app's `normalizeUrlKey` and the scraper's `normalizeUrl` are one rule written
+  twice (they differ only for a bare site root and for an unreadable address): one function in a shared
+  scraper file, written into the app by the join. Her stored quarantine keys follow the app's result, so
+  the one rule gives the app's result wherever the two differ on anything she holds or any sweep row on
+  disk. Compression's `urlKey` is a looser key by design (it decodes, and drops listing segments): it
+  stays its own rule, built on the shared one only where that changes none of its keys.
+- **Accents.** Stripping accent marks (the NFD step) is written in `foldText`, `normalizeTitle`,
+  `artistKey` and the scraper's place folding: one shared piece. The special letters (ø, æ,
+  ß, ł…) are folded only by `foldText` today; giving the other keys the same folding changes keys
+  for shows she holds, so that corner is NOT changed: run the comparison on a trial, save its list for
+  her, and leave the code as it is.
+- **Show IDs.** One rule (`makeLedgerRow`'s) for every new show. The starter set stops deriving IDs by a
+  second rule: an entry whose ID the one rule would not give carries its ID written out, so every starter
+  ID stays exactly as it is (an ID once given never changes; `mergeSeedInto` matches on it).
+- **Her ledger is never changed, and nothing is written to her store.**
+- **Done when:** `node build/keys_compare.js --old <main> --new . --ledger … --quarantine …` passes with
+  an empty list; the gates; `npm test`.
+
+### Round "scraper side" — done
+
+Merged. `scraper/pro_forma.js` is the one home of the sweep file's columns, marker sentence, "Topic:" note,
+cell quoting, table reader and sweep-log merge, written into the app as `PRO_FORMA`; the month spellings
+are one list in `dates.js` (the pattern identical; the name-to-number map the same pairs in another order,
+read only by lookup). `build/sweep_same_check.js --old <tree>` proves nothing a sweep writes and nothing
+the app reads changed. **The price rule and the two venues** (4E, 4F) are merged too: see "Parked for her".
+
+### Round "scraper side" — design (as written before the round)
 
 Branch `claude/restructure-4-scraper`. Facts the sweep's tools and the app each hold their own copy of,
 brought to one home in the scraper's files and written into the app by the join (as the date and summary
@@ -437,11 +483,11 @@ and compares them (`build/same_text_check.js`, kept).
 
 ## Handover record — updated after every step
 
-**Where we are:** steps 1 and 2 of "This run" are done (59 published; the app-side round merged), and
-step 6's cutting plan is written (item 5 above; re-check it against the code once the item-4 rounds are in).
-`build/keys_compare.js` (step 5's proof) is built and proven on branch `claude/restructure-4-keys`: it passes
-on the code as it stands against her ledger and quarantine (read from her store into the scratchpad, never
-committed) and fails on a changed title rule. Next: step 3, the scraper-side round.
+**Where we are:** steps 1 to 4 of "This run" are done and on `main` (59 published; app side, scraper side,
+the price rule and the two venues merged), and step 6's cutting plan is written (item 5; re-check it against
+the code once step 5 is in). Next: step 5, the keys round — its proof `build/keys_compare.js` is on
+`claude/restructure-4-keys`; her ledger and quarantine for it are read from her store into the scratchpad
+(read-only; `ledger/live` → `ledgerParts/<id>-<n>` joined, base64, gunzip) and never committed.
 
 **Open problems:** a sub-agent cannot start the watched test run — the test hook reads the coordinator's
 transcript for the "Expected test run" line — so the coordinator runs gate 2 itself. The hook often refuses
