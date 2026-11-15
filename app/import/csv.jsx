@@ -20,14 +20,6 @@ function csvParse(text){
 // is not (a reused title could block the wrong row — bounded, and visible on screen).
 const ignoreKeyFor=(venueId,url,title)=>
   venueId+"|"+(url?normalizeUrlKey(url):"t:"+normalizeTitle(title));
-//@piece normalizeTitle
-
-// Conservative duplicate matching for incoming refresh results.
-const normalizeTitle = v => stripAccents(String(v||""))
-  .toLowerCase()
-  .replace(/&/g," and ").replace(/\+/g," and ")
-  .replace(/[’‘`]/g,"'").replace(/['"]/g,"")
-  .replace(/[^a-z0-9]+/g," ").replace(/\s+/g," ").trim();
 //@piece dateMs
 
 const dateMs = d => {

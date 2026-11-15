@@ -372,6 +372,8 @@
   "inClosingWindow",
   "tierFor",
   "S",
+  "SEED_IDS",
+  "showId",
   "buildSeed",
   "mergeSeedInto",
   "resetSeed",

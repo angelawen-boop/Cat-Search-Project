@@ -46,6 +46,14 @@ const LETTER_FOLD={"\u00f8":"o","\u00e6":"ae","\u0153":"oe","\u00df":"ss","\u014
 //@piece foldText
 
 const foldText=s=>stripAccents(String(s||"").toLowerCase()).replace(/[\u00f8\u00e6\u0153\u00df\u0142\u0111\u00f0\u00fe\u0131]/g,c=>LETTER_FOLD[c]);
+//@piece normalizeTitle
+
+// Conservative duplicate matching for incoming refresh results.
+const normalizeTitle = v => stripAccents(String(v||""))
+  .toLowerCase()
+  .replace(/&/g," and ").replace(/\+/g," and ")
+  .replace(/[’‘`]/g,"'").replace(/['"]/g,"")
+  .replace(/[^a-z0-9]+/g," ").replace(/\s+/g," ").trim();
 //@piece stripMd
 
 

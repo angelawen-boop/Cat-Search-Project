@@ -16,7 +16,8 @@
  *     titles, the cloud jobs with no store, Claude's prompts for a page and for the facts round, the
  *     version notes, the unreadable-date note, the ISBN readers and the host clean-up.
  * Pieces whose join differs on purpose (the ISBN patterns merged into one, written with a look-behind, the
- * web-address strip, and the answer checks, whose accent strip the keys round made KEYS.stripAccents) are in
+ * web-address strip, the answer checks, whose accent strip the keys round made KEYS.stripAccents, and the
+ * starter set, whose IDs come from showId or are written out in SEED_IDS) are in
  * BY_CALLS and are held to way 2 only. A name standing for a function (`const stripAccents=KEYS.stripAccents`)
  * is read by the literals of that function's source. The pieces the scraper-side round made
  * name scraper/pro_forma.js, and the date reader whose month lists it builds from one list, are in
@@ -120,7 +121,7 @@ function literals(node, page) {
 const pageA = { ...A, get: n => O(n), only: new Set() }, pageB = { ...B, get: n => N(n), only: onlyNew };
 
 // The ISBN patterns merged into one, written with a look-behind, and the new helper itself: by calls only.
-const BY_CALLS = new Set(['isbnInResults', 'isbnsIn', 'withoutWww', 'ANSWER_CHECK']);
+const BY_CALLS = new Set(['isbnInResults', 'isbnsIn', 'withoutWww', 'ANSWER_CHECK', 'buildSeed']);
 const BY_SWEEP_CHECK = new Set(['DATES', 'proFormaCsv', 'csvParse', 'isMarkerRow', 'topicOf', 'mergeSweepLog']);
 let same = 0;
 for (const [name, a] of A.decls) {
@@ -206,6 +207,8 @@ const sameCall = async (label, f) => {
   const said = ['Zurbarán\'s first great retrospective.', 'Les plus grands chefs-d\'œuvre de Hammershøi.', 'Größte Schau, never seen.', 'Miró and Riopelle, côte à côte.'];
   const pageText = 'La première rétrospective de Zurbarán; la plus grande exposition. Größte, største Hammershøi, mai vista.';
   for (const t of said) await sameCall('ANSWER_CHECK ' + t, g => { const c = g('ANSWER_CHECK'); return [c.validateAnswer(t), c.unsupportedClaims(t, pageText), c.rewordsTitle(t, 'Zurbarán'), c.withoutPlaceOpener('Côte à côte. ' + t, 'Miró', ['Côte à côte'])]; });
+
+  await sameCall('the starter set, every show and its ID', g => g('buildSeed')());
 
   const shopify = '{"collections":[{"id":1,"title":"Books","handle":"books","products_count":12,"description":""},{"id":2,"title":"Empty","handle":"empty","products_count":0},{"id":3,"title":"Cards","handle":"cards"}]}';
   await sameCall('shopifySections', g => g('shopifySections')(shopify, 'https://s.org/'));

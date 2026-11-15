@@ -4886,8 +4886,7 @@ function partialApplyWords({acceptedCount,undecidedCount}){
   };
 }
 function makeLedgerRow(c,now){
-  const base=c.museumId+"-"+normalizeTitle(c.title).replace(/[^a-z0-9]+/g,"").slice(0,50);
-  return {id:base,museumId:c.museumId,title:c.title,startDate:c.startDate||null,endDate:c.endDate||null,summary:c.summary||"",exUrl:c.exUrl||(MU[c.museumId]?.listUrl||""),interested:true,watching:false,acquiring:null,looked:false,hasCatalogue:"unknown",catalogueTitle:null,isbn13:null,publisher:null,publisherUrl:null,publisherResult:null,shopUrl:null,shopState:null,shopChange:null,addedAt:now,editedAt:null,
+  return {id:showId(c.museumId,c.title),museumId:c.museumId,title:c.title,startDate:c.startDate||null,endDate:c.endDate||null,summary:c.summary||"",exUrl:c.exUrl||(MU[c.museumId]?.listUrl||""),interested:true,watching:false,acquiring:null,looked:false,hasCatalogue:"unknown",catalogueTitle:null,isbn13:null,publisher:null,publisherUrl:null,publisherResult:null,shopUrl:null,shopState:null,shopChange:null,addedAt:now,editedAt:null,
     ...(labelDone(c)?{period:c.period,periodYear:c.periodYear,periodResponse:!!c.periodResponse,periodArtist:c.periodArtist||"",themes:c.themes,labelledAt:c.labelledAt||now}:{})};
 }
 // Apply whatever she picked where the stitched file disagreed with itself.
@@ -5395,8 +5394,13 @@ const S=[
 ["acq","Tom Sachs: Bronze","2024-11-07","2024-12-13","New York. Bricolage in bronze.","tom-sachs3"],
 ["acq","Jacob El Hanani: Drawing on Canvas","2024-09-10","2024-10-18","New York. Microscopically fine line drawing.","jacob-el-hanani"],
 ];
+// Starter shows that keep an ID showId would spell otherwise (accented letters dropped, not folded),
+// written out by venue and title: an ID never changes, and mergeSeedInto matches on it.
+const SEED_IDS={"met|Christmas Tree and Neapolitan Crèche":"met-christmastreeandneapolitancrche","ng|Zurbarán":"ng-zurbarn","ng|Waldmüller: Landscapes":"ng-waldmllerlandscapes","ng|José María Velasco":"ng-josmaravelasco","acq|Joan Miró | Jean Paul Riopelle":"acq-joanmirjeanpaulriopelle","acq|Miquel Barceló":"acq-miquelbarcel"};
+// A new show's ID: its venue, then its title as matched, letters and digits only, cut at 50.
+function showId(museumId,title){ return museumId+"-"+normalizeTitle(title).replace(/[^a-z0-9]+/g,"").slice(0,50); }
 
-function buildSeed(){return S.map(([m,t,s,e,d,sl])=>{const id=m+"-"+t.toLowerCase().replace(/[^a-z0-9]+/g,"").slice(0,50);const mu=MU[m];return{id,museumId:m,title:t,startDate:s||null,endDate:e||null,summary:d,exUrl:sl?(mu.exBase+sl):mu.listUrl,interested:true,watching:false,acquiring:null,looked:false,hasCatalogue:"unknown",catalogueTitle:null,isbn13:null,publisher:null,publisherUrl:null,publisherResult:null,shopUrl:null,shopState:null,shopChange:null};});}
+function buildSeed(){return S.map(([m,t,s,e,d,sl])=>{const id=SEED_IDS[m+"|"+t]||showId(m,t);const mu=MU[m];return{id,museumId:m,title:t,startDate:s||null,endDate:e||null,summary:d,exUrl:sl?(mu.exBase+sl):mu.listUrl,interested:true,watching:false,acquiring:null,looked:false,hasCatalogue:"unknown",catalogueTitle:null,isbn13:null,publisher:null,publisherUrl:null,publisherResult:null,shopUrl:null,shopState:null,shopChange:null};});}
 
 function mergeSeedInto(existing){const byId=new Map(existing.map(r=>[r.id,r]));for(const s of buildSeed()){const p=byId.get(s.id);if(p)byId.set(s.id,{...p,startDate:p.startDate||s.startDate,endDate:p.endDate||s.endDate,summary:p.summary||s.summary,exUrl:p.exUrl||s.exUrl,watching:p.watching||false});else byId.set(s.id,s);}return Array.from(byId.values());}
 // Reset's job: the built-in starter set and the two sentences about it — the one on the screen's
