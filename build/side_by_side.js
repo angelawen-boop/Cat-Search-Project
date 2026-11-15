@@ -467,6 +467,9 @@ function compare(o, n, changesAllowed) {
       if (!inO || !inN) {
         const kind = inO ? o.kinds[k] : n.kinds[k];
         if (kind === 'function') { console.log(`NOTE  value ${k}: a function only in the ${inO ? 'old' : 'new'} version (allowed)`); continue; }
+        // A text or pattern that was written inline and now has a name: new, and nothing old is gone.
+        // What it changes, if anything, shows in the screens and records compared below.
+        if (!inO && (kind === 'string' || /^"\/.*\/[a-z]*"$/.test(n.plain[k]))) { console.log(`NOTE  value ${k}: a named text or pattern only in the new version (allowed)`); continue; }
         diffs++; console.log(`DIFF  value ${k}: only in the ${inO ? 'old' : 'new'} version, and it is not a function (${kind})`); continue;
       }
       compared++;
