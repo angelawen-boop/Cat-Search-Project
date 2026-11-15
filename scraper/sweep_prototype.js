@@ -32,6 +32,7 @@ const fs = require('fs');
 const path = require('path');
 const { seenOn, listingNote } = require('./listing_note.js');
 const { windowFrom, outsideWindow, recordWindow } = require('./routine_window.js');
+const { CSV_HEADER, MARKER_SENTINEL, sweepCell, csvText } = require('./pro_forma.js');
 
 // ── Proxy setup ───────────────────────────────────────────────────────────────
 const PROXY_URL = process.env.HTTPS_PROXY || process.env.https_proxy;
@@ -526,7 +527,7 @@ function followPagination(queue, pg, newRows, rows, code, v, moreShown = true) {
     rows.push({
       venue_code: code, title: `[${pg.ctx} page]`, start_date: '', end_date: '',
       summary: '', url: v.base + pg.path,
-      notes: `The venue's "${pg.ctx}" archive was still returning new exhibitions after ${MAX_ARCHIVE_PAGES} pages, so reading it was stopped. Older exhibitions may be missing. Marker row, not an exhibition.`,
+      notes: `The venue's "${pg.ctx}" archive was still returning new exhibitions after ${MAX_ARCHIVE_PAGES} pages, so reading it was stopped. Older exhibitions may be missing. ${MARKER_SENTINEL}`,
     });
     return;
   }
@@ -662,22 +663,6 @@ function writeLog() {
   fs.writeFileSync(LOG_PATH, logLines.join('\n') + '\n', 'utf8');
 }
 
-// ── CSV helpers ───────────────────────────────────────────────────────────────
-function csvCell(val) {
-  if (val == null || val === '') return '';
-  const s = String(val).trim();
-  // Quote if contains comma, newline, or double-quote
-  if (s.includes(',') || s.includes('\n') || s.includes('"')) {
-    return '"' + s.replace(/"/g, '""') + '"';
-  }
-  return s;
-}
-function csvRow(r) {
-  return [r.venue_code, r.title, r.start_date, r.end_date, r.summary, r.url, r.notes,
-          r.swept_at]
-    .map(csvCell).join(',');
-}
-
 // WHEN THIS ROW WAS COLLECTED — the eighth column, added 20 Sep 2026.
 //
 // HER FINDING. The app's freshness drawer dated every venue by the moment she
@@ -697,8 +682,6 @@ function csvRow(r) {
 // and the app formats it for her. A local time with no zone would be a guess at
 // both ends.
 function sweptAtNow() { return new Date().toISOString(); }
-
-const CSV_HEADER = 'venue_code,title,start_date,end_date,summary,url,notes,swept_at';
 
 // WHERE EACH ROW WAS SEEN, written once, at the front of its notes — see
 // listing_note.js. Clears the list so a second call cannot write it twice.
@@ -721,8 +704,7 @@ function writeVenueCsv(code, rows) {
   const at = sweptAtNow();
   for (const r of rows) if (!r.swept_at) r.swept_at = at;
   finishNotes(rows);
-  const lines = [CSV_HEADER, ...rows.map(csvRow)];
-  fs.writeFileSync(venueCsvPath(code), lines.join('\n') + '\n', 'utf8');
+  fs.writeFileSync(venueCsvPath(code), csvText(rows, sweepCell), 'utf8');
 }
 
 /**
@@ -4459,7 +4441,7 @@ async function scrapeVenueRows(page, code, { listingOnly = false } = {}) {
       rows.push({
         venue_code: code, title: `[${pg.ctx} page]`, start_date: '', end_date: '',
         summary: '', url,
-        notes: `The venue's "${pg.ctx}" listing page could not be read: ${failureProse(r.reason)}. Marker row, not an exhibition.`,
+        notes: `The venue's "${pg.ctx}" listing page could not be read: ${failureProse(r.reason)}. ${MARKER_SENTINEL}`,
       });
       continue;
     }
@@ -4499,7 +4481,7 @@ async function scrapeVenueRows(page, code, { listingOnly = false } = {}) {
         rows.push({
           venue_code: code, title: `[${pg.ctx} page]`, start_date: '', end_date: '',
           summary: '', url,
-          notes: `The venue's "${pg.ctx}" listing was still revealing more exhibitions after 30 presses of its "load more" button, so reading it was stopped. Older exhibitions may be missing. Marker row, not an exhibition.`,
+          notes: `The venue's "${pg.ctx}" listing was still revealing more exhibitions after 30 presses of its "load more" button, so reading it was stopped. Older exhibitions may be missing. ${MARKER_SENTINEL}`,
         });
       }
     }
@@ -4510,7 +4492,7 @@ async function scrapeVenueRows(page, code, { listingOnly = false } = {}) {
       rows.push({
         venue_code: code, title: `[${pg.ctx} page]`, start_date: '', end_date: '',
         summary: '', url,
-        notes: `The venue's "${pg.ctx}" listing page loaded but was empty. Marker row, not an exhibition.`,
+        notes: `The venue's "${pg.ctx}" listing page loaded but was empty. ${MARKER_SENTINEL}`,
       });
       continue;
     }
@@ -4626,7 +4608,7 @@ async function scrapeVenueRows(page, code, { listingOnly = false } = {}) {
         rows.push({
           venue_code: code, title: `[${pg.ctx} page]`, start_date: '', end_date: '',
           summary: '', url,
-          notes: `The venue's "${pg.ctx}" listing page loaded but no exhibitions could be read from it. Marker row, not an exhibition.`,
+          notes: `The venue's "${pg.ctx}" listing page loaded but no exhibitions could be read from it. ${MARKER_SENTINEL}`,
         });
       }
 
@@ -5149,7 +5131,7 @@ async function fetchIndividualPagesEach(page, rows, venueCode) {
         // Marked because excludeUndated would otherwise read this row's empty
         // date columns as the venue having published no run, and file a show
         // whose page merely timed out as a permanent display. Internal only —
-        // csvRow() writes a fixed seven columns, so it never reaches the CSV.
+        // the CSV writer writes only the pro forma's columns, so it never reaches the CSV.
         row.detailFailed = true;
         failed++;
         continue;

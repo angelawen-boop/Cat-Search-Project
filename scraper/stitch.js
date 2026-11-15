@@ -46,8 +46,7 @@ const OUT_DIR = path.join(__dirname, 'output');
 // PER ROW. Two runs of one venue land side by side here with different sweep
 // times, which is the normal case, so no file-level or venue-level date could
 // carry the fact.
-const COLS = ['venue_code', 'title', 'start_date', 'end_date', 'summary', 'url', 'notes',
-              'swept_at'];
+const { COLUMNS: COLS, CSV_HEADER, quoteCell, parseCsv } = require('./pro_forma.js');
 
 const args = process.argv.slice(2);
 const outArg = args.find(a => a.startsWith('--out='));
@@ -58,10 +57,6 @@ if (!names.length) {
   console.error('       folder names are relative to scraper/output/, or absolute');
   process.exit(1);
 }
-
-// Reuse the compressor's parser rather than write a second one: curatorial text
-// is full of commas and newlines, and two parsers would drift.
-const { parseCsv } = require('./compress.js');
 
 const rows = [];
 const perVenue = new Map();          // venue -> [{dir, n}]
@@ -118,13 +113,12 @@ if (problems.length) {
   process.exit(1);
 }
 
-const q = v => /[",\n\r]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v;
 const stamp = new Date().toISOString().slice(0, 16).replace(/[-:]/g, '').replace('T', '_');
 const dirName = `stitch_${stamp}`;
 const outDir = path.join(OUT_DIR, dirName);
 fs.mkdirSync(outDir, { recursive: true });
 const out = outArg ? outArg.split('=').slice(1).join('=') : path.join(outDir, 'sweep.csv');
-fs.writeFileSync(out, [COLS.join(','), ...rows.map(r => r.map(q).join(','))].join('\n') + '\n', 'utf8');
+fs.writeFileSync(out, [CSV_HEADER, ...rows.map(r => r.map(quoteCell).join(','))].join('\n') + '\n', 'utf8');
 
 // What went into it, so the file can be traced back months from now.
 fs.writeFileSync(path.join(outDir, 'sources.txt'),

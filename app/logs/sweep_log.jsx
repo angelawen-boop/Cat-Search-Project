@@ -3,19 +3,8 @@
 
 
 // Merge, never replace: a venue's dates move only for a LATER time, so an old sweep
-// file cannot drag them backwards. Tried and brought-rows move independently.
-function mergeSweepLog(prev,seen){
-  const out={...(prev||{})};
-  const later=(a,b)=>(!a||(b&&b>a))?b:a;
-  for(const v of Object.keys((seen&&seen.attempted)||{})){
-    const was=out[v]||{};
-    out[v]={
-      attempted: later(was.attempted, seen.attempted[v]),
-      returned:  later(was.returned,  (seen.returned||{})[v]||null),
-    };
-  }
-  return out;
-}
+// file cannot drag them backwards. Tried and brought-rows move independently (scraper/pro_forma.js).
+const mergeSweepLog=PRO_FORMA.mergeSweepLog;
 //@piece SWEEP_LOG_DOC
 
 

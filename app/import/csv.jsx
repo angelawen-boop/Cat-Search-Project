@@ -6,24 +6,13 @@
 // door as a sweep. swept_at stays blank: a link is not a sweep, and the
 // freshness drawer is about sweeps.
 function proFormaCsv(rows){
-  const cell=v=>{const s=String(v==null?"":v);return /[",\n\r]/.test(s)?"\""+s.replace(/"/g,"\"\"")+"\"":s;};
-  const cols=["venue_code","title","start_date","end_date","summary","url","notes","swept_at"];
-  return [cols.join(",")].concat(rows.map(r=>cols.map(c=>cell(r[c])).join(","))).join("\n")+"\n";
+  return PRO_FORMA.csvText(rows,PRO_FORMA.quoteCell);
 }
 //@piece csvParse
 
+// The scraper's reader, after every line ending is made \n; blank lines are left out.
 function csvParse(text){
-  const out=[]; let i=0,field="",row=[],inQ=false; text=String(text).replace(/\r\n?/g,"\n");
-  const pushF=()=>{row.push(field);field="";}; const pushR=()=>{out.push(row);row=[];};
-  while(i<text.length){ const c=text[i];
-    if(inQ){ if(c==='"'){ if(text[i+1]==='"'){field+='"';i+=2;continue;} inQ=false;i++;continue;} field+=c;i++;continue; }
-    if(c==='"'){inQ=true;i++;continue;}
-    if(c===','){pushF();i++;continue;}
-    if(c==='\n'){pushF();pushR();i++;continue;}
-    field+=c;i++;
-  }
-  if(field.length>0||row.length>0){pushF();pushR();}
-  return out.filter(r=>r.some(c=>String(c).trim()!==""));
+  return PRO_FORMA.parseCsv(String(text).replace(/\r\n?/g,"\n")).filter(r=>r.some(c=>String(c).trim()!==""));
 }
 //@piece ignoreKeyFor
 
@@ -77,10 +66,7 @@ const sameExhibition = (a,b) => {
 // applies until she says. Unusable data becomes a note on the card, never dropped.
 // Marker rows (a listing page the sweep could not read) are matched on the scraper's
 // notes sentence, never on a bracketed title, and go to the coverage panel.
-const isMarkerRow = note => {
-  const MARKER_SENTINEL = "Marker row, not an exhibition.";
-  return String(note||"").trim().endsWith(MARKER_SENTINEL);
-};
+const isMarkerRow = PRO_FORMA.isMarkerNote;
 //@piece fuller
 
 // Which of two values to offer first when a stitched file disagrees with itself: the
@@ -140,7 +126,7 @@ function analyzeProForma(text,rows,ignoredKeys,opts){
   // Which venues this file touched (attempted) and gave rows (returned), dated by the
   // rows' swept_at, the latest per venue — never by the moment of import.
   const attempted={}, returned={};
-  const later=(a,b)=>(!a||(b&&b>a))?b:a;
+  const later=PRO_FORMA.later;
   // Counts she can reconcile: every row read is accounted for (docs/app.md §3
   // "Counts that reconcile").
   let silent=0, blocked=0;

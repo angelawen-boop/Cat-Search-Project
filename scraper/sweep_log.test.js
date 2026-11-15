@@ -46,10 +46,8 @@ test('S-003: order cannot change the answer — an older file never pushes a dat
 });
 
 test('S-004: the rebuilder and the APP agree — read from the real JSX, not a copy', () => {
-  // The rule is restated in sweep_log.js rather than imported, because the
-  // app has no build step and nothing to import from. So it is held against
-  // the app's own mergeSweepLog here, or the two drift silently — which is
-  // the failure this repo keeps recording.
+  // Both name mergeSweepLog in pro_forma.js; the app's copy is the one the join
+  // wrote into the page, so it is held against the rebuilder here.
   //
   // THE ROW ORDER HERE IS DELIBERATE: the LATER stamp comes FIRST at every
   // venue. A rule that simply takes the last row it saw would agree with the

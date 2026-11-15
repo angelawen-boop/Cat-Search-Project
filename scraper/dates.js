@@ -10,29 +10,40 @@
 'use strict';
 
 // ── Date helpers ──────────────────────────────────────────────────────────────
-// Every month spelling a venue has used, in one shared map (docs/scraper.md §3).
-const MONTHS = { january:1,february:2,march:3,april:4,may:5,june:6,
-  july:7,august:8,september:9,october:10,november:11,december:12,
-  jan:1,feb:2,mar:3,apr:4,jun:6,jul:7,aug:8,sep:9,sept:9,oct:10,nov:11,dec:12,
+// Every month spelling a venue has used, one list (docs/scraper.md §3): per language, its full names
+// then its short forms, each with its month number. MONTHS, MONTH_PATTERN and GERMAN_DAY_DOT are all
+// built from it. A spelling an earlier language already has is listed again only where the German
+// day needs it ("30. April"). English is written capitalised, as the pattern carries it.
+const MONTH_SPELLINGS = [
+  { lang: 'en',
+    long: { January:1, February:2, Feburary:2 /* a venue's own misspelling (Jacquemart-André) */, March:3, April:4, May:5,
+      June:6, July:7, August:8, September:9, October:10, November:11, December:12 },
+    short: { Sept:9, Jan:1, Feb:2, Mar:3, Apr:4, Jun:6, Jul:7, Aug:8, Sep:9, Oct:10, Nov:11, Dec:12 } },
 
-  // Italian, for the five Italian venues ("11 maggio-12 giugno 2025"). gennaio/giugno
-  // and marzo/maggio differ late, so abbreviations stay long enough to be unambiguous.
-  gennaio:1, febbraio:2, marzo:3, aprile:4, maggio:5, giugno:6,
-  luglio:7, agosto:8, settembre:9, ottobre:10, novembre:11, dicembre:12,
-  genn:1, febbr:2, magg:5, giu:6, lug:7, ago:8, sett:9, ott:10, dic:12,
-
-  // Three-letter Italian forms ("10 set 2026 - 22 nov 2026", the Accademia).
-  set:9, gen:1, mag:5,
+  // Italian, for the five Italian venues ("11 maggio-12 giugno 2025"). gennaio/giugno and marzo/maggio
+  // differ late, so short forms stay long enough to be unambiguous; the three-letter forms are the
+  // Accademia's ("10 set 2026 - 22 nov 2026"). Longest first: sett before set, genn before gen.
+  { lang: 'it',
+    long: { gennaio:1, febbraio:2, marzo:3, aprile:4, maggio:5, giugno:6,
+      luglio:7, agosto:8, settembre:9, ottobre:10, novembre:11, dicembre:12 },
+    short: { genn:1, febbr:2, magg:5, giu:6, lug:7, ago:8, sett:9, ott:10, dic:12, set:9, gen:1, mag:5 } },
 
   // French ("Du 2 mars au 19 mai 2024", Chantilly), with and without accents.
-  janvier:1, février:2, fevrier:2, mars:3, avril:4, mai:5, juin:6, juillet:7, août:8, aout:8,
-  septembre:9, octobre:10, décembre:12, decembre:12, janv:1, févr:2, fevr:2, avr:4, juil:7, déc:12,
+  { lang: 'fr',
+    long: { janvier:1, février:2, fevrier:2, mars:3, avril:4, mai:5, juin:6, juillet:7, août:8, aout:8,
+      septembre:9, octobre:10, décembre:12, decembre:12 },
+    short: { janv:1, févr:2, fevr:2, avr:4, juil:7, déc:12 } },
 
   // German ("30. Juni 2024 – 5. Januar 2025", Emil Schumacher Museum), Austrian "Jänner" too.
-  januar:1, jänner:1, februar:2, märz:3, maerz:3, juni:6, juli:7, oktober:10, dezember:12, okt:10, dez:12,
+  { lang: 'de',
+    long: { januar:1, jänner:1, februar:2, märz:3, maerz:3, april:4, mai:5, juni:6, juli:7, august:8,
+      september:9, oktober:10, november:11, dezember:12 },
+    short: { okt:10, dez:12 } },
+];
 
-  // A venue's own misspelling (Jacquemart-André, "Feburary").
-  feburary:2 };
+// Month name (lower case) to number.
+const MONTHS = Object.fromEntries(MONTH_SPELLINGS.flatMap(l => [...Object.entries(l.long), ...Object.entries(l.short)])
+  .map(([name, n]) => [name.toLowerCase(), n]));
 
 /**
  * A weekday in front of a date. Longest alternative first ("sat" before "saturday"
@@ -47,21 +58,29 @@ const WEEKDAY_PREFIX_SRC =
 // (a saint, a street) stays.
 const ORDINAL_SUFFIX = /\b(\d{1,2})(?:[sS][tT]|[nN][dD]|[rR][dD]|[tT][hH]|[eE][rR]| (?:st|nd|rd|th))\b/g;
 
-// One month pattern for every parser; long names first, a trailing full stop allowed
-// ("Sept."). The (?![A-Za-z]) is load-bearing: without it "7 November 2025" can match
-// as "7 Nov" + "ember 2025", silently defeating any lookahead after it.
-const MONTH_PATTERN =
-  '(?:January|February|Feburary|March|April|May|June|July|August|September|October|November|December' +
-  '|gennaio|febbraio|marzo|aprile|maggio|giugno|luglio|agosto|settembre|ottobre|novembre|dicembre'
-  + '|janvier|février|fevrier|mars|avril|mai|juin|juillet|août|aout|septembre|octobre|décembre|decembre' +
-  '|januar|jänner|februar|märz|maerz|juni|juli|oktober|dezember' +
-  '|Sept|Jan|Feb|Mar|Apr|Jun|Jul|Aug|Sep|Oct|Nov|Dec' +
-  // Longest first within each language: sett before set, genn before gen, magg before mag.
-  '|genn|febbr|magg|giu|lug|ago|sett|ott|dic|set|gen|mag|janv|févr|fevr|avr|juil|déc|okt|dez)\\.?(?![A-Za-z])';
+// One month pattern for every parser: every language's full names, then every short form, each
+// spelling once; a trailing full stop allowed ("Sept."). The (?![A-Za-z]) is load-bearing: without it
+// "7 November 2025" can match as "7 Nov" + "ember 2025", silently defeating any lookahead after it.
+const MONTH_PATTERN = (() => {
+  const seen = new Set(), out = [];
+  for (const kind of ['long', 'short']) {
+    for (const l of MONTH_SPELLINGS) {
+      for (const name of Object.keys(l[kind])) {
+        if (seen.has(name.toLowerCase())) continue;
+        seen.add(name.toLowerCase());
+        out.push(name);
+      }
+    }
+  }
+  return '(?:' + out.join('|') + ')\\.?(?![A-Za-z])';
+})();
 
 // A German day is written with a full stop ("30. Juni"): the stop leaves before a month name.
-const GERMAN_DAY_DOT = new RegExp('(?<![\\d.])(\\d{1,2})\\.\\s*(?=(?:januar|jänner|februar|märz|maerz|april|mai|juni|juli|august'
-  + '|september|oktober|november|dezember|okt|dez)\\.?(?![A-Za-zäöü]))', 'gi');
+const GERMAN_DAY_DOT = (() => {
+  const de = MONTH_SPELLINGS.find(l => l.lang === 'de');
+  const names = [...Object.keys(de.long), ...Object.keys(de.short)].join('|');
+  return new RegExp('(?<![\\d.])(\\d{1,2})\\.\\s*(?=(?:' + names + ')\\.?(?![A-Za-zäöü]))', 'gi');
+})();
 
 // Month name to number, tolerating the trailing full stop the pattern allows.
 function monthNum(name) {

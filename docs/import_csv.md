@@ -6,6 +6,9 @@ The **only** file the app ingests. Columns exactly, in this order:
 venue_code, title, start_date, end_date, summary, url, notes, swept_at
 ```
 
+- One home in code: `scraper/pro_forma.js` holds the columns, the marker sentence, the "Topic:" note, the
+  reader, the cell quoting and the sweep-log merge; the scraper's tools require it and the join writes it into
+  the app (`build/sweep_same_check.js` proves a change to it changed nothing).
 - CSV, not Excel. Excel silently reformats dates.
 - Dates `YYYY-MM-DD`. The app blanks what it cannot read and notes it.
 - `venue_code` must be one the recipes know. Unknown codes land in "Couldn't be

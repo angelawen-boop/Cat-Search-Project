@@ -17,9 +17,9 @@ const path = require('path');
 
 const ROUTINE_MONTHS = 6;
 const WINDOW_FILE = 'window.json';
-const MARKER_SENTINEL = 'Marker row, not an exhibition.';
+const { isMarkerNote } = require('./pro_forma.js');
 const s = v => String(v == null ? '' : v).trim();
-const isMarker = r => s(r.notes).endsWith(MARKER_SENTINEL);
+const isMarker = r => isMarkerNote(r.notes);
 
 /** "2026-10-15" → "2026-04-15": the same day ROUTINE_MONTHS earlier, clamped to the month's end. */
 function windowFrom(dateStr, months = ROUTINE_MONTHS) {
