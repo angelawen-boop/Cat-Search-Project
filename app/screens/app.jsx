@@ -479,10 +479,9 @@ export default function App(){
     finally{ setRecheckSaid(said); saveLookupTape(tape,{ok:!said.failed,said:said.text}); setRelabelId(null); }
   }
 
-  // Do not regroup: Claude's answer stands for this show until its next Relabel (her design).
   function keepPeriod(id){
     const r=rows.find(x=>x.id===id); if(!r||roStop())return;
-    commit(rows.map(x=>x.id===id?{...x,periodKeep:true,editedAt:new Date().toISOString()}:x));
+    commit(markKeepPeriod(rows,id,new Date().toISOString()));
     setRecheckSaid({id,failed:false,text:"Relabelled: "+periodText(r)+" \u2014 no regrouping."});
   }
 
@@ -697,24 +696,13 @@ export default function App(){
     setBusy(false);setBusyId(null);setRechecking(false);setLookLabel(null);
   }
 
-  const dismiss=id=>{commit(rows.map(r=>r.id===id?{...r,interested:false}:r));if(undoTimer.current)clearTimeout(undoTimer.current);setUndo({id});undoTimer.current=setTimeout(()=>setUndo(null),10000);};
-  const undoDismiss=()=>{if(!undo)return;commit(rows.map(r=>r.id===undo.id?{...r,interested:true}:r));setUndo(null);if(undoTimer.current)clearTimeout(undoTimer.current);};
-  const restore=id=>commit(rows.map(r=>r.id===id?{...r,interested:true}:r));
-  const toggleWatch=id=>commit(rows.map(r=>r.id===id?{...r,watching:!r.watching}:r));
-  // Leaving Yes clears the buy-next dot and its place in her order: it marks a wanted book only.
-  const setAcq=(id,v)=>commit(rows.map(r=>{if(r.id!==id)return r;const a=r.acquiring===v?null:v,bn=a==="yes"&&!!r.buyNext;return{...r,acquiring:a,buyNext:bn,buyRank:bn?(r.buyRank??null):null};}));
-  // A newly marked card goes to the top of her Buy next order (highest buyRank first).
-  const toggleBuyNext=id=>{const top=rows.reduce((m,r)=>r.buyNext&&Number.isFinite(r.buyRank)?Math.max(m,r.buyRank):m,0);
-    commit(rows.map(r=>r.id===id?{...r,buyNext:!r.buyNext,buyRank:r.buyNext?null:top+1}:r));};
-  // A drop in the Buy next view: the card lands before the shown card it was dropped above
-  // (else after the one below it), across every Buy next card, hidden ones included, then
-  // all are renumbered. Not an edit: editedAt is untouched (her decision).
-  const moveBuyNext=(id,beforeId,afterId)=>{
-    const shown=new Map(view.map((r,i)=>[r.id,i])),key=r=>Number.isFinite(r.buyRank)?r.buyRank:-Infinity;
-    const all=rows.filter(isBuyNext).sort((a,b)=>key(b)-key(a)||(shown.get(a.id)??1e9)-(shown.get(b.id)??1e9)).map(r=>r.id);
-    const order=all.filter(x=>x!==id);let at=beforeId?order.indexOf(beforeId):afterId?order.indexOf(afterId)+1:-1;if(at<0)at=order.length;
-    order.splice(at,0,id);const rank=new Map(order.map((x,i)=>[x,order.length-i]));
-    commit(rows.map(r=>rank.has(r.id)?{...r,buyRank:rank.get(r.id)}:r));};
+  const dismiss=id=>{commit(markDismiss(rows,id));if(undoTimer.current)clearTimeout(undoTimer.current);setUndo({id});undoTimer.current=setTimeout(()=>setUndo(null),10000);};
+  const undoDismiss=()=>{if(!undo)return;commit(markRestore(rows,undo.id));setUndo(null);if(undoTimer.current)clearTimeout(undoTimer.current);};
+  const restore=id=>commit(markRestore(rows,id));
+  const toggleWatch=id=>commit(markWatch(rows,id));
+  const setAcq=(id,v)=>commit(markAcquiring(rows,id,v));
+  const toggleBuyNext=id=>commit(markBuyNext(rows,id));
+  const moveBuyNext=(id,beforeId,afterId)=>commit(markBuyNextMove(rows,id,beforeId,afterId,view.map(r=>r.id)));
   // ── DRAG TO REORDER, BUY NEXT ONLY ──
   // Touch: hold a card ~0.45s (a buzz where the phone allows), then drag; a swipe before
   // that scrolls. Mouse: press and move. Buttons, links and version picks keep their taps.
@@ -789,15 +777,14 @@ export default function App(){
     document.addEventListener("touchmove",hold,{passive:false});
     return()=>document.removeEventListener("touchmove",hold,{passive:false});
   },[dragOn]);
-  // Her pick on a card with several versions (pickRow): the card's book follows it.
-  const setPick=(id,i)=>{ const r=rows.find(x=>x.id===id); const next=r&&pickRow(r,i,new Date().toISOString()); if(next&&next!==r)commit(rows.map(x=>x.id===id?next:x)); };
+  const setPick=(id,i)=>{ const next=markPick(rows,id,i,new Date().toISOString()); if(next!==rows)commit(next); };
   // A card's buttons, by name. One function for the life of the page (so LedgerCard can skip
   // redrawing) that calls this render's handler, which sees the current ledger.
   const cardActs=useRef(null);
   // Her digital catalogue link: an empty box leaves the card as it was; not a link → the box stays open.
   const setDigital=(id,text)=>{ if(!String(text||"").trim()){ setDigitalBox(null); return; }
     const href=typedLink(text); if(!href)return; setDigitalBox(null);
-    const r=rows.find(x=>x.id===id); if(r&&r.digitalUrl!==href)commit(rows.map(x=>x.id===id?{...x,digitalUrl:href,editedAt:new Date().toISOString()}:x)); };
+    const next=markDigital(rows,id,href,new Date().toISOString()); if(next!==rows)commit(next); };
   cardActs.current={restore,toggleWatch,dismiss,setAcq,toggleBuyNext,setPick,findOneCat,recheckShop,relabel,keepPeriod,setDigital,
     openDigital:id=>setDigitalBox(id),closeDigital:()=>setDigitalBox(null),
     toggleOpen:id=>setOpenCards(o=>({...o,[id]:!o[id]}))};

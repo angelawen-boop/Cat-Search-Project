@@ -123,6 +123,13 @@
    "id": "4-keys",
    "name": "Round keys: the web-address key and the accent strip kept once in scraper/keys.js and written into the app by the join; one rule for a new show's ID",
    "files": {}
+  },
+  {
+   "id": "5-a1",
+   "name": "Main screen, stage A1: what each card mark does to the ledger, as plain functions out of the screen",
+   "files": {
+    "ledger/marks.jsx": "What each mark on a card does to the ledger: dismiss, restore, watch, acquiring, Buy next and its order, the catalogue pick, the digital link, keep this period."
+   }
   }
  ],
  "pieces": {
@@ -613,6 +620,17 @@
   "CatalogueBox": "screens/ledger_card.jsx",
   "CatalogueNone": "screens/ledger_card.jsx",
   "App": "screens/app.jsx",
+  "markRow": "ledger/marks.jsx",
+  "markDismiss": "ledger/marks.jsx",
+  "markRestore": "ledger/marks.jsx",
+  "markWatch": "ledger/marks.jsx",
+  "markAcquiring": "ledger/marks.jsx",
+  "markBuyNext": "ledger/marks.jsx",
+  "markBuyNextMove": "ledger/marks.jsx",
+  "markPick": "ledger/marks.jsx",
+  "markDigital": "ledger/marks.jsx",
+  "markKeepPeriod": "ledger/marks.jsx",
+
   "UNREAD_OCC,UNREAD_LINKS,UNREAD_PAGES,UNREAD_PASTES,UNREAD_SWEEPS,UNREAD_QUAR": "connections/store.jsx",
   "SHOP_WORD": "shop_finder/museum_shop.jsx",
   "SHOP_WORDS": "shop_finder/museum_shop.jsx",
