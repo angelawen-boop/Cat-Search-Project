@@ -642,7 +642,10 @@ function takePassage(pg){
   const kindOf=l=>/^\s*#{1,6}\s/.test(l)?"heading":/^\s*>/.test(l)?"quote":/^\s*\|/.test(l)?"table":/^\s*(?:[*+-]|\d+\.)\s/.test(l)?"list":"text";
   for(let k=from;k<lines.length;k++){
     if(k>d&&k<=dEnd||k===d&&!keepDateLine)continue;
-    const line=lines[k], own=stripMd(line);
+    const line=lines[k];
+    let own=stripMd(line);
+    // A scrap the venue's page prints at a line's end (linkRead.stripTrailing; the Prado's "| \+" toggle) leaves it.
+    if(lr&&lr.stripTrailing){ const s=own.replace(lr.stripTrailing,""); if(s!==own)rule("stripTrailing"); own=s; }
     // The passage ends at the first line matching linkRead.until (a box for other shows).
     if(lr&&lr.until&&lr.until.test(own)){ rule("until"); break; }
     if(!own){ cur=null; continue; }

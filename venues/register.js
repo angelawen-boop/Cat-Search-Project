@@ -276,12 +276,13 @@ const VENUES = [
 
   // The Prado: chip "Prado" right after KHM, cards "Prado Madrid" (her decision). Its dates are month first
   // (DATE_ORDER, dates.js).
-  // Its all-number dates: "6/9/2026 - 9/27/2026".
+  // Its all-number dates: "6/9/2026 - 9/27/2026". A description cut short behind its "+" toggle ends
+  // "… | \+": the scrap leaves the passage, the cut sentence stays (`stripTrailing`).
   { id: "occ-museodelprado-es", kind: "manual",
     names: { card: "Prado", chip: "Prado", group: null, full: "Museo Nacional del Prado", inEnglish: null, aka: ["Prado", "Museo del Prado"], replaced: ["Prado Madrid"], hers: true },
     city: "Madrid", country: "Spain", english: false, language: null,
     shop: { home: null, catalogues: null, search: null, unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
-    read: { link: null, sites: [], dateOrder: "month", spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
+    read: { link: { stripTrailing: /\s*\|\s*\\?\+$/ }, sites: [], dateOrder: "month", spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
     sweep: { exBase: null, listUrl: null },
     filed: { addedAt: "2026-10-29T04:52:37.794Z", aka: ["Prado", "Museo del Prado"], city: "Madrid", confirmed: true, country: "Spain", english: false, englishPicked: false, finder: 3, foundBy: "a search", gallery: false, host: "www.museodelprado.es", id: "occ-museodelprado-es", name: "Museo Nacional del Prado", pageShop: "https://tiendaprado.com/en/", searchRule: 2, shelfKind: "catalogues", shop: "found", shopCatalogues: "https://tiendaprado.com/en/410-catalogues", shopEnglishUnread: null, shopHome: "https://tiendaprado.com/", shopSearch: null, short: "Madrid Prado", turnedDown: [], why: null } },
 

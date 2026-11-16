@@ -287,7 +287,8 @@ venue's rule is that venue's** (her decision). Below: the rules, and her decisio
   line never reaches Claude (`skip`); shop.skd.museum sells tickets and gifts only → she answers **No shop** once.
 - **Chantilly** (`occ-chateaudechantilly-fr`): its names and chip place are hers (her decision). **The Prado**
   (`occ-museodelprado-es`, her decision): month first (`DATE_ORDER`); a touring
-  show's other house on its date line still files here. **Cini** (her decision): three venues under one chip —
+  show's other house on its date line still files here; a description cut short behind its "+" toggle loses the
+  toggle's " | \+", the cut sentence kept (`stripTrailing`, AL-095). **Cini** (her decision): three venues under one chip —
   the foundation (`occ-cini-it`), Le Stanze del Vetro, Le Stanze della Fotografia; Claude decides the venue as for
   any new one, and answers the Cini house only on first meeting cini.it, so a later Stanze show files under the
   foundation (her accepted outcome). **Moretti** (`occ-morettigallery-com`, her decision: a Moretti rule): the place after " : " leaves

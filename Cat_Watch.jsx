@@ -234,12 +234,13 @@ const VENUES = [
 
   // The Prado: chip "Prado" right after KHM, cards "Prado Madrid" (her decision). Its dates are month first
   // (DATE_ORDER, dates.js).
-  // Its all-number dates: "6/9/2026 - 9/27/2026".
+  // Its all-number dates: "6/9/2026 - 9/27/2026". A description cut short behind its "+" toggle ends
+  // "… | \+": the scrap leaves the passage, the cut sentence stays (`stripTrailing`).
   { id: "occ-museodelprado-es", kind: "manual",
     names: { card: "Prado", chip: "Prado", group: null, full: "Museo Nacional del Prado", inEnglish: null, aka: ["Prado", "Museo del Prado"], replaced: ["Prado Madrid"], hers: true },
     city: "Madrid", country: "Spain", english: false, language: null,
     shop: { home: null, catalogues: null, search: null, unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
-    read: { link: null, sites: [], dateOrder: "month", spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
+    read: { link: { stripTrailing: /\s*\|\s*\\?\+$/ }, sites: [], dateOrder: "month", spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
     sweep: { exBase: null, listUrl: null },
     filed: { addedAt: "2026-10-29T04:52:37.794Z", aka: ["Prado", "Museo del Prado"], city: "Madrid", confirmed: true, country: "Spain", english: false, englishPicked: false, finder: 3, foundBy: "a search", gallery: false, host: "www.museodelprado.es", id: "occ-museodelprado-es", name: "Museo Nacional del Prado", pageShop: "https://tiendaprado.com/en/", searchRule: 2, shelfKind: "catalogues", shop: "found", shopCatalogues: "https://tiendaprado.com/en/410-catalogues", shopEnglishUnread: null, shopHome: "https://tiendaprado.com/", shopSearch: null, short: "Madrid Prado", turnedDown: [], why: null } },
 
@@ -948,7 +949,7 @@ function venueView(e,rec,fallback){
     shopSearch:live?s.shopSearch||null:null,shopUnknown:!live&&!(s.shop==="none"&&s.confirmed)};
 }
 // Every name a venue goes by, as the parts that look for it in a text match it.
-const venueNames=v=>[...new Set([v&&v.name,v&&v.card,v&&v.lookupName,...((v&&v.replaced)||[])].filter(Boolean))];
+const venueNames=v=>[...new Set([v&&v.name,v&&v.nameInEnglish,v&&v.card,v&&v.lookupName,...((v&&v.replaced)||[])].filter(Boolean))];
 // Her 28 swept venues, in her venue order: drawer, chips, Sort by Venue and refresh headings follow it.
 const MUSEUMS=VENUE_REGISTER.filter(e=>e.kind==="swept").map(e=>venueView(e));
 // The Occasional venues (no chip of their own) follow, by country: the United States, the rest of that group
@@ -2695,7 +2696,10 @@ function takePassage(pg){
   const kindOf=l=>/^\s*#{1,6}\s/.test(l)?"heading":/^\s*>/.test(l)?"quote":/^\s*\|/.test(l)?"table":/^\s*(?:[*+-]|\d+\.)\s/.test(l)?"list":"text";
   for(let k=from;k<lines.length;k++){
     if(k>d&&k<=dEnd||k===d&&!keepDateLine)continue;
-    const line=lines[k], own=stripMd(line);
+    const line=lines[k];
+    let own=stripMd(line);
+    // A scrap the venue's page prints at a line's end (linkRead.stripTrailing; the Prado's "| \+" toggle) leaves it.
+    if(lr&&lr.stripTrailing){ const s=own.replace(lr.stripTrailing,""); if(s!==own)rule("stripTrailing"); own=s; }
     // The passage ends at the first line matching linkRead.until (a box for other shows).
     if(lr&&lr.until&&lr.until.test(own)){ rule("until"); break; }
     if(!own){ cur=null; continue; }

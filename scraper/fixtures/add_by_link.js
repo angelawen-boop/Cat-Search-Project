@@ -552,6 +552,21 @@ function runtime() {
     ok(r.ok && r.base === "Matrimonial Bliss: Chagall's Double Portrait with Wine Glass" && r.site === 'Minneapolis Institute of Art',
       'AL-032: Mia: no "–– Minneapolis Institute of Art" tail, no "&#039;", the venue named in full', JSON.stringify([r.base, r.site]));
   }
+  // ── AL-095: the Prado (that venue only): a description cut short behind its "+" toggle ends "… | \+"; the scrap
+  // leaves the passage, the cut sentence stays. Live pages on docs/link_proof_pages.json. ─
+  {
+    const read = new Function('React', 'window', 'document', 'localStorage', code + '\n;return readShowPage;')(React, win, win.document, win.localStorage);
+    const page = { title: 'Painted Gardens - Exhibition - Museo Nacional del Prado',
+      full_content: '# Painted Gardens\n\nMuseo Nacional del Prado. Madrid 3/4/2027 \\- 7/18/2027\n\n'
+        + 'The gardens of the court were painted again and again, each painter finding in them a new order of nature and art. '.repeat(3)
+        + '\n\nThis second paragraph follows the painters from the royal sites to the cloisters. There the same plants turn up in altarpieces … | \\+\n\n'
+        + 'Curator:\n    A curator of the collection\n' };
+    const url = 'https://www.museodelprado.es/en/whats-on/exhibition/painted-gardens/0000';
+    const r = read(page, url, 'occ-museodelprado-es'), other = read(page, url, 'occ-getty-edu');
+    ok(r.ok && /in altarpieces …$/.test(r.raw) && !r.raw.includes('\\+') && r.start === '2027-03-04' && r.end === '2027-07-18',
+      'AL-095:  the Prado: the "| \\+" toggle scrap leaves the passage, the cut sentence ending "…" stays', JSON.stringify([r.raw.slice(-60), r.start, r.end]));
+    ok(other.ok && other.raw.endsWith('… | \\+'), 'AL-095a: the rule is the Prado\'s: another venue\'s reading of the same text is unchanged', JSON.stringify(other.raw.slice(-30)));
+  }
   // ── AL-083: Moretti (her decision, Moretti only): the place after " : " leaves the title, the capitals are
   // recased, and its description typed in capitals reaches Claude, the cookie panel not. Read live (29 Oct). ─
   {
