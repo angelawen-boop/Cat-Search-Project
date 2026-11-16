@@ -283,6 +283,38 @@ other shop-answer rules in `app/import/review.jsx`, `venuesShopConfirmed`, `venu
 `venuesShopAdded`, `lookAgainJob`, `venuesLookedAgain`. Every function left in the screen calls a job or a
 rule and puts what comes back into memory.
 
+### Stage B — the rules both runs follow (design)
+
+- **A piece is a component at the top level of its file** in `app/screens/` (never defined inside the
+  screen: it would be rebuilt, and lose its place, on every redraw), one `//@piece` each. Its section of
+  the layout moves into it by script, line for line; the names inside stay the same because the piece
+  opens by taking them from what it is handed.
+- **What a piece is handed:** the values it shows; the look-and-feel as ONE `ui` object (the palette, the
+  tier colours, the chip, button and link styles); and **named actions**. Where a section's button today
+  calls the screen's setters inline, that handler becomes a named function in the screen (same body) and
+  the piece is handed it under a name that says what it does. No piece is handed a raw setter of memory it
+  does not own.
+- **No piece takes more than about fifteen things** (`ui` counts as one). A section that needs more is cut
+  into smaller pieces along its own sub-sections, in the same file. One that still needs more is a sign of
+  a wrong cut: it is left in the screen and reported, for her list.
+- **Memory moves into a piece only when the cross-reference shows no one else reads or writes it.**
+- **The proof:** every screen the check draws identical — it now also draws the dark theme, the sweep-log
+  drawer, the quarantine, Reset cards and Cloud Saves drawers, the Save panel and the search box in full.
+
+### Run B1 — the page's own pieces (design)
+
+Branch `claude/restructure-5-b1`. *Sonnet, medium.*
+- `header.jsx`: the title and toolbar with the Save panel; the cloud line and the status lines; the
+  banners and the error line; the diagnostic box (it owns "open" and "copied", and the reset of "copied"
+  when a new diagnostic arrives); the sweep-log line and its drawer (it owns "open"); the counts and the
+  search row. Several pieces, by the fifteen-things rule.
+- `chips.jsx`: the sort, when, venue, theme, acquiring and showing rows. Handed the filters object, the
+  sort, and named actions (toggle a venue, pick a sort, clear, and one per switch).
+- `card_list.jsx`: the empty state, the period dividers, the cards and the "more" marker.
+- `drawers.jsx`: the tools row, Cloud Saves, the quarantine list, Reset cards.
+- `floating.jsx`: the search-selected-words button, top and bottom, the undo bar, the confirm box, the footer.
+- **Stays in the screen for B2:** the import pop-up, the review, the shop screen.
+
 ## 4A — the venue register (merged)
 
 **Her decisions (made; the code-or-store question is closed):**

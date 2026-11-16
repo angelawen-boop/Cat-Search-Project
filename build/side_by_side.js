@@ -775,6 +775,20 @@ async function snapshot(jsxFile, outFile, liveFile) {
   jobWeb = null; jobClaude = null;
   if (dialog()) { click(inDialog(/^Cancel$/)); await steady(); }
 
+  // 6. Drawing (stage B of the main screen): the pieces no earlier step opens, each in full.
+  const draw = async (name, find, back) => {
+    await step(name, async () => { const was = screen(); const ok = click(find()) && await until(() => screen() !== was, 4000);
+      await steady(); capture(name, ok, screen); if (back !== false) { click((back || find)()); await steady(); } });
+  };
+  const bottom = t => () => [...doc.querySelectorAll('button')].filter(b => b.textContent.trim() === t).pop();
+  await draw('draw-dark', () => doc.querySelector('button[title="Switch to dark"]'), () => doc.querySelector('button[title="Switch to light"]'));
+  await draw('draw-sweep-log', () => button(/^Details$/), () => button(/^Hide details$/));
+  await draw('draw-quarantine', bottom('Quarantine'));
+  await draw('draw-reset-cards', bottom('Clear search'));
+  await draw('draw-cloud-saves', bottom('Cloud Saves'));
+  await draw('draw-save-panel', () => button(/^Save$/), false);
+  await draw('draw-search-box', () => doc.querySelector('button[title="Search"]'));
+
   // 5. The whole run's store sequence, opening to here.
   capture('store-sequence-all', true, () => seq.join('\n'));
 
