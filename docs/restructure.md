@@ -439,6 +439,62 @@ box, and "a ledger was loaded" (the screen passes the filters' `ledgerLoaded`).
   and everything of the card actions, the link venues and the import session (C5 to C7), which now call
   the document's named actions where they called its setters.
 
+**C4 — done, merged.** `app/screens/use_ledger_document.jsx`, `useLedgerDocument({showError,
+showDiagnostic, ask, onLoaded})`: about 300 lines, every effect in its old order, no dependency list
+changed, the store's sequence identical. Named actions for the rest of the screen: `commit`, `put`,
+`latest`, `readOnlyStop`, `addToQuarantine`, `releaseFromQuarantine`, `importApplied`, and Load, Save, Reset
+and the safety copies. The screen's block is about 500 lines.
+
+### Runs C5 to C7 — the last three hooks (design, from a fresh look at what is left)
+
+**The call order changes from the plan in one place, the coordinator's call:** the link venues' hook is
+called BEFORE the card actions' hook, because a lookup's "work out this venue's shop search" is the link
+venues' action and is handed to the card actions by name. The opening's reads are untouched by this: the
+card actions read nothing on opening. Order: … `useLedgerDocument` → the list → `useLinkVenues` →
+`useCardActions` → `useBuyNextDrag`, `useListDrawing` → `useImportSession`.
+
+**One "a job is running" flag, in the screen** (labelling, lookups and the Read share it by design). The
+hooks are handed it as named things: is one running, start, end, and "show this progress".
+
+**C6 `use_link_venues.jsx`, `useLinkVenues(rows)`** — branch `claude/restructure-5-c6`, run FIRST of the
+three. *Opus, medium.*
+- **Owns:** the working copy of the manual-import venues and the stored copy; its own opening read (the
+  venues), declared after the document's and before the screen's remaining opening reads.
+- **Named actions:** `hold(venues)` (what a Read met), `dropHeld()` (Cancel), the shop answers —
+  `confirmShop(id, english)`, `noShop(id)`, `addShop(id, link)` (the link already checked),
+  `lookAgain(id)` (the search, then what it found onto the venues as they stand) — `toConfirm(proposals,
+  decisions)`, `importApplied(proposals, decisions)` (keeps only the answers for venues going in, stores
+  them), and `fillShopSearch(id)` for the lookup.
+- **Stays outside it:** which shop box is open and which venue is being looked for (the shop screen's own
+  memory, C7): the screen's handlers set those and call the venue actions, as today's lines do in order.
+
+**C5 `use_card_actions.jsx`, `useCardActions({…})`** — branch `claude/restructure-5-c5`. *Opus, medium.*
+- **Owns:** which card is busy, the lookup's progress line, which of the two buttons runs, the card being
+  relabelled, what the last job said on a card, Label's line, which Digital box is open, which cards are
+  open, the undo bar and its timer, and the one `cardAct` the cards call.
+- **Handed, by name:** from the document `rows`, `commit`, `put`, `latest`, `readOnlyStop`; the job flag;
+  "show this error line" and "show this diagnostic"; the shown order of cards (for the Buy next move);
+  the link venues' `fillShopSearch`.
+- **Hands back:** `cardState` (the one object the card list takes), `cardAct`, Label's line and
+  `labelLedger`, the undo and `undoDismiss`, `moveBuyNext`, and `forgetSaid(id)` for Reset-a-card (which
+  stays in the screen with the drawer's memory and the confirm box).
+
+**C7 `use_import_session.jsx`, `useImportSession({…})`** — branch `claude/restructure-5-c7`. *Opus, medium.*
+- **Owns:** the pop-up's mode, the Links box, the Pages list, the Paste boxes, the Read's note and
+  failures, the Read under way and what it was read from, the proposals, decisions, coverage, tally, the
+  held sweep, the venues the Read met, the shop screen's turn, its open box and the venue being looked
+  for, the two file inputs' refs; the store-the-paste-boxes-as-she-types effect; its own opening reads
+  (pending links, pages, pastes), declared last.
+- **Handed, by name:** from the document `rows`, the quarantine's list, `hasLedger`, `commit`,
+  `addToQuarantine`, `importApplied`, `readOnlyStop`, Load and open-the-cloud-copy (the "open a ledger
+  first" case); the sweep log's `recordSweep`; the filters' `importApplied`; the link venues' actions and
+  working copy; the job flag and progress; "show this error line"; "ask her". It never clears a filter
+  and never writes a venue itself.
+- **Hands back:** what the pop-up, the review and the shop screen show, and every action they call.
+- **After C7 the screen keeps:** the job flag and progress line, the error line, the diagnostic, the
+  store-unread markers, the confirm box, the theme and `ui`, search-selected-words, the drawers' shared
+  "open" flags and Reset-a-card, the list's three lines, and the order of the pieces.
+
 ## 4A — the venue register (merged)
 
 **Her decisions (made; the code-or-store question is closed):**
@@ -770,7 +826,7 @@ word) and item 5's cutting plan in full, then:
 
 ## Handover record — updated after every step
 
-**Where we are:** item 5 is under way: A1 and A2 are merged (see "5 — the runs"); Stage A is finished and merged (A1, A2, A3-0, A3a, A3b); Stage B is finished and merged (B1, B2); C1, C2 and C3 are merged; next C4, the ledger document (design written), then C5 to C7. Item 4 is finished and on `main`: steps 1 to 5 of "This run" (59 published; the app-side
+**Where we are:** item 5 is under way: A1 and A2 are merged (see "5 — the runs"); Stage A is finished and merged (A1, A2, A3-0, A3a, A3b); Stage B is finished and merged (B1, B2); C1 to C4 are merged; next C6 (link venues), then C5 (card actions), then C7 (import session) — designs written. Item 4 is finished and on `main`: steps 1 to 5 of "This run" (59 published; the app-side
 and scraper-side rounds, the price rule and the two venues, the keys round). Step 6, the main screen's
 cutting plan, is written (item 5). `main` passes the app's suites, the join, structure and fact checks. What waits for her is under "Parked for her" and "Start here", 5.
 
