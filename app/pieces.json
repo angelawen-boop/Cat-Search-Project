@@ -741,6 +741,7 @@
   "useBuyNextDrag",
   "useSweepLog",
   "useLedgerDocument",
+  "useLinkVenues",
   "App"
  ]
 }

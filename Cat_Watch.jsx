@@ -10600,6 +10600,62 @@ function useLedgerDocument({showError,showDiagnostic,ask:askHer,onLoaded}){
     handleSave,toggleSavePanel,closeSavePanel,typeSaveLabel,chooseSaveCloud,
     toggleCloudSaves,requestRollback,downloadSnapshot,dismissCloudCheck};
 }
+// The venues Links, Pages and Paste have met (docs/add_by_link.md). It reads its own record from the store when
+// the page opens (App calls it after the ledger document and before its opening effect, so the store's reads keep
+// their order) and hands back the working copy and named actions; the stored copy never leaves it.
+function useLinkVenues(rows){
+  const[occVenues,setOccVenues]=useState({});
+  // The stored copy of the new venues; occVenues is the working copy. The store is
+  // written only when the ledger moves — an unfinished import keeps nothing (her decision).
+  const occSaved=useRef({});
+  useEffect(()=>{
+    // Add by link: the venues it has met.
+    readOccasional().then(map=>{ occSaved.current=map; registerOccasional(map); setOccVenues(map); });
+  },[]);
+  // The shop screen's answers are held in the working copy and stored when the ledger
+  // moves; Cancel import drops them, Back keeps them (her decision). Confirmed in a
+  // finished import → never asked again.
+  function hold(next){ registerOccasional(next); setOccVenues(next); }
+  // Back to what the store holds: the import's venues and answers dropped.
+  function dropHeld(){
+    const saved=occSaved.current;
+    for(const id of Object.keys(MU)) if(isOcc(id)&&!saved[id]){ delete MU[id]; KNOWN_VENUES.delete(id); }
+    registerOccasional(saved); registerUnseenOccasional(rows); setOccVenues(saved);
+  }
+  // The shop screen's answers (venuesShopConfirmed, venuesNoShop, venuesShopAdded), held.
+  function confirmShop(id,english){ if(occVenues[id])hold(venuesShopConfirmed(occVenues,id,english)); }
+  function noShop(id){ if(occVenues[id])hold(venuesNoShop(occVenues,id)); }
+  // Her own shop link, already checked to be a link.
+  function addShop(id,href){
+    if(!occVenues[id])return;
+    hold(venuesShopAdded(occVenues,id,href));
+  }
+  // "Look again" (lookAgainJob); what it found goes onto the venues as they stand then (venuesLookedAgain).
+  async function lookAgain(id){
+    const v=occVenues[id]; if(!v)return;
+    const found=await lookAgainJob(v);
+    setOccVenues(prev=>{
+      const next=venuesLookedAgain(prev,id,found);
+      registerOccasional(next); return next; });
+  }
+  // The shop screen asks about a venue outside her list whose shop is unconfirmed (venuesGoingIn).
+  function toConfirm(proposals,decisions){ return shopVenuesToConfirm(proposals,decisions,occVenues,occSaved.current); }
+  // An import applied: only the answers for venues going in are kept, and stored.
+  function importApplied(proposals,decisions){
+    if(occVenues!==occSaved.current){ const kept=answeredOnly(occVenues,occSaved.current,venuesGoingIn(proposals,decisions)); writeOccasional(kept); occSaved.current=kept; registerOccasional(kept); setOccVenues(kept); }
+  }
+  // A link venue's shop search, worked out once at its first lookup (shopSearchAdditions) — then stored.
+  async function fillShopSearch(id){
+    const v=occVenues[id]||occSaved.current[id];
+    const adds=await shopSearchAdditions(MU[id],v);
+    if(!adds)return;
+    const add=x=>x?{...x,...adds}:x;
+    if(occSaved.current[id]){ const saved={...occSaved.current,[id]:add(occSaved.current[id])}; occSaved.current=saved; writeOccasional(saved); }
+    setOccVenues(prev=>{ const next=prev[id]?{...prev,[id]:add(prev[id])}:prev; registerOccasional(next); return next; });
+    MU[id]={...MU[id],...occVenue(id,{...v,...adds})};
+  }
+  return{occVenues,hold,dropHeld,confirmShop,noShop,addShop,lookAgain,toConfirm,importApplied,fillShopSearch};
+}
 
 export default function App(){
   const[busy,setBusy]=useState(false);
@@ -10626,10 +10682,6 @@ export default function App(){
   const pagesFileRef=useRef(null);
   const linksAtRead=useRef(null);   // the links the open review was read from; Cancel import puts them back
   const linkRead=useRef({on:false,stop:false});   // a Read under way; Cancel mid-Read stops it after the link in hand
-  const[occVenues,setOccVenues]=useState({});
-  // The stored copy of the new venues; occVenues is the working copy. The store is
-  // written only when the ledger moves — an unfinished import keeps nothing (her decision).
-  const occSaved=useRef({});
   const[error,setError]=useState(null);
   const[rechecking,setRechecking]=useState(false);   // which of the card's two buttons is running
   const[recheckSaid,setRecheckSaid]=useState(null);  // {id,text,failed}: Re-check's answer, shown on that card
@@ -10656,6 +10708,10 @@ export default function App(){
   // A row from an occasional venue this page's store has not met still files
   // under a venue — see registerUnseenOccasional. Idempotent; costs a loop.
   registerUnseenOccasional(rows);
+  // The link venues (the hook: app/screens/use_link_venues.jsx). Called after the ledger document and before the
+  // opening effect below, so the venues are still read after the cloud copy and before the pending links.
+  const linkVenues=useLinkVenues(rows);
+  const{occVenues,hold,dropHeld,confirmShop,noShop,addShop,toConfirm,fillShopSearch}=linkVenues;
   const[openCards,setOpenCards]=useState({});
   const[undo,setUndo]=useState(null);
   const undoTimer=useRef(null);
@@ -10724,8 +10780,7 @@ export default function App(){
   };
 
   useEffect(()=>{
-    // Add by link: the venues it has met, and links still waiting in the box.
-    readOccasional().then(map=>{ occSaved.current=map; registerOccasional(map); setOccVenues(map); });
+    // Add by link: links still waiting in the box.
     readPendingLinks().then(t=>{ if(t)setLinkText(t); });
     readPendingPages().then(l=>{ if(l.length)setPages(l); });
     readPendingPastes().then(l=>{ if(l.length)setPastes(pasteBoxes(l)); });
@@ -10804,7 +10859,7 @@ export default function App(){
     // Cancelled mid-Read: nothing from this Read is kept; every link stays in the box.
     if(out.stopped){ linkRead.current={on:false,stop:false}; setProg({done:0,total:0,label:""}); setBusy(false); setImportMode(null); return; }
     linkRead.current={on:false,stop:false};
-    if(out.venuesChanged){ registerOccasional(out.venues); setOccVenues(out.venues); }   // held, not stored: see occSaved
+    if(out.venuesChanged){ hold(out.venues); }   // held, not stored: see useLinkVenues
     setProg({done:0,total:0,label:""}); setBusy(false); setReadVenues(out.met);
     const done=readOutcome(input,out,{pages,pastes,rows,ignored});
     // The box (or list) is stored when the import finishes.
@@ -10841,39 +10896,24 @@ export default function App(){
     setPages(picked.list); setLinkFails(picked.bad); setLinkNote(null);
     if(picked.store)writePendingPages(picked.list);
   }
-  // The shop screen's answers are held in the working copy and stored when the ledger
-  // moves; Cancel import drops them, Back keeps them (her decision). Confirmed in a
-  // finished import → never asked again.
-  function holdVenues(next){ registerOccasional(next); setOccVenues(next); }
-  // Back to what the store holds: the import's venues and answers dropped.
-  function dropHeldVenues(){
-    const saved=occSaved.current;
-    for(const id of Object.keys(MU)) if(isOcc(id)&&!saved[id]){ delete MU[id]; KNOWN_VENUES.delete(id); }
-    registerOccasional(saved); registerUnseenOccasional(rows); setOccVenues(saved);
-  }
-  // The shop screen's answers (venuesShopConfirmed, venuesNoShop, venuesShopAdded), held.
-  function confirmShop(id,english){ if(occVenues[id])holdVenues(venuesShopConfirmed(occVenues,id,english)); }
-  function noShopFor(id){ if(occVenues[id])holdVenues(venuesNoShop(occVenues,id)); }
+  // The shop screen's answers go to the link venues (useLinkVenues); here only the shop screen's own boxes.
   // Not a link → the box stays open.
   function addShopFor(id,text){
     if(!occVenues[id])return;
     if(!String(text||"").trim()){ setShopAdding(null); return; }
     const href=typedLink(text); if(!href)return;
     setShopAdding(null);
-    holdVenues(venuesShopAdded(occVenues,id,href));
+    addShop(id,href);
   }
-  // "Look again" (lookAgainJob); what it found goes onto the venues as they stand then (venuesLookedAgain).
+  // "Look again": the venue being looked for shows while the link venues' search runs.
   async function lookAgain(id){
-    const v=occVenues[id]; if(!v)return;
+    if(!occVenues[id])return;
     setShopLooking(id);
-    const found=await lookAgainJob(v);
+    await linkVenues.lookAgain(id);
     setShopLooking(null);
-    setOccVenues(prev=>{
-      const next=venuesLookedAgain(prev,id,found);
-      registerOccasional(next); return next; });
   }
   // The shop screen asks about a venue outside her list whose shop is unconfirmed (venuesGoingIn).
-  function venuesToConfirm(){ return shopVenuesToConfirm(proposals,decisions,occVenues,occSaved.current); }
+  function venuesToConfirm(){ return toConfirm(proposals,decisions); }
   // THE REVIEW'S LAST BUTTON. With a shop to confirm it is "Next" and opens
   // the shop screen; the ledger moves only when that screen is done.
   function proceedRefresh(partial){
@@ -10903,7 +10943,7 @@ export default function App(){
     // carries the list too.
     if(out.quarantineAdd)addToQuarantine(out.quarantineAdd);
     commit(out.ledger,new Date().toISOString());
-    if(occVenues!==occSaved.current){ const kept=answeredOnly(occVenues,occSaved.current,venuesGoingIn(proposals,decisions)); writeOccasional(kept); occSaved.current=kept; registerOccasional(kept); setOccVenues(kept); }
+    linkVenues.importApplied(proposals,decisions);
     setShopScreen(null); setShopAdding(null); setReadVenues([]);
     setProposals(null); setDecisions({}); setSeenInFile(null); doc.importApplied(out.done);
     importApplied(out.touched);
@@ -10912,25 +10952,15 @@ export default function App(){
   function cancelRefresh(){
     const p=pendingAfterCancel(linksAtRead.current,{linkText,pages,pastes});
     if(p){ setPending(p.kind,p.value); writePending(p.kind,p.value); linksAtRead.current=null; }
-    dropHeldVenues(); setShopScreen(null); setShopAdding(null); setReadVenues([]); setProposals(null); setDecisions({}); setCoverage([]); setTally(null); setSeenInFile(null); }
+    dropHeld(); setShopScreen(null); setShopAdding(null); setReadVenues([]); setProposals(null); setDecisions({}); setCoverage([]); setTally(null); setSeenInFile(null); }
 
 
 
 
   // The lookup runs at top level (lookupCatalogue); the page hands it its progress
   // line and, for an occasional venue, the check that works out its shop search.
+  // (fillShopSearch: the link venues' action, useLinkVenues.)
   const lookHooks={label:setLookLabel,prepareShop:fillShopSearch};
-
-  // A link venue's shop search, worked out once at its first lookup (shopSearchAdditions) — then stored.
-  async function fillShopSearch(id){
-    const v=occVenues[id]||occSaved.current[id];
-    const adds=await shopSearchAdditions(MU[id],v);
-    if(!adds)return;
-    const add=x=>x?{...x,...adds}:x;
-    if(occSaved.current[id]){ const saved={...occSaved.current,[id]:add(occSaved.current[id])}; occSaved.current=saved; writeOccasional(saved); }
-    setOccVenues(prev=>{ const next=prev[id]?{...prev,[id]:add(prev[id])}:prev; registerOccasional(next); return next; });
-    MU[id]={...MU[id],...occVenue(id,{...v,...adds})};
-  }
   // Find catalogue / Search again (findCatalogueJob): what it found lands on the ledger as it
   // stands when the answer arrives; its line goes on the card, or its sentence in the banner.
   async function findOneCat(id){
@@ -11027,7 +11057,7 @@ export default function App(){
   const clearAllPasteBoxes=()=>{ const l=pasteBoxes([]); setPastes(l); setLinkFails([]); setLinkNote(null); writePendingPastes(l); };
   const addPasteBox=()=>setPastes(l=>[...l,newBox()]);
   const clearPages=()=>{ setPages([]); setLinkFails([]); setLinkNote(null); writePendingPages([]); };
-  const cancelImportPopup=()=>{ if(linkRead.current.on){ linkRead.current.stop=true; setProg(p=>({...p,label:readStopping(importMode)})); return; } if(!proposals)dropHeldVenues(); setImportMode(null); };
+  const cancelImportPopup=()=>{ if(linkRead.current.on){ linkRead.current.stop=true; setProg(p=>({...p,label:readStopping(importMode)})); return; } if(!proposals)dropHeld(); setImportMode(null); };
   const askPartialApply=(acceptedCount,undecidedCount)=>setConfirmBox({
     title:partialApplyWords({acceptedCount,undecidedCount}).title,
     text:partialApplyWords({acceptedCount,undecidedCount}).text,
@@ -11084,7 +11114,7 @@ export default function App(){
       {/* The shop screen (her design): one card per new venue with an unconfirmed shop;
           the ledger moves only when every card is answered. Over the review (1100),
           under the confirm box (1200). */}
-      {shopScreen&&proposals&&<ShopScreen ui={ui} shopScreen={shopScreen} occVenues={occVenues} shopLooking={shopLooking} shopAdding={shopAdding} confirmShop={confirmShop} lookAgain={lookAgain} noShopFor={noShopFor} addShopFor={addShopFor} toggleShopAdd={toggleShopAdd} typeShopLink={typeShopLink} closeShopAdd={closeShopAdd} backFromShop={backFromShop} applyRefresh={applyRefresh}/>}
+      {shopScreen&&proposals&&<ShopScreen ui={ui} shopScreen={shopScreen} occVenues={occVenues} shopLooking={shopLooking} shopAdding={shopAdding} confirmShop={confirmShop} lookAgain={lookAgain} noShopFor={noShop} addShopFor={addShopFor} toggleShopAdd={toggleShopAdd} typeShopLink={typeShopLink} closeShopAdd={closeShopAdd} backFromShop={backFromShop} applyRefresh={applyRefresh}/>}
       <ConfirmBox ui={ui} confirmBox={confirmBox} dismissConfirm={dismissConfirm} answerConfirm={answerConfirm}/>
       <Footer ui={ui}/>
     </div>
