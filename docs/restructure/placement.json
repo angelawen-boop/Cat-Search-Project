@@ -58,7 +58,7 @@
    "name": "CSV import and the review",
    "files": {
     "import/csv.jsx": "Reading the pro forma CSV.",
-    "import/review.jsx": "The review cards' decisions, 'Probably not for you', partial apply, counts, and which venues' shop answers are kept."
+    "import/review.jsx": "The review cards' decisions, 'Probably not for you', partial apply, counts, the shop screen's answers, and which venues' shop answers are kept."
    }
   },
   {
@@ -144,6 +144,14 @@
    "files": {
     "lookup/card_jobs.jsx": "The jobs on one card: Find catalogue / Search again and Re-check museum shop — what they found and what to say.",
     "periods/label_jobs.jsx": "The labelling jobs: Label, Relabel, Label import cards, what each says, and putting the labels onto rows or cards."
+   }
+  },
+  {
+   "id": "5-a3b",
+   "name": "Main screen, stage A3b: a venue's shop answers — the shop search filled at a first lookup, and the shop screen's answers — out of the screen",
+   "files": {
+    "shop_finder/museum_shop.jsx": "Finding a museum's shop and its catalogue shelf.",
+    "import/review.jsx": "The review cards' decisions, 'Probably not for you', partial apply, counts, the shop screen's answers, and which venues' shop answers are kept."
    }
   }
  ],
@@ -840,6 +848,12 @@
   "labelLedgerJob": "periods/label_jobs.jsx",
   "labelsOntoRows": "periods/label_jobs.jsx",
   "relabelJob": "periods/label_jobs.jsx",
-  "keptPeriodSaid": "periods/label_jobs.jsx"
+  "keptPeriodSaid": "periods/label_jobs.jsx",
+  "shopSearchAdditions": "shop_finder/museum_shop.jsx",
+  "venuesShopConfirmed": "import/review.jsx",
+  "venuesNoShop": "import/review.jsx",
+  "venuesShopAdded": "import/review.jsx",
+  "lookAgainJob": "import/review.jsx",
+  "venuesLookedAgain": "import/review.jsx"
  }
 }

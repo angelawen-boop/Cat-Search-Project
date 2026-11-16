@@ -278,6 +278,11 @@ Branch `claude/restructure-5-a3b`. *Opus, medium.*
 - **The screen keeps:** the working copy and the stored copy of the venues, which box is open, which venue
   is being looked for, and the store write.
 
+**A3b — done, merged. Stage A is finished.** `shopSearchAdditions` (the shop finder part) and, beside the
+other shop-answer rules in `app/import/review.jsx`, `venuesShopConfirmed`, `venuesNoShop`,
+`venuesShopAdded`, `lookAgainJob`, `venuesLookedAgain`. Every function left in the screen calls a job or a
+rule and puts what comes back into memory.
+
 ## 4A — the venue register (merged)
 
 **Her decisions (made; the code-or-store question is closed):**
@@ -609,7 +614,7 @@ word) and item 5's cutting plan in full, then:
 
 ## Handover record — updated after every step
 
-**Where we are:** item 5 is under way: A1 and A2 are merged (see "5 — the runs"); A3-0 and A3a are merged; next A3b (design written), then stage B. Item 4 is finished and on `main`: steps 1 to 5 of "This run" (59 published; the app-side
+**Where we are:** item 5 is under way: A1 and A2 are merged (see "5 — the runs"); Stage A is finished and merged (A1, A2, A3-0, A3a, A3b); next stage B, run B1. Item 4 is finished and on `main`: steps 1 to 5 of "This run" (59 published; the app-side
 and scraper-side rounds, the price rule and the two venues, the keys round). Step 6, the main screen's
 cutting plan, is written (item 5). `main` passes the app's suites, the join, structure and fact checks. What waits for her is under "Parked for her" and "Start here", 5.
 
