@@ -196,6 +196,13 @@
    "files": {
     "screens/use_ledger_document.jsx": "The ledger-document hook: the rows, the quarantine, changed-since-saved, the cloud copy (its opening, the automatic save, the heartbeat, read-only), the safety copies, Save, Load, Reset and the import reminder."
    }
+  },
+  {
+   "id": "5-c6",
+   "name": "Main screen, stage C6: the link venues become a hook",
+   "files": {
+    "screens/use_link_venues.jsx": "The link-venues hook: the manual-import venues held and stored, their opening read, the shop screen's answers, what an applied import keeps, and a link venue's shop search for the lookup."
+   }
   }
  ],
  "pieces": {
@@ -939,6 +946,7 @@
   "useListDrawing": "screens/use_list_drawing.jsx",
   "useBuyNextDrag": "screens/use_buy_next_drag.jsx",
   "useSweepLog": "screens/use_sweep_log.jsx",
-  "useLedgerDocument": "screens/use_ledger_document.jsx"
+  "useLedgerDocument": "screens/use_ledger_document.jsx",
+  "useLinkVenues": "screens/use_link_venues.jsx"
  }
 }
