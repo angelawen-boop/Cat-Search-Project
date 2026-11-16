@@ -684,6 +684,15 @@
   "listView",
   "listCounts",
   "scrubGroupsOf",
+  "findCatalogueJob",
+  "recheckShopJob",
+  "labelCardsJob",
+  "labelsOntoCards",
+  "labelLedgerStart",
+  "labelLedgerJob",
+  "labelsOntoRows",
+  "relabelJob",
+  "keptPeriodSaid",
   "App"
  ]
 }

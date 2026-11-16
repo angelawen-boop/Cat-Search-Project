@@ -8942,6 +8942,125 @@ function scrubGroupsOf(view,periodView,byArtist){
     return out;
 }
 
+// Find catalogue and Search again (findOneCat's job). `row` is the card as it was pressed; `hooks`
+// the lookup's (lookupCatalogue); `latest()` the ledger as it stands when the answer arrives.
+// Hands back `rows` to commit (or null), `card` — the line for the card {id,text,failed} (or null),
+// `banner` — the sentence for the banner (or null), and `detail`, the diagnostic.
+// A step that died is not an answer: the card says why, and the reason is not
+// stored — it is a fact about one attempt. C-043 to C-045.
+async function findCatalogueJob(row,hooks,latest){
+  const id=row.id;
+  const tape=tapeStart(row.looked?"Search again":"Find catalogue",row);
+  const out=await lookupCatalogue(row,hooks);
+  saveLookupTape(tape,out);
+  const res={detail:out.detail,rows:null,card:null,banner:null};
+  // SEARCH AGAIN REPLACES THE CARD ONLY WHEN IT FINISHED. Any step that
+  // failed → the card stays as it was, and says so.
+  if(row.looked&&out.ok&&out.trouble){
+    res.card={id,failed:true,text:"Search again didn’t finish — "+out.trouble.split("[")[0].trim()};
+  } else if(out.ok){
+    res.rows=landOnCard(latest(),id,row,out.row);
+    if(out.trouble&&out.troubleLang)res.banner="Found the catalogue for “"+row.title+"”, but the language check "
+      +"stopped part-way, so the title may be the shop’s translation and an English edition may be missed. "
+      +out.trouble.split("[")[0].trim();
+    else if(out.trouble)res.banner="Found the catalogue for “"+row.title+"”, but the search "
+      +"stopped part-way, so the ISBN or the publisher’s page may be missing when they "
+      +"exist. "+out.trouble.split("[")[0].trim()+" Press “Search again”.";
+  } else {
+    // On the card, not in a banner (her decision): Re-check's line word for word,
+    // "Re-check" swapped for "Search" or "Search again".
+    const why=String(out.detail||"").split("\n").pop().split("[")[0].trim();
+    res.card={id,failed:true,text:(row.looked?"Search again":"Search")+" didn’t run — "+why};
+  }
+  return res;
+}
+
+// "Re-check museum shop" (her design; see "A BOOK LEAVING THE SHOP" in card_text.jsx; recheckShop's job):
+// its answer is printed on the card, under the button she pressed. `found` is the card as it was
+// pressed, `hooks` the lookup's, `latest()` the ledger as it stands when the answer arrives.
+// Hands back `rows` to commit (or null), `card` {id,text,failed}, and `detail`, the diagnostic.
+async function recheckShopJob(found,hooks,latest){
+  const tape=tapeStart("Re-check museum shop",found);
+  const out=await recheckShopRow(found,hooks);
+  saveLookupTape(tape,out);
+  const id=found.id;
+  return {detail:out.detail||null,
+    rows:out.ok&&out.row&&out.row!==found?landOnCard(latest(),id,found,out.row):null,
+    card:{id,text:out.said,failed:!out.ok}};
+}
+
+// Every new show gets its period while she reviews the cards: one ask for
+// the import, written onto the card (docs/periods.md). A miss leaves the card without
+// one, for Label to fill later. `props` are the import's cards. Hands back nothing when there is
+// no new show, else {labels: Map card index → label, at, said} (labelsOntoCards writes them).
+async function labelCardsJob(props){
+  const shows=[];
+  props.forEach((p,i)=>{ if(p.type==="add")shows.push(periodShow(i,p.cand)); });
+  if(!shows.length)return null;
+  const tape=tapeStart("Label import cards",{title:shows.length+" new shows"});
+  const {labels,batches}=await labelPeriods(shows);
+  const said=labelSummary(shows.length,batches);
+  saveLookupTape(tape,{ok:said.ok,said:said.text,detail:JSON.stringify(batches)});
+  const at=new Date().toISOString();
+  return {labels,at,said};
+}
+// The labels onto the import's cards — only if they are still the same cards (`cur` is the cards
+// as they stand now, `props` the cards that were labelled).
+const labelsOntoCards=(cur,props,{labels,at})=>cur!==props?cur:props.map((p,i)=>labels.has(i)?{...p,cand:{...p.cand,...labels.get(i),labelledAt:at}}:p);
+// Label: every show (stage 3: the whole ledger, her decision) with no period or no themes yet, dismissed ones
+// included. Fills only; a labelled show is never relabelled. Not an edit of hers: editedAt stays.
+// What there is to label: {todo}, or {said} when there is nothing.
+function labelLedgerStart(rows){
+  const todo=rows.filter(r=>!labelDone(r));
+  if(!todo.length)return {said:{ok:true,text:"Label: every exhibition already has a period."}};
+  return {todo};
+}
+// Label's job on `todo` (labelLedgerStart). `progress` takes each progress line {done,total,label}.
+// Hands back `labels` (Map id → label, or null when none came back; labelsOntoRows writes them),
+// `said` — her line — and `debug`, the diagnostic.
+async function labelLedgerJob(todo,progress){
+  progress({done:0,total:todo.length,label:"Labelling periods…"});
+  // Each run is one record in the lookup log: every question, Claude's answer, each batch's outcome.
+  const tape=tapeStart("Label periods",{title:todo.length+" exhibitions"});
+  let said={ok:false,text:"Label: didn’t finish."}, batches=[], labels=null;
+  try{
+    const res=await labelPeriods(todo.map((r,i)=>periodShow(i,r)),(done,total)=>progress({done,total,label:"Labelling periods…"}));
+    batches=res.batches;
+    const at=new Date().toISOString();
+    const byId=new Map(); res.labels.forEach((v,i)=>byId.set(todo[i].id,{...v,labelledAt:at}));
+    if(byId.size)labels=byId;
+    said=labelSummary(todo.length,batches);
+  }catch(e){ said={ok:false,text:"Label: didn’t finish — "+String((e&&e.message)||e)+"."}; }
+  const debug=said.text+"\n"+batches.map((b,j)=>"Batch "+(j+1)+": "+b.labelled+" of "+b.shows+" labelled, "+b.tries+" "+(b.tries===1?"try":"tries")+(b.why?" — "+b.why:"")).join("\n");
+  saveLookupTape(tape,{ok:said.ok,said:said.text,detail:JSON.stringify(batches)});
+  return {labels,said,debug};
+}
+// The labels onto the rows as they stand now; a row labelled meanwhile is skipped.
+const labelsOntoRows=(rows,byId)=>rows.map(r=>byId.has(r.id)&&!labelDone(r)?{...r,...byId.get(r.id)}:r);
+// Relabel (her design): one show asked afresh under the current rules, its label
+// replaced; what it says shows in that card's drawer. Not an edit of hers: editedAt stays.
+// `r` is the card as it was pressed; `latest()` the ledger as it stands when the answer arrives.
+// Hands back `rows` to put in place (or null) and `said`, the line for the card {id,failed,text,regrouped}.
+async function relabelJob(r,latest){
+  const id=r.id;
+  const tape=tapeStart("Relabel",r);
+  let said, rows=null;
+  try{
+    const {labels,batches}=await labelPeriods([periodShow(0,r)]);
+    const v=labels.get(0)&&{...labels.get(0),periodKeep:false,relabelledAt:new Date().toISOString()};
+    if(v){
+      const next=landOnCard(latest(),id,r,{...r,...v});
+      rows=next;
+      const nr={...r,...v}, shown=periodOf(nr,artistPeriods(next));
+      said={id,failed:false,regrouped:shown!==nr.period,text:"Relabelled: "+periodText(nr)+(shown!==nr.period?" — shown with "+nr.periodArtist+"’s other shows, under "+PERIOD_NAME[shown]:"")+"."};
+    }else said={id,failed:true,text:"Relabel didn’t finish — "+(batches[0]&&batches[0].why||"no answer")+"."};
+  }catch(e){ said={id,failed:true,text:"Relabel didn’t finish — "+String((e&&e.message)||e)+"."}; }
+  finally{ saveLookupTape(tape,{ok:!said.failed,said:said.text}); }
+  return {rows,said};
+}
+// "Keep this period"'s line for the card; `r` is the card before the mark.
+const keptPeriodSaid=(id,r)=>({id,failed:false,text:"Relabelled: "+periodText(r)+" — no regrouping."});
+
 export default function App(){
   const[rows,setRows]=useState([]);
   // A row from an occasional venue this page's store has not met still files
@@ -9337,71 +9456,40 @@ export default function App(){
   }
 
 
-  // Every new show gets its period while she reviews the cards: one ask for
-  // the import, written onto the card (docs/periods.md). A miss leaves the card without
-  // one, for Label to fill later.
+  // Every new show gets its period while she reviews the cards (labelCardsJob), written onto
+  // the cards only if they are still the same cards.
   async function labelCards(props){
-    const shows=[];
-    props.forEach((p,i)=>{ if(p.type==="add")shows.push(periodShow(i,p.cand)); });
-    if(!shows.length)return;
-    const tape=tapeStart("Label import cards",{title:shows.length+" new shows"});
-    const {labels,batches}=await labelPeriods(shows);
-    const said=labelSummary(shows.length,batches);
-    saveLookupTape(tape,{ok:said.ok,said:said.text,detail:JSON.stringify(batches)});
-    const at=new Date().toISOString();
-    if(labels.size)setProposals(cur=>cur!==props?cur:props.map((p,i)=>labels.has(i)?{...p,cand:{...p.cand,...labels.get(i),labelledAt:at}}:p));
+    const out=await labelCardsJob(props);
+    if(out&&out.labels.size)setProposals(cur=>labelsOntoCards(cur,props,out));
   }
-  // Label: every show (stage 3: the whole ledger, her decision) with no period or no themes yet, dismissed ones
-  // included. Fills only; a labelled show is never relabelled. Not an edit of hers: editedAt stays.
+  // Label (labelLedgerStart, labelLedgerJob): the screen is busy, shows its progress and puts
+  // the labels onto the rows as they stand when the answer arrives.
   async function labelLedger(){
     if(busy||roStop())return;
-    const todo=rows.filter(r=>!labelDone(r));
-    if(!todo.length){ setLabelSaid({ok:true,text:"Label: every exhibition already has a period."}); return; }
-    setBusy(true); setLabelSaid(null); setProg({done:0,total:todo.length,label:"Labelling periods\u2026"});
-    // Each run is one record in the lookup log: every question, Claude's answer, each batch's outcome.
-    const tape=tapeStart("Label periods",{title:todo.length+" exhibitions"});
-    let said={ok:false,text:"Label: didn\u2019t finish."}, batches=[];
-    try{
-      const res=await labelPeriods(todo.map((r,i)=>periodShow(i,r)),(done,total)=>setProg({done,total,label:"Labelling periods\u2026"}));
-      batches=res.batches;
-      const at=new Date().toISOString();
-      const byId=new Map(); res.labels.forEach((v,i)=>byId.set(todo[i].id,{...v,labelledAt:at}));
-      if(byId.size){ setRows(prev=>prev.map(r=>byId.has(r.id)&&!labelDone(r)?{...r,...byId.get(r.id)}:r)); setDirty(true); setSaveNote(null); }
-      said=labelSummary(todo.length,batches);
-    }catch(e){ said={ok:false,text:"Label: didn\u2019t finish \u2014 "+String((e&&e.message)||e)+"."}; }
-    finally{
-      setLabelSaid(said);
-      setDebug(said.text+"\n"+batches.map((b,j)=>"Batch "+(j+1)+": "+b.labelled+" of "+b.shows+" labelled, "+b.tries+" "+(b.tries===1?"try":"tries")+(b.why?" \u2014 "+b.why:"")).join("\n"));
-      saveLookupTape(tape,{ok:said.ok,said:said.text,detail:JSON.stringify(batches)});
-      setBusy(false); setProg({done:0,total:0,label:""});
-    }
+    const start=labelLedgerStart(rows);
+    if(start.said){ setLabelSaid(start.said); return; }
+    setBusy(true); setLabelSaid(null);
+    const out=await labelLedgerJob(start.todo,setProg);
+    if(out.labels){ setRows(prev=>labelsOntoRows(prev,out.labels)); setDirty(true); setSaveNote(null); }
+    setLabelSaid(out.said);
+    setDebug(out.debug);
+    setBusy(false); setProg({done:0,total:0,label:""});
   }
 
-  // Relabel (her design): one show asked afresh under the current rules, its label
-  // replaced; what it says shows in that card's drawer. Not an edit of hers: editedAt stays.
+  // Relabel (relabelJob): what it says shows in that card's drawer.
   async function relabel(id){
     const r=rows.find(x=>x.id===id);
     if(!r||busy||relabelId||roStop())return;
     setRelabelId(id); setRecheckSaid(null);
-    const tape=tapeStart("Relabel",r);
-    let said;
-    try{
-      const {labels,batches}=await labelPeriods([periodShow(0,r)]);
-      const v=labels.get(0)&&{...labels.get(0),periodKeep:false,relabelledAt:new Date().toISOString()};
-      if(v){
-        const next=landOnCard(cloudLatest.current.rows,id,r,{...r,...v});
-        setRows(next); setDirty(true); setSaveNote(null);
-        const nr={...r,...v}, shown=periodOf(nr,artistPeriods(next));
-        said={id,failed:false,regrouped:shown!==nr.period,text:"Relabelled: "+periodText(nr)+(shown!==nr.period?" \u2014 shown with "+nr.periodArtist+"\u2019s other shows, under "+PERIOD_NAME[shown]:"")+"."};
-      }else said={id,failed:true,text:"Relabel didn\u2019t finish \u2014 "+(batches[0]&&batches[0].why||"no answer")+"."};
-    }catch(e){ said={id,failed:true,text:"Relabel didn\u2019t finish \u2014 "+String((e&&e.message)||e)+"."}; }
-    finally{ setRecheckSaid(said); saveLookupTape(tape,{ok:!said.failed,said:said.text}); setRelabelId(null); }
+    const out=await relabelJob(r,()=>cloudLatest.current.rows);
+    if(out.rows){ setRows(out.rows); setDirty(true); setSaveNote(null); }
+    setRecheckSaid(out.said); setRelabelId(null);
   }
 
   function keepPeriod(id){
     const r=rows.find(x=>x.id===id); if(!r||roStop())return;
     commit(markKeepPeriod(rows,id,new Date().toISOString()));
-    setRecheckSaid({id,failed:false,text:"Relabelled: "+periodText(r)+" \u2014 no regrouping."});
+    setRecheckSaid(keptPeriodSaid(id,r));
   }
 
   // ── ADD BY LINK — the Read button. The job is readShows (the Links/Pages/Paste parts);
@@ -9548,7 +9636,6 @@ export default function App(){
   // The lookup runs at top level (lookupCatalogue); the page hands it its progress
   // line and, for an occasional venue, the check that works out its shop search.
   const lookHooks={label:setLookLabel,prepareShop:fillShopSearch};
-  const lookupCat=row=>lookupCatalogue(row,lookHooks);
 
   // A link venue met before the finder proved searches (finder 2), or before today's search
   // proof (SEARCH_RULE: the RA's search was missed), gets its search worked out once, at its
@@ -9567,49 +9654,29 @@ export default function App(){
     setOccVenues(prev=>{ const next=prev[id]?{...prev,[id]:add(prev[id])}:prev; registerOccasional(next); return next; });
     MU[id]={...MU[id],...occVenue(id,{...v,shopSearch:found,finder:3,searchRule:SEARCH_RULE})};
   }
-  // A step that died is not an answer: the card says why, and the reason is not
-  // stored — it is a fact about one attempt. C-043 to C-045.
+  // Find catalogue / Search again (findCatalogueJob): what it found lands on the ledger as it
+  // stands when the answer arrives; its line goes on the card, or its sentence in the banner.
   async function findOneCat(id){
     if(roStop())return;
     setBusy(true);setBusyId(id);setError(null);setRecheckSaid(null);
     const row=rows.find(r=>r.id===id);
-    const tape=tapeStart(row.looked?"Search again":"Find catalogue",row);
-    const out=await lookupCat(row);
-    saveLookupTape(tape,out);
+    const out=await findCatalogueJob(row,lookHooks,()=>cloudLatest.current.rows);
     setDebug(out.detail);
-    // SEARCH AGAIN REPLACES THE CARD ONLY WHEN IT FINISHED. Any step that
-    // failed → the card stays as it was, and says so.
-    if(row.looked&&out.ok&&out.trouble){
-      setRecheckSaid({id,failed:true,text:"Search again didn\u2019t finish \u2014 "+out.trouble.split("[")[0].trim()});
-    } else if(out.ok){
-      await commit(landOnCard(cloudLatest.current.rows,id,row,out.row));
-      if(out.trouble&&out.troubleLang)setError("Found the catalogue for \u201c"+row.title+"\u201d, but the language check "
-        +"stopped part-way, so the title may be the shop\u2019s translation and an English edition may be missed. "
-        +out.trouble.split("[")[0].trim());
-      else if(out.trouble)setError("Found the catalogue for \u201c"+row.title+"\u201d, but the search "
-        +"stopped part-way, so the ISBN or the publisher\u2019s page may be missing when they "
-        +"exist. "+out.trouble.split("[")[0].trim()+" Press \u201cSearch again\u201d.");
-    } else {
-      // On the card, not in a banner (her decision): Re-check's line word for word,
-      // "Re-check" swapped for "Search" or "Search again".
-      const why=String(out.detail||"").split("\n").pop().split("[")[0].trim();
-      setRecheckSaid({id,failed:true,text:(row.looked?"Search again":"Search")+" didn\u2019t run \u2014 "+why});
-    }
+    if(out.card)setRecheckSaid(out.card);
+    if(out.rows)await commit(out.rows);
+    if(out.banner)setError(out.banner);
     setBusy(false);setBusyId(null);setLookLabel(null);
   }
 
-  // "Re-check museum shop" (her design; see "A BOOK LEAVING THE SHOP" above): its answer
-  // is printed on the card, under the button she pressed.
+  // "Re-check museum shop" (recheckShopJob): its answer is printed on the card, under the button she pressed.
   async function recheckShop(id){
     if(roStop())return;
     setBusy(true);setBusyId(id);setRechecking(true);setError(null);setRecheckSaid(null);
     const found=rows.find(r=>r.id===id);
-    const tape=tapeStart("Re-check museum shop",found);
-    const out=await recheckShopRow(found,lookHooks);
-    saveLookupTape(tape,out);
-    setDebug(out.detail||null);
-    if(out.ok&&out.row&&out.row!==found)await commit(landOnCard(cloudLatest.current.rows,id,found,out.row));
-    setRecheckSaid({id,text:out.said,failed:!out.ok});
+    const out=await recheckShopJob(found,lookHooks,()=>cloudLatest.current.rows);
+    setDebug(out.detail);
+    if(out.rows)await commit(out.rows);
+    setRecheckSaid(out.card);
     setBusy(false);setBusyId(null);setRechecking(false);setLookLabel(null);
   }
 
