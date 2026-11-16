@@ -500,6 +500,10 @@ document (its read keeps its place); the stored copy never leaves it. One order 
 Look again, the venue's new answer is set just before "looking" is cleared, where it was just after — the
 same moment on screen.
 
+**C5 — done, merged.** `app/screens/use_card_actions.jsx`, `useCardActions({…})`: no effect of its own;
+the job flag stays in the screen and reaches it as `jobRunning`, `jobStarts`, `jobEnds`, `showProgress`.
+The screen's block is about 390 lines.
+
 ## 4A — the venue register (merged)
 
 **Her decisions (made; the code-or-store question is closed):**
@@ -831,7 +835,7 @@ word) and item 5's cutting plan in full, then:
 
 ## Handover record — updated after every step
 
-**Where we are:** item 5 is under way: A1 and A2 are merged (see "5 — the runs"); Stage A is finished and merged (A1, A2, A3-0, A3a, A3b); Stage B is finished and merged (B1, B2); C1 to C4 and C6 are merged; next C5 (card actions), then C7 (import session) — designs written. Item 4 is finished and on `main`: steps 1 to 5 of "This run" (59 published; the app-side
+**Where we are:** item 5 is under way: A1 and A2 are merged (see "5 — the runs"); Stage A is finished and merged (A1, A2, A3-0, A3a, A3b); Stage B is finished and merged (B1, B2); C1 to C6 are merged; next C7 (the import session, design written), then the fixes session is told the trunk is free, then her test page. Item 4 is finished and on `main`: steps 1 to 5 of "This run" (59 published; the app-side
 and scraper-side rounds, the price rule and the two venues, the keys round). Step 6, the main screen's
 cutting plan, is written (item 5). `main` passes the app's suites, the join, structure and fact checks. What waits for her is under "Parked for her" and "Start here", 5.
 
