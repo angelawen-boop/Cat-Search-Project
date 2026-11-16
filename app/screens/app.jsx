@@ -31,19 +31,6 @@ export default function App(){
   const[linkNote,setLinkNote]=useState(null);
   const[linkText,setLinkText]=useState("");
   const[linkFails,setLinkFails]=useState([]);
-  // A Read's progress, its note and each line it could not read: one piece for Links, Pages and
-  // Paste; failAs(f) is how a line names what it could not read.
-  const readStatus=failAs=><>
-    {busy&&prog.total>0&&<div style={{marginTop:8}}>
-      <div style={{height:4,background:C.rule,borderRadius:2,overflow:"hidden"}}>
-        <div style={{height:"100%",width:Math.round(100*prog.done/prog.total)+"%",background:C.action}}/></div>
-      <div style={{marginTop:4,fontSize:11,color:C.soft}}>{prog.label}</div>
-    </div>}
-    {linkNote&&<div style={{marginTop:6,fontSize:11.5,color:C.soft,lineHeight:1.45}}>{linkNote}</div>}
-    {linkFails.map((f,i)=><div key={i} style={{marginTop:6,fontSize:11.5,color:TH.urgent.ink,lineHeight:1.4,overflowWrap:"anywhere"}}>
-      {f.url?failAs(f):""}{f.url?" \u2014 ":""}{f.why}
-    </div>)}
-  </>;
   const[pages,setPages]=useState([]);   // Pages: saved pages waiting, as text ({url,title,name,text})
   const[pastes,setPastes]=useState(()=>pasteBoxes([]));   // Paste: {id,at,url,text} boxes, two to start
   const pagesFileRef=useRef(null);
@@ -145,13 +132,6 @@ export default function App(){
   // Listing pages the sweep could not read. NOT proposals — see isMarkerRow().
   const[coverage,setCoverage]=useState([]);
   const[tally,setTally]=useState(null);
-  // Which triage bands are open: set by what a band asks of her, never its size —
-  // markers and combined-for-you open closed; the count shows either way.
-  const[openBands,setOpenBands]=useState({});
-  // Which venues are open in normal cases. Undefined = OPEN, so a venue is never hidden
-  // by default. "Collapse all" writes false for each venue, so opening one later does
-  // not reopen the rest.
-  const[openVenues,setOpenVenues]=useState({});
   const[decisions,setDecisions]=useState({}); // proposal index -> "accept"|"reject"|"addnew"
   const[refreshDone,setRefreshDone]=useState(null); // {added,filled,changed} after applying
   const[refreshTouched,setRefreshTouched]=useState([]); // ids added/changed in the last refresh
@@ -792,85 +772,11 @@ export default function App(){
   const pBtn=useMemo(()=>({...sBtn,background:C.action,color:C.onAction,border:"none",opacity:busy?0.5:1,cursor:busy?"wait":"pointer"}),[C,busy]);
   const lnk=useMemo(()=>linkButton(C),[C]);
   // The look-and-feel the layout pieces take, as one object (it keeps its identity while its members do).
-  const ui=useMemo(()=>({C,TH,chip,sBtn,pBtn,lnk}),[C,TH,chip,sBtn,pBtn,lnk]);
+  // The review cards' and shop screen's decision buttons (decBtn), always the same four in the same places.
+  const ui=useMemo(()=>({C,TH,chip,sBtn,pBtn,lnk,
+    decBtn:(active,color)=>({padding:"3px 9px",borderRadius:4,border:"1px solid "+(active?color:C.rule),background:active?color:"transparent",color:active?C.onAction:C.soft,fontSize:11,fontWeight:600,cursor:"pointer",whiteSpace:"nowrap"})
+  }),[C,TH,chip,sBtn,pBtn,lnk]);
 
-  // ---- Approval-stage render helpers ----
-  const decBtn=(active,color)=>({padding:"3px 9px",borderRadius:4,border:"1px solid "+(active?color:C.rule),background:active?color:"transparent",color:active?C.onAction:C.soft,fontSize:11,fontWeight:600,cursor:"pointer",whiteSpace:"nowrap"});
-  const isUndecided=(p,i)=>isUndecidedCard(p,decisions[i]);
-
-  const renderProposalCard=(p,i)=>{
-    const dec=decisions[i]||{};
-    const infoRow=(label,val)=><div style={{marginBottom:2,overflowWrap:"anywhere"}}><b style={{color:C.ink}}>{label}:</b> {val&&String(val).trim()?val:<span style={{color:C.muted}}>{"\u2014"}</span>}</div>;
-    return(
-      <div key={i} id={"prop-"+i} style={{border:"1px solid "+C.rule,borderRadius:6,background:C.card,padding:"10px 12px",marginBottom:8}}>
-        <div style={{fontSize:13,fontWeight:600,color:C.ink,marginBottom:4}}>{p.title}</div>
-
-
-        {p.type==="add"&&<div style={{fontSize:11.5,color:C.ink,lineHeight:1.5}}>
-          <div style={{fontWeight:700,marginBottom:3}}>{"New show \u2014 not in your ledger yet."}</div>
-          {infoRow("Dates",dateRange(p.cand))}
-          {infoRow("Description",p.cand.summary)}
-          {infoRow("Link",p.cand.exUrl&&<a href={p.cand.exUrl} target="_blank" rel="noopener noreferrer" style={{color:C.ink}}>{p.cand.exUrl}</a>)}
-          {infoRow("Period",periodText(p.cand))}
-        </div>}
-
-        {(p.type==="fill"||p.type==="change")&&<div style={{fontSize:11.5,color:C.ink}}>
-          <div style={{fontWeight:700,marginBottom:5}}>{"Existing entry \u2014 decide each change:"}</div>
-          {dec.mode==="addnew"
-            ? <div style={{fontStyle:"italic",color:C.action}}>Will be added as a separate new entry instead of changing the existing one.</div>
-            : p.upd.map((u,j)=>{const fd=(dec.fields||{})[j];return(
-                <div key={j} style={{display:"flex",gap:8,alignItems:"flex-start",marginBottom:5}}>
-                  <div style={{flex:1,minWidth:0,lineHeight:1.4,overflowWrap:"anywhere"}}><b style={{color:C.ink}}>{u.label}:</b> <span style={{color:C.soft}}>{u.kind==="fill"?("add \u201c"+u.newVal+"\u201d"):("\u201c"+u.oldVal+"\u201d \u2192 \u201c"+u.newVal+"\u201d")}</span></div>
-                  <button onClick={()=>setFieldDec(i,j,"accept")} style={decBtn(fd==="accept",C.okEdge)}>{fd==="accept"?"\u2713 ":""}Accept edit</button>
-                  <button onClick={()=>setFieldDec(i,j,"reject")} style={decBtn(fd==="reject",C.rejectInk)}>Reject</button>
-                </div>
-              );})}
-        </div>}
-
-        {/* The file disagreed with itself: both values shown, the fuller one ticked as
-            a starting point, one tap switches (her decision). */}
-        {p.choices&&p.choices.length>0&&<div style={{marginTop:7,paddingTop:6,borderTop:"1px dotted "+C.rule}}>
-          <div style={{fontSize:10.5,color:C.soft,lineHeight:1.5,marginBottom:5}}>The sweep file gave two different answers here. The longer one is picked for you {"\u2014"} change it if it{"\u2019"}s wrong.</div>
-          {p.choices.map((ch,j)=>(
-            <div key={j} style={{marginBottom:6}}>
-              <div style={{fontSize:11,fontWeight:700,color:C.ink,marginBottom:3}}>{ch.label}</div>
-              {ch.options.map((opt,k)=>{
-                const picked=(dec.choices||{})[ch.field];
-                const chosen=(picked===undefined?ch.picked:picked)===opt;
-                return(
-                  <button key={k} onClick={()=>setChoice(i,ch.field,opt)}
-                    style={{...decBtn(chosen,C.okEdge),display:"block",width:"100%",textAlign:"left",marginBottom:3,whiteSpace:"normal",lineHeight:1.4}}>
-                    {chosen?"\u2713 ":"\u00a0\u00a0"}{opt&&String(opt).trim()?opt:"(blank)"}
-                  </button>
-                );
-              })}
-            </div>
-          ))}
-        </div>}
-
-        {p.notes&&p.notes.length>0&&<div style={{marginTop:6,fontSize:10.5,color:C.soft,lineHeight:1.5,borderTop:"1px dotted "+C.rule,paddingTop:5}}>{p.notes.map((n,j)=><div key={j}>{"\u00b7 "}{n}</div>)}</div>}
-
-        {/* Three outcomes: Reject remembers nothing (the row returns next sweep). Never
-            add is for rows that should not be entries at all (a talk, an unfoldable
-            duplicate, a dead link) — not for a show she is not interested in, which is
-            accepted and then dismissed. */}
-        {p.type==="add"&&<div style={{marginTop:8,display:"flex",gap:6,flexWrap:"wrap"}}>
-          <button onClick={()=>setCardMode(i,"accept")} style={decBtn(dec.mode==="accept",C.okEdge)}>{dec.mode==="accept"?"\u2713 ":""}Add new entry</button>
-          <button onClick={()=>setCardMode(i,"reject")} style={decBtn(dec.mode==="reject",C.rejectInk)}>{dec.mode==="reject"?"\u2713 ":""}Reject</button>
-          <button onClick={()=>setCardMode(i,"never")} style={decBtn(dec.mode==="never",C.neverInk)}>{dec.mode==="never"?"\u2713 ":""}{"Never add this"}</button>
-        </div>}
-        {p.type==="add"&&dec.mode==="never"&&<div style={{marginTop:5,fontSize:10.5,color:C.soft,lineHeight:1.45}}>
-          {"Won\u2019t be offered again on future sweeps."}
-        </div>}
-
-        {p.type==="change"&&<div style={{marginTop:8}}>
-          <button onClick={()=>setCardMode(i,"addnew")} style={decBtn(dec.mode==="addnew","#4A5A6B")}>{dec.mode==="addnew"?"\u2713 ":""}{"No \u2014 this is a different show, add as separate entry"}</button>
-        </div>}
-
-      </div>
-    );
-  };
-  const{acceptedCount,undecidedCount,quarantinedCount,rejectedCount}=countDecisions(proposals,decisions);
 
   // The line under the buttons: what the last Save did, until the next change; otherwise
   // what was loaded. Whether work is safe is the cloud line's job.
@@ -928,6 +834,27 @@ export default function App(){
     setDirty(true);};
   const dismissConfirm=()=>setConfirmBox(null);
   const answerConfirm=()=>{const a=confirmBox.act;setConfirmBox(null);a&&a();};
+  // The import pop-up, the review and the shop screen: each button's handler, as the layout carries it.
+  const openCloudFromImport=()=>{setImportMode(null);requestOpenCloud();};
+  const loadFromImport=()=>{setImportMode(null);requestImport();};
+  const chooseCsvImport=()=>{setImportMode(null);refreshFileRef.current?.click();};
+  const pickImportTab=kind=>{ if(importMode!==kind){ setLinkFails([]); setLinkNote(null); } setImportMode(kind); };
+  const typeLinkText=v=>setLinkText(v);
+  const clearLinkText=()=>{ setLinkText(""); setLinkFails([]); setLinkNote(null); writePendingLinks(""); };
+  const typeInPasteBox=(id,k,v)=>setPastes(l=>l.map(y=>y.id===id?{...y,[k]:v}:y));
+  const clearPasteBox=id=>{ const l=pastes.map(y=>y.id===id?newBox():y); setPastes(l); writePendingPastes(l); };
+  const clearAllPasteBoxes=()=>{ const l=pasteBoxes([]); setPastes(l); setLinkFails([]); setLinkNote(null); writePendingPastes(l); };
+  const addPasteBox=()=>setPastes(l=>[...l,newBox()]);
+  const clearPages=()=>{ setPages([]); setLinkFails([]); setLinkNote(null); writePendingPages([]); };
+  const cancelImportPopup=()=>{ if(linkRead.current.on){ linkRead.current.stop=true; setProg(p=>({...p,label:readStopping(importMode)})); return; } if(!proposals)dropHeldVenues(); setImportMode(null); };
+  const askPartialApply=(acceptedCount,undecidedCount)=>setConfirmBox({
+    title:partialApplyWords({acceptedCount,undecidedCount}).title,
+    text:partialApplyWords({acceptedCount,undecidedCount}).text,
+    act:()=>proceedRefresh(true)});
+  const toggleShopAdd=(id,typing,added,link)=>setShopAdding(typing?null:{id,text:added?link:""});
+  const typeShopLink=(id,text)=>setShopAdding({id,text});
+  const closeShopAdd=()=>setShopAdding(null);
+  const backFromShop=()=>{setShopAdding(null);setShopScreen(null);};
 
   if(!loaded)return(<div style={{fontFamily:"'Inter',system-ui,sans-serif",background:C.bg,color:C.soft,minHeight:"100vh",display:"grid",placeItems:"center",fontSize:13}}>Opening the ledger{"\u2026"}</div>);
 
@@ -965,351 +892,18 @@ export default function App(){
       <ResetAndQuarantine ui={ui} rows={rows} showIgnored={showIgnored} ignored={ignored} ignoredByVenue={ignoredByVenue} quarWhy={quarWhy} showResetCards={showResetCards} resetQuery={resetQuery} typeResetQuery={typeResetQuery} askResetCard={askResetCard} releaseFromQuarantine={releaseFromQuarantine}/>
       {/* The import pop-up (her design; docs/add_by_link.md): CSV and Links, and a small
           Cancel. Under the review (1100) so cards open on top; under the confirm box (1200). */}
-      {importMode&&(
-        <div role="dialog" style={{position:"fixed",inset:0,background:C.scrim,zIndex:1050,display:"flex",flexDirection:"column",justifyContent:"center",padding:16}}>
-          {/* Sized to what it holds. CSV and Links match Load and Save; the one pressed
-              turns green (her design). */}
-          <div style={{background:C.bg,borderRadius:8,...(importMode==="links"||importMode==="pages"||importMode==="paste"?{maxWidth:820,width:"100%"}:{width:"fit-content"}),boxSizing:"border-box",margin:"0 auto",display:"flex",flexDirection:"column",maxHeight:"100%",overflow:"auto",boxShadow:"0 8px 30px rgba(0,0,0,0.3)",padding:"14px 18px 10px"}}>
-            {/* IMPORT NEEDS A LEDGER OPEN: on an empty page it offers only the ways to open
-                one (her design), so an import can never become the whole ledger. */}
-            {importMode==="needLedger"&&<div style={{textAlign:"center"}}>
-              <div style={{fontSize:13,color:C.ink,marginBottom:10}}>Your ledger needs to be opened first.</div>
-              <div style={{display:"flex",gap:5,justifyContent:"center"}}>
-                <button onClick={()=>{setImportMode(null);requestOpenCloud();}} style={sBtn}>Open last cloud save</button>
-                <button onClick={()=>{setImportMode(null);requestImport();}} style={sBtn}>Load</button>
-              </div>
-            </div>}
-            {importMode!=="needLedger"&&<div style={{display:"flex",gap:5,justifyContent:"center"}}>
-              <button onClick={()=>{setImportMode(null);refreshFileRef.current?.click();}} disabled={busy} style={sBtn}>CSV</button>
-              <button onClick={()=>{ if(importMode!=="links"){ setLinkFails([]); setLinkNote(null); } setImportMode("links"); }} disabled={busy} style={importMode==="links"?{...pBtn,opacity:1}:sBtn}>Links</button>
-              <button onClick={()=>{ if(importMode!=="pages"){ setLinkFails([]); setLinkNote(null); } setImportMode("pages"); }} disabled={busy} style={importMode==="pages"?{...pBtn,opacity:1}:sBtn}>Pages</button>
-              <button onClick={()=>{ if(importMode!=="paste"){ setLinkFails([]); setLinkNote(null); } setImportMode("paste"); }} disabled={busy} style={importMode==="paste"?{...pBtn,opacity:1}:sBtn}>Paste</button>
-            </div>}
-            {importMode==="paste"&&<div style={{marginTop:14}}>
-              {/* Paste: one box per page, the link and the page's text in separate boxes, a faint "Link" in
-                  the link box (her design). "Clear" as the Links box has it: in the box, top right; "Clear all"
-                  the same, above the boxes. */}
-              {pastes.map((x,i)=>{
-                const set=(k,v)=>setPastes(l=>l.map(y=>y.id===x.id?{...y,[k]:v}:y));
-                const field={width:"100%",boxSizing:"border-box",fontSize:12.5,fontFamily:"inherit",padding:"6px 10px",border:"1px solid "+C.rule,borderRadius:4,background:C.card,color:C.ink,display:"block"};
-                return <div key={x.id} style={{marginBottom:10,position:"relative"}}>
-                  <input value={x.url} onChange={e=>set("url",e.target.value)} disabled={busy} placeholder="Link" aria-label="Link" inputMode="url" autoCapitalize="off" autoCorrect="off" spellCheck={false} style={{...field,paddingRight:52}}/>
-                  {filledBox(x)&&<button onClick={()=>{ const l=pastes.map(y=>y.id===x.id?newBox():y); setPastes(l); writePendingPastes(l); }} disabled={busy}
-                    style={{position:"absolute",top:7,right:8,background:"none",border:"none",color:C.soft,fontSize:11,textDecoration:"underline",cursor:"pointer",padding:0}}>Clear</button>}
-                  <textarea value={x.text} onChange={e=>set("text",e.target.value)} disabled={busy} aria-label="Text" rows={5} style={{...field,marginTop:4,resize:"vertical"}}/>
-                </div>;
-              })}
-              {/* "Clear all" in the row with + and Read, centred as Cancel is (her design). */}
-              <div style={{display:"grid",gridTemplateColumns:"1fr auto 1fr",alignItems:"center"}}>
-                <span/>
-                <span>{pastes.some(filledBox)&&<button onClick={()=>{ const l=pasteBoxes([]); setPastes(l); setLinkFails([]); setLinkNote(null); writePendingPastes(l); }} disabled={busy}
-                  style={{background:"none",border:"none",color:C.soft,fontSize:11,textDecoration:"underline",cursor:"pointer",padding:0}}>Clear all</button>}</span>
-                <div style={{display:"flex",justifyContent:"flex-end",gap:5}}>
-                <button onClick={()=>setPastes(l=>[...l,newBox()])} disabled={busy} aria-label="Add a box" style={sBtn}>+</button>
-                <button onClick={()=>readLinks("paste")} disabled={busy} style={pBtn}>Read</button>
-                </div>
-              </div>
-              {readStatus(f=>f.url)}
-            </div>}
-            {importMode==="pages"&&<div style={{marginTop:14}}>
-              {/* Pages: saved show pages, read as a link is read. The list works as the Links
-                  box does: "Clear" empties it and the store; what is not read stays. */}
-              <input ref={pagesFileRef} type="file" multiple accept=".mht,.mhtml,.html,.htm,multipart/related,message/rfc822,text/html" onChange={pickPages} style={{display:"none"}}/>
-              <div style={{position:"relative",border:"1px solid "+C.rule,borderRadius:4,background:C.card,padding:"8px 52px 8px 10px",minHeight:60,fontSize:12.5,color:C.ink}}>
-                {pages.length?pages.map(p=><div key={p.url} style={{overflowWrap:"anywhere",lineHeight:1.5}}>{p.title||p.name||p.url}</div>)
-                  :null}
-                {pages.length>0&&<button onClick={()=>{ setPages([]); setLinkFails([]); setLinkNote(null); writePendingPages([]); }} disabled={busy}
-                  style={{position:"absolute",top:6,right:8,background:"none",border:"none",color:C.soft,fontSize:11,textDecoration:"underline",cursor:"pointer",padding:0}}>Clear</button>}
-              </div>
-              <div style={{display:"flex",justifyContent:"flex-end",gap:5,marginTop:8}}>
-                <button onClick={()=>pagesFileRef.current?.click()} disabled={busy} style={sBtn}>Choose pages</button>
-                <button onClick={()=>readLinks("pages")} disabled={busy||!pages.length} style={pBtn}>Read</button>
-              </div>
-              {readStatus(f=>{ const pg=pages.find(p=>p.url===f.url); return (pg&&(pg.title||pg.name))||f.url; })}
-            </div>}
-            {importMode==="links"&&<div style={{marginTop:14}}>
-              {/* "Clear" sits inside the box, top right (her design): one press empties
-                  it and the store. */}
-              <div style={{position:"relative"}}>
-                <textarea value={linkText} onChange={e=>setLinkText(e.target.value)} rows={8} disabled={busy}
-                  style={{width:"100%",boxSizing:"border-box",fontSize:12.5,fontFamily:"inherit",padding:"8px 52px 8px 10px",border:"1px solid "+C.rule,borderRadius:4,background:C.card,color:C.ink,resize:"vertical",display:"block"}}/>
-                {linkText.trim()&&<button onClick={()=>{ setLinkText(""); setLinkFails([]); setLinkNote(null); writePendingLinks(""); }} disabled={busy}
-                  style={{position:"absolute",top:6,right:8,background:"none",border:"none",color:C.soft,fontSize:11,textDecoration:"underline",cursor:"pointer",padding:0}}>Clear</button>}
-              </div>
-              <div style={{display:"flex",justifyContent:"flex-end",marginTop:8}}>
-                <button onClick={()=>readLinks("links")} disabled={busy} style={pBtn}>Read</button>
-              </div>
-              {readStatus(f=><a href={f.url} target="_blank" rel="noopener noreferrer" style={{color:TH.urgent.ink}}>{f.url}</a>)}
-            </div>}
-            {/* Cancel always answers: a catalogue search also sets busy, and once locked the
-                pop-up out until the search ended (her report). */}
-            <div style={{textAlign:"center",marginTop:10}}>
-              <button onClick={()=>{ if(linkRead.current.on){ linkRead.current.stop=true; setProg(p=>({...p,label:readStopping(importMode)})); return; } if(!proposals)dropHeldVenues(); setImportMode(null); }} style={{background:"none",border:"none",color:C.soft,fontSize:10,textDecoration:"underline",cursor:"pointer",padding:0}}>Cancel</button>
-            </div>
-          </div>
-        </div>
-      )}
-      {proposals&&(
-        <div style={{position:"fixed",inset:0,background:"rgba(20,18,16,0.5)",zIndex:1100,display:"flex",flexDirection:"column",padding:16}}>
-          <div style={{background:C.bg,borderRadius:8,maxWidth:820,width:"100%",margin:"0 auto",display:"flex",flexDirection:"column",maxHeight:"100%",overflow:"hidden",boxShadow:"0 8px 30px rgba(0,0,0,0.3)"}}>
-            <div style={{padding:"14px 18px",borderBottom:"1px solid "+C.rule}}>
-              <div style={{fontFamily:"'Fraunces',Georgia,serif",fontSize:20,fontWeight:500,color:C.ink}}>{proposals.length} proposed change{proposals.length===1?"":"s"} found</div>
-              {/* The counts, her wording: two sentences, each ending in the number the
-                  next starts from (docs/app.md §3). Every term stays — drop one and the
-                  arithmetic stops closing. */}
-              {tally&&(()=>{
-                const cards=tally.add+tally.fill+tally.change;
-                const n=(v,tone)=><b style={{color:tone||C.ink}}>{v}</b>;
-                return (
-                <div style={{fontSize:11.5,color:C.soft,marginTop:6,lineHeight:1.6}}>
-                  <div>
-                    From {n(tally.fileRows)} row{tally.fileRows===1?"":"s"} in the file
-                    {" \u2014 "}{n(tally.markers)} marker row{tally.markers===1?"":"s"}
-                    {tally.blocked>0&&<>{", "}{n(tally.blocked)} you{"\u2019"}d said never to add</>}
-                    {", "}{n(tally.folded)} duplicate row{tally.folded===1?"":"s"} reconciled/de-duped
-                    {", "}{n(tally.silent)} already matching ledger
-                    {" = "}{n(cards)} entries considered for import
-                  </div>
-                  <div style={{marginTop:2}}>
-                    From {n(cards)} entr{cards===1?"y":"ies"}
-                    {" \u2014 "}{n(tally.fill)} fill a gap
-                    {", "}{n(tally.change)} edit existing data
-                    {", "}{n(tally.add)} new exhibition{tally.add===1?"":"s"}
-                  </div>
-                </div>
-                );
-              })()}
-            </div>
-            <div style={{overflow:"auto",padding:"12px 18px",flex:1}}>
-              {/* Triage first, then the ordinary work (her decision): odd cases batched
-                  by kind, easiest first, so she finishes one kind of thinking at a time.
-                  A venue can appear twice on this screen — accepted. */}
-              {(()=>{
-                const at=proposals.map((p,i)=>({p,i}));
-                const vOrder=m=>{const k=MUSEUMS.findIndex(x=>x.id===m);return k<0?999:k;};
-                const byVenue=a=>a.slice().sort((x,y)=>vOrder(x.p.venueId)-vOrder(y.p.venueId));
-                // No "unusable" band: a faulty row refuses the whole file (analyzeProForma;
-                // qc.js upstream).
-                const real    = at;
-                // Was this card built from more than one row? Ask the fold's own flag, never
-                // the notes — a travelling show's note says "same exhibition" too (fixture 16).
-                const isMerged=x=>!!x.p.merged;
-                const hasChoice=x=>!!x.p.choices;
-                const mergedOnly = byVenue(real.filter(x=>isMerged(x)&&!hasChoice(x)));
-                // A conflict is always a fold, so there is no band for a lone disagreement
-                // (fixture 17).
-                const mergedConf = byVenue(real.filter(x=>hasChoice(x)));
-                const plain      = real.filter(x=>!isMerged(x)&&!hasChoice(x));
-                // No link at all: usable rows, grouped because the link is the only key for
-                // folding and quarantine, so they return fresh every sweep (her decision).
-                const noLink     = byVenue(plain.filter(x=>!x.p.cand||!x.p.cand.exUrl));
-                const notForYou  = byVenue(plain.filter(x=>isTopicCard(x.p)));
-                const ordinary   = plain.filter(x=>x.p.cand&&x.p.cand.exUrl&&!isTopicCard(x.p));
-                // Venue subheadings inside each band, in the same style and order as below.
-                const byVenueBlocks=list=>allVenues().map(m=>{
-                  const grp=list.filter(x=>x.p.venueId===m.id);
-                  if(!grp.length)return null;
-                  return(
-                    <div key={m.id} style={{marginBottom:10}}>
-                      <div style={{fontSize:10,letterSpacing:"0.14em",textTransform:"uppercase",color:C.soft,marginBottom:6,fontWeight:600}}>{m.card}</div>
-                      {grp.map(({p,i})=>renderProposalCard(p,i))}
-                    </div>
-                  );
-                }).filter(Boolean);
-                // Every band carries its own count on its header, so collapsing never
-                // hides it.
-                const bandOpen=(key,dflt)=>openBands[key]===undefined?dflt:openBands[key];
-                // A venue with no entry is OPEN. See the state declaration.
-                const venueOpen=id=>openVenues[id]!==false;
-                const band=(key,title,tone,n,dflt,body)=>{
-                  const open=bandOpen(key,dflt);
-                  return(
-                    <div key={key} style={{marginBottom:10}}>
-                      <button onClick={()=>setOpenBands(o=>({...o,[key]:!open}))}
-                        style={{display:"flex",alignItems:"center",gap:7,width:"100%",textAlign:"left",background:"none",
-                                border:"none",borderBottom:"1px solid "+C.rule,padding:"5px 0",cursor:"pointer",color:tone||C.soft}}>
-                        <span style={{fontSize:9,lineHeight:1,width:9,display:"inline-block",transform:open?"rotate(90deg)":"none",transition:"transform .12s"}}>{"\u25B6"}</span>
-                        <span style={{fontSize:11,letterSpacing:"0.07em",fontWeight:600}}>{title}</span>
-                        <span style={{fontSize:11,fontWeight:700,color:tone||C.ink}}>{"\u00b7"} {n}</span>
-                      </button>
-                      {open&&<div style={{marginTop:8}}>{body}</div>}
-                    </div>
-                  );
-                };
-                // The odd-cases total counts the markers too.
-                const oddCount=coverage.length+mergedOnly.length+mergedConf.length+noLink.length;
-                const markerBlocks=MUSEUMS.map(m=>{
-                  const grp=coverage.filter(cv=>cv.venueId===m.id);
-                  if(!grp.length)return null;
-                  return(
-                    <div key={"cvg"+m.id} style={{marginBottom:10}}>
-                      <div style={{fontSize:10,letterSpacing:"0.14em",textTransform:"uppercase",color:C.soft,marginBottom:6,fontWeight:600}}>{m.card}</div>
-                      {grp.map((cv,i)=>(
-                        <div key={"cv"+i} style={{border:"1px solid "+C.rule,borderRadius:6,padding:"8px 10px",marginBottom:6,background:C.card}}>
-                          <div style={{fontSize:12,color:C.ink}}>{cv.what}</div>
-                          <div style={{fontSize:11.5,color:C.soft,marginTop:2,lineHeight:1.5}}>{cv.why}</div>
-                        </div>
-                      ))}
-                    </div>
-                  );
-                }).filter(Boolean);
-                return(<>
-                  {oddCount>0&&(
-                    <div style={{marginBottom:16,paddingBottom:12,borderBottom:"2px solid "+C.rule}}>
-                      <div style={{fontFamily:"'Fraunces',Georgia,serif",fontSize:15,color:C.ink,marginBottom:8}}>Odd cases {"\u00b7"} {oddCount}</div>
-                      {coverage.length>0&&band("markers","1. Marker rows",undefined,coverage.length,false,markerBlocks)}
-                      {mergedOnly.length>0&&band("merged","2. Combined rows \u00b7 identical rows were de-duped or reconciled",undefined,mergedOnly.length,false,byVenueBlocks(mergedOnly))}
-                      {mergedConf.length>0&&band("mergedconf","3. Combined rows \u00b7 identical rows produced conflicts \u2014 yours to choose",C.accent,mergedConf.length,true,byVenueBlocks(mergedConf))}
-                      {noLink.length>0&&band("nolink","4. No exhibition url \u00b7 link goes to venue\u2019s listing page",undefined,noLink.length,true,byVenueBlocks(noLink))}
-                    </div>
-                  )}
-                  {notForYou.length>0&&(
-                    <div style={{marginBottom:16,paddingBottom:12,borderBottom:"2px solid "+C.rule}}>
-                      <div style={{fontFamily:"'Fraunces',Georgia,serif",fontSize:15,color:C.ink,marginBottom:8}}>Probably not for you {"\u00b7"} {notForYou.length}</div>
-                      {byVenueBlocks(notForYou)}
-                    </div>
-                  )}
-                {ordinary.length>0&&(()=>{
-                    // Only venues with ordinary cards, or "Collapse all" would write keys
-                    // for empty venues and read the wrong way next click.
-                    const venuesHere=allVenues().filter(m=>ordinary.some(x=>x.p.venueId===m.id)).map(m=>m.id);
-                    const anyOpen=venuesHere.some(id=>venueOpen(id));
-                    return(
-                    <div style={{marginBottom:12,display:"flex",alignItems:"flex-end",gap:12,flexWrap:"wrap"}}>
-                      <div style={{flex:"1 1 260px",minWidth:0}}>
-                        <div style={{fontFamily:"'Fraunces',Georgia,serif",fontSize:15,color:C.ink,marginBottom:2}}>Normal cases {"\u00b7"} {ordinary.length}</div>
-                        <div style={{fontSize:11.5,color:C.soft,lineHeight:1.55}}>Nothing unusual about these {"\u2014"} one row in the file, nothing combined, nothing disagreeing.</div>
-                      </div>
-                      <button onClick={()=>{
-                          const next={};
-                          for(const id of venuesHere) next[id]=!anyOpen;
-                          setOpenVenues(o=>({...o,...next}));
-                        }} style={sBtn}>{anyOpen?"Collapse all venues":"Expand all venues"}</button>
-                    </div>
-                  );})()}
-                  {/* Order inside a venue (her decision): fills, then edits, then new;
-                      newest closing date first in each; no closing date last. */}
-                  {allVenues().map(m=>{
-                    const rank={fill:0,change:1,add:2};
-                    const grp=ordinary.filter(x=>x.p.venueId===m.id).slice().sort((a,b)=>{
-                      const d=(rank[a.p.type]??9)-(rank[b.p.type]??9); if(d!==0)return d;
-                      const ae=a.p.cand&&a.p.cand.endDate, be=b.p.cand&&b.p.cand.endDate;
-                      if(!ae&&!be)return 0; if(!ae)return 1; if(!be)return -1;
-                      return be.localeCompare(ae);
-                    });
-                    if(!grp.length)return null;
-                    // The venue heading is the control (docs/app.md §3 "Screen rulings").
-                    const vOpen=venueOpen(m.id);
-                    return(
-                    <div key={m.id} style={{marginBottom:14}}>
-                      <button onClick={()=>setOpenVenues(o=>({...o,[m.id]:!vOpen}))}
-                        style={{display:"flex",alignItems:"center",gap:8,width:"100%",textAlign:"left",background:"none",
-                                border:"none",borderBottom:"1px solid "+C.rule,padding:"6px 0",marginBottom:8,cursor:"pointer",color:C.accent}}>
-                        <span style={{fontSize:10,lineHeight:1,width:10,display:"inline-block",transform:vOpen?"rotate(90deg)":"none",transition:"transform .12s"}}>{"\u25B6"}</span>
-                        <span style={{fontSize:14,letterSpacing:"0.01em",fontWeight:700}}>{m.card}</span>
-                        <span style={{fontSize:12,fontWeight:700}}>{"\u00b7"} {grp.length}</span>
-                        {/* The undecided count per venue, only where there is work: a
-                            closed venue still declares what it holds; a "0" is clutter
-                            (her decision). */}
-                        {(()=>{const u=grp.filter(({p,i})=>isUndecided(p,i)).length;
-                          return u>0?<span style={{fontSize:11,fontWeight:600,color:C.soft}}>{"\u00b7 "+u+" to decide"}</span>:null;})()}
-                      </button>
-                      {vOpen&&grp.map(({p,i})=>renderProposalCard(p,i))}
-                    </div>
-                  );})}
-                </>);
-              })()}
-            </div>
-            <div style={{padding:"12px 18px",borderTop:"1px solid "+C.rule,display:"flex",gap:10,alignItems:"center",flexWrap:"wrap"}}>
-              <button onClick={cancelRefresh} style={sBtn}>Cancel import</button>
-              {/* Rejected and quarantined are named only when there is one (her ask);
-                  what is named adds up to what is decided. */}
-              <span style={{fontSize:11.5,color:C.soft,marginLeft:"auto"}}>
-                {(rejectedCount?rejectedCount+" rejected, ":"")+(quarantinedCount?quarantinedCount+" quarantined, ":"")+acceptedCount+" to apply"}</span>
-              {/* No separate "N to decide" link here (her decision: clutter) — the venue
-                  headings say where the cards are. */}
-              {/* Every card must be decided before the ledger moves — a hard block, her
-                  permanent design (docs/app.md §3). The button says what is missing. */}
-              {/* ===== PARTIAL APPLY — stays until she says (CLAUDE.md §5.1) =====
-                  Beside the block, never instead of it: drawn only when some cards are
-                  decided and some are not (offerPartialApply). It asks first, in her
-                  wording (partialApplyWords), naming what is left behind and the way back. To
-                  remove it: this block, `partial` on applyRefresh and applyCards,
-                  offerPartialApply, partialApplyWords, fixture 18h. */}
-              {offerPartialApply({acceptedCount,undecidedCount})&&<button
-                onClick={()=>setConfirmBox({
-                  title:partialApplyWords({acceptedCount,undecidedCount}).title,
-                  text:partialApplyWords({acceptedCount,undecidedCount}).text,
-                  act:()=>proceedRefresh(true)})}
-                title={partialApplyWords({acceptedCount,undecidedCount}).hover}
-                style={{...sBtn,borderColor:C.accent,color:C.accent,fontWeight:600}}>
-                {partialApplyWords({acceptedCount,undecidedCount}).button}</button>}
-              {/* ===== end partial apply block ===== */}
-              {/* "Next" when a new venue's shop is still to confirm (her design): the
-                  ledger moves only after the shop screen. */}
-              <button onClick={()=>proceedRefresh(false)} disabled={undecidedCount>0}
-                title={undecidedCount>0?"Decide every card first — "+undecidedCount+" still undecided.":""}
-                style={{...pBtn,...(undecidedCount>0?{background:C.muted,cursor:"not-allowed",opacity:1}:{})}}>
-                {undecidedCount>0
-                  ? undecidedCount+" still to decide"
-                  : venuesToConfirm().length?"Next":"Go ahead and update the ledger"}</button>
-            </div>
-          </div>
-        </div>
-      )}
+      <ImportPopup ui={ui} importMode={importMode} cancelImportPopup={cancelImportPopup}>
+        <ImportNeedLedger ui={ui} importMode={importMode} openCloudFromImport={openCloudFromImport} loadFromImport={loadFromImport}/>
+        <ImportTabs ui={ui} importMode={importMode} busy={busy} chooseCsvImport={chooseCsvImport} pickImportTab={pickImportTab}/>
+        <ImportPaste ui={ui} importMode={importMode} busy={busy} pastes={pastes} typeInPasteBox={typeInPasteBox} clearPasteBox={clearPasteBox} clearAllPasteBoxes={clearAllPasteBoxes} addPasteBox={addPasteBox} readLinks={readLinks} prog={prog} linkNote={linkNote} linkFails={linkFails}/>
+        <ImportPages ui={ui} importMode={importMode} busy={busy} pages={pages} pagesFileRef={pagesFileRef} pickPages={pickPages} clearPages={clearPages} readLinks={readLinks} prog={prog} linkNote={linkNote} linkFails={linkFails}/>
+        <ImportLinks ui={ui} importMode={importMode} busy={busy} linkText={linkText} typeLinkText={typeLinkText} clearLinkText={clearLinkText} readLinks={readLinks} prog={prog} linkNote={linkNote} linkFails={linkFails}/>
+      </ImportPopup>
+      <ReviewPanel ui={ui} proposals={proposals} tally={tally} coverage={coverage} decisions={decisions} setFieldDec={setFieldDec} setCardMode={setCardMode} setChoice={setChoice} cancelRefresh={cancelRefresh} askPartialApply={askPartialApply} proceedRefresh={proceedRefresh} venuesToConfirm={venuesToConfirm}/>
       {/* The shop screen (her design): one card per new venue with an unconfirmed shop;
           the ledger moves only when every card is answered. Over the review (1100),
           under the confirm box (1200). */}
-      {shopScreen&&proposals&&(()=>{
-        const left=shopScreen.ids.filter(id=>!(occVenues[id]||{}).confirmed||shopLooking===id).length;
-        return <div role="dialog" style={{position:"fixed",inset:0,background:C.scrim,zIndex:1150,display:"flex",flexDirection:"column",padding:16}}>
-          <div style={{background:C.bg,borderRadius:8,maxWidth:820,width:"100%",margin:"0 auto",display:"flex",flexDirection:"column",maxHeight:"100%",overflow:"hidden",boxShadow:"0 8px 30px rgba(0,0,0,0.3)"}}>
-            <div style={{padding:"14px 18px",borderBottom:"1px solid "+C.rule}}>
-              <div style={{fontFamily:"'Fraunces',Georgia,serif",fontSize:20,fontWeight:500,color:C.ink}}>New Venue Shops</div>
-            </div>
-            <div style={{overflow:"auto",padding:"4px 18px 14px",flex:1}}>
-              {/* The review cards' buttons (decBtn), always the same four in the same
-                  places (her decision); Confirm greyed only with no shop to confirm. */}
-              {shopScreen.ids.map(id=>{
-                const v=occVenues[id]||{}, link=v.shop==="found"?v.shopCatalogues:null, looking=shopLooking===id;
-                const home=v.shop==="noshelf"||v.shop==="failed"?v.shopHome:null;
-                const said=v.shop==="found"?null:v.shop==="noshelf"?"Shop found, but not its books section: "
-                  :v.shop==="failed"?"Search failed.":"No museum shop found.";
-                // The finder found no catalogues section: one line, her wording, whatever it took instead.
-                const lesser=link&&v.shelfKind&&v.shelfKind!=="catalogues"?"Shop found, but not its catalogues section ":null;
-                const en=v.shop==="found"?v.shopEnglishUnread:null;
-                const yes=v.confirmed&&v.shop==="found"&&!v.englishPicked&&!v.shopAdded, yesEn=v.confirmed&&!!en&&!!v.englishPicked, none=v.confirmed&&v.shop==="none", added=v.confirmed&&!!v.shopAdded;
-                const typing=shopAdding&&shopAdding.id===id;
-                return <div key={id} style={{paddingTop:12,marginTop:10,borderTop:"1px solid "+C.rule,fontSize:12.5,color:C.ink,lineHeight:1.45}}>
-                  <div style={{fontWeight:600}}>{(MU[id]&&MU[id].card)||v.short||v.name||id}</div>
-                  {link?<div>{lesser&&<span style={{color:C.soft}}>{lesser}</span>}<a href={link} target="_blank" rel="noopener noreferrer" style={{color:C.action,overflowWrap:"anywhere"}}>{link}</a></div>
-                    :<div style={{color:C.soft}}>{said}{home&&v.shop==="noshelf"&&<a href={home} target="_blank" rel="noopener noreferrer" style={{color:C.action,overflowWrap:"anywhere"}}>{home}</a>}</div>}
-                  <div style={{display:"flex",gap:6,marginTop:6,alignItems:"center",flexWrap:"wrap"}}>
-                    {looking?<span style={{fontSize:11.5,color:C.soft}}>Looking{"\u2026"}</span>:<>
-                      <button onClick={()=>confirmShop(id)} disabled={!!shopLooking||!(link||home)} style={{...decBtn(yes,C.okEdge),...(!(link||home)?{opacity:0.4,cursor:"not-allowed"}:{})}}>{yes?"\u2713 ":""}Confirm</button>
-                      <button onClick={()=>lookAgain(id)} disabled={!!shopLooking} style={decBtn(false,C.okEdge)}>Look again</button>
-                      <button onClick={()=>noShopFor(id)} disabled={!!shopLooking} style={decBtn(none,C.rejectInk)}>{none?"\u2713 ":""}No shop</button>
-                      <button onClick={()=>setShopAdding(typing?null:{id,text:added?link:""})} disabled={!!shopLooking} style={decBtn(added,C.okEdge)}>{added?"\u2713 ":""}Add</button>
-                    </>}
-                  </div>
-                  {/* "Add": her link, taken on Enter or on leaving the box; Escape closes it. */}
-                  {typing&&!looking&&<input autoFocus value={shopAdding.text} onChange={e=>setShopAdding({id,text:e.target.value})}
-                    onKeyDown={e=>{ if(e.key==="Enter")addShopFor(id,e.target.value); else if(e.key==="Escape"){ e.target.value=""; setShopAdding(null); } }}
-                    onBlur={e=>addShopFor(id,e.target.value)}
-                    style={{display:"block",width:"100%",boxSizing:"border-box",marginTop:6,padding:"5px 8px",fontSize:12.5,border:"1px solid "+C.rule,borderRadius:4,background:C.card,color:C.ink,fontFamily:"inherit"}}/>}
-                  {/* Its English section, which the finder could not read: hers to confirm instead. */}
-                  {en&&<><div style={{marginTop:6}}><a href={en} target="_blank" rel="noopener noreferrer" style={{color:C.action,overflowWrap:"anywhere"}}>{en}</a></div>
-                    <div style={{display:"flex",gap:6,marginTop:6}}>{!looking&&<button onClick={()=>confirmShop(id,true)} disabled={!!shopLooking} style={decBtn(yesEn,C.okEdge)}>{yesEn?"\u2713 ":""}Confirm</button>}</div></>}
-                </div>;})}
-            </div>
-            <div style={{padding:"12px 18px",borderTop:"1px solid "+C.rule,display:"flex",gap:10,alignItems:"center"}}>
-              <button onClick={()=>{setShopAdding(null);setShopScreen(null);}} disabled={!!shopLooking} style={sBtn}>Back</button>
-              <button onClick={()=>applyRefresh(shopScreen.partial)} disabled={left>0}
-                style={{...pBtn,marginLeft:"auto",...(left>0?{background:C.muted,cursor:"not-allowed",opacity:1}:{})}}>
-                {left>0?left+" still to decide":"Go ahead and update the ledger"}</button>
-            </div>
-          </div>
-        </div>;})()}
+      {shopScreen&&proposals&&<ShopScreen ui={ui} shopScreen={shopScreen} occVenues={occVenues} shopLooking={shopLooking} shopAdding={shopAdding} confirmShop={confirmShop} lookAgain={lookAgain} noShopFor={noShopFor} addShopFor={addShopFor} toggleShopAdd={toggleShopAdd} typeShopLink={typeShopLink} closeShopAdd={closeShopAdd} backFromShop={backFromShop} applyRefresh={applyRefresh}/>}
       <ConfirmBox ui={ui} confirmBox={confirmBox} dismissConfirm={dismissConfirm} answerConfirm={answerConfirm}/>
       <Footer ui={ui}/>
     </div>

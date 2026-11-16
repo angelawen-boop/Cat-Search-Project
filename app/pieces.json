@@ -722,6 +722,20 @@
   "ResetAndQuarantine",
   "ConfirmBox",
   "Footer",
+  "ReadStatus",
+  "ImportPopup",
+  "ImportNeedLedger",
+  "ImportTabs",
+  "ImportPaste",
+  "ImportPages",
+  "ImportLinks",
+  "ProposalCard",
+  "ReviewHeading",
+  "ReviewBody",
+  "ReviewButtons",
+  "ReviewPanel",
+  "ShopVenueCard",
+  "ShopScreen",
   "App"
  ]
 }

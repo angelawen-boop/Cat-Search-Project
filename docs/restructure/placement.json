@@ -164,6 +164,15 @@
     "screens/drawers.jsx": "The tools row, the Cloud Saves drawer, and the Quarantine list with the Reset cards drawer.",
     "screens/floating.jsx": "The search-selected-words button, the jump buttons, the undo bar, the confirm box and the footer."
    }
+  },
+  {
+   "id": "5-b2",
+   "name": "Main screen, stage B2: the import pop-up, the review and the shop screen cut into components",
+   "files": {
+    "screens/import_popup.jsx": "The import pop-up: its frame, the open-a-ledger-first case, the four buttons, the Paste, Pages and Links boxes, and the Read's status.",
+    "screens/review_panel.jsx": "The review: its heading and counts, the bands and venues (with their own open marks), the last buttons, and the proposal card.",
+    "screens/shop_screen.jsx": "The shop screen and its venue card."
+   }
   }
  ],
  "pieces": {
@@ -888,6 +897,20 @@
   "JumpButtons": "screens/floating.jsx",
   "UndoBar": "screens/floating.jsx",
   "ConfirmBox": "screens/floating.jsx",
-  "Footer": "screens/floating.jsx"
+  "Footer": "screens/floating.jsx",
+  "ReadStatus": "screens/import_popup.jsx",
+  "ImportPopup": "screens/import_popup.jsx",
+  "ImportNeedLedger": "screens/import_popup.jsx",
+  "ImportTabs": "screens/import_popup.jsx",
+  "ImportPaste": "screens/import_popup.jsx",
+  "ImportPages": "screens/import_popup.jsx",
+  "ImportLinks": "screens/import_popup.jsx",
+  "ProposalCard": "screens/review_panel.jsx",
+  "ReviewHeading": "screens/review_panel.jsx",
+  "ReviewBody": "screens/review_panel.jsx",
+  "ReviewButtons": "screens/review_panel.jsx",
+  "ReviewPanel": "screens/review_panel.jsx",
+  "ShopVenueCard": "screens/shop_screen.jsx",
+  "ShopScreen": "screens/shop_screen.jsx"
  }
 }
