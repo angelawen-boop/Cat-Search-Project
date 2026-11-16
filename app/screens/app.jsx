@@ -495,35 +495,25 @@ export default function App(){
     for(const id of Object.keys(MU)) if(isOcc(id)&&!saved[id]){ delete MU[id]; KNOWN_VENUES.delete(id); }
     registerOccasional(saved); registerUnseenOccasional(rows); setOccVenues(saved);
   }
-  // Each answer keeps what the finder found (`beforeAnswer`), so an answer for a venue with no show going in is
-  // dropped when the ledger moves (answeredOnly).
-  // A shop with no books section seen ("Shop found, but not its books section"): her Confirm takes the shop shown as its section.
-  function confirmShop(id,english){ const v=occVenues[id]; if(!v)return; const whole=v.shop==="noshelf"&&v.shopHome?{shop:"found",shopCatalogues:v.shopHome,shelfKind:"front"}:{};
-    holdVenues({...occVenues,[id]:{...v,beforeAnswer:v.beforeAnswer||foundShop(v),...whole,confirmed:true,englishPicked:!!english,shopAdded:false}}); }
-  // "No shop": the lookup goes straight to the web, as at Capodimonte.
-  function noShopFor(id){ const v=occVenues[id]; if(v)holdVenues({...occVenues,[id]:{...v,beforeAnswer:v.beforeAnswer||foundShop(v),shop:"none",confirmed:true,...SHOP_RESET,shopAdded:false}}); }
-  // "Add": her own link taken as the section. Its search is worked out at the venue's first lookup (fillShopSearch).
+  // The shop screen's answers (venuesShopConfirmed, venuesNoShop, venuesShopAdded), held.
+  function confirmShop(id,english){ if(occVenues[id])holdVenues(venuesShopConfirmed(occVenues,id,english)); }
+  function noShopFor(id){ if(occVenues[id])holdVenues(venuesNoShop(occVenues,id)); }
   // Not a link → the box stays open.
   function addShopFor(id,text){
-    const v=occVenues[id]; if(!v)return;
+    if(!occVenues[id])return;
     if(!String(text||"").trim()){ setShopAdding(null); return; }
     const href=typedLink(text); if(!href)return;
     setShopAdding(null);
-    holdVenues({...occVenues,[id]:{...v,beforeAnswer:v.beforeAnswer||foundShop(v),shop:"found",...SHOP_RESET,shopHome:originOf(href),shopCatalogues:href,searchRule:null,shopAdded:true,foundBy:"her link",confirmed:true}});
+    holdVenues(venuesShopAdded(occVenues,id,href));
   }
-  // "Look again": a new search NOW, skipping only the pages she turned down, never the
-  // whole site.
+  // "Look again" (lookAgainJob); what it found goes onto the venues as they stand then (venuesLookedAgain).
   async function lookAgain(id){
     const v=occVenues[id]; if(!v)return;
-    const turnedDown=[...(v.turnedDown||[]),v.shopCatalogues].filter(Boolean);
     setShopLooking(id);
-    let shop;
-    try{ shop=await discoverShop(v.pageShop||"",v.host,venueSearchName(v.id,v),turnedDown,v.id,null,v.english===false,v.gallery===true); }
-    catch(e){ shop={shop:"failed",why:"Couldn\u2019t look ("+String((e&&e.message)||e)+")."}; }
+    const found=await lookAgainJob(v);
     setShopLooking(null);
     setOccVenues(prev=>{
-      const{beforeAnswer,...was}=prev[id];
-      const next={...prev,[id]:{...was,...SHOP_RESET,shopAdded:false,...shop,confirmed:false,turnedDown}};
+      const next=venuesLookedAgain(prev,id,found);
       registerOccasional(next); return next; });
   }
   // The shop screen asks about a venue outside her list whose shop is unconfirmed (venuesGoingIn).
@@ -582,22 +572,15 @@ export default function App(){
   // line and, for an occasional venue, the check that works out its shop search.
   const lookHooks={label:setLookLabel,prepareShop:fillShopSearch};
 
-  // A link venue met before the finder proved searches (finder 2), or before today's search
-  // proof (SEARCH_RULE: the RA's search was missed), gets its search worked out once, at its
-  // first lookup, from its own shelf — then stored.
+  // A link venue's shop search, worked out once at its first lookup (shopSearchAdditions) — then stored.
   async function fillShopSearch(id){
-    const mu=MU[id];
-    if(!mu||!mu.occasional||mu.shopSearch||!mu.shopHome)return;
     const v=occVenues[id]||occSaved.current[id];
-    if(!v||(v.finder>=3&&v.searchRule>=SEARCH_RULE))return;
-    let found;
-    const f=mu.shopCatalogues?await fetchPage(mu.shopCatalogues,SHOP_BOOKS_ASK,null,{full:true}):{ok:true,results:[]};
-    if(f.ok)found=await proveShopSearch(pageTextOf(f.results),mu.shopCatalogues||mu.shopHome);
-    if(found===undefined||!f.ok)return;   // a call that died is not an answer
-    const add=x=>x?{...x,shopSearch:found,finder:3,searchRule:SEARCH_RULE}:x;
+    const adds=await shopSearchAdditions(MU[id],v);
+    if(!adds)return;
+    const add=x=>x?{...x,...adds}:x;
     if(occSaved.current[id]){ const saved={...occSaved.current,[id]:add(occSaved.current[id])}; occSaved.current=saved; writeOccasional(saved); }
     setOccVenues(prev=>{ const next=prev[id]?{...prev,[id]:add(prev[id])}:prev; registerOccasional(next); return next; });
-    MU[id]={...MU[id],...occVenue(id,{...v,shopSearch:found,finder:3,searchRule:SEARCH_RULE})};
+    MU[id]={...MU[id],...occVenue(id,{...v,...adds})};
   }
   // Find catalogue / Search again (findCatalogueJob): what it found lands on the ledger as it
   // stands when the answer arrives; its line goes on the card, or its sentence in the banner.

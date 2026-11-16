@@ -435,6 +435,22 @@ async function proveShopSearch(text,home){
   }
   return null;
 }
+//@piece shopSearchAdditions
+
+// A link venue met before the finder proved searches (finder 2), or before today's search
+// proof (SEARCH_RULE: the RA's search was missed), gets its search worked out once, at its
+// first lookup, from its own shelf. `mu` is the venue's entry (MU[id]), `v` its record (the
+// working copy's, else the stored one). Hands back what to add to the record, or nothing when
+// there is nothing to work out.
+async function shopSearchAdditions(mu,v){
+  if(!mu||!mu.occasional||mu.shopSearch||!mu.shopHome)return;
+  if(!v||(v.finder>=3&&v.searchRule>=SEARCH_RULE))return;
+  let found;
+  const f=mu.shopCatalogues?await fetchPage(mu.shopCatalogues,SHOP_BOOKS_ASK,null,{full:true}):{ok:true,results:[]};
+  if(f.ok)found=await proveShopSearch(pageTextOf(f.results),mu.shopCatalogues||mu.shopHome);
+  if(found===undefined||!f.ok)return;   // a call that died is not an answer
+  return {shopSearch:found,finder:3,searchRule:SEARCH_RULE};
+}
 //@piece SHOP_AWAY_LABEL
 
 // The museum's own Shop page (its own site, a /shop path) and the link on it to a shop on

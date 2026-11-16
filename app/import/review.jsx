@@ -1,4 +1,4 @@
-//@ The review cards' decisions, 'Probably not for you', partial apply, counts, and which venues' shop answers are kept.
+//@ The review cards' decisions, 'Probably not for you', partial apply, counts, the shop screen's answers, and which venues' shop answers are kept.
 //@piece isUndecidedCard
 
 
@@ -68,6 +68,44 @@ function answeredOnly(venues,saved,going){
     out[id]=beforeAnswer&&!going.has(id)?(saved&&saved[id]?saved[id]:{...rest,...SHOP_FIELDS.reduce((o,k)=>(o[k]=null,o),{}),...beforeAnswer,confirmed:false}):rest;
   }
   return out;
+}
+//@piece venuesShopConfirmed
+
+// The shop screen's answers, each `(venues, id, …) → venues`, the same `venues` back when the id is unknown.
+// Each answer keeps what the finder found (`beforeAnswer`), so an answer for a venue with no show going in is
+// dropped when the ledger moves (answeredOnly).
+// A shop with no books section seen ("Shop found, but not its books section"): her Confirm takes the shop shown as its section.
+function venuesShopConfirmed(venues,id,english){ const v=venues[id]; if(!v)return venues; const whole=v.shop==="noshelf"&&v.shopHome?{shop:"found",shopCatalogues:v.shopHome,shelfKind:"front"}:{};
+  return {...venues,[id]:{...v,beforeAnswer:v.beforeAnswer||foundShop(v),...whole,confirmed:true,englishPicked:!!english,shopAdded:false}}; }
+//@piece venuesNoShop
+
+// "No shop": the lookup goes straight to the web, as at Capodimonte.
+function venuesNoShop(venues,id){ const v=venues[id]; if(!v)return venues; return {...venues,[id]:{...v,beforeAnswer:v.beforeAnswer||foundShop(v),shop:"none",confirmed:true,...SHOP_RESET,shopAdded:false}}; }
+//@piece venuesShopAdded
+
+// "Add": her own link (`href`, already checked by typedLink) taken as the section. Its search is worked out
+// at the venue's first lookup (fillShopSearch).
+function venuesShopAdded(venues,id,href){
+  const v=venues[id]; if(!v)return venues;
+  return {...venues,[id]:{...v,beforeAnswer:v.beforeAnswer||foundShop(v),shop:"found",...SHOP_RESET,shopHome:originOf(href),shopCatalogues:href,searchRule:null,shopAdded:true,foundBy:"her link",confirmed:true}};
+}
+//@piece lookAgainJob
+
+// "Look again": a new search NOW, skipping only the pages she turned down, never the
+// whole site. The venue's record in; out come the shop found and the pages turned down.
+async function lookAgainJob(v){
+  const turnedDown=[...(v.turnedDown||[]),v.shopCatalogues].filter(Boolean);
+  let shop;
+  try{ shop=await discoverShop(v.pageShop||"",v.host,venueSearchName(v.id,v),turnedDown,v.id,null,v.english===false,v.gallery===true); }
+  catch(e){ shop={shop:"failed",why:"Couldn’t look ("+String((e&&e.message)||e)+")."}; }
+  return {shop,turnedDown};
+}
+//@piece venuesLookedAgain
+
+// What Look again found (lookAgainJob), put onto the venues as they stand when it arrives.
+function venuesLookedAgain(venues,id,{shop,turnedDown}){
+  const{beforeAnswer,...was}=venues[id];
+  return {...venues,[id]:{...was,...SHOP_RESET,shopAdded:false,...shop,confirmed:false,turnedDown}};
 }
 //@piece shopWrittenIn
 
