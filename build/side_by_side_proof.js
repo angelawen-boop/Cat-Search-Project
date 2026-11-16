@@ -13,7 +13,7 @@
  * The real page is run once; the Links read's two pages are fetched live once, through the free
  * Parallel server, and handed to every run.
  *
- *   node build/side_by_side_proof.js          about eleven minutes
+ *   node build/side_by_side_proof.js          about twenty minutes
  */
 'use strict';
 const fs = require('fs');
@@ -72,6 +72,19 @@ const BREAKS = [
   ['readPages-calls', swap('/^(?:P|DIV|', '/^(?:PRE|DIV|')],
   ['readPaste', swap('return{...page,start:r.start||"",end:r.end||""', 'return{...page,start:r.start||"",end:r.start||""')],
   ['readPaste-calls', swap('raw:String(text).slice(0,LINK_RAW_CHARS)', 'raw:String(text).slice(1,LINK_RAW_CHARS)')],
+  // The jobs (run A3-0).
+  ['label', swap('"Label: all "+total+" exhibitions labelled."', '"Label: all "+total+" exhibitions done."')],
+  ['keep-period', swap('" \\u2014 no regrouping."', '" \\u2014 not regrouping."')],
+  ['find-trouble', swap('+" Press \\u201cSearch again\\u201d."', '+" Press \\u201cSearch\\u201d."')],
+  ['find-died', swap('" didn\\u2019t run \\u2014 "', '" did not run \\u2014 "')],
+  ['digital-store', swap('{...x,digitalUrl:href,editedAt:now}', '{...x,digitalUrl:href,editedAt:id}')],
+  ['pick-store', swap('const next=r&&pickRow(r,i,now);', 'const next=r&&pickRow(r,i,null);')],
+  ['shop-apply-store', swap('englishPicked:!!english,shopAdded:false', 'englishPicked:!!english,shopAdded:null')],
+  ['store-sequence', t => {
+    const occ = '    readOccasional().then(map=>{ occSaved.current=map; registerOccasional(map); setOccVenues(map); });\n';
+    const pl = '    readPendingLinks().then(t=>{ if(t)setLinkText(t); });\n';
+    return swap(occ + pl, pl + occ)(t);
+  }],
 ];
 // [what is shown, the change, whether --changes-allowed passes it, the line that must name it when it fails]
 const ALLOWED = [
