@@ -738,6 +738,7 @@
   "ShopScreen",
   "useFilters",
   "useListDrawing",
+  "useBuyNextDrag",
   "App"
  ]
 }
