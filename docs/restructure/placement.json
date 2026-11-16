@@ -137,6 +137,14 @@
    "files": {
     "ledger/list_view.jsx": "The list on the main screen: the one filters object and its all-clear value, the list mode, the filtered and sorted list, its counts and the scrubber's groups."
    }
+  },
+  {
+   "id": "5-a3a",
+   "name": "Main screen, stage A3a: what a lookup or a labelling found and what to say, as jobs out of the screen",
+   "files": {
+    "lookup/card_jobs.jsx": "The jobs on one card: Find catalogue / Search again and Re-check museum shop — what they found and what to say.",
+    "periods/label_jobs.jsx": "The labelling jobs: Label, Relabel, Label import cards, what each says, and putting the labels onto rows or cards."
+   }
   }
  ],
  "pieces": {
@@ -823,6 +831,15 @@
   "listMode": "ledger/list_view.jsx",
   "listView": "ledger/list_view.jsx",
   "listCounts": "ledger/list_view.jsx",
-  "scrubGroupsOf": "ledger/list_view.jsx"
+  "scrubGroupsOf": "ledger/list_view.jsx",
+  "findCatalogueJob": "lookup/card_jobs.jsx",
+  "recheckShopJob": "lookup/card_jobs.jsx",
+  "labelCardsJob": "periods/label_jobs.jsx",
+  "labelsOntoCards": "periods/label_jobs.jsx",
+  "labelLedgerStart": "periods/label_jobs.jsx",
+  "labelLedgerJob": "periods/label_jobs.jsx",
+  "labelsOntoRows": "periods/label_jobs.jsx",
+  "relabelJob": "periods/label_jobs.jsx",
+  "keptPeriodSaid": "periods/label_jobs.jsx"
  }
 }
