@@ -241,6 +241,15 @@ with fixed stand-in replies from the web and from Claude and every call recorded
 - **The store's sequence:** every read, write, delete and list the page makes on its store, in order, from
   opening to the first save, compared as its own record (stage C's proof).
 
+**A3-0 — done, merged.** The check now presses, after Reset and on her test ledger loaded again (plus one
+card with versions): Label (progress, line, diagnostic), Relabel in the regrouped case and "Do not
+regroup"; Find catalogue, Search again, Re-check, a lookup whose step dies and one that ends with trouble;
+the digital link (a link, and not a link); the catalogue pick; a Paste read meeting a new venue through the
+shop screen (Confirm, No shop, Add, Look again, Back, Next, Apply) and once ending in Cancel import; and the
+store's sequence of reads and writes, opening to first save and whole run (the 20-second heartbeat left out:
+where it lands depends on the machine). Screen, store and every web and Claude call compared for each. Eleven
+deliberate breaks, each caught by the step that presses it. The check takes about five minutes.
+
 ### Run A3a — what a lookup or a labelling found and what to say (design)
 
 Branch `claude/restructure-5-a3a`. *Opus, medium.*
@@ -411,6 +420,11 @@ every item across before sending it to her.
 - **Publishing:** 59 = the venue work, published unattended once its three checks pass (her yes given).
   60 = the whole restructure, when she says. Her keyed Parallel: yes given.
 - **Her updates:** a short line at each quarter of a step and at each step's end, a time estimate where there is one.
+- **The fixes session (her word, given to the coordinator directly):** another session holds four leftover
+  fixes on `claude/restructure-fixes`. The coordinator carries every run through C7 first and never pauses
+  for it; then tells it the trunk is free, waits for its merge, pulls, and only then builds the test page.
+  Her checklist for the round is specific: each item tied to something changed, the exact card and button,
+  what she should see, run by the coordinator first (relayed by the first session as her instruction).
 - **Handing over to a new session:** only once the main screen's cutting plan is written here in full, and
   only if the chat is heavy; then for the main-screen work alone. The plan says, per piece: what it holds,
   what it owns of the page's memory, what passes in and out, why the cut is there, and its model.
@@ -590,7 +604,7 @@ word) and item 5's cutting plan in full, then:
 
 ## Handover record — updated after every step
 
-**Where we are:** item 5 is under way: A1 and A2 are merged (see "5 — the runs"); next is A3-0 (the check learns the jobs), then A3a and A3b, their designs written. Item 4 is finished and on `main`: steps 1 to 5 of "This run" (59 published; the app-side
+**Where we are:** item 5 is under way: A1 and A2 are merged (see "5 — the runs"); A3-0 (the check learns the jobs) is merged; next A3a, then A3b, their designs written. Item 4 is finished and on `main`: steps 1 to 5 of "This run" (59 published; the app-side
 and scraper-side rounds, the price rule and the two venues, the keys round). Step 6, the main screen's
 cutting plan, is written (item 5). `main` passes the app's suites, the join, structure and fact checks. What waits for her is under "Parked for her" and "Start here", 5.
 
