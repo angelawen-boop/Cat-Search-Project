@@ -173,6 +173,13 @@
     "screens/review_panel.jsx": "The review: its heading and counts, the bands and venues (with their own open marks), the last buttons, and the proposal card.",
     "screens/shop_screen.jsx": "The shop screen and its venue card."
    }
+  },
+  {
+   "id": "5-c1",
+   "name": "Main screen, stage C1: the filters and the sort become a hook",
+   "files": {
+    "screens/use_filters.jsx": "The filters hook: the chips, the sort, the search box and the pinned just-imported cards, with the actions that touch only them."
+   }
   }
  ],
  "pieces": {
@@ -911,6 +918,7 @@
   "ReviewButtons": "screens/review_panel.jsx",
   "ReviewPanel": "screens/review_panel.jsx",
   "ShopVenueCard": "screens/shop_screen.jsx",
-  "ShopScreen": "screens/shop_screen.jsx"
+  "ShopScreen": "screens/shop_screen.jsx",
+  "useFilters": "screens/use_filters.jsx"
  }
 }

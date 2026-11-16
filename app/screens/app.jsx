@@ -113,19 +113,15 @@ export default function App(){
   const[loadedInfo,setLoadedInfo]=useState(null);
   const[confirmBox,setConfirmBox]=useState(null); // {text, act} for confirm-before-replace
   const[,setTick]=useState(0);
-  const[sortBy,setSortBy]=useState("date");
-  const[dateReversed,setDateReversed]=useState(false);
-  // Every filter in ONE object (filtersClear is the all-clear value); set by name with setFilters(f=>({...f,x:…})).
-  const[filters,setFilters]=useState(filtersClear);
+  const list=useFilters();
+  const{filters,sort,bnOnly,periodView,viewToken,showSearch,searchRef,sortBy,dateReversed,refreshTouched,pinTouched,toggleSet,clearFilters,pickSort,toggleSearchBox,typeSearch,clearSearchText,toggleAcqWanted,toggleAcqOwned,toggleBuyNextView,toggleAcq3mo,toggleAcq6mo,toggleAcqHasCat,toggleAcqNoCat,toggleAcqDigital,toggleWatchedOnly,toggleDismissedOnly,toggleLabelledOnly,toggleShowAll,searchFor,ledgerLoaded,importApplied}=list;
   const{venueF,themeF,timeF,acqWanted,acqOwned,acq3mo,acq6mo,acqHasCat,acqNoCat,acqDigital,acqBuyNext,bnPeriod,bnDate,showAll,dismissedOnly,labelledF,watchedF,search}=filters;
   const[drag,setDrag]=useState(null); // the card being dragged in the Buy next view
-  const[showSearch,setShowSearch]=useState(false);
   const[openCards,setOpenCards]=useState({});
   const[undo,setUndo]=useState(null);
   const undoTimer=useRef(null);
   const fileRef=useRef(null);
   const refreshFileRef=useRef(null);
-  const searchRef=useRef(null);
   // Words selected anywhere on the page (her design): a button beside them searches them, exactly as typed.
   const[selPick,setSelPick]=useState(null);
   const[proposals,setProposals]=useState(null); // null = not in refresh review; array = reviewing
@@ -134,10 +130,6 @@ export default function App(){
   const[tally,setTally]=useState(null);
   const[decisions,setDecisions]=useState({}); // proposal index -> "accept"|"reject"|"addnew"
   const[refreshDone,setRefreshDone]=useState(null); // {added,filled,changed} after applying
-  const[refreshTouched,setRefreshTouched]=useState([]); // ids added/changed in the last refresh
-  const[pinTouched,setPinTouched]=useState(false); // pin those ids to the top this session
-  const sort={sortBy,dateReversed,pinTouched,refreshTouched};
-  const{bnOnly,periodView}=listMode(filters,sort);
   const dragOn=bnOnly&&!bnPeriod&&!bnDate&&!readOnly;
   const[showTop,setShowTop]=useState(false); // show the return-to-top button once scrolled down
   // Light or dark: remembered in browser storage (a per-device convenience, wrapped —
@@ -189,7 +181,7 @@ export default function App(){
   },[]);
   const searchPick=()=>{
     if(!selPick)return;
-    setFilters(f=>({...f,search:selPick.text})); setShowSearch(true); setSelPick(null);
+    searchFor(selPick.text); setSelPick(null);
     try{window.getSelection().removeAllRanges();}catch{}
     // Lands at the start of the cards (her ask), once the list has redrawn.
     setTimeout(()=>{const el=document.querySelector("[data-card-list]");window.scrollTo({top:el?el.getBoundingClientRect().top+window.scrollY-8:0});},60);
@@ -268,7 +260,7 @@ export default function App(){
     setError(null);
     setLoadedInfo(info||null);
     setRefreshDone(null);
-    setPinTouched(false); setRefreshTouched([]);
+    ledgerLoaded();
   },[]);
 
   // ── THE CLOUD LEDGER, INSIDE THE APP ──────────────────────────────────────
@@ -343,8 +335,6 @@ export default function App(){
     if(line!==null)setSnapWhy(line);
   }
 
-  const toggleSet=(name,val)=>setFilters(f=>{const n=new Set(f[name]);if(n.has(val))n.delete(val);else n.add(val);return{...f,[name]:n};});
-  const clearFilters=()=>{setFilters(filtersClear());setShowSearch(false);};
 
   // The sweep log is written when the import FINISHES (her decision: an unfinished
   // import keeps nothing); held in seenInFile until then. A file with nothing to
@@ -530,16 +520,13 @@ export default function App(){
     if(occVenues!==occSaved.current){ const kept=answeredOnly(occVenues,occSaved.current,venuesGoingIn(proposals,decisions)); writeOccasional(kept); occSaved.current=kept; registerOccasional(kept); setOccVenues(kept); }
     setShopScreen(null); setShopAdding(null); setReadVenues([]);
     setProposals(null); setDecisions({}); setSeenInFile(null); setRefreshDone(out.done);
-    setRefreshTouched(out.touched); setPinTouched(out.touched.length>0); // float just-changed entries to the top, this session
-    setFilters(filtersClear());
+    importApplied(out.touched);
   }
   // Cancel import after a Read puts every link (or page) it read back (pendingAfterCancel), stored.
   function cancelRefresh(){
     const p=pendingAfterCancel(linksAtRead.current,{linkText,pages,pastes});
     if(p){ setPending(p.kind,p.value); writePending(p.kind,p.value); linksAtRead.current=null; }
     dropHeldVenues(); setShopScreen(null); setShopAdding(null); setReadVenues([]); setProposals(null); setDecisions({}); setCoverage([]); setTally(null); setSeenInFile(null); }
-  // A second tap on Date reverses it; a third goes back to the usual order.
-  const pickSort=k=>{if(bnOnly){if(k==="period"||k==="date"){const cur=bnPeriod?"period":bnDate?"date":"";if(cur!==k){setFilters(f=>({...f,bnPeriod:k==="period",bnDate:k==="date"}));setDateReversed(false);}else if(!dateReversed)setDateReversed(true);else{setFilters(f=>({...f,bnPeriod:false,bnDate:false}));setDateReversed(false);}}return;}setDateReversed((k==="date"||k==="period")&&sortBy===k&&!pinTouched&&!dateReversed);setSortBy(k);setPinTouched(false);}; // manual sort releases the pinned refresh group
 
 
 
@@ -731,7 +718,6 @@ export default function App(){
   // DRAWN AS SHE SCROLLS: the first DRAW_STEP cards, then DRAW_STEP more each time the end
   // of the drawn list nears the screen. A new filter, sort or search starts again from the
   // top (viewToken). Jump to bottom draws the rest first. No IntersectionObserver → all.
-  const viewToken=useMemo(()=>({}),[sortBy,filters,pinTouched,dateReversed]);
   const[drawn,setDrawn]=useState({token:null,n:DRAW_STEP});
   const drawLimit=typeof IntersectionObserver==="undefined"?Infinity:drawn.token===viewToken?drawn.n:DRAW_STEP;
   const moreRef=useRef(null);
@@ -802,21 +788,6 @@ export default function App(){
   const chooseSaveCloud=on=>setSaveCloud(on);
   const openImportChoice=()=>{setLinkNote(null);setImportMode(hasLedger?"choose":"needLedger");};
   const dismissCloudCheck=()=>setCloudCheck(null);
-  const toggleSearchBox=()=>{if(showSearch)setFilters(f=>({...f,search:""}));setShowSearch(v=>!v);setTimeout(()=>searchRef.current?.focus(),100);};
-  const typeSearch=v=>{setFilters(f=>({...f,search:v}));};
-  const clearSearchText=()=>{setFilters(f=>({...f,search:""}));if(searchRef.current)searchRef.current.focus();};
-  const toggleAcqWanted=()=>setFilters(f=>({...f,acqWanted:!f.acqWanted}));
-  const toggleAcqOwned=()=>{setFilters(f=>({...f,acqOwned:!f.acqOwned,...(acqBuyNext?{bnPeriod:false,bnDate:false}:{})}));if(acqBuyNext){setDateReversed(false);}};
-  const toggleBuyNextView=()=>setFilters(f=>({...f,acqBuyNext:!f.acqBuyNext,bnPeriod:false,bnDate:false}));
-  const toggleAcq3mo=()=>setFilters(f=>({...f,acq3mo:!f.acq3mo}));
-  const toggleAcq6mo=()=>setFilters(f=>({...f,acq6mo:!f.acq6mo}));
-  const toggleAcqHasCat=()=>setFilters(f=>({...f,acqHasCat:!f.acqHasCat}));
-  const toggleAcqNoCat=()=>setFilters(f=>({...f,acqNoCat:!f.acqNoCat}));
-  const toggleAcqDigital=()=>setFilters(f=>({...f,acqDigital:!f.acqDigital}));
-  const toggleWatchedOnly=()=>setFilters(f=>({...f,watchedF:!f.watchedF}));
-  const toggleDismissedOnly=()=>setFilters(f=>({...f,dismissedOnly:!f.dismissedOnly,showAll:false}));
-  const toggleLabelledOnly=()=>setFilters(f=>({...f,labelledF:!f.labelledF}));
-  const toggleShowAll=()=>setFilters(f=>({...f,showAll:!f.showAll,dismissedOnly:false}));
   const toggleResetCards=()=>{if(showResetCards)setResetQuery("");setShowResetCards(v=>!v);};
   const toggleCloudSaves=()=>{setShowSnaps(v=>!v); if(!showSnaps)loadSnaps();};
   const toggleQuarantine=()=>setShowIgnored(v=>!v);

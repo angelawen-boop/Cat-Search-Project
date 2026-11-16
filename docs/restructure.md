@@ -384,6 +384,24 @@ Branch `claude/restructure-5-c1`. *Sonnet, medium.* `app/screens/use_filters.jsx
 - **The screen keeps:** the list (`byArtist`, `view`, `counts`) and everything else, unchanged; `loadLedger`
   and `applyRefresh` call the two named actions where today they set the pin and the filters themselves.
 
+**C1 — done, merged.** `app/screens/use_filters.jsx`, `useFilters()`: the filters, the search box, the sort
+and the pin, their actions, and the three told-by-name actions (`searchFor`, `ledgerLoaded`,
+`importApplied`). No setter leaves it.
+
+### Runs C2 and C3 — the list's drawing, the drag, the sweep log (design; one sub-agent, three commits)
+
+Branch `claude/restructure-5-c2`. *Sonnet, medium.*
+- **`use_list_drawing.jsx`, `useListDrawing(view, viewToken, scrubGroups)`** — owns how much of the list
+  is drawn, the "more" marker's ref and its watcher, the wish to land at the bottom or on a period and the
+  two effects that carry it out, and whether the top and bottom buttons show (with its scroll listener).
+  Hands back the draw limit, the marker's ref, `showTop`, `jumpToPeriod`, `jumpToBottom`.
+- **`use_buy_next_drag.jsx`, `useBuyNextDrag(dragOn, moveBuyNext)`** — owns the card being dragged, the
+  gesture, and the hold-the-scroll effect. Hands back `drag` and `startDrag`.
+- **`use_sweep_log.jsx`, `useSweepLog()`** — owns the freshness record and why it could not be read; its
+  own opening read, taken out of the opening effect and declared BEFORE it, so the sweep log is still the
+  first thing read; hands back the record, the latest attempt, the why-line and `recordSweep(seen)`.
+- **The screen keeps:** everything else; the held sweep of an unfinished import stays with the import.
+
 ## 4A — the venue register (merged)
 
 **Her decisions (made; the code-or-store question is closed):**
@@ -715,7 +733,7 @@ word) and item 5's cutting plan in full, then:
 
 ## Handover record — updated after every step
 
-**Where we are:** item 5 is under way: A1 and A2 are merged (see "5 — the runs"); Stage A is finished and merged (A1, A2, A3-0, A3a, A3b); Stage B is finished and merged (B1, B2); next stage C, run C1 (designs written under "5 — the runs"). Item 4 is finished and on `main`: steps 1 to 5 of "This run" (59 published; the app-side
+**Where we are:** item 5 is under way: A1 and A2 are merged (see "5 — the runs"); Stage A is finished and merged (A1, A2, A3-0, A3a, A3b); Stage B is finished and merged (B1, B2); C1 is merged; next C2 and C3 together (design written), then C4. Item 4 is finished and on `main`: steps 1 to 5 of "This run" (59 published; the app-side
 and scraper-side rounds, the price rule and the two venues, the keys round). Step 6, the main screen's
 cutting plan, is written (item 5). `main` passes the app's suites, the join, structure and fact checks. What waits for her is under "Parked for her" and "Start here", 5.
 
