@@ -739,6 +739,7 @@
   "useFilters",
   "useListDrawing",
   "useBuyNextDrag",
+  "useSweepLog",
   "App"
  ]
 }

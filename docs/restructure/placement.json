@@ -186,7 +186,8 @@
    "name": "Main screen, stage C2 and C3: the list drawing, the Buy next drag and the sweep log become hooks",
    "files": {
     "screens/use_list_drawing.jsx": "The list-drawing hook: how much of the list is drawn as she scrolls, the jumps to a period and to the bottom, and the top and bottom buttons.",
-    "screens/use_buy_next_drag.jsx": "The Buy next drag hook: the card being dragged, the gesture that lifts and moves it, and the hold-the-scroll listener."
+    "screens/use_buy_next_drag.jsx": "The Buy next drag hook: the card being dragged, the gesture that lifts and moves it, and the hold-the-scroll listener.",
+    "screens/use_sweep_log.jsx": "The sweep-log hook: the freshness record per venue, why it could not be read, its opening read, and recording a finished import's sweep."
    }
   }
  ],
@@ -929,6 +930,7 @@
   "ShopScreen": "screens/shop_screen.jsx",
   "useFilters": "screens/use_filters.jsx",
   "useListDrawing": "screens/use_list_drawing.jsx",
-  "useBuyNextDrag": "screens/use_buy_next_drag.jsx"
+  "useBuyNextDrag": "screens/use_buy_next_drag.jsx",
+  "useSweepLog": "screens/use_sweep_log.jsx"
  }
 }
