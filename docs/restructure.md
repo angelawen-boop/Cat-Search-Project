@@ -337,6 +337,53 @@ Branch `claude/restructure-5-b2`. *Sonnet, medium.* Stage B's rules hold.
   box, clear all, add a box, remove a page, pick a tab, cancel) becomes a named function in the screen.
   The three layouts share one memory, which stays in the screen until C7.
 
+**B2 — done, merged. Stage B is finished.** Fourteen pieces in `import_popup.jsx`, `review_panel.jsx`
+(with the proposal card) and `shop_screen.jsx`, none handed more than fourteen things; seventeen more named
+actions in the screen; the review owns which bands and venues are open and stays mounted between imports.
+The screen's block is about 910 lines: no layout of its own left, only memory, handlers and the order of
+the pieces.
+
+### Stage C — how the hooks fit together (design, written after B from a fresh cross-reference)
+
+- **A hook is a function `useX(…)` at the top level of its own part in `app/screens/`**, holding the
+  `useState`, `useRef`, `useMemo` and `useEffect` lines of its group, moved, and the handlers that only
+  touch that group. It hands back ONE object: what it remembers (to read) and named actions. The screen
+  calls the hooks, in a fixed order, and hands each piece what it needs from them by name.
+- **The order the screen calls them, which is also the order of the opening's reads:** `useFilters` →
+  `useSweepLog` (the sweep log's read) → `useLedgerDocument` (the quarantine's read, then the cloud copy's)
+  → the list (`listView`, worked out in the screen from the document's rows and the filters) →
+  `useListDrawing`, `useBuyNextDrag` → `useCardActions` → `useLinkVenues` (the venues' read) →
+  `useImportSession` (the pending links, pages and pastes).
+- **No two hooks need each other.** Who tells whom, always by a named action handed in by the screen:
+  the document tells the filters "a ledger was loaded"; the import session tells the document "commit",
+  "add to the quarantine" and "an import was applied" (the document keeps the import reminder, because
+  Save and Load clear it), tells the sweep log "record this sweep", and tells the filters "these cards
+  changed". **A change from the plan, the coordinator's call:** `useFilters` does not hand back the list.
+  The list needs the document's rows and the document needs to tell the filters about a load; a hook that
+  both took the rows and was told by their owner would make the two need each other. So the filters hold
+  memory and actions only, and the screen works out the list in three lines.
+- **Shared by design, stays in the screen and is handed in by name:** the one "a job is running" flag and
+  its progress line, the error line, the diagnostic, the confirm box ("ask her"), the theme and `ui`.
+- **The order of effects.** Effects run in the order they are declared; moving a group's effects into a
+  hook keeps their order within the group and changes it between groups only as the call order above
+  says. The check's store sequence must be identical; so must every screen.
+- **Models (the coordinator's call, under her rule "by the judgement the job needs"):** C1 to C3 are
+  self-contained and the check now presses everything they touch: Sonnet, medium. C4 to C7 are where order
+  matters: Opus, medium, as the plan says.
+
+### Run C1 — `use_filters` (design)
+
+Branch `claude/restructure-5-c1`. *Sonnet, medium.* `app/screens/use_filters.jsx`, `useFilters()`:
+- **Owns:** the filters object, whether the search box is open and its input's ref, the sort, the
+  reversal, the pinned cards (which, and whether pinned).
+- **Hands back:** those to read; `sort`, `bnOnly`, `periodView`; the token that changes whenever a filter
+  or the sort does (the list starts again from the top on it); and the actions — toggle a venue, theme or
+  time, each switch's toggle, pick a sort, clear all, open or close the search box, type, clear the words,
+  "search for these words" (search-selected-words), "a ledger was loaded" (the pin is released) and "an
+  import was applied — these cards changed" (pinned, every filter cleared).
+- **The screen keeps:** the list (`byArtist`, `view`, `counts`) and everything else, unchanged; `loadLedger`
+  and `applyRefresh` call the two named actions where today they set the pin and the filters themselves.
+
 ## 4A — the venue register (merged)
 
 **Her decisions (made; the code-or-store question is closed):**
@@ -668,7 +715,7 @@ word) and item 5's cutting plan in full, then:
 
 ## Handover record — updated after every step
 
-**Where we are:** item 5 is under way: A1 and A2 are merged (see "5 — the runs"); Stage A is finished and merged (A1, A2, A3-0, A3a, A3b); B1 is merged; next B2 (design written), then stage C. Item 4 is finished and on `main`: steps 1 to 5 of "This run" (59 published; the app-side
+**Where we are:** item 5 is under way: A1 and A2 are merged (see "5 — the runs"); Stage A is finished and merged (A1, A2, A3-0, A3a, A3b); Stage B is finished and merged (B1, B2); next stage C, run C1 (designs written under "5 — the runs"). Item 4 is finished and on `main`: steps 1 to 5 of "This run" (59 published; the app-side
 and scraper-side rounds, the price rule and the two venues, the keys round). Step 6, the main screen's
 cutting plan, is written (item 5). `main` passes the app's suites, the join, structure and fact checks. What waits for her is under "Parked for her" and "Start here", 5.
 
