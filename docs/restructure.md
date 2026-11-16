@@ -263,6 +263,11 @@ Branch `claude/restructure-5-a3a`. *Opus, medium.*
 - **The screen keeps:** the read-only stop, the busy flags and progress line, and putting what a job
   hands back into memory, in the same order as today.
 
+**A3a — done, merged.** `app/lookup/card_jobs.jsx` (`findCatalogueJob`, `recheckShopJob`) and
+`app/periods/label_jobs.jsx` (`labelCardsJob`, `labelsOntoCards`, `labelLedgerStart`, `labelLedgerJob`,
+`labelsOntoRows`, `relabelJob`, `keptPeriodSaid`). Each job keeps its own lookup-log record; the screen's
+handlers set the busy flags, call the job and put what it hands back into memory.
+
 ### Run A3b — a venue's shop answers (design)
 
 Branch `claude/restructure-5-a3b`. *Opus, medium.*
@@ -604,7 +609,7 @@ word) and item 5's cutting plan in full, then:
 
 ## Handover record — updated after every step
 
-**Where we are:** item 5 is under way: A1 and A2 are merged (see "5 — the runs"); A3-0 (the check learns the jobs) is merged; next A3a, then A3b, their designs written. Item 4 is finished and on `main`: steps 1 to 5 of "This run" (59 published; the app-side
+**Where we are:** item 5 is under way: A1 and A2 are merged (see "5 — the runs"); A3-0 and A3a are merged; next A3b (design written), then stage B. Item 4 is finished and on `main`: steps 1 to 5 of "This run" (59 published; the app-side
 and scraper-side rounds, the price rule and the two venues, the keys round). Step 6, the main screen's
 cutting plan, is written (item 5). `main` passes the app's suites, the join, structure and fact checks. What waits for her is under "Parked for her" and "Start here", 5.
 
