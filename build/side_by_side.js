@@ -194,14 +194,13 @@ async function snapshot(jsxFile, outFile, liveFile) {
   const store = fakeStore();
   // The store as the page reaches it: every read, write, delete and list logged in order (the operation and the
   // record's name, never its contents), and a record four steps deep (the lookup log's pieces) reached through its
-  // parent, as the platform's store allows. An operation made from a repeating timer (the one-tab heartbeat, every
-  // 20 seconds of real time) is left out of the log: when it falls depends on the machine, not on the page.
-  const { AsyncLocalStorage } = require('async_hooks');
-  const timer = new AsyncLocalStorage();
+  // parent, as the platform's store allows. The page's long repeating timers (the one-tab heartbeat every 20
+  // seconds, the half-minute "x ago" refresh) never fire here: when they fall depends on the machine, not on the
+  // page, and a save that happened to ride on one used to drop out of the log on some runs.
   const realInterval = global.setInterval;
-  global.setInterval = (fn, ms, ...a) => realInterval((...x) => timer.run(true, () => fn(...x)), ms, ...a);
+  global.setInterval = (fn, ms, ...a) => (ms >= 10000 ? realInterval(() => {}, ms) : realInterval(fn, ms, ...a));
   const seq = [];
-  const logOp = (op, p) => { if (!timer.getStore()) seq.push(op + ' ' + p); };
+  const logOp = (op, p) => { seq.push(op + ' ' + p); };
   const docOf = p => ({
     get: () => { logOp('read', p); return store.doc(p).get(); },
     set: v => { logOp('write', p); return store.doc(p).set(v); },

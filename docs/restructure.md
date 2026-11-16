@@ -504,6 +504,19 @@ same moment on screen.
 the job flag stays in the screen and reaches it as `jobRunning`, `jobStarts`, `jobEnds`, `showProgress`.
 The screen's block is about 390 lines.
 
+**C7 — done, merged. Stage C and item 5's cutting are finished.** `app/screens/use_import_session.jsx`,
+`useImportSession({…})`: the pop-up, the review and the shop screen's one memory, its two effects, its
+opening reads last. The screen's block (`app/screens/app.jsx`) is about 200 lines: the hooks called in
+their order, the job flag, the error line and diagnostic, the confirm box, the theme and `ui`,
+search-selected-words, the drawers' shared flags with Reset-a-card, the list's three lines, and the pieces
+in page order. No file in `app/screens/` is over about 325 lines. **Seen and left:** a memory of "the
+venues the last Read met" is written in four places and read nowhere.
+
+**The check's own fault, found at C7 and fixed:** the store log left out anything started from a repeating
+timer (to keep the heartbeat out), and the page's half-minute refresh could carry an automatic save with
+it, so on some runs one save's lines were missing from one side. The long repeating timers now never fire
+in the stand-in browser and every operation is logged.
+
 ## 4A — the venue register (merged)
 
 **Her decisions (made; the code-or-store question is closed):**
@@ -578,7 +591,14 @@ only read); load her current ledger (decoded from her store's `ledger/live`, kep
 committed) in the stand-in browser with those records, and check the cards, venue names and chips; then
 send her the link and the latest sweep file.
 
-**Her checklist:** load her ledger export; scroll and open a few cards; star and unstar one; the venue and
+**How a round's checklist is made (her instruction, relayed by the first session):** specific, never "try a few
+things". Every item is tied to something changed: exactly what to do (which card, venue, button, what to
+type), what she should see, and what it proves — "still works as before" for each area moved, "now looks
+fixed" for each fix with what she would have seen before. Real cards and venues from her ledger. The
+coordinator runs every item on the test page first, the way she will, and lists only what it has seen come
+out right; grouped so she can work through it in order; plain words, no code names.
+
+**The earlier rounds' checklist (kept as the record):** load her ledger export; scroll and open a few cards; star and unstar one; the venue and
 theme chips and the Period sort; Import → CSV with a sweep file, look through the review, Cancel; Import →
 Links with one link, Read, Cancel; Pages with one saved page, Read, Cancel; Paste with one link and its
 text, Read, Cancel; Find catalogue on one card; Save now; open the cloud copies drawer. She says "same", or
@@ -835,7 +855,7 @@ word) and item 5's cutting plan in full, then:
 
 ## Handover record — updated after every step
 
-**Where we are:** item 5 is under way: A1 and A2 are merged (see "5 — the runs"); Stage A is finished and merged (A1, A2, A3-0, A3a, A3b); Stage B is finished and merged (B1, B2); C1 to C6 are merged; next C7 (the import session, design written), then the fixes session is told the trunk is free, then her test page. Item 4 is finished and on `main`: steps 1 to 5 of "This run" (59 published; the app-side
+**Where we are:** item 5 is under way: A1 and A2 are merged (see "5 — the runs"); Stage A is finished and merged (A1, A2, A3-0, A3a, A3b); Stage B is finished and merged (B1, B2); every run through C7 is merged (see "5 — the runs"). Next: the fixes session is told the trunk is free; when its work is in, pull, then build her test page for round 3 with the specific checklist ("Her tests"). Item 4 is finished and on `main`: steps 1 to 5 of "This run" (59 published; the app-side
 and scraper-side rounds, the price rule and the two venues, the keys round). Step 6, the main screen's
 cutting plan, is written (item 5). `main` passes the app's suites, the join, structure and fact checks. What waits for her is under "Parked for her" and "Start here", 5.
 
