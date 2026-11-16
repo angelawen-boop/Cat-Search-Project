@@ -553,19 +553,40 @@ function runtime() {
       'AL-032: Mia: no "–– Minneapolis Institute of Art" tail, no "&#039;", the venue named in full', JSON.stringify([r.base, r.site]));
   }
   // ── AL-095: the Prado (that venue only): a description cut short behind its "+" toggle ends "… | \+"; the scrap
-  // leaves the passage, the cut sentence stays. Live pages on docs/link_proof_pages.json. ─
+  // leaves the passage, the cut sentence stays; the "Curator:" credit under it never reaches Claude.
+  // Live pages on docs/link_proof_pages.json. ─
   {
     const read = new Function('React', 'window', 'document', 'localStorage', code + '\n;return readShowPage;')(React, win, win.document, win.localStorage);
     const page = { title: 'Painted Gardens - Exhibition - Museo Nacional del Prado',
       full_content: '# Painted Gardens\n\nMuseo Nacional del Prado. Madrid 3/4/2027 \\- 7/18/2027\n\n'
         + 'The gardens of the court were painted again and again, each painter finding in them a new order of nature and art. '.repeat(3)
         + '\n\nThis second paragraph follows the painters from the royal sites to the cloisters. There the same plants turn up in altarpieces … | \\+\n\n'
-        + 'Curator:\n    A curator of the collection\n' };
+        + 'Curator:\n    María Gómez Ruiz, Senior Curator of Spanish and Flemish Paintings before 1700, Museo Nacional del Prado.\n\n'
+        + '### The cloister gardens\n\nIn the cloisters the painters found a smaller, enclosed nature, and the same flowers return in the margins of the books they painted.\n' };
     const url = 'https://www.museodelprado.es/en/whats-on/exhibition/painted-gardens/0000';
     const r = read(page, url, 'occ-museodelprado-es'), other = read(page, url, 'occ-getty-edu');
-    ok(r.ok && /in altarpieces …$/.test(r.raw) && !r.raw.includes('\\+') && r.start === '2027-03-04' && r.end === '2027-07-18',
-      'AL-095:  the Prado: the "| \\+" toggle scrap leaves the passage, the cut sentence ending "…" stays', JSON.stringify([r.raw.slice(-60), r.start, r.end]));
-    ok(other.ok && other.raw.endsWith('… | \\+'), 'AL-095a: the rule is the Prado\'s: another venue\'s reading of the same text is unchanged', JSON.stringify(other.raw.slice(-30)));
+    ok(r.ok && r.raw.includes('in altarpieces …\n') && !r.raw.includes('\\+') && r.start === '2027-03-04' && r.end === '2027-07-18',
+      'AL-095:  the Prado: the "| \\+" toggle scrap leaves the passage, the cut sentence ending "…" stays', JSON.stringify([r.raw.slice(-200), r.start, r.end]));
+    ok(r.ok && !/Curator|Gómez Ruiz/.test(r.raw) && /margins of the books they painted\.$/.test(r.raw),
+      'AL-095b: the Prado: the "Curator:" credit and its names line leave the passage; the text after it stays', JSON.stringify(r.raw.slice(-200)));
+    ok(other.ok && other.raw.includes('… | \\+') && /Curator: María Gómez Ruiz/.test(other.raw),
+      'AL-095a: the rules are the Prado\'s: another venue\'s reading of the same text is unchanged', JSON.stringify(other.raw.slice(-300)));
+  }
+  // ── AL-096: the V&A (that venue only): its dates are looked for above "Exhibition highlights", whose picture
+  // captions name collection seasons; a page printing "Closing today" and no date is undated, with no
+  // "shows only" note. Live page on docs/link_proof_pages.json. ─
+  {
+    const read = new Function('React', 'window', 'document', 'localStorage', code + '\n;return readShowPage;')(React, win, win.document, win.localStorage);
+    const page = { title: 'Painted Silks · V&A',
+      full_content: '# Painted Silks\n\n## "Dress is a picture you can walk in." – A designer\n\n'
+        + 'The first exhibition on painted silk spans three centuries, celebrating the makers who turned a length of cloth into a picture. It traces the craft from the workshop to the catwalk.\n\n'
+        + 'Exhibition\n\n* Closing today\n* V&A South Kensington\n\n## Exhibition highlights\n\n'
+        + '* A model on a dark catwalk wearing a painted silk gown Haute Couture autumn/winter 2024\n* A painted silk fan, 1780\n' };
+    const url = 'https://www.vam.ac.uk/exhibitions/painted-silks';
+    const r = read(page, url, 'va'), other = read(page, url, 'occ-getty-edu');
+    ok(r.ok && r.start === '' && r.end === '' && r.noDates && !r.shown,
+      'AL-096:  the V&A: a caption\'s "autumn/winter 2024" under "Exhibition highlights" is never the show\'s dates', JSON.stringify([r.start, r.end, r.noDates, r.shown]));
+    ok(other.ok && !!other.shown, 'AL-096a: the rule is the V&A\'s: another venue\'s reading of the same text is unchanged', JSON.stringify(other.shown));
   }
   // ── AL-083: Moretti (her decision, Moretti only): the place after " : " leaves the title, the capitals are
   // recased, and its description typed in capitals reaches Claude, the cookie panel not. Read live (29 Oct). ─

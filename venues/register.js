@@ -193,11 +193,13 @@ const VENUES = [
     sweep: { exBase: null, listUrl: null },
     filed: null },
 
+  // The V&A: a link's dates are looked for above its "Exhibition highlights" list, whose picture captions
+  // name collection seasons ("Haute Couture autumn/winter 2024"), never the show's dates (`datesUntil`).
   { id: "va", kind: "swept",
     names: { card: "V&A", chip: "V&A", group: null, full: "Victoria and Albert Museum", inEnglish: null, aka: [], replaced: [], hers: true },
     city: "London", country: "United Kingdom", english: true, language: null,
     shop: { home: "https://www.vam.ac.uk/shop", catalogues: "https://www.vam.ac.uk/shop/books/exhibition-books.html", search: "https://www.vam.ac.uk/shop/search?q=", unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
-    read: { link: null, sites: [], dateOrder: null, spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
+    read: { link: { datesUntil: /^Exhibition highlights$/i }, sites: [], dateOrder: null, spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
     sweep: { exBase: null, listUrl: null },
     filed: null },
 
@@ -274,15 +276,15 @@ const VENUES = [
     sweep: { exBase: null, listUrl: null },
     filed: null },
 
-  // The Prado: chip "Prado" right after KHM, cards "Prado Madrid" (her decision). Its dates are month first
-  // (DATE_ORDER, dates.js).
-  // Its all-number dates: "6/9/2026 - 9/27/2026". A description cut short behind its "+" toggle ends
-  // "… | \+": the scrap leaves the passage, the cut sentence stays (`stripTrailing`).
+  // The Prado: chip and card "Prado", right after KHM; "Prado Madrid" is the card name it replaced (her decision).
+  // Its dates are month first (DATE_ORDER, dates.js); its all-number dates: "6/9/2026 - 9/27/2026". A description
+  // cut short behind its "+" toggle ends "… | \+": the scrap leaves the passage, the cut sentence stays
+  // (`stripTrailing`). The "Curator:" / "Curators:" credit under the description never reaches it (`skipParagraph`).
   { id: "occ-museodelprado-es", kind: "manual",
     names: { card: "Prado", chip: "Prado", group: null, full: "Museo Nacional del Prado", inEnglish: null, aka: ["Prado", "Museo del Prado"], replaced: ["Prado Madrid"], hers: true },
     city: "Madrid", country: "Spain", english: false, language: null,
     shop: { home: null, catalogues: null, search: null, unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
-    read: { link: { stripTrailing: /\s*\|\s*\\?\+$/ }, sites: [], dateOrder: "month", spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
+    read: { link: { stripTrailing: /\s*\|\s*\\?\+$/, skipParagraph: /^Curators?:\s/ }, sites: [], dateOrder: "month", spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
     sweep: { exBase: null, listUrl: null },
     filed: { addedAt: "2026-10-29T04:52:37.794Z", aka: ["Prado", "Museo del Prado"], city: "Madrid", confirmed: true, country: "Spain", english: false, englishPicked: false, finder: 3, foundBy: "a search", gallery: false, host: "www.museodelprado.es", id: "occ-museodelprado-es", name: "Museo Nacional del Prado", pageShop: "https://tiendaprado.com/en/", searchRule: 2, shelfKind: "catalogues", shop: "found", shopCatalogues: "https://tiendaprado.com/en/410-catalogues", shopEnglishUnread: null, shopHome: "https://tiendaprado.com/", shopSearch: null, short: "Madrid Prado", turnedDown: [], why: null } },
 

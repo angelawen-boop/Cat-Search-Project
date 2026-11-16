@@ -689,6 +689,8 @@ function takePassage(pg){
     }
     if(b.kind!=="text"){ rule("skip:"+b.kind); continue; }
     if((t===dateLine&&!keepDateLine)||t===headingText||seen.has(t))continue;
+    // A paragraph the venue opens with a label, its lines joined (linkRead.skipParagraph; the Prado's "Curator:" over the names).
+    if(lr&&lr.skipParagraph&&lr.skipParagraph.test(t)){ rule("skipParagraph"); continue; }
     if(isFurniture(t)){ rule("skip:furniture"); continue; }
     if(isCaption(t)){ rule("skip:caption"); continue; }
     // The show's title printed again with a subtitle and no sentence ("Paradise on Earth. Flemish landscape painting from
