@@ -740,6 +740,7 @@
   "useListDrawing",
   "useBuyNextDrag",
   "useSweepLog",
+  "useLedgerDocument",
   "App"
  ]
 }
