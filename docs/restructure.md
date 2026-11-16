@@ -283,6 +283,60 @@ other shop-answer rules in `app/import/review.jsx`, `venuesShopConfirmed`, `venu
 `venuesShopAdded`, `lookAgainJob`, `venuesLookedAgain`. Every function left in the screen calls a job or a
 rule and puts what comes back into memory.
 
+### Stage B — the rules both runs follow (design)
+
+- **A piece is a component at the top level of its file** in `app/screens/` (never defined inside the
+  screen: it would be rebuilt, and lose its place, on every redraw), one `//@piece` each. Its section of
+  the layout moves into it by script, line for line; the names inside stay the same because the piece
+  opens by taking them from what it is handed.
+- **What a piece is handed:** the values it shows; the look-and-feel as ONE `ui` object (the palette, the
+  tier colours, the chip, button and link styles); and **named actions**. Where a section's button today
+  calls the screen's setters inline, that handler becomes a named function in the screen (same body) and
+  the piece is handed it under a name that says what it does. No piece is handed a raw setter of memory it
+  does not own.
+- **No piece takes more than about fifteen things** (`ui` counts as one). A section that needs more is cut
+  into smaller pieces along its own sub-sections, in the same file. One that still needs more is a sign of
+  a wrong cut: it is left in the screen and reported, for her list.
+- **Memory moves into a piece only when the cross-reference shows no one else reads or writes it.**
+- **The proof:** every screen the check draws identical — it now also draws the dark theme, the sweep-log
+  drawer, the quarantine, Reset cards and Cloud Saves drawers, the Save panel and the search box in full.
+
+### Run B1 — the page's own pieces (design)
+
+Branch `claude/restructure-5-b1`. *Sonnet, medium.*
+- `header.jsx`: the title and toolbar with the Save panel; the cloud line and the status lines; the
+  banners and the error line; the diagnostic box (it owns "open" and "copied", and the reset of "copied"
+  when a new diagnostic arrives); the sweep-log line and its drawer (it owns "open"); the counts and the
+  search row. Several pieces, by the fifteen-things rule.
+- `chips.jsx`: the sort, when, venue, theme, acquiring and showing rows. Handed the filters object, the
+  sort, and named actions (toggle a venue, pick a sort, clear, and one per switch).
+- `card_list.jsx`: the empty state, the period dividers, the cards and the "more" marker.
+- `drawers.jsx`: the tools row, Cloud Saves, the quarantine list, Reset cards.
+- `floating.jsx`: the search-selected-words button, top and bottom, the undo bar, the confirm box, the footer.
+- **Stays in the screen for B2:** the import pop-up, the review, the shop screen.
+
+**B1 — done, merged.** Twenty-three pieces in `header.jsx`, `chips.jsx`, `card_list.jsx`, `drawers.jsx`,
+`floating.jsx`, none handed more than thirteen things; thirty named actions in the screen in place of the
+buttons' inline setters; the diagnostic box and the sweep-log drawer own their "open" memory. **One
+grouping to know:** the card list is handed the per-card job and open state (which card is busy, its
+progress line, what the last job said, which cards and boxes are open) as one object, `cardState` — the
+memory C5's hook will own; unbundled the list needed twenty-one things.
+
+### Run B2 — the import's three layouts (design)
+
+Branch `claude/restructure-5-b2`. *Sonnet, medium.* Stage B's rules hold.
+- `import_popup.jsx`: the pop-up — the "open a ledger first" case, the four buttons, the Links box, the
+  Pages list, the Paste boxes, and the Read's status (`readStatus` becomes a piece of its own).
+- `review_panel.jsx`: the review — its heading and counts, the bands and venues, the coverage notes, the
+  last buttons; and the proposal card as a piece of its own (`renderProposalCard`, with `decBtn`).
+- `shop_screen.jsx`: the shop screen and its venue card.
+- **Memory that moves:** which review bands and which venues are open, into the review — which must stay
+  mounted between imports (it draws nothing when there is no review), so what was open stays open from one
+  review to the next, as today.
+- **Named actions:** every inline setter of the pop-up's boxes (type a link, type in a paste box, clear a
+  box, clear all, add a box, remove a page, pick a tab, cancel) becomes a named function in the screen.
+  The three layouts share one memory, which stays in the screen until C7.
+
 ## 4A — the venue register (merged)
 
 **Her decisions (made; the code-or-store question is closed):**
@@ -614,7 +668,7 @@ word) and item 5's cutting plan in full, then:
 
 ## Handover record — updated after every step
 
-**Where we are:** item 5 is under way: A1 and A2 are merged (see "5 — the runs"); Stage A is finished and merged (A1, A2, A3-0, A3a, A3b); next stage B, run B1. Item 4 is finished and on `main`: steps 1 to 5 of "This run" (59 published; the app-side
+**Where we are:** item 5 is under way: A1 and A2 are merged (see "5 — the runs"); Stage A is finished and merged (A1, A2, A3-0, A3a, A3b); B1 is merged; next B2 (design written), then stage C. Item 4 is finished and on `main`: steps 1 to 5 of "This run" (59 published; the app-side
 and scraper-side rounds, the price rule and the two venues, the keys round). Step 6, the main screen's
 cutting plan, is written (item 5). `main` passes the app's suites, the join, structure and fact checks. What waits for her is under "Parked for her" and "Start here", 5.
 
