@@ -222,6 +222,301 @@ Branch `claude/restructure-5-a2`. A new part, `app/ledger/list_view.jsx` (featur
   `filters` in place of the sixteen.
 - **Must come out the same:** every list in every sort, chip and combination the check walks.
 
+**A2 — done, merged.** `app/ledger/list_view.jsx` (`filtersClear`, `listMode`, `listView`, `listCounts`,
+`scrubGroupsOf`); the screen holds the filters as one object, set by name; both clears are one call.
+
+### Run A3-0 — the check learns the jobs (design; a tool run, no app change)
+
+Branch `claude/restructure-5-a3-check`. A3 and all of stage C move the jobs the side-by-side check never
+presses, so the check is taught them first, against unchanged app code (old = new = `main`: it must come out
+identical, and each new step must be shown to fail on a one-word break). *Opus, medium.* New steps, each
+with fixed stand-in replies from the web and from Claude and every call recorded:
+- Label (the toolbar's button) on the loaded ledger; Relabel on one card, and "keep this period" where the
+  card offers it; the store after each.
+- Find catalogue on a card not yet looked up; Search again on it; Re-check museum shop; a digital link
+  typed into a card; the catalogue pick where a card has versions. The card, the banner, the diagnostic box
+  and the store after each.
+- A Paste read that meets a venue outside her list, through the review to the shop screen: Confirm, No
+  shop, her own link, Look again, Back, then Apply; and once more ending in Cancel import. Screen and store.
+- **The store's sequence:** every read, write, delete and list the page makes on its store, in order, from
+  opening to the first save, compared as its own record (stage C's proof).
+
+**A3-0 — done, merged.** The check now presses, after Reset and on her test ledger loaded again (plus one
+card with versions): Label (progress, line, diagnostic), Relabel in the regrouped case and "Do not
+regroup"; Find catalogue, Search again, Re-check, a lookup whose step dies and one that ends with trouble;
+the digital link (a link, and not a link); the catalogue pick; a Paste read meeting a new venue through the
+shop screen (Confirm, No shop, Add, Look again, Back, Next, Apply) and once ending in Cancel import; and the
+store's sequence of reads and writes, opening to first save and whole run (the 20-second heartbeat left out:
+where it lands depends on the machine). Screen, store and every web and Claude call compared for each. Eleven
+deliberate breaks, each caught by the step that presses it. The check takes about five minutes.
+
+### Run A3a — what a lookup or a labelling found and what to say (design)
+
+Branch `claude/restructure-5-a3a`. *Opus, medium.*
+- **Lookup part:** the Find catalogue / Search again job and the Re-check job, shaped like the Read job:
+  the row and the lookup's hooks in; out comes what to land on the card (through `landOnCard`, on the
+  ledger as it stands when the answer arrives), the line for the card, the banner sentence, the diagnostic.
+  The lookup-log record is started and saved by the job. Every sentence moves with it, word for word.
+- **Periods part:** Label, Relabel and Label-import-cards as jobs (inputs in; labels, sentence and
+  diagnostic out; progress through a callback; the lookup-log record kept by the job), the plain function
+  that puts labels onto rows (it still skips a row labelled meanwhile), and "keep this period"'s sentence.
+- **The screen keeps:** the read-only stop, the busy flags and progress line, and putting what a job
+  hands back into memory, in the same order as today.
+
+**A3a — done, merged.** `app/lookup/card_jobs.jsx` (`findCatalogueJob`, `recheckShopJob`) and
+`app/periods/label_jobs.jsx` (`labelCardsJob`, `labelsOntoCards`, `labelLedgerStart`, `labelLedgerJob`,
+`labelsOntoRows`, `relabelJob`, `keptPeriodSaid`). Each job keeps its own lookup-log record; the screen's
+handlers set the busy flags, call the job and put what it hands back into memory.
+
+### Run A3b — a venue's shop answers (design)
+
+Branch `claude/restructure-5-a3b`. *Opus, medium.*
+- **Shop finder part:** a link venue's shop search worked out at its first lookup (`fillShopSearch`): the
+  venue's record in, the record's additions out (or nothing when a call died). The screen stores them.
+- **Link-venue part:** the shop screen's answers as `(venues, id, …) → venues`: confirm (with the English
+  pick), no shop, her own link, and what Look again found (the search itself is a job: venue in, shop out).
+- **The screen keeps:** the working copy and the stored copy of the venues, which box is open, which venue
+  is being looked for, and the store write.
+
+**A3b — done, merged. Stage A is finished.** `shopSearchAdditions` (the shop finder part) and, beside the
+other shop-answer rules in `app/import/review.jsx`, `venuesShopConfirmed`, `venuesNoShop`,
+`venuesShopAdded`, `lookAgainJob`, `venuesLookedAgain`. Every function left in the screen calls a job or a
+rule and puts what comes back into memory.
+
+### Stage B — the rules both runs follow (design)
+
+- **A piece is a component at the top level of its file** in `app/screens/` (never defined inside the
+  screen: it would be rebuilt, and lose its place, on every redraw), one `//@piece` each. Its section of
+  the layout moves into it by script, line for line; the names inside stay the same because the piece
+  opens by taking them from what it is handed.
+- **What a piece is handed:** the values it shows; the look-and-feel as ONE `ui` object (the palette, the
+  tier colours, the chip, button and link styles); and **named actions**. Where a section's button today
+  calls the screen's setters inline, that handler becomes a named function in the screen (same body) and
+  the piece is handed it under a name that says what it does. No piece is handed a raw setter of memory it
+  does not own.
+- **No piece takes more than about fifteen things** (`ui` counts as one). A section that needs more is cut
+  into smaller pieces along its own sub-sections, in the same file. One that still needs more is a sign of
+  a wrong cut: it is left in the screen and reported, for her list.
+- **Memory moves into a piece only when the cross-reference shows no one else reads or writes it.**
+- **The proof:** every screen the check draws identical — it now also draws the dark theme, the sweep-log
+  drawer, the quarantine, Reset cards and Cloud Saves drawers, the Save panel and the search box in full.
+
+### Run B1 — the page's own pieces (design)
+
+Branch `claude/restructure-5-b1`. *Sonnet, medium.*
+- `header.jsx`: the title and toolbar with the Save panel; the cloud line and the status lines; the
+  banners and the error line; the diagnostic box (it owns "open" and "copied", and the reset of "copied"
+  when a new diagnostic arrives); the sweep-log line and its drawer (it owns "open"); the counts and the
+  search row. Several pieces, by the fifteen-things rule.
+- `chips.jsx`: the sort, when, venue, theme, acquiring and showing rows. Handed the filters object, the
+  sort, and named actions (toggle a venue, pick a sort, clear, and one per switch).
+- `card_list.jsx`: the empty state, the period dividers, the cards and the "more" marker.
+- `drawers.jsx`: the tools row, Cloud Saves, the quarantine list, Reset cards.
+- `floating.jsx`: the search-selected-words button, top and bottom, the undo bar, the confirm box, the footer.
+- **Stays in the screen for B2:** the import pop-up, the review, the shop screen.
+
+**B1 — done, merged.** Twenty-three pieces in `header.jsx`, `chips.jsx`, `card_list.jsx`, `drawers.jsx`,
+`floating.jsx`, none handed more than thirteen things; thirty named actions in the screen in place of the
+buttons' inline setters; the diagnostic box and the sweep-log drawer own their "open" memory. **One
+grouping to know:** the card list is handed the per-card job and open state (which card is busy, its
+progress line, what the last job said, which cards and boxes are open) as one object, `cardState` — the
+memory C5's hook will own; unbundled the list needed twenty-one things.
+
+### Run B2 — the import's three layouts (design)
+
+Branch `claude/restructure-5-b2`. *Sonnet, medium.* Stage B's rules hold.
+- `import_popup.jsx`: the pop-up — the "open a ledger first" case, the four buttons, the Links box, the
+  Pages list, the Paste boxes, and the Read's status (`readStatus` becomes a piece of its own).
+- `review_panel.jsx`: the review — its heading and counts, the bands and venues, the coverage notes, the
+  last buttons; and the proposal card as a piece of its own (`renderProposalCard`, with `decBtn`).
+- `shop_screen.jsx`: the shop screen and its venue card.
+- **Memory that moves:** which review bands and which venues are open, into the review — which must stay
+  mounted between imports (it draws nothing when there is no review), so what was open stays open from one
+  review to the next, as today.
+- **Named actions:** every inline setter of the pop-up's boxes (type a link, type in a paste box, clear a
+  box, clear all, add a box, remove a page, pick a tab, cancel) becomes a named function in the screen.
+  The three layouts share one memory, which stays in the screen until C7.
+
+**B2 — done, merged. Stage B is finished.** Fourteen pieces in `import_popup.jsx`, `review_panel.jsx`
+(with the proposal card) and `shop_screen.jsx`, none handed more than fourteen things; seventeen more named
+actions in the screen; the review owns which bands and venues are open and stays mounted between imports.
+The screen's block is about 910 lines: no layout of its own left, only memory, handlers and the order of
+the pieces.
+
+### Stage C — how the hooks fit together (design, written after B from a fresh cross-reference)
+
+- **A hook is a function `useX(…)` at the top level of its own part in `app/screens/`**, holding the
+  `useState`, `useRef`, `useMemo` and `useEffect` lines of its group, moved, and the handlers that only
+  touch that group. It hands back ONE object: what it remembers (to read) and named actions. The screen
+  calls the hooks, in a fixed order, and hands each piece what it needs from them by name.
+- **The order the screen calls them, which is also the order of the opening's reads:** `useFilters` →
+  `useSweepLog` (the sweep log's read) → `useLedgerDocument` (the quarantine's read, then the cloud copy's)
+  → the list (`listView`, worked out in the screen from the document's rows and the filters) →
+  `useListDrawing`, `useBuyNextDrag` → `useCardActions` → `useLinkVenues` (the venues' read) →
+  `useImportSession` (the pending links, pages and pastes).
+- **No two hooks need each other.** Who tells whom, always by a named action handed in by the screen:
+  the document tells the filters "a ledger was loaded"; the import session tells the document "commit",
+  "add to the quarantine" and "an import was applied" (the document keeps the import reminder, because
+  Save and Load clear it), tells the sweep log "record this sweep", and tells the filters "these cards
+  changed". **A change from the plan, the coordinator's call:** `useFilters` does not hand back the list.
+  The list needs the document's rows and the document needs to tell the filters about a load; a hook that
+  both took the rows and was told by their owner would make the two need each other. So the filters hold
+  memory and actions only, and the screen works out the list in three lines.
+- **Shared by design, stays in the screen and is handed in by name:** the one "a job is running" flag and
+  its progress line, the error line, the diagnostic, the confirm box ("ask her"), the theme and `ui`.
+- **The order of effects.** Effects run in the order they are declared; moving a group's effects into a
+  hook keeps their order within the group and changes it between groups only as the call order above
+  says. The check's store sequence must be identical; so must every screen.
+- **Models (the coordinator's call, under her rule "by the judgement the job needs"):** C1 to C3 are
+  self-contained and the check now presses everything they touch: Sonnet, medium. C4 to C7 are where order
+  matters: Opus, medium, as the plan says.
+
+### Run C1 — `use_filters` (design)
+
+Branch `claude/restructure-5-c1`. *Sonnet, medium.* `app/screens/use_filters.jsx`, `useFilters()`:
+- **Owns:** the filters object, whether the search box is open and its input's ref, the sort, the
+  reversal, the pinned cards (which, and whether pinned).
+- **Hands back:** those to read; `sort`, `bnOnly`, `periodView`; the token that changes whenever a filter
+  or the sort does (the list starts again from the top on it); and the actions — toggle a venue, theme or
+  time, each switch's toggle, pick a sort, clear all, open or close the search box, type, clear the words,
+  "search for these words" (search-selected-words), "a ledger was loaded" (the pin is released) and "an
+  import was applied — these cards changed" (pinned, every filter cleared).
+- **The screen keeps:** the list (`byArtist`, `view`, `counts`) and everything else, unchanged; `loadLedger`
+  and `applyRefresh` call the two named actions where today they set the pin and the filters themselves.
+
+**C1 — done, merged.** `app/screens/use_filters.jsx`, `useFilters()`: the filters, the search box, the sort
+and the pin, their actions, and the three told-by-name actions (`searchFor`, `ledgerLoaded`,
+`importApplied`). No setter leaves it.
+
+### Runs C2 and C3 — the list's drawing, the drag, the sweep log (design; one sub-agent, three commits)
+
+Branch `claude/restructure-5-c2`. *Sonnet, medium.*
+- **`use_list_drawing.jsx`, `useListDrawing(view, viewToken, scrubGroups)`** — owns how much of the list
+  is drawn, the "more" marker's ref and its watcher, the wish to land at the bottom or on a period and the
+  two effects that carry it out, and whether the top and bottom buttons show (with its scroll listener).
+  Hands back the draw limit, the marker's ref, `showTop`, `jumpToPeriod`, `jumpToBottom`.
+- **`use_buy_next_drag.jsx`, `useBuyNextDrag(dragOn, moveBuyNext)`** — owns the card being dragged, the
+  gesture, and the hold-the-scroll effect. Hands back `drag` and `startDrag`.
+- **`use_sweep_log.jsx`, `useSweepLog()`** — owns the freshness record and why it could not be read; its
+  own opening read, taken out of the opening effect and declared BEFORE it, so the sweep log is still the
+  first thing read; hands back the record, the latest attempt, the why-line and `recordSweep(seen)`.
+- **The screen keeps:** everything else; the held sweep of an unfinished import stays with the import.
+
+**C2 and C3 — done, merged.** `useListDrawing`, `useBuyNextDrag`, `useSweepLog` (called first in the
+screen: its read is still the first the page makes). The screen's block is about 755 lines.
+
+### Run C4 — `use_ledger_document` (design)
+
+Branch `claude/restructure-5-c4`. *Opus, medium.* `app/screens/use_ledger_document.jsx`,
+`useLedgerDocument({showError, showDiagnostic, ask, onLoaded})` — the four are named actions the screen
+hands in: put a line in the error line (or clear it), put a diagnostic in the box, ask her in the confirm
+box, and "a ledger was loaded" (the screen passes the filters' `ledgerLoaded`).
+- **Owns:** the rows, "opened", the last-import stamp, changed-since-saved; the quarantine and its
+  why-line (and the list worked out from it, in venue order); the cloud copy's state (what the store held
+  on open, the check line, armed, read-only, the tracker, the ledger-as-it-stands ref, save state, last
+  saved, why not saving); the safety copies (the list, its why-line, busy, whether the drawer is open —
+  Save now refreshes an open drawer); the Save panel (open, the typed name, the cloud tick, busy, what the
+  last Save said); the load line; the unconfirmed download; the half-minute tick; the Load file input's
+  ref; and the import reminder ("Import complete — save both"), because Load and Save clear it.
+- **Its effects, in today's order:** the opening (the empty ledger and "opened"; the quarantine's read;
+  then the cloud copy: another copy editing? → the venue waiting-room tidy → the read, and opening it);
+  the tick; the heartbeat and letting go; the automatic save.
+- **Hands back, to read:** `rows`, `loaded`, `hasLedger`, `dirty`, `readOnly`, the quarantine's list (both
+  orders) and why-line, the cloud status line, the load line, the check line, the Save panel's and the
+  safety copies' values, the reminder, the unconfirmed download.
+- **Hands back, named actions:** `commit(rows, stamp?)`; `put(rowsOrFn)` — rows put in place with no
+  read-only question, marked changed (Label and Relabel use it, as today); `latest()` — the rows as they
+  stand; `readOnlyStop()`; `addToQuarantine(map)` and `releaseFromQuarantine(entry)`; `importApplied(done)`
+  (sets the reminder); Load (`requestImport`, `handleImport`), `requestOpenCloud`, Reset (`requestReset`),
+  Save (`handleSave`, the panel's open, close, type and tick), the safety copies (`toggleCloudSaves`,
+  `requestRollback`, `downloadSnapshot`), `dismissCloudCheck`.
+- **The opening effect is split, in place:** the document takes its lines (the empty ledger, "opened",
+  the quarantine's read, the cloud block); what is left in the screen's own opening effect is the link
+  venues' read and the three pending reads, in today's order. The hook is called BEFORE the screen's
+  opening effect is declared and AFTER `useSweepLog`, so the store's reads keep their order.
+- **The screen keeps:** the error line, the diagnostic, the confirm box, the busy flag and progress line,
+  the theme, the drawers' own "open" flags that two pieces share (quarantine, Reset cards and its search),
+  and everything of the card actions, the link venues and the import session (C5 to C7), which now call
+  the document's named actions where they called its setters.
+
+**C4 — done, merged.** `app/screens/use_ledger_document.jsx`, `useLedgerDocument({showError,
+showDiagnostic, ask, onLoaded})`: about 300 lines, every effect in its old order, no dependency list
+changed, the store's sequence identical. Named actions for the rest of the screen: `commit`, `put`,
+`latest`, `readOnlyStop`, `addToQuarantine`, `releaseFromQuarantine`, `importApplied`, and Load, Save, Reset
+and the safety copies. The screen's block is about 500 lines.
+
+### Runs C5 to C7 — the last three hooks (design, from a fresh look at what is left)
+
+**The call order changes from the plan in one place, the coordinator's call:** the link venues' hook is
+called BEFORE the card actions' hook, because a lookup's "work out this venue's shop search" is the link
+venues' action and is handed to the card actions by name. The opening's reads are untouched by this: the
+card actions read nothing on opening. Order: … `useLedgerDocument` → the list → `useLinkVenues` →
+`useCardActions` → `useBuyNextDrag`, `useListDrawing` → `useImportSession`.
+
+**One "a job is running" flag, in the screen** (labelling, lookups and the Read share it by design). The
+hooks are handed it as named things: is one running, start, end, and "show this progress".
+
+**C6 `use_link_venues.jsx`, `useLinkVenues(rows)`** — branch `claude/restructure-5-c6`, run FIRST of the
+three. *Opus, medium.*
+- **Owns:** the working copy of the manual-import venues and the stored copy; its own opening read (the
+  venues), declared after the document's and before the screen's remaining opening reads.
+- **Named actions:** `hold(venues)` (what a Read met), `dropHeld()` (Cancel), the shop answers —
+  `confirmShop(id, english)`, `noShop(id)`, `addShop(id, link)` (the link already checked),
+  `lookAgain(id)` (the search, then what it found onto the venues as they stand) — `toConfirm(proposals,
+  decisions)`, `importApplied(proposals, decisions)` (keeps only the answers for venues going in, stores
+  them), and `fillShopSearch(id)` for the lookup.
+- **Stays outside it:** which shop box is open and which venue is being looked for (the shop screen's own
+  memory, C7): the screen's handlers set those and call the venue actions, as today's lines do in order.
+
+**C5 `use_card_actions.jsx`, `useCardActions({…})`** — branch `claude/restructure-5-c5`. *Opus, medium.*
+- **Owns:** which card is busy, the lookup's progress line, which of the two buttons runs, the card being
+  relabelled, what the last job said on a card, Label's line, which Digital box is open, which cards are
+  open, the undo bar and its timer, and the one `cardAct` the cards call.
+- **Handed, by name:** from the document `rows`, `commit`, `put`, `latest`, `readOnlyStop`; the job flag;
+  "show this error line" and "show this diagnostic"; the shown order of cards (for the Buy next move);
+  the link venues' `fillShopSearch`.
+- **Hands back:** `cardState` (the one object the card list takes), `cardAct`, Label's line and
+  `labelLedger`, the undo and `undoDismiss`, `moveBuyNext`, and `forgetSaid(id)` for Reset-a-card (which
+  stays in the screen with the drawer's memory and the confirm box).
+
+**C7 `use_import_session.jsx`, `useImportSession({…})`** — branch `claude/restructure-5-c7`. *Opus, medium.*
+- **Owns:** the pop-up's mode, the Links box, the Pages list, the Paste boxes, the Read's note and
+  failures, the Read under way and what it was read from, the proposals, decisions, coverage, tally, the
+  held sweep, the venues the Read met, the shop screen's turn, its open box and the venue being looked
+  for, the two file inputs' refs; the store-the-paste-boxes-as-she-types effect; its own opening reads
+  (pending links, pages, pastes), declared last.
+- **Handed, by name:** from the document `rows`, the quarantine's list, `hasLedger`, `commit`,
+  `addToQuarantine`, `importApplied`, `readOnlyStop`, Load and open-the-cloud-copy (the "open a ledger
+  first" case); the sweep log's `recordSweep`; the filters' `importApplied`; the link venues' actions and
+  working copy; the job flag and progress; "show this error line"; "ask her". It never clears a filter
+  and never writes a venue itself.
+- **Hands back:** what the pop-up, the review and the shop screen show, and every action they call.
+- **After C7 the screen keeps:** the job flag and progress line, the error line, the diagnostic, the
+  store-unread markers, the confirm box, the theme and `ui`, search-selected-words, the drawers' shared
+  "open" flags and Reset-a-card, the list's three lines, and the order of the pieces.
+
+**C6 — done, merged.** `app/screens/use_link_venues.jsx`, `useLinkVenues(rows)`, called right after the
+document (its read keeps its place); the stored copy never leaves it. One order changed by a hair: after
+Look again, the venue's new answer is set just before "looking" is cleared, where it was just after — the
+same moment on screen.
+
+**C5 — done, merged.** `app/screens/use_card_actions.jsx`, `useCardActions({…})`: no effect of its own;
+the job flag stays in the screen and reaches it as `jobRunning`, `jobStarts`, `jobEnds`, `showProgress`.
+The screen's block is about 390 lines.
+
+**C7 — done, merged. Stage C and item 5's cutting are finished.** `app/screens/use_import_session.jsx`,
+`useImportSession({…})`: the pop-up, the review and the shop screen's one memory, its two effects, its
+opening reads last. The screen's block (`app/screens/app.jsx`) is about 200 lines: the hooks called in
+their order, the job flag, the error line and diagnostic, the confirm box, the theme and `ui`,
+search-selected-words, the drawers' shared flags with Reset-a-card, the list's three lines, and the pieces
+in page order. No file in `app/screens/` is over about 325 lines. **Seen and left:** a memory of "the
+venues the last Read met" is written in four places and read nowhere.
+
+**The check's own fault, found at C7 and fixed:** the store log left out anything started from a repeating
+timer (to keep the heartbeat out), and the page's half-minute refresh could carry an automatic save with
+it, so on some runs one save's lines were missing from one side. The long repeating timers now never fire
+in the stand-in browser and every operation is logged.
+
 ## 4A — the venue register (merged)
 
 **Her decisions (made; the code-or-store question is closed):**
@@ -296,7 +591,14 @@ only read); load her current ledger (decoded from her store's `ledger/live`, kep
 committed) in the stand-in browser with those records, and check the cards, venue names and chips; then
 send her the link and the latest sweep file.
 
-**Her checklist:** load her ledger export; scroll and open a few cards; star and unstar one; the venue and
+**How a round's checklist is made (her instruction, relayed by the first session):** specific, never "try a few
+things". Every item is tied to something changed: exactly what to do (which card, venue, button, what to
+type), what she should see, and what it proves — "still works as before" for each area moved, "now looks
+fixed" for each fix with what she would have seen before. Real cards and venues from her ledger. The
+coordinator runs every item on the test page first, the way she will, and lists only what it has seen come
+out right; grouped so she can work through it in order; plain words, no code names.
+
+**The earlier rounds' checklist (kept as the record):** load her ledger export; scroll and open a few cards; star and unstar one; the venue and
 theme chips and the Period sort; Import → CSV with a sweep file, look through the review, Cancel; Import →
 Links with one link, Read, Cancel; Pages with one saved page, Read, Cancel; Paste with one link and its
 text, Read, Cancel; Find catalogue on one card; Save now; open the cloud copies drawer. She says "same", or
@@ -369,6 +671,11 @@ every item across before sending it to her.
 - **Publishing:** 59 = the venue work, published unattended once its three checks pass (her yes given).
   60 = the whole restructure, when she says. Her keyed Parallel: yes given.
 - **Her updates:** a short line at each quarter of a step and at each step's end, a time estimate where there is one.
+- **The fixes session (her word, given to the coordinator directly):** another session holds four leftover
+  fixes on `claude/restructure-fixes`. The coordinator carries every run through C7 first and never pauses
+  for it; then tells it the trunk is free, waits for its merge, pulls, and only then builds the test page.
+  Her checklist for the round is specific: each item tied to something changed, the exact card and button,
+  what she should see, run by the coordinator first (relayed by the first session as her instruction).
 - **Handing over to a new session:** only once the main screen's cutting plan is written here in full, and
   only if the chat is heavy; then for the main-screen work alone. The plan says, per piece: what it holds,
   what it owns of the page's memory, what passes in and out, why the cut is there, and its model.
@@ -541,7 +848,7 @@ word) and item 5's cutting plan in full, then:
 
 ## Handover record — updated after every step
 
-**Where we are:** item 5 is under way: A1 is merged (see "5 — the runs"); A2 is next, its design written. Item 4 is finished and on `main`: steps 1 to 5 of "This run" (59 published; the app-side
+**Where we are:** item 5 is under way: A1 and A2 are merged (see "5 — the runs"); Stage A is finished and merged (A1, A2, A3-0, A3a, A3b); Stage B is finished and merged (B1, B2); every run through C7 is merged (see "5 — the runs"). Next: the fixes session is told the trunk is free; when its work is in, pull, then build her test page for round 3 with the specific checklist ("Her tests"). Item 4 is finished and on `main`: steps 1 to 5 of "This run" (59 published; the app-side
 and scraper-side rounds, the price rule and the two venues, the keys round). Step 6, the main screen's
 cutting plan, is written (item 5). `main` passes the app's suites, the join, structure and fact checks. What waits for her is under "Parked for her" and "Start here", 5.
 

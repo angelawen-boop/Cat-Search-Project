@@ -58,7 +58,7 @@
    "name": "CSV import and the review",
    "files": {
     "import/csv.jsx": "Reading the pro forma CSV.",
-    "import/review.jsx": "The review cards' decisions, 'Probably not for you', partial apply, counts, and which venues' shop answers are kept."
+    "import/review.jsx": "The review cards' decisions, 'Probably not for you', partial apply, counts, the shop screen's answers, and which venues' shop answers are kept."
    }
   },
   {
@@ -129,6 +129,93 @@
    "name": "Main screen, stage A1: what each card mark does to the ledger, as plain functions out of the screen",
    "files": {
     "ledger/marks.jsx": "What each mark on a card does to the ledger: dismiss, restore, watch, acquiring, Buy next and its order, the catalogue pick, the digital link, keep this period."
+   }
+  },
+  {
+   "id": "5-a2",
+   "name": "Main screen, stage A2: the list (filters as one object, the list, its counts, the scrubber's groups) as plain functions out of the screen",
+   "files": {
+    "ledger/list_view.jsx": "The list on the main screen: the one filters object and its all-clear value, the list mode, the filtered and sorted list, its counts and the scrubber's groups."
+   }
+  },
+  {
+   "id": "5-a3a",
+   "name": "Main screen, stage A3a: what a lookup or a labelling found and what to say, as jobs out of the screen",
+   "files": {
+    "lookup/card_jobs.jsx": "The jobs on one card: Find catalogue / Search again and Re-check museum shop — what they found and what to say.",
+    "periods/label_jobs.jsx": "The labelling jobs: Label, Relabel, Label import cards, what each says, and putting the labels onto rows or cards."
+   }
+  },
+  {
+   "id": "5-a3b",
+   "name": "Main screen, stage A3b: a venue's shop answers — the shop search filled at a first lookup, and the shop screen's answers — out of the screen",
+   "files": {
+    "shop_finder/museum_shop.jsx": "Finding a museum's shop and its catalogue shelf.",
+    "import/review.jsx": "The review cards' decisions, 'Probably not for you', partial apply, counts, the shop screen's answers, and which venues' shop answers are kept."
+   }
+  },
+  {
+   "id": "5-b1",
+   "name": "Main screen, stage B1: the page's own layout cut into components",
+   "files": {
+    "screens/header.jsx": "The title and toolbar, the Save panel, the status lines and banners, the diagnostic box (with its own open and copied marks), the sweep-log line and drawer (with its own open mark), and the counts and search row.",
+    "screens/chips.jsx": "The Sort, When, Venue, Theme, Acquiring and Showing chip rows.",
+    "screens/card_list.jsx": "The list of cards: the empty state, the dividers, the cards with the Buy next drag wrapper, and the \"more\" marker.",
+    "screens/drawers.jsx": "The tools row, the Cloud Saves drawer, and the Quarantine list with the Reset cards drawer.",
+    "screens/floating.jsx": "The search-selected-words button, the jump buttons, the undo bar, the confirm box and the footer."
+   }
+  },
+  {
+   "id": "5-b2",
+   "name": "Main screen, stage B2: the import pop-up, the review and the shop screen cut into components",
+   "files": {
+    "screens/import_popup.jsx": "The import pop-up: its frame, the open-a-ledger-first case, the four buttons, the Paste, Pages and Links boxes, and the Read's status.",
+    "screens/review_panel.jsx": "The review: its heading and counts, the bands and venues (with their own open marks), the last buttons, and the proposal card.",
+    "screens/shop_screen.jsx": "The shop screen and its venue card."
+   }
+  },
+  {
+   "id": "5-c1",
+   "name": "Main screen, stage C1: the filters and the sort become a hook",
+   "files": {
+    "screens/use_filters.jsx": "The filters hook: the chips, the sort, the search box and the pinned just-imported cards, with the actions that touch only them."
+   }
+  },
+  {
+   "id": "5-c2",
+   "name": "Main screen, stage C2 and C3: the list drawing, the Buy next drag and the sweep log become hooks",
+   "files": {
+    "screens/use_list_drawing.jsx": "The list-drawing hook: how much of the list is drawn as she scrolls, the jumps to a period and to the bottom, and the top and bottom buttons.",
+    "screens/use_buy_next_drag.jsx": "The Buy next drag hook: the card being dragged, the gesture that lifts and moves it, and the hold-the-scroll listener.",
+    "screens/use_sweep_log.jsx": "The sweep-log hook: the freshness record per venue, why it could not be read, its opening read, and recording a finished import's sweep."
+   }
+  },
+  {
+   "id": "5-c4",
+   "name": "Main screen, stage C4: the ledger as a document becomes a hook",
+   "files": {
+    "screens/use_ledger_document.jsx": "The ledger-document hook: the rows, the quarantine, changed-since-saved, the cloud copy (its opening, the automatic save, the heartbeat, read-only), the safety copies, Save, Load, Reset and the import reminder."
+   }
+  },
+  {
+   "id": "5-c6",
+   "name": "Main screen, stage C6: the link venues become a hook",
+   "files": {
+    "screens/use_link_venues.jsx": "The link-venues hook: the manual-import venues held and stored, their opening read, the shop screen's answers, what an applied import keeps, and a link venue's shop search for the lookup."
+   }
+  },
+  {
+   "id": "5-c5",
+   "name": "Main screen, stage C5: the card actions become a hook",
+   "files": {
+    "screens/use_card_actions.jsx": "The card-actions hook: which card is busy and its progress line, Label, Relabel, keep-period, Find catalogue, Re-check, the marks and their undo, the Digital box, which cards are open, and the one cardAct the cards call."
+   }
+  },
+  {
+   "id": "5-c7",
+   "name": "Main screen, stage C7: the import session becomes a hook",
+   "files": {
+    "screens/use_import_session.jsx": "The import-session hook: the pop-up's inputs, the Read, the review's proposals and decisions, the shop screen's turn, Apply and Cancel, and the pending links, pages and pastes read on opening."
    }
   }
  ],
@@ -629,7 +716,6 @@
   "markPick": "ledger/marks.jsx",
   "markDigital": "ledger/marks.jsx",
   "markKeepPeriod": "ledger/marks.jsx",
-
   "UNREAD_OCC,UNREAD_LINKS,UNREAD_PAGES,UNREAD_PASTES,UNREAD_SWEEPS,UNREAD_QUAR": "connections/store.jsx",
   "SHOP_WORD": "shop_finder/museum_shop.jsx",
   "SHOP_WORDS": "shop_finder/museum_shop.jsx",
@@ -809,6 +895,71 @@
   "pageRawBlock": "import/claude_read.jsx",
   "isbnDigits": "foundations/isbn.jsx",
   "ISBN13_STANDALONE": "foundations/isbn.jsx",
-  "withoutWww": "foundations/text.jsx"
+  "withoutWww": "foundations/text.jsx",
+  "filtersClear": "ledger/list_view.jsx",
+  "listMode": "ledger/list_view.jsx",
+  "listView": "ledger/list_view.jsx",
+  "listCounts": "ledger/list_view.jsx",
+  "scrubGroupsOf": "ledger/list_view.jsx",
+  "findCatalogueJob": "lookup/card_jobs.jsx",
+  "recheckShopJob": "lookup/card_jobs.jsx",
+  "labelCardsJob": "periods/label_jobs.jsx",
+  "labelsOntoCards": "periods/label_jobs.jsx",
+  "labelLedgerStart": "periods/label_jobs.jsx",
+  "labelLedgerJob": "periods/label_jobs.jsx",
+  "labelsOntoRows": "periods/label_jobs.jsx",
+  "relabelJob": "periods/label_jobs.jsx",
+  "keptPeriodSaid": "periods/label_jobs.jsx",
+  "shopSearchAdditions": "shop_finder/museum_shop.jsx",
+  "venuesShopConfirmed": "import/review.jsx",
+  "venuesNoShop": "import/review.jsx",
+  "venuesShopAdded": "import/review.jsx",
+  "lookAgainJob": "import/review.jsx",
+  "venuesLookedAgain": "import/review.jsx",
+  "Toolbar": "screens/header.jsx",
+  "SavePanel": "screens/header.jsx",
+  "StatusLines": "screens/header.jsx",
+  "Banners": "screens/header.jsx",
+  "DiagnosticBox": "screens/header.jsx",
+  "SweepLog": "screens/header.jsx",
+  "CountsRow": "screens/header.jsx",
+  "SearchRow": "screens/header.jsx",
+  "SortRow": "screens/chips.jsx",
+  "WhenRow": "screens/chips.jsx",
+  "VenueRow": "screens/chips.jsx",
+  "ThemeRow": "screens/chips.jsx",
+  "AcquiringRow": "screens/chips.jsx",
+  "ShowingRow": "screens/chips.jsx",
+  "CardList": "screens/card_list.jsx",
+  "ToolsRow": "screens/drawers.jsx",
+  "CloudSaves": "screens/drawers.jsx",
+  "ResetAndQuarantine": "screens/drawers.jsx",
+  "SelectedWordsButton": "screens/floating.jsx",
+  "JumpButtons": "screens/floating.jsx",
+  "UndoBar": "screens/floating.jsx",
+  "ConfirmBox": "screens/floating.jsx",
+  "Footer": "screens/floating.jsx",
+  "ReadStatus": "screens/import_popup.jsx",
+  "ImportPopup": "screens/import_popup.jsx",
+  "ImportNeedLedger": "screens/import_popup.jsx",
+  "ImportTabs": "screens/import_popup.jsx",
+  "ImportPaste": "screens/import_popup.jsx",
+  "ImportPages": "screens/import_popup.jsx",
+  "ImportLinks": "screens/import_popup.jsx",
+  "ProposalCard": "screens/review_panel.jsx",
+  "ReviewHeading": "screens/review_panel.jsx",
+  "ReviewBody": "screens/review_panel.jsx",
+  "ReviewButtons": "screens/review_panel.jsx",
+  "ReviewPanel": "screens/review_panel.jsx",
+  "ShopVenueCard": "screens/shop_screen.jsx",
+  "ShopScreen": "screens/shop_screen.jsx",
+  "useFilters": "screens/use_filters.jsx",
+  "useListDrawing": "screens/use_list_drawing.jsx",
+  "useBuyNextDrag": "screens/use_buy_next_drag.jsx",
+  "useSweepLog": "screens/use_sweep_log.jsx",
+  "useLedgerDocument": "screens/use_ledger_document.jsx",
+  "useLinkVenues": "screens/use_link_venues.jsx",
+  "useCardActions": "screens/use_card_actions.jsx",
+  "useImportSession": "screens/use_import_session.jsx"
  }
 }
