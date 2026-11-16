@@ -203,6 +203,13 @@
    "files": {
     "screens/use_link_venues.jsx": "The link-venues hook: the manual-import venues held and stored, their opening read, the shop screen's answers, what an applied import keeps, and a link venue's shop search for the lookup."
    }
+  },
+  {
+   "id": "5-c5",
+   "name": "Main screen, stage C5: the card actions become a hook",
+   "files": {
+    "screens/use_card_actions.jsx": "The card-actions hook: which card is busy and its progress line, Label, Relabel, keep-period, Find catalogue, Re-check, the marks and their undo, the Digital box, which cards are open, and the one cardAct the cards call."
+   }
   }
  ],
  "pieces": {
@@ -947,6 +954,7 @@
   "useBuyNextDrag": "screens/use_buy_next_drag.jsx",
   "useSweepLog": "screens/use_sweep_log.jsx",
   "useLedgerDocument": "screens/use_ledger_document.jsx",
-  "useLinkVenues": "screens/use_link_venues.jsx"
+  "useLinkVenues": "screens/use_link_venues.jsx",
+  "useCardActions": "screens/use_card_actions.jsx"
  }
 }
