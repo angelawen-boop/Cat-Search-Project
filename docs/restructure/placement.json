@@ -210,6 +210,13 @@
    "files": {
     "screens/use_card_actions.jsx": "The card-actions hook: which card is busy and its progress line, Label, Relabel, keep-period, Find catalogue, Re-check, the marks and their undo, the Digital box, which cards are open, and the one cardAct the cards call."
    }
+  },
+  {
+   "id": "5-c7",
+   "name": "Main screen, stage C7: the import session becomes a hook",
+   "files": {
+    "screens/use_import_session.jsx": "The import-session hook: the pop-up's inputs, the Read, the review's proposals and decisions, the shop screen's turn, Apply and Cancel, and the pending links, pages and pastes read on opening."
+   }
   }
  ],
  "pieces": {
@@ -955,6 +962,7 @@
   "useSweepLog": "screens/use_sweep_log.jsx",
   "useLedgerDocument": "screens/use_ledger_document.jsx",
   "useLinkVenues": "screens/use_link_venues.jsx",
-  "useCardActions": "screens/use_card_actions.jsx"
+  "useCardActions": "screens/use_card_actions.jsx",
+  "useImportSession": "screens/use_import_session.jsx"
  }
 }

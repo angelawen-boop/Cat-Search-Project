@@ -743,6 +743,7 @@
   "useLedgerDocument",
   "useLinkVenues",
   "useCardActions",
+  "useImportSession",
   "App"
  ]
 }
