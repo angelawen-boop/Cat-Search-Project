@@ -55,12 +55,9 @@ export default function App(){
   const occSaved=useRef({});
   const[error,setError]=useState(null);
   const[rechecking,setRechecking]=useState(false);   // which of the card's two buttons is running
-  const[copySaid,setCopySaid]=useState(null);       // "ok" / "no": what the diagnostic's copy icon last managed
   const[recheckSaid,setRecheckSaid]=useState(null);  // {id,text,failed}: Re-check's answer, shown on that card
   const[saveErr,setSaveErr]=useState(false);
   const[debug,setDebug]=useState(null);
-  useEffect(()=>setCopySaid(null),[debug]); // a new diagnostic has not been copied
-  const[showDebug,setShowDebug]=useState(false);
   const[lastRun,setLastRun]=useState(null);
   // Quarantine (docs/app.md §4): the third outcome beside reject and dismiss. The MAP is
   // stored (tombstones and all); the LIST is derived from it — what she sees and what
@@ -117,7 +114,6 @@ export default function App(){
     }
     return out;
   },[venueSeen]);
-  const[showFresh,setShowFresh]=useState(false);
   const[freshWhy,setFreshWhy]=useState(null);   // why the sweep log is empty, when it is
   const[seenInFile,setSeenInFile]=useState(null);
   // A download we started but cannot confirm arrived. Never clears `dirty`.
@@ -792,9 +788,11 @@ export default function App(){
   // TH, chip, pBtn and lnk keep their identity between renders, so LedgerCard can skip redrawing.
   const TH=useMemo(()=>tiersFor(theme),[theme]);          // the tier colours for THIS theme
   const chip=useCallback(on=>({padding:"4px 10px",borderRadius:999,border:"1px solid "+(on?C.ink:C.rule),background:on?C.ink:"transparent",color:on?C.onAction:C.soft,fontSize:11,fontWeight:500,cursor:"pointer",whiteSpace:"nowrap"}),[C]);
-  const sBtn={padding:"5px 12px",borderRadius:4,border:"1px solid "+C.rule,background:"transparent",color:C.soft,fontSize:11,fontWeight:500,cursor:"pointer"};
+  const sBtn=useMemo(()=>({padding:"5px 12px",borderRadius:4,border:"1px solid "+C.rule,background:"transparent",color:C.soft,fontSize:11,fontWeight:500,cursor:"pointer"}),[C]);
   const pBtn=useMemo(()=>({...sBtn,background:C.action,color:C.onAction,border:"none",opacity:busy?0.5:1,cursor:busy?"wait":"pointer"}),[C,busy]);
   const lnk=useMemo(()=>linkButton(C),[C]);
+  // The look-and-feel the layout pieces take, as one object (it keeps its identity while its members do).
+  const ui=useMemo(()=>({C,TH,chip,sBtn,pBtn,lnk}),[C,TH,chip,sBtn,pBtn,lnk]);
 
   // ---- Approval-stage render helpers ----
   const decBtn=(active,color)=>({padding:"3px 9px",borderRadius:4,border:"1px solid "+(active?color:C.rule),background:active?color:"transparent",color:active?C.onAction:C.soft,fontSize:11,fontWeight:600,cursor:"pointer",whiteSpace:"nowrap"});
@@ -890,351 +888,81 @@ export default function App(){
   // it still shows with no check line, and for Reset, roll-back and open-from-cloud.
   else if(!dirty&&!saveNote&&loadedInfo){savedText=loadedInfo;}
 
+  // What the layout pieces call, each by a name that says what it does. The bodies are the ones the
+  // buttons carried inline: the screen's own setters stay here.
+  const toggleSavePanel=()=>setShowSave(v=>!v);
+  const closeSavePanel=()=>setShowSave(false);
+  const typeSaveLabel=v=>setSaveLabel(v);
+  const chooseSaveCloud=on=>setSaveCloud(on);
+  const openImportChoice=()=>{setLinkNote(null);setImportMode(hasLedger?"choose":"needLedger");};
+  const dismissCloudCheck=()=>setCloudCheck(null);
+  const toggleSearchBox=()=>{if(showSearch)setFilters(f=>({...f,search:""}));setShowSearch(v=>!v);setTimeout(()=>searchRef.current?.focus(),100);};
+  const typeSearch=v=>{setFilters(f=>({...f,search:v}));};
+  const clearSearchText=()=>{setFilters(f=>({...f,search:""}));if(searchRef.current)searchRef.current.focus();};
+  const toggleAcqWanted=()=>setFilters(f=>({...f,acqWanted:!f.acqWanted}));
+  const toggleAcqOwned=()=>{setFilters(f=>({...f,acqOwned:!f.acqOwned,...(acqBuyNext?{bnPeriod:false,bnDate:false}:{})}));if(acqBuyNext){setDateReversed(false);}};
+  const toggleBuyNextView=()=>setFilters(f=>({...f,acqBuyNext:!f.acqBuyNext,bnPeriod:false,bnDate:false}));
+  const toggleAcq3mo=()=>setFilters(f=>({...f,acq3mo:!f.acq3mo}));
+  const toggleAcq6mo=()=>setFilters(f=>({...f,acq6mo:!f.acq6mo}));
+  const toggleAcqHasCat=()=>setFilters(f=>({...f,acqHasCat:!f.acqHasCat}));
+  const toggleAcqNoCat=()=>setFilters(f=>({...f,acqNoCat:!f.acqNoCat}));
+  const toggleAcqDigital=()=>setFilters(f=>({...f,acqDigital:!f.acqDigital}));
+  const toggleWatchedOnly=()=>setFilters(f=>({...f,watchedF:!f.watchedF}));
+  const toggleDismissedOnly=()=>setFilters(f=>({...f,dismissedOnly:!f.dismissedOnly,showAll:false}));
+  const toggleLabelledOnly=()=>setFilters(f=>({...f,labelledF:!f.labelledF}));
+  const toggleShowAll=()=>setFilters(f=>({...f,showAll:!f.showAll,dismissedOnly:false}));
+  const toggleResetCards=()=>{if(showResetCards)setResetQuery("");setShowResetCards(v=>!v);};
+  const toggleCloudSaves=()=>{setShowSnaps(v=>!v); if(!showSnaps)loadSnaps();};
+  const toggleQuarantine=()=>setShowIgnored(v=>!v);
+  const typeResetQuery=v=>setResetQuery(v);
+  const askResetCard=id=>setConfirmBox({title:"Reset this search?",yes:"Yes",act:()=>{
+    commit(resetOneCard(rows,id));
+    if(recheckSaid&&recheckSaid.id===id)setRecheckSaid(null);
+    setResetQuery("");}});
+  const releaseFromQuarantine=x=>{
+    if(roStop())return;
+    const at=new Date().toISOString();
+    setQuarantine(prev=>{ const next=mergeQuarantine(prev,{[x.key]:{venueId:x.venueId,title:x.title,at,state:"released"}});
+      writeQuarantine(next).then(ok=>{ if(!ok) setQuarWhy("That release couldn\u2019t be saved to this page\u2019s store, so it may come back when you reload."); });
+      return next; });
+    setDirty(true);};
+  const dismissConfirm=()=>setConfirmBox(null);
+  const answerConfirm=()=>{const a=confirmBox.act;setConfirmBox(null);a&&a();};
+
   if(!loaded)return(<div style={{fontFamily:"'Inter',system-ui,sans-serif",background:C.bg,color:C.soft,minHeight:"100vh",display:"grid",placeItems:"center",fontSize:13}}>Opening the ledger{"\u2026"}</div>);
 
   return(
     <div style={{fontFamily:"'Inter',system-ui,sans-serif",background:C.bg,color:C.ink,minHeight:"100vh",padding:"20px 16px 60px"}}>
       <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
       <header style={{maxWidth:760,margin:"0 auto 14px"}}>
-        <div style={{fontSize:10,letterSpacing:"0.18em",textTransform:"uppercase",color:C.soft,marginBottom:4}}>Art Watch</div>
-        <h1 style={{fontFamily:"'Fraunces',Georgia,serif",fontSize:36,lineHeight:1,fontWeight:500,margin:0,letterSpacing:"-0.02em"}}>Before it goes<span style={{color:C.accent}}> out of print</span></h1>
-        <div style={{marginTop:14,display:"flex",flexWrap:"wrap",gap:5,alignItems:"center"}}>
-          {/* Load and Import (her decision): Load opens a ledger file; Import brings in a
-              sweep CSV as cards. */}
-          <button onClick={requestImport} style={sBtn}>Load</button>
-          <button onClick={()=>setShowSave(v=>!v)} disabled={!hasLedger} style={{...pBtn,opacity:hasLedger?1:0.4,cursor:hasLedger?"pointer":"not-allowed"}}>Save</button>
-          <input ref={fileRef} type="file" accept=".json" onChange={handleImport} style={{display:"none"}}/>
-          {/* Small and out of the way: it is a comfort control, not part of the
-              work. Says what it will DO, not what is currently on. */}
-          <button onClick={toggleTheme} title={theme==="dark"?"Switch to light":"Switch to dark"}
-            style={{...sBtn,marginLeft:"auto",padding:"5px 9px"}}>{theme==="dark"?"\u2600 Light":"\u263D Dark"}</button>
-          <button onClick={()=>{setLinkNote(null);setImportMode(hasLedger?"choose":"needLedger");}} style={sBtn}>Import</button>
-          <input ref={refreshFileRef} type="file" accept=".csv,text/csv" onChange={handleRefreshFile} style={{display:"none"}}/>
-        </div>
-        {/* The Save panel (her design): the description names the offline file and its
-            cloud twin; the tick starts on. */}
-        {showSave&&hasLedger&&<div style={{marginTop:8,padding:"10px 12px",background:C.drawer,border:"1px solid "+C.rule,borderRadius:4}}>
-          <div style={{display:"flex",gap:6,alignItems:"center",flexWrap:"wrap"}}>
-            <input value={saveLabel} onChange={e=>setSaveLabel(e.target.value)} maxLength={80} placeholder={"Description (optional) \u2014 e.g. after 30 lookups"}
-              onKeyDown={e=>{if(e.key==="Enter")handleSave();}}
-              style={{flex:"1 1 220px",minWidth:0,padding:"5px 8px",fontSize:12.5,border:"1px solid "+C.rule,borderRadius:4,background:C.card,color:C.ink,fontFamily:"inherit"}}/>
-            <button onClick={handleSave} disabled={saveBusy} style={{...pBtn,opacity:saveBusy?0.4:1,cursor:saveBusy?"not-allowed":"pointer"}}>{saveBusy?"Saving\u2026":"Save now"}</button>
-            <button onClick={()=>setShowSave(false)} style={sBtn}>Cancel</button>
-          </div>
-          <label style={{display:"flex",gap:6,alignItems:"center",marginTop:8,fontSize:12.5,color:C.ink,cursor:"pointer"}}>
-            <input type="checkbox" checked={saveCloud} onChange={e=>setSaveCloud(e.target.checked)}/>
-            {"Also save a copy to cloud"}
-          </label>
-          <div style={{marginTop:6,fontSize:11,color:C.soft,wordBreak:"break-all"}}>{"File name: "+LEDGER_PREFIX+localStamp()+(labelSlug(saveLabel)?"-"+labelSlug(saveLabel):"")+".json"}</div>
-        </div>}
-        {/* The status lines, in her order (docs/app.md §9): the cloud line first, always —
-            green, or the red banner when saving has stopped; a line's space; what loading
-            did; what saving did. */}
-        {cloudStatus.trouble?
-          <div style={{marginTop:8,padding:"9px 12px",background:C.warnBg,border:"2px solid "+C.warnEdge,borderRadius:5,fontSize:12.5,fontWeight:700,color:C.warnInk,lineHeight:1.4,display:"flex",alignItems:"flex-start",gap:9}}>
-            <span style={{fontSize:17,lineHeight:1.1}}>{"☁"}</span>
-            <span>{cloudStatus.text}</span>
-          </div>
-        :<div style={{marginTop:6,fontSize:11,color:C.okEdge,fontWeight:600,display:"flex",gap:8,alignItems:"baseline",flexWrap:"wrap"}}>
-          <span>{"☁ "}{cloudStatus.text}</span>
-          {!hasLedger&&cloudLive&&cloudLive.rec&&<button onClick={requestOpenCloud} style={{background:"none",border:"none",color:C.action,fontSize:11,fontWeight:600,textDecoration:"underline",cursor:"pointer",padding:0}}>Open it</button>}
-        </div>}
-        <div style={{marginTop:16}}>
-          {savedText&&<div style={{fontSize:11,color:C.ink,lineHeight:1.45}}>{savedText}</div>}
-          {/* Stays until she dismisses it or the next Load replaces it (her decision): a
-              line that fades can vanish unread. */}
-          {cloudCheck&&<div style={{marginTop:2,fontSize:11,color:C.ink,lineHeight:1.45,display:"flex",gap:8,alignItems:"baseline"}}>
-            <span style={{flex:1}}>{cloudCheck}</span>
-            <button onClick={()=>setCloudCheck(null)} title="Dismiss" aria-label="Dismiss" style={{background:"none",border:"none",color:C.soft,fontSize:14,lineHeight:1,cursor:"pointer",padding:0}}>{"\u00d7"}</button>
-          </div>}
-          {hasLedger&&saveNote&&<div style={{marginTop:6,fontSize:11,lineHeight:1.45}}>
-            <span style={{color:saveNote.ok?C.okEdge:C.warnInk,fontWeight:saveNote.ok?600:700}}>{saveNote.text}</span>
-            {saveNote.file&&<span style={{color:C.ink,fontWeight:400}}>{" ("+saveNote.file+")"}</span>}
-          </div>}
-        </div>
-        {hasLedger&&refreshDone&&<div style={{marginTop:8,padding:"9px 12px",background:C.okBg,border:"2px solid #2D6B5A",borderRadius:5,fontSize:12.5,fontWeight:700,color:C.okInk,lineHeight:1.4,display:"flex",alignItems:"flex-start",gap:9}}>
-          {/* The icon sits on the first line of text (her ask): centred, it drifted when
-              the banner wrapped. */}
-          <span style={{fontSize:17,lineHeight:"17.5px"}}>{"\u21BB"}</span>
-          {/* Two paragraphs, worded by importComplete: the instruction, then the counts
-              (the way back is on the partial-import confirm box). */}
-          <span>
-            <span style={{display:"block",marginBottom:"1.45em"}}>{importComplete(refreshDone).head}</span>
-            <span style={{display:"block"}}>{importComplete(refreshDone).counts}</span>
-          </span>
-        </div>}
-        {hasLedger&&unconfirmedSave&&<div style={{marginTop:8,padding:"9px 12px",background:C.holdBg,border:"2px solid "+C.soft,borderRadius:5,fontSize:12.5,color:C.ink,lineHeight:1.45,display:"flex",alignItems:"flex-start",gap:9}}>
-          <span style={{fontSize:16,lineHeight:1.1}}>{"\u2193"}</span>
-          <span>{"A download of "+unconfirmedSave+" was started. This viewer can\u2019t tell us whether it arrived, so your ledger is still marked unsaved \u2014 check your downloads folder. If the file is there, you\u2019re safe."}</span>
-        </div>}
-        {showUnsavedBanner&&!refreshDone&&<div style={{marginTop:8,padding:"9px 12px",background:C.warnBg,border:"2px solid #B5791A",borderRadius:5,fontSize:12.5,fontWeight:700,color:C.warnInk,lineHeight:1.4,display:"flex",alignItems:"center",gap:9}}>
-          <span style={{fontSize:17,lineHeight:1}}>{"\u26A0"}</span>
-          <span>{"UNSAVED CHANGES \u2014 what's on screen is not saved to a file. Tap \u201cSave\u201d before you close this tab or your work is lost."}</span>
-        </div>}
-        {/* A quarantine that isn't saving is a banner, not a footnote (her decision),
-            shown with or without a ledger open. */}
-        {/* A part of the store that could not be read (the quarantine has its own banner). */}
-        {storeUnread.filter(w=>w!==UNREAD_QUAR).length>0&&<div style={{marginTop:8,padding:"9px 12px",background:C.warnBg,border:"2px solid "+C.warnEdge,borderRadius:5,fontSize:12.5,fontWeight:700,color:C.warnInk,lineHeight:1.4,display:"flex",alignItems:"flex-start",gap:9}}>
-          <span style={{fontSize:17,lineHeight:1.1}}>{"\u26A0"}</span>
-          <span>{"STORE NOT READ \u2014 "+storeUnread.filter(w=>w!==UNREAD_QUAR).join(", ")+" couldn\u2019t be read from store, refresh to re-check. Current incorrect information will not overwrite the store until the read corrects."}</span>
-        </div>}
-        {quarWhy&&<div style={{marginTop:8,padding:"9px 12px",background:C.warnBg,border:"2px solid "+C.warnEdge,borderRadius:5,fontSize:12.5,fontWeight:700,color:C.warnInk,lineHeight:1.4,display:"flex",alignItems:"flex-start",gap:9}}>
-          <span style={{fontSize:17,lineHeight:1.1}}>{"\u26A0"}</span>
-          <span>{"QUARANTINE \u2014 "+quarWhy}</span>
-        </div>}
-        {busy&&prog.total>0&&!importMode&&<div style={{marginTop:8}}><div style={{height:3,background:C.rule,borderRadius:2,overflow:"hidden"}}><div style={{height:"100%",width:(prog.done/prog.total*100)+"%",background:C.action,transition:"width .3s ease"}}/></div><div style={{fontSize:10,color:C.soft,marginTop:3}}>{prog.done}/{prog.total} · {prog.label}</div></div>}
-        {labelSaid&&<div style={labelSaid.ok?{marginTop:8,fontSize:11.5,color:C.soft}:{marginTop:8,padding:"7px 11px",background:TH.urgent.wash,border:"1px solid "+TH.urgent.ink,borderRadius:4,fontSize:11.5,color:TH.urgent.ink}}>{labelSaid.text}</div>}
-        {readOnly&&<div style={{marginTop:8,padding:"7px 11px",background:TH.urgent.wash,border:"1px solid "+TH.urgent.ink,borderRadius:4,fontSize:11.5,color:TH.urgent.ink,fontWeight:700}}>{RO_LINE}</div>}
-        {error&&error!==RO_LINE&&<div style={{marginTop:8,padding:"7px 11px",background:TH.urgent.wash,border:"1px solid "+TH.urgent.ink,borderRadius:4,fontSize:11.5,color:TH.urgent.ink}}>{error}</div>}
-        {debug&&<div style={{marginTop:4}}><button onClick={()=>setShowDebug(v=>!v)} style={{background:"none",border:"none",color:C.soft,fontSize:10,textDecoration:"underline",cursor:"pointer",padding:0}}>{showDebug?"Hide diagnostic":"Show diagnostic"}</button>
-          {/* Copy: an icon alone, bottom right of the tray (her ask). A tick only if the
-              copy happened — a frame can refuse the clipboard — else a cross; back to
-              the icon after two seconds. */}
-          {showDebug&&<div style={{position:"relative",marginTop:4}}>
-            <pre style={{margin:0,padding:"7px 28px 7px 7px",background:C.drawer,border:"1px solid "+C.rule,borderRadius:4,fontSize:9.5,whiteSpace:"pre-wrap",wordBreak:"break-word",color:C.soft,maxHeight:160,overflow:"auto"}}>{debug}</pre>
-            <button aria-label={copySaid==="ok"?"Copied":copySaid==="no"?"Couldn\u2019t copy":"Copy"} title={copySaid==="ok"?"Copied":copySaid==="no"?"Couldn\u2019t copy":"Copy"}
-              onClick={async()=>{const r=await copyText(debug)?"ok":"no";setCopySaid(r);setTimeout(()=>setCopySaid(v=>v===r?null:v),2000);}}
-              style={{position:"absolute",right:5,bottom:5,background:"none",border:"none",color:C.soft,fontSize:13,lineHeight:1,cursor:"pointer",padding:2}}>{copySaid==="ok"?"\u2713":copySaid==="no"?"\u2717":"\u29c9"}</button>
-          </div>}</div>}
-        {/* Not gated on a ledger: when a sweep last ran is what the page knows. */}
-        <div style={{marginTop:6,fontSize:10.5,color:C.soft,display:"flex",gap:12,flexWrap:"wrap",alignItems:"center"}}>
-          {/* "Unknown", never "never" (her decision): an empty store is not evidence
-              that no sweep ran. */}
-          <span>Last sweep: {lastSweep?fmtRefresh(lastSweep):"Unknown"}</span>
-          {/* Per-venue freshness: collapsed by default, ALWAYS shown — a control that
-              disappears when the log is empty cannot report anything. */}
-          <button onClick={()=>setShowFresh(v=>!v)} style={{background:"none",border:"none",color:C.soft,fontSize:10.5,textDecoration:"underline",cursor:"pointer",padding:0}}>{showFresh?"Hide details":"Details"}</button>
-        </div>
+        <Toolbar ui={ui} theme={theme} hasLedger={hasLedger} fileRef={fileRef} refreshFileRef={refreshFileRef} requestImport={requestImport} handleImport={handleImport} handleRefreshFile={handleRefreshFile} toggleTheme={toggleTheme} toggleSavePanel={toggleSavePanel} openImportChoice={openImportChoice}/>
+        <SavePanel ui={ui} showSave={showSave} hasLedger={hasLedger} saveLabel={saveLabel} saveCloud={saveCloud} saveBusy={saveBusy} typeSaveLabel={typeSaveLabel} chooseSaveCloud={chooseSaveCloud} handleSave={handleSave} closeSavePanel={closeSavePanel}/>
+        <StatusLines ui={ui} cloudStatus={cloudStatus} hasLedger={hasLedger} cloudLive={cloudLive} requestOpenCloud={requestOpenCloud} savedText={savedText} cloudCheck={cloudCheck} dismissCloudCheck={dismissCloudCheck} saveNote={saveNote}/>
+        <Banners ui={ui} hasLedger={hasLedger} refreshDone={refreshDone} unconfirmedSave={unconfirmedSave} showUnsavedBanner={showUnsavedBanner} storeUnread={storeUnread} quarWhy={quarWhy} busy={busy} prog={prog} importMode={importMode} labelSaid={labelSaid} readOnly={readOnly} error={error}/>
+        <DiagnosticBox ui={ui} debug={debug}/>
+        <SweepLog ui={ui} lastSweep={lastSweep} venueSeen={venueSeen} freshWhy={freshWhy} counts={counts}/>
 
-        {/* Not gated on a ledger: the sweep log survives Reset. */}
-        {showFresh&&<div style={{marginTop:6,padding:"8px 10px",background:C.drawer,border:"1px solid "+C.rule,borderRadius:4}}>
-          {/* Tracked and Dismissed live here, at the top of Details (her decision). */}
-          <div style={{display:"flex",gap:14,fontSize:10.5,color:C.soft,flexWrap:"wrap",marginBottom:8}}>
-            <span><b style={{color:C.ink}}>{counts.total}</b> Tracked</span>
-            {counts.dismissed>0&&<span><b>{counts.dismissed}</b> Dismissed</span>}
-          </div>
-          <div style={{fontSize:10,color:C.soft,marginBottom:6,lineHeight:1.5}}>
-            {"When each venue was last swept, and when it last gave us exhibitions."}
-          </div>
-          {/* "NO SWEEPS YET" AND "COULDN'T READ THE STORE" LOOK IDENTICAL AND
-              MEAN OPPOSITE THINGS, so an empty panel always says which. */}
-          {freshWhy&&<div style={{fontSize:11,color:C.accent,marginBottom:6,lineHeight:1.5}}>{freshWhy}</div>}
-          {/* An empty store says nothing about whether a sweep ran (her decision), so no
-              "No sweep imported yet". Unlike freshWhy, here the store did answer. */}
-          {!freshWhy&&Object.keys(venueSeen).length===0&&
-            <div style={{fontSize:11,color:C.soft,marginBottom:6}}>{"The store holds no sweep dates, so when each venue was last swept is unknown."}</div>}
-          {MUSEUMS.map(m=>{
-            const v=venueSeen[m.id]; if(!v)return null;
-            const stale=v.returned&&v.attempted&&v.returned!==v.attempted;
-            return(
-              <div key={m.id} style={{display:"grid",gridTemplateColumns:"minmax(0,1.1fr) minmax(0,1fr) minmax(0,1fr)",gap:8,fontSize:10.5,color:C.soft,padding:"3px 0",alignItems:"baseline"}}>
-                <span style={{color:C.ink}}>{m.card}</span>
-                <span>{momentLines("swept ",v.attempted)}</span>
-                <span style={{color:v.returned?(stale?TH.urgent.ink:C.soft):TH.urgent.ink,fontWeight:stale||!v.returned?600:400}}>
-                  {v.returned?momentLines("rows ",v.returned):"no rows \u2014 refused"}
-                </span>
-              </div>
-            );
-          })}
-          {MUSEUMS.filter(m=>!venueSeen[m.id]).length>0&&
-            <div style={{fontSize:10.5,color:C.soft,marginTop:6,paddingTop:5,borderTop:"1px solid "+C.rule}}>
-              {"Not in any sweep yet: "+MUSEUMS.filter(m=>!venueSeen[m.id]).map(m=>m.card).join(", ")+"."}
-            </div>}
-        </div>}
-
-        <div style={{marginTop:10,paddingTop:8,borderTop:"1px solid "+C.rule,display:"flex",gap:14,fontSize:10.5,color:C.soft,flexWrap:"wrap",alignItems:"center"}}>
-          <span><b style={{color:C.ink}}>{counts.watched}</b> Watched</span>
-          <span><b style={{color:C.ink}}>{counts.wanted}</b> Wanted</span>
-          <span><b style={{color:C.owned}}>{counts.owned}</b> Owned</span>
-          <span><b style={{color:TH.urgent.ink}}>{counts.pressing}</b> Closing Window</span>
-          <button onClick={()=>{if(showSearch)setFilters(f=>({...f,search:""}));setShowSearch(v=>!v);setTimeout(()=>searchRef.current?.focus(),100);}} style={{marginLeft:"auto",background:"none",border:"none",cursor:"pointer",fontSize:16,color:C.soft,padding:0,lineHeight:1}} title="Search">{"\uD83D\uDD0D"}</button>
-        </div>
-        {/* The cross clears what she typed (her ask): right-aligned, shown while there is text. */}
-        {showSearch&&<div style={{marginTop:6,position:"relative"}}><input ref={searchRef} value={search} onChange={e=>{const v=e.target.value;setFilters(f=>({...f,search:v}));}} style={{width:"100%",padding:"7px 30px 7px 10px",border:"1px solid "+C.rule,borderRadius:4,background:C.card,color:C.ink,fontSize:12.5,fontFamily:"inherit",boxSizing:"border-box"}}/>
-          {search&&<button onClick={()=>{setFilters(f=>({...f,search:""}));if(searchRef.current)searchRef.current.focus();}} aria-label="Clear search" title="Clear"
-            style={{position:"absolute",right:6,top:"50%",transform:"translateY(-50%)",background:"none",border:"none",color:C.soft,fontSize:16,lineHeight:1,cursor:"pointer",padding:"2px 4px"}}>{"\u00d7"}</button>}</div>}
+        <CountsRow ui={ui} counts={counts} toggleSearchBox={toggleSearchBox}/>
+        <SearchRow ui={ui} showSearch={showSearch} search={search} searchRef={searchRef} typeSearch={typeSearch} clearSearchText={clearSearchText}/>
       </header>
 
       <div style={{maxWidth:760,margin:"0 auto 12px",display:"flex",flexDirection:"column",gap:5}}>
-        <div style={{display:"flex",gap:4,flexWrap:"wrap",alignItems:"center"}}>
-          <span style={{fontSize:9,letterSpacing:"0.12em",textTransform:"uppercase",color:C.soft,marginRight:2}}>Sort</span>
-          {[["date","Date"],["venue","Venue"],["period","Period"],["added","Recently added"],["edited","Recently edited"],["labelled","Recently labelled"]].map(([k,l])=><button key={k} onClick={()=>pickSort(k)} style={chip(bnOnly?((k==="period"&&bnPeriod)||(k==="date"&&bnDate)):(sortBy===k&&!pinTouched))}>{l}{(bnOnly?(k==="period"&&bnPeriod)||(k==="date"&&bnDate):(k==="date"||k==="period")&&sortBy===k&&!pinTouched)?(dateReversed?" \u2191":" \u2193"):""}</button>)}
-          {pinTouched&&<span style={{fontSize:10.5,color:C.action,fontWeight:600}}>{"\u2191 just-refreshed entries shown first"}</span>}
-        </div>
-        <div style={{display:"flex",gap:4,flexWrap:"wrap",alignItems:"center"}}>
-          <span style={{fontSize:9,letterSpacing:"0.12em",textTransform:"uppercase",color:C.soft,marginRight:2}}>When</span>
-          {[["current","Current"],["past","Past"],["upcoming","Announced"],["recent","Recently opened"]].map(([k,l])=><button key={k} onClick={()=>toggleSet("timeF",k)} style={chip(timeF.has(k))}>{l}</button>)}
-        </div>
-        <div style={{display:"flex",gap:4,flexWrap:"wrap",alignItems:"center"}}>
-          <span style={{fontSize:9,letterSpacing:"0.12em",textTransform:"uppercase",color:C.soft,marginRight:2}}>Venue</span>
-          {chipVenues().map(id=><button key={chipKey(id)} onClick={()=>toggleSet("venueF",chipKey(id))} style={chip(venueF.has(chipKey(id)))}>{REG[id].names.chip}</button>)}
-          {OCC_CHIPS.map(([k,l])=><button key={k} onClick={()=>toggleSet("venueF",k)} style={chip(venueF.has(k))}>{l}</button>)}
-        </div>
-        <div style={{display:"flex",gap:4,flexWrap:"wrap",alignItems:"center"}}>
-          <span style={{fontSize:9,letterSpacing:"0.12em",textTransform:"uppercase",color:C.soft,marginRight:2}}>Theme</span>
-          {THEME_CHIPS.map(([k,l])=><button key={k} onClick={()=>toggleSet("themeF",k)} style={chip(themeF.has(k))}>{l}</button>)}
-        </div>
-        <div style={{display:"flex",gap:4,flexWrap:"wrap",alignItems:"center"}}>
-          <span style={{fontSize:9,letterSpacing:"0.12em",textTransform:"uppercase",color:C.soft,marginRight:2}}>Acquiring?</span>
-          <button onClick={()=>setFilters(f=>({...f,acqWanted:!f.acqWanted}))} style={chip(acqWanted)}>Wanted</button>
-          <button onClick={()=>{setFilters(f=>({...f,acqOwned:!f.acqOwned,...(acqBuyNext?{bnPeriod:false,bnDate:false}:{})}));if(acqBuyNext){setDateReversed(false);}}} style={chip(acqOwned)}>Owned</button>
-          <button onClick={()=>setFilters(f=>({...f,acqBuyNext:!f.acqBuyNext,bnPeriod:false,bnDate:false}))} style={chip(acqBuyNext)}>Buy next</button>
-          <button onClick={()=>setFilters(f=>({...f,acq3mo:!f.acq3mo}))} style={chip(acq3mo)}>3+ mos</button>
-          <button onClick={()=>setFilters(f=>({...f,acq6mo:!f.acq6mo}))} style={chip(acq6mo)}>6+ mos closing window</button>
-          <button onClick={()=>setFilters(f=>({...f,acqHasCat:!f.acqHasCat}))} style={chip(acqHasCat)}>Has catalogue</button>
-          <button onClick={()=>setFilters(f=>({...f,acqNoCat:!f.acqNoCat}))} style={chip(acqNoCat)}>No catalogue</button>
-          <button onClick={()=>setFilters(f=>({...f,acqDigital:!f.acqDigital}))} style={chip(acqDigital)}>Digital catalogue</button>
-        </div>
-        <div style={{display:"flex",gap:4,flexWrap:"wrap",alignItems:"center"}}>
-          <span style={{fontSize:9,letterSpacing:"0.12em",textTransform:"uppercase",color:C.soft,marginRight:2}}>Showing</span>
-          <button onClick={()=>setFilters(f=>({...f,watchedF:!f.watchedF}))} style={chip(watchedF)}>Watched</button>
-          <button onClick={()=>setFilters(f=>({...f,dismissedOnly:!f.dismissedOnly,showAll:false}))} style={chip(dismissedOnly)}>Dismissed</button>
-          <button onClick={()=>setFilters(f=>({...f,labelledF:!f.labelledF}))} style={chip(labelledF)}>Recently labelled</button>
-          <button onClick={()=>setFilters(f=>({...f,showAll:!f.showAll,dismissedOnly:false}))} style={chip(showAll)}>Show all</button>
-          <button onClick={clearFilters} style={{...chip(false),color:C.muted,borderColor:C.muted}}>Clear all</button>
-        </div>
+        <SortRow ui={ui} sort={sort} filters={filters} bnOnly={bnOnly} pickSort={pickSort}/>
+        <WhenRow ui={ui} filters={filters} toggleSet={toggleSet}/>
+        <VenueRow ui={ui} filters={filters} toggleSet={toggleSet}/>
+        <ThemeRow ui={ui} filters={filters} toggleSet={toggleSet}/>
+        <AcquiringRow ui={ui} filters={filters} toggleAcqWanted={toggleAcqWanted} toggleAcqOwned={toggleAcqOwned} toggleBuyNextView={toggleBuyNextView} toggleAcq3mo={toggleAcq3mo} toggleAcq6mo={toggleAcq6mo} toggleAcqHasCat={toggleAcqHasCat} toggleAcqNoCat={toggleAcqNoCat} toggleAcqDigital={toggleAcqDigital}/>
+        <ShowingRow ui={ui} filters={filters} toggleWatchedOnly={toggleWatchedOnly} toggleDismissedOnly={toggleDismissedOnly} toggleLabelledOnly={toggleLabelledOnly} toggleShowAll={toggleShowAll} clearFilters={clearFilters}/>
       </div>
 
-      <div data-card-list="1" style={{maxWidth:760,margin:"0 auto",display:"flex",flexDirection:"column",gap:10}}>
-        {view.length===0&&<div style={{background:C.card,border:"1px solid "+C.rule,borderRadius:5,padding:18,fontSize:12.5,color:C.soft}}>Nothing matches those filters.</div>}
-        {(()=>{
-          const pinnedCount=pinTouched&&!bnOnly?view.filter(x=>refreshTouched.includes(x.id)).length:0;
-          // Band headers for the "recently" sorts (only when not in the post-import pinned snapshot).
-          const bandMode=(!pinTouched&&!bnOnly&&(sortBy==="added"||sortBy==="edited"||sortBy==="labelled"))?sortBy:null;
-          const newestAdd=bandMode==="added"?(view.find(x=>x.addedAt)?.addedAt||null):null;
-          const newestEdit=bandMode==="edited"?(view.find(x=>x.editedAt)?.editedAt||null):null;
-          const newestLabel=bandMode==="labelled"?(lastLabel(view.find(x=>lastLabel(x)))||null):null;
-          const bandOf=(x)=>{
-            if(bandMode==="added")return !x.addedAt?"seed":(x.addedAt===newestAdd?"add_this":"add_earlier");
-            if(bandMode==="edited")return x.editedAt?(x.editedAt===newestEdit?"ed_this":"ed_earlier"):(x.addedAt?"ed_never":"seed");
-            // A show labelled before this sort existed has no labelledAt: stage 1.
-            if(bandMode==="labelled")return lastLabel(x)?(lastLabel(x)===newestLabel?"lab_this":"lab_earlier"):(periodLabelled(x)?"lab_stage1":"lab_never");
-            return null;
-          };
-          const BAND_LABEL={add_this:"This import",add_earlier:"Earlier imports",seed:"Original set",ed_this:"This import's edits",ed_earlier:"Earlier edits",ed_never:"Never edited",lab_this:"This labelling",lab_earlier:"Earlier labellings",lab_stage1:"Stage 1",lab_never:"Not labelled"};
-          const bandDivider=(txt,pk)=><div data-period={pk} style={{display:"flex",alignItems:"center",gap:8,margin:"2px 2px",color:C.soft}}><div style={{flex:1,height:1,background:C.rule}}/><span style={{fontSize:9.5,letterSpacing:"0.1em",textTransform:"uppercase"}}>{txt}</span><div style={{flex:1,height:1,background:C.rule}}/></div>;
-          return view.slice(0,drawLimit).map((r,i)=>{
-          const brk=(pinTouched&&pinnedCount>0&&pinnedCount<view.length&&i===pinnedCount)?bandDivider("Rest of the list"):null;
-          let header=null;
-          if(periodView&&(i===0||periodOf(view[i-1],byArtist)!==periodOf(r,byArtist)))header=bandDivider(PERIOD_NAME[periodOf(r,byArtist)],periodOf(r,byArtist));
-          if(bandMode){const b=bandOf(r);const pb=i>0?bandOf(view[i-1]):null;if(b!==pb)header=bandDivider(BAND_LABEL[b]||"");}
-          const lead=brk||header;
-          const isBusy=busyId===r.id;
-          const card=<LedgerCard r={r} mu={MU[r.museumId]} isOpen={!!openCards[r.id]} isBusy={isBusy} busy={busy} rechecking={isBusy&&rechecking} lookLabel={isBusy?lookLabel:null}
-              said={recheckSaid&&recheckSaid.id===r.id?recheckSaid:null} relabelling={relabelId===r.id} digitalOpen={digitalBox===r.id} C={C} TH={TH} chip={chip} pBtn={pBtn} lnk={lnk} act={cardAct}/>;
-          if(!dragOn||!isBuyNext(r))return <React.Fragment key={r.id}>{lead}{card}</React.Fragment>;
-          // The lifted card follows the finger; the cards it passes slide aside by its height.
-          let ds={userSelect:"none",WebkitUserSelect:"none",WebkitTouchCallout:"none",cursor:"grab"};
-          if(drag&&r.id===drag.id)ds={...ds,position:"relative",zIndex:5,transform:"translateY("+drag.dy+"px) scale(1.02)",boxShadow:"0 6px 18px rgba(0,0,0,0.28)",borderRadius:5,cursor:"grabbing"};
-          else if(drag){const j=i<drag.from?i:i-1,f=j<drag.to?j:j+1;ds={...ds,transform:"translateY("+((f-i)*(drag.h+10))+"px)",transition:"transform 150ms ease"};}
-          return <div key={r.id} data-buynext={r.id} onMouseDown={e=>startDrag(e,r.id)} onTouchStart={e=>startDrag(e,r.id)} onContextMenu={e=>e.preventDefault()} style={ds}>{card}</div>;
-        });})()}
-        {view.length>drawLimit&&<div ref={moreRef} style={{height:1}}/>}
-      </div>
+      <CardList ui={ui} view={view} sort={sort} bnOnly={bnOnly} periodView={periodView} byArtist={byArtist} drawLimit={drawLimit} cardState={{busyId,busy,rechecking,lookLabel,recheckSaid,relabelId,digitalBox,openCards}} dragOn={dragOn} drag={drag} startDrag={startDrag} cardAct={cardAct} moreRef={moreRef}/>
       {scrubGroups.length>0&&<PeriodScrubber groups={scrubGroups} C={C} onJump={jumpToPeriod}/>}
-      {/* Top on the left, bottom on the right (her layout), shown once she has scrolled down. */}
-      {/* Filled as the "Recently opened" tag, edged in the action green (her choice), in both themes. */}
-      {selPick&&<button onMouseDown={e=>e.preventDefault()} onClick={searchPick}
-        style={{position:"fixed",top:selPick.y,left:selPick.x,transform:"translateX(-50%)",zIndex:1000,background:TH.recent.wash,border:"1px solid "+C.action,borderRadius:4,color:TH.recent.ink,fontSize:12,fontWeight:500,cursor:"pointer",padding:"6px 12px",whiteSpace:"nowrap",boxShadow:"0 2px 8px rgba(0,0,0,0.18)"}}>Search</button>}
-      {showTop&&(<>
-        <button onClick={()=>window.scrollTo({top:0,behavior:"smooth"})} aria-label="Return to top"
-          style={{position:"fixed",bottom:undo?64:20,left:"50%",transform:"translateX(calc(-100% - 5px))",zIndex:998,width:38,height:38,borderRadius:"50%",background:C.card,border:"1px solid "+C.rule,color:C.ink,fontSize:16,lineHeight:1,cursor:"pointer",boxShadow:"0 2px 8px rgba(0,0,0,0.18)"}}>{"\u2191"}</button>
-        <button onClick={jumpToBottom} aria-label="Jump to bottom"
-          style={{position:"fixed",bottom:undo?64:20,left:"50%",transform:"translateX(5px)",zIndex:998,width:38,height:38,borderRadius:"50%",background:C.card,border:"1px solid "+C.rule,color:C.ink,fontSize:16,lineHeight:1,cursor:"pointer",boxShadow:"0 2px 8px rgba(0,0,0,0.18)"}}>{"\u2193"}</button>
-      </>)}
-      {undo&&(
-        <div style={{position:"fixed",bottom:20,left:"50%",transform:"translateX(-50%)",background:C.ink,color:C.onAction,borderRadius:4,padding:"7px 14px",fontSize:12,display:"flex",gap:10,alignItems:"center",zIndex:999,boxShadow:"0 2px 8px rgba(0,0,0,0.2)"}}>
-          {/* "Undo", the same size as the word before it (her decision). A <button>
-              does not inherit the page's font, so it is told to. */}
-          <span style={{fontSize:14,lineHeight:"20px"}}>Dismissed</span>
-          <button onClick={undoDismiss} style={{background:"none",border:"1px solid rgba(255,255,255,0.5)",borderRadius:3,color:C.onAction,fontFamily:"inherit",fontSize:14,lineHeight:"20px",fontWeight:600,cursor:"pointer",padding:"1px 8px",margin:0}}>Undo</button>
-        </div>
-      )}
-      {/* Quarantine lives down here, right-aligned on the starter-set line (her decision). */}
-      <div style={{maxWidth:760,margin:"18px auto 0",paddingTop:10,borderTop:"1px solid "+C.rule,fontSize:10,color:C.soft,lineHeight:1.6,display:"flex",justifyContent:"space-between",alignItems:"baseline",gap:12,flexWrap:"wrap"}}>
-        {/* Two buttons on the left, no sentence (her decision), spaced like the drawers on the right. */}
-        <span style={{display:"flex",gap:14}}>
-          {/* Reset to Seed is unwired from her page (her decision), requestReset kept; drawn only for the tests. */}
-          {typeof window!=="undefined"&&window.__catWatchTest&&<button onClick={requestReset} style={{background:"none",border:"none",color:C.soft,fontSize:10,textDecoration:"underline",cursor:"pointer",padding:0}}>Reset to Seed</button>}
-          <button onClick={labelLedger} style={{background:"none",border:"none",color:C.soft,fontSize:10,textDecoration:"underline",cursor:"pointer",padding:0}}>Label</button>
-          <button onClick={()=>{if(showResetCards)setResetQuery("");setShowResetCards(v=>!v);}} style={{background:"none",border:"none",color:C.soft,fontSize:10,textDecoration:"underline",cursor:"pointer",padding:0}}>Clear search</button>
-        </span>
-        <span style={{marginLeft:"auto",display:"flex",gap:14}}>
-          {/* Cloud Saves sit beside Quarantine, in the same type, always drawn — a control
-              that appears only with something to show can't say "none yet" (her decision). */}
-          <button onClick={()=>{setShowSnaps(v=>!v); if(!showSnaps)loadSnaps();}} style={{background:"none",border:"none",color:C.soft,fontSize:10,textDecoration:"underline",cursor:"pointer",padding:0}}>{"Cloud Saves"}</button>
-          {/* Quarantine's link is always drawn too (her catch): an empty one vanished. */}
-          {<button onClick={()=>setShowIgnored(v=>!v)} style={{background:"none",border:"none",color:C.soft,fontSize:10,textDecoration:"underline",cursor:"pointer",padding:0}}>{"Quarantine"}</button>}
-        </span>
-      </div>
-      <div style={{maxWidth:760,margin:"0 auto"}}>
-        {showSnaps&&<div style={{marginTop:6,padding:"10px 12px",background:C.drawer,border:"1px solid "+C.rule,borderRadius:4}}>
-          {/* A list, like Quarantine (her design): copies come from Save and the two
-              automatic safety copies. */}
-          <div style={{fontSize:12,color:C.ink,marginBottom:8,lineHeight:1.55}}>
-            {snaps&&snaps.length>0&&<b>{snaps.length+" cloud save"+(snaps.length===1?"":"s")+". "}</b>}
-            {"From exports also saved to the cloud and safety snapshots (taken before a Load, Reset or roll-back to an earlier snapshot)."}
-          </div>
-          {snapWhy&&<div style={{fontSize:12,fontWeight:600,color:C.warnInk,background:C.warnBg,border:"1px solid "+C.warnEdge,borderRadius:4,padding:"5px 8px",marginBottom:8}}>{snapWhy}</div>}
-          {snaps===null?<div style={{fontSize:12,color:C.soft}}>{"Reading cloud saves…"}</div>
-          :snaps.length===0?<div style={{fontSize:12,color:C.soft}}>{"No cloud saves yet."}</div>
-          :snaps.map(s=>(
-            <div key={s.id} style={{display:"flex",gap:10,fontSize:12.5,color:C.ink,padding:"5px 0",alignItems:"baseline",borderTop:"1px dotted "+C.rule,flexWrap:"wrap"}}>
-              {/* One width for every time (her ask): 15em fits the longest, with
-                  even-width digits. */}
-              <span style={{flex:"0 0 auto",minWidth:"15em",fontWeight:600,whiteSpace:"nowrap",fontVariantNumeric:"tabular-nums"}}>{localReadable(s.at)}</span>
-              {/* No "automatic" tag (her decision): her own copies are marked by her
-                  description in bold. */}
-              <span style={{flex:"1 1 160px"}}>{s.kind!=="safety"&&s.label?<>{"Export: \u201c"}<b>{s.label}</b>{"\u201d"}</>:snapTitle(s,snaps)}<span style={{color:C.soft}}>{" · "+s.rows+" exhibitions"}</span>{s.filename&&<span style={{display:"block",fontSize:11,color:C.soft,wordBreak:"break-all"}}>{s.filename}</span>}</span>
-              <button onClick={()=>downloadSnapshot(s)} style={{background:"none",border:"none",color:C.action,fontSize:12.5,fontWeight:600,textDecoration:"underline",cursor:"pointer",padding:0,whiteSpace:"nowrap"}}>Download</button>
-              <button onClick={()=>requestRollback(s)} disabled={snapBusy} style={{background:"none",border:"none",color:C.accent,fontSize:12.5,fontWeight:600,textDecoration:"underline",cursor:"pointer",padding:0,whiteSpace:"nowrap"}}>Roll back</button>
-            </div>
-          ))}
-        </div>}
-      </div>
-      <div style={{maxWidth:760,margin:"0 auto"}}>
-        {showIgnored&&ignored.length===0&&<div style={{marginTop:6,padding:"8px 10px",background:C.drawer,border:"1px solid "+C.rule,borderRadius:4,fontSize:12,color:C.soft}}>{quarWhy?"Quarantine can\u2019t be read: "+quarWhy:"Nothing in quarantine."}</div>}
-        {/* Reset cards (her design): find a card by typing, pick it, confirm; its catalogue
-            result is cleared (resetCard) and it shows "Find catalogue" again. Her marks
-            stay. One card per confirm. */}
-        {showResetCards&&<div style={{marginTop:6,padding:"8px 10px",background:C.drawer,border:"1px solid "+C.rule,borderRadius:4}}>
-          <input value={resetQuery} onChange={e=>setResetQuery(e.target.value)} style={{width:"100%",padding:"7px 10px",border:"1px solid "+C.rule,borderRadius:4,background:C.card,color:C.ink,fontSize:12.5,fontFamily:"inherit",boxSizing:"border-box"}}/>
-          {resetQuery.trim()&&(()=>{
-            const hits=cardsToReset(rows,resetQuery);
-            if(!hits.length)return <div style={{fontSize:12,color:C.soft,marginTop:8}}>{"No searched cards match."}</div>;
-            return hits.map(r=>(
-              <div key={r.id} style={{display:"flex",gap:10,fontSize:12.5,color:C.ink,padding:"4px 0",alignItems:"baseline",marginTop:4}}>
-                <span style={{minWidth:130,fontWeight:600}}>{MU[r.museumId]?MU[r.museumId].card:r.museumId}</span>
-                <button onClick={()=>setConfirmBox({title:"Reset this search?",yes:"Yes",act:()=>{
-                  commit(resetOneCard(rows,r.id));
-                  if(recheckSaid&&recheckSaid.id===r.id)setRecheckSaid(null);
-                  setResetQuery("");}})} style={{flex:1,textAlign:"left",background:"none",border:"none",color:C.action,fontSize:12.5,fontFamily:"inherit",textDecoration:"underline",cursor:"pointer",padding:0}}>{r.title}</button>
-              </div>));
-          })()}
-        </div>}
-        {showIgnored&&ignored.length>0&&<div style={{marginTop:6,padding:"8px 10px",background:C.drawer,border:"1px solid "+C.rule,borderRadius:4}}>
-          {/* Big enough to read (her decision): decisions she may need to undo, in body
-              ink, at chip size or above. */}
-          <div style={{fontSize:12,color:C.ink,marginBottom:8,lineHeight:1.55}}>
-            {/* The count lives in here (her decision); the footer button just says Quarantine. */}
-            <b>{ignored.length+" in quarantine. "}</b>{"Entries excluded from all future imports. Removing them from quarantine will re-offer them in future sweeps \u2014 it does not immediately add them to your ledger."}
-          </div>
-          {/* By venue only (her decision): venues in the app's order, titles A–Z. */}
-          {ignoredByVenue.map(x=>(
-            <div key={x.key} style={{display:"grid",gridTemplateColumns:"minmax(60px,0.7fr) minmax(0,2fr) auto",gap:10,fontSize:12.5,color:C.ink,padding:"4px 0",alignItems:"baseline"}}>
-              <span style={{fontWeight:600}}>{MU[x.venueId]?MU[x.venueId].card:x.venueId}</span>
-              <span>{x.title||"(no title)"}</span>
-              <button onClick={()=>{
-                if(roStop())return;
-                const at=new Date().toISOString();
-                setQuarantine(prev=>{ const next=mergeQuarantine(prev,{[x.key]:{venueId:x.venueId,title:x.title,at,state:"released"}});
-                  writeQuarantine(next).then(ok=>{ if(!ok) setQuarWhy("That release couldn\u2019t be saved to this page\u2019s store, so it may come back when you reload."); });
-                  return next; });
-                setDirty(true);}} style={{background:"none",border:"none",color:C.action,fontSize:12.5,fontWeight:600,textDecoration:"underline",cursor:"pointer",padding:0,whiteSpace:"nowrap"}}>Remove</button>
-            </div>
-          ))}
-        </div>}
-      </div>
+      <SelectedWordsButton ui={ui} selPick={selPick} searchPick={searchPick}/>
+      <JumpButtons ui={ui} showTop={showTop} undo={undo} jumpToBottom={jumpToBottom}/>
+      <UndoBar ui={ui} undo={undo} undoDismiss={undoDismiss}/>
+      <ToolsRow ui={ui} requestReset={requestReset} labelLedger={labelLedger} toggleResetCards={toggleResetCards} toggleCloudSaves={toggleCloudSaves} toggleQuarantine={toggleQuarantine}/>
+      <CloudSaves ui={ui} showSnaps={showSnaps} snaps={snaps} snapWhy={snapWhy} snapBusy={snapBusy} downloadSnapshot={downloadSnapshot} requestRollback={requestRollback}/>
+      <ResetAndQuarantine ui={ui} rows={rows} showIgnored={showIgnored} ignored={ignored} ignoredByVenue={ignoredByVenue} quarWhy={quarWhy} showResetCards={showResetCards} resetQuery={resetQuery} typeResetQuery={typeResetQuery} askResetCard={askResetCard} releaseFromQuarantine={releaseFromQuarantine}/>
       {/* The import pop-up (her design; docs/add_by_link.md): CSV and Links, and a small
           Cancel. Under the review (1100) so cards open on top; under the confirm box (1200). */}
       {importMode&&(
@@ -1582,27 +1310,8 @@ export default function App(){
             </div>
           </div>
         </div>;})()}
-      {/* ABOVE THE REVIEW PANEL, NOT UNDER IT: the confirm box is the TOP layer (1200),
-          because the thing asked last is answered first (fixture 18i). Any new overlay
-          goes below it. */}
-      {confirmBox&&(
-        <div style={{position:"fixed",inset:0,background:C.scrim,display:"grid",placeItems:"center",zIndex:1200,padding:16}}>
-          <div style={{background:C.card,border:"1px solid "+C.rule,borderRadius:8,maxWidth:420,padding:"18px 20px",boxShadow:"0 6px 24px rgba(0,0,0,0.25)"}}>
-            {/* The heading is the caller's; the default keeps the old wording. */}
-            <div style={{fontSize:14,fontWeight:700,color:C.ink,marginBottom:8}}>{confirmBox.title||"Replace what's on screen?"}</div>
-            {confirmBox.text?<div style={{fontSize:12.5,color:C.body,lineHeight:1.5,marginBottom:16}}>{confirmBox.text}</div>:<div style={{height:8}}/>}
-            <div style={{display:"flex",gap:8,justifyContent:"flex-end"}}>
-              <button onClick={()=>setConfirmBox(null)} style={sBtn}>Cancel</button>
-              <button onClick={()=>{const a=confirmBox.act;setConfirmBox(null);a&&a();}} style={{...pBtn,background:C.accent}}>{confirmBox.yes||"Continue"}</button>
-            </div>
-          </div>
-        </div>
-      )}
-      {/* The version, small and grey: something she checks, not acts on. Reads
-          APP_VERSION, so there is one copy of the number. */}
-      <footer style={{maxWidth:760,margin:"28px auto 0",fontSize:10.5,color:C.soft,textAlign:"center"}}>
-        Art Watch {"·"} v {APP_VERSION} {"·"} {APP_VERSION_DATE}
-      </footer>
+      <ConfirmBox ui={ui} confirmBox={confirmBox} dismissConfirm={dismissConfirm} answerConfirm={answerConfirm}/>
+      <Footer ui={ui}/>
     </div>
   );
 }

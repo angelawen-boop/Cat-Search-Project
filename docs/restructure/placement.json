@@ -153,6 +153,17 @@
     "shop_finder/museum_shop.jsx": "Finding a museum's shop and its catalogue shelf.",
     "import/review.jsx": "The review cards' decisions, 'Probably not for you', partial apply, counts, the shop screen's answers, and which venues' shop answers are kept."
    }
+  },
+  {
+   "id": "5-b1",
+   "name": "Main screen, stage B1: the page's own layout cut into components",
+   "files": {
+    "screens/header.jsx": "The title and toolbar, the Save panel, the status lines and banners, the diagnostic box (with its own open and copied marks), the sweep-log line and drawer (with its own open mark), and the counts and search row.",
+    "screens/chips.jsx": "The Sort, When, Venue, Theme, Acquiring and Showing chip rows.",
+    "screens/card_list.jsx": "The list of cards: the empty state, the dividers, the cards with the Buy next drag wrapper, and the \"more\" marker.",
+    "screens/drawers.jsx": "The tools row, the Cloud Saves drawer, and the Quarantine list with the Reset cards drawer.",
+    "screens/floating.jsx": "The search-selected-words button, the jump buttons, the undo bar, the confirm box and the footer."
+   }
   }
  ],
  "pieces": {
@@ -854,6 +865,29 @@
   "venuesNoShop": "import/review.jsx",
   "venuesShopAdded": "import/review.jsx",
   "lookAgainJob": "import/review.jsx",
-  "venuesLookedAgain": "import/review.jsx"
+  "venuesLookedAgain": "import/review.jsx",
+  "Toolbar": "screens/header.jsx",
+  "SavePanel": "screens/header.jsx",
+  "StatusLines": "screens/header.jsx",
+  "Banners": "screens/header.jsx",
+  "DiagnosticBox": "screens/header.jsx",
+  "SweepLog": "screens/header.jsx",
+  "CountsRow": "screens/header.jsx",
+  "SearchRow": "screens/header.jsx",
+  "SortRow": "screens/chips.jsx",
+  "WhenRow": "screens/chips.jsx",
+  "VenueRow": "screens/chips.jsx",
+  "ThemeRow": "screens/chips.jsx",
+  "AcquiringRow": "screens/chips.jsx",
+  "ShowingRow": "screens/chips.jsx",
+  "CardList": "screens/card_list.jsx",
+  "ToolsRow": "screens/drawers.jsx",
+  "CloudSaves": "screens/drawers.jsx",
+  "ResetAndQuarantine": "screens/drawers.jsx",
+  "SelectedWordsButton": "screens/floating.jsx",
+  "JumpButtons": "screens/floating.jsx",
+  "UndoBar": "screens/floating.jsx",
+  "ConfirmBox": "screens/floating.jsx",
+  "Footer": "screens/floating.jsx"
  }
 }
