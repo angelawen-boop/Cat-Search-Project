@@ -180,6 +180,13 @@
    "files": {
     "screens/use_filters.jsx": "The filters hook: the chips, the sort, the search box and the pinned just-imported cards, with the actions that touch only them."
    }
+  },
+  {
+   "id": "5-c2",
+   "name": "Main screen, stage C2 and C3: the list drawing, the Buy next drag and the sweep log become hooks",
+   "files": {
+    "screens/use_list_drawing.jsx": "The list-drawing hook: how much of the list is drawn as she scrolls, the jumps to a period and to the bottom, and the top and bottom buttons."
+   }
   }
  ],
  "pieces": {
@@ -919,6 +926,7 @@
   "ReviewPanel": "screens/review_panel.jsx",
   "ShopVenueCard": "screens/shop_screen.jsx",
   "ShopScreen": "screens/shop_screen.jsx",
-  "useFilters": "screens/use_filters.jsx"
+  "useFilters": "screens/use_filters.jsx",
+  "useListDrawing": "screens/use_list_drawing.jsx"
  }
 }

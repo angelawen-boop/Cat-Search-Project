@@ -737,6 +737,7 @@
   "ShopVenueCard",
   "ShopScreen",
   "useFilters",
+  "useListDrawing",
   "App"
  ]
 }
