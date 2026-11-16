@@ -402,6 +402,43 @@ Branch `claude/restructure-5-c2`. *Sonnet, medium.*
   first thing read; hands back the record, the latest attempt, the why-line and `recordSweep(seen)`.
 - **The screen keeps:** everything else; the held sweep of an unfinished import stays with the import.
 
+**C2 and C3 — done, merged.** `useListDrawing`, `useBuyNextDrag`, `useSweepLog` (called first in the
+screen: its read is still the first the page makes). The screen's block is about 755 lines.
+
+### Run C4 — `use_ledger_document` (design)
+
+Branch `claude/restructure-5-c4`. *Opus, medium.* `app/screens/use_ledger_document.jsx`,
+`useLedgerDocument({showError, showDiagnostic, ask, onLoaded})` — the four are named actions the screen
+hands in: put a line in the error line (or clear it), put a diagnostic in the box, ask her in the confirm
+box, and "a ledger was loaded" (the screen passes the filters' `ledgerLoaded`).
+- **Owns:** the rows, "opened", the last-import stamp, changed-since-saved; the quarantine and its
+  why-line (and the list worked out from it, in venue order); the cloud copy's state (what the store held
+  on open, the check line, armed, read-only, the tracker, the ledger-as-it-stands ref, save state, last
+  saved, why not saving); the safety copies (the list, its why-line, busy, whether the drawer is open —
+  Save now refreshes an open drawer); the Save panel (open, the typed name, the cloud tick, busy, what the
+  last Save said); the load line; the unconfirmed download; the half-minute tick; the Load file input's
+  ref; and the import reminder ("Import complete — save both"), because Load and Save clear it.
+- **Its effects, in today's order:** the opening (the empty ledger and "opened"; the quarantine's read;
+  then the cloud copy: another copy editing? → the venue waiting-room tidy → the read, and opening it);
+  the tick; the heartbeat and letting go; the automatic save.
+- **Hands back, to read:** `rows`, `loaded`, `hasLedger`, `dirty`, `readOnly`, the quarantine's list (both
+  orders) and why-line, the cloud status line, the load line, the check line, the Save panel's and the
+  safety copies' values, the reminder, the unconfirmed download.
+- **Hands back, named actions:** `commit(rows, stamp?)`; `put(rowsOrFn)` — rows put in place with no
+  read-only question, marked changed (Label and Relabel use it, as today); `latest()` — the rows as they
+  stand; `readOnlyStop()`; `addToQuarantine(map)` and `releaseFromQuarantine(entry)`; `importApplied(done)`
+  (sets the reminder); Load (`requestImport`, `handleImport`), `requestOpenCloud`, Reset (`requestReset`),
+  Save (`handleSave`, the panel's open, close, type and tick), the safety copies (`toggleCloudSaves`,
+  `requestRollback`, `downloadSnapshot`), `dismissCloudCheck`.
+- **The opening effect is split, in place:** the document takes its lines (the empty ledger, "opened",
+  the quarantine's read, the cloud block); what is left in the screen's own opening effect is the link
+  venues' read and the three pending reads, in today's order. The hook is called BEFORE the screen's
+  opening effect is declared and AFTER `useSweepLog`, so the store's reads keep their order.
+- **The screen keeps:** the error line, the diagnostic, the confirm box, the busy flag and progress line,
+  the theme, the drawers' own "open" flags that two pieces share (quarantine, Reset cards and its search),
+  and everything of the card actions, the link venues and the import session (C5 to C7), which now call
+  the document's named actions where they called its setters.
+
 ## 4A — the venue register (merged)
 
 **Her decisions (made; the code-or-store question is closed):**
@@ -733,7 +770,7 @@ word) and item 5's cutting plan in full, then:
 
 ## Handover record — updated after every step
 
-**Where we are:** item 5 is under way: A1 and A2 are merged (see "5 — the runs"); Stage A is finished and merged (A1, A2, A3-0, A3a, A3b); Stage B is finished and merged (B1, B2); C1 is merged; next C2 and C3 together (design written), then C4. Item 4 is finished and on `main`: steps 1 to 5 of "This run" (59 published; the app-side
+**Where we are:** item 5 is under way: A1 and A2 are merged (see "5 — the runs"); Stage A is finished and merged (A1, A2, A3-0, A3a, A3b); Stage B is finished and merged (B1, B2); C1, C2 and C3 are merged; next C4, the ledger document (design written), then C5 to C7. Item 4 is finished and on `main`: steps 1 to 5 of "This run" (59 published; the app-side
 and scraper-side rounds, the price rule and the two venues, the keys round). Step 6, the main screen's
 cutting plan, is written (item 5). `main` passes the app's suites, the join, structure and fact checks. What waits for her is under "Parked for her" and "Start here", 5.
 

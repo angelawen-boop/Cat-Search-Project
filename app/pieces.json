@@ -737,6 +737,9 @@
   "ShopVenueCard",
   "ShopScreen",
   "useFilters",
+  "useListDrawing",
+  "useBuyNextDrag",
+  "useSweepLog",
   "App"
  ]
 }
