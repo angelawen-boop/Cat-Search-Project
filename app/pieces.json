@@ -742,6 +742,7 @@
   "useSweepLog",
   "useLedgerDocument",
   "useLinkVenues",
+  "useCardActions",
   "App"
  ]
 }

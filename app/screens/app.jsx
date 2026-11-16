@@ -8,12 +8,7 @@ function momentLines(label,iso){const t=fmtRefresh(iso),i=t.lastIndexOf(" ");ret
 
 export default function App(){
   const[busy,setBusy]=useState(false);
-  const[busyId,setBusyId]=useState(null);
-  const[lookLabel,setLookLabel]=useState(null); // the progress line while a lookup or Re-check runs (lookupLabel)
   const[prog,setProg]=useState({done:0,total:0,label:""});
-  const[labelSaid,setLabelSaid]=useState(null);   // the last Label run's line
-  const[relabelId,setRelabelId]=useState(null);   // the card a Relabel is asking about
-  const[digitalBox,setDigitalBox]=useState(null);  // the card whose Digital catalogue box is open
   // Add by link: one pop-up for CSV and Links, nothing added to the page (her design).
   // importMode: null · "choose" · "links" (the box open below them) · "needLedger" (empty page).
   const[importMode,setImportMode]=useState(null);
@@ -32,8 +27,6 @@ export default function App(){
   const linksAtRead=useRef(null);   // the links the open review was read from; Cancel import puts them back
   const linkRead=useRef({on:false,stop:false});   // a Read under way; Cancel mid-Read stops it after the link in hand
   const[error,setError]=useState(null);
-  const[rechecking,setRechecking]=useState(false);   // which of the card's two buttons is running
-  const[recheckSaid,setRecheckSaid]=useState(null);  // {id,text,failed}: Re-check's answer, shown on that card
   const[debug,setDebug]=useState(null);
   const[storeUnread,setStoreUnread]=useState([]);   // parts of the store that could not be read this opening
   useEffect(()=>{ storeUnreadSeen=setStoreUnread; setStoreUnread([...STORE_UNREAD]); return()=>{ storeUnreadSeen=()=>{}; }; },[]);
@@ -61,9 +54,12 @@ export default function App(){
   // opening effect below, so the venues are still read after the cloud copy and before the pending links.
   const linkVenues=useLinkVenues(rows);
   const{occVenues,hold,dropHeld,confirmShop,noShop,addShop,toConfirm,fillShopSearch}=linkVenues;
-  const[openCards,setOpenCards]=useState({});
-  const[undo,setUndo]=useState(null);
-  const undoTimer=useRef(null);
+  // The jobs and marks on one card (the hook: app/screens/use_card_actions.jsx). Called after the link venues (it is
+  // handed fillShopSearch) and before the Buy next drag (it is handed moveBuyNext). The job flag stays here, shared
+  // with the import's Read; the hook gets it as named things.
+  const jobStarts=()=>setBusy(true), jobEnds=()=>setBusy(false), showProgress=p=>setProg(p);
+  const{cardState,cardAct,labelSaid,labelLedger,undo,undoDismiss,moveBuyNext,forgetSaid}=useCardActions({rows,commit,put,latest,readOnlyStop:roStop,
+    jobRunning:busy,jobStarts,jobEnds,showProgress,showError:setError,showDiagnostic:setDebug,shownIds:()=>view.map(r=>r.id),fillShopSearch});
   const refreshFileRef=useRef(null);
   // Words selected anywhere on the page (her design): a button beside them searches them, exactly as typed.
   const[selPick,setSelPick]=useState(null);
@@ -166,35 +162,6 @@ export default function App(){
   async function labelCards(props){
     const out=await labelCardsJob(props);
     if(out&&out.labels.size)setProposals(cur=>labelsOntoCards(cur,props,out));
-  }
-  // Label (labelLedgerStart, labelLedgerJob): the screen is busy, shows its progress and puts
-  // the labels onto the rows as they stand when the answer arrives.
-  async function labelLedger(){
-    if(busy||roStop())return;
-    const start=labelLedgerStart(rows);
-    if(start.said){ setLabelSaid(start.said); return; }
-    setBusy(true); setLabelSaid(null);
-    const out=await labelLedgerJob(start.todo,setProg);
-    if(out.labels){ put(prev=>labelsOntoRows(prev,out.labels)); }
-    setLabelSaid(out.said);
-    setDebug(out.debug);
-    setBusy(false); setProg({done:0,total:0,label:""});
-  }
-
-  // Relabel (relabelJob): what it says shows in that card's drawer.
-  async function relabel(id){
-    const r=rows.find(x=>x.id===id);
-    if(!r||busy||relabelId||roStop())return;
-    setRelabelId(id); setRecheckSaid(null);
-    const out=await relabelJob(r,latest);
-    if(out.rows){ put(out.rows); }
-    setRecheckSaid(out.said); setRelabelId(null);
-  }
-
-  function keepPeriod(id){
-    const r=rows.find(x=>x.id===id); if(!r||roStop())return;
-    commit(markKeepPeriod(rows,id,new Date().toISOString()));
-    setRecheckSaid(keptPeriodSaid(id,r));
   }
 
   // ── ADD BY LINK — the Read button. The job is readShows (the Links/Pages/Paste parts);
@@ -306,57 +273,8 @@ export default function App(){
 
 
 
-  // The lookup runs at top level (lookupCatalogue); the page hands it its progress
-  // line and, for an occasional venue, the check that works out its shop search.
-  // (fillShopSearch: the link venues' action, useLinkVenues.)
-  const lookHooks={label:setLookLabel,prepareShop:fillShopSearch};
-  // Find catalogue / Search again (findCatalogueJob): what it found lands on the ledger as it
-  // stands when the answer arrives; its line goes on the card, or its sentence in the banner.
-  async function findOneCat(id){
-    if(roStop())return;
-    setBusy(true);setBusyId(id);setError(null);setRecheckSaid(null);
-    const row=rows.find(r=>r.id===id);
-    const out=await findCatalogueJob(row,lookHooks,latest);
-    setDebug(out.detail);
-    if(out.card)setRecheckSaid(out.card);
-    if(out.rows)await commit(out.rows);
-    if(out.banner)setError(out.banner);
-    setBusy(false);setBusyId(null);setLookLabel(null);
-  }
-
-  // "Re-check museum shop" (recheckShopJob): its answer is printed on the card, under the button she pressed.
-  async function recheckShop(id){
-    if(roStop())return;
-    setBusy(true);setBusyId(id);setRechecking(true);setError(null);setRecheckSaid(null);
-    const found=rows.find(r=>r.id===id);
-    const out=await recheckShopJob(found,lookHooks,latest);
-    setDebug(out.detail);
-    if(out.rows)await commit(out.rows);
-    setRecheckSaid(out.card);
-    setBusy(false);setBusyId(null);setRechecking(false);setLookLabel(null);
-  }
-
-  const dismiss=id=>{commit(markDismiss(rows,id));if(undoTimer.current)clearTimeout(undoTimer.current);setUndo({id});undoTimer.current=setTimeout(()=>setUndo(null),10000);};
-  const undoDismiss=()=>{if(!undo)return;commit(markRestore(rows,undo.id));setUndo(null);if(undoTimer.current)clearTimeout(undoTimer.current);};
-  const restore=id=>commit(markRestore(rows,id));
-  const toggleWatch=id=>commit(markWatch(rows,id));
-  const setAcq=(id,v)=>commit(markAcquiring(rows,id,v));
-  const toggleBuyNext=id=>commit(markBuyNext(rows,id));
-  const moveBuyNext=(id,beforeId,afterId)=>commit(markBuyNextMove(rows,id,beforeId,afterId,view.map(r=>r.id)));
   // ── DRAG TO REORDER, BUY NEXT ONLY ── (the hook: app/screens/use_buy_next_drag.jsx)
   const{drag,startDrag}=useBuyNextDrag(dragOn,moveBuyNext);
-  const setPick=(id,i)=>{ const next=markPick(rows,id,i,new Date().toISOString()); if(next!==rows)commit(next); };
-  // A card's buttons, by name. One function for the life of the page (so LedgerCard can skip
-  // redrawing) that calls this render's handler, which sees the current ledger.
-  const cardActs=useRef(null);
-  // Her digital catalogue link: an empty box leaves the card as it was; not a link → the box stays open.
-  const setDigital=(id,text)=>{ if(!String(text||"").trim()){ setDigitalBox(null); return; }
-    const href=typedLink(text); if(!href)return; setDigitalBox(null);
-    const next=markDigital(rows,id,href,new Date().toISOString()); if(next!==rows)commit(next); };
-  cardActs.current={restore,toggleWatch,dismiss,setAcq,toggleBuyNext,setPick,findOneCat,recheckShop,relabel,keepPeriod,setDigital,
-    openDigital:id=>setDigitalBox(id),closeDigital:()=>setDigitalBox(null),
-    toggleOpen:id=>setOpenCards(o=>({...o,[id]:!o[id]}))};
-  const cardAct=useCallback((name,...a)=>cardActs.current[name](...a),[]);
 
   // One artist, one group: worked out from every labelled show, dismissed ones included.
   const byArtist=useMemo(()=>artistPeriods(rows),[rows]);
@@ -390,7 +308,7 @@ export default function App(){
   const typeResetQuery=v=>setResetQuery(v);
   const askResetCard=id=>setConfirmBox({title:"Reset this search?",yes:"Yes",act:()=>{
     commit(resetOneCard(rows,id));
-    if(recheckSaid&&recheckSaid.id===id)setRecheckSaid(null);
+    forgetSaid(id);
     setResetQuery("");}});
   const dismissConfirm=()=>setConfirmBox(null);
   const answerConfirm=()=>{const a=confirmBox.act;setConfirmBox(null);a&&a();};
@@ -442,7 +360,7 @@ export default function App(){
         <ShowingRow ui={ui} filters={filters} toggleWatchedOnly={toggleWatchedOnly} toggleDismissedOnly={toggleDismissedOnly} toggleLabelledOnly={toggleLabelledOnly} toggleShowAll={toggleShowAll} clearFilters={clearFilters}/>
       </div>
 
-      <CardList ui={ui} view={view} sort={sort} bnOnly={bnOnly} periodView={periodView} byArtist={byArtist} drawLimit={drawLimit} cardState={{busyId,busy,rechecking,lookLabel,recheckSaid,relabelId,digitalBox,openCards}} dragOn={dragOn} drag={drag} startDrag={startDrag} cardAct={cardAct} moreRef={moreRef}/>
+      <CardList ui={ui} view={view} sort={sort} bnOnly={bnOnly} periodView={periodView} byArtist={byArtist} drawLimit={drawLimit} cardState={cardState} dragOn={dragOn} drag={drag} startDrag={startDrag} cardAct={cardAct} moreRef={moreRef}/>
       {scrubGroups.length>0&&<PeriodScrubber groups={scrubGroups} C={C} onJump={jumpToPeriod}/>}
       <SelectedWordsButton ui={ui} selPick={selPick} searchPick={searchPick}/>
       <JumpButtons ui={ui} showTop={showTop} undo={undo} jumpToBottom={jumpToBottom}/>
