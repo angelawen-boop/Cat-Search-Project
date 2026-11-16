@@ -15,6 +15,16 @@
  *     every call made to the web and to Claude. Claude answers both versions with the same fixed reply.
  *   - with --live, the Read job for Links too: two proof pages fetched live once per run through the
  *     free Parallel server, the same reply handed to both versions.
+ *   - the jobs (run A3-0), on her test ledger loaded again with one card that has versions: Label (its
+ *     progress at 0 and after one batch, its line, the diagnostic), Relabel and "Do not regroup"; Find
+ *     catalogue (its progress line), Search again, Re-check museum shop, a Find catalogue whose shop page
+ *     dies and one whose publisher page dies after the book is found; a digital link (words that are not
+ *     a link, then a link); the catalogue pick; a Paste from a venue outside her list through the review
+ *     to the shop screen, once ending in Cancel import, once through Confirm, No shop, Add, Look again,
+ *     Back, Next and Apply. Each: the screen, the store, every call. The web and Claude answer with fixed
+ *     replies shaped on the fixtures' (catalogue_route.js, recheck_shop.js, add_by_link.js).
+ *   - the store's sequence (every read, write, delete and list, by record name): opening to the first
+ *     automatic save after her ledger loads (store-sequence), and the whole run (store-sequence-all).
  * A screen a version never reached is a FAIL, never an empty pass. Any difference prints where it is,
  * and the exit code is 1.
  *
@@ -53,6 +63,62 @@ function ledgerText() {
   const themes = [['sculpture'], ['architecture'], []];
   hers.rows = hers.rows.map((r, i) => (i % 9 ? r : { ...r, period: periods[(i / 9) % 5][0], periodYear: periods[(i / 9) % 5][1], themes: themes[(i / 9) % 3] }));
   return JSON.stringify(hers);
+}
+
+// ── the jobs (run A3-0): the stand-in web and Claude for Label, Relabel, the lookups and a new venue ──
+// The same test ledger, plus one card with catalogue versions (her ledger has none): Vasari, her case 1
+// (docs/lookup_proof_cards.json), each version carrying its book as pickRow reads it (catalogue_route.js, PK-).
+const PROOF_CARDS = path.join(ROOT, 'docs', 'lookup_proof_cards.json');
+const PICK_TITLE = 'Giorgio Vasari: The Book of Drawings';
+function jobsLedgerText() {
+  const L = JSON.parse(ledgerText());
+  const c = JSON.parse(fs.readFileSync(PROOF_CARDS, 'utf8')).cards.find(x => x.case === 1);
+  const book = v => ({ catalogueTitle: v.title, isbn13: v.isbn13, publisher: v.publisher, publisherUrl: null, publisherResult: null, shopState: 'web', shopUrl: null });
+  const editions = c.versions.map(v => ({ title: v.title, note: null, city: null, year: null, proofUrl: null, ...v, card: book(v) }));
+  const pick = editions.findIndex(v => v.isbn13 === c.pick);
+  L.rows.push({ ...L.rows[1], id: 'louvre-vasaritest', museumId: c.venue, title: c.title, startDate: '2022-03-31', endDate: '2022-07-04',
+    summary: 'The Book of Drawings.', exUrl: 'https://www.louvre.fr/en/vasari-test', interested: true, acquiring: null, looked: true,
+    hasCatalogue: 'yes', ...book(editions[pick]), editions, editionPick: pick });
+  return JSON.stringify(L);
+}
+// The lookups' stand-in replies, shaped as catalogue_route.js's WL-030 (a third-party publisher at an English
+// venue): the shop's shelf carries the book, the book's page its ISBN, the publisher's site its page.
+const isShopRead = p => /venue’s OWN shop pages/.test(p);
+const isJudge = p => /"kind": "book"\|"listing"\|"other"/.test(p);
+const LOOK_BOOK = 'https://shop.nationalgallery.org.uk/test-hannibal-book.html';
+const LOOK_PUB = 'https://hannibalbooks.be/en/test-hannibal-book#1';
+function lookupWeb(T, how) {
+  const fails = () => { const e = new Error('upstream'); e.code = 'upstream_error'; throw e; };
+  return (tool, args) => {
+    if (tool === 'web_search') {
+      const q = args.search_queries.join(' | ');
+      if (q.startsWith('Hannibal Books')) return { payload: { results: [{ url: 'https://hannibalbooks.be/en/about', title: 'Hannibal Books', excerpts: ['Hannibal'] }] } };
+      if (q.startsWith('site:hannibalbooks.be')) return { payload: { results: [{ url: LOOK_PUB, title: T + ' | Hannibal', excerpts: [T] }] } };
+      return { payload: { results: [] } };
+    }
+    if (how === 'shopDies') fails();
+    if (args.urls.includes(LOOK_BOOK)) return { payload: { errors: [], results: [{ url: LOOK_BOOK, title: T, excerpts: [], full_content: '# ' + T + '\nISBN 9789493416543\n£40\n' + 'x '.repeat(300) }] } };
+    if (args.urls.includes(LOOK_PUB)) { if (how === 'pubFails') fails(); return { payload: { errors: [], results: [{ url: LOOK_PUB, title: T, excerpts: [], full_content: '# ' + T + '\nISBN 9789493416543\n' + 'Essays. '.repeat(80) }] } }; }
+    return { payload: { errors: [], results: args.urls.map(u => ({ url: u, title: 'Exhibition catalogues', excerpts: ['[' + T + ' £40](' + LOOK_BOOK + ')\n' + 'Another catalogue · €35. '.repeat(20)] })) } };
+  };
+}
+// Re-check's question about the book's page: sold out (recheck_shop.js's reply), so the card changes.
+const lookupClaude = T => p => (/"forSale"/.test(p) ? { forSale: false, why: 'The page says Sold out.' } : isShopRead(p) ? { found: true, thisVenue: true, catalogueTitle: T, isbn13: null, publisher: 'Hannibal Books', publisherUrl: null, shopUrl: LOOK_BOOK }
+  : isJudge(p) ? { kind: 'book', bookUrl: null } : {});
+// A Paste from a venue outside her list. Its shop search is the Courtauld's real one (docs/link_pages/shop_search/
+// courtauld.json, add_by_link.js AL-008) moved onto a made-up museum, so the finder takes its catalogues section.
+const NEW_HOST = 'testhausmuseum.org';
+const NEW_URL = 'https://www.' + NEW_HOST + '/exhibitions/testhaus-treasures';
+const NEW_TEXT = 'Testhaus Treasures: Drawings from the Collection was shown at the Testhaus Museum from March 3, 2025 to June 15, 2025, with drawings from five centuries.';
+const NEW_REPLY = { summary: 'Five centuries of drawings from the Testhaus collection.', title: 'Testhaus Treasures: Drawings from the Collection',
+  dates: 'March 3, 2025 to June 15, 2025', english: '', englishSpeaking: true, gallery: false, venue: 'The Testhaus Museum', venueShort: 'Testhaus',
+  venueCity: 'London', venueCountry: 'United Kingdom', venueOwnPage: true };
+function newVenueWeb() {
+  const real = fs.readFileSync(path.join(ROOT, 'docs', 'link_pages', 'shop_search', 'courtauld.json'), 'utf8');
+  const moved = JSON.parse(real.split('courtauld.ac.uk').join(NEW_HOST).split('Courtauld').join('Testhaus'));
+  return (tool, args) => (tool === 'web_search'
+    ? { payload: { results: /Testhaus/.test(args.search_queries.join(' ')) ? moved.results : [] } }
+    : { payload: { results: args.urls.map(u => ({ url: u, title: '', full_content: '' })), errors: [] } });
 }
 
 // ── the live pages: fetched once per run, through the free Parallel server (docs/testing.md) ──
@@ -126,6 +192,30 @@ async function snapshot(jsxFile, outFile, liveFile) {
   const win = dom.window, doc = win.document;
   win.__catWatchTest = true;   // draws Reset to Seed, as the tests' page has it
   const store = fakeStore();
+  // The store as the page reaches it: every read, write, delete and list logged in order (the operation and the
+  // record's name, never its contents), and a record four steps deep (the lookup log's pieces) reached through its
+  // parent, as the platform's store allows. An operation made from a repeating timer (the one-tab heartbeat, every
+  // 20 seconds of real time) is left out of the log: when it falls depends on the machine, not on the page.
+  const { AsyncLocalStorage } = require('async_hooks');
+  const timer = new AsyncLocalStorage();
+  const realInterval = global.setInterval;
+  global.setInterval = (fn, ms, ...a) => realInterval((...x) => timer.run(true, () => fn(...x)), ms, ...a);
+  const seq = [];
+  const logOp = (op, p) => { if (!timer.getStore()) seq.push(op + ' ' + p); };
+  const docOf = p => ({
+    get: () => { logOp('read', p); return store.doc(p).get(); },
+    set: v => { logOp('write', p); return store.doc(p).set(v); },
+    update: async v => { logOp('update', p); const d = store.docs.get(p); return store.doc(p).set({ ...(d ? JSON.parse(d) : {}), ...v }); },
+    delete: () => { logOp('delete', p); return store.doc(p).delete(); },
+    collection: c => collOf(p + '/' + c),
+  });
+  const collOf = c => {
+    let q = store.collection(c);
+    const out = { doc: id => docOf(c + '/' + id), orderBy: (f, d) => { q = q.orderBy(f, d); return out; }, limit: n => { q = q.limit(n); return out; },
+      get: () => { logOp('list', c); return q.get(); } };
+    return out;
+  };
+  const logged = { doc: docOf, collection: collOf };
   const saved = [];
   // The web answers only during the Read jobs. Claude answers throughout (the period labels after an
   // import ask it), so no failed question is retried later inside another step.
@@ -141,8 +231,18 @@ async function snapshot(jsxFile, outFile, liveFile) {
     return { payload: { results: [], errors: [] } };
   }) };
   // Claude's fixed reply, in the shape the app reads (scraper/fixtures/add_by_link.js, add_by_paste.js).
+  // The jobs' steps hand in their own web and Claude (jobWeb, jobClaude); `gate`, while set, holds every such
+  // call until it is opened, so a progress line can be seen part-way.
+  let jobWeb = null, jobClaude = null, gate = null;
+  const makeGate = () => { let open; const p = new Promise(r => { open = r; }); return { p, open }; };
+  const jobMcp = { callTool: answering(async (server, tool, args) => {
+    calls.push('web ' + server + ' ' + tool + ' ' + JSON.stringify(args));
+    if (gate) await gate.p;
+    return jobWeb(tool, args);
+  }) };
   const sample = { json: answering(async (full, opts) => {
     calls.push('claude ' + JSON.stringify(opts || {}) + '\n' + full);
+    if (jobClaude) { if (gate) await gate.p; const r = await jobClaude(full); if (r !== undefined) return r; }
     // The period labels (scraper/fixtures/period_render.js): every show asked about is Baroque, 1650.
     if (/name the art period/.test(full)) return { labels: full.split('Exhibitions:\n')[1].split('\n').filter(Boolean).map(l => ({ i: JSON.parse(l).i, period: 'baroque', year: 1650, themes: [] })) };
     return batchReply(full, async prompt => {
@@ -156,8 +256,8 @@ async function snapshot(jsxFile, outFile, liveFile) {
       return reply;
     });
   }) };
-  win.claude = { use: async name => (name === 'db' ? store : name === 'downloads' ? { save: async f => { saved.push(f); } }
-    : name === 'mcp' && reading ? mcp : name === 'sample' ? sample : null) };
+  win.claude = { use: async name => (name === 'db' ? logged : name === 'downloads' ? { save: async f => { saved.push(f); } }
+    : name === 'mcp' && reading ? mcp : name === 'mcp' && jobWeb ? jobMcp : name === 'sample' ? sample : null) };
   for (const k of ['window', 'document', 'navigator', 'localStorage', 'requestAnimationFrame', 'cancelAnimationFrame',
     'MutationObserver', 'Node', 'Element', 'HTMLElement', 'Event', 'CustomEvent', 'getComputedStyle', 'FileReader',
     'File', 'DOMParser', 'HTMLInputElement', 'KeyboardEvent', 'MouseEvent']) { try { global[k] = win[k]; } catch {} }
@@ -226,11 +326,19 @@ async function snapshot(jsxFile, outFile, liveFile) {
     input.dispatchEvent(new win.Event('change', { bubbles: true }));
   };
   const before = screen();
+  const atLoad = seq.length;
   give('input[type=file][accept=".json"]', [new win.File([ledgerText()], 'ledger.json', { type: 'application/json' })]);
   const loaded = await until(() => screen() !== before && doc.querySelectorAll('article').length > 0);
   await steady();
   capture('afterLedger', loaded, screen);
   capture('afterLedger-store', loaded, storeText);
+  // The store's sequence from opening to the first automatic save after her ledger is loaded (its switch to the
+  // new live ledger and anything that save does after it): stage C's proof that the opening reads keep their order.
+  await step('store-sequence', async () => {
+    const sw = seq.findIndex((s, i) => i >= atLoad && s === 'write ledger/live');
+    let end = sw; while (end >= 0 && end + 1 < seq.length && !/^(read|list) /.test(seq[end + 1])) end++;
+    capture('store-sequence', loaded && sw >= 0, () => seq.slice(0, end + 1).join('\n'));
+  });
 
   // The Import pop-up and its four tabs.
   await step('importPopup', async () => {
@@ -466,6 +574,209 @@ async function snapshot(jsxFile, outFile, liveFile) {
     type(doc.querySelector('input[aria-label="Link"]'), PASTE_URL);
     type(doc.querySelector('textarea[aria-label="Text"]'), PASTE_TEXT);
   });
+
+  // ── THE JOBS (run A3-0): what stage A3 and stage C move, pressed with fixed stand-in replies ──────────
+  // Each capture: the screen's fingerprint, the lines above the cards (progress, Label's line, the banner, the
+  // diagnostic) and the card in hand; then the store (every record, a long one by its fingerprint, the cards in
+  // hand read back from the live ledger, and any lookup-log record the step wrote, read back); then every call.
+  const zlib = require('zlib'), sha1 = t => require('crypto').createHash('sha1').update(t).digest('hex');
+  const articleOf = title => [...doc.querySelectorAll('article')].find(a => { const h = a.querySelector('h3'); return h && h.firstChild && h.firstChild.textContent === title; });
+  const inCard = (title, re) => { const a = articleOf(title); return a && [...a.querySelectorAll('button')].find(b => re.test(b.textContent.trim())); };
+  const head = () => { const a = doc.querySelector('article'); if (!a) return text(); const r = doc.createRange(); r.setStart(doc.body, 0); r.setEndBefore(a); return r.toString(); };
+  const view = title => sha1(screen()) + '\n-- above the cards --\n' + head() + '\n-- the card --\n' + ((title && articleOf(title))
+    ? articleOf(title).textContent + [...articleOf(title).querySelectorAll('input')].map(i => '\n[a box holding "' + i.value + '"]').join('') : '(none)');
+  const unzip = b64 => { try { return zlib.gunzipSync(Buffer.from(b64, 'base64')).toString('utf8'); } catch (e) { return '(unreadable: ' + e.message + ')'; } };
+  const rec = k => { const v = store.docs.get(k); return v ? JSON.parse(v) : null; };
+  const storeView = (titles, tapesBefore) => {
+    const lines = [...store.docs.entries()].sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
+      .map(([k, v]) => k + ' = ' + (v.length > 3000 ? 'sha1 ' + sha1(v) + ' (' + v.length + ' characters)' : v));
+    const live = rec('ledger/live');
+    if (live) {
+      let z = ''; for (let i = 0; i < live.parts; i++) z += (rec('ledgerParts/' + live.id + '-' + i) || {}).z || '';
+      let rows = []; try { rows = JSON.parse(unzip(z)).rows || []; } catch {}
+      lines.push('-- the live ledger: ' + rows.length + ' rows; the cards in hand --');
+      for (const t of titles) lines.push(JSON.stringify(rows.filter(r => r.title === t)));
+    }
+    for (const k of tapeKeys().filter(k => !tapesBefore.includes(k))) {
+      const h = rec(k); let z = ''; for (let i = 0; i < (h.pieces || 0); i++) z += (rec(k + '/pieces/' + i) || {}).text || '';
+      lines.push('-- lookup log ' + k + ' --\n' + (h.enc === 'gzip-base64' ? unzip(z) : z));
+    }
+    return lines.join('\n');
+  };
+  const tapeKeys = () => [...store.docs.keys()].filter(k => /^lookups\/[^/]+$/.test(k)).sort();
+  // One job step: `run` presses and waits (true when the step reached its screen); the view, store and calls
+  // captured. `card`: the title of the card in hand, or a function giving it once the step has run.
+  const job = async (name, card, run) => {
+    await step(name, async () => {
+      calls.length = 0; const tapes = tapeKeys();
+      const ok = await run();
+      await steady();
+      const t = typeof card === 'function' ? card() : card;
+      capture(name, ok, () => view(t));
+      capture(name + '-store', ok, () => storeView(t ? [t] : [], tapes));
+      capture(name + '-calls', ok, () => calls.join('\n\n'));
+    });
+  };
+  // A card's job has finished: a call was made, none is out, no card's button is greyed.
+  const jobDone = () => until(() => calls.length > 0 && !pending && !doc.querySelector('article button[disabled]'), 30000);
+
+  // Her test ledger again (after Reset), with the Vasari card that has versions.
+  await step('jobs-ledger', async () => {
+    const was = screen();
+    give('input[type=file][accept=".json"]', [new win.File([jobsLedgerText()], 'ledger.json', { type: 'application/json' })]);
+    const ok = await until(() => screen() !== was && !!articleOf(PICK_TITLE));
+    await steady(); capture('jobs-ledger', ok, () => view(PICK_TITLE));
+  });
+
+  // 1. Label, the toolbar's button: Claude holds back its first two answers so the progress line is seen at 0 and
+  // after one batch. Every show gets Gothic, 1300; every other one "Test Artist" as its artist; every fifth Sculpture.
+  const periodLines = full => full.split('Exhibitions:\n')[1].split('\n').filter(Boolean).map(l => JSON.parse(l));
+  await job('label', null, async () => {
+    jobWeb = null;
+    jobClaude = full => (/name the art period/.test(full) ? { labels: periodLines(full).map(s => ({ i: s.i, period: 'gothic', year: 1300, response: false,
+      artist: s.i % 2 ? '' : 'Test Artist', themes: s.i % 5 ? [] : ['sculpture'], why: 'The stand-in’s answer.' })) } : undefined);
+    gate = makeGate();
+    click(button(/^Label$/));
+    const ok0 = await until(() => /\b0\/\d+ · Labelling periods/.test(text()));
+    capture('label-progress-0', ok0, () => view(null));
+    const g1 = gate; gate = makeGate(); g1.open();
+    const ok1 = await until(() => /\b40\/\d+ · Labelling periods/.test(text()));
+    capture('label-progress-1', ok1, () => view(null));
+    const g2 = gate; gate = null; g2.open();
+    const ok = await until(() => /Label: (all|\d+ of)/.test(head()) && !/Labelling periods/.test(text()), 60000);
+    await steady();
+    const show = button(/^Show diagnostic$/); if (show) click(show);
+    return ok && await until(() => !!doc.querySelector('pre'));
+  });
+
+  // Relabel on the first card: Baroque, 1650, "Test Artist" — whose other shows are Gothic, so the card offers
+  // "Do not regroup"; pressed.
+  const firstTitle = () => { const h = doc.querySelector('article h3'); return h ? h.firstChild.textContent : ''; };
+  let relabelled = '';
+  await job('relabel', () => relabelled, async () => {
+    relabelled = firstTitle();
+    jobClaude = full => (/name the art period/.test(full) ? { labels: [{ i: 0, period: 'baroque', year: 1650, response: false, artist: 'Test Artist', themes: [], why: 'The stand-in’s answer.' }] } : undefined);
+    click(inCard(relabelled, /^Catalogue|Catalogue$/)); await until(() => !!inCard(relabelled, /^Relabel$/));
+    click(inCard(relabelled, /^Relabel$/));
+    return await until(() => /Relabelled: /.test((articleOf(relabelled) || {}).textContent || ''));
+  });
+  await job('keep-period', () => relabelled, async () => {
+    const b = inCard(relabelled, /^Do not regroup$/); click(b);
+    return !!b && await until(() => /no regrouping/.test((articleOf(relabelled) || {}).textContent || ''));
+  });
+  jobClaude = null;
+
+  // 2. Find catalogue on a card not yet looked up (it finds a book: the web holds back its first answer so the
+  // progress line is seen), Search again, Re-check museum shop; one Find catalogue where the shop's page dies, and
+  // one where the publisher's page dies after the book is found.
+  const lookStep = async (name, title, how, re, first) => {
+    await job(name, title, async () => {
+      jobWeb = lookupWeb(title + ': The Catalogue', how); jobClaude = lookupClaude(title + ': The Catalogue');
+      if (first) { click(inCard(title, /^Catalogue$/)); await until(() => !!inCard(title, re)); }
+      const b = inCard(title, re); if (!b) return false;
+      if (first) gate = makeGate();
+      click(b);
+      if (first) {
+        const seen = await until(() => /Searching venue shop/.test((articleOf(title) || {}).textContent || ''));
+        capture(name + '-progress', seen, () => view(title));
+        const g = gate; gate = null; g.open();
+      }
+      return await jobDone();
+    });
+  };
+  await lookStep('find', 'Zurbarán', null, /^Find catalogue$/, true);
+  await lookStep('search-again', 'Zurbarán', null, /^Search again$/);
+  await lookStep('recheck', 'Zurbarán', null, /^Re-check museum shop$/);
+  await lookStep('find-died', 'Monet and Renoir: Painting Side by Side', 'shopDies', /^Find catalogue$/, true);
+  await lookStep('find-trouble', 'Waldmüller: Landscapes', 'pubFails', /^Find catalogue$/, true);
+  jobWeb = null; jobClaude = null;
+
+  // 3. Her digital catalogue link on the card just found: words that are not a link (the box stays open), then a link.
+  const digital = async (name, typed) => {
+    await job(name, 'Zurbarán', async () => {
+      if (!articleOf('Zurbarán').querySelector('input')) click(inCard('Zurbarán', /^Digital catalogue$/));
+      const box = await until(() => !!articleOf('Zurbarán').querySelector('input')) && articleOf('Zurbarán').querySelector('input');
+      if (!box) return false;
+      Object.getOwnPropertyDescriptor(win.HTMLInputElement.prototype, 'value').set.call(box, typed);
+      box.dispatchEvent(new win.KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+      await steady(); return true;
+    });
+  };
+  await digital('digital-not-a-link', 'not a link');
+  await digital('digital', 'https://example.org/zurbaran-catalogue.pdf');
+  // The catalogue pick on the card with versions: the third block (Stockholm's hardcover).
+  await job('pick', PICK_TITLE, async () => {
+    click(inCard(PICK_TITLE, /Catalogue/)); await until(() => !!articleOf(PICK_TITLE).querySelector('[role=radio]'));
+    const r = [...articleOf(PICK_TITLE).querySelectorAll('[role=radio]')].find(x => x.getAttribute('aria-checked') !== 'true');
+    if (!r) return false;
+    const k = [...articleOf(PICK_TITLE).querySelectorAll('[role=radio]')].indexOf(r);
+    click(r);
+    return await until(() => articleOf(PICK_TITLE).querySelectorAll('[role=radio]')[k].getAttribute('aria-checked') === 'true');
+  });
+
+  // 4. A Paste from a venue outside her list, through the review to the shop screen. First ending in Cancel import
+  // (from the shop screen: Confirm, Back, Cancel import); then the same read again: Confirm, No shop, her own link,
+  // Look again, Back, Next, Confirm, Apply.
+  const shops = () => [...doc.querySelectorAll('[role=dialog]')].find(d => /New Venue Shops/.test(d.textContent));
+  // The review panel: the fixed layer holding "Cancel import".
+  const reviewPanel = () => { let el = button(/^Cancel import$/); while (el && el.parentElement && !(el.style && el.style.position === 'fixed')) el = el.parentElement; return el; };
+  const shopView = () => sha1(screen()) + '\n-- the shop screen --\n' + (shops() ? shops().textContent : '(none)')
+    + '\n-- the review --\n' + (reviewPanel() ? reviewPanel().textContent : '(none)') + '\n-- above the cards --\n' + head();
+  const shopBtn = label => shops() && [...shops().querySelectorAll('button')].find(b => b.textContent.replace(/^✓ /, '') === label);
+  const shopStep = async (name, run) => {
+    await step(name, async () => {
+      calls.length = 0;
+      const ok = await run();
+      await steady();
+      capture(name, ok, shopView);
+      capture(name + '-store', ok, () => storeView([], tapeKeys()));
+      capture(name + '-calls', ok, () => calls.join('\n\n'));
+    });
+  };
+  const pasteRead = async name => {
+    await shopStep(name, async () => {
+      jobWeb = newVenueWeb();
+      jobClaude = full => (/Testhaus Treasures/.test(full) && !/name the art period/.test(full) ? batchReply(full, async p => (/Testhaus Treasures/.test(p) ? NEW_REPLY : undefined)) : undefined);
+      click(button(/^Import$/)); await until(() => !!inDialog(/^Paste$/));
+      click(inDialog(/^Paste$/)); await steady();
+      type(doc.querySelector('input[aria-label="Link"]'), NEW_URL); type(doc.querySelector('textarea[aria-label="Text"]'), NEW_TEXT);
+      await settle(1000); await steady();
+      click(buttons(/^Read$/).pop());
+      const ok = await until(() => !!button(/^Cancel import$/), 60000);
+      await steady();
+      for (const b of buttons(/^Add new entry$/)) click(b);
+      await steady();
+      return ok && !!button(/^Next$/);
+    });
+  };
+  const press = (name, label, wait) => shopStep(name, async () => { const b = typeof label === 'string' ? shopBtn(label) : label(); if (!b) return false; click(b); return wait ? await until(wait, 30000) : true; });
+  await pasteRead('paste-new');
+  await press('shop-screen', () => button(/^Next$/), () => !!shops());
+  await press('shop-confirm', 'Confirm');
+  await press('shop-back', 'Back', () => !shops());
+  await press('cancel-import', () => button(/^Cancel import$/), () => !button(/^Cancel import$/));
+  await pasteRead('paste-new-again');
+  await press('shop-screen-again', () => button(/^Next$/), () => !!shops());
+  await press('shop-confirm-again', 'Confirm');
+  await press('shop-no-shop', 'No shop');
+  await shopStep('shop-add', async () => {
+    const b = shopBtn('Add'); if (!b) return false; click(b);
+    const box = await until(() => !!shops().querySelector('input')) && shops().querySelector('input');
+    if (!box) return false;
+    type(box, 'shop.' + NEW_HOST + '/collections/books'); await steady();
+    box.dispatchEvent(new win.KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+    return await until(() => !shops().querySelector('input'));
+  });
+  await press('shop-look-again', 'Look again', () => !/Looking…/.test(shops().textContent));
+  await press('shop-back-again', 'Back', () => !shops());
+  await press('shop-next', () => button(/^Next$/), () => !!shops());
+  await press('shop-answered', () => shopBtn('Confirm') && !shopBtn('Confirm').disabled ? shopBtn('Confirm') : shopBtn('No shop'));
+  await press('shop-apply', () => shops() && [...shops().querySelectorAll('button')].pop(), () => !shops() && /Import complete/.test(text()));
+  jobWeb = null; jobClaude = null;
+  if (dialog()) { click(inDialog(/^Cancel$/)); await steady(); }
+
+  // 5. The whole run's store sequence, opening to here.
+  capture('store-sequence-all', true, () => seq.join('\n'));
 
   screens.consoleErrors = shouted.join('\n');
   fs.writeFileSync(outFile, JSON.stringify({ values, plain, kinds, screens, missed }));
