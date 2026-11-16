@@ -291,6 +291,11 @@ A session records each failing suite here and does not investigate it (`docs/tes
 seconds for an automatic save (CA-002, CA-005d, CA-006, TC-001) gave up. The cloud suites now run alone (her decision; the 8
 seconds kept). If one still fails when run alone, record it here — that is a real fault, not crowding.
 
+**OPEN — the live shop checks miss at four venues** (`shop_check.js`: Berlin, the Albertina, the Belvedere;
+`gallery_shop_check.js`: White Cube), the same under the code before the price rule (the same live replies read by
+both). Needs investigation: a finder fault or a right answer the site has moved on from (`docs/restructure.md`,
+"Parked for her").
+
 **OPEN — the scraper's unit group (`node --test scraper/date.test.js …`, `pacing.test.js` in it) freezes now and then when
 other suites run beside it**; three times so far, each time passing in seconds alone. It recurred, so it needs investigation.
 The runner now stops it and re-runs it alone (`docs/testing.md`), so it costs about a minute, never her wait.
