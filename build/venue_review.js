@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /*
- * venue_review.js — her venue review page, built from the register (docs/restructure.md, 4A).
+ * venue_review.js — her venue review page, built from the register (docs/restructure.md, "The venue register").
  *
  *   node build/venue_review.js      writes build/dist/venue_review.html
  *

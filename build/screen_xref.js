@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /*
- * screen_xref.js — the cross-reference behind the main screen's cutting plan (docs/restructure.md, item 5).
+ * screen_xref.js — the cross-reference behind the main screen's cutting plan (docs/restructure.md, "How the app is laid out now").
  * For everything the screen's block remembers or defines (state, refs, functions, memos, values), it
  * prints which functions and which sections of the layout read it and which write it. A boundary for a
  * cut is where this shows one: a thing used inside one section only moves into it; a thing two share

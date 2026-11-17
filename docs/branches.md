@@ -25,7 +25,9 @@ Branches separate in-progress work from known-good work, never components.
 | `claude/met-connection-experiments` | Abandoned — do not merge |
 | `claude/playwright-scraper-prototype-z68iko` | Abandoned — merging it would undo the current scraper |
 | `claude/restructure-L0`, `claude/restructure-L1`, `claude/restructure-L2`, `claude/restructure-L3`, `claude/restructure-L4a`, `claude/restructure-L4b`, `claude/restructure-L4c`, `claude/restructure-L4d`, `claude/restructure-L4e`, `claude/restructure-L4f`, `claude/restructure-L5a`, `claude/restructure-1A`, `claude/restructure-1B`, `claude/restructure-2`, `claude/restructure-3a`, `claude/restructure-3b`, `claude/restructure-3c`, `claude/restructure-3d`, `claude/restructure-4a`, `claude/restructure-4a-fixes`, `claude/restructure-4a-filing`, `claude/restructure-4a-pallant`, `claude/restructure-check`, `claude/restructure-4-app`, `claude/restructure-4-scraper`, `claude/restructure-4-keys`, `claude/restructure-5-a1`, `claude/restructure-5-a2`, `claude/restructure-5-a3-check`, `claude/restructure-5-a3a`, `claude/restructure-5-a3b`, `claude/restructure-5-b1`, `claude/restructure-5-b2`, `claude/restructure-5-c1` … `-c7` | One per restructure layer, work item or 4A fix (docs/restructure.md): opened from `main`, merged back once its gates pass; kept as history |
-| `claude/restructure-4a-case3` | 4A's waiting-room test with a test venue name, kept off `main` (docs/restructure.md, handover record) |
+| `claude/restructure-4a-case3` | The waiting-room test with a test venue name, kept off `main` |
+| `claude/v59-1` | 59.1 (the Theme chip's count, the venue scrubber) — merged into `main`; kept as history |
+| `claude/restructure-fixes` | **Another session's four fixes left from the restructure** (its brief is on that branch, in the restructure docs folder, `fixes.md`); merges into `main` only when she says |
 
 **Holding a push for another session — her decision.** When she says a
 session must wait for another:

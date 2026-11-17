@@ -71,7 +71,7 @@ const writeShell = args.includes('--write-shell');
 
 function die(m) { console.error('BUILD FAILED — ' + m); process.exit(1); }
 
-// ── the venues waiting in the store, filed into the code (docs/restructure.md, 4A) ───────────────
+// ── the venues waiting in the store, filed into the code (docs/restructure.md, "The venue register") ───────────────
 //
 // A build that will be published files what the page's store holds for venues first: the waiting
 // room (`venues/occasional`) into venues/register.js, and her names from the venue review page. The
