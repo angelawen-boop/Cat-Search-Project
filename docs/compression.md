@@ -2,7 +2,7 @@
 
 **Read this only when changing compression.** Built, tested and signed off; the
 running rules are in `docs/scraper.md` §9 and the prompts in
-`scraper/compress_prompt.md`. Compressed 30 Sep; full history in git.
+`scraper/compress_prompt.md`. Full history in git.
 
 ---
 

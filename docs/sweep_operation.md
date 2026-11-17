@@ -150,12 +150,9 @@ a venue's budget. Fixtures and probes never read it.
 - **No default wait on top of robots.txt in the container** — her decision,
   no problem seen in container sweeps.
 
-### The network bridge — don't remove it
+### The network bridge — what it reuses and logs
 
-In the container all outbound traffic goes through an agent proxy **Chromium
-cannot use**. So Chromium does no network I/O: every request is intercepted and
-answered by Node (`installNetworkBridge`). **A raw egress path around the proxy
-exists. Do not use it and do not build on it.**
+Why it exists, and the path around the proxy never to use: `docs/scraper.md` §7.
 
 - **It reuses program files and stylesheets the site lets be kept**, once per
   worker, as a browser does (her go-ahead); never the page itself or live
@@ -164,7 +161,6 @@ exists. Do not use it and do not build on it.**
   `reply labels` line (`replyLabels`; BR-015 to BR-017). A timeout says whether
   the page itself arrived and which files were outstanding (`stallReport`;
   ST-001/002).
-
 
 ### Then hand her the file — she must never have to ask
 

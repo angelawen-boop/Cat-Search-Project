@@ -147,11 +147,8 @@ link Add by link reads save one record to the page's store (`lookups`, newest 50
 so a miss or an untidy title is diagnosed without her pasting the panel. It holds
 every call's input and full answer, what Claude was sent and its exact answer, the
 card before and after, and for a link what code read off the page and the title
-made; gzipped, split
-into `pieces` under the 256 KiB cap. Nothing shows on the page; the panel is
-unchanged. A session reads it: ArtifactData `list` of `lookups`, then of
-`lookups/<id>/pieces`, with `out_dir`; then `node build/lookup_log.js <dir> <id>`.
-`saveLookupTape`; LL-001 to LL-009.
+made; gzipped, split into `pieces` under the 256 KiB cap. Nothing shows on the page.
+How a session reads it: CLAUDE.md §1, "The logs". `saveLookupTape`; LL-001 to LL-009.
 
 **The progress line** (her decision): at most four labels, in order, each once,
 never back — "Searching venue shop…", "Searching more broadly…" (shop had
@@ -222,8 +219,10 @@ text handed to it, so it can never report a page that was not found.
   her list alone (known misfire: a namesake). C-070 to C-078e.
 - **The publisher link is checked** (`cleanPublisherUrl`, `publisherLinkOf`):
   a real address on the publisher's own site. C-032 to C-038.
-- **One fold for matching** (`foldText`): accents dropped and ø æ œ ß ł đ ð þ ı
-  folded, so "Hammershøi" matches "Hammershoi". LT-001 to LT-004.
+- **One fold for matching** (`foldLetters` in `scraper/keys.js`, `foldText` in the app): lowercase, accents dropped,
+  ø æ œ ß ł đ ð þ ı folded, so "Hammershøi" matches "Hammershoi". The search box, title matching, the artist key,
+  compression's title key and the place fold all use it; a show she holds, met again spelled with plain letters at
+  another address, is matched, not offered as new. LT-001 to LT-004.
 
 ### Rules her decisions settled
 
@@ -246,9 +245,7 @@ Each replaced a real failure. Card wording is in the code.
   Canaletto): `englishCheck`, `englishLine`, never repeating the publisher above it.
 - **Publisher and edition are read off the ISBN, in code** (Botticelli gave three
   publishers in three lookups; order of trust: "Trust order" above). An English edition
-  must be the same catalogue (`sameCatalogue`; Reaktion's monograph refused, ED-004). The
-  facts round runs always at a non-English venue, elsewhere only for a missing ISBN or a
-  missing or guessed publisher.
+  must be the same catalogue (`sameCatalogue`; Reaktion's monograph refused, ED-004).
 - **A book found on the web is looked for again on the shop's list read first** (her decision,
   Yale *Constable*: the list says only "Constable", so the shelf read cannot tie it to the show;
   the web can). Phase 4b, `bookOnShelfAfterWeb`: EVERY shelf link carrying the book's whole
@@ -281,7 +278,7 @@ Each replaced a real failure. Card wording is in the code.
   the design working. A ticket is never a catalogue (`isTicketLink`); a web-found shop
   link is opened before it is filed (`confirmShopLink`).
 - **Not in the shop** reads "Not in the museum shop — shop link opens the general store."
-  at every venue with a shop. A venue with none (`borghese`, `capo`, `dellav`) reads only
+  at every venue with a shop. A venue with none (`borghese`, `capo`, `dellav`, `uffizi`) reads only
   "Venue has no shop.", grey, no shop link, no Re-check; its lookup goes straight to the
   web. **Booko** (last buy link; no "AU" on any bookseller button, her decision) is `booko.au/<isbn>`, else its title search.
 - **Read in code before Claude:** a book's link on a shelf (`bookLinkOnShelf`: the one
@@ -332,6 +329,7 @@ seeing the change. It is not a monitor.
 | a shop link, green | re-reads THAT page | 404 / redirected / sold out → **No longer in the museum shop.** (dark red), link kept as **Museum shop (last seen)** |
 | a shop link, red | re-reads THAT page | buyable → **Back in the museum shop.** |
 | no shop link | the shop step alone | found → **Now in the museum shop.** |
+| a shop link, green, still there | re-reads THAT page | the headline becomes **Still in the museum shop.**, same green, saved (`shopChange: "still"`); the small line under the button goes |
 
 - No history kept (her decision). A failed check changes nothing — a refusal,
   timeout or empty page is never "gone".
@@ -339,18 +337,17 @@ seeing the change. It is not a monitor.
   question to Claude about one page. Pre-order counts as in the shop; sold out /
   unavailable in any language counts as gone. **Sold out anywhere on the page
   outranks** "Add to cart", a price or a note to earlier pre-orderers (Morgan Tarot).
-- Search again replaces the card, shop status included (above); Re-check is unchanged.
+- Search again replaces the card, shop status included (above), and puts the plain "In the museum shop." back;
+  Re-check is unchanged. "Now in the museum shop." is saved on every path. C-079c, C-097, M-004.
 - Tested: C-079 to C-099, `recheck_shop.js` R-001 to R-023. **Not yet seen: how
   a real shop words "sold out", or a real redirect.**
 
 ### Blocked shops, tickets, web-found shop links
 
-Three rules (KHM *Canaletto & Bellotto*, filed "In the museum shop" with a dead TICKET
-link): a shop's waiting room (307 on every page) is not "not in the shop"; a ticket is
-never a catalogue; a web-found shop link counts only once opened and shown to be the
-book for sale. A blocked shop says so (her wording, "Rules her decisions settled"). Rows already
-carrying a ticket link lose it on Re-check. L-001 to L-019; L-020 to L-023 for
-`listedOnly`.
+From KHM *Canaletto & Bellotto*, once filed "In the museum shop" with a dead TICKET link: a shop's
+waiting room (307 on every page) is blocked, not "not in the shop"; the ticket and web-found-link rules are
+in "Rules her decisions settled". Rows already carrying a ticket link lose it on Re-check. L-001 to L-019;
+L-020 to L-023 for `listedOnly`.
 
 ### Shop addresses — checked by opening each
 
@@ -362,7 +359,8 @@ Gallery back to 2019).
 
 **The addresses are printed from the venue register (`venues/register.js`) by `node scraper/shop_addresses.js`** —
 the register is the one copy. No shop: borghese, capo, dellav, uffizi (its shop sells no books, so it is never searched —
-her decision, 59.2; `khm` has no shelf).
+her decision); `khm` has no shelf. The Uffizi is searched under its Italian name (`full`; `inEnglish` the English), and
+a venue is recognised as a publisher, and named, under either.
 
 - **Shelf depth is one number for every shop**: `SHELF_DEPTH`, five pages, read
   in the same call — five covers MAD's 68 books. Menil and Morgan answer
@@ -378,12 +376,10 @@ her decision, 59.2; `khm` has no shelf).
 The app names no model. It asks the viewer's Claude through `sample`; every
 lookup read passes `modelTier: default`. **The one exception: the Links, Pages and Paste read asks `complex`**
 (her decision, after its descriptions turned flat on `default`; `LINK_READ_TIER`, AL-090) — one request for the whole
-import (`docs/add_by_link.md`), so the cost is per import, not per link. **Which model answered is not recorded:** the app reads
-`sample.json`, which hides the tier applied, so the lookup log cannot show whether `complex` was served. Measured on her
-Palazzo Strozzi links: the old rules echoed the title on Opus and Sonnet alike, so the model was not the cause. Her verdict on 57.2: better, not necessarily good (CLAUDE.md §2.2.11). `quick` risks exactly the misreadings
-this route was rebuilt to fix; `complex` costs more; nothing has misread, so
-there is nothing to tune against. Only one `.jsx` has ever existed in this repo
-— the "Sonnet copy" was a Chat artifact.
+import (`docs/add_by_link.md`), so the cost is per import, not per link. Her verdict: better, not necessarily good
+(CLAUDE.md §2.2.11). **Which model answered is not recorded:** `sample.json` hides the tier applied. `quick` risks exactly
+the misreadings this route was rebuilt to fix; nothing has misread, so there is nothing to tune against. Only one `.jsx`
+has ever existed in this repo — the "Sonnet copy" was a Chat artifact.
 
 ---
 
@@ -486,6 +482,12 @@ Quarantine adds a "you'd said never to add" term. **Every term stays.**
 - **Occasional is two chips: Occ - US (Australia last) and Occ - Europe (UK included); no Occ - Other** (her
   decision). Europe's order: UK, Germany, Belgium, France, Switzerland, Italy, Spain, Netherlands.
   A venue's country is on its register entry (`venues/register.js`), else the address's country ending (OC-001–002).
+- **A picked Theme chip reads "Sculpture · 107"** (her design): its own count after a dot, gone when unpicked; with two
+  picked, each shows its own count (the list with that theme alone picked, every other filter as it stands), while the
+  list holds the shows with either. TC-001–005.
+- **The scrubber lists venues in an Occ group** (her design): with "Occ - US" or "Occ - Europe" picked and the list
+  sorted by venue, holding the right edge opens the Period sort's ruler, one row per venue in Sort-by-venue order;
+  lifting jumps to that venue's first card. VS-001–006.
 - Search ignores accents ("Bocklin" finds Böcklin); the When line reads Current, Past, Announced. "Reset to Seed"
   always asks, and is unwired from her page (drawn only when a test sets `window.__catWatchTest`).
 
@@ -624,18 +626,3 @@ Her wording and order. The code holds the exact strings.
   first only while the red banner shows.
 - **Storage limit:** a record over 256 KiB is refused; a large ledger splits into
   compressed pieces (a 352-row ledger is one piece) and reads back identical.
-
-## The Theme chip's count and the venue scrubber (59.1, her design)
-
-- **A picked Theme chip reads "Sculpture · 107"**: its own count after a dot, gone when unpicked. With two
-  picked, each shows its own count (the list with that theme alone picked, every other filter as it stands),
-  while the list holds the shows with either.
-- **The scrubber lists venues in an Occ group**: with "Occ - US" or "Occ - Europe" picked and the list sorted by
-  venue, holding the right edge opens the same ruler as the Period sort, one row per venue in the order Sort by
-  venue gives; lifting jumps to that venue's first card. Tests TC-001 to TC-005, VS-001 to VS-006.
-- **"Still in the museum shop."** — a Re-check that finds the book in the shop again changes the card's headline to
-  this, in the same green, and saves it (`shopChange: "still"`): the small line under the button goes, so the
-  headline is what tells her she re-checked. A fresh Search again puts the plain "In the museum shop." back.
-  A Re-check that finds a book newly on the shelf now also saves "Now in the museum shop." on every path. C-079c,
-  C-097, M-004.
-

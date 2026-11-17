@@ -103,8 +103,8 @@ checked against them. ● = starts picked; a card with one version looks as it d
 Her decision. Search logic, kept apart from the display work: it is built with the Stage 1/1b search on `parked`
 (`docs/handover_search_stage1.md` there), never as a patch on today's search on `main`.
 
-**Fixed on `main`, live at her next publish: a link venue searched under its short card name** ("Detroit", "Antwerp KMSKA").
-Restructure 4A makes every venue's `lookupName` its full name (her decision: search names long, card names short).
+**Fixed, live at 59: a link venue searched under its short card name** ("Detroit", "Antwerp KMSKA") — the venue register
+makes every venue's `lookupName` its full name (her decision: search names long, card names short).
 
 **What the search is for:** every catalogue of this exhibition, at any showing, whoever printed it — this venue's, another's, a
 tour's shared one, and their other printings, bindings and languages. Which venue a book belongs to never decides whether it is

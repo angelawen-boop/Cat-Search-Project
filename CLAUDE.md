@@ -166,11 +166,10 @@ Everything not listed here is finished. Do not reopen a closed item without a ne
 
 The app is feature parts under `app/` that a session can read whole; the main screen is the order of its pieces
 (`docs/restructure.md`: how it is laid out, the rules any later change to the screen follows, the checks). Her test
-round 3 passed. **`main` holds 59.2, unpublished** (the rebuilt screen, the Theme chip's count, the venue scrubber for
-the Occ groups, "Still in the museum shop.", and the fixes after item 4 — her test round on the test page passed; the Uffizi's shop removed after it, on `main` only);
-her app runs 59 as published before the main-screen work. **OPEN — the plan to 60, in order (her decisions):** a new
-session builds the words list (every sentence she sees, written once), then the housekeeping; 60 is published when she
-says; then the leftover venue record is cleared. **She types "Continue the restructure." → read `docs/restructure.md`
+rounds passed. **`main` holds 59.2, unpublished** (the rebuilt screen, the Theme chip's count, the venue scrubber for
+the Occ groups, "Still in the museum shop.", the fixes after item 4, the Uffizi's shop removed, the words list — every
+sentence she sees, written once — and the housekeeping); her app runs 59. **OPEN — the rest of the plan to 60 (her
+decisions):** 60 is published when she says; then the leftover venue record is cleared. **She types "Continue the restructure." → read `docs/restructure.md`
 and do the next undone step of "What is left — the plan to 60".** Her venue review page,
 permanent, refreshed and filed at each publish: https://claude.ai/artifact/RmSC86pu1rkBxsZDtfdA1J.
 
@@ -195,18 +194,14 @@ build with `parked` Stage 1/1b). Today the first read names one book and throws 
 Hemessen fix), and other versions are listed only after a book passes — *Victorian Radicals* lost both its books. Full record:
 `docs/catalogue_versions.md`, "Search: every catalogue of the exhibition" — read it before any search work.
 
-**Done — the catalogue blocks, live at 47.1** (her call: done unless she finds bugs): her order, the first book picked, one block per book.
-
 **PAUSED — no lookup patches until the redesign is agreed** (her decision: past the third-patch limit — `lookupCatalogue` changed 10
 times in three days). The redesign (find → choose → tell, every version kept, her starting-pick rules) and its nine agreed cases are in
 `docs/catalogue_versions.md`; every later change is checked against them. Awaiting her approval to build; no code before. She is
 noting issues as she uses it, for a later debugging session.
-- **A link venue searched under its short card name ("Detroit")** — fixed by the venue register (every venue searched
-  by its full name), live at 59.
 - **OPEN — three cases any search debugging must fix** (her decision; `docs/catalogue_versions.md`, cases 10–12; case 13, Beato
   Angelico, is her report, not yet agreed): Munich's CEDON shop sells German and English editions on ONE page with a language choice
   (*Venezia 500*, *Jacobus Vrel*), and junk text is written as the publisher (Vrel, Dresden's *Paradise on Earth*, Correggio).
-- **Shops tested by her in the app:** `brit`, `morgan`, `mad`, `orsay`, `louvre`, `moma`. `uffizi`'s shop sells no books: no shop in its entry, never searched (her decision, 59.2).
+- **Shops tested by her in the app:** `brit`, `morgan`, `mad`, `orsay`, `louvre`, `moma`. The Uffizi's has no books, so it is never searched (her decision; `docs/app.md`).
 - **OPEN — the publisher step's verdict is not stable.** *Metamorphoses* (Hannibal), two fresh lookups, same code: "Publisher's
   section", then "Publisher" (right). Cause unproven (a different candidate page, the page empty — `pageIsShell`, or the read judging a
   page differently); read its lookup-log record (gone once 50 newer lookups have run).
@@ -261,10 +256,8 @@ Cini, Prado, Correr): `docs/app.md`, `docs/add_by_link.md`.
   (Louisiana): *Louise Bourgeois* → "Bourgeois's Cells, begun when she was almost eighty." Agree any change with her first.
 - **Live at 58, her next import confirms** — one request to Claude for the whole Links, Pages or Paste import; never the
   title reworded; a written-in shop never asked on the shop screen (`docs/publishing.md`, "What is live now").
-- **OPEN — Belvedere stays German** (lookup log L1792752998011063a): the English search found `belvedere.at/en/museum-shop`, whose
-  shop link points to the German `belvedere.at/shop`, and the app followed it; the English-version step tried only English FRONT
-  pages, never the English version of the shop page. Its English shop's address is not known. The shop check passed it because a
-  venue whose right answer is "no books section" (`shop: null`) passes on ANY non-books answer — fix both before more test links.
+- **OPEN — Belvedere stays German**, and the shop check passes a venue whose right answer is "no books section" on ANY
+  non-books answer — fix both before more test links (the cause: `docs/add_by_link.md`, "The English version").
 - **OPEN, her go-ahead pending — the shorter date note:** `The venue's page shows only "September 2026" for this exhibition's
   dates — no day.` (her wording; cut after "no day"). The sweep writes the same note (`shownOnlyNote`, `dates.js`), so the
   sweep's cards change with it.
@@ -298,8 +291,8 @@ seconds kept). If one still fails when run alone, record it here — that is a r
 
 **OPEN — the live shop checks miss at four venues** (`shop_check.js`: Berlin, the Albertina, the Belvedere;
 `gallery_shop_check.js`: White Cube), the same under the code before the price rule (the same live replies read by
-both). Needs investigation: a finder fault or a right answer the site has moved on from (`docs/restructure.md`,
-"Parked for her").
+both). Needs investigation: a finder fault or a right answer the site has moved on from (`docs/testing.md`,
+"The shop finder's standing check").
 
 **OPEN — the scraper's unit group (`node --test scraper/date.test.js …`, `pacing.test.js` in it) freezes now and then when
 other suites run beside it**; three times so far, each time passing in seconds alone. It recurred, so it needs investigation.
@@ -472,16 +465,15 @@ Each line came from a real failure. Details are in git history and `docs/`.
   role split.
 - **Catalogue lookup:** splitting it from drawer output. (A map of publisher websites is no longer rejected — her roadmap,
   §6.) A background shop check on every click. Linking straight to an Amazon product page from an ISBN-10. Pointing the shop
-  link at an ISBN search. **Asking a Shopify shop directly whether a book is for sale**: `.js` refused, `.oembed` 429, a
-  product's `.json` has no availability; the search answer's `available` counts pre-orders and omits the sold-out Tarot.
+  link at an ISBN search. **Asking a Shopify shop directly whether a book is for sale** (each answer refused or wrong:
+  `docs/shop_pages/README.md`).
   **Reading the exhibition's own page for a catalogue when the shop is blocked** — a model read and a new step for two shops
   (KHM, MAM); the card already links the shop's search.
 - **Scraper:** blocking scripts and trackers in the bridge (IR-13). Splitting the scraper into modules (IR-14). **Fetching
   several pages at once within one venue (IR-15) — never.** Dropping an undated row because its start date is old (IR-18). A
   default wait on top of robots.txt in the container.
-- **Blocked venues:** **sweeping in her everyday Chrome on her own profile** — Chrome refuses a program attaching to its main
-  profile, her personal browsing stays out of this, and the Morgan checks her own browser every visit while the seeded
-  profile is not checked. **Fetching a blocked venue through the Parallel connector** — no more new methods to chase a venue.
+- **Blocked venues:** **sweeping in her everyday Chrome on her own profile** (Chrome refuses a program on its main profile;
+  her browsing stays out of this; `docs/venues.md`). **Fetching a blocked venue through the Parallel connector** — no more new methods to chase a venue.
   **Splitting one venue across days, or a slower pace**.
 
 **Corrected along the way:** Chat can **not** fetch any URL cold. The Italian venues are four different situations. The

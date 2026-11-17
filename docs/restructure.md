@@ -1,9 +1,8 @@
 # The restructure — the app in feature parts
 
-**The cutting is finished and on `main`; her test round 3 passed. Her app still runs the version published
-before the main-screen work.** A session sent here by "Continue the restructure." reads this file, then
-does the next undone step of "What is left — the plan to 60". The step-by-step designs and the record of each run are in git
-(`git log -p -- docs/restructure.md`).
+**The cutting is finished and on `main`; her test rounds passed. Her app still runs 59, published before the
+main-screen work.** "Continue the restructure." → read this file, then do the next undone step of "What is left — the
+plan to 60". Each run's design and record are in git (`git log -p -- docs/restructure.md`).
 
 ## Why (her decision)
 
@@ -25,20 +24,14 @@ import (her name):** Links, Pages and Paste together.
 
 ## What was done
 
-- **The parts.** Every piece moved into a part under `app/`, by feature; `Cat_Watch.jsx` is the joined
-  output. The parts hold no copy of the scraper's rules: the join writes them in from the scraper's files
-  each time (the one exception: the summary examples, re-taken by `sync_shared.js --examples`).
-- **One door to the store** (`connections/store.jsx`); the web and Claude connections announce each call
-  and the lookup log listens.
-- **The machinery out of the screen:** the CSV import engine, the Read job for manual import, Save and
-  the cloud copy's jobs, Reset and Load; then card marks, the list's filters and sorts, the lookup and
-  labelling jobs, a venue's shop answers.
-- **One copy of every fact:** the venue register (`venues/register.js`, below), the app's repeated
-  sentences and patterns, the sweep file's columns and readers (`scraper/pro_forma.js`), one web-address
-  key, one accent strip and one show-ID rule (`scraper/keys.js`, `showId`). The audit:
-  `docs/restructure/duplicates.md`.
-- **The main screen** went from about 1,770 lines to about 200: its layout is 37 small pieces, its memory
-  seven hook groups, and what is left is the order of the pieces.
+Every piece moved into a part under `app/`, by feature (`Cat_Watch.jsx` is the joined output; the parts hold no copy of
+the scraper's rules — the join writes them in, except the summary examples, re-taken by `sync_shared.js --examples`). One
+door to the store (`connections/store.jsx`); the web and Claude connections announce each call and the lookup log
+listens. The machinery taken out of the screen (imports, Read, Save and the cloud jobs, Reset and Load, card marks,
+filters and sorts, lookups, labelling, shop answers). One copy of every fact (the venue register; `scraper/pro_forma.js`
+for the sweep file; `scraper/keys.js` for the web-address key, the letter fold and the show-ID rule; the audit:
+`docs/restructure/duplicates.md`). The main screen went from about 1,770 lines to about 200: 37 small pieces, seven hook
+groups, and the order of the pieces.
 
 ## How the app is laid out now
 
@@ -130,8 +123,7 @@ every piece and every test that lifts part of the page can name it.
   page, https://claude.ai/artifact/RmSC86pu1rkBxsZDtfdA1J (store `names/<id>`, `picks/<key>`), rebuilt
   from the register at each publish, her entries filed in then.
 - **Her ledger is never changed (her decision) — banned outright.** No item alters, corrects or migrates
-  her ledger rows or saved file. Where a duplicate sits inside her ledger, it stays. The quarantine stays
-  in both the store and her saved file.
+  her ledger rows or saved file. Where a duplicate sits inside her ledger, it stays.
 - Thyssen's and Acquavella's shop sections are written into the register: hard-coded answers, her decision.
 
 ## The checks
@@ -142,13 +134,9 @@ every piece and every test that lifts part of the page can name it.
 - **`build/side_by_side.js --base <ref> --changes-allowed`** — two versions of the page in a stand-in
   browser with the same clock, store, web and Claude: every table and list the page defines, every screen,
   every store record, every web and Claude call, and the store's sequence of reads and writes must be
-  identical; only a function's text may differ. It walks: opening and loading her test ledger; the Import
-  pop-up's tabs; every chip and sort and their combinations; card marks and the undo; Save now and the
-  Cloud Saves drawer; a sweep file's review (mixed decisions, partial apply, apply); Reset; the Read for
-  Pages and Paste; Label, Relabel and "Do not regroup"; Find catalogue, Search again, Re-check, a lookup
-  that dies and one with trouble; the digital link; the catalogue pick; a new venue through the shop
-  screen (every answer, Apply, and Cancel import); the dark theme and each drawer. About six minutes. Long
-  repeating timers never fire in it. **Use it for any change meant to leave behaviour alone.**
+  identical; only a function's text may differ. It walks every screen and action she has (the walk is listed
+  in the script). About six minutes; long repeating timers never fire in it. **Use it for any change meant
+  to leave behaviour alone.**
 - **`build/restructure_gates.js --base main --layer <id> --changes-allowed`** — the join exact, nothing
   lost or doubled, every piece in its part, then the three checks above. Then `npm run test:app`.
 - **`build/same_text_check.js`, `build/sweep_same_check.js`, `build/keys_compare.js`** — the proofs of the
@@ -174,54 +162,32 @@ see, and what it proves. Real cards and venues from her ledger. The session runs
 lists only what it has seen come out right, saying plainly which items it could not run live (anything
 needing her connector or her Claude); grouped in order; plain words, no code names.
 
-## The fixes after item 4 — done (59.2)
+## How a session works on this — her standard (keep)
 
-Merged from `claude/restructure-fixes`. Period labelling keeps sending a venue's English name (`periodShow`);
-the side-by-side check finds a picked Theme chip with its count. **Her standard for such work (keep):** a session solves, without
-asking her, anything the real world gives one answer to, any inconsistency with how the app already does
-the same job, and a test key the world has moved on from; a side effect of a fix is a flaw in the fix, so
-the fix without it is found; "nothing is failing" is no reason to leave two rules. She is asked only for
-taste or her own data (a sentence on screen, what a venue keeps, a name she chose), anything touching her
-ledger or store, publishing, a real fork, or a fix that could not be found — in a few plain lines.
-- **One letter fold.** `foldLetters` (`scraper/keys.js`, in the app as `KEYS`): lowercase, accents dropped,
-  ø æ œ ß ł đ ð þ ı folded. The search box, title matching, the artist key, compression's title key and the
-  place fold all use it. `build/keys_compare.js` on her ledger and quarantine: every stored key and starter
-  ID unchanged, the same cards on re-import, none she holds offered as new; the simplified copies spelled
-  differently are printed as a note, and a copy that newly joins or splits two shows fails. A show she
-  holds, met again spelled with plain letters at another address, is now matched, not offered as new.
-- **One price rule.** `pricesIn` / `hasPrice` (`app/shop_finder/museum_shop.jsx`) for the finder, the lookup
-  and the galleries: an amount with its currency, cents or none; never a zero total, a price filter, a
-  "from … and above" bound or a delivery threshold; a range standing alone is one book's price span. A
-  shelf may still be known by its price filter. `build/price_compare.js`: every venue's shelf fetched live,
-  each difference read; the live shop checks give every venue the same answer as the code before.
-- **The Uffizi is searched in Italian under its Italian name** (`full`; its English name is `inEnglish`),
-  and a venue is recognised as a publisher, and named, under either. Its shop sells no books, so its entry
-  holds no shop and a lookup goes straight to the web (her decision, after her test round).
-- **The proof pages.** A changed page read correctly updates the key; read badly, the reader gets that
-  venue's rule (the Prado's cut-off marker and curator credit, the V&A's picture captions never dated).
-  `scraper/link_proof_check.js` treats a page listed as refused as listed while refused for the same reason.
-- **Small faults:** a file with no sweep time adds nothing to the sweep log; `show_tags.readCsv` says how
-  many rows it dropped; `build/blocks_check.js` names its cases by venue and title.
-- **The live shop checks miss at four venues, the same under the code before the fixes** (the same live
-  replies read by both): Berlin takes one book's page for the section, the Albertina's section is not
-  found, the Belvedere stays German (CLAUDE.md §2.2.11), White Cube takes its prints section. Not
-  investigated.
+A session solves, without asking her, anything the real world gives one answer to, any inconsistency with how the app
+already does the same job, and a test key the world has moved on from; a side effect of a fix is a flaw in the fix, so
+the fix without it is found; "nothing is failing" is no reason to leave two rules. She is asked only for taste or her own
+data (a sentence on screen, what a venue keeps, a name she chose), anything touching her ledger or store, publishing, a
+real fork, or a fix that could not be found — in a few plain lines.
+
+**The fixes after item 4 (59.2, done):** one letter fold (`foldLetters`; `docs/app.md`, "Why each rule exists"; proved on
+her ledger and quarantine by `build/keys_compare.js`: every stored key and starter ID unchanged), one price rule
+(`docs/add_by_link.md`, "The shop finder"; proved live by `build/price_compare.js`), the Uffizi searched under its Italian
+name, the Prado's and the V&A's link rules (`docs/add_by_link.md`, "Venue link rules"). The live shop checks miss at four
+venues, the same under the code before (CLAUDE.md §2.2.6).
 
 ## What is left — the plan to 60 (her decisions)
 
 In this order; nothing runs beside another.
 
-1. **Done — the fixes merged as 59.2**, on the test page ("The fixes after item 4" above); her test round
-   on it passed. The Uffizi's shop was taken out of its entry after it (on `main`, not on the test page).
-2. **Done — the words list** ("The words list" above). No wording changed: the side-by-side check came
-   out identical.
-3. **Housekeeping** — the same session after the words list, or a new one she starts (Sonnet at medium is
-   enough): re-run the tools' own proofs (`node build/restructure_gates_proof.js`, `node
-   build/side_by_side_proof.js`, about half an hour); the "-2, -3" suffix that keeps a new ID unique,
-   written twice inside the import's apply, made one; a memory of "the venues the last Read met" that is
-   written and never read; the import's quarantine write that runs inside a state updater; the Save
-   panel's "File name:" preview worked out without the save's trim and 80-character cut;
-   `placement.json`'s oldest note on `screens/app.jsx`; the docs over their size budget (the guide review).
+1. **Done — the fixes merged as 59.2**, her test round on the test page passed; the Uffizi's shop taken out of its
+   entry after it (on `main` only).
+2. **Done — the words list** ("The words list" above); the side-by-side check came out identical.
+3. **Done — housekeeping:** the new-ID suffix written once; a memory written and never read removed; the quarantine
+   stored outside its state updater; the Save panel's "File name:" preview and Save sharing one rule; `placement.json`
+   brought up to date; the docs over their size budget (the guide review).
+   **Still to finish:** the tools' own proofs (`node build/restructure_gates_proof.js`, `node build/side_by_side_proof.js`,
+   about half an hour) re-run on this code.
 4. **Publish 60 to her real app — when she says.** The publish files any waiting venues and tells her in
    one line if it did.
 5. **After 60 is published and her app has opened on it:** the one-time clear of the leftover Christie's
@@ -252,5 +218,3 @@ her and the work moves on. She gets a short line at each quarter of a stage.
   another worktree holds `main`: use a detached worktree for an old-code copy.
 - A test that finds a control by its exact words breaks when the words gain a count or a mark: find it by
   its name with or without the addition.
-- Publishing: the first try is refused as not viewed and saves the live page; prove by script that the
-  live page is an earlier build of this same page, then send again (refused once as unchanged), then again.

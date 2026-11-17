@@ -56,7 +56,7 @@ what code cannot do — never start by handing a job to Claude. Where the line f
 - **The card name shows wherever a venue is named** (her decision): `names.card`, never the long search name; a chip keeps
   its own label (`names.chip`). **Search name long, card name short** (her decision): the shop search uses full name, other names, city, country (`venueSearchName`).
 - **Renaming a venue — on her venue review page, never in the app** (her decision;
-  https://claude.ai/artifact/RmSC86pu1rkBxsZDtfdA1J, `docs/restructure.md`, "4A"). The publish files her name into the
+  https://claude.ai/artifact/RmSC86pu1rkBxsZDtfdA1J, `docs/restructure.md`, "The venue register"). The publish files her name into the
   register entry: `names.card`, the name it replaces in `names.replaced`, `names.hers` true; chip label and full name
   stay, so chips and shop searches do not move. Claude learns from it: renames go into its question as "for <full
   name>: <her name>, not <Claude's>" (`SHORT_NAME_RENAMES`). **Her style** (her review of every link venue):
@@ -135,7 +135,10 @@ not speak English: (1) search for the English shop first ("<name> English langua
 result taken, no stacked searches (her decision); (2) landed on a foreign shop, look for its English version — a language link,
 else English addresses (`/en/`, `/en-int/`, `/en-gb/`, `/en-us/`, `en.`) in one call — and walk it as the shop was; (3) the English
 search finds no shop → the plain search, then step 2; no English version → the foreign section stands.
-**Known gap — Belvedere stays German** (CLAUDE.md §2.2.11).
+**Known gap — Belvedere stays German** (CLAUDE.md §2.2.11; lookup log L1792752998011063a): the English search found
+`belvedere.at/en/museum-shop`, whose shop link points to the German `belvedere.at/shop`, and the app followed it; step (2) tried
+only English front pages, never the English version of the shop page. Its English shop's address is not known. The shop check
+passed it because a venue whose right answer is "no books section" (`shop: null`) passes on any non-books answer.
 
 **Right answers, her decisions:** Thyssen — "Exposiciones", not the collection guides she once confirmed; Antwerp — the KMSKA
 shelf under Books, as confirmed. **The standing check is strict** (one right answer per venue): `docs/shop_check.json`,
@@ -154,7 +157,7 @@ last). **A site name the reader cannot match to the address
 needs a venue rule naming it** (the register's `names.full`; Mia). Fixes from Berlin: German joins its words; the shop page that shows
 the shop itself links one book first, so the book's site is taken.
 
-**A gallery's shop — her design** (published at 52.1; `docs/gallery_shop_check.json`, `node scraper/gallery_shop_check.js`).
+**A gallery's shop — her design** (`docs/gallery_shop_check.json`, `node scraper/gallery_shop_check.js`).
 Galleries sell books from a "Publications"/"Publishing"/"Library" page on their own site or a shop on another, rarely called a shop
 and never with an "exhibition catalogues" section, so they have their own path (her decision: galleries apart from museums) so no
 museum can get worse. Claude says whether a new venue is a gallery (`gallery`); a gallery goes down `galleryShop` first, and the
@@ -188,7 +191,7 @@ Her own link by **Add** is stored confirmed, so it is never asked again either. 
 Built as the scraper is: one shared reader, a venue entry only for what differs (her decision). **Where the sweep has met a case
 and she has decided it, Links and Pages follow the sweep's rule — the same code (`dates.js`), never a rule of their own** (her
 decision). Before writing a reader rule, look for the sweep's. A general rule ships only if no proof page gets worse. Code:
-`readShowPage`, `splitPageTitle`, `cardTitle`, `DATES.findDateRange`. Tests
+`readShowPage`, `splitPageTitle`, `cardTitle`, `DATES.findDateRange`.
 
 - **R1 Site in the page title** — a dash tail that is the site's address is the site (KHM); a separator with no site after it is
   dropped; a bar title with the site first takes the other part.
@@ -345,7 +348,7 @@ under the museum Claude names when that museum is on that site (`ownMuseumNamed`
 under its own museum (a Tate Modern record under Tate Modern). A sister site on a shared domain (cultura.gov.it) is not "under".
 **"Tate Gallery"** (pre-2000 records) names neither Tate, so it is its own venue (her decision); its shop must be the Tate's
 current shop. Its records' text for Claude is the one under their "Summary" heading, below the copies list (her saved Reynolds and
-Pre-Raphaelite pages; venue rule `from` with `fromLast`). No listed proof page can reach the rule (every page on her museums' sites files by address first). Tests
+Pre-Raphaelite pages; venue rule `from` with `fromLast`). No listed proof page can reach the rule (every page on her museums' sites files by address first).
 
 ## Someone else's page — a show held elsewhere
 
@@ -379,8 +382,8 @@ A last resort (her decision): a show so old its venue's page is gone, read off a
 - **At a swept venue** a link is for shows before the 1 July 2024 lookback, or a venue she has stopped sweeping — never a show the
   scraper has or will have. **No exclusions apply to a link** (her decision): displays and collection shows are added too.
 - **The general reader does not yet work at** acq, rijks, borghese, louvre, uffizi, mam, mad, ashmolean, artic, brit, dellav.
-  **Her choice: only acq, louvre, artic and brit get work**; the others may never come into play. A page printing no year still
-  fails — blank dates are NOT approved, and "current year" would misdate archives.
+  **Her choice: only acq, louvre, artic and brit get work**; the others may never come into play. A page printing no year
+  comes in undated with the sweep's note (R15) — never "current year", which would misdate archives.
 - **A link from one of the 28 files under that venue**, known by its site (`VENUE_SITES`, written into the page by the join; the
   Tates by path). A new venue's shop is looked for once per Read, never once per link.
 - **Claude reads relevant passages, not the first N characters** (`pickPassages`); a link labelled "catalog" onto the venue's shop

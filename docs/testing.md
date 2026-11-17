@@ -41,7 +41,9 @@ After a change to the shop finder only: `node scraper/shop_check.js <venue keys>
 run. About five calls a venue on the free Parallel server (her key is not in the environment). **After a fix: only the venues that fix
 can reach; all of them once before publishing** (her decision); a full run is about half an hour. **Live only — never saved copies of
 the shops' replies** (her decision). The gallery path has its own: `node scraper/gallery_shop_check.js <keys>`
-(`docs/gallery_shop_check.json`), same rules.
+(`docs/gallery_shop_check.json`), same rules. **Known misses, not investigated** (CLAUDE.md §2.2.6; the same under the
+code before 59.2, on the same live replies): Berlin takes one book's page for the section, the Albertina's section is not
+found, the Belvedere stays German, White Cube takes its prints section.
 
 ## Live proof pages — testing against the live internet
 
@@ -52,7 +54,8 @@ decision). Not part of `npm test`.
 imperfect; `rules`; `passage`, the first and last 60 characters handed to Claude). Fetch the addresses live through Parallel (the keyed
 connector only with her yes), save each reply as `{url,title,full_content}` by script into a scratchpad folder, run `node
 scraper/link_proof_check.js <folder>` (`--all` also fails on a listed page with no reply); exit 1 on any difference — a reader change
-to sign off (update the list) or a site that changed. A page whose rules changed is reported, not a difference (`--write-rules`).
+to sign off (update the list) or a site that changed. A page whose rules changed is reported, not a difference (`--write-rules`); a page listed as refused counts as listed while
+it is refused for the same reason. A changed page read correctly updates the list; read badly, that venue gets a rule.
 **A page is on the list only for a rule no other listed page at its venue shows** (her decision: one page per venue layout, one per
 unusual thing): add pages only with `--add` on new replies, never by hand; `--cover` prints the fewest pages per venue that show every
 rule. A rule the reader cannot see is held by an offline test (AL-031, the date tests). **From a script:** the free Parallel server

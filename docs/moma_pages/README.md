@@ -17,14 +17,13 @@ finds nothing.
 
 - **`<div id="description">`** holds the curatorial blurb and stops before
   the funders, the Events block and the related articles — all of which carry
-  their own dates. **Corrected 27 Sep:** its LAST paragraph is the credit
+  their own dates. Its LAST paragraph is the credit
   ("Organized by…", "… is organized by…", "We are grateful…") on all four
   pages saved that day, so the recipe reads it paragraph by paragraph and drops
   that one (`creditPara`; `fixtures/moma_pages.js`).
-- **A tag beside the title says what MoMA calls the thing**: `Exhibition` on
-  *It's Alive*, `Installation` on *Creativity Lab*. **Superseded 30 Sep:** the
-  listing's own section headings already separate them, so installations are
-  dropped on the listing and never opened (MM-001–003).
+- **Installations are dropped on the listing and never opened** — its own section
+  headings separate them (MM-001–003); the tag beside a show page's title
+  (`Exhibition`, `Installation`) is not needed.
 - **"In the galleries" needs no rule.** Those rooms live at `/calendar/floors/N`
   and `/calendar/galleries/N`, which the recipe's selector never matches. It had
   been assumed they were mixed in with the exhibitions; they are not.

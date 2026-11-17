@@ -40,7 +40,7 @@ L1792302616858k119 (missed) and L1792303360912nj6q (found).
   and shapes its replies differently. Parallel also opens every page today (shop, publisher, links),
   so a search-only engine needs an opener beside it.
 - **Concerns:** every engine has the same roulette with a different index; switching changes which books
-  are missed, not whether. Lesson §4.1: when a tool is swapped the route must not change, and a
+  are missed, not whether. CLAUDE.md §4.1: when a tool is swapped the route must not change, and a
   better source is not a complete one. Next step if she wants it: run the app's real queries for the
   agreed cases and cases 10–12 through two or three engines, side by side.
 

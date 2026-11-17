@@ -1,7 +1,7 @@
 # The files she imported — how each was built
 
 A one-off script that changes a file she USES is not a one-off: what it did is
-recorded here. Compressed 30 Sep; full history in git.
+recorded here. Full history in git.
 
 ## The main import — `stitch_20260924_0417/sweep_compressed.csv`
 

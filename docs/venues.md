@@ -123,7 +123,7 @@ WHY 30 Sep was clean is likely, not proven.
   wrote 8 — the engine dropped rows whose text came off the listing (MP-009/010).
   The re-run re-asked 8 pages: kept pages aren't reused once a venue has written
   a file, even a wrong one. *Giovanni Bellini's "Pietà" Restored*: the listing's
-  only text is a caption and photo credit; the page isn't opened (her decision).
+  only text is a caption and photo credit, which is not a description, so its page is opened.
 - **MoMA** `run_2026-09-30_162442`: 14 (9 + 5). It opened all 24 listed pages
   because the recipe missed the listing's section headings — fixed
   (MM-001–003). Lost colons (MM-004) and a gallery-closure notice (MM-005)
@@ -156,8 +156,6 @@ is its only wait.
   (whole line, or the closing side of a range) — the one silent drop, her explicit
   decision, named in the log. Don't copy it to a venue not checked for the
   same wording.
-- *Baseball Cards … Burdick* has no closing date anywhere; she confirmed it.
-  (It is now excluded as a recurring series — see "Her decisions, per venue" above.)
 - Summaries: every real exhibition has curatorial text, 612–2,000 characters.
 - `collectionapi.metmuseum.org` covers objects, not exhibitions.
 

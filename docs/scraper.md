@@ -3,9 +3,9 @@
 How `scraper/sweep_prototype.js` reads a museum site and why each rule exists.
 `docs/sweep_operation.md` carries the commands and the shape. **Read the relevant section
 before changing that area** — almost every rule here replaced something that
-looked sensible and was silently wrong. Compressed 30 Sep; full history in git.
-Section numbers are referenced from the guide and code — keep them. The original
-long comments: `git show bea6dd7:scraper/dates.js` (and `…:scraper/sweep_prototype.js`).
+looked sensible and was silently wrong. Full history in git; the original long comments:
+`git show bea6dd7:scraper/dates.js` (and `…:scraper/sweep_prototype.js`). Section numbers are referenced
+from the guide and code — keep them.
 
 ---
 
@@ -416,10 +416,9 @@ from the title. Further exclusions: `docs/venues.md`.
   cause as fact.
 - **Blocked venues stay wired in:** a refusal costs half a second, leaves marker
   rows, and makes every sweep a monitor. Blocks come and go.
-- **Who sweeps what is code** (`machineVenues()`), because remembering failed: on
-  13 Sep the container's met/artic refusals landed beside her laptop's real rows
-  and she couldn't tell which machine had been blocked. Sweeping from both also
-  doubles the load that gets venues blocked.
+- **Who sweeps what is code** (`machineVenues()`): remembered by hand, one machine's refusals
+  landed beside the other's real rows and no one could tell which had been blocked; sweeping from
+  both also doubles the load that gets venues blocked.
 
 ---
 
@@ -439,11 +438,8 @@ visibly mangled and uses the app's URL button with Chrome's translation.
 
 ## 16. Open — confirmed only by a sweep that happens anyway
 
-Her instruction: no probes for hypothetical problems.
-
-| Open | Why |
-|---|---|
-| The load-more fix beyond the Louvre | No other venue has such a control |
+Her instruction: no probes for hypothetical problems. Open: the load-more fix beyond the Louvre (no other
+venue has such a control).
 
 ---
 
