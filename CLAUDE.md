@@ -167,9 +167,11 @@ Everything not listed here is finished. Do not reopen a closed item without a ne
 The app is feature parts under `app/` that a session can read whole; the main screen is the order of its pieces
 (`docs/restructure.md`: how it is laid out, the rules any later change to the screen follows, the checks). Her test
 round 3 passed. **`main` holds 59.1, unpublished** (the rebuilt screen, the Theme chip's count, the venue scrubber for
-the Occ groups, "Still in the museum shop."); her app runs 59 as published before the main-screen work. **OPEN, hers
-to say:** publishing to her app; when the fixes session (`claude/restructure-fixes`) merges; the "words" list.
-**She types "Continue the restructure." → read `docs/restructure.md`, "What is left".** Her venue review page,
+the Occ groups, "Still in the museum shop."); her app runs 59 as published before the main-screen work. **OPEN — the plan to
+60, in order (her decisions):** the fixes session (`claude/restructure-fixes`) merges, 59.2 on the test page; a new
+session builds the words list (every sentence she sees, written once), then the housekeeping; 60 is published when she
+says; then the leftover venue record is cleared. **She types "Continue the restructure." → read `docs/restructure.md`
+and do the next undone step of "What is left — the plan to 60".** Her venue review page,
 permanent, refreshed and filed at each publish: https://claude.ai/artifact/RmSC86pu1rkBxsZDtfdA1J.
 
 #### 2.2.2 Fixes not yet checked in the cases they were written for

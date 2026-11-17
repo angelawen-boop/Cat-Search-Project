@@ -2,7 +2,7 @@
 
 **The cutting is finished and on `main`; her test round 3 passed. Her app still runs the version published
 before the main-screen work.** A session sent here by "Continue the restructure." reads this file, then
-"What is left". The step-by-step designs and the record of each run are in git
+does the next undone step of "What is left — the plan to 60". The step-by-step designs and the record of each run are in git
 (`git log -p -- docs/restructure.md`).
 
 ## Why (her decision)
@@ -149,37 +149,42 @@ see, and what it proves. Real cards and venues from her ledger. The session runs
 lists only what it has seen come out right, saying plainly which items it could not run live (anything
 needing her connector or her Claude); grouped in order; plain words, no code names.
 
-## What is left
+## What is left — the plan to 60 (her decisions)
 
-**For her to say:**
-- **Publishing to her real app.** `main` holds 59.1 (the rebuilt screen, the Theme chip's count, the venue
-  scrubber for the Occ groups, "Still in the museum shop."); the test page has it. The publish files any
-  waiting venues and tells her in one line if it did.
-- **The fixes session's work** (another session, branch `claude/restructure-fixes`; its brief is
-  `fixes.md` in that branch's restructure docs folder): special letters read one way, one price rule, a venue searched under
-  its own-language name, the proof-page key. It merges when she says; the test page was built without it.
-- **The "words" list** — every sentence a feature shows her, in one place. Not started; hers to call.
+In this order; nothing runs beside another.
 
-**For a session:**
-- After her real app has opened on a published version: the one-time clear of the leftover Christie's
-  press record in `venues/occasional` (her yes given; backup `docs/store_backup_2026-11-06/`).
-- Re-run the tools' own proofs after this round's changes to them: `node
-  build/restructure_gates_proof.js`, `node build/side_by_side_proof.js` (about half an hour together).
-- Small things seen and left: a memory of "the venues the last Read met" is written and never read; the
-  import's quarantine write runs inside a state updater; the Save panel's "File name:" preview is worked
-  out without the save's trim and 80-character cut; `placement.json`'s oldest note on `screens/app.jsx` is
-  out of date.
+1. **The fixes session merges** (another session, branch `claude/restructure-fixes`; its brief is `fixes.md`
+   in that branch's restructure docs folder). Its work, each on an answer she had already given: special
+   letters read one way; **one price rule** for the shop finder, the lookup and the galleries (prices with or
+   without cents; a price range is not a price; a zero total is not a price); a venue searched under its
+   own-language name; **the proof pages** (a changed page the reader reads correctly gets its reference
+   updated; one it reads badly gets that venue's rule, never the reference bent); the sweep log adds nothing
+   from a file with no sweep time; the row-dropping tool says how many it dropped; the blocks check names
+   its cases by venue and title. Before merging it brings in `main` as it stands, runs the full tests and
+   the side-by-side check, and finishes its live gallery shop check. On the test page it is 59.2.
+2. **The words list** — a new session, Opus at medium, started only once the merge is in and `main` is
+   clean. Every sentence the app shows her, written once in one place, every place that shows it naming
+   that one copy; a check fails a sentence on screen that is not on the list. So a change of wording is made
+   once and reaches everywhere, and no session can change it in some places only or slip in a new sentence
+   unseen. **Agreed limits:** the check cannot judge whether a new sentence should have reused an old one —
+   it forces it onto the list, where it shows; a sentence with a gap (a title, a count, a venue) is a
+   pattern on the list; tests that look for exact words read them from the list; the wording sent to Claude
+   is NOT part of it (changing it changes behaviour). No wording changes in this job: the side-by-side
+   check must come out identical.
+3. **Housekeeping** — the same session after the words list, or a new one she starts (Sonnet at medium is
+   enough): re-run the tools' own proofs (`node build/restructure_gates_proof.js`, `node
+   build/side_by_side_proof.js`, about half an hour); the "-2, -3" suffix that keeps a new ID unique,
+   written twice inside the import's apply, made one; a memory of "the venues the last Read met" that is
+   written and never read; the import's quarantine write that runs inside a state updater; the Save
+   panel's "File name:" preview worked out without the save's trim and 80-character cut;
+   `placement.json`'s oldest note on `screens/app.jsx`; the docs over their size budget (the guide review).
+4. **Publish 60 to her real app — when she says.** The publish files any waiting venues and tells her in
+   one line if it did.
+5. **After 60 is published and her app has opened on it:** the one-time clear of the leftover Christie's
+   press record in `venues/occasional` (her yes given; backup `docs/store_backup_2026-11-06/`).
 
-**Parked for her (her decisions to make; none blocks a publish):**
-- One shop's shelf page counts as "has prices" only because of its empty basket's "0,00 €".
-- From the scraper side, seen and not touched: the sweep log can record an empty "tried" date for a venue
-  first met through a file whose rows carry no `swept_at`; `show_tags.readCsv` drops, without a word, a
-  row whose cell count differs from the header's; `build/blocks_check.js` still types its show IDs by hand.
-- Rules that look alike and are different, left alone: compression's looser address key; the sweep-diff's
-  fold; the publisher step's own address strip; the "-2, -3" suffix that keeps a new ID unique, written
-  twice inside the import's apply.
-- Four live proof pages read differently from the signed-off list, the same under old code and new: the
-  sites or Parallel's replies changed, not the reader. The list was not updated.
+**Left alone on purpose (her decision — different jobs, not duplicates):** compression's looser address
+key; the sweep-diff's fold; the publisher step's own address strip.
 
 ## Who does what, when more of this is done (her decisions)
 
