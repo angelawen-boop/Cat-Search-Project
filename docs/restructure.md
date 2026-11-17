@@ -186,8 +186,12 @@ In this order; nothing runs beside another.
 3. **Done — housekeeping:** the new-ID suffix written once; a memory written and never read removed; the quarantine
    stored outside its state updater; the Save panel's "File name:" preview and Save sharing one rule; `placement.json`
    brought up to date; the docs over their size budget (the guide review).
-   **Still to finish:** the tools' own proofs (`node build/restructure_gates_proof.js`, `node build/side_by_side_proof.js`,
-   about half an hour) re-run on this code.
+   **Not done — the tools' own proofs** (`node build/restructure_gates_proof.js`, `node build/side_by_side_proof.js`),
+   stopped by her and never re-run without her say (her decision). Why: they run outside the test runner, so the hook that
+   shows her a test's expected time never fires; the side-by-side proof alone takes over an hour, not the half hour this
+   plan said — 37 one-word breaks each re-run the walk through the whole app, three at a time, and a step can wait up to
+   20 seconds for the screen to stop changing, so the machine sits near idle while it waits. No session had raised its cost
+   with her.
 4. **Publish 60 to her real app — when she says.** The publish files any waiting venues and tells her in
    one line if it did.
 5. **After 60 is published and her app has opened on it:** the one-time clear of the leftover Christie's

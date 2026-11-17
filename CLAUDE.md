@@ -168,7 +168,8 @@ The app is feature parts under `app/` that a session can read whole; the main sc
 (`docs/restructure.md`: how it is laid out, the rules any later change to the screen follows, the checks). Her test
 rounds passed. **`main` holds 59.2, unpublished** (the rebuilt screen, the Theme chip's count, the venue scrubber for
 the Occ groups, "Still in the museum shop.", the fixes after item 4, the Uffizi's shop removed, the words list — every
-sentence she sees, written once — and the housekeeping); her app runs 59. **OPEN — the rest of the plan to 60 (her
+sentence she sees, written once — and the housekeeping, except the tools' own proofs: not done, stopped by her,
+`docs/restructure.md` says why); her app runs 59. **OPEN — the rest of the plan to 60 (her
 decisions):** 60 is published when she says; then the leftover venue record is cleared. **She types "Continue the restructure." → read `docs/restructure.md`
 and do the next undone step of "What is left — the plan to 60".** Her venue review page,
 permanent, refreshed and filed at each publish: https://claude.ai/artifact/RmSC86pu1rkBxsZDtfdA1J.
