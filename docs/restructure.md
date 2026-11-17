@@ -871,6 +871,14 @@ against new with stand-in replies only; her round is their live proof. The venue
 republished (no venue was waiting; the register did not change). **Next:** her report; faults fixed; the
 fixes session merges when she says; 60 to her app only when she says.
 
+**59.1 — on `main` and on the test page, not on her app (her asks during round 3; she passed every step of
+the round).** A picked Theme chip shows its count after a dot ("Sculpture · 107"; each picked chip its own;
+the count is the list with that theme alone picked, every other filter as it stands — `themeCounts`). The
+scrubber also lists venues: with an Occ group picked AND the list sorted by venue, each venue's first card
+carries the scrubber's mark (`venueScrubGroupsOf`; no scrubber for an Occ group in any other sort —
+the coordinator's reading of "per the venue order when I sort by venue"). Tests: `theme_count_venue_scrub.js`
+(TC-, VS-). Her app is still 59 as published before the main-screen work.
+
 **Open problems:** a sub-agent cannot start the watched test run — the test hook reads the coordinator's
 transcript for the "Expected test run" line — so the coordinator runs gate 2 itself. The hook often refuses
 the first try even after the line is written; write the line again and retry.
