@@ -244,6 +244,8 @@ her and the work moves on. She gets a short line at each quarter of a stage.
 - A sub-agent can stop on the account's usage limit: its work is saved; when the limit resets, message it
   to continue, never start a second. One that reports while its own check still runs will report again.
 - Gate a merge on the test run's own exit code, never on a grep of its output.
+- Run the side-by-side check alone: run beside a test run it once reported a screen's fingerprint
+  different while every screen, read in full, was the same.
 - A check that leaves something out "to be steady" can drop what it was meant to prove (the store log once
   lost a save that rode on a timer): prefer making the page steady in the stand-in browser.
 - Never `git add -A` in a worktree that holds a `node_modules` link. `git checkout main` fails while
