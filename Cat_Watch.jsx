@@ -3,7 +3,7 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 // The footer prints APP_VERSION and its date, so she can tell one build from the next.
 // Numbering, her decision: a whole number for a substantial change, a decimal for a
 // small one, one number per publish. Bump it with the change it describes.
-const APP_VERSION = "59.1";
+const APP_VERSION = "59.2";
 const APP_VERSION_DATE = "17 Nov 2026";
 
 // ===== THE VENUE REGISTER — the join writes venues/register.js in below, every venue's facts in her venue order; never edit it here. Edit venues/register.js, then run `node build/app_join.js`. =====
@@ -4860,7 +4860,7 @@ function labelSummary(total,batches){
   const whys=[...new Set(batches.filter(b=>b.why).map(b=>b.why.replace(/\.$/,"")))];
   return {ok:false,text:"Label: "+done+" of "+total+" exhibitions labelled; "+(total-done)+" not — "+whys.join("; ")+"."};
 }
-const periodShow=(i,r)=>({i,venue:(MU[r.museumId]||{}).name||r.museumId,title:r.title,dates:dateRange(r),summary:r.summary});
+const periodShow=(i,r)=>({i,venue:(MU[r.museumId]||{}).nameInEnglish||(MU[r.museumId]||{}).name||r.museumId,title:r.title,dates:dateRange(r),summary:r.summary});
 
 // Every decided card lands in one count — to apply, quarantined or rejected — so the
 // footer adds up (her ask). The counts and the link box both use cardOutcome.

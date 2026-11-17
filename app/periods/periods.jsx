@@ -288,4 +288,4 @@ function labelSummary(total,batches){
 }
 //@piece periodShow
 
-const periodShow=(i,r)=>({i,venue:(MU[r.museumId]||{}).name||r.museumId,title:r.title,dates:dateRange(r),summary:r.summary});
+const periodShow=(i,r)=>({i,venue:(MU[r.museumId]||{}).nameInEnglish||(MU[r.museumId]||{}).name||r.museumId,title:r.title,dates:dateRange(r),summary:r.summary});
