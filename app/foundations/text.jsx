@@ -38,19 +38,14 @@ function originOf(u){ try{ return new URL(u).origin+"/"; }catch{ return ""; } }
 
 // Accent marks dropped: the scraper's own strip (scraper/keys.js).
 const stripAccents=KEYS.stripAccents;
-//@piece LETTER_FOLD
-
-// Accents dropped, and the letters that are not accented ones folded too: ø, æ, œ, ß, ł,
-// đ, ð, þ and dotless ı ("Hammershøi" matches "Hammershoi"). One fold for all matching.
-const LETTER_FOLD={"\u00f8":"o","\u00e6":"ae","\u0153":"oe","\u00df":"ss","\u0142":"l","\u0111":"d","\u00f0":"d","\u00fe":"th","\u0131":"i"};
 //@piece foldText
 
-const foldText=s=>stripAccents(String(s||"").toLowerCase()).replace(/[\u00f8\u00e6\u0153\u00df\u0142\u0111\u00f0\u00fe\u0131]/g,c=>LETTER_FOLD[c]);
+// Accents dropped and the special letters folded (ø, æ, ß…): the one fold for all matching (scraper/keys.js).
+const foldText=KEYS.foldLetters;
 //@piece normalizeTitle
 
 // Conservative duplicate matching for incoming refresh results.
-const normalizeTitle = v => stripAccents(String(v||""))
-  .toLowerCase()
+const normalizeTitle = v => foldText(v)
   .replace(/&/g," and ").replace(/\+/g," and ")
   .replace(/[’‘`]/g,"'").replace(/['"]/g,"")
   .replace(/[^a-z0-9]+/g," ").replace(/\s+/g," ").trim();

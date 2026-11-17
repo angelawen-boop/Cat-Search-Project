@@ -49,7 +49,7 @@ function venueView(e,rec,fallback){
 //@piece venueNames
 
 // Every name a venue goes by, as the parts that look for it in a text match it.
-const venueNames=v=>[...new Set([v&&v.name,v&&v.card,v&&v.lookupName,...((v&&v.replaced)||[])].filter(Boolean))];
+const venueNames=v=>[...new Set([v&&v.name,v&&v.nameInEnglish,v&&v.card,v&&v.lookupName,...((v&&v.replaced)||[])].filter(Boolean))];
 //@piece MUSEUMS
 
 // Her 28 swept venues, in her venue order: drawer, chips, Sort by Venue and refresh headings follow it.

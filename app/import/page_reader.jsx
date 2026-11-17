@@ -642,7 +642,10 @@ function takePassage(pg){
   const kindOf=l=>/^\s*#{1,6}\s/.test(l)?"heading":/^\s*>/.test(l)?"quote":/^\s*\|/.test(l)?"table":/^\s*(?:[*+-]|\d+\.)\s/.test(l)?"list":"text";
   for(let k=from;k<lines.length;k++){
     if(k>d&&k<=dEnd||k===d&&!keepDateLine)continue;
-    const line=lines[k], own=stripMd(line);
+    const line=lines[k];
+    let own=stripMd(line);
+    // A scrap the venue's page prints at a line's end (linkRead.stripTrailing; the Prado's "| \+" toggle) leaves it.
+    if(lr&&lr.stripTrailing){ const s=own.replace(lr.stripTrailing,""); if(s!==own)rule("stripTrailing"); own=s; }
     // The passage ends at the first line matching linkRead.until (a box for other shows).
     if(lr&&lr.until&&lr.until.test(own)){ rule("until"); break; }
     if(!own){ cur=null; continue; }
@@ -686,6 +689,8 @@ function takePassage(pg){
     }
     if(b.kind!=="text"){ rule("skip:"+b.kind); continue; }
     if((t===dateLine&&!keepDateLine)||t===headingText||seen.has(t))continue;
+    // A paragraph the venue opens with a label, its lines joined (linkRead.skipParagraph; the Prado's "Curator:" over the names).
+    if(lr&&lr.skipParagraph&&lr.skipParagraph.test(t)){ rule("skipParagraph"); continue; }
     if(isFurniture(t)){ rule("skip:furniture"); continue; }
     if(isCaption(t)){ rule("skip:caption"); continue; }
     // The show's title printed again with a subtitle and no sentence ("Paradise on Earth. Flemish landscape painting from

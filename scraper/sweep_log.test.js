@@ -99,3 +99,11 @@ test('S-006: a file with no swept_at column is skipped, not read as blanks', () 
   assert.strictEqual(used.length, 0);
   assert.strictEqual(skipped, 1);
 });
+
+test('S-007: a venue seen with no sweep time adds nothing; a logged venue stays as it was', () => {
+  const prev = { ng:{ attempted:T.early, returned:T.early } };
+  const seen = { attempted:{ ng:'', moma:'' }, returned:{} };
+  const merged = APP.mergeSweepLog(prev, seen);
+  assert.deepStrictEqual(merged, prev);
+  assert.ok(!('moma' in merged));
+});

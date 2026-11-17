@@ -20,7 +20,7 @@
  *   scraper/answer_check.js    → ANSWER_CHECK, the checks on every description Claude writes
  *   scraper/pro_forma.js       → PRO_FORMA: the CSV's columns, marker sentence, "Topic:" note, cell
  *                                 quoting, table reader and the sweep-log merge
- *   scraper/keys.js            → KEYS: the web-address key and the accent strip. It comes first: dates.js
+ *   scraper/keys.js            → KEYS: the web-address key, the accent strip and the letter fold. It comes first: dates.js
  *                                 and answer_check.js name it, through a `require('./keys.js')` line
  *                                 the join turns into the page's own KEYS
  *   sweep_prototype.js VENUES  → VENUE_SITES: each venue's site (and, where two venues share one,

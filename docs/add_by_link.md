@@ -123,7 +123,10 @@ Shop page pointing elsewhere is followed (`shopElsewhere`); a Shop button vouche
 a book's address in a menu stands for its section (`menuLinks`). A shop on a shared site (Yale/Touchnet) is read on the exact
 page the museum links; a shop page that is one line is reopened once with `page=1` (`openShopPage`); a short page of several
 lines never (Louvre, LG-); menu labels read by their first six words. The shared word lists (`SHELF_CATALOGUES`, `SHELF_BOOKS`, `BOOK_WORD`) include German, Danish and Scandinavian
-words and franc/crown prices. Ranking: an exhibitions' catalogues section first (`SHELF_EXHIBITIONS`); "/products/" after a section word is a
+words and franc/crown prices. **One price rule** for the finder, the lookup and the galleries (`pricesIn`, `hasPrice`): an
+amount with its currency, cents or none; never a zero (an empty basket's "0,00 €", Berlin), a filter by price (a range as a list item,
+link or with a count, or from zero; "and above", "orders over £50") or a link's hover title; a book's own span ("$40.00 - $65.00", the
+Met) is its price. A filter by price still marks a priced list for the shelf test (KMSKA's shelf came back without prices). Ranking: an exhibitions' catalogues section first (`SHELF_EXHIBITIONS`); "/products/" after a section word is a
 section; a shop on the museum's own sub-address is the shop. A section found on a later page is kept by its first (her decision;
 `firstPageOf`).
 
@@ -247,6 +250,8 @@ venue's rule is that venue's** (her decision). Below: the rules, and her decisio
 - **Louisiana** (`occ-louisiana-dk`): a retired show's address opens the "Past Exhibitions" list (Louise Bourgeois,
   2016) — refused with the Parallel fault line, as a 202 is; she saves the page (`listingPage`). A heading
   line ending in a comma runs on to the next, no colon (`headingCommaJoin`). Day first (`DATE_ORDER`).
+- **V&A** (`va`): a link's dates are looked for above "Exhibition highlights", whose captions name collection
+  seasons, never the show's dates (`datesUntil`, AL-096).
 - **MoMA** (`moma`): a space typed before a comma ("Toyo Ito , SANAA") is dropped, so the heading wins over the
   events list's repeat (her decision: MoMA only; `spaceBeforeComma`).
 - **Galerie de la Présidence** (`occ-presidence-fr`): " : Exhibition" leaves its show headings (her decision; `titleDrop`).
@@ -257,8 +262,8 @@ venue's rule is that venue's** (her decision). Below: the rules, and her decisio
 - **Palazzo Reale Milano**: "I Brueghel - Palazzo Reale Milano" → `titleDrop` + `nameInLines`; the city's
   site refuses Parallel (403) — Pages only (below).
 - **Łazienki** (`occ-lazienki-krolewskie-pl`, her decision): title from the page title less " - Events" (`tabTitle`). **Getty** (`occ-getty-edu`, her
-  decision): "Museum Collection" pages take their heading as title (`tabNotName`); its dates are drawn by
-  script (data.getty.edu), so its links come in undated (reading them there is unbuilt). **A link with no dates whose
+  decision): "Museum Collection" pages take their heading as title (`tabNotName`); its exhibition pages
+  print their dates under the heading, its "Museum Collection" pages give none (reading them there is unbuilt). **A link with no dates whose
   page holds a script's unfilled placeholder** gets "Dates cannot be seen — JS-rendering." (her wording, shared;
   `SCRIPT_DATES_NOTE`). HTML codes in a heading are decoded.
 - **The Correr's archive**: the title is the "# " heading after "Section menu" / "Menù di sezione" (`titleAfter`); capitals recased each side of a full stop (her decision; `capsStops`).
@@ -284,7 +289,9 @@ venue's rule is that venue's** (her decision). Below: the rules, and her decisio
   line never reaches Claude (`skip`); shop.skd.museum sells tickets and gifts only → she answers **No shop** once.
 - **Chantilly** (`occ-chateaudechantilly-fr`): its names and chip place are hers (her decision). **The Prado**
   (`occ-museodelprado-es`, her decision): month first (`DATE_ORDER`); a touring
-  show's other house on its date line still files here. **Cini** (her decision): three venues under one chip —
+  show's other house on its date line still files here; a description cut short behind its "+" toggle loses the
+  toggle's " | \+", the cut sentence kept (`stripTrailing`, AL-095); its "Curator:" credit never reaches the
+  passage (`skipParagraph`, AL-095b). **Cini** (her decision): three venues under one chip —
   the foundation (`occ-cini-it`), Le Stanze del Vetro, Le Stanze della Fotografia; Claude decides the venue as for
   any new one, and answers the Cini house only on first meeting cini.it, so a later Stanze show files under the
   foundation (her accepted outcome). **Moretti** (`occ-morettigallery-com`, her decision: a Moretti rule): the place after " : " leaves

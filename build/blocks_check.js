@@ -28,16 +28,17 @@ const OUT = path.join(__dirname, 'dist', 'blocks_check.html');
 const MOUNT = 'ReactDOM.createRoot(document.getElementById("root")).render(React.createElement(BlocksCheck));';
 const BLOCKS_CHECK = 'https://claude.ai/artifact/TCGZyPJgUJmNS9bueC2Rds';
 
-// Her named cases (docs/catalogue_versions.md, status line), by ledger id.
+// Her named cases (docs/catalogue_versions.md, status line): [venue, title] — found in the ledger by those
+// two, never by the id one ledger happens to store a show under. Titles compare exactly.
 const CASES = [
-  'occ-britishart-yale-edu-sensationandsensibilityviewinggainsboroughscottage',
-  'occ-britishart-yale-edu-johnconstablethelandscapereimagined',
-  'occ-britishart-yale-edu-gwenjohnstrangebeauties',
-  'occ-britishart-yale-edu-victorianradicalsfromthepreraphaelitestotheartsand',
-  'occ-britishart-yale-edu-canalettoinenglandavenetianartistabroad17461755',
-  'occ-britishart-yale-edu-thebeautyoflifewilliammorrisandtheartofdesign',
-  'occ-britishart-yale-edu-pearlstopyramidsbritishvisualcultureandthelevant16',
-  'khm-canalettoandbellotto',
+  ['occ-britishart-yale-edu', 'Sensation and Sensibility: Viewing Gainsborough\u2019s \u201cCottage Door\u201d'],
+  ['occ-britishart-yale-edu', 'John Constable: The Landscape Reimagined'],
+  ['occ-britishart-yale-edu', 'Gwen John: Strange Beauties'],
+  ['occ-britishart-yale-edu', 'Victorian Radicals: From the Pre-Raphaelites to the Arts and Crafts Movement'],
+  ['occ-britishart-yale-edu', 'Canaletto in England: A Venetian Artist Abroad, 1746\u20131755'],
+  ['occ-britishart-yale-edu', '\u201cThe Beauty of Life\u201d: William Morris and the Art of Design'],
+  ['occ-britishart-yale-edu', 'Pearls to Pyramids: British Visual Culture and the Levant, 1600\u20131830'],
+  ['khm', 'Canaletto & Bellotto'],
 ];
 // The show's own facts only: the card is blank, as Search again makes it.
 const SHOW = ['id', 'museumId', 'title', 'startDate', 'endDate', 'summary', 'exUrl'];
@@ -51,8 +52,9 @@ const ledgerFile = arg('--ledger'), venuesFile = arg('--venues');
 if (!ledgerFile || !venuesFile) die('usage: --ledger <file> --venues <file>');
 const ledger = JSON.parse(fs.readFileSync(ledgerFile, 'utf8'));
 const venues = docOf(venuesFile).venues || {};
-const cases = CASES.map(id => {
-  const r = (ledger.rows || ledger).find(x => x.id === id) || die('case not in her ledger: ' + id);
+const cases = CASES.map(([venue, title]) => {
+  const r = (ledger.rows || ledger).find(x => x.museumId === venue && x.title === title)
+    || die('case not in her ledger: ' + venue + ' / ' + title);
   return { ...Object.fromEntries(SHOW.map(k => [k, r[k] === undefined ? null : r[k]])),
     interested: true, watching: false, acquiring: null, buyNext: false, looked: false, hasCatalogue: 'unknown' };
 });

@@ -3,7 +3,7 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 // The footer prints APP_VERSION and its date, so she can tell one build from the next.
 // Numbering, her decision: a whole number for a substantial change, a decimal for a
 // small one, one number per publish. Bump it with the change it describes.
-const APP_VERSION = "59.1";
+const APP_VERSION = "59.2";
 const APP_VERSION_DATE = "17 Nov 2026";
 
 // ===== THE VENUE REGISTER — the join writes venues/register.js in below, every venue's facts in her venue order; never edit it here. Edit venues/register.js, then run `node build/app_join.js`. =====
@@ -151,11 +151,13 @@ const VENUES = [
     sweep: { exBase: null, listUrl: null },
     filed: null },
 
+  // The V&A: a link's dates are looked for above its "Exhibition highlights" list, whose picture captions
+  // name collection seasons ("Haute Couture autumn/winter 2024"), never the show's dates (`datesUntil`).
   { id: "va", kind: "swept",
     names: { card: "V&A", chip: "V&A", group: null, full: "Victoria and Albert Museum", inEnglish: null, aka: [], replaced: [], hers: true },
     city: "London", country: "United Kingdom", english: true, language: null,
     shop: { home: "https://www.vam.ac.uk/shop", catalogues: "https://www.vam.ac.uk/shop/books/exhibition-books.html", search: "https://www.vam.ac.uk/shop/search?q=", unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
-    read: { link: null, sites: [], dateOrder: null, spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
+    read: { link: { datesUntil: /^Exhibition highlights$/i }, sites: [], dateOrder: null, spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
     sweep: { exBase: null, listUrl: null },
     filed: null },
 
@@ -232,14 +234,15 @@ const VENUES = [
     sweep: { exBase: null, listUrl: null },
     filed: null },
 
-  // The Prado: chip "Prado" right after KHM, cards "Prado Madrid" (her decision). Its dates are month first
-  // (DATE_ORDER, dates.js).
-  // Its all-number dates: "6/9/2026 - 9/27/2026".
+  // The Prado: chip and card "Prado", right after KHM; "Prado Madrid" is the card name it replaced (her decision).
+  // Its dates are month first (DATE_ORDER, dates.js); its all-number dates: "6/9/2026 - 9/27/2026". A description
+  // cut short behind its "+" toggle ends "… | \+": the scrap leaves the passage, the cut sentence stays
+  // (`stripTrailing`). The "Curator:" / "Curators:" credit under the description never reaches it (`skipParagraph`).
   { id: "occ-museodelprado-es", kind: "manual",
     names: { card: "Prado", chip: "Prado", group: null, full: "Museo Nacional del Prado", inEnglish: null, aka: ["Prado", "Museo del Prado"], replaced: ["Prado Madrid"], hers: true },
     city: "Madrid", country: "Spain", english: false, language: null,
     shop: { home: null, catalogues: null, search: null, unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
-    read: { link: null, sites: [], dateOrder: "month", spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
+    read: { link: { stripTrailing: /\s*\|\s*\\?\+$/, skipParagraph: /^Curators?:\s/ }, sites: [], dateOrder: "month", spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
     sweep: { exBase: null, listUrl: null },
     filed: { addedAt: "2026-10-29T04:52:37.794Z", aka: ["Prado", "Museo del Prado"], city: "Madrid", confirmed: true, country: "Spain", english: false, englishPicked: false, finder: 3, foundBy: "a search", gallery: false, host: "www.museodelprado.es", id: "occ-museodelprado-es", name: "Museo Nacional del Prado", pageShop: "https://tiendaprado.com/en/", searchRule: 2, shelfKind: "catalogues", shop: "found", shopCatalogues: "https://tiendaprado.com/en/410-catalogues", shopEnglishUnread: null, shopHome: "https://tiendaprado.com/", shopSearch: null, short: "Madrid Prado", turnedDown: [], why: null } },
 
@@ -336,7 +339,7 @@ const VENUES = [
 
   // Its all-number dates: "From 18/06/2025 to 28/09/2025".
   { id: "uffizi", kind: "swept",
-    names: { card: "Uffizi", chip: "Uffizi", group: null, full: "Uffizi Galleries", inEnglish: null, aka: [], replaced: [], hers: true },
+    names: { card: "Uffizi", chip: "Uffizi", group: null, full: "Gallerie degli Uffizi", inEnglish: "Uffizi Galleries", aka: [], replaced: [], hers: true },
     city: "Florence", country: "Italy", english: false, language: "Italian",
     shop: { home: "https://shop.uffizi.it/en/", catalogues: null, search: "https://shop.uffizi.it/en/?s=", unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
     read: { link: null, sites: [], dateOrder: "day", spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
@@ -948,7 +951,7 @@ function venueView(e,rec,fallback){
     shopSearch:live?s.shopSearch||null:null,shopUnknown:!live&&!(s.shop==="none"&&s.confirmed)};
 }
 // Every name a venue goes by, as the parts that look for it in a text match it.
-const venueNames=v=>[...new Set([v&&v.name,v&&v.card,v&&v.lookupName,...((v&&v.replaced)||[])].filter(Boolean))];
+const venueNames=v=>[...new Set([v&&v.name,v&&v.nameInEnglish,v&&v.card,v&&v.lookupName,...((v&&v.replaced)||[])].filter(Boolean))];
 // Her 28 swept venues, in her venue order: drawer, chips, Sort by Venue and refresh headings follow it.
 const MUSEUMS=VENUE_REGISTER.filter(e=>e.kind==="swept").map(e=>venueView(e));
 // The Occasional venues (no chip of their own) follow, by country: the United States, the rest of that group
@@ -990,12 +993,20 @@ function normalizeUrlKey(u) {
   } catch { return ''; }
 }
 
-// Accent marks dropped ("é" → "e"). Letters that are not accented ones (ø, æ, ß…) stay as they are.
+// Accent marks dropped ("é" → "e"). Letters that are not accented ones (ø, æ, ß…) stay as they are;
+// foldLetters folds those too.
 const stripAccents = s => String(s).normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-return { normalizeUrlKey, stripAccents };
+
+// Letters that are not accented ones, folded to plain letters ("Hammershøi" matches "Hammershoi").
+const LETTER_FOLD = { 'ø': 'o', 'æ': 'ae', 'œ': 'oe', 'ß': 'ss', 'ł': 'l', 'đ': 'd', 'ð': 'd', 'þ': 'th', 'ı': 'i' };
+
+// The one fold wherever a title or name is simplified to be compared or searched: lowercase,
+// accents dropped, special letters folded.
+const foldLetters = s => stripAccents(String(s || '').toLowerCase()).replace(/[øæœßłđðþı]/g, c => LETTER_FOLD[c]);
+return { normalizeUrlKey, stripAccents, foldLetters };
 })();
 const DATES=(()=>{
-const { stripAccents } = KEYS;
+const { foldLetters } = KEYS;
 
 // ── Date helpers ──────────────────────────────────────────────────────────────
 // Every month spelling a venue has used, one list (docs/scraper.md §3): per language, its full names
@@ -1774,7 +1785,7 @@ function capsTitleRule(code) {
 // A venue with several galleries (read.places on its register entry): a gallery tacked onto the title
 // after a dash ("… – Acquavella Palm Beach", "… – Lévy Gorvy Dayan, London") is not part of the title
 // (her decision). A gallery in brackets, the sweep's mark of a show run in two, stays.
-const foldPlace = s => stripAccents(String(s || '')).toLowerCase();
+const foldPlace = s => foldLetters(s);
 function withoutPlaceTail(code, title) {
   const e = REGISTER.find(v => v.id === code);
   if (!e || !e.read.places.length || !title) return title;
@@ -2042,10 +2053,11 @@ const later = (a, b) => (!a || (b && b > a)) ? b : a;
 
 // The sweep log merged with what a file showed (`seen`: {attempted, returned}, venue → stamp). A venue's
 // dates move only for a later time, so an old file cannot drag them back; tried and brought-rows move
-// independently.
+// independently. A venue seen with no sweep time adds nothing: the file says nothing about when it was tried.
 function mergeSweepLog(prev, seen) {
   const out = { ...(prev || {}) };
   for (const v of Object.keys((seen && seen.attempted) || {})) {
+    if (!seen.attempted[v]) continue;
     const was = out[v] || {};
     out[v] = {
       attempted: later(was.attempted, seen.attempted[v]),
@@ -2125,10 +2137,8 @@ function typedLink(text){
   let u=null; try{ u=new URL(/^https?:\/\//i.test(t)?t:"https://"+t); }catch{}
   return u&&/^https?:$/.test(u.protocol)&&u.hostname.includes(".")?u.href:null;
 }
-// Accents dropped, and the letters that are not accented ones folded too: ø, æ, œ, ß, ł,
-// đ, ð, þ and dotless ı ("Hammershøi" matches "Hammershoi"). One fold for all matching.
-const LETTER_FOLD={"\u00f8":"o","\u00e6":"ae","\u0153":"oe","\u00df":"ss","\u0142":"l","\u0111":"d","\u00f0":"d","\u00fe":"th","\u0131":"i"};
-const foldText=s=>stripAccents(String(s||"").toLowerCase()).replace(/[\u00f8\u00e6\u0153\u00df\u0142\u0111\u00f0\u00fe\u0131]/g,c=>LETTER_FOLD[c]);
+// Accents dropped and the special letters folded (ø, æ, ß…): the one fold for all matching (scraper/keys.js).
+const foldText=KEYS.foldLetters;
 
 // The connector hands back the page as markdown. One line of it, as words.
 function stripMd(line){
@@ -2688,7 +2698,10 @@ function takePassage(pg){
   const kindOf=l=>/^\s*#{1,6}\s/.test(l)?"heading":/^\s*>/.test(l)?"quote":/^\s*\|/.test(l)?"table":/^\s*(?:[*+-]|\d+\.)\s/.test(l)?"list":"text";
   for(let k=from;k<lines.length;k++){
     if(k>d&&k<=dEnd||k===d&&!keepDateLine)continue;
-    const line=lines[k], own=stripMd(line);
+    const line=lines[k];
+    let own=stripMd(line);
+    // A scrap the venue's page prints at a line's end (linkRead.stripTrailing; the Prado's "| \+" toggle) leaves it.
+    if(lr&&lr.stripTrailing){ const s=own.replace(lr.stripTrailing,""); if(s!==own)rule("stripTrailing"); own=s; }
     // The passage ends at the first line matching linkRead.until (a box for other shows).
     if(lr&&lr.until&&lr.until.test(own)){ rule("until"); break; }
     if(!own){ cur=null; continue; }
@@ -2732,6 +2745,8 @@ function takePassage(pg){
     }
     if(b.kind!=="text"){ rule("skip:"+b.kind); continue; }
     if((t===dateLine&&!keepDateLine)||t===headingText||seen.has(t))continue;
+    // A paragraph the venue opens with a label, its lines joined (linkRead.skipParagraph; the Prado's "Curator:" over the names).
+    if(lr&&lr.skipParagraph&&lr.skipParagraph.test(t)){ rule("skipParagraph"); continue; }
     if(isFurniture(t)){ rule("skip:furniture"); continue; }
     if(isCaption(t)){ rule("skip:caption"); continue; }
     // The show's title printed again with a subtitle and no sentence ("Paradise on Earth. Flemish landscape painting from
@@ -3475,18 +3490,49 @@ function rankShelves(cands,ownName){
 // A SHELF OF BOOKS, READ OFF ITS TEXT: book words and prices, both plural. German joins
 // its words ("Ausstellungskataloge", Berlin).
 const BOOK_WORD=/\bisbn\b|\bhard(?:cover|back)\b|\bpaperback\b|\bsoftcover\b|\bpages\b|\bcatalog(?:ue|o|us)?s?\b|\bcatalogi\b|kataloge?\b|\bbooks?\b|\bboek(?:en)?\b|\blibros?\b|\blivres?\b|\bbuch\b|\bbu(?:e)?cher\b|\bbok\b|\bbocker\b|\bpublikation(?:en|er)?\b|\bseiten\b|\bsidor\b|\btapa (?:dura|blanda)\b/g;
-// Swiss francs and Scandinavian crowns count too (Beyeler "CHF 45.00", Nationalmuseum "SEK 345"), and a
-// currency code before the number (Albertina "EUR 24,90").
-const PRICE=/[$€£]\s?\d|\b(?:chf|sek|dkk|nok|kr\.?|eur|usd|gbp|aud|cad)\s?\d|\d[.,]\d{2}\s?(?:€|eur\b|usd\b|gbp\b|chf\b|\$|£)|\d\s?(?:sek|dkk|nok|kr)\b/g;
+// A PRICE: an amount with its currency, symbol or code, before or after it, cents or none, any case —
+// "CHF 45.00" (Beyeler), "SEK 345" (Nationalmuseum), "EUR 24,90" (Albertina), "80 €" (Karsten Greve),
+// "1.250,00 €", "$1,250". A currency between two numbers goes with the one that has no other ("1600 - 1815
+// £25", a V&A title; "0,00€ 12,00€", Thyssen).
+const PRICE_AMOUNT=/(?:[$€£]|\b(?:chf|sek|dkk|nok|kr\.?|eur|usd|gbp|aud|cad))[^\S\n]?(\d{1,3}(?:[.,'\u2019\u00a0\u202f]\d{3})+(?:[.,]\d{1,2})?|\d+(?:[.,]\d{1,2})?)(?!\d)|(?<![\d.,])(\d{1,3}(?:[.,'\u2019\u00a0\u202f]\d{3})+(?:[.,]\d{1,2})?|\d+(?:[.,]\d{1,2})?)(?!\d)[^\S\n]?(?:[$€£]|(?:chf|sek|dkk|nok|kr|eur|usd|gbp|aud|cad)\b)(?![^\S\n]?(?=(\d[\d.,'\u2019\u00a0\u202f]*))\3(?![^\S\n]?(?:[$€£]|(?:chf|sek|dkk|nok|kr|eur|usd|gbp|aud|cad)\b)))/gi;
+// Every amount in a text, each marked when it is a shop's filter by price, never a thing's price: two amounts
+// joined low to high as a list item, a link or with a count ("7 € - 15 €" Prado, "* £10 - £20 (5)" V&A,
+// "£0.00 \- £20.00 23 items" National Gallery), or from zero (KMSKA's "€ 0 \- € 90"); one end of one ("€40.00 and
+// above", Guggenheim Bilbao; "Over $300"). Standing alone, low to high, it is a book's price span ("$40.00 -
+// $65.00", the Met; Ashmolean). A link's hover title repeats the link and is not read ("Refine by price: 1 - £9.99", Tate).
+function priceMarks(text){
+  const t=String(text||"").replace(/(\]\([^)\s]+)\s+"[^"\n]*"\)/g,"$1)");
+  const value=n=>{ const m=n.match(/^(.*?)(?:[.,](\d{1,2}))?$/); return parseFloat(m[1].replace(/\D/g,"")+"."+(m[2]||"0")); };
+  const all=[...t.matchAll(PRICE_AMOUNT)].map(m=>({text:m[0].trim(),at:m.index,end:m.index+m[0].length,value:value(m[1]||m[2])}));
+  const line=(from,to)=>[t.slice(t.lastIndexOf("\n",from-1)+1,from),t.slice(to).split("\n")[0]];
+  const joined=/^(?:[^\S\n]*\\?[-\u2010-\u2015~][^\S\n]*|[^\S\n]+(?:to|bis|au|til|a|\u00e0)[^\S\n]+)$/i;
+  all.forEach((p,i)=>{
+    const q=all[i+1], [before,after]=line(p.at,(q||p).end);
+    if(q&&joined.test(t.slice(p.end,q.at))&&p.value<=q.value){
+      if(p.value===0||/^[^\S\n]*(?:\(\d+\)|\d+\b)/.test(after)
+        ||(/^\s*(?:(?:[*+\-]|\d+\.)\s+\[?|\[)[^\S\n]*$/.test(before)&&/^[^\S\n]*(?:\]\(|$)/.test(after)))p.filter=q.filter=true;
+      else q.span=true;
+    }
+    const [b1,a1]=line(p.at,p.end);
+    if(/\b(?:under|below|over|above|less than|more than)[^\S\n]*$/i.test(b1)||/^[^\S\n]*(?:and|&|or)[^\S\n]+(?:above|over|up|more|less|under|below)\b/i.test(a1))p.filter=true;
+  });
+  return all.filter(p=>!p.span);
+}
+// Every real price in a text — one rule for the shop finder, the lookup and the galleries: an amount, not a
+// filter by price, and not zero (an empty basket's total, "0,00 €", Berlin's "Merkzettel").
+const pricesIn=text=>priceMarks(text).filter(p=>!p.filter&&p.value>0).map(p=>p.text);
+const hasPrice=text=>pricesIn(text).length>0;
+// Prices, or a filter by price, which only a priced list carries (KMSKA's shelf came back with its slider
+// and not its prices).
 function looksLikeBookShelf(text){
-  const t=foldText(text);
-  return (t.match(BOOK_WORD)||[]).length>=3&&(t.match(PRICE)||[]).length>=2;
+  const t=foldText(text), marks=priceMarks(t);
+  return (t.match(BOOK_WORD)||[]).length>=3&&(marks.filter(p=>!p.filter&&p.value>0).length>=2||marks.some(p=>p.filter));
 }
 const PRODUCT_LINK=/\/products?\/[^/?#]|\/p\/[^/?#]|product_?detail|[?&]product_?id=/i;
 function productLinksOn(text,host){ return [...new Set(mdLinks(text).filter(l=>hostOf(l.url)===host&&PRODUCT_LINK.test(l.url)).map(l=>l.url))]; }
 function looksLikeOneBook(text){
   const t=foldText(text);
-  return /\bisbn\b|\bhard(?:cover|back)\b|\bpaperback\b|\bsoftcover\b/.test(t)&&new RegExp(PRICE.source).test(t);
+  return /\bisbn\b|\bhard(?:cover|back)\b|\bpaperback\b|\bsoftcover\b/.test(t)&&hasPrice(t);
 }
 // A shop page that comes back as one line, its title alone, is opened once more with
 // "page=1" added: Yale's shop (on Touchnet) sends its menu, lists and books only when the
@@ -3623,16 +3669,10 @@ const SEARCH_SHAPES=["search?q=","search.php?search_query=","catalogsearch/resul
 // Shopware's two searches (CEDON "search?search=", Berlin "search?sSearch="): a second call,
 // made only when the first proves nothing — one call carries 20 addresses at most.
 const SEARCH_SHAPES_LATER=["search?search=","search?sSearch="];
-const PRICE_ONE=new RegExp(PRICE.source,"i");
-// A price anywhere on a shop page, as the catalogue lookup asks of a whole page (shopStep): any price
-// above, or a whole number before the euro sign or a currency code ("39 \u20ac", "45 EUR").
-const PRICE_ON_PAGE=new RegExp(PRICE.source+"|\\d\\s?(?:\u20ac|(?:eur|usd|gbp)\\b)","i");
 const NOT_A_BOOK_LINK=/cart|wishlist|account|login/i;
 const BLOCK_LINES=6;   // lines of a link's block read for its price
 // A shop's buttons beside a price are not books (Cleveland's filter "Reset", the RA's "Shop now").
 const BUTTON_LABEL=/^(?:reset|clear(?: all)?|shop(?: now| all)?|details|view(?: all| more)?|more|quick view|add to (?:cart|basket|bag)|buy(?: now)?|zum produkt|jetzt bestellen|optionen w\u00e4hlen|in den warenkorb)$/i;
-// "0,00 €" is an empty basket's total, never a book's price (Berlin's "Merkzettel").
-const realPrice=l=>PRICE_ONE.test(l)&&!/(?:^|[^\d.,])0[.,]00\s?(?:€|eur\b)|[$£€]\s?0[.,]00\b/i.test(l);
 // A book on the shop's pages: a link with its price right after it; failing that, a link
 // whose own block (to the next link on the shop) holds a price within a few lines — CEDON
 // prints title, description, then "Regulärer Preis: 34,90 €".
@@ -3644,7 +3684,7 @@ function booksSeenOn(text,host,both){
     seen.add(path); out.push({label:stripMd(label),path});
   };
   for(const m of String(text||"").matchAll(/\[([^\]\[]{3,160})\]\((https?:\/\/[^)\s]+)\)([^\[\n]{0,40})/g)){
-    if(PRICE_ONE.test(m[3])&&hostOf(m[2])===host)add(m[1],m[2]);
+    if(hasPrice(m[3])&&hostOf(m[2])===host)add(m[1],m[2]);
   }
   if(out.length&&!both)return out;
   const links=[...String(text||"").matchAll(/\[([^\]\[]{3,160})\]\((https?:\/\/[^)\s]+)(?:\s+"[^"]*")?\)/g)].filter(m=>hostOf(m[2])===host);
@@ -3655,7 +3695,7 @@ function booksSeenOn(text,host,both){
     const end=i+1<links.length?links[i+1].index:undefined;
     const block=String(text).slice(m.index+m[0].length,end).split("\n").map(l=>l.trim()).filter(Boolean).slice(0,BLOCK_LINES);
     let p=""; try{ p=new URL(m[2]).pathname; }catch{}
-    if(!BUTTON_LABEL.test(stripMd(m[1]).trim())&&block.some(realPrice))add(full.get(p)||m[1],m[2]);
+    if(!BUTTON_LABEL.test(stripMd(m[1]).trim())&&block.some(hasPrice))add(full.get(p)||m[1],m[2]);
   });
   return out;
 }
@@ -3853,7 +3893,7 @@ async function tryShelves(sf,cands,how,inside){
     if(await firstProductIsBook(fetchPage,t,hostOf(c.url)))return{...c,how};
     sf.failed.add(k);
     // An exhibition-catalogues section whose page came back with no price at all: unread, not proved empty.
-    if(c.target&&!String(t).split("\n").some(realPrice))sf.unread.push(c.url);
+    if(c.target&&!hasPrice(t))sf.unread.push(c.url);
   }
   if(inside||!ranked.mixed.length)return null;
   const m=ranked.mixed[0];
@@ -4105,8 +4145,6 @@ const GALLERY_SHOP_IN=/\b(?:shop|store|boutique)\b/;
 const GALLERY_NOT_PAGE=/\/(?:cart|basket|checkout|account|login|wishlist)\b|ticket/i;
 // A book's own page: its price and its make (ISBN, binding, page count), in the languages met.
 const GALLERY_BOOK_MAKE=/\bisbn\b|\bhard ?(?:cover|back)\b|\bsoft ?cover\b|\bpaperback\b|\bbroschur|\bgebunden\b|\breliure\b|\bbroche\b|\b\d+\s?(?:pages|pp\b|p\.|s\.|seiten|pagine|paginas)/;
-// A price with no cents counts on a book's own page ("80 €", Galerie Karsten Greve).
-const GALLERY_PRICE=new RegExp(PRICE.source+"|\\b\\d+\\s?(?:€|eur\\b|chf\\b)");
 // A Shopify shop under the gallery's own store name (acquavellagalleries.myshopify.com).
 function ownShopifyStore(u,host){
   const h=hostOf(u);
@@ -4116,7 +4154,7 @@ function ownShopifyStore(u,host){
 }
 // A shop's own word for it does too: a line filing it under books ("Books, Editions Mennour").
 const GALLERY_BOOK_FILED=/^(?:books?|livres|bucher|libri|libros|catalog(?:ue)?s?)\b/;
-const galleryBookPage=t=>{ const f=foldText(t); return (GALLERY_BOOK_MAKE.test(f)||String(t).split("\n").some(l=>GALLERY_BOOK_FILED.test(foldText(stripMd(l)).trim())))&&GALLERY_PRICE.test(f); };
+const galleryBookPage=t=>{ const f=foldText(t); return (GALLERY_BOOK_MAKE.test(f)||String(t).split("\n").some(l=>GALLERY_BOOK_FILED.test(foldText(stripMd(l)).trim())))&&hasPrice(f); };
 // Which list (her rule): the NARROWEST section that holds the catalogues and can be read. Best first:
 // 1 the catalogues ("Catalogues", "Exhibition-Related Books"), 2 the gallery's own publications ("Publications",
 // "Gagosian Books", "Perrotin Editions - Books"), 3 books, 4 everything ("All"). Never a section of only some
@@ -4178,7 +4216,7 @@ async function galleryShop(page,museumHost,venueName,turnedDown,trace,foreign){
     // A heading naming its books, two priced entries under it (Massimo De Carlo's "## Catalogues", whose own pages
     // come back without the book).
     const head=String(text).search(/^#+\s*(?:catalog|books?\b|publications?\b|livres|publikationen|libri|pubblicazioni)/im);
-    if(head>=0){ const part=String(text).slice(head).split(/\n#+\s/)[0]; if(part.split("\n").filter(l=>GALLERY_PRICE.test(foldText(l))).length>=2)return true; }
+    if(head>=0){ const part=String(text).slice(head).split(/\n#+\s/)[0]; if(part.split("\n").filter(hasPrice).length>=2)return true; }
     const host=hostOf(url);
     let items=productLinksOn(text,host);
     if(items.length<2)items=itemsUnder(text,host,url);
@@ -4251,7 +4289,7 @@ async function galleryShop(page,museumHost,venueName,turnedDown,trace,foreign){
     const self=rank(pathWords(url))||rank(String(t).match(/^#\s+(.+)$/m)?String(t).match(/^#\s+(.+)$/m)[1]:"")||4;
     // A link the page also shows with its price is one book, not a section (Zwirner's "Meet the Typographer, David
     // Zwirner Books, 2024" cover, "$19.95" beside it).
-    const priced=new Set([...mdLinks(t).filter(l=>GALLERY_PRICE.test(foldText(l.label))).map(l=>normalizeUrlKey(l.url)),...booksSeenOn(t,hostOf(url)).map(b=>b.path)]);
+    const priced=new Set([...mdLinks(t).filter(l=>hasPrice(l.label)).map(l=>normalizeUrlKey(l.url)),...booksSeenOn(t,hostOf(url)).map(b=>b.path)]);
     const isBook=u=>{ let p=""; try{ p=new URL(u).pathname; }catch{} return priced.has(normalizeUrlKey(u))||priced.has(p); };
     const subs=menuLinks(t,hostOf(url)).filter(c=>own(c.url)&&normalizeUrlKey(c.url)!==normalizeUrlKey(url)&&!GALLERY_NOT_PAGE.test(c.url)&&!isBook(c.url))
       .map(c=>({...c,rank:rank(c.label||"")})).filter(c=>c.rank);
@@ -4357,8 +4395,7 @@ function csvParse(text){
 const ignoreKeyFor=(venueId,url,title)=>
   venueId+"|"+(url?normalizeUrlKey(url):"t:"+normalizeTitle(title));
 // Conservative duplicate matching for incoming refresh results.
-const normalizeTitle = v => stripAccents(String(v||""))
-  .toLowerCase()
+const normalizeTitle = v => foldText(v)
   .replace(/&/g," and ").replace(/\+/g," and ")
   .replace(/[’‘`]/g,"'").replace(/['"]/g,"")
   .replace(/[^a-z0-9]+/g," ").replace(/\s+/g," ").trim();
@@ -4696,7 +4733,7 @@ const miscFor=y=>y<1900?"mischistoric":"miscmodern";
 
 // One artist, one group (her decision): shows about one artist take the group most of
 // them were given; a tie goes to the earlier group. A response show keeps its own.
-const artistKey=a=>stripAccents(String(a||"")).toLowerCase().replace(/[^a-z]+/g," ").trim();
+const artistKey=a=>foldText(a).replace(/[^a-z]+/g," ").trim();
 function artistPeriods(rows){
   const tally=new Map();
   for(const r of rows){
@@ -4823,7 +4860,7 @@ function labelSummary(total,batches){
   const whys=[...new Set(batches.filter(b=>b.why).map(b=>b.why.replace(/\.$/,"")))];
   return {ok:false,text:"Label: "+done+" of "+total+" exhibitions labelled; "+(total-done)+" not — "+whys.join("; ")+"."};
 }
-const periodShow=(i,r)=>({i,venue:(MU[r.museumId]||{}).name||r.museumId,title:r.title,dates:dateRange(r),summary:r.summary});
+const periodShow=(i,r)=>({i,venue:(MU[r.museumId]||{}).nameInEnglish||(MU[r.museumId]||{}).name||r.museumId,title:r.title,dates:dateRange(r),summary:r.summary});
 
 // Every decided card lands in one count — to apply, quarantined or rejected — so the
 // footer adds up (her ask). The counts and the link box both use cardOutcome.
@@ -7364,7 +7401,7 @@ async function shopStep(row,io){
   if(!s1.results.length)return{ran:true,ok:true,detail:s1.detail,data:null};
   // A venue whose books Parallel drops (the Städel), a shop drawn by script (Basel), or a section she confirmed
   // unread (Berlin's English one): no priced line, even read whole, is "parallel", "script" or "unconfirmed".
-  const priced=r=>pageTextOf(r.results).split("\n").some(realPrice);
+  const priced=r=>hasPrice(pageTextOf(r.results));
   if(mu&&(mu.shopUnseen==="parallel"||mu.shopUnseen==="script"||mu.shopUnseen==="unconfirmed")&&!priced(s1)){
     const whole=await io.fetch(shopPages,SHOP_BOOKS_ASK,null,{full:true});
     if(!whole.ok)return{ran:true,ok:false,detail:s1.detail+"\n"+whole.detail,data:null};
@@ -7379,7 +7416,7 @@ async function shopStep(row,io){
   const readWhole=async()=>{
     const whole=await io.fetch(shopPages,SHOP_BOOKS_ASK,null,{full:true});
     if(!whole.ok)return{out:{ran:true,ok:false,detail:s1.detail+"\n"+whole.detail,data:null}};
-    let books=whole.results.filter(r=>!pageIsShell([r])&&PRICE_ON_PAGE.test(oneText(r)));
+    let books=whole.results.filter(r=>!pageIsShell([r])&&hasPrice(oneText(r)));
     // No price on any page: a list of titles is books when its first product is one
     // (firstProductIsBook, Yale's Publications), or its first book under its own address (Galerie Karsten Greve).
     const listed=books.length?null:whole.results.find(r=>!pageIsShell([r]));
@@ -7406,7 +7443,7 @@ async function shopStep(row,io){
   // Nothing found on pages that show no book at all — no price, no product link (MoMA's
   // member pop-up, too long to count as empty): read whole, and with no books on them
   // the shop could not be seen, never "not in the museum shop" (her decision; B-007).
-  const showsBook=r=>oneText(r).split("\n").some(realPrice)||productLinksOn(oneText(r),hostOf(r.url)).length>0;
+  const showsBook=r=>hasPrice(oneText(r))||productLinksOn(oneText(r),hostOf(r.url)).length>0;
   if(!(r1.data&&r1.data.found)&&shop===s1&&s1.results.every(r=>!showsBook(r))){
     const w=await readWhole();
     if(w.out&&w.out.blocked)return w.out;
@@ -7613,15 +7650,22 @@ function proofOf(onV,given){
   return String((g||onV[0]||{}).url||"")||null;
 }
 // The venue's own house: its imprint (isVenueImprint), or a name carrying every
-// distinctive word of the venue's short name ("Louvre éditions").
+// distinctive word of the venue's full or English name ("Louvre éditions").
 const VENUE_GENERIC=new Set(["national","art","arts","fine","modern","royal","musee","museum","museo","museu",
   "gallery","galleria","galerie","collection","the"]);
+// Does this text (already through normPublisher) carry every distinctive word of the
+// venue's full name, or of its English name where it has one?
+function venueNameIn(mu,text){
+  const n=" "+text+" ";
+  return [lookupName(mu),mu.nameInEnglish].some(nm=>{
+    const w=nm?normPublisher(nm).split(" ").filter(t=>t.length>2&&!VENUE_GENERIC.has(t)):[];
+    return w.length>0&&w.every(t=>n.includes(" "+t+" "));
+  });
+}
 function venueHouse(name,museumId){
   if(isVenueImprint(name,museumId))return true;
   const mu=MU[museumId];
-  const v=mu?normPublisher(lookupName(mu)).split(" ").filter(t=>t.length>2&&!VENUE_GENERIC.has(t)):[];
-  const n=" "+normPublisher(name)+" ";
-  return v.length>0&&v.every(t=>n.includes(" "+t+" "));
+  return !!mu&&venueNameIn(mu,normPublisher(name));
 }
 const HOUSE_SPLIT=/\s*(?:\/|;|&|\s+and\s+|\s+with\s+)\s*/i;
 function venuePrinting(name,museumId){
@@ -7660,14 +7704,13 @@ function cityOf(said,pub,results,museumId){
   return m&&m.city||null;
 }
 // One of her venues named as a publisher: its whole name, or every distinctive word of
-// its short name ("Musée du Louvre"); never a name merely containing another's
+// its full or English name ("Musée du Louvre"); never a name merely containing another's
 // ("National Gallery of Art" is not the National Gallery).
 function venueNamedIn(pub,except){
   const parts=String(pub||"").split(HOUSE_SPLIT).map(normPublisher).filter(Boolean);
   for(const m of Object.values(MU)){
     if(!m||m.id===except)continue;
-    const w=normPublisher(lookupName(m)).split(" ").filter(t=>t.length>2&&!VENUE_GENERIC.has(t));
-    if(parts.some(p=>p===normPublisher(m.name)||(w.length&&w.every(t=>(" "+p+" ").includes(" "+t+" ")))))return m;
+    if(parts.some(p=>p===normPublisher(m.name)||venueNameIn(m,p)))return m;
   }
   return null;
 }

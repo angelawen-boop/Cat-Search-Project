@@ -1,6 +1,6 @@
 /**
- * keys.js — the pieces a show's matching keys are built from: the web-address key and the accent
- * strip. One copy, shared by the scraper's tools and the app (docs/restructure.md, round "keys").
+ * keys.js — the pieces a show's matching keys are built from: the web-address key, the accent
+ * strip and the letter fold. One copy, shared by the scraper's tools and the app (docs/restructure.md, round "keys").
  * `node build/app_join.js` writes everything above module.exports into Cat_Watch.jsx as KEYS, and
  * `node build/app_join.js --check` fails until it has. Edit HERE, then run the join. Pure: nothing
  * above module.exports may use Node. Her quarantine is stored under these keys: a change here must
@@ -20,7 +20,15 @@ function normalizeUrlKey(u) {
   } catch { return ''; }
 }
 
-// Accent marks dropped ("é" → "e"). Letters that are not accented ones (ø, æ, ß…) stay as they are.
+// Accent marks dropped ("é" → "e"). Letters that are not accented ones (ø, æ, ß…) stay as they are;
+// foldLetters folds those too.
 const stripAccents = s => String(s).normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 
-module.exports = { normalizeUrlKey, stripAccents };
+// Letters that are not accented ones, folded to plain letters ("Hammershøi" matches "Hammershoi").
+const LETTER_FOLD = { 'ø': 'o', 'æ': 'ae', 'œ': 'oe', 'ß': 'ss', 'ł': 'l', 'đ': 'd', 'ð': 'd', 'þ': 'th', 'ı': 'i' };
+
+// The one fold wherever a title or name is simplified to be compared or searched: lowercase,
+// accents dropped, special letters folded.
+const foldLetters = s => stripAccents(String(s || '').toLowerCase()).replace(/[øæœßłđðþı]/g, c => LETTER_FOLD[c]);
+
+module.exports = { normalizeUrlKey, stripAccents, foldLetters };

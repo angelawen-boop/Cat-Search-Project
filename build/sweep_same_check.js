@@ -194,12 +194,19 @@ function copyTree(tree, label) {
   // dates.js outside the month block: the text before the weekday rule, and from the month pattern to monthNum, cut out.
   const cut = (t, from, to) => { const a = t.indexOf(from), b = t.indexOf(to, a); if (a < 0 || b < 0) throw new Error('dates.js: ' + from + ' gone'); return t.slice(0, a) + t.slice(b); };
   const keepOut = t => cut(cut(t, '// ── Date helpers', '/**\n * A weekday in front'), '// One month pattern for every parser', '// Month name to number, tolerating');
-  // The code from 'use strict' on, the keys round's shared accent strip read as the text it stands for
-  // (scraper/keys.js stripAccents: the keys line gone, each call written out).
+  // The code from 'use strict' on, with the two lines that name the shared fold (scraper/keys.js) set aside:
+  // the keys line and foldPlace. Those changed on purpose (accent strip, then the one letter fold); what
+  // foldPlace gives is compared below on every place the venues name.
   const code = t => t.slice(t.indexOf("'use strict';"));
-  const keysRead = t => t.replace(/^const \{ stripAccents \} = require\('\.\/keys\.js'\);\n/m, '')
-    .replace(/stripAccents\((String\(s \|\| ''\))\)/g, "$1.normalize('NFD').replace(/[\\u0300-\\u036f]/g, '')");
-  same('dates.js outside the month block', keepOut(code(O.text('scraper/dates.js'))), keepOut(code(keysRead(N.text('scraper/dates.js')))))
+  const keysRead = t => t.replace(/^const \{ \w+ \} = require\('\.\/keys\.js'\);\n/m, '').replace(/^const foldPlace = .*$/m, 'const foldPlace = (the shared fold);');
+  {
+    const places = Object.values(require(path.join(NEW, 'venues', 'register.js')).VENUES).flatMap(v => [...((v.read || {}).places || []), (v.read || {}).placeOwner, v.city]).filter(Boolean);
+    const fold = tree => { const t = fs.readFileSync(path.join(tree, 'scraper', 'dates.js'), 'utf8'); const K = require(path.join(tree, 'scraper', 'keys.js')); return new Function('stripAccents', 'foldLetters', t.match(/^const foldPlace = .*$/m)[0] + '\nreturn foldPlace;')(K.stripAccents, K.foldLetters); };
+    const fo = fold(OLD), fn = fold(NEW);
+    const moved = [...new Set(places)].filter(x => fo(x) !== fn(x) && !/[øæœßłđðþı]/i.test(x));
+    same('foldPlace on every place the venues name', J([]), J(moved)) && pass('foldPlace: the same for all ' + new Set(places).size + ' places the venues name (a special letter apart)');
+  }
+  same('dates.js outside the month block', keepOut(code(keysRead(O.text('scraper/dates.js')))), keepOut(code(keysRead(N.text('scraper/dates.js')))))
     && pass('dates.js: the same code outside the month block');
 
   const PF = require(path.join(NEW, 'scraper', 'pro_forma.js'));
@@ -277,7 +284,11 @@ function copyTree(tree, label) {
     if (so) lo = O.app.mergeSweepLog(lo, so);
     if (sn) ln = N.app.mergeSweepLog(ln, sn);
   }
-  same("the app's log after importing every file", J(lo), J(ln)) && pass("the app's log after importing all " + FILES.length + ' files in turn: the same');
+  // Venue by venue: the log is a map, and a file with no sweep time no longer adds a blank entry first
+  // (mergeSweepLog), so the venues can be met in another order. A venue left with a blank "tried" date
+  // by the old merge would show here as a difference.
+  const byVenue = m => J(Object.keys(m).sort().map(k => [k, m[k]]));
+  same("the app's log after importing every file", byVenue(lo), byVenue(ln)) && pass("the app's log after importing all " + FILES.length + ' files in turn: the same');
 }
 
 // ── (e) the Topic note ────────────────────────────────────────────────────────

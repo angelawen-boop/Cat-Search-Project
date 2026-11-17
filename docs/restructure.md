@@ -149,6 +149,37 @@ see, and what it proves. Real cards and venues from her ledger. The session runs
 lists only what it has seen come out right, saying plainly which items it could not run live (anything
 needing her connector or her Claude); grouped in order; plain words, no code names.
 
+## The fixes after item 4 — done (59.2)
+
+Merged from `claude/restructure-fixes`. **Her standard for such work (keep):** a session solves, without
+asking her, anything the real world gives one answer to, any inconsistency with how the app already does
+the same job, and a test key the world has moved on from; a side effect of a fix is a flaw in the fix, so
+the fix without it is found; "nothing is failing" is no reason to leave two rules. She is asked only for
+taste or her own data (a sentence on screen, what a venue keeps, a name she chose), anything touching her
+ledger or store, publishing, a real fork, or a fix that could not be found — in a few plain lines.
+- **One letter fold.** `foldLetters` (`scraper/keys.js`, in the app as `KEYS`): lowercase, accents dropped,
+  ø æ œ ß ł đ ð þ ı folded. The search box, title matching, the artist key, compression's title key and the
+  place fold all use it. `build/keys_compare.js` on her ledger and quarantine: every stored key and starter
+  ID unchanged, the same cards on re-import, none she holds offered as new; the simplified copies spelled
+  differently are printed as a note, and a copy that newly joins or splits two shows fails. A show she
+  holds, met again spelled with plain letters at another address, is now matched, not offered as new.
+- **One price rule.** `pricesIn` / `hasPrice` (`app/shop_finder/museum_shop.jsx`) for the finder, the lookup
+  and the galleries: an amount with its currency, cents or none; never a zero total, a price filter, a
+  "from … and above" bound or a delivery threshold; a range standing alone is one book's price span. A
+  shelf may still be known by its price filter. `build/price_compare.js`: every venue's shelf fetched live,
+  each difference read; the live shop checks give every venue the same answer as the code before.
+- **The Uffizi is searched in Italian under its Italian name** (`full`; its English name is `inEnglish`),
+  and a venue is recognised as a publisher, and named, under either.
+- **The proof pages.** A changed page read correctly updates the key; read badly, the reader gets that
+  venue's rule (the Prado's cut-off marker and curator credit, the V&A's picture captions never dated).
+  `scraper/link_proof_check.js` treats a page listed as refused as listed while refused for the same reason.
+- **Small faults:** a file with no sweep time adds nothing to the sweep log; `show_tags.readCsv` says how
+  many rows it dropped; `build/blocks_check.js` names its cases by venue and title.
+- **The live shop checks miss at four venues, the same under the code before the fixes** (the same live
+  replies read by both): Berlin takes one book's page for the section, the Albertina's section is not
+  found, the Belvedere stays German (CLAUDE.md §2.2.11), White Cube takes its prints section. Not
+  investigated.
+
 ## What is left — the plan to 60 (her decisions)
 
 In this order; nothing runs beside another.

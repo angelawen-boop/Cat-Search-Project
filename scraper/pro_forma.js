@@ -67,10 +67,11 @@ const later = (a, b) => (!a || (b && b > a)) ? b : a;
 
 // The sweep log merged with what a file showed (`seen`: {attempted, returned}, venue → stamp). A venue's
 // dates move only for a later time, so an old file cannot drag them back; tried and brought-rows move
-// independently.
+// independently. A venue seen with no sweep time adds nothing: the file says nothing about when it was tried.
 function mergeSweepLog(prev, seen) {
   const out = { ...(prev || {}) };
   for (const v of Object.keys((seen && seen.attempted) || {})) {
+    if (!seen.attempted[v]) continue;
     const was = out[v] || {};
     out[v] = {
       attempted: later(was.attempted, seen.attempted[v]),

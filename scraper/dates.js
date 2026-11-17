@@ -9,7 +9,7 @@
  * Formats and their reasons: docs/scraper.md §3.
  */
 'use strict';
-const { stripAccents } = require('./keys.js');
+const { foldLetters } = require('./keys.js');
 
 // ── Date helpers ──────────────────────────────────────────────────────────────
 // Every month spelling a venue has used, one list (docs/scraper.md §3): per language, its full names
@@ -788,7 +788,7 @@ function capsTitleRule(code) {
 // A venue with several galleries (read.places on its register entry): a gallery tacked onto the title
 // after a dash ("… – Acquavella Palm Beach", "… – Lévy Gorvy Dayan, London") is not part of the title
 // (her decision). A gallery in brackets, the sweep's mark of a show run in two, stays.
-const foldPlace = s => stripAccents(String(s || '')).toLowerCase();
+const foldPlace = s => foldLetters(s);
 function withoutPlaceTail(code, title) {
   const e = REGISTER.find(v => v.id === code);
   if (!e || !e.read.places.length || !title) return title;

@@ -34,10 +34,6 @@ const GALLERY_NOT_PAGE=/\/(?:cart|basket|checkout|account|login|wishlist)\b|tick
 
 // A book's own page: its price and its make (ISBN, binding, page count), in the languages met.
 const GALLERY_BOOK_MAKE=/\bisbn\b|\bhard ?(?:cover|back)\b|\bsoft ?cover\b|\bpaperback\b|\bbroschur|\bgebunden\b|\breliure\b|\bbroche\b|\b\d+\s?(?:pages|pp\b|p\.|s\.|seiten|pagine|paginas)/;
-//@piece GALLERY_PRICE
-
-// A price with no cents counts on a book's own page ("80 €", Galerie Karsten Greve).
-const GALLERY_PRICE=new RegExp(PRICE.source+"|\\b\\d+\\s?(?:€|eur\\b|chf\\b)");
 //@piece ownShopifyStore
 
 // A Shopify shop under the gallery's own store name (acquavellagalleries.myshopify.com).
@@ -53,7 +49,7 @@ function ownShopifyStore(u,host){
 const GALLERY_BOOK_FILED=/^(?:books?|livres|bucher|libri|libros|catalog(?:ue)?s?)\b/;
 //@piece galleryBookPage
 
-const galleryBookPage=t=>{ const f=foldText(t); return (GALLERY_BOOK_MAKE.test(f)||String(t).split("\n").some(l=>GALLERY_BOOK_FILED.test(foldText(stripMd(l)).trim())))&&GALLERY_PRICE.test(f); };
+const galleryBookPage=t=>{ const f=foldText(t); return (GALLERY_BOOK_MAKE.test(f)||String(t).split("\n").some(l=>GALLERY_BOOK_FILED.test(foldText(stripMd(l)).trim())))&&hasPrice(f); };
 //@piece GALLERY_CATALOGUES
 
 // Which list (her rule): the NARROWEST section that holds the catalogues and can be read. Best first:
@@ -127,7 +123,7 @@ async function galleryShop(page,museumHost,venueName,turnedDown,trace,foreign){
     // A heading naming its books, two priced entries under it (Massimo De Carlo's "## Catalogues", whose own pages
     // come back without the book).
     const head=String(text).search(/^#+\s*(?:catalog|books?\b|publications?\b|livres|publikationen|libri|pubblicazioni)/im);
-    if(head>=0){ const part=String(text).slice(head).split(/\n#+\s/)[0]; if(part.split("\n").filter(l=>GALLERY_PRICE.test(foldText(l))).length>=2)return true; }
+    if(head>=0){ const part=String(text).slice(head).split(/\n#+\s/)[0]; if(part.split("\n").filter(hasPrice).length>=2)return true; }
     const host=hostOf(url);
     let items=productLinksOn(text,host);
     if(items.length<2)items=itemsUnder(text,host,url);
@@ -200,7 +196,7 @@ async function galleryShop(page,museumHost,venueName,turnedDown,trace,foreign){
     const self=rank(pathWords(url))||rank(String(t).match(/^#\s+(.+)$/m)?String(t).match(/^#\s+(.+)$/m)[1]:"")||4;
     // A link the page also shows with its price is one book, not a section (Zwirner's "Meet the Typographer, David
     // Zwirner Books, 2024" cover, "$19.95" beside it).
-    const priced=new Set([...mdLinks(t).filter(l=>GALLERY_PRICE.test(foldText(l.label))).map(l=>normalizeUrlKey(l.url)),...booksSeenOn(t,hostOf(url)).map(b=>b.path)]);
+    const priced=new Set([...mdLinks(t).filter(l=>hasPrice(l.label)).map(l=>normalizeUrlKey(l.url)),...booksSeenOn(t,hostOf(url)).map(b=>b.path)]);
     const isBook=u=>{ let p=""; try{ p=new URL(u).pathname; }catch{} return priced.has(normalizeUrlKey(u))||priced.has(p); };
     const subs=menuLinks(t,hostOf(url)).filter(c=>own(c.url)&&normalizeUrlKey(c.url)!==normalizeUrlKey(url)&&!GALLERY_NOT_PAGE.test(c.url)&&!isBook(c.url))
       .map(c=>({...c,rank:rank(c.label||"")})).filter(c=>c.rank);

@@ -379,7 +379,7 @@ async function snapshot(jsxFile, outFile, liveFile) {
     click(rowOf('Venue')[0]); await until(() => !lit(rowOf('Venue')[0])); await steady();
   });
   await step('themeChip', async () => {
-    const pick = () => rowOf('Theme').find(b => b.textContent === 'Sculpture');
+    const pick = () => rowOf('Theme').find(b => /^Sculpture( \u00b7 \d+)?$/.test(b.textContent)); // a picked chip shows its count (59.1)
     click(pick());
     const ok = await until(() => lit(pick()));
     await steady(); capture('themeChip', ok, screen);
