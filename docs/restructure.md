@@ -859,6 +859,18 @@ word) and item 5's cutting plan in full, then:
 and scraper-side rounds, the price rule and the two venues, the keys round). Step 6, the main screen's
 cutting plan, is written (item 5). `main` passes the app's suites, the join, structure and fact checks. What waits for her is under "Parked for her" and "Start here", 5.
 
+**Test round 3 — published, waiting on her (her word: built without the fixes session's work).** The
+test page holds `main` as merged through C7; her store's venue, quarantine and sweep-log records were
+copied into its store; with her current ledger loaded it shows what her app shows (`build/test_page_check.js`
+passed). The coordinator ran her checklist's steps in a stand-in browser on her ledger (loading, every chip
+row, every sort, the search, a card's marks and the Buy next view, dismiss and undo, Label, the drawers,
+Save now, the pop-up's tabs, a sweep file's review and Cancel): all came out right, no console errors.
+Not run live by the coordinator, because they need her connector and her Claude: Find catalogue, Search
+again, Re-check, Relabel, and a Read by Links, Pages and Paste — the side-by-side check proves those old
+against new with stand-in replies only; her round is their live proof. The venue review page was not
+republished (no venue was waiting; the register did not change). **Next:** her report; faults fixed; the
+fixes session merges when she says; 60 to her app only when she says.
+
 **Open problems:** a sub-agent cannot start the watched test run — the test hook reads the coordinator's
 transcript for the "Expected test run" line — so the coordinator runs gate 2 itself. The hook often refuses
 the first try even after the line is written; write the line again and retry.
