@@ -355,14 +355,14 @@ carrying a ticket link lose it on Re-check. L-001 to L-019; L-020 to L-023 for
 ### Shop addresses — checked by opening each
 
 `shopCatalogues` (the shop's own shelf, named from its own navigation) is opened
-first, `shopSearch` (+ the exhibition title) in the same call. Both, because `uffizi`
-and `khm` have no shelf, and elsewhere the search box catches a book filed on another
+first, `shopSearch` (+ the exhibition title) in the same call. Both, because `khm`
+has no shelf, and elsewhere the search box catches a book filed on another
 shelf. **Sold-out books stay listed** on shelves (Menil 47 with 4 sold out; National
 Gallery back to 2019).
 
 **The addresses are printed from the venue register (`venues/register.js`) by `node scraper/shop_addresses.js`** —
-the register is the one copy. No shop: borghese, capo, dellav (`uffizi` sells no books; `khm`
-has no shelf).
+the register is the one copy. No shop: borghese, capo, dellav, uffizi (its shop sells no books, so it is never searched —
+her decision, 59.2; `khm` has no shelf).
 
 - **Shelf depth is one number for every shop**: `SHELF_DEPTH`, five pages, read
   in the same call — five covers MAD's 68 books. Menil and Morgan answer

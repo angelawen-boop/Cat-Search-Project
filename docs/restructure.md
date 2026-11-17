@@ -170,7 +170,8 @@ ledger or store, publishing, a real fork, or a fix that could not be found — i
   shelf may still be known by its price filter. `build/price_compare.js`: every venue's shelf fetched live,
   each difference read; the live shop checks give every venue the same answer as the code before.
 - **The Uffizi is searched in Italian under its Italian name** (`full`; its English name is `inEnglish`),
-  and a venue is recognised as a publisher, and named, under either.
+  and a venue is recognised as a publisher, and named, under either. Its shop sells no books, so its entry
+  holds no shop and a lookup goes straight to the web (her decision, after her test round).
 - **The proof pages.** A changed page read correctly updates the key; read badly, the reader gets that
   venue's rule (the Prado's cut-off marker and curator credit, the V&A's picture captions never dated).
   `scraper/link_proof_check.js` treats a page listed as refused as listed while refused for the same reason.
@@ -185,8 +186,8 @@ ledger or store, publishing, a real fork, or a fix that could not be found — i
 
 In this order; nothing runs beside another.
 
-1. **Done — the fixes merged as 59.2**, on the test page ("The fixes after item 4" above). Her test round
-   on it: special letters, the Prado and V&A links, a museum shop's prices, the Uffizi's search.
+1. **Done — the fixes merged as 59.2**, on the test page ("The fixes after item 4" above); her test round
+   on it passed. The Uffizi's shop was taken out of its entry after it (on `main`, not on the test page).
 2. **The words list** — a new session, Opus at medium, started only once the merge is in and `main` is
    clean. Every sentence the app shows her, written once in one place, every place that shows it naming
    that one copy; a check fails a sentence on screen that is not on the list. So a change of wording is made

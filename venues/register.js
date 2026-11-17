@@ -379,11 +379,11 @@ const VENUES = [
     sweep: { exBase: null, listUrl: null },
     filed: { addedAt: "2026-10-19T04:12:56.470Z", confirmed: true, english: false, finder: 3, foundBy: "the venue's rule", host: "www.staedelmuseum.de", id: "occ-staedelmuseum-de", name: "St\u00e4del Museum", pageShop: "", searchRule: 2, shelfKind: null, shop: "found", shopCatalogues: "https://liebieghaus.ticketfritz.de/Shop/Index/staedel-publikationen/43885", shopHome: "https://liebieghaus.ticketfritz.de/", shopSearch: null, turnedDown: [], why: null } },
 
-  // Its all-number dates: "From 18/06/2025 to 28/09/2025".
+  // Its all-number dates: "From 18/06/2025 to 28/09/2025". Its shop sells no books, so no shop is searched (her decision).
   { id: "uffizi", kind: "swept",
     names: { card: "Uffizi", chip: "Uffizi", group: null, full: "Gallerie degli Uffizi", inEnglish: "Uffizi Galleries", aka: [], replaced: [], hers: true },
     city: "Florence", country: "Italy", english: false, language: "Italian",
-    shop: { home: "https://shop.uffizi.it/en/", catalogues: null, search: "https://shop.uffizi.it/en/?s=", unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
+    shop: { home: null, catalogues: null, search: null, unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
     read: { link: null, sites: [], dateOrder: "day", spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
     sweep: { exBase: null, listUrl: null },
     filed: null },

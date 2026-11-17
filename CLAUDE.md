@@ -167,7 +167,7 @@ Everything not listed here is finished. Do not reopen a closed item without a ne
 The app is feature parts under `app/` that a session can read whole; the main screen is the order of its pieces
 (`docs/restructure.md`: how it is laid out, the rules any later change to the screen follows, the checks). Her test
 round 3 passed. **`main` holds 59.2, unpublished** (the rebuilt screen, the Theme chip's count, the venue scrubber for
-the Occ groups, "Still in the museum shop.", and the fixes after item 4 — on the test page, her test round on them open);
+the Occ groups, "Still in the museum shop.", and the fixes after item 4 — her test round on the test page passed; the Uffizi's shop removed after it, on `main` only);
 her app runs 59 as published before the main-screen work. **OPEN — the plan to 60, in order (her decisions):** a new
 session builds the words list (every sentence she sees, written once), then the housekeeping; 60 is published when she
 says; then the leftover venue record is cleared. **She types "Continue the restructure." → read `docs/restructure.md`
@@ -206,7 +206,7 @@ noting issues as she uses it, for a later debugging session.
 - **OPEN — three cases any search debugging must fix** (her decision; `docs/catalogue_versions.md`, cases 10–12; case 13, Beato
   Angelico, is her report, not yet agreed): Munich's CEDON shop sells German and English editions on ONE page with a language choice
   (*Venezia 500*, *Jacobus Vrel*), and junk text is written as the publisher (Vrel, Dresden's *Paradise on Earth*, Correggio).
-- **Shops tested by her in the app:** `brit`, `morgan`, `mad`, `orsay`, `louvre`, `moma`. `uffizi`'s shop sells no books — settled.
+- **Shops tested by her in the app:** `brit`, `morgan`, `mad`, `orsay`, `louvre`, `moma`. `uffizi`'s shop sells no books: no shop in its entry, never searched (her decision, 59.2).
 - **OPEN — the publisher step's verdict is not stable.** *Metamorphoses* (Hannibal), two fresh lookups, same code: "Publisher's
   section", then "Publisher" (right). Cause unproven (a different candidate page, the page empty — `pageIsShell`, or the read judging a
   page differently); read its lookup-log record (gone once 50 newer lookups have run).
@@ -451,6 +451,9 @@ Each line came from a real failure. Details are in git history and `docs/`.
   guessed from the prompt instead (Chagall, Postwar Europe), and sessions kept writing "the log would settle it" without reading it.
 - **A stand-in Claude does not predict hers** — Sonnet said Baroque, her app's Claude Surveys (*Metamorphoses*); her own
   run's record decides. A repeat ask through `sample` is replayed unless `cache:false`.
+- **A venue fact goes into its register entry, not only into the notes** — the Uffizi's "sells no books" sat in a doc for
+  weeks while its entry kept the shop, so every lookup searched a shop of souvenirs. **Name things by looking them up** — a
+  venue known only by its code was written around ("the second of your Italian venues"), not named.
 - **Capability on one machine is not on both** (pacing was laptop-only), and "the shared path is built" is not "every venue is ready" — say it per venue.
 
 ### 4.2 Rejected — do not re-propose
