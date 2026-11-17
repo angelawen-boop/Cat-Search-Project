@@ -633,4 +633,9 @@ Her wording and order. The code holds the exact strings.
 - **The scrubber lists venues in an Occ group**: with "Occ - US" or "Occ - Europe" picked and the list sorted by
   venue, holding the right edge opens the same ruler as the Period sort, one row per venue in the order Sort by
   venue gives; lifting jumps to that venue's first card. Tests TC-001 to TC-005, VS-001 to VS-006.
+- **"Still in the museum shop."** — a Re-check that finds the book in the shop again changes the card's headline to
+  this, in the same green, and saves it (`shopChange: "still"`): the small line under the button goes, so the
+  headline is what tells her she re-checked. A fresh Search again puts the plain "In the museum shop." back.
+  A Re-check that finds a book newly on the shelf now also saves "Now in the museum shop." on every path. C-079c,
+  C-097, M-004.
 
