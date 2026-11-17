@@ -563,6 +563,7 @@ function runtime(answer, log) {
     eq(api.shopHeadline('shop', null), 'In the museum shop.', 'C-079: the plain green sentence');
     eq(api.shopHeadline('shop', 'now'), 'Now in the museum shop.', 'C-079a: wasn’t there, now is');
     eq(api.shopHeadline('shop', 'back'), 'Back in the museum shop.', 'C-079b: was there, went, came back');
+    eq(api.shopHeadline('shop', 'still'), 'Still in the museum shop.', 'C-079c: a Re-check found it there again (her design, 59.1)');
     eq(api.shopHeadline('gone', null), 'No longer in the museum shop.', 'C-080: the red one says it plainly');
     eq(api.shopHeadline('web', 'gone'), null,
        'C-080a: a 22 Sep "web"+"gone" row, with no link kept, reads as plain "not in the shop"');
@@ -621,7 +622,10 @@ function runtime(answer, log) {
     r = await run(isGone, page, { forSale: true, why: 'Add to cart.' });
     eq(r.out.row.shopState + '|' + r.out.row.shopChange, 'shop|back', 'C-096: gone then buyable is "back"');
     r = await run(inShop, page, { forSale: true });
-    eq(r.out.ok && r.out.row === inShop, true, 'C-097: still for sale changes nothing');
+    eq(r.out.ok && r.out.row.shopState + '|' + r.out.row.shopChange, 'shop|still', 'C-097: still for sale marks the card "still" and changes nothing else');
+    eq(JSON.stringify({ ...r.out.row, shopChange: inShop.shopChange }), JSON.stringify(inShop), 'C-097b:   every other field as it was');
+    const again = await run(r.out.row, page, { forSale: true });
+    eq(again.out.row === r.out.row, true, 'C-097c: re-checked again and still there: the card is left exactly as it is');
     r = await run(inShop, page, { forSale: 'maybe' });
     eq(r.out.ok, false, 'C-098: an unreadable answer is a failed check');
     const ce = new Error('x'); ce.code = 'rate_limited';

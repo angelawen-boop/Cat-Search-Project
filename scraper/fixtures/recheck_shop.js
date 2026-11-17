@@ -709,7 +709,7 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
     await click(button(card(madListed.title), /^Re-check museum shop$/));
     c = card(madListed.title); t = c ? c.textContent : '';
     ok(shopLink(c) && shopLink(c).getAttribute('href') === LISTED, 'M-003: her card in the shop with no link — Re-check reads the link off the shelf', shopLink(c) && shopLink(c).getAttribute('href'));
-    ok(/In the museum shop\./.test(t) && !/Now in the museum shop/.test(t), 'M-004:   and it stays "In the museum shop." — never "Now", it was there already', t.slice(0, 200));
+    ok(/Still in the museum shop\./.test(t) && !/Now in the museum shop/.test(t), 'M-004:   and the headline reads "Still in the museum shop." — never "Now", it was there already', t.slice(0, 200));
     ok(/Re-checked: still in the museum shop\./.test(t), 'M-005:   Re-check says it is still there', t.slice(0, 400));
 
     await openTray(madTwo.title);

@@ -216,7 +216,8 @@ const until = async (fn, ms = 8000) => { const t = Date.now(); while (Date.now()
     ok(!divider('Early Modernism') && !!btn(m2(), 'Do not regroup'), 'PR-040: the next Relabel remembers nothing: regrouped again, the button offered again');
     relabelWith = null;
     // The Theme row filters; Ex-themes is every labelled show with no theme.
-    const chipBtn = t => [...doc.querySelectorAll('button')].find(b => b.textContent === t);
+    // A picked Theme chip reads "Sculpture · 1" (59.1): found by its name, with or without its count.
+    const chipBtn = t => [...doc.querySelectorAll('button')].find(b => b.textContent === t || b.textContent.startsWith(t + ' \u00b7 '));
     const allShown = cards().length;
     click(chipBtn('Sculpture')); await settle(150);
     ok(cards().length === 1 && cards()[0].querySelector('h3').textContent === firstTitle, 'PR-019: Sculpture shows only the show labelled Sculpture', String(cards().length));

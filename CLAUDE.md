@@ -162,12 +162,17 @@ summaries: four Rijksmuseum rows whose pages return 404, plus occasional page ti
 
 Everything not listed here is finished. Do not reopen a closed item without a new fact.
 
-#### 2.2.1 The restructure — under way (her decision)
+#### 2.2.1 The restructure — cut and on `main`, not yet on her app (her decision)
 
-The app is being moved, bottom up and one layer at a time, into feature parts under `app/` that a session can read whole;
-`Cat_Watch.jsx` becomes the joined output. **She types "Continue the restructure." → read `docs/restructure.md` in full and do
-what its "Start here" says.** Her venue review page (every venue's names, a box for hers, facts to choose), permanent,
-refreshed and filed at each publish: https://claude.ai/artifact/RmSC86pu1rkBxsZDtfdA1J (docs/restructure.md, 4A). While a layer's branch is open, no other app change goes on `main`.
+The app is feature parts under `app/` that a session can read whole; the main screen is the order of its pieces
+(`docs/restructure.md`: how it is laid out, the rules any later change to the screen follows, the checks). Her test
+round 3 passed. **`main` holds 59.1, unpublished** (the rebuilt screen, the Theme chip's count, the venue scrubber for
+the Occ groups, "Still in the museum shop."); her app runs 59 as published before the main-screen work. **OPEN — the plan to
+60, in order (her decisions):** the fixes session (`claude/restructure-fixes`) merges, 59.2 on the test page; a new
+session builds the words list (every sentence she sees, written once), then the housekeeping; 60 is published when she
+says; then the leftover venue record is cleared. **She types "Continue the restructure." → read `docs/restructure.md`
+and do the next undone step of "What is left — the plan to 60".** Her venue review page,
+permanent, refreshed and filed at each publish: https://claude.ai/artifact/RmSC86pu1rkBxsZDtfdA1J.
 
 #### 2.2.2 Fixes not yet checked in the cases they were written for
 
@@ -196,7 +201,7 @@ Hemessen fix), and other versions are listed only after a book passes — *Victo
 times in three days). The redesign (find → choose → tell, every version kept, her starting-pick rules) and its nine agreed cases are in
 `docs/catalogue_versions.md`; every later change is checked against them. Awaiting her approval to build; no code before. She is
 noting issues as she uses it, for a later debugging session.
-- **A link venue searched under its short card name ("Detroit")** — fixed by restructure 4A (every venue searched
+- **A link venue searched under its short card name ("Detroit")** — fixed by the venue register (every venue searched
   by its full name), live at 59.
 - **OPEN — three cases any search debugging must fix** (her decision; `docs/catalogue_versions.md`, cases 10–12; case 13, Beato
   Angelico, is her report, not yet agreed): Munich's CEDON shop sells German and English editions on ONE page with a language choice
@@ -314,7 +319,7 @@ behind such a link. Read the one for the work in hand.
 | `docs/app.md` | The app's evidence: catalogue lookup, shop addresses, saving, intake bands, quarantine, sweep log, seed, the cloud ledger's screen | Changing anything in the app |
 | `docs/cloud_storage.md` | The cloud ledger: what the page's store holds, Save and the safety copies, the opening switch, the safety proofs, the read-only lock for a second copy | Changing anything about saving to the page's own store |
 | `docs/store_backup_2026-09-21/` | A read-out of the page's store, as insurance | Only if the store is lost AND `sweep_log.js` cannot rebuild it |
-| `docs/store_backup_2026-11-06/` | Her app's `venues/occasional` record before restructure 4A, as insurance | Only if the one-time clear of old venue records goes wrong |
+| `docs/store_backup_2026-11-06/` | Her app's `venues/occasional` record before the venue register, as insurance | Only if the one-time clear of old venue records goes wrong |
 | `docs/ledger_2026-09-24/` | Her real ledger as exported on 24 Sep, kept as test data for the cloud-store and scalability work — **never load it into her published app** | Testing saving or sizing against a real ledger |
 | `docs/scalability.md` | What grows as the ledger grows, measured; parked work for when she acts | The list feels slow, the store fills, or she raises the size |
 
@@ -364,7 +369,7 @@ behind such a link. Read the one for the work in hand.
 | `docs/branches.md` | The branch table and holding a push for another session | Creating, merging or pushing a branch |
 | `docs/publishing.md` | Version numbering, building the app and the publish steps | Publishing the app |
 | `docs/testing.md` | Which test group to run, where a failure is recorded, the live proof pages, test anchors, JSX validation | Running or writing tests, or re-checking live proof pages |
-| `docs/restructure.md`, `docs/restructure/placement.json`, `docs/restructure/duplicates.md` | The restructure into feature parts: the layers, the gates and their proof, who does what, the handover record; where every piece goes; the audit of facts kept twice (items 4A–4F) | "Continue the restructure.", or any change to the app while it is under way |
+| `docs/restructure.md`, `docs/restructure/placement.json`, `docs/restructure/duplicates.md` | The app in feature parts: how it is laid out, the rules of a cut, the checks, her test page, what is left; where every piece goes; the audit of facts kept twice | "Continue the restructure.", or any change to the main screen or to where a piece lives |
 
 **Reviews**
 
@@ -510,7 +515,7 @@ bot-blocked, so Pages and Paste only) is a fact about that venue, never a limit 
 > restating `capabilities` must restate all four; omitting it carries them
 > forward. **Renaming the connector means restating them.**
 
-**Live: 59 in her app** (the app is named **Art Watch** on screen since 57; the header's big line is unchanged), with the cloud ledger (merged at 46). What each recent version changed is in
+**Live: 59 in her app; `main` holds 59.1, unpublished (§2.2.1)** (the app is named **Art Watch** on screen since 57; the header's big line is unchanged), with the cloud ledger (merged at 46). What each recent version changed is in
 `docs/publishing.md`, "What is live now".
 
 #### The mental model, load-bearing

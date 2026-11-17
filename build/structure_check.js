@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /*
- * structure_check.js — the structure guard (docs/restructure.md, "The guard").
+ * structure_check.js — the structure guard (docs/restructure.md, "The checks").
  *
  *   node build/structure_check.js [--root <dir>]
  *

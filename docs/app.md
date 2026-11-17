@@ -624,3 +624,18 @@ Her wording and order. The code holds the exact strings.
   first only while the red banner shows.
 - **Storage limit:** a record over 256 KiB is refused; a large ledger splits into
   compressed pieces (a 352-row ledger is one piece) and reads back identical.
+
+## The Theme chip's count and the venue scrubber (59.1, her design)
+
+- **A picked Theme chip reads "Sculpture · 107"**: its own count after a dot, gone when unpicked. With two
+  picked, each shows its own count (the list with that theme alone picked, every other filter as it stands),
+  while the list holds the shows with either.
+- **The scrubber lists venues in an Occ group**: with "Occ - US" or "Occ - Europe" picked and the list sorted by
+  venue, holding the right edge opens the same ruler as the Period sort, one row per venue in the order Sort by
+  venue gives; lifting jumps to that venue's first card. Tests TC-001 to TC-005, VS-001 to VS-006.
+- **"Still in the museum shop."** — a Re-check that finds the book in the shop again changes the card's headline to
+  this, in the same green, and saves it (`shopChange: "still"`): the small line under the button goes, so the
+  headline is what tells her she re-checked. A fresh Search again puts the plain "In the museum shop." back.
+  A Re-check that finds a book newly on the shelf now also saves "Now in the museum shop." on every path. C-079c,
+  C-097, M-004.
+

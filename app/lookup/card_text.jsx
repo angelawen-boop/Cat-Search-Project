@@ -50,7 +50,8 @@ function publisherNote(result,hasUrl){
 // books on them, drawn by script (MoMA). "parallel": a venue whose books Parallel drops
 // (`shopUnseen`, the Städel), its pages showing no priced line. "unconfirmed": a section she confirmed though the
 // finder could not read it (`shopUnseen` "unconfirmed"; Berlin's English one), cause unchecked. Each way whether the book is there is
-// UNKNOWN — never "not in the shop". shopChange: "now" | "back" | null on a "shop" row.
+// UNKNOWN — never "not in the shop". shopChange: "now" | "back" | "still" | null on a "shop" row
+// ("still": a Re-check found it there again — the headline is how she knows she re-checked; her design).
 // A legacy "gone" on a "web" row reads as plain "web".
 
 // The one line at the top of the catalogue panel. Outside the component so a
@@ -60,6 +61,7 @@ function shopHeadline(shopState,shopChange){
   if(shopState==="shop"){
     if(shopChange==="back")return "Back in the museum shop.";
     if(shopChange==="now") return "Now in the museum shop.";
+    if(shopChange==="still")return "Still in the museum shop.";
     return "In the museum shop.";
   }
   if(shopState==="gone")return "No longer in the museum shop.";

@@ -1,4 +1,4 @@
-// The venue register (venues/register.js) and its waiting room — docs/restructure.md, item 4A.
+// The venue register (venues/register.js) and its waiting room — docs/restructure.md, "The venue register".
 //   VR-001…  build/file_venues.js files the store's waiting records into the register.
 //   VR-010…  the page clears a waiting record the register already holds, and shows the rest over it.
 //   VR-020…  a venue with several galleries (Acquavella, Lévy Gorvy Dayan): one list, every way in.

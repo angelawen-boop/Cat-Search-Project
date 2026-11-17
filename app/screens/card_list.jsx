@@ -2,7 +2,7 @@
 //@piece CardList
 
 // The list of cards: the empty state, the period and band dividers, each card (and the Buy next drag wrapper) and the "more" marker.
-function CardList({ui,view,sort,bnOnly,periodView,byArtist,drawLimit,cardState,dragOn,drag,startDrag,cardAct,moreRef}){
+function CardList({ui,view,sort,bnOnly,periodView,venueScrub,byArtist,drawLimit,cardState,dragOn,drag,startDrag,cardAct,moreRef}){
   const{C,TH,chip,pBtn,lnk}=ui;
   const{sortBy,pinTouched,refreshTouched}=sort;
   const{busyId,busy,rechecking,lookLabel,recheckSaid,relabelId,digitalBox,openCards}=cardState;
@@ -34,6 +34,8 @@ function CardList({ui,view,sort,bnOnly,periodView,byArtist,drawLimit,cardState,d
           const isBusy=busyId===r.id;
           const card=<LedgerCard r={r} mu={MU[r.museumId]} isOpen={!!openCards[r.id]} isBusy={isBusy} busy={busy} rechecking={isBusy&&rechecking} lookLabel={isBusy?lookLabel:null}
               said={recheckSaid&&recheckSaid.id===r.id?recheckSaid:null} relabelling={relabelId===r.id} digitalOpen={digitalBox===r.id} C={C} TH={TH} chip={chip} pBtn={pBtn} lnk={lnk} act={cardAct}/>;
+          // The venue scrubber's mark: a venue's first card, wrapped so the scrubber can find and jump to it.
+          if(venueScrub&&(i===0||view[i-1].museumId!==r.museumId))return <React.Fragment key={r.id}>{lead}<div data-period={venueScrubKey(r.museumId)}>{card}</div></React.Fragment>;
           if(!dragOn||!isBuyNext(r))return <React.Fragment key={r.id}>{lead}{card}</React.Fragment>;
           // The lifted card follows the finger; the cards it passes slide aside by its height.
           let ds={userSelect:"none",WebkitUserSelect:"none",WebkitTouchCallout:"none",cursor:"grab"};

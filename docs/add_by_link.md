@@ -41,7 +41,7 @@ what code cannot do — never start by handing a job to Claude. Where the line f
   a rejected card's, an undecided card's after a partial apply, and on Cancel import every link the Read took.
 - **No lookback cutoff** for anything added by link (her decision). **Chip: one "Occasional"** for every venue added this way
   (her decision), each venue keeping its own name and shop behind it. A link to a venue already swept files under that venue.
-- **One entry per venue — the venue register, `venues/register.js`** (her decision; docs/restructure.md, 4A): chip and group,
+- **One entry per venue — the venue register, `venues/register.js`** (her decision; docs/restructure.md, "The venue register"): chip and group,
   card, full and lookup names, other names, city, country, other sites (`read.sites`: a path on a shared site, a house `line`),
   link options (`read.link`), shop settings, and the store record it was last filed from (`filed`). What the app finds out
   waits in the store, `venues/occasional`, and shows over the entry, field by field, where it changed since filing (her

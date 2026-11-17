@@ -179,6 +179,11 @@ async function readShopPage(book,url,io,opened){
   }
   return{kind:"read",forSale:d.forSale,why,results:f.results,detail:f.detail+"\n"+rd.detail+(why?"\n"+why:"")};
 }
+//@piece stillInShop
+
+// A Re-check found the book in the shop again: the card's headline says "Still in the museum shop." from now on
+// (her design: the small line under the button goes, the headline is what tells her she re-checked).
+const stillInShop=row=>row.shopChange==="still"?row:{...row,shopChange:"still"};
 //@piece recheckLinkedPage
 
 
@@ -195,7 +200,7 @@ async function recheckLinkedPage(row){
   if(p.kind==="noread")return{ok:false,detail:p.detail,said:"Re-check didn’t finish — "+p.why};
   if(p.kind==="badanswer")return{ok:false,detail:p.detail,said:"Re-check didn’t finish — answer came back unreadable."};
   if(p.forSale){
-    if(hadIt)return{ok:true,detail:p.detail,row,said:"Re-checked: still for sale in the museum shop."};
+    if(hadIt)return{ok:true,detail:p.detail,row:stillInShop(row),said:"Re-checked: still for sale in the museum shop."};
     return{ok:true,detail:p.detail,row:{...row,shopState:"shop",shopChange:"back"},said:"Re-checked: back in the museum shop."};
   }
   return{ok:true,detail:p.detail,row:{...row,shopState:"gone",shopChange:null},
@@ -263,7 +268,7 @@ async function recheckShopCore(found,hooks){
       const {url,failed}=await bookOnShelfAfterWeb(F,v,s.results,dom,new Set(shopPagesFor(MU[row.museumId],String(row.title||"").trim()).map(normalizeUrlKey)),io,log);
       const detail=[s.detail].concat(log).join("\n");
       out=failed?{ok:false,detail,said:"Re-check didn’t work — shop page couldn’t be read."}
-        :url?{ok:true,detail,row:{...answered,shopState:"shop",shopUrl:url,shopChange:null},said:dropped+(row.shopState==="shop"?"Re-checked: still in the museum shop.":"Re-checked: now in the museum shop.")}
+        :url?{ok:true,detail,row:{...answered,shopState:"shop",shopUrl:url,shopChange:row.shopState==="shop"?"still":"now"},said:dropped+(row.shopState==="shop"?"Re-checked: still in the museum shop.":"Re-checked: now in the museum shop.")}
         :{ok:true,detail,row:{...answered,shopState:"web",shopUrl:null},said:dropped+"Re-checked: not in the museum shop."};
     }
     else if(o.found&&(o.catalogueTitle||o.isbn13)&&(onShop||o.listedOnly)){
@@ -271,7 +276,7 @@ async function recheckShopCore(found,hooks){
       // the page IS the shop's. Web search and the publisher are never run.
       const hit=await readBookPage({ok:true,detail:s.detail,pageUrl:o.shopUrl,row:foundInShop(row,o)},
         MU[row.museumId]?.name||"",dom,io);
-      out={ok:true,detail:hit.detail,row:hit.row,said:dropped+(row.shopState==="shop"?"Re-checked: still in the museum shop.":"Re-checked: now in the museum shop.")};
+      out={ok:true,detail:hit.detail,row:row.shopState==="shop"?stillInShop(hit.row):hit.row,said:dropped+(row.shopState==="shop"?"Re-checked: still in the museum shop.":"Re-checked: now in the museum shop.")};
     }
     else out={ok:true,detail:s.detail,row:answered,said:dropped+"Re-checked: not in the museum shop."};
   }

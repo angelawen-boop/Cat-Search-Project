@@ -1,4 +1,4 @@
-//@ The period scrubber.
+//@ The scrubber: periods in the Period sort, venues in an Occ group sorted by venue.
 //@piece SCRUB_ROW,SCRUB_BULGE,SCRUB_ZONE,SCRUB_HOLD,SCRUB_SLOP
 
 // The period scrubber (her design): hidden until she holds a finger on the middle of the right

@@ -3,8 +3,8 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 // The footer prints APP_VERSION and its date, so she can tell one build from the next.
 // Numbering, her decision: a whole number for a substantial change, a decimal for a
 // small one, one number per publish. Bump it with the change it describes.
-const APP_VERSION = "59";
-const APP_VERSION_DATE = "15 Nov 2026";
+const APP_VERSION = "59.1";
+const APP_VERSION_DATE = "17 Nov 2026";
 
 // ===== THE VENUE REGISTER — the join writes venues/register.js in below, every venue's facts in her venue order; never edit it here. Edit venues/register.js, then run `node build/app_join.js`. =====
 const VENUE_REGISTER=(()=>{
@@ -6706,7 +6706,8 @@ function publisherNote(result,hasUrl){
 // books on them, drawn by script (MoMA). "parallel": a venue whose books Parallel drops
 // (`shopUnseen`, the Städel), its pages showing no priced line. "unconfirmed": a section she confirmed though the
 // finder could not read it (`shopUnseen` "unconfirmed"; Berlin's English one), cause unchecked. Each way whether the book is there is
-// UNKNOWN — never "not in the shop". shopChange: "now" | "back" | null on a "shop" row.
+// UNKNOWN — never "not in the shop". shopChange: "now" | "back" | "still" | null on a "shop" row
+// ("still": a Re-check found it there again — the headline is how she knows she re-checked; her design).
 // A legacy "gone" on a "web" row reads as plain "web".
 
 // The one line at the top of the catalogue panel. Outside the component so a
@@ -6716,6 +6717,7 @@ function shopHeadline(shopState,shopChange){
   if(shopState==="shop"){
     if(shopChange==="back")return "Back in the museum shop.";
     if(shopChange==="now") return "Now in the museum shop.";
+    if(shopChange==="still")return "Still in the museum shop.";
     return "In the museum shop.";
   }
   if(shopState==="gone")return "No longer in the museum shop.";
@@ -7080,6 +7082,9 @@ async function readShopPage(book,url,io,opened){
   }
   return{kind:"read",forSale:d.forSale,why,results:f.results,detail:f.detail+"\n"+rd.detail+(why?"\n"+why:"")};
 }
+// A Re-check found the book in the shop again: the card's headline says "Still in the museum shop." from now on
+// (her design: the small line under the button goes, the headline is what tells her she re-checked).
+const stillInShop=row=>row.shopChange==="still"?row:{...row,shopChange:"still"};
 
 // Put text on the clipboard; true only if it got there. The clipboard API
 // first; a page in a frame may be refused it, so the old select-and-copy
@@ -7106,7 +7111,7 @@ async function recheckLinkedPage(row){
   if(p.kind==="noread")return{ok:false,detail:p.detail,said:"Re-check didn’t finish — "+p.why};
   if(p.kind==="badanswer")return{ok:false,detail:p.detail,said:"Re-check didn’t finish — answer came back unreadable."};
   if(p.forSale){
-    if(hadIt)return{ok:true,detail:p.detail,row,said:"Re-checked: still for sale in the museum shop."};
+    if(hadIt)return{ok:true,detail:p.detail,row:stillInShop(row),said:"Re-checked: still for sale in the museum shop."};
     return{ok:true,detail:p.detail,row:{...row,shopState:"shop",shopChange:"back"},said:"Re-checked: back in the museum shop."};
   }
   return{ok:true,detail:p.detail,row:{...row,shopState:"gone",shopChange:null},
@@ -7166,7 +7171,7 @@ async function recheckShopCore(found,hooks){
       const {url,failed}=await bookOnShelfAfterWeb(F,v,s.results,dom,new Set(shopPagesFor(MU[row.museumId],String(row.title||"").trim()).map(normalizeUrlKey)),io,log);
       const detail=[s.detail].concat(log).join("\n");
       out=failed?{ok:false,detail,said:"Re-check didn’t work — shop page couldn’t be read."}
-        :url?{ok:true,detail,row:{...answered,shopState:"shop",shopUrl:url,shopChange:null},said:dropped+(row.shopState==="shop"?"Re-checked: still in the museum shop.":"Re-checked: now in the museum shop.")}
+        :url?{ok:true,detail,row:{...answered,shopState:"shop",shopUrl:url,shopChange:row.shopState==="shop"?"still":"now"},said:dropped+(row.shopState==="shop"?"Re-checked: still in the museum shop.":"Re-checked: now in the museum shop.")}
         :{ok:true,detail,row:{...answered,shopState:"web",shopUrl:null},said:dropped+"Re-checked: not in the museum shop."};
     }
     else if(o.found&&(o.catalogueTitle||o.isbn13)&&(onShop||o.listedOnly)){
@@ -7174,7 +7179,7 @@ async function recheckShopCore(found,hooks){
       // the page IS the shop's. Web search and the publisher are never run.
       const hit=await readBookPage({ok:true,detail:s.detail,pageUrl:o.shopUrl,row:foundInShop(row,o)},
         MU[row.museumId]?.name||"",dom,io);
-      out={ok:true,detail:hit.detail,row:hit.row,said:dropped+(row.shopState==="shop"?"Re-checked: still in the museum shop.":"Re-checked: now in the museum shop.")};
+      out={ok:true,detail:hit.detail,row:row.shopState==="shop"?stillInShop(hit.row):hit.row,said:dropped+(row.shopState==="shop"?"Re-checked: still in the museum shop.":"Re-checked: now in the museum shop.")};
     }
     else out={ok:true,detail:s.detail,row:answered,said:dropped+"Re-checked: not in the museum shop."};
   }
@@ -8956,7 +8961,9 @@ function listMode(filters,sort){
   // Buy next by period (her design): Period in the Buy next view switches between her dragged
   // order and the period order with its dividers; she drags only in her own order.
   const periodView=bnOnly?bnPeriod:(sortBy==="period"&&!pinTouched);
-  return{bnOnly,periodView};
+  // The venue scrubber (her design): with an Occ group picked and the list sorted by venue, she scrubs to a venue.
+  const venueScrub=!bnOnly&&!pinTouched&&sortBy==="venue"&&[...filters.venueF].some(k=>String(k).startsWith("occ:"));
+  return{bnOnly,periodView,venueScrub};
 }
 // The list: filtered, searched and sorted.
 function listView(rows,filters,sort,byArtist){
@@ -9024,6 +9031,22 @@ function scrubGroupsOf(view,periodView,byArtist){
     if(!periodView)return [];
     const out=[];
     view.forEach((r,i)=>{const k=periodOf(r,byArtist); if(!out.length||out[out.length-1].key!==k)out.push({key:k,name:PERIOD_NAME[k],at:i});});
+    return out;
+}
+// The scrubber's venues: the view's venues in order (the order Sort by venue gives), each with its first card's place.
+function venueScrubGroupsOf(view,venueScrub){
+    if(!venueScrub)return [];
+    const out=[];
+    view.forEach((r,i)=>{const k=venueScrubKey(r.museumId); if(!out.length||out[out.length-1].key!==k)out.push({key:k,name:(MU[r.museumId]||{}).card||r.museumId,at:i});});
+    return out;
+}
+// The mark the scrubber jumps to: a venue's first card in the list.
+const venueScrubKey=id=>"venue:"+id;
+// The count a picked Theme chip shows (her design): the cards the list would hold with that theme alone picked,
+// every other filter as it stands. One count per picked theme.
+function themeCounts(rows,filters,sort,byArtist){
+    const out={};
+    for(const k of filters.themeF)out[k]=listView(rows,{...filters,themeF:new Set([k])},sort,byArtist).length;
     return out;
 }
 
@@ -9389,14 +9412,14 @@ function VenueRow({ui,filters,toggleSet}){
         </div>
   );
 }
-// The Theme chips.
-function ThemeRow({ui,filters,toggleSet}){
+// The Theme chips. A picked one shows its count after a dot (her design).
+function ThemeRow({ui,filters,toggleSet,themeCount}){
   const{C,chip}=ui;
   const{themeF}=filters;
   return(
         <div style={{display:"flex",gap:4,flexWrap:"wrap",alignItems:"center"}}>
           <span style={{fontSize:9,letterSpacing:"0.12em",textTransform:"uppercase",color:C.soft,marginRight:2}}>Theme</span>
-          {THEME_CHIPS.map(([k,l])=><button key={k} onClick={()=>toggleSet("themeF",k)} style={chip(themeF.has(k))}>{l}</button>)}
+          {THEME_CHIPS.map(([k,l])=><button key={k} onClick={()=>toggleSet("themeF",k)} style={chip(themeF.has(k))}>{l}{themeF.has(k)?" \u00b7 "+themeCount[k]:""}</button>)}
         </div>
   );
 }
@@ -9434,7 +9457,7 @@ function ShowingRow({ui,filters,toggleWatchedOnly,toggleDismissedOnly,toggleLabe
   );
 }
 // The list of cards: the empty state, the period and band dividers, each card (and the Buy next drag wrapper) and the "more" marker.
-function CardList({ui,view,sort,bnOnly,periodView,byArtist,drawLimit,cardState,dragOn,drag,startDrag,cardAct,moreRef}){
+function CardList({ui,view,sort,bnOnly,periodView,venueScrub,byArtist,drawLimit,cardState,dragOn,drag,startDrag,cardAct,moreRef}){
   const{C,TH,chip,pBtn,lnk}=ui;
   const{sortBy,pinTouched,refreshTouched}=sort;
   const{busyId,busy,rechecking,lookLabel,recheckSaid,relabelId,digitalBox,openCards}=cardState;
@@ -9466,6 +9489,8 @@ function CardList({ui,view,sort,bnOnly,periodView,byArtist,drawLimit,cardState,d
           const isBusy=busyId===r.id;
           const card=<LedgerCard r={r} mu={MU[r.museumId]} isOpen={!!openCards[r.id]} isBusy={isBusy} busy={busy} rechecking={isBusy&&rechecking} lookLabel={isBusy?lookLabel:null}
               said={recheckSaid&&recheckSaid.id===r.id?recheckSaid:null} relabelling={relabelId===r.id} digitalOpen={digitalBox===r.id} C={C} TH={TH} chip={chip} pBtn={pBtn} lnk={lnk} act={cardAct}/>;
+          // The venue scrubber's mark: a venue's first card, wrapped so the scrubber can find and jump to it.
+          if(venueScrub&&(i===0||view[i-1].museumId!==r.museumId))return <React.Fragment key={r.id}>{lead}<div data-period={venueScrubKey(r.museumId)}>{card}</div></React.Fragment>;
           if(!dragOn||!isBuyNext(r))return <React.Fragment key={r.id}>{lead}{card}</React.Fragment>;
           // The lifted card follows the finger; the cards it passes slide aside by its height.
           let ds={userSelect:"none",WebkitUserSelect:"none",WebkitTouchCallout:"none",cursor:"grab"};
@@ -10164,7 +10189,7 @@ function useFilters(){
   const[refreshTouched,setRefreshTouched]=useState([]); // ids added/changed in the last refresh
   const[pinTouched,setPinTouched]=useState(false); // pin those ids to the top this session
   const sort={sortBy,dateReversed,pinTouched,refreshTouched};
-  const{bnOnly,periodView}=listMode(filters,sort);
+  const{bnOnly,periodView,venueScrub}=listMode(filters,sort);
   const viewToken=useMemo(()=>({}),[sortBy,filters,pinTouched,dateReversed]);
   const toggleSet=(name,val)=>setFilters(f=>{const n=new Set(f[name]);if(n.has(val))n.delete(val);else n.add(val);return{...f,[name]:n};});
   const clearFilters=()=>{setFilters(filtersClear());setShowSearch(false);};
@@ -10198,7 +10223,7 @@ function useFilters(){
     setRefreshTouched(touched); setPinTouched(touched.length>0); // float just-changed entries to the top, this session
     setFilters(filtersClear());
   };
-  return{filters,sort,bnOnly,periodView,viewToken,showSearch,searchRef,sortBy,dateReversed,refreshTouched,pinTouched,
+  return{filters,sort,bnOnly,periodView,venueScrub,viewToken,showSearch,searchRef,sortBy,dateReversed,refreshTouched,pinTouched,
     toggleSet,clearFilters,pickSort,toggleSearchBox,typeSearch,clearSearchText,
     toggleAcqWanted,toggleAcqOwned,toggleBuyNextView,toggleAcq3mo,toggleAcq6mo,toggleAcqHasCat,toggleAcqNoCat,toggleAcqDigital,
     toggleWatchedOnly,toggleDismissedOnly,toggleLabelledOnly,toggleShowAll,searchFor,ledgerLoaded,importApplied};
@@ -11012,7 +11037,7 @@ export default function App(){
   const{venueSeen,lastSweep,freshWhy,recordSweep}=useSweepLog(); // FIRST: its opening read is the first thing the page reads from its store
   const[confirmBox,setConfirmBox]=useState(null); // {text, act} for confirm-before-replace
   const list=useFilters();
-  const{filters,sort,bnOnly,periodView,viewToken,showSearch,searchRef,sortBy,dateReversed,refreshTouched,pinTouched,toggleSet,clearFilters,pickSort,toggleSearchBox,typeSearch,clearSearchText,toggleAcqWanted,toggleAcqOwned,toggleBuyNextView,toggleAcq3mo,toggleAcq6mo,toggleAcqHasCat,toggleAcqNoCat,toggleAcqDigital,toggleWatchedOnly,toggleDismissedOnly,toggleLabelledOnly,toggleShowAll,searchFor,ledgerLoaded,importApplied}=list;
+  const{filters,sort,bnOnly,periodView,venueScrub,viewToken,showSearch,searchRef,sortBy,dateReversed,refreshTouched,pinTouched,toggleSet,clearFilters,pickSort,toggleSearchBox,typeSearch,clearSearchText,toggleAcqWanted,toggleAcqOwned,toggleBuyNextView,toggleAcq3mo,toggleAcq6mo,toggleAcqHasCat,toggleAcqNoCat,toggleAcqDigital,toggleWatchedOnly,toggleDismissedOnly,toggleLabelledOnly,toggleShowAll,searchFor,ledgerLoaded,importApplied}=list;
   const{venueF,themeF,timeF,acqWanted,acqOwned,acq3mo,acq6mo,acqHasCat,acqNoCat,acqDigital,acqBuyNext,bnPeriod,bnDate,showAll,dismissedOnly,labelledF,watchedF,search}=filters;
   // The ledger as a document (the hook: app/screens/use_ledger_document.jsx). Called after the sweep log and the
   // filters and before the import session below, so the store's reads keep their order.
@@ -11109,7 +11134,8 @@ export default function App(){
   const view=useMemo(()=>listView(rows,filters,sort,byArtist),[rows,byArtist,sortBy,filters,pinTouched,refreshTouched,dateReversed]);
 
   // The scrubber's periods: the view's groups in order, each with its first card's place.
-  const scrubGroups=useMemo(()=>scrubGroupsOf(view,periodView,byArtist),[view,periodView,byArtist]);
+  const scrubGroups=useMemo(()=>periodView?scrubGroupsOf(view,periodView,byArtist):venueScrubGroupsOf(view,venueScrub),[view,periodView,byArtist,venueScrub]);
+  const themeCount=useMemo(()=>themeCounts(rows,filters,sort,byArtist),[rows,byArtist,sortBy,filters,pinTouched,refreshTouched,dateReversed]);
   const{drawLimit,moreRef,showTop,jumpToPeriod,jumpToBottom}=useListDrawing(view,viewToken,scrubGroups);
 
   const counts=useMemo(()=>listCounts(rows),[rows]);
@@ -11161,12 +11187,12 @@ export default function App(){
         <SortRow ui={ui} sort={sort} filters={filters} bnOnly={bnOnly} pickSort={pickSort}/>
         <WhenRow ui={ui} filters={filters} toggleSet={toggleSet}/>
         <VenueRow ui={ui} filters={filters} toggleSet={toggleSet}/>
-        <ThemeRow ui={ui} filters={filters} toggleSet={toggleSet}/>
+        <ThemeRow ui={ui} filters={filters} toggleSet={toggleSet} themeCount={themeCount}/>
         <AcquiringRow ui={ui} filters={filters} toggleAcqWanted={toggleAcqWanted} toggleAcqOwned={toggleAcqOwned} toggleBuyNextView={toggleBuyNextView} toggleAcq3mo={toggleAcq3mo} toggleAcq6mo={toggleAcq6mo} toggleAcqHasCat={toggleAcqHasCat} toggleAcqNoCat={toggleAcqNoCat} toggleAcqDigital={toggleAcqDigital}/>
         <ShowingRow ui={ui} filters={filters} toggleWatchedOnly={toggleWatchedOnly} toggleDismissedOnly={toggleDismissedOnly} toggleLabelledOnly={toggleLabelledOnly} toggleShowAll={toggleShowAll} clearFilters={clearFilters}/>
       </div>
 
-      <CardList ui={ui} view={view} sort={sort} bnOnly={bnOnly} periodView={periodView} byArtist={byArtist} drawLimit={drawLimit} cardState={cardState} dragOn={dragOn} drag={drag} startDrag={startDrag} cardAct={cardAct} moreRef={moreRef}/>
+      <CardList ui={ui} view={view} sort={sort} bnOnly={bnOnly} periodView={periodView} venueScrub={venueScrub} byArtist={byArtist} drawLimit={drawLimit} cardState={cardState} dragOn={dragOn} drag={drag} startDrag={startDrag} cardAct={cardAct} moreRef={moreRef}/>
       {scrubGroups.length>0&&<PeriodScrubber groups={scrubGroups} C={C} onJump={jumpToPeriod}/>}
       <SelectedWordsButton ui={ui} selPick={selPick} searchPick={searchPick}/>
       <JumpButtons ui={ui} showTop={showTop} undo={undo} jumpToBottom={jumpToBottom}/>

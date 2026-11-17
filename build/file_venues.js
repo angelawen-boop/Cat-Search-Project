@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /*
- * file_venues.js — file the store's waiting venues into the venue register (docs/restructure.md, 4A).
+ * file_venues.js — file the store's waiting venues into the venue register (docs/restructure.md, "The venue register").
  *
  *   node build/file_venues.js <store json file>    the store's `venues/occasional` record, as read
  *   --register <file>                               another register file (the tests' own copy)
