@@ -963,6 +963,9 @@
   "useLedgerDocument": "screens/use_ledger_document.jsx",
   "useLinkVenues": "screens/use_link_venues.jsx",
   "useCardActions": "screens/use_card_actions.jsx",
-  "useImportSession": "screens/use_import_session.jsx"
+  "useImportSession": "screens/use_import_session.jsx",
+  "venueScrubGroupsOf": "ledger/list_view.jsx",
+  "venueScrubKey": "ledger/list_view.jsx",
+  "themeCounts": "ledger/list_view.jsx"
  }
 }

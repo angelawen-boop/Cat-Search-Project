@@ -19,7 +19,7 @@ export default function App(){
   const{venueSeen,lastSweep,freshWhy,recordSweep}=useSweepLog(); // FIRST: its opening read is the first thing the page reads from its store
   const[confirmBox,setConfirmBox]=useState(null); // {text, act} for confirm-before-replace
   const list=useFilters();
-  const{filters,sort,bnOnly,periodView,viewToken,showSearch,searchRef,sortBy,dateReversed,refreshTouched,pinTouched,toggleSet,clearFilters,pickSort,toggleSearchBox,typeSearch,clearSearchText,toggleAcqWanted,toggleAcqOwned,toggleBuyNextView,toggleAcq3mo,toggleAcq6mo,toggleAcqHasCat,toggleAcqNoCat,toggleAcqDigital,toggleWatchedOnly,toggleDismissedOnly,toggleLabelledOnly,toggleShowAll,searchFor,ledgerLoaded,importApplied}=list;
+  const{filters,sort,bnOnly,periodView,venueScrub,viewToken,showSearch,searchRef,sortBy,dateReversed,refreshTouched,pinTouched,toggleSet,clearFilters,pickSort,toggleSearchBox,typeSearch,clearSearchText,toggleAcqWanted,toggleAcqOwned,toggleBuyNextView,toggleAcq3mo,toggleAcq6mo,toggleAcqHasCat,toggleAcqNoCat,toggleAcqDigital,toggleWatchedOnly,toggleDismissedOnly,toggleLabelledOnly,toggleShowAll,searchFor,ledgerLoaded,importApplied}=list;
   const{venueF,themeF,timeF,acqWanted,acqOwned,acq3mo,acq6mo,acqHasCat,acqNoCat,acqDigital,acqBuyNext,bnPeriod,bnDate,showAll,dismissedOnly,labelledF,watchedF,search}=filters;
   // The ledger as a document (the hook: app/screens/use_ledger_document.jsx). Called after the sweep log and the
   // filters and before the import session below, so the store's reads keep their order.
@@ -116,7 +116,8 @@ export default function App(){
   const view=useMemo(()=>listView(rows,filters,sort,byArtist),[rows,byArtist,sortBy,filters,pinTouched,refreshTouched,dateReversed]);
 
   // The scrubber's periods: the view's groups in order, each with its first card's place.
-  const scrubGroups=useMemo(()=>scrubGroupsOf(view,periodView,byArtist),[view,periodView,byArtist]);
+  const scrubGroups=useMemo(()=>periodView?scrubGroupsOf(view,periodView,byArtist):venueScrubGroupsOf(view,venueScrub),[view,periodView,byArtist,venueScrub]);
+  const themeCount=useMemo(()=>themeCounts(rows,filters,sort,byArtist),[rows,byArtist,sortBy,filters,pinTouched,refreshTouched,dateReversed]);
   const{drawLimit,moreRef,showTop,jumpToPeriod,jumpToBottom}=useListDrawing(view,viewToken,scrubGroups);
 
   const counts=useMemo(()=>listCounts(rows),[rows]);
@@ -168,12 +169,12 @@ export default function App(){
         <SortRow ui={ui} sort={sort} filters={filters} bnOnly={bnOnly} pickSort={pickSort}/>
         <WhenRow ui={ui} filters={filters} toggleSet={toggleSet}/>
         <VenueRow ui={ui} filters={filters} toggleSet={toggleSet}/>
-        <ThemeRow ui={ui} filters={filters} toggleSet={toggleSet}/>
+        <ThemeRow ui={ui} filters={filters} toggleSet={toggleSet} themeCount={themeCount}/>
         <AcquiringRow ui={ui} filters={filters} toggleAcqWanted={toggleAcqWanted} toggleAcqOwned={toggleAcqOwned} toggleBuyNextView={toggleBuyNextView} toggleAcq3mo={toggleAcq3mo} toggleAcq6mo={toggleAcq6mo} toggleAcqHasCat={toggleAcqHasCat} toggleAcqNoCat={toggleAcqNoCat} toggleAcqDigital={toggleAcqDigital}/>
         <ShowingRow ui={ui} filters={filters} toggleWatchedOnly={toggleWatchedOnly} toggleDismissedOnly={toggleDismissedOnly} toggleLabelledOnly={toggleLabelledOnly} toggleShowAll={toggleShowAll} clearFilters={clearFilters}/>
       </div>
 
-      <CardList ui={ui} view={view} sort={sort} bnOnly={bnOnly} periodView={periodView} byArtist={byArtist} drawLimit={drawLimit} cardState={cardState} dragOn={dragOn} drag={drag} startDrag={startDrag} cardAct={cardAct} moreRef={moreRef}/>
+      <CardList ui={ui} view={view} sort={sort} bnOnly={bnOnly} periodView={periodView} venueScrub={venueScrub} byArtist={byArtist} drawLimit={drawLimit} cardState={cardState} dragOn={dragOn} drag={drag} startDrag={startDrag} cardAct={cardAct} moreRef={moreRef}/>
       {scrubGroups.length>0&&<PeriodScrubber groups={scrubGroups} C={C} onJump={jumpToPeriod}/>}
       <SelectedWordsButton ui={ui} selPick={selPick} searchPick={searchPick}/>
       <JumpButtons ui={ui} showTop={showTop} undo={undo} jumpToBottom={jumpToBottom}/>
