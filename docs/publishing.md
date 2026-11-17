@@ -27,8 +27,10 @@ the next goes through. Later ones go straight through.
 
 ## What is live now
 
-**On `main`, unpublished: 59.1** — the main screen rebuilt as pieces and hooks (no change she sees), a picked Theme
-chip's count, the venue scrubber for the Occ groups, "Still in the museum shop." after a Re-check (`docs/app.md`).
+**On `main`, unpublished: 59.2** — the main screen rebuilt as pieces and hooks (no change she sees), a picked Theme
+chip's count, the venue scrubber for the Occ groups, "Still in the museum shop." after a Re-check (`docs/app.md`);
+59.2: one letter fold, one price rule, the Uffizi searched under its Italian name, the Prado's and V&A's link rules
+(`docs/restructure.md`, "The fixes after item 4").
 On the restructure test page; her app only when she says.
 
 **Live: 59 in her app**: the venue register: every venue's facts in one home in the code, her names wherever a venue

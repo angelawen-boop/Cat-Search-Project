@@ -151,7 +151,8 @@ needing her connector or her Claude); grouped in order; plain words, no code nam
 
 ## The fixes after item 4 — done (59.2)
 
-Merged from `claude/restructure-fixes`. **Her standard for such work (keep):** a session solves, without
+Merged from `claude/restructure-fixes`. Period labelling keeps sending a venue's English name (`periodShow`);
+the side-by-side check finds a picked Theme chip with its count. **Her standard for such work (keep):** a session solves, without
 asking her, anything the real world gives one answer to, any inconsistency with how the app already does
 the same job, and a test key the world has moved on from; a side effect of a fix is a flaw in the fix, so
 the fix without it is found; "nothing is failing" is no reason to leave two rules. She is asked only for
@@ -184,15 +185,8 @@ ledger or store, publishing, a real fork, or a fix that could not be found — i
 
 In this order; nothing runs beside another.
 
-1. **The fixes session merges** (another session, branch `claude/restructure-fixes`; its brief is `fixes.md`
-   in that branch's restructure docs folder). Its work, each on an answer she had already given: special
-   letters read one way; **one price rule** for the shop finder, the lookup and the galleries (prices with or
-   without cents; a price range is not a price; a zero total is not a price); a venue searched under its
-   own-language name; **the proof pages** (a changed page the reader reads correctly gets its reference
-   updated; one it reads badly gets that venue's rule, never the reference bent); the sweep log adds nothing
-   from a file with no sweep time; the row-dropping tool says how many it dropped; the blocks check names
-   its cases by venue and title. Before merging it brings in `main` as it stands, runs the full tests and
-   the side-by-side check, and finishes its live gallery shop check. On the test page it is 59.2.
+1. **Done — the fixes merged as 59.2**, on the test page ("The fixes after item 4" above). Her test round
+   on it: special letters, the Prado and V&A links, a museum shop's prices, the Uffizi's search.
 2. **The words list** — a new session, Opus at medium, started only once the merge is in and `main` is
    clean. Every sentence the app shows her, written once in one place, every place that shows it naming
    that one copy; a check fails a sentence on screen that is not on the list. So a change of wording is made
