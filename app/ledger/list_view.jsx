@@ -12,7 +12,9 @@ function listMode(filters,sort){
   // Buy next by period (her design): Period in the Buy next view switches between her dragged
   // order and the period order with its dividers; she drags only in her own order.
   const periodView=bnOnly?bnPeriod:(sortBy==="period"&&!pinTouched);
-  return{bnOnly,periodView};
+  // The venue scrubber (her design): with an Occ group picked and the list sorted by venue, she scrubs to a venue.
+  const venueScrub=!bnOnly&&!pinTouched&&sortBy==="venue"&&[...filters.venueF].some(k=>String(k).startsWith("occ:"));
+  return{bnOnly,periodView,venueScrub};
 }
 //@piece listView
 
@@ -86,5 +88,27 @@ function scrubGroupsOf(view,periodView,byArtist){
     if(!periodView)return [];
     const out=[];
     view.forEach((r,i)=>{const k=periodOf(r,byArtist); if(!out.length||out[out.length-1].key!==k)out.push({key:k,name:PERIOD_NAME[k],at:i});});
+    return out;
+}
+//@piece venueScrubGroupsOf
+
+// The scrubber's venues: the view's venues in order (the order Sort by venue gives), each with its first card's place.
+function venueScrubGroupsOf(view,venueScrub){
+    if(!venueScrub)return [];
+    const out=[];
+    view.forEach((r,i)=>{const k=venueScrubKey(r.museumId); if(!out.length||out[out.length-1].key!==k)out.push({key:k,name:(MU[r.museumId]||{}).card||r.museumId,at:i});});
+    return out;
+}
+//@piece venueScrubKey
+
+// The mark the scrubber jumps to: a venue's first card in the list.
+const venueScrubKey=id=>"venue:"+id;
+//@piece themeCounts
+
+// The count a picked Theme chip shows (her design): the cards the list would hold with that theme alone picked,
+// every other filter as it stands. One count per picked theme.
+function themeCounts(rows,filters,sort,byArtist){
+    const out={};
+    for(const k of filters.themeF)out[k]=listView(rows,{...filters,themeF:new Set([k])},sort,byArtist).length;
     return out;
 }

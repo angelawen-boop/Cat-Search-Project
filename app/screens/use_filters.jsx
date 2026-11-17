@@ -15,7 +15,7 @@ function useFilters(){
   const[refreshTouched,setRefreshTouched]=useState([]); // ids added/changed in the last refresh
   const[pinTouched,setPinTouched]=useState(false); // pin those ids to the top this session
   const sort={sortBy,dateReversed,pinTouched,refreshTouched};
-  const{bnOnly,periodView}=listMode(filters,sort);
+  const{bnOnly,periodView,venueScrub}=listMode(filters,sort);
   const viewToken=useMemo(()=>({}),[sortBy,filters,pinTouched,dateReversed]);
   const toggleSet=(name,val)=>setFilters(f=>{const n=new Set(f[name]);if(n.has(val))n.delete(val);else n.add(val);return{...f,[name]:n};});
   const clearFilters=()=>{setFilters(filtersClear());setShowSearch(false);};
@@ -49,7 +49,7 @@ function useFilters(){
     setRefreshTouched(touched); setPinTouched(touched.length>0); // float just-changed entries to the top, this session
     setFilters(filtersClear());
   };
-  return{filters,sort,bnOnly,periodView,viewToken,showSearch,searchRef,sortBy,dateReversed,refreshTouched,pinTouched,
+  return{filters,sort,bnOnly,periodView,venueScrub,viewToken,showSearch,searchRef,sortBy,dateReversed,refreshTouched,pinTouched,
     toggleSet,clearFilters,pickSort,toggleSearchBox,typeSearch,clearSearchText,
     toggleAcqWanted,toggleAcqOwned,toggleBuyNextView,toggleAcq3mo,toggleAcq6mo,toggleAcqHasCat,toggleAcqNoCat,toggleAcqDigital,
     toggleWatchedOnly,toggleDismissedOnly,toggleLabelledOnly,toggleShowAll,searchFor,ledgerLoaded,importApplied};

@@ -43,14 +43,14 @@ function VenueRow({ui,filters,toggleSet}){
 }
 //@piece ThemeRow
 
-// The Theme chips.
-function ThemeRow({ui,filters,toggleSet}){
+// The Theme chips. A picked one shows its count after a dot (her design).
+function ThemeRow({ui,filters,toggleSet,themeCount}){
   const{C,chip}=ui;
   const{themeF}=filters;
   return(
         <div style={{display:"flex",gap:4,flexWrap:"wrap",alignItems:"center"}}>
           <span style={{fontSize:9,letterSpacing:"0.12em",textTransform:"uppercase",color:C.soft,marginRight:2}}>Theme</span>
-          {THEME_CHIPS.map(([k,l])=><button key={k} onClick={()=>toggleSet("themeF",k)} style={chip(themeF.has(k))}>{l}</button>)}
+          {THEME_CHIPS.map(([k,l])=><button key={k} onClick={()=>toggleSet("themeF",k)} style={chip(themeF.has(k))}>{l}{themeF.has(k)?" \u00b7 "+themeCount[k]:""}</button>)}
         </div>
   );
 }
