@@ -13,7 +13,7 @@ function readInputs(kind,{linkText,pages,pastes}){
   const items=fromPasted?pasted:fromPages?pages:linksIn(linkText).map(url=>({url}));
   const urls=items.map(x=>x.url);
   const input={kind:fromPasted?"paste":fromPages?"pages":"links",items,urls,pasted,pasteBad};
-  if(!urls.length)input.nothing=pasteBad.length?pasteBad:[{url:"",why:fromPasted?"Nothing pasted.":fromPages?"No pages chosen.":"No links found in the box."}];
+  if(!urls.length)input.nothing=pasteBad.length?pasteBad:[{url:"",why:fromPasted?W.nothingPasted:fromPages?W.noPagesChosen:W.noLinksFound}];
   return input;
 }
 //@piece readShows
@@ -36,15 +36,16 @@ async function readShows(input,occVenues,{progress,stopped}){
   for(let n=0;n<urls.length;n++){
     if(stopped())break;
     const url=urls[n];
-    progress({done:n,total:urls.length,label:"Reading "+(n+1)+" of "+urls.length+"\u2026"});
+    progress({done:n,total:urls.length,label:say(W.readingNofM,{n:n+1,m:urls.length})});
     const item=items[n];
     // Each link's reading is one record in the lookup log: what code read off the
     // page, Claude's answer and the title made from them.
+    // Not words: the lookup log's names for the three ways in.
     const tape=tapeStart(fromPasted?"Add by paste":fromPages?"Add by page":"Add by link",{title:url,exUrl:url}), seen={url};
     const failsBefore=fails.length;
     let queued=false;
     try{
-      const f=fromPages?{ok:true,results:[{url,title:item.title,full_content:item.text}]}:await fetchPage(url,"The exhibition's title, dates and description.",null,{full:true});
+      const f=fromPages?{ok:true,results:[{url,title:item.title,full_content:item.text}]}:await fetchPage(url,/* Not words: sent to the web. */"The exhibition's title, dates and description.",null,{full:true});
       if(!f.ok){ fails.push({url,why:f.detail}); continue; }
       const res=f.results[0];
       if(!res){
@@ -73,7 +74,7 @@ async function readShows(input,occVenues,{progress,stopped}){
       if(askFresh)namedNow.add(vc);
       work.push({n,url,item,res,page,vc,host,askFresh,askVenue,ownSite,tape,seen,entry:linkItem(page,askVenue,url,vc)});
       queued=true;
-    }catch(e){ fails.push({url,why:"Couldn\u2019t read it ("+String((e&&e.message)||e)+")."}); }
+    }catch(e){ fails.push({url,why:say(W.couldntReadIt,{why:String((e&&e.message)||e)})}); }
     finally{
       if(!queued){ tape.link={...seen,row:null}; saveLookupTape(tape,{ok:false,said:fails.length>failsBefore?fails[fails.length-1].why:null}); }
     }
@@ -89,11 +90,11 @@ async function readShows(input,occVenues,{progress,stopped}){
     const ask=w.ask, faults=w.faults;
     lookupTape=tape;
     try{
-      if(faults.length){ fails.push({url,why:"Claude\u2019s description failed check and re-attempt multiple times ("+faults.join("; ")+")"}); continue; }
+      if(faults.length){ fails.push({url,why:say(W.descriptionFailedCheck,{faults:faults.join("; ")})}); continue; }
       let a=linkAnswer(ask.ok?ask.data:null);
       // A pasted box: no title, no box read (the title is Claude's, checked; her decision).
       if(page.pasted){
-        if(!ask.ok){ fails.push({url,why:"Claude couldn\u2019t read the text ("+ask.detail.replace(/\s+\[.*$/,"")+")."}); continue; }
+        if(!ask.ok){ fails.push({url,why:say(W.claudeCouldntReadText,{why:ask.detail.replace(/\s+\[.*$/,"")})}); continue; }
         page=pasteDates({...page,base:pasteTitle(a.pasteTitle)},a.pasteDates,vc); seen.page=page;
       }
       if(askFresh&&ownSite&&maybeElsewhere(a,host)){ const more=await readResults(elsewherePrompt(page,url,a)); if(more.ok)a={...a,...elsewhereAnswer(more.data)}; }
@@ -112,7 +113,7 @@ async function readShows(input,occVenues,{progress,stopped}){
         if(!looked.has(vc)&&(!had||(!had.confirmed&&(!(had.finder>=2)||had.shop!=="found")))){
           looked.add(vc);
           const name=venueSearchName(vc,{...(had&&!namedByAddress(had)?had:{name:page.site}),...(named&&(!had||namedByAddress(had))?{name:named.name}:{}),...(named?{aka:named.aka,city:named.city,country:named.country}:{})});
-          progress({done:n,total:urls.length,label:"Reading "+(n+1)+" of "+urls.length+"\u2026 looking for "+name+"\u2019s shop"});
+          progress({done:n,total:urls.length,label:say(W.readingLookingForShop,{n:n+1,m:urls.length,name})});
           const pageShop=away?"":shopLinkOnPage(oneText(res),host);
           const gallery=had&&had.gallery!==undefined?had.gallery:ask.ok&&a.gallery;
           const shop=await discoverShop(pageShop,host,name,had?had.turnedDown:[],vc,null,(had&&had.english===false)||(ask.ok&&a.englishSpeaking===false),gallery&&!away?{page:oneText(res),url}:gallery);
@@ -139,8 +140,8 @@ async function readShows(input,occVenues,{progress,stopped}){
       got.push({venue_code:vc,title,start_date:page.start,end_date:page.end,
         summary:a.summary?composeSummary(cardTitle(a.english,vc),ANSWER_CHECK.withoutPlaceOpener(a.summary,title,REG[vc]?REG[vc].read.places:[])):"",url:page.link,
         notes:[page.noDates?(page.orderUnknown?DATES.ORDER_UNKNOWN_NOTE:page.shown?DATES.shownOnlyNote(page.shown,page.shownWhy):page.scriptDates?SCRIPT_DATES_NOTE:DATES.NO_DATES_NOTE):"",page.dateNote||"",
-          ask.ok?"":"Description not written \u2014 "+ask.detail.replace(/\s+\[.*$/,"")].filter(Boolean).join(" ")});
-    }catch(e){ fails.push({url,why:"Couldn\u2019t read it ("+String((e&&e.message)||e)+")."}); }
+          ask.ok?"":say(W.descriptionNotWritten,{why:ask.detail.replace(/\s+\[.*$/,"")})].filter(Boolean).join(" ")});
+    }catch(e){ fails.push({url,why:say(W.couldntReadIt,{why:String((e&&e.message)||e)})}); }
     finally{
       const failed=fails.length>failsBefore;
       tape.link={...seen,row:failed?null:got[got.length-1]};
@@ -170,7 +171,7 @@ function readOutcome(input,out,{pages,pastes,rows,ignored}){
   if(!res.props.length){
     // Every one quarantined: it says so, not "your ledger already matches" (her wording).
     return {pending,finished:true,tally:res.tally||null,
-      note:"Read "+got.length+(fromPages?" page":" link")+(got.length===1?"":"s")+", but "+(res.tally&&res.tally.blocked>=got.length?"nothing to add \u2014 already in your quarantine.":"nothing new to propose \u2014 your ledger already matches "+(got.length===1?"it":"them")+".")};
+      note:say(W.readButNothing,{n:got.length,what:fromPages?W.page:W.link,s:got.length===1?"":"s"})+(res.tally&&res.tally.blocked>=got.length?W.alreadyQuarantined:say(W.alreadyMatches,{them:got.length===1?W.it:W.them}))};
   }
   return {pending,props:res.props,tally:res.tally||null,
     held:{kind,items:fromPasted?pasted.map(p=>({...p.box,url:p.url})):fromPages?items:urls}};
@@ -178,7 +179,7 @@ function readOutcome(input,out,{pages,pastes,rows,ignored}){
 //@piece readStopping
 
 // The progress line once Cancel is pressed mid-Read.
-const readStopping=kind=>"Stopping after this "+(kind==="pages"||kind==="paste"?"page":"link")+"\u2026";
+const readStopping=kind=>say(W.stoppingAfter,{what:kind==="pages"||kind==="paste"?W.pageWord:W.linkWord});
 //@piece pendingAfterApply
 
 
@@ -216,7 +217,7 @@ function pickedPages(pages,files,parse){
   for(const f of files){
     let r;
     try{ if(f.failed)throw f.error; r=savedPageReply(f.text,parse); }
-    catch(err){ r={ok:false,why:"Couldn\u2019t read it ("+String((err&&err.message)||err)+")."}; }
+    catch(err){ r={ok:false,why:say(W.couldntReadIt,{why:String((err&&err.message)||err)})}; }
     if(r.ok)add.push({url:r.res.url,title:r.res.title,name:f.name,text:r.res.full_content});
     else bad.push({url:"",why:f.name+": "+r.why});
   }

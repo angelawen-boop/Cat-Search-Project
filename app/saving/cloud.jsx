@@ -73,11 +73,11 @@ async function cloudReadParts(coll,meta){
   let z="";
   for(let i=0;i<meta.parts;i++){
     const snap=await storeRead(coll+"/"+meta.id+"-"+i);
-    if(!snap.exists)throw {code:"missing_part",message:"Part "+(i+1)+" of "+meta.parts+" is missing."};
+    if(!snap.exists)throw {code:"missing_part",message:say(W.partMissing,{i:i+1,n:meta.parts})};
     z+=String((snap.data||{}).z||"");
   }
   const text=await cloudGunzip(z);
-  if(await cloudSha(text)!==meta.sha)throw {code:"fingerprint",message:"The copy doesn’t match its fingerprint, so it was not used."};
+  if(await cloudSha(text)!==meta.sha)throw {code:"fingerprint",message:W.fingerprintMismatch};
   return text;
 }
 //@piece cloudDeleteParts
@@ -166,13 +166,13 @@ function ledgerDifference(a,b){
 // Every failure that has its own fix gets its own sentence (mcpTrouble's rule).
 function cloudTrouble(e,verb){
   const code=String((e&&e.code)||"");
-  const act=verb==="read"?"read":"save to";
-  if(code==="not_granted")        return "You declined this page access to its store.";
-  if(code==="quota_exceeded")     return "The page’s store is full ("+String((e&&e.message)||"")+").";
-  if(code==="resource_exhausted") return "Too many saves in a row just now — it will try again on your next change.";
-  if(code==="revoked")            return "This page lost access to its store while open. Reload the page.";
+  const act=verb==="read"?W.actRead:W.actSaveTo;
+  if(code==="not_granted")        return W.storeDeclined;
+  if(code==="quota_exceeded")     return say(W.storeFull,{why:String((e&&e.message)||"")});
+  if(code==="resource_exhausted") return W.tooManySaves;
+  if(code==="revoked")            return W.storeRevoked;
   if(code==="missing_part"||code==="fingerprint") return String(e.message);
-  return "Couldn’t "+act+" the cloud copy ("+(code||String((e&&e.message)||e||"unknown"))+").";
+  return say(W.couldntCloud,{act,why:code||String((e&&e.message)||e||"unknown")});
 }
 //@piece CLOUD_SESSION_DOC
 
@@ -183,7 +183,7 @@ function cloudTrouble(e,verb){
 const CLOUD_SESSION_DOC="ledger/session";
 //@piece RO_LINE
 
-const RO_LINE="Read only — Art Watch is open in another tab or device. Close it there, then reload this one.";
+const RO_LINE=W.readOnlyLine;
 //@piece SESSION_BEAT_MS
 
 const SESSION_BEAT_MS=20000;

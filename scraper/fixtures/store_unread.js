@@ -13,6 +13,7 @@
  *   node scraper/fixtures/store_unread.js
  */
 'use strict';
+const { WORDS } = require('./words.js');   // the app's sentences, from its words list
 const STORE = require('../../build/store_names.js').storeNames();
 const fs = require('fs');
 const os = require('os');
@@ -60,7 +61,8 @@ function brokenReads(store, paths) {
 (async () => {
   // ── SU-004/005: the write itself, lifted from the page ──
   // The section and the page's door to the store, which the two ask.
-  const sec = src.slice(src.indexOf('// A STORE READ THAT FAILED'), src.indexOf('// ── PAGES:')) + doorSource(src);
+  const sec = require('./words.js').wordsSource(src)   // the section, with the words list it names
+    + src.slice(src.indexOf('// A STORE READ THAT FAILED'), src.indexOf('// ── PAGES:')) + doorSource(src);
   const lift = db => new Function('useCap', 'OCC_DOC', 'cloudReadOnly', 'VENUE_REGISTER', 'REG', sec + '\nreturn {readOccasional,writeOccasional};')(async () => db, STORE.occasional, false, [], {});
   const held = fakeStore();
   await held.doc(STORE.occasional).set({ venues: { 'occ-a': { id: 'occ-a', name: 'Museum A' }, 'occ-b': { id: 'occ-b', name: 'Museum B' } } });
@@ -99,7 +101,7 @@ function brokenReads(store, paths) {
     await act(async () => { root.render(React.createElement(App)); });
     global.IS_REACT_ACT_ENVIRONMENT = false;
     const text = () => doc.getElementById('root').textContent;
-    const named = ['the link venues', 'the links waiting in the Links box', 'the pages waiting in the Pages list', 'the sweep log'];
+    const named = [WORDS.unreadOcc, WORDS.unreadLinks, WORDS.unreadPages, WORDS.unreadSweeps];
     ok(await until(() => /STORE NOT READ/.test(text()) && named.every(n => text().includes(n))),
       'SU-001: every part that could not be read is named on the page ("STORE NOT READ"), not shown as empty', text().slice(0, 300));
     ok(text().includes(' couldn’t be read from store, refresh to re-check. Current incorrect information will not overwrite the store until the read corrects.'),

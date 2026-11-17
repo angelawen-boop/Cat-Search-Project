@@ -175,6 +175,9 @@ async function main() {
   // Every venue fact in venues/register.js, and no sentence, list or rule written twice in the parts (build/fact_check.js).
   const facts = spawnSync('node', [path.join(ROOT, 'build', 'fact_check.js')], { encoding: 'utf8' });
   if (facts.status !== 0) { console.error((facts.stdout || facts.stderr || 'fact_check.js failed').trim()); process.exit(1); }
+  // Every sentence the app shows is on the words list, and the tests read them from it (build/words_check.js).
+  const words = spawnSync('node', [path.join(ROOT, 'build', 'words_check.js')], { encoding: 'utf8' });
+  if (words.status !== 0) { console.error((words.stdout || words.stderr || 'words_check.js failed').trim()); process.exit(1); }
 
   const what = 'node scraper/run_tests.js ' + args.join(' ');
   W.takeLock(what.trim(), expected);

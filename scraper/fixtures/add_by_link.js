@@ -23,6 +23,7 @@
  *   node scraper/fixtures/add_by_link.js
  */
 'use strict';
+const { WORDS, wordsRe } = require('./words.js');   // the app's sentences, from its words list
 const STORE = require('../../build/store_names.js').storeNames();
 const { batchReply } = require('./batch_reply.js');
 const batchState = {};
@@ -637,7 +638,7 @@ function runtime() {
     ok(rla.ok && rla.base === 'Diane Arbus Photographs, 1956-1971' && rla.start === '2022-03-24',
       'AL-091:  Louisiana: a heading line ending in a comma runs on, no colon after it', JSON.stringify([rla.base, rla.start]));
     const lb = live('louisiana_bourgeois'), rlb = read(lb, lb.url, 'occ-louisiana-dk');
-    ok(!rlb.ok && rlb.why === 'The page contents cannot be seen \u2014 Parallel fault. Import the full saved page.',
+    ok(!rlb.ok && rlb.why === WORDS.pageParallelFault,
       'AL-091a: Louisiana: a link that opens the Past Exhibitions list is no show — the Parallel fault line', JSON.stringify(rlb));
     const lbElse = read(lb, 'https://example.org/past', null);
     ok(lbElse.ok !== false || !/Parallel fault/.test(lbElse.why || ''), 'AL-091b: the list refusal is Louisiana\'s rule, not read elsewhere', JSON.stringify(lbElse.why || lbElse.base));
@@ -645,7 +646,7 @@ function runtime() {
       'AL-088:  no dates and a script placeholder left on the page ("{{daysLeft(exhibition.end)}}"): "Dates cannot be seen — JS-rendering." (her wording); no placeholder, the usual note', JSON.stringify([rt.scriptDates, rg.scriptDates]));
     const note = new Function('React', 'window', 'document', 'localStorage', code + '\n;return SCRIPT_DATES_NOTE;')(React, win, win.document, win.localStorage);
     const jsx = fs.readFileSync(path.join(__dirname, '..', '..', 'Cat_Watch.jsx'), 'utf8');
-    ok(note === 'Dates cannot be seen \u2014 JS-rendering.' && jsx.includes('page.scriptDates?SCRIPT_DATES_NOTE:DATES.NO_DATES_NOTE'),
+    ok(note === WORDS.datesJsRendering && jsx.includes('page.scriptDates?SCRIPT_DATES_NOTE:DATES.NO_DATES_NOTE'),
       'AL-088a: the card note is her sentence word for word, in place of "No closing date found…"', JSON.stringify(note));
   }
   // ── AL-075: a heading that is part of the tab title is the title; a line that is only the venue's name is
@@ -760,14 +761,14 @@ function runtime() {
   {
     const csvInput = win.document.querySelector('input[type=file][accept=".csv,text/csv"]');
     let opened = false; csvInput.click = () => { opened = true; };
-    await click(inDialog('CSV'));
+    await click(inDialog(WORDS.tabCsv));
     ok(opened && !dialog(), 'AL-001d:  "CSV" closes it and opens the file picker, as Import always did');
   }
   await click(importBtn());
-  await click(inDialog('Cancel'));
+  await click(inDialog(WORDS.cancel));
   ok(!dialog(), 'AL-001e:  "Cancel" closes it');
   await click(importBtn());
-  await click(inDialog('Links'));
+  await click(inDialog(WORDS.tabLinks));
   const box = dialog().querySelector('textarea');
   {
     const [csvB, linksB] = [...dialog().querySelectorAll('button')];
@@ -783,7 +784,7 @@ function runtime() {
   await act(async () => { setter.call(box, pasted); box.dispatchEvent(new win.Event('input', { bubbles: true })); });
   await settle();
   calls.length = 0;
-  await click([...dialog().querySelectorAll('button')].find(b => b.textContent === 'Read'));
+  await click([...dialog().querySelectorAll('button')].find(b => b.textContent === WORDS.read));
   await settle(30);
   const expand = buttons(/^Expand all venues$/)[0];
   if (expand) await click(expand);
@@ -833,11 +834,11 @@ function runtime() {
   {
     for (const b of buttons(/Add new entry$/)) await click(b);
     await click(buttons(/^Next$/)[0]);
-    const scr = () => [...win.document.querySelectorAll('[role=dialog]')].find(d => /New Venue Shops/.test(d.textContent));
+    const scr = () => [...win.document.querySelectorAll('[role=dialog]')].find(d => wordsRe(WORDS.newVenueShops).test(d.textContent));
     const card = name => [...scr().querySelectorAll('div')].find(d => d.firstChild && d.firstChild.textContent === name && d.querySelector('button'));
-    await click([...card('Thyssen-Bornemisza').querySelectorAll('button')].find(x => x.textContent === 'Confirm'));
+    await click([...card('Thyssen-Bornemisza').querySelectorAll('button')].find(x => x.textContent === WORDS.confirm));
     ok(JSON.stringify(occStored()) === before12, 'AL-012a:  Confirm on the shop screen stores nothing yet');
-    await click([...scr().querySelectorAll('button')].find(b => b.textContent === 'Back'));
+    await click([...scr().querySelectorAll('button')].find(b => b.textContent === WORDS.back));
     await click(buttons(/^Cancel import$/)[0]);
     ok(!scr() && JSON.stringify(occStored()) === before12, 'AL-012b:  Cancel import: the store is as it was before the Read');
     {
@@ -851,7 +852,7 @@ function runtime() {
     await act(async () => { setter.call(box2, pasted); box2.dispatchEvent(new win.Event('input', { bubbles: true })); });
     await settle();
     calls.length = 0;
-    await click([...dialog().querySelectorAll('button')].find(b => b.textContent === 'Read'));
+    await click([...dialog().querySelectorAll('button')].find(b => b.textContent === WORDS.read));
     await settle(30);
     const ex = buttons(/^Expand all venues$/)[0];
     if (ex) await click(ex);
@@ -953,7 +954,7 @@ function runtime() {
     const asG = occ('occ-testhaus-koeln-de', { shop: 'found', shopCatalogues: G, shopEnglishUnread: E, confirmed: true });
     const asE = occ('occ-testhaus-koeln-de', { shop: 'found', shopCatalogues: G, shopEnglishUnread: E, confirmed: true, englishPicked: true });
     ok(asG.shopCatalogues === G && !asG.shopUnseen && asE.shopCatalogues === E && asE.shopUnseen === 'unconfirmed'
-      && fn('shopUnreadHead')('unconfirmed') === 'The museum shop contents cannot be seen \u2014 unconfirmed page problem',
+      && fn('shopUnreadHead')('unconfirmed') === WORDS.shopUnconfirmedHead,
       'AL-073h:  her English pick is the section looked up, its contents unseen: "The museum shop contents cannot be seen — unconfirmed page problem" (her wording)', JSON.stringify([asG, asE]));
     before = calls.length;
     await discoverShop('', 'www.testhaus.de', 'Testhaus Berlin', [], 'occ-testhaus-de');
@@ -1081,8 +1082,8 @@ function runtime() {
         && own[F].shopUnseen === 'parallel' && calls.length === before,
         'AL-049a:  its shop\'s books section is written in (the finder cannot see its books) and offered for her to confirm, nothing fetched', JSON.stringify(r));
       const head = fn('shopUnreadHead');
-      ok(head('parallel') === 'The museum shop contents cannot be seen — Parallel fault' && head('script') === 'The museum shop contents cannot be seen — JS-rendering'
-        && head('blocked') === 'The museum shop is blocked', 'AL-049b:  the card\'s three lines for a shop that cannot be read (her wording)');
+      ok(head('parallel') === WORDS.shopParallelHead && head('script') === WORDS.shopScriptHead
+        && head('blocked') === WORDS.shopBlockedHead, 'AL-049b:  the card\'s three lines for a shop that cannot be read (her wording)');
     }
     ok(own[A].group === own[M].group && own[A].chip === 'Munich' && own[A].card === 'Munich Alte Pinakothek'
       && own[M].card === 'Munich der Moderne' && order.indexOf(A) + 1 === order.indexOf(M),
@@ -1113,7 +1114,7 @@ function runtime() {
     const cedon = labels('https://www.museumsshop.cedon.de/Kataloge/Pinakothek-der-Moderne-Muenchen', 'www.museumsshop.cedon.de');
     ok(cedon[0] === '25 + Highlights', 'AL-044a:  CEDON: title, description, then "Regulärer Preis" — the title is the book', JSON.stringify(cedon.slice(0, 2)));
     const cle = labels('https://shop.clevelandart.org/collections/exhibitions', 'shop.clevelandart.org');
-    ok(!cle.includes('Reset') && cle[0] === 'The Jazz Age: American Style in the 1920s', 'AL-044b:  a filter\'s "Reset" beside a price is not a book', JSON.stringify(cle.slice(0, 2)));
+    ok(!cle.includes(WORDS.reset) && cle[0] === 'The Jazz Age: American Style in the 1920s', 'AL-044b:  a filter\'s "Reset" beside a price is not a book', JSON.stringify(cle.slice(0, 2)));
     const b = await A.proveShopSearch(LIVE['https://www.smb-webshop.de/buecher-und-medien/ausstellungskataloge/'], 'https://www.smb-webshop.de/');
     ok(b === 'https://www.smb-webshop.de/search?sSearch=', 'AL-044c:  Berlin\'s search proved at "search?sSearch=" (Shopware), its home page at "?post_type=product&s=" turned down', b);
     asked.length = 0;
@@ -1142,13 +1143,13 @@ function runtime() {
   const cardsBefore = ledgerCards();
   ok(buttons(/^Next$/).length === 1 && !buttons(/^Go ahead and update the ledger$/).length, 'AL-009a:  every card decided, the review\'s last button reads "Next"');
   await click(buttons(/^Next$/)[0]);
-  const shops = () => [...win.document.querySelectorAll('[role=dialog]')].find(d => /New Venue Shops/.test(d.textContent));
+  const shops = () => [...win.document.querySelectorAll('[role=dialog]')].find(d => wordsRe(WORDS.newVenueShops).test(d.textContent));
   ok(!!shops() && ledgerCards() === cardsBefore, 'AL-009b:  "Next" opens the shop screen; the ledger has not moved');
   const shopCard = name => [...shops().querySelectorAll('div')].find(d => d.firstChild && d.firstChild.textContent === name && d.querySelector('button'));
   const press = async (name, label) => { const c = shopCard(name); const b = c && [...c.querySelectorAll('button')].find(x => x.textContent === label); if (b) await click(b); return !!b; };
   const footer = () => [...shops().querySelectorAll('button')].pop().textContent;
   ok(footer() === '5 still to decide' && !shopCard('Royal Academy UK'), 'AL-009c:  five venues to answer — not the RA, its one card rejected — and the ledger button says so', footer());
-  ok(/New Venue Shops/.test(shops().textContent) && !shops().textContent.includes('Check and approve each shop link.'), 'AL-009c2:  her heading, with no line under it');
+  ok(wordsRe(WORDS.newVenueShops).test(shops().textContent) && !shops().textContent.includes('Check and approve each shop link.'), 'AL-009c2:  her heading, with no line under it');
   {
     const has = (name, u) => shopCard(name).textContent.includes(u);
     ok(has('Courtauld', 'https://shop.courtauld.ac.uk/collections/courtauld-catalogues')
@@ -1161,14 +1162,14 @@ function runtime() {
        && !/its publications|its books:|exhibition catalogues section/.test(shops().textContent),
       'AL-009c5:  a section that is not a catalogues section carries her one line, "Shop found, but not its catalogues section", and nothing about what it is; a catalogues section carries none', shopCard('Thyssen-Bornemisza').textContent);
   }
-  await click([...shops().querySelectorAll('button')].find(b => b.textContent === 'Back'));
+  await click([...shops().querySelectorAll('button')].find(b => b.textContent === WORDS.back));
   await raPress(/Add new entry$/);
   await click(buttons(/^Next$/)[0]);
   ok(footer() === '6 still to decide' && !!shopCard('Royal Academy UK'), 'AL-009c4:  the RA\'s card added back, the RA is asked too', footer());
   {
     const order = name => [...shopCard(name).querySelectorAll('button')].map(b => b.textContent).join('|');
-    const conf = [...shopCard('Royal Academy UK').querySelectorAll('button')].find(b => b.textContent === 'Confirm');
-    ok(shopCard('Royal Academy UK').textContent.includes('No museum shop found.') && order('Royal Academy UK') === 'Confirm|Look again|No shop|Add'
+    const conf = [...shopCard('Royal Academy UK').querySelectorAll('button')].find(b => b.textContent === WORDS.confirm);
+    ok(shopCard('Royal Academy UK').textContent.includes(WORDS.noMuseumShopFound) && order('Royal Academy UK') === 'Confirm|Look again|No shop|Add'
        && conf.disabled && order('Courtauld') === 'Confirm|Look again|No shop|Add',
       'AL-009d:  the same four buttons in the same places on every card; Confirm greyed where nothing was found', order('Royal Academy UK'));
   }
@@ -1176,21 +1177,21 @@ function runtime() {
   // DIA Publications turned down: "Books & Stationery" is mixed, so it is only
   // looked inside — and holds no other books-only section.
   calls.length = 0;
-  await press('Detroit', 'Look again'); await settle(10);
+  await press('Detroit', WORDS.lookAgain); await settle(10);
   ok(shopCard('Detroit').textContent.includes('Shop found, but not its books section: https://diashop.org/')
      && !shopCard('Detroit').textContent.includes('dia-museum-book-shop') && fetched('https://diashop.org/dia-museum-book-shop/'),
     'AL-009e:  Look again never offers a mixed books-and-stationery section; with nothing books-only left it says so and links the shop', shopCard('Detroit').textContent);
-  await press('Thyssen-Bornemisza', 'Confirm');
+  await press('Thyssen-Bornemisza', WORDS.confirm);
   ok(/^✓ Confirm$/.test([...shopCard('Thyssen-Bornemisza').querySelectorAll('button')][0].textContent), 'AL-009f0:  Confirm ticks, as "Add new entry" does');
   ok(!(occStored()['occ-museothyssen-org'] || {}).confirmed && footer() === '5 still to decide',
     'AL-009f:  Confirm counts at once — one fewer to decide — but is not stored yet', footer());
   calls.length = 0;
-  await press('Mauritshuis', 'Look again');
+  await press('Mauritshuis', WORDS.lookAgain);
   await settle(10);
   ok(calls.some(c => c.tool === 'web_search') && shopCard('Mauritshuis').textContent.includes('https://shop.mauritshuis.nl/product-categorie/boeken-catalogi')
      && !shopCard('Mauritshuis').textContent.includes('/catalogi/catalogi') && !/✓/.test(shopCard('Mauritshuis').textContent),
     'AL-009g:  Look again searches on the spot and skips only the page turned down — the same shop\'s other section offered, to confirm', shopCard('Mauritshuis').textContent);
-  await click([...shops().querySelectorAll('button')].find(b => b.textContent === 'Back'));
+  await click([...shops().querySelectorAll('button')].find(b => b.textContent === WORDS.back));
   ok(!shops() && buttons(/^Next$/).length === 1, 'AL-009i:  Back returns to the review, decisions kept');
   await click(buttons(/^Next$/)[0]);
   ok(/^✓ Confirm$/.test([...shopCard('Thyssen-Bornemisza').querySelectorAll('button')][0].textContent) && footer() === '5 still to decide',
@@ -1201,35 +1202,35 @@ function runtime() {
     const type = async (el, t, key) => { await act(async () => { Object.getOwnPropertyDescriptor(win.HTMLInputElement.prototype, 'value').set.call(el, t); el.dispatchEvent(new win.Event('input', { bubbles: true })); }); await settle();
       await act(async () => { el.dispatchEvent(new win.KeyboardEvent('keydown', { key, bubbles: true })); }); await settle(); };
     const was = footer();
-    await press('Royal Academy UK', 'Add');
+    await press('Royal Academy UK', WORDS.add);
     ok(!!box() && box().value === '' && !box().placeholder && !/\S/.test(shopCard('Royal Academy UK').textContent.replace(/Royal Academy UK|No museum shop found\.|Confirm|Look again|No shop|Add/g, '')),
       'AL-080:  Add opens an empty box beside the buttons, with no words of its own');
     await type(box(), 'not a link', 'Enter');
     ok(!!box() && footer() === was && !/✓/.test(shopCard('Royal Academy UK').textContent), 'AL-080a: words that are not a link are not taken: the box stays open, nothing answered');
     await type(box(), 'not a link', 'Escape');
     ok(!box() && footer() === was, 'AL-080b: Escape closes the box, nothing answered');
-    await press('Royal Academy UK', 'Add');
+    await press('Royal Academy UK', WORDS.add);
     await type(box(), 'shop.royalacademy.org.uk/books', 'Enter');
     const btns = () => [...shopCard('Royal Academy UK').querySelectorAll('button')].map(b => b.textContent).join('|');
     ok(!box() && shopCard('Royal Academy UK').textContent.includes('https://shop.royalacademy.org.uk/books') && btns() === 'Confirm|Look again|No shop|✓ Add'
        && footer() === String(Number(was.split(' ')[0]) - 1) + ' still to decide',
       'AL-080c: a link typed without https:// is taken on Enter: shown as the shop, Add ticks, one fewer to decide', btns() + ' | ' + footer());
   }
-  await press('Royal Academy UK', 'No shop');
+  await press('Royal Academy UK', WORDS.noShop);
   ok(/^✓ No shop$/.test([...shopCard('Royal Academy UK').querySelectorAll('button')][2].textContent), 'AL-009j:  No shop is an answer');
   {
     // ── AL-079: "Shop found, but not its books section": Confirm takes the shop shown (her ask) ──
     const conf = () => [...shopCard('Detroit').querySelectorAll('button')].find(b => /Confirm$/.test(b.textContent));
     const was = footer(), enabled = !conf().disabled;
-    await press('Detroit', 'Confirm');
+    await press('Detroit', WORDS.confirm);
     ok(enabled && /^✓ Confirm$/.test(conf().textContent) && shopCard('Detroit').textContent.includes('Shop found, but not its catalogues section https://diashop.org/')
        && footer() === String(Number(was.split(' ')[0]) - 1) + ' still to decide',
       'AL-079:  a shop with no books section seen can be confirmed: Confirm ticks, the shop shown is taken as its section, one fewer to decide', shopCard('Detroit').textContent + ' | ' + footer());
   }
-  await press('Detroit', 'No shop');
-  await press('Courtauld', 'Confirm'); await press('Cleveland', 'Confirm');
+  await press('Detroit', WORDS.noShop);
+  await press('Courtauld', WORDS.confirm); await press('Cleveland', WORDS.confirm);
   // Mauritshuis answered by Add (AL-080d): the section typed in herself.
-  await press('Mauritshuis', 'Add');
+  await press('Mauritshuis', WORDS.add);
   {
     const el = shopCard('Mauritshuis').querySelector('input');
     await act(async () => { Object.getOwnPropertyDescriptor(win.HTMLInputElement.prototype, 'value').set.call(el, 'https://shop.mauritshuis.nl/product-categorie/boeken-catalogi'); el.dispatchEvent(new win.Event('input', { bubbles: true })); });
@@ -1237,11 +1238,11 @@ function runtime() {
   }
   // The RA's card rejected again: off the screen; its answer is kept while the import is open (Back keeps
   // answers), but never stored: the RA has no show going in (her decision; AL-009m, AL-009o).
-  await click([...shops().querySelectorAll('button')].find(b => b.textContent === 'Back'));
+  await click([...shops().querySelectorAll('button')].find(b => b.textContent === WORDS.back));
   await raPress(/Reject$/);
   await click(buttons(/^Next$/)[0]);
   ok(!shopCard('Royal Academy UK'), 'AL-009j2:  the RA\'s card rejected again, the RA leaves the screen');
-  ok(footer() === 'Go ahead and update the ledger', 'AL-009k:  every shop answered, the ledger may move', footer());
+  ok(footer() === WORDS.goAhead, 'AL-009k:  every shop answered, the ledger may move', footer());
   await click([...shops().querySelectorAll('button')].pop());
   ok(!shops() && ledgerCards() > cardsBefore, 'AL-009l:  and does');
   ok((store.get(STORE.linksPending) || {}).text === REFUSED + '\n' + EMPTY + '\n' + urlOf('ra_guggenheim'), 'AL-007d:  the import finished, the two unread links are stored, so closing the page loses nothing', JSON.stringify(store.get(STORE.linksPending)));
@@ -1264,8 +1265,8 @@ function runtime() {
   }
 
   // ── AL-010: accepted, they file under their venues and the one chip ─────
-  ok(!!dialog() && /Links/.test(dialog().textContent), 'AL-010z:  two links could not be read, so the import pop-up waits under it');
-  await click([...dialog().querySelectorAll('button')].find(b => b.textContent === 'Cancel'));
+  ok(!!dialog() && wordsRe(WORDS.tabLinks).test(dialog().textContent), 'AL-010z:  two links could not be read, so the import pop-up waits under it');
+  await click([...dialog().querySelectorAll('button')].find(b => b.textContent === WORDS.cancel));
   const occChips = [buttons(/^Occ - US$/)[0], buttons(/^Occ - Europe$/)[0]];
   ok(occChips.every(Boolean) && !buttons(/^Occasional$/).length && !buttons(/^Occ - Other$/).length, 'AL-010: "Occ - US" and "Occ - Europe" chips sit with the venue chips, no "Occasional", no "Occ - Other"');
   for (const c of occChips) await click(c);
@@ -1302,29 +1303,29 @@ function runtime() {
   // ── AL-020: a rejected card's link goes back in the box (her ask, 7 Oct) ─
   {
     await click(importBtn());
-    if (!dialog().querySelector('textarea')) await click(inDialog('Links'));
+    if (!dialog().querySelector('textarea')) await click(inDialog(WORDS.tabLinks));
     const box3 = dialog().querySelector('textarea');
     ok(box3.value === REFUSED + '\n' + EMPTY + '\n' + urlOf('ra_guggenheim'), 'AL-020: the RA card was rejected: its link is back in the box with the two unread, and nothing accepted is', JSON.stringify(box3.value));
-    const clear = inDialog('Clear');
+    const clear = inDialog(WORDS.clear);
     ok(!!clear && box3.parentElement.contains(clear), 'AL-020a:  a "Clear" sits inside the box');
     if (clear) await click(clear);
     ok(dialog().querySelector('textarea').value === '' && (store.get(STORE.linksPending) || {}).text === '',
       'AL-020b:  pressed, the box is empty and stays empty — the store emptied too', JSON.stringify(store.get(STORE.linksPending)));
-    ok(!inDialog('Clear'), 'AL-020c:  and with nothing in the box, no Clear');
+    ok(!inDialog(WORDS.clear), 'AL-020c:  and with nothing in the box, no Clear');
     await act(async () => { setter.call(dialog().querySelector('textarea'), REFUSED + '\n' + EMPTY); dialog().querySelector('textarea').dispatchEvent(new win.Event('input', { bubbles: true })); });
     await settle();
-    await click(inDialog('Cancel'));
+    await click(inDialog(WORDS.cancel));
   }
   // ── AL-035: Cancel during a Read stops it; nothing kept, every link left in the box ─
   {
     await click(importBtn());
-    if (!dialog().querySelector('textarea')) await click(inDialog('Links'));
+    if (!dialog().querySelector('textarea')) await click(inDialog(WORDS.tabLinks));
     const three = HELD + '\n' + REFUSED + '\n' + EMPTY;
     await act(async () => { setter.call(dialog().querySelector('textarea'), three); dialog().querySelector('textarea').dispatchEvent(new win.Event('input', { bubbles: true })); });
     await settle();
     const before = calls.length;
-    await click(inDialog('Read'));
-    const cancel = inDialog('Cancel');
+    await click(inDialog(WORDS.read));
+    const cancel = inDialog(WORDS.cancel);
     ok(!!cancel && !cancel.disabled, 'AL-035: while links are being read, Cancel can be pressed');
     if (cancel) await click(cancel);
     release();
@@ -1333,11 +1334,11 @@ function runtime() {
     ok(!dialog() && !/proposed change/.test(win.document.body.textContent) && !after.includes(REFUSED) && !after.includes(EMPTY),
       'AL-035a:  it stops after the link in hand: no more pages read, no review, the pop-up closed', JSON.stringify(after));
     await click(importBtn());
-    if (!dialog().querySelector('textarea')) await click(inDialog('Links'));
+    if (!dialog().querySelector('textarea')) await click(inDialog(WORDS.tabLinks));
     ok(dialog().querySelector('textarea').value === three, 'AL-035b:  and every link is still in the box', JSON.stringify(dialog().querySelector('textarea').value));
     await act(async () => { setter.call(dialog().querySelector('textarea'), REFUSED + '\n' + EMPTY); dialog().querySelector('textarea').dispatchEvent(new win.Event('input', { bubbles: true })); });
     await settle();
-    await click(inDialog('Cancel'));
+    await click(inDialog(WORDS.cancel));
   }
   // ── AL-013: a CSV import keeps nothing until it finishes either ─────────
   {
@@ -1407,12 +1408,12 @@ function runtime() {
     P[ra2] = { ...P[urlOf('ra_guggenheim')], url: ra2 };
     store.delete(STORE.occasional);   // the RA unmet: its shop not found, twice over
     await click(importBtn());
-    await click(inDialog('Links'));
+    await click(inDialog(WORDS.tabLinks));
     const box2 = dialog().querySelector('textarea');
     await act(async () => { setter.call(box2, jq.join('\n') + '\n' + urlOf('ra_guggenheim') + '\n' + ra2); box2.dispatchEvent(new win.Event('input', { bubbles: true })); });
     await settle();
     calls.length = 0;
-    await click([...dialog().querySelectorAll('button')].find(b => b.textContent === 'Read'));
+    await click([...dialog().querySelectorAll('button')].find(b => b.textContent === WORDS.read));
     await settle(30);
     const shopSearches = calls.filter(c => c.kind === 'mcp' && c.tool === 'web_search');
     ok(!shopSearches.some(c => /Jacquemart/i.test(c.args.search_queries.join(' '))), 'AL-018: seven Jacquemart-André links: no shop looked for — it is one of her 28', JSON.stringify(shopSearches.map(c => c.args.search_queries)));
@@ -1434,9 +1435,9 @@ function runtime() {
     const before24 = ledgerCards();
     await click(buttons(/^Update with the 1 I.ve decided$/)[0]);
     await click(buttons(/^Continue$/)[0]);
-    const scr = () => [...win.document.querySelectorAll('[role=dialog]')].find(d => /New Venue Shops/.test(d.textContent));
+    const scr = () => [...win.document.querySelectorAll('[role=dialog]')].find(d => wordsRe(WORDS.newVenueShops).test(d.textContent));
     if (scr()) {
-      for (const b of [...scr().querySelectorAll('button')].filter(b => b.textContent === 'No shop')) await click(b);
+      for (const b of [...scr().querySelectorAll('button')].filter(b => b.textContent === WORDS.noShop)) await click(b);
       await click([...scr().querySelectorAll('button')].pop());
     }
     const kept = ((store.get(STORE.linksPending) || {}).text || '').split('\n').filter(Boolean);
@@ -1449,12 +1450,12 @@ function runtime() {
     const pasted = enf.url + '?utm_source=chatgpt.com';
     P[pasted] = { ...enf, url: pasted }; P[enf.url] = enf;
     await click(importBtn());
-    if (!dialog().querySelector('textarea')) await click(inDialog('Links'));
+    if (!dialog().querySelector('textarea')) await click(inDialog(WORDS.tabLinks));
     const box = dialog().querySelector('textarea');
     await act(async () => { setter.call(box, pasted); box.dispatchEvent(new win.Event('input', { bubbles: true })); });
     await settle();
     calls.length = 0;
-    await click([...dialog().querySelectorAll('button')].find(b => b.textContent === 'Read'));
+    await click([...dialog().querySelectorAll('button')].find(b => b.textContent === WORDS.read));
     await settle(30);
     const asked = calls.find(c => c.kind === 'sample'), samples = calls.filter(c => c.kind === 'sample' && !/name the art period/.test(c.prompt || ''));
     ok(asked && /venueOwnPage/.test(asked.prompt) && /Buckingham Palace, London, 19 May/.test(asked.prompt),
@@ -1478,12 +1479,12 @@ function runtime() {
     P[K1] = { url: K1, title: 'Magritte. La ligne de vie ', full_content: '# **Magritte** . La ligne de vie' + body };
     P[K2] = { url: K2, title: 'Folly Beyond Words. Bruegel and Proverbs in Art', full_content: '# Folly Beyond Words. Bruegel and Proverbs in Art' + body };
     await click(importBtn());
-    if (!dialog().querySelector('textarea')) await click(inDialog('Links'));
+    if (!dialog().querySelector('textarea')) await click(inDialog(WORDS.tabLinks));
     const box = dialog().querySelector('textarea');
     await act(async () => { setter.call(box, K1 + '\n' + K2); box.dispatchEvent(new win.Event('input', { bubbles: true })); });
     await settle();
     calls.length = 0;
-    await click([...dialog().querySelectorAll('button')].find(b => b.textContent === 'Read'));
+    await click([...dialog().querySelectorAll('button')].find(b => b.textContent === WORDS.read));
     await settle(30);
     const reqs = calls.filter(c => c.kind === 'sample' && !/name the art period/.test(c.prompt || ''));
     const asked = reqs.flatMap(c => [...c.prompt.matchAll(/===== ITEM (\d+) =====\n([\s\S]*?)\n===== END ITEM \1 =====/g)].map(m => /"venueShort"/.test(m[2])));
@@ -1573,7 +1574,7 @@ function runtime() {
       'AL-070: an exhibitions\' catalogues section ranks first (Thyssen "Exposiciones"); Danish "udstillingskataloger" is catalogues; a section under "/products/" is one (Albertina), a product never', JSON.stringify(rk));
     // ── AL-071: her shop-finder design — only the exhibition-catalogues section is taken at once ─
     const rk2 = fn('rankShelves')([
-      { url: 'https://www.kmskashop.be/en/books/', label: 'Books', words: 'Books en books' },
+      { url: 'https://www.kmskashop.be/en/books/', label: WORDS.themeBooks, words: 'Books en books' },
       { url: 'https://www.kmskashop.be/en/books/kmska/', label: 'KMSKA', words: 'KMSKA en books kmska' },
       { url: 'https://shop.fondationbeyeler.ch/en/kategorie/exhibition-catalogues', words: 'Exhibition catalogues' },
       { url: 'https://the-museum-shop-at-wam.myshopify.com/collections/catalogs', words: 'Catalogs' },
@@ -1610,8 +1611,8 @@ function runtime() {
       'AL-065: "22\\.05.2008 | 14.08.2008" read as 22 May to 14 August 2008 (Correggio)', JSON.stringify([corr.base, corr.start, corr.end, corr.why]));
     // ── AL-067: Parallel's 202 is Parallel's fault, not the museum's ─
     const why = fn('pageUnreadWhy');
-    ok(why({ error_type: 'network_error', http_status_code: 202 }) === 'The page contents cannot be seen \u2014 Parallel fault. Import the full saved page.'
-      && why({ error_type: 'http_error', http_status_code: 403 }) === 'The museum refused the page (403).' && why(null) === 'The page came back empty.',
+    ok(why({ error_type: 'network_error', http_status_code: 202 }) === WORDS.pageParallelFault
+      && why({ error_type: 'http_error', http_status_code: 403 }) === 'The museum refused the page (403).' && why(null) === WORDS.pageEmpty,
       'AL-067: a page Parallel answers 202 for says "contents cannot be seen — Parallel fault" (the Borghese\'s archive site serves it to anyone); a 403 is still the museum\'s');
     // ── AL-069: a bot check in place of the page is never a show (the sweep's test, shared) ─
     const anubis = rdd({ title: "Making sure you're not a bot!", full_content: "# Making sure you're not a bot!\n\nLoading...\n\n" + 'You are seeing this because the administrator of this website has set up Anubis to protect the server against the scourge of AI companies aggressively scraping websites. '.repeat(4) },
@@ -1706,12 +1707,12 @@ function runtime() {
     const S3 = 'https://scuderiequirinale.it/en/exhibition/americans-in-florence';
     P[S3] = { url: S3, title: 'Americans in Florence', full_content: '# Americans in Florence: Sargent and the American Impressionist' + body.replace('Pontormo is', 'Sargent and the Americans who made Florence home are') };
     await click(importBtn());
-    if (!dialog().querySelector('textarea')) await click(inDialog('Links'));
+    if (!dialog().querySelector('textarea')) await click(inDialog(WORDS.tabLinks));
     const box = dialog().querySelector('textarea');
     await act(async () => { setter.call(box, S1 + '\n' + S2 + '\n' + S3); box.dispatchEvent(new win.Event('input', { bubbles: true })); });
     await settle();
     calls.length = 0;
-    await click([...dialog().querySelectorAll('button')].find(b => b.textContent === 'Read'));
+    await click([...dialog().querySelectorAll('button')].find(b => b.textContent === WORDS.read));
     await settle(30);
     const asks = t => calls.filter(c => c.kind === 'sample' && new RegExp('EXHIBITION TITLE, as the page gives it: "' + t + '"', 'i').test(c.prompt));
     const p = asks('Pontormo');
@@ -1741,12 +1742,12 @@ function runtime() {
     const readAll = async titles => {
       for (const t of titles) P[urlFor(t)] = { url: urlFor(t), title: t, full_content: '# ' + t + body };
       await click(importBtn());
-      if (!dialog().querySelector('textarea')) await click(inDialog('Links'));
+      if (!dialog().querySelector('textarea')) await click(inDialog(WORDS.tabLinks));
       const box = dialog().querySelector('textarea');
       await act(async () => { setter.call(box, titles.map(urlFor).join('\n')); box.dispatchEvent(new win.Event('input', { bubbles: true })); });
       await settle();
       calls.length = 0;
-      await click([...dialog().querySelectorAll('button')].find(b => b.textContent === 'Read'));
+      await click([...dialog().querySelectorAll('button')].find(b => b.textContent === WORDS.read));
       await settle(30);
       return calls.filter(c => c.kind === 'sample' && /===== ITEM/.test(c.prompt));
     };
@@ -1776,12 +1777,12 @@ function runtime() {
   {
     P[QUARANTINED] = { url: QUARANTINED, title: 'Quarantined Show', full_content: '# Quarantined Show\n\n9 Oct 2026 \u2013 7 Feb 2027\n\n' + 'The Quarantined Show brings together the artist\u2019s most important paintings alongside an exceptional selection of drawings, offering an opportunity to explore the full breadth of his artistic production. '.repeat(3) };
     await click(importBtn());
-    if (!dialog().querySelector('textarea')) await click(inDialog('Links'));
+    if (!dialog().querySelector('textarea')) await click(inDialog(WORDS.tabLinks));
     const box = dialog().querySelector('textarea');
     await act(async () => { setter.call(box, QUARANTINED); box.dispatchEvent(new win.Event('input', { bubbles: true })); });
     await settle();
     calls.length = 0;
-    await click([...dialog().querySelectorAll('button')].find(b => b.textContent === 'Read'));
+    await click([...dialog().querySelectorAll('button')].find(b => b.textContent === WORDS.read));
     await settle(30);
     const shown = win.document.body.textContent;
     ok(shown.includes('Read 1 link, but nothing to add \u2014 already in your quarantine.') && !shown.includes('your ledger already matches it'),
@@ -1795,11 +1796,11 @@ function runtime() {
     const NY = 'https://chateaudechantilly.fr/en/evenement/exhibition-the-princely-fleet-of-the-chateau-de-chantilly/';
     P[NY] = { url: NY, title: 'Exhibition - The Princely Fleet of Chantilly - Château de Chantilly', full_content: '# Exhibition \u2013 The Princely Fleet of the Chateau de Chantilly\n\nFrom 8 March to 2 June\n\nChâteau\n\n' + 'Bringing together the Château de Chantilly\u2019s vast collection of archives, plans, books and engravings, this exhibition offers a glimpse into the princely fleet and its boats. '.repeat(3) };
     await click(importBtn());
-    if (!dialog().querySelector('textarea')) await click(inDialog('Links'));
+    if (!dialog().querySelector('textarea')) await click(inDialog(WORDS.tabLinks));
     const box = dialog().querySelector('textarea');
     await act(async () => { setter.call(box, NY); box.dispatchEvent(new win.Event('input', { bubbles: true })); });
     await settle();
-    await click([...dialog().querySelectorAll('button')].find(b => b.textContent === 'Read'));
+    await click([...dialog().querySelectorAll('button')].find(b => b.textContent === WORDS.read));
     await settle(30);
     const ex = buttons(/^Expand all venues$/)[0];
     if (ex) await click(ex);

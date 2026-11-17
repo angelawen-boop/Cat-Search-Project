@@ -45,6 +45,7 @@ const foldText=KEYS.foldLetters;
 //@piece normalizeTitle
 
 // Conservative duplicate matching for incoming refresh results.
+// Not words: a key for matching titles, never shown.
 const normalizeTitle = v => foldText(v)
   .replace(/&/g," and ").replace(/\+/g," and ")
   .replace(/[’‘`]/g,"'").replace(/['"]/g,"")

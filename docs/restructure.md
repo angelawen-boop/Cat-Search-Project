@@ -92,6 +92,30 @@ failed.
 - Branches holding their own `Cat_Watch.jsx` (`parked`, `claude/theme-shelf`) are not merged across the
   restructure; their work is rebuilt on the parts when she wants it.
 
+## The words list (her decision)
+
+Every sentence, button, label and line the app shows her is written once, in `app/foundations/words.jsx`
+(`W`); every place that shows one names its entry. A sentence with a gap (a title, a count, a venue) is a
+pattern, its gaps written `{name}` and filled by `say(W.x,{…})`; a gap holding a link or bold words is
+drawn by `<Say text={W.x} gaps={{…}}/>` (`screens/theme.jsx`). The list sits near the top of the page, so
+every piece and every test that lifts part of the page can name it.
+- **Not on it (agreed):** the wording sent to Claude or the web (prompts, search words, a fault said back
+  to Claude) — changing it changes what the app does; the lookup log's names for its records; how a shop
+  was found (kept in the store); the starter set's exhibitions; and the tables of facts that have their
+  own one home (venue, country, period and theme names). Each such text sits under a comment starting
+  "Not words:" that says which. The diagnostic box's lines ARE on it: she can open the box.
+- **`build/words_check.js`** fails: words written anywhere but the list (JSX text, a shown attribute, a
+  string holding two words or one capitalised word) unless under a "Not words:" comment or in a place never
+  shown (a CSS value, a key, a comparison, what a text is searched for); an entry no part shows, or two
+  entries with the same words; a pattern filled with other gaps than its own, or shown unfilled; and a test
+  that writes out a whole entry's words. It runs before every test run, in the build and in the gates.
+- **Tests** read the app's sentences from the list (`scraper/fixtures/words.js`: `WORDS`, `say`, `wordsRe`;
+  `wordsSource` for a test that lifts part of the page). **Agreed limits:** the check cannot judge whether a
+  new sentence should have reused an old one — it forces it onto the list, where it shows; one lowercase
+  word with no space beside it ("none", "never") is not recognised as words, so it is on the list only
+  where a session put it; a test that looks for a few words of a sentence (`/No catalogue found/`) still
+  writes those words.
+
 ## The venue register (her decisions)
 
 - **The code is the one home for every venue's facts** (swept and manual import alike):
@@ -114,6 +138,7 @@ failed.
 
 - **`build/structure_check.js`** — the levels, the store's door, hooks and JSX only in the screens.
 - **`build/fact_check.js`** — venue facts in one home; nothing written twice.
+- **`build/words_check.js`** — every sentence she sees on the words list (above).
 - **`build/side_by_side.js --base <ref> --changes-allowed`** — two versions of the page in a stand-in
   browser with the same clock, store, web and Claude: every table and list the page defines, every screen,
   every store record, every web and Claude call, and the store's sequence of reads and writes must be
@@ -188,15 +213,8 @@ In this order; nothing runs beside another.
 
 1. **Done — the fixes merged as 59.2**, on the test page ("The fixes after item 4" above); her test round
    on it passed. The Uffizi's shop was taken out of its entry after it (on `main`, not on the test page).
-2. **The words list** — a new session, Opus at medium, started only once the merge is in and `main` is
-   clean. Every sentence the app shows her, written once in one place, every place that shows it naming
-   that one copy; a check fails a sentence on screen that is not on the list. So a change of wording is made
-   once and reaches everywhere, and no session can change it in some places only or slip in a new sentence
-   unseen. **Agreed limits:** the check cannot judge whether a new sentence should have reused an old one —
-   it forces it onto the list, where it shows; a sentence with a gap (a title, a count, a venue) is a
-   pattern on the list; tests that look for exact words read them from the list; the wording sent to Claude
-   is NOT part of it (changing it changes behaviour). No wording changes in this job: the side-by-side
-   check must come out identical.
+2. **Done — the words list** ("The words list" above). No wording changed: the side-by-side check came
+   out identical.
 3. **Housekeeping** — the same session after the words list, or a new one she starts (Sonnet at medium is
    enough): re-run the tools' own proofs (`node build/restructure_gates_proof.js`, `node
    build/side_by_side_proof.js`, about half an hour); the "-2, -3" suffix that keeps a new ID unique,

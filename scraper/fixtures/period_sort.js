@@ -1,3 +1,4 @@
+const { WORDS } = require('./words.js');   // the app's sentences, from its words list
 // The Period sort (her trial; docs/periods.md): the period list's order, the tie rule,
 // the trial venues, the check on Claude's answer, themes and Label's retries. Cases PS-001 to PS-018.
 const H=require('./harness.js');
@@ -84,7 +85,7 @@ check('PS-010 a response show keeps its own group', H.periodOf(sg[3],by)==='high
 check('PS-010 a tie goes to the earlier group; names match however dotted', H.periodOf(sg[4],by)==='georgian'&&H.periodOf(sg[5],by)==='georgian');
 check('PS-010 a show with no artist keeps its own group', H.periodOf({period:'gothic',periodYear:1325},by)==='gothic');
 check('PS-011 her line says when every show was labelled', H.labelSummary(80,[{shows:40,labelled:40},{shows:40,labelled:40}]).ok&&H.labelSummary(80,[{shows:40,labelled:40},{shows:40,labelled:40}]).text==='Label: all 80 exhibitions labelled.');
-const ls=H.labelSummary(80,[{shows:40,labelled:40},{shows:40,labelled:0,why:'Claude is rate-limited.'}]);
+const ls=H.labelSummary(80,[{shows:40,labelled:40},{shows:40,labelled:0,why:WORDS.claudeRateLimited}]);
 check('PS-011 her line says how many were not, and why', !ls.ok&&ls.text==='Label: 40 of 80 exhibitions labelled; 40 not — Claude is rate-limited..'.replace('..','.'), ls.text);
 
 // Themes (her design): labels, any number per show, never a group; the period stays.
@@ -112,7 +113,7 @@ check('PS-014 the label reads its themes after the year', H.periodText({period:'
 check('PS-014 a show labelled before themes is asked again', !H.labelDone({period:'rococo',periodYear:1750})&&H.labelDone({period:'rococo',periodYear:1750,themes:[]}));
 check('PS-015 her waits: 15 seconds, then a minute; a minute before the last go', H.LABEL_WAITS.retry.join()==='15000,60000'&&H.LABEL_WAITS.lastGo===60000);
 check('PS-016 Label\'s own words: Claude didn\u2019t answer, with the code', H.labelWhy({code:'upstream_error'})==='Claude didn\u2019t answer (upstream_error).');
-check('PS-016 unreadable and declined, without telling her what to do', H.labelWhy({code:'invalid_json'})==='Claude\u2019s answer came back unreadable.'&&H.labelWhy({code:'not_granted'})==='You declined to let this page use Claude.');
+check('PS-016 unreadable and declined, without telling her what to do', H.labelWhy({code:'invalid_json'})===WORDS.labelUnreadable&&H.labelWhy({code:'not_granted'})===WORDS.labelDeclined);
 check('PS-016 never the lookup\'s "search results"', !/search results/.test(['upstream_error','invalid_json','not_granted','rate_limited',''].map(c=>H.labelWhy({code:c})).join()));
 
 // Surrealism / Dada has its own group (her decision); Interwar Modernism keeps every other style of those years.

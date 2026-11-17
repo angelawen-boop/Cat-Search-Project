@@ -8,9 +8,9 @@ function SortRow({ui,sort,filters,bnOnly,pickSort}){
   const{bnPeriod,bnDate}=filters;
   return(
         <div style={{display:"flex",gap:4,flexWrap:"wrap",alignItems:"center"}}>
-          <span style={{fontSize:9,letterSpacing:"0.12em",textTransform:"uppercase",color:C.soft,marginRight:2}}>Sort</span>
-          {[["date","Date"],["venue","Venue"],["period","Period"],["added","Recently added"],["edited","Recently edited"],["labelled","Recently labelled"]].map(([k,l])=><button key={k} onClick={()=>pickSort(k)} style={chip(bnOnly?((k==="period"&&bnPeriod)||(k==="date"&&bnDate)):(sortBy===k&&!pinTouched))}>{l}{(bnOnly?(k==="period"&&bnPeriod)||(k==="date"&&bnDate):(k==="date"||k==="period")&&sortBy===k&&!pinTouched)?(dateReversed?" \u2191":" \u2193"):""}</button>)}
-          {pinTouched&&<span style={{fontSize:10.5,color:C.action,fontWeight:600}}>{"\u2191 just-refreshed entries shown first"}</span>}
+          <span style={{fontSize:9,letterSpacing:"0.12em",textTransform:"uppercase",color:C.soft,marginRight:2}}>{W.sortRow}</span>
+          {[["date",W.sortDate],["venue",W.sortVenue],["period",W.sortPeriod],["added",W.recentlyAdded],["edited",W.recentlyEdited],["labelled",W.recentlyLabelled]].map(([k,l])=><button key={k} onClick={()=>pickSort(k)} style={chip(bnOnly?((k==="period"&&bnPeriod)||(k==="date"&&bnDate)):(sortBy===k&&!pinTouched))}>{l}{(bnOnly?(k==="period"&&bnPeriod)||(k==="date"&&bnDate):(k==="date"||k==="period")&&sortBy===k&&!pinTouched)?(dateReversed?" \u2191":" \u2193"):""}</button>)}
+          {pinTouched&&<span style={{fontSize:10.5,color:C.action,fontWeight:600}}>{W.justRefreshedFirst}</span>}
         </div>
   );
 }
@@ -22,8 +22,8 @@ function WhenRow({ui,filters,toggleSet}){
   const{timeF}=filters;
   return(
         <div style={{display:"flex",gap:4,flexWrap:"wrap",alignItems:"center"}}>
-          <span style={{fontSize:9,letterSpacing:"0.12em",textTransform:"uppercase",color:C.soft,marginRight:2}}>When</span>
-          {[["current","Current"],["past","Past"],["upcoming","Announced"],["recent","Recently opened"]].map(([k,l])=><button key={k} onClick={()=>toggleSet("timeF",k)} style={chip(timeF.has(k))}>{l}</button>)}
+          <span style={{fontSize:9,letterSpacing:"0.12em",textTransform:"uppercase",color:C.soft,marginRight:2}}>{W.whenRow}</span>
+          {[["current",W.whenCurrent],["past",W.whenPast],["upcoming",W.whenAnnounced],["recent",W.recentlyOpened]].map(([k,l])=><button key={k} onClick={()=>toggleSet("timeF",k)} style={chip(timeF.has(k))}>{l}</button>)}
         </div>
   );
 }
@@ -35,7 +35,7 @@ function VenueRow({ui,filters,toggleSet}){
   const{venueF}=filters;
   return(
         <div style={{display:"flex",gap:4,flexWrap:"wrap",alignItems:"center"}}>
-          <span style={{fontSize:9,letterSpacing:"0.12em",textTransform:"uppercase",color:C.soft,marginRight:2}}>Venue</span>
+          <span style={{fontSize:9,letterSpacing:"0.12em",textTransform:"uppercase",color:C.soft,marginRight:2}}>{W.sortVenue}</span>
           {chipVenues().map(id=><button key={chipKey(id)} onClick={()=>toggleSet("venueF",chipKey(id))} style={chip(venueF.has(chipKey(id)))}>{REG[id].names.chip}</button>)}
           {OCC_CHIPS.map(([k,l])=><button key={k} onClick={()=>toggleSet("venueF",k)} style={chip(venueF.has(k))}>{l}</button>)}
         </div>
@@ -49,7 +49,7 @@ function ThemeRow({ui,filters,toggleSet,themeCount}){
   const{themeF}=filters;
   return(
         <div style={{display:"flex",gap:4,flexWrap:"wrap",alignItems:"center"}}>
-          <span style={{fontSize:9,letterSpacing:"0.12em",textTransform:"uppercase",color:C.soft,marginRight:2}}>Theme</span>
+          <span style={{fontSize:9,letterSpacing:"0.12em",textTransform:"uppercase",color:C.soft,marginRight:2}}>{W.themeRow}</span>
           {THEME_CHIPS.map(([k,l])=><button key={k} onClick={()=>toggleSet("themeF",k)} style={chip(themeF.has(k))}>{l}{themeF.has(k)?" \u00b7 "+themeCount[k]:""}</button>)}
         </div>
   );
@@ -62,15 +62,15 @@ function AcquiringRow({ui,filters,toggleAcqWanted,toggleAcqOwned,toggleBuyNextVi
   const{acqWanted,acqOwned,acq3mo,acq6mo,acqHasCat,acqNoCat,acqDigital,acqBuyNext}=filters;
   return(
         <div style={{display:"flex",gap:4,flexWrap:"wrap",alignItems:"center"}}>
-          <span style={{fontSize:9,letterSpacing:"0.12em",textTransform:"uppercase",color:C.soft,marginRight:2}}>Acquiring?</span>
-          <button onClick={toggleAcqWanted} style={chip(acqWanted)}>Wanted</button>
-          <button onClick={toggleAcqOwned} style={chip(acqOwned)}>Owned</button>
-          <button onClick={toggleBuyNextView} style={chip(acqBuyNext)}>Buy next</button>
-          <button onClick={toggleAcq3mo} style={chip(acq3mo)}>3+ mos</button>
-          <button onClick={toggleAcq6mo} style={chip(acq6mo)}>6+ mos closing window</button>
-          <button onClick={toggleAcqHasCat} style={chip(acqHasCat)}>Has catalogue</button>
-          <button onClick={toggleAcqNoCat} style={chip(acqNoCat)}>No catalogue</button>
-          <button onClick={toggleAcqDigital} style={chip(acqDigital)}>Digital catalogue</button>
+          <span style={{fontSize:9,letterSpacing:"0.12em",textTransform:"uppercase",color:C.soft,marginRight:2}}>{W.acquiringRow}</span>
+          <button onClick={toggleAcqWanted} style={chip(acqWanted)}>{W.chipWanted}</button>
+          <button onClick={toggleAcqOwned} style={chip(acqOwned)}>{W.chipOwned}</button>
+          <button onClick={toggleBuyNextView} style={chip(acqBuyNext)}>{W.buyNext}</button>
+          <button onClick={toggleAcq3mo} style={chip(acq3mo)}>{W.chip3mo}</button>
+          <button onClick={toggleAcq6mo} style={chip(acq6mo)}>{W.chip6mo}</button>
+          <button onClick={toggleAcqHasCat} style={chip(acqHasCat)}>{W.chipHasCatalogue}</button>
+          <button onClick={toggleAcqNoCat} style={chip(acqNoCat)}>{W.chipNoCatalogue}</button>
+          <button onClick={toggleAcqDigital} style={chip(acqDigital)}>{W.digitalCatalogue}</button>
         </div>
   );
 }
@@ -82,12 +82,12 @@ function ShowingRow({ui,filters,toggleWatchedOnly,toggleDismissedOnly,toggleLabe
   const{showAll,dismissedOnly,labelledF,watchedF}=filters;
   return(
         <div style={{display:"flex",gap:4,flexWrap:"wrap",alignItems:"center"}}>
-          <span style={{fontSize:9,letterSpacing:"0.12em",textTransform:"uppercase",color:C.soft,marginRight:2}}>Showing</span>
-          <button onClick={toggleWatchedOnly} style={chip(watchedF)}>Watched</button>
-          <button onClick={toggleDismissedOnly} style={chip(dismissedOnly)}>Dismissed</button>
-          <button onClick={toggleLabelledOnly} style={chip(labelledF)}>Recently labelled</button>
-          <button onClick={toggleShowAll} style={chip(showAll)}>Show all</button>
-          <button onClick={clearFilters} style={{...chip(false),color:C.muted,borderColor:C.muted}}>Clear all</button>
+          <span style={{fontSize:9,letterSpacing:"0.12em",textTransform:"uppercase",color:C.soft,marginRight:2}}>{W.showingRow}</span>
+          <button onClick={toggleWatchedOnly} style={chip(watchedF)}>{W.chipWatched}</button>
+          <button onClick={toggleDismissedOnly} style={chip(dismissedOnly)}>{W.chipDismissed}</button>
+          <button onClick={toggleLabelledOnly} style={chip(labelledF)}>{W.recentlyLabelled}</button>
+          <button onClick={toggleShowAll} style={chip(showAll)}>{W.showAll}</button>
+          <button onClick={clearFilters} style={{...chip(false),color:C.muted,borderColor:C.muted}}>{W.clearAll}</button>
         </div>
   );
 }

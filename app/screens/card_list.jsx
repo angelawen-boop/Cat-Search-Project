@@ -8,7 +8,7 @@ function CardList({ui,view,sort,bnOnly,periodView,venueScrub,byArtist,drawLimit,
   const{busyId,busy,rechecking,lookLabel,recheckSaid,relabelId,digitalBox,openCards}=cardState;
   return(
       <div data-card-list="1" style={{maxWidth:760,margin:"0 auto",display:"flex",flexDirection:"column",gap:10}}>
-        {view.length===0&&<div style={{background:C.card,border:"1px solid "+C.rule,borderRadius:5,padding:18,fontSize:12.5,color:C.soft}}>Nothing matches those filters.</div>}
+        {view.length===0&&<div style={{background:C.card,border:"1px solid "+C.rule,borderRadius:5,padding:18,fontSize:12.5,color:C.soft}}>{W.nothingMatches}</div>}
         {(()=>{
           const pinnedCount=pinTouched&&!bnOnly?view.filter(x=>refreshTouched.includes(x.id)).length:0;
           // Band headers for the "recently" sorts (only when not in the post-import pinned snapshot).
@@ -23,10 +23,10 @@ function CardList({ui,view,sort,bnOnly,periodView,venueScrub,byArtist,drawLimit,
             if(bandMode==="labelled")return lastLabel(x)?(lastLabel(x)===newestLabel?"lab_this":"lab_earlier"):(periodLabelled(x)?"lab_stage1":"lab_never");
             return null;
           };
-          const BAND_LABEL={add_this:"This import",add_earlier:"Earlier imports",seed:"Original set",ed_this:"This import's edits",ed_earlier:"Earlier edits",ed_never:"Never edited",lab_this:"This labelling",lab_earlier:"Earlier labellings",lab_stage1:"Stage 1",lab_never:"Not labelled"};
+          const BAND_LABEL={add_this:W.bandThisImport,add_earlier:W.bandEarlierImports,seed:W.bandOriginalSet,ed_this:W.bandThisImportsEdits,ed_earlier:W.bandEarlierEdits,ed_never:W.bandNeverEdited,lab_this:W.bandThisLabelling,lab_earlier:W.bandEarlierLabellings,lab_stage1:W.bandStage1,lab_never:W.bandNotLabelled};
           const bandDivider=(txt,pk)=><div data-period={pk} style={{display:"flex",alignItems:"center",gap:8,margin:"2px 2px",color:C.soft}}><div style={{flex:1,height:1,background:C.rule}}/><span style={{fontSize:9.5,letterSpacing:"0.1em",textTransform:"uppercase"}}>{txt}</span><div style={{flex:1,height:1,background:C.rule}}/></div>;
           return view.slice(0,drawLimit).map((r,i)=>{
-          const brk=(pinTouched&&pinnedCount>0&&pinnedCount<view.length&&i===pinnedCount)?bandDivider("Rest of the list"):null;
+          const brk=(pinTouched&&pinnedCount>0&&pinnedCount<view.length&&i===pinnedCount)?bandDivider(W.bandRestOfList):null;
           let header=null;
           if(periodView&&(i===0||periodOf(view[i-1],byArtist)!==periodOf(r,byArtist)))header=bandDivider(PERIOD_NAME[periodOf(r,byArtist)],periodOf(r,byArtist));
           if(bandMode){const b=bandOf(r);const pb=i>0?bandOf(view[i-1]):null;if(b!==pb)header=bandDivider(BAND_LABEL[b]||"");}

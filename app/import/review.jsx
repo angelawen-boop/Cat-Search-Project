@@ -87,7 +87,7 @@ function venuesNoShop(venues,id){ const v=venues[id]; if(!v)return venues; retur
 // at the venue's first lookup (fillShopSearch).
 function venuesShopAdded(venues,id,href){
   const v=venues[id]; if(!v)return venues;
-  return {...venues,[id]:{...v,beforeAnswer:v.beforeAnswer||foundShop(v),shop:"found",...SHOP_RESET,shopHome:originOf(href),shopCatalogues:href,searchRule:null,shopAdded:true,foundBy:"her link",confirmed:true}};
+  return {...venues,[id]:{...v,beforeAnswer:v.beforeAnswer||foundShop(v),shop:"found",...SHOP_RESET,shopHome:originOf(href),shopCatalogues:href,searchRule:null,shopAdded:true,/* Not words: how the shop was found, kept in the store. */foundBy:"her link",confirmed:true}};
 }
 //@piece lookAgainJob
 
@@ -97,7 +97,7 @@ async function lookAgainJob(v){
   const turnedDown=[...(v.turnedDown||[]),v.shopCatalogues].filter(Boolean);
   let shop;
   try{ shop=await discoverShop(v.pageShop||"",v.host,venueSearchName(v.id,v),turnedDown,v.id,null,v.english===false,v.gallery===true); }
-  catch(e){ shop={shop:"failed",why:"Couldn’t look ("+String((e&&e.message)||e)+")."}; }
+  catch(e){ shop={shop:"failed",why:say(W.couldntLook,{why:String((e&&e.message)||e)})}; }
   return {shop,turnedDown};
 }
 //@piece venuesLookedAgain
@@ -161,12 +161,10 @@ function shopVenuesToConfirm(proposals,decisions,venues,saved){
 // naming what is left behind and the way back.
 function partialApplyWords({acceptedCount,undecidedCount}){
   return {
-    title:"Complete this partial import?",
-    text:acceptedCount+" decided "+(acceptedCount===1?"card":"cards")+" will go into your ledger now. "
-      +undecidedCount+" undecided "+(undecidedCount===1?"card":"cards")+" will be left behind — "
-      +"import them using the same sweep file.",
-    hover:"Apply the "+acceptedCount+" you have decided and come back to the rest later.",
-    button:"Update with the "+acceptedCount+" I’ve decided",
+    title:W.partialTitle,
+    text:say(W.partialText,{n:acceptedCount,cards:acceptedCount===1?W.card:W.cards,left:undecidedCount,leftCards:undecidedCount===1?W.card:W.cards}),
+    hover:say(W.partialHover,{n:acceptedCount}),
+    button:say(W.partialButton,{n:acceptedCount}),
   };
 }
 //@piece makeLedgerRow
@@ -241,7 +239,7 @@ function applyCards(rows,proposals,decisions,partial){
 // numbers adding up.
 function importComplete(done){
   return {
-    head:"Import complete. Save it now.",
-    counts:done.added+" added, "+done.filled+" filled in, "+done.changed+" updated"+(done.never?", "+done.never+" quarantined":"")+(done.left?", "+done.left+" left undecided":"")+".",
+    head:W.importComplete,
+    counts:say(W.importCounts,{added:done.added,filled:done.filled,changed:done.changed})+(done.never?say(W.importQuarantined,{n:done.never}):"")+(done.left?say(W.importLeft,{n:done.left}):"")+".",
   };
 }

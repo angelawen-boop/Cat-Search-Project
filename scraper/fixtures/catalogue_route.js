@@ -22,6 +22,7 @@
  *   node scraper/fixtures/catalogue_route.js
  */
 'use strict';
+const { WORDS } = require('./words.js');   // the app's sentences, from its words list
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
@@ -167,7 +168,7 @@ const searches = calls => calls.filter(c => c.tool === 'web_search').map(c => c.
     const pubs = ['container', 'site', 'nosite', 'unnamed', 'product', 'selfpublished', null].map(k => api.publisherNote(k, true)).filter(Boolean);
     const eng = ['publisher', 'shops', 'unknownlang', 'stopped', 'english'].map(c => api.englishLine({ englishCheck: c, publisher: 'Lienart',
       originalEdition: c === 'english' ? { title: 'Original', publisher: 'Pub' } : null })).filter(Boolean);
-    const shop = [api.shopHeadline('shop', null), api.shopHeadline('gone', null), 'Not in the museum shop — shop link opens the general store.',
+    const shop = [api.shopHeadline('shop', null), api.shopHeadline('gone', null), WORDS.notInShopGeneralStore,
       api.SHOP_BLOCKED_FOUND_REST, api.SHOP_BLOCKED_NONE_REST];
     const all = [...pubs, ...eng, ...shop];
     eq(new Set(all).size, all.length, 'CT-001: no sentence is printed by two of the shop, publisher and English lines');
@@ -181,8 +182,8 @@ const searches = calls => calls.filter(c => c.tool === 'web_search').map(c => c.
     const out = await lift(script, calls).lookupCatalogue(r, { label: l => labels.push(l) });
     return { out, calls, row: out.row, labels };
   };
-  const L1 = 'Searching venue shop…', L2 = 'Searching more broadly…', L3 = 'Finding the ISBN and publisher…',
-    L3F = 'Finding the ISBN, publisher and English edition…', L4 = 'Looking for the publisher’s page…';
+  const L1 = WORDS.stageShop, L2 = WORDS.stageWeb, L3 = WORDS.stageFacts,
+    L3F = WORDS.stageFactsForeign, L4 = WORDS.stagePublisher;
 
   // ── WL-001..WL-006: Hammershøi ends on the English edition ───────────────────
   {
@@ -368,13 +369,13 @@ const searches = calls => calls.filter(c => c.tool === 'web_search').map(c => c.
     let { out, calls, row: r } = await run(row('louvre', 'Test Nature Show'), make());
     eq([r.catalogueTitle, r.isbn13, r.publisher, r.shopState], [OWN, '9782359064612', 'Lienart', 'shop'], 'WL-040: a foreign book — its own title, its ISBN, still in the museum shop');
     eq([r.englishCheck, r.publisherUrl, r.publisherResult], ['publisher', PUB_PAGE, 'product'], 'WL-041:   no English edition, the publisher’s page read and linked');
-    eq(api.englishLine(r), "No English edition — checked publisher's site and bookshops.", 'WL-042:   the card says the publisher’s site was checked, without repeating the publisher printed above');
+    eq(api.englishLine(r), WORDS.noEnglishPublisher, 'WL-042:   the card says the publisher’s site was checked, without repeating the publisher printed above');
     ok(!calls.some(c => c.kind === 'sample' && isPageRead(c.prompt)), 'WL-043:   the book’s page read in the facts round’s one read, not on its own');
     eq([out.calls.calls, out.calls.waits], [8, 7], 'WL-044:   8 calls, 7 waits in a row (was 13)');
 
     ({ out, row: r } = await run(row('louvre', 'Test Nature Show'), make({ pubPage: 'shell' })));
     eq([r.englishCheck, r.publisherResult], ['shops', 'container'], 'WL-045: the publisher’s page came back empty — not "checked publisher’s site"');
-    eq(api.englishLine(r), 'No English edition found in bookshops.', 'WL-046:   the card says bookshops only');
+    eq(api.englishLine(r), WORDS.noEnglishShops, 'WL-046:   the card says bookshops only');
 
     ({ out, row: r } = await run(row('louvre', 'Test Nature Show'), make({ pubPage: 'fail' })));
     ok(out.trouble && !out.troubleLang && r.publisherResult === null && api.publisherNote(r.publisherResult, !!r.publisherUrl) === '' && r.englishCheck === 'shops',
@@ -585,8 +586,8 @@ const searches = calls => calls.filter(c => c.tool === 'web_search').map(c => c.
       'HR-011: page counts far apart are two books; close or unknown, no verdict');
 
     // A guessed publisher that contradicts the ISBN's own records gives way to them.
-    const F = { isbn: FR_ISBN, publisher: 'Lund Humphries', pubFrom: 'general results', publisherUrl: null };
-    api.oneBook(F, [{ url: 'https://shop.test/x', title: FR, excerpts: ['ISBN ' + FR_ISBN + '\nPublisher: Somogy éditions d\'art'] }], [], '', 'louvre');
+    const F = { isbn: FR_ISBN, publisher: 'Lund Humphries', pubFrom: WORDS.fromGeneralResults, publisherUrl: null };
+    api.oneBook(F, [{ url: 'https://shop.test/x', title: FR, excerpts: [WORDS.isbnLabel + FR_ISBN + '\nPublisher: Somogy éditions d\'art'] }], [], '', 'louvre');
     eq(F.publisher, 'Somogy éditions d\'art', 'HR-012: a guessed publisher the ISBN’s records contradict is replaced by theirs — one book per card');
   }
 
@@ -694,7 +695,7 @@ const searches = calls => calls.filter(c => c.tool === 'web_search').map(c => c.
       'CY-004: the facts read asks each version and edition for its year and the other showing’s city, in the one read it already makes');
     eq(brief(r.editions), [['French', '9789462302815', null, 'this']], 'BT-001: Botticelli — one version, Fonds Mercator’s French catalogue');
     eq([r.editionPick, r.isbn13], [0, '9789462302815'], 'BT-002:   one version only, so it is picked and fills the card');
-    eq(api.englishLine(r), 'No English edition found in bookshops.', 'BT-003:   a one-version foreign card keeps today’s English line; Reaktion’s book is left off (this recording prints no ISBN for it — ED-004 proves the refusal)');
+    eq(api.englishLine(r), WORDS.noEnglishShops, 'BT-003:   a one-version foreign card keeps today’s English line; Reaktion’s book is left off (this recording prints no ISBN for it — ED-004 proves the refusal)');
   }
 
   // ── VO-001..VO-006: her order, on her nine cases (docs/lookup_proof_cards.json) and her Yale cards ─
@@ -787,7 +788,7 @@ const searches = calls => calls.filter(c => c.tool === 'web_search').map(c => c.
       ['title', 'lang', 'binding', 'pages', 'publisher', 'isbn13', 'alsoIsbn13', 'showing', 'proofUrl', 'note', 'city', 'year', 'card', 'shopFirst'],
       'VF-002: a stored version keeps her fields, the other showing’s city, its year and whether it was found in the shop; the lookup’s own are dropped');
     eq([api.englishLine({ englishCheck: 'shops', editions: [{}] }), api.englishLine({ englishCheck: 'shops', editions: [{}, {}] })],
-      ['No English edition found in bookshops.', null], 'VF-003: a one-version card keeps today’s English line; a card with several has none until her version lines');
+      [WORDS.noEnglishShops, null], 'VF-003: a one-version card keeps today’s English line; a card with several has none until her version lines');
   }
 
 
@@ -804,8 +805,8 @@ const searches = calls => calls.filter(c => c.tool === 'web_search').map(c => c.
     };
     const shown = r => { const vb = api.versionBlocks(r);
       return vb ? vb.map(b => [b.picked ? '●' : '○', b.title, b.publisher, b.facts,
-        b.isbn ? 'ISBN ' + b.isbn + (b.also ? '; ' + b.also.isbn + ' (' + b.also.whose + ')' : '') : 'ISBN not confirmed',
-        [b.why, b.source ? 'Source: ' + b.source.host : null].filter(Boolean).join(' ') || null].filter(Boolean).join(' | ')) : null; };
+        b.isbn ? WORDS.isbnLabel + b.isbn + (b.also ? '; ' + b.also.isbn + ' (' + b.also.whose + ')' : '') : 'ISBN not confirmed',
+        [b.why, b.source ? WORDS.sourceLabel + b.source.host : null].filter(Boolean).join(' ') || null].filter(Boolean).join(' | ')) : null; };
     const LOUVRE_ED = 'https://www.louvre.fr/editions/catalogue/giorgio-vasari-le-livre-des-dessins';
     const PDF = 'https://mini-site.louvre.fr/trimestriel/2016/Catalogue_Editions_2016/files/assets/common/downloads/publication.pdf';
     const NGA = 'https://www.nga.gov/sites/default/files/migrate_images/content/dam/ngaweb/research/gallery-archives/pressreleases/2012-2010/2016/14a11_108163_20160615.pdf';
@@ -907,7 +908,7 @@ const searches = calls => calls.filter(c => c.tool === 'web_search').map(c => c.
     ok(opened(P2409 + '&page=1') && r.isbn13 === '9780300284669', 'YS-003:   Constable’s own page read for its ISBN, with "page=1" when blank', JSON.stringify([r.isbn13]));
     calls.length = 0;
     const re = await y.recheckShopRow(r, { label: () => {} });
-    ok(re.ok && re.said === 'Re-checked: still for sale in the museum shop.' && opened(P2409 + '&page=1'),
+    ok(re.ok && re.said === WORDS.recheckedStillForSale && opened(P2409 + '&page=1'),
       'YS-004: Re-check museum shop reads Constable’s page (blank, then "page=1") and finds it still for sale', JSON.stringify([re.ok, re.said]));
     const POPUP = '# Membership\n' + 'Join now to save 20% on your first order. '.repeat(15) + '[View All Memberships](https://store.test/pages/memberships)';
     const shelf = args => ({ payload: { errors: [], results: args.urls.map(u => args.full_content ? { url: u, title: 'Store', excerpts: [POPUP], full_content: POPUP }
@@ -1047,7 +1048,7 @@ const searches = calls => calls.filter(c => c.tool === 'web_search').map(c => c.
       ok(/Not this book: .*PRODUCTID=900/.test(out.detail), 'SB-003:   "Constable: Drawings" prints another ISBN — not this book', out.detail.split('\n').slice(-8).join(' | '));
       calls.length = 0;
       const re = await y.recheckShopRow(r, { label: () => {} });
-      ok(re.ok && re.said === 'Re-checked: still for sale in the museum shop.', 'SB-004: Re-check then reads Constable’s page and finds it still for sale', JSON.stringify(re.said));
+      ok(re.ok && re.said === WORDS.recheckedStillForSale, 'SB-004: Re-check then reads Constable’s page and finds it still for sale', JSON.stringify(re.said));
     }
     {
       const { y } = make({ constableIsbn: null });
@@ -1083,7 +1084,7 @@ const searches = calls => calls.filter(c => c.tool === 'web_search').map(c => c.
       const res = text => [{ url: 'x', full_content: text }];
       eq([api.sameBookOnPage(res('Published by the Yale Center for British Art. $40.00'), F, { pages: null }),
           api.sameBookOnPage(res('Published by Thames & Hudson. $40.00'), F, { pages: null })],
-        ['the same publisher', null], 'SB-008: with no ISBN and no page count, the publisher decides');
+        [WORDS.samePublisher, null], 'SB-008: with no ISBN and no page count, the publisher decides');
     }
   }
   // ── SV-001..SV-008: every book on a card looked for on the shop's list, so the shop line
@@ -1099,8 +1100,8 @@ const searches = calls => calls.filter(c => c.tool === 'web_search').map(c => c.
       + 'Description ' + 'A generously illustrated volume from the YCBA Collection Series. '.repeat(6) + kind + ' 200 Pages ISBN ' + isbn + '\n\nPrice:\n\n' + price + '\n\nQuantity:\n\nAdd to Basket';
     const make = ({ shelfIsbn = SOFT, refuse = false, readFails = false } = {}) => {
       const page = u => {
-        if (u === P0 + '&page=1') return PAGE('Painters, Ports, and Profits', '9780300286540', '$65.00', 'Hardcover');
-        if (u === P1 + '&page=1') return PAGE(BOOK, shelfIsbn, '$45.00', 'Paperback');
+        if (u === P0 + '&page=1') return PAGE('Painters, Ports, and Profits', '9780300286540', '$65.00', WORDS.hardcover);
+        if (u === P1 + '&page=1') return PAGE(BOOK, shelfIsbn, '$45.00', WORDS.paperback);
         if ([P0, P1].includes(u)) return 'Product Detail';
         if (u === PUBS) return 'YCBA Home - Publications';
         if (u.startsWith(PUBS + '&page=')) return LIST;
@@ -1139,11 +1140,11 @@ const searches = calls => calls.filter(c => c.tool === 'web_search').map(c => c.
     eq([picked.shopState, picked.shopUrl, picked.isbn13], ['shop', P1, SOFT], 'SV-005:   picking the hardcover and back again shows the paperback’s own shop answer and link');
     calls.length = 0;
     const re = await y.recheckShopRow({ ...picked, shopState: 'web', shopUrl: null }, { label: () => {} });
-    eq([re.ok, re.row && re.row.shopState, re.row && re.row.shopUrl, re.said], [true, 'shop', P1, 'Re-checked: now in the museum shop.'],
+    eq([re.ok, re.row && re.row.shopState, re.row && re.row.shopUrl, re.said], [true, 'shop', P1, WORDS.recheckedNowInShop],
       'SV-006: Re-check with the paperback picked looks for the paperback on the shop’s list', JSON.stringify([re.said, re.detail && re.detail.split('\n').slice(-4)]));
     eq([re.row.editions[0].card.shopState, re.row.editions[0].card.shopUrl], ['shop', P1], 'SV-007:   and the paperback’s own stored answer follows, so picking away and back keeps it');
     const re2 = await y.recheckShopRow(y.pickRow(r, 1, 'now'), { label: () => {} });
-    eq([re2.row && re2.row.shopState, re2.said, re2.row && re2.row.editions[1].card.shopState, re2.row && re2.row.editions[0].card.shopState], ['web', 'Re-checked: not in the museum shop.', 'web', 'shop'],
+    eq([re2.row && re2.row.shopState, re2.said, re2.row && re2.row.editions[1].card.shopState, re2.row && re2.row.editions[0].card.shopState], ['web', WORDS.recheckedNotInShop, 'web', 'shop'],
       'SV-008: Re-check with the hardcover picked: still not in the shop, and the paperback’s answer is left as it was');
     eq(re2.row && re2.row.editions.map(v => v.isbn13), [SOFT, HARD], 'SV-012:   a Re-check never moves a block: the order stays as the lookup set it');
     const b = make({ refuse: true });

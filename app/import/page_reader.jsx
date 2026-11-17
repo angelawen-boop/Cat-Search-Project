@@ -66,7 +66,7 @@ const TITLE_LABEL=/^(?:exhibitions?|mostra|ausstellung|exposition|exposición|te
 //@piece NO_TITLE_ON_PAGE
 
 // Why a page is refused when no title can be read from it.
-const NO_TITLE_ON_PAGE="Couldn’t find the show’s title on the page.";
+const NO_TITLE_ON_PAGE=W.noTitleOnPage;
 //@piece GENERIC_TITLE_WORDS
 
 // Words too general to name a show.
@@ -263,8 +263,8 @@ function joinTitle(name,sub,dashAfterColon){
 // Why a link came back with no page. Parallel answering 202 ("accepted", no page sent) for a page the
 // site serves to anyone (the Borghese's archive site) is Parallel's fault, said as the shop's line says it.
 function pageUnreadWhy(e){
-  if(e&&e.http_status_code===202)return "The page contents cannot be seen \u2014 Parallel fault. Import the full saved page.";
-  return e?"The museum refused the page ("+String(e.http_status_code||e.error_type||"no reason given")+").":"The page came back empty.";
+  if(e&&e.http_status_code===202)return W.pageParallelFault;
+  return e?say(W.museumRefusedPage,{why:String(e.http_status_code||e.error_type||W.noReasonGiven)}):W.pageEmpty;
 }
 //@piece SCRIPT_DATES_NOTE
 
@@ -279,7 +279,7 @@ function pageUnreadWhy(e){
 // One page → {ok, base, between, under, afterDates, start, end, raw, site, link, noDates, shown, shownWhy, dateLine, dateNote} or {ok:false, why}.
 // A link's page whose dates a script draws after loading (her wording); and the sign of it, a template
 // placeholder the script never filled ("{{daysLeft(exhibition.end)}}").
-const SCRIPT_DATES_NOTE="Dates cannot be seen \u2014 JS-rendering.";
+const SCRIPT_DATES_NOTE=W.datesJsRendering;
 //@piece SCRIPT_PLACEHOLDER
 
 const SCRIPT_PLACEHOLDER=/\{\{[^{}\n]{1,80}\}\}/;
@@ -308,7 +308,7 @@ function pageToRead(res,url,vc,rules){
   const rule=t=>{ if(rules&&!rules.includes(t))rules.push(t); };
   const lr=linkOptions(vc);
   const text=String(oneText(res)||"");
-  if(text.trim().length<SHELL_CHARS){ rule("fail:empty"); return{fail:{ok:false,why:"The page came back empty."}}; }
+  if(text.trim().length<SHELL_CHARS){ rule("fail:empty"); return{fail:{ok:false,why:W.pageEmpty}}; }
   // A bot check in place of the page (the sweep's own test, shared): never read as a show.
   const head=(text.match(/^\s*#\s+(.+)$/m)||[])[1];
   if(CHALLENGE_TITLE.test(String(res&&res.title||""))||CHALLENGE_TITLE.test(stripMd(head))){ rule("fail:bot-check"); return{fail:{ok:false,why:BOT_CHECK_SAID.charAt(0).toUpperCase()+BOT_CHECK_SAID.slice(1)+"."}}; }
@@ -324,6 +324,7 @@ function pageToRead(res,url,vc,rules){
   if(TITLE_LABEL.test(decodeEntities(stripMd(res&&res.title)).split(" | ")[0].trim()))rule("tab:label");
   // A venue's own date forms rewritten before reading: two-digit years (shortYear, NGV), "as of" for
   // "to" (asOfTo, Palazzo Reale Milano).
+  // Not words: the date reader's own reading.
   const dateText=l=>lr&&lr.shortYear?withLongYears(l):lr&&lr.asOfTo?String(l).replace(/\s+as of\s+/gi," to "):l;
   // The venue an all-number date's order is looked up under (DATE_ORDER, dates.js): its own site's,
   // whether or not it has an entry here.
@@ -496,7 +497,7 @@ function findDates(pg){
     h=h0; rule("title:"+candRule[cands.indexOf(h0)]);
     found=mo&&mo.r.orderUnknown?{d:mo.k,range:{start:"",end:""},noDates:true,orderUnknown:true,via:"dates:order-unknown"}
       :mo?{d:mo.k,range:{start:"",end:""},noDates:true,shown:mo.r.shownText,shownWhy:mo.r.shownWhy,via:"dates:shown-only"}
-      :ny?{d:ny.k,range:{start:"",end:""},noDates:true,shown:ny.t,shownWhy:"no year is published anywhere",via:"dates:no-year"}
+      :ny?{d:ny.k,range:{start:"",end:""},noDates:true,shown:ny.t,shownWhy:W.noYearPublished,via:"dates:no-year"}
       :{d:h0,range:{start:"",end:""},noDates:true,via:"dates:none"};
     // No dates, and the page still holds a script's unfilled placeholder ("{{daysLeft(exhibition.end)}}", Getty):
     // its dates are drawn by script, so the card says so (SCRIPT_DATES_NOTE).
@@ -539,6 +540,7 @@ function findDates(pg){
 // show, or the line when it runs on.
 function settleName(pg){
   const{lr,lines,rule,dateText,dateVenue,h,heading,show,site,broken,after,words,host}=pg;
+  // Not words: a key for matching names.
   const flatName=x=>foldText(stripMd(x)).replace(/&/g," and ").replace(/[^a-z0-9]/g,"");
   const nameWords=x=>foldText(stripMd(x)).replace(/&/g," and ").split(/[^a-z0-9]+/).filter(w=>w&&!GENERIC_TITLE_WORDS.has(w));
   const isHeading=/^\s*#{1,6}\s/.test(lines[h])||h===broken||(after>=0&&h===after);

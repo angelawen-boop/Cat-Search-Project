@@ -39,11 +39,11 @@ function savedPageHtml(text){
 // parse: html → a Document (the page's own DOMParser; a test hands in jsdom's).
 function savedPageReply(text,parse){
   const got=savedPageHtml(text);
-  if(!got.html.trim())return{ok:false,why:"The file holds no web page."};
+  if(!got.html.trim())return{ok:false,why:W.fileNoPage};
   const doc=parse(got.html);
   const meta=sel=>{ const e=doc.querySelector(sel); return e?(e.getAttribute("href")||e.getAttribute("content")||"").trim():""; };
   const url=got.url||meta('link[rel="canonical"]')||meta('meta[property="og:url"]')||((String(text).match(/saved from url=\(\d+\)(\S+?)\s*-->/i)||[])[1]||"");
-  if(!/^https?:\/\//i.test(url))return{ok:false,why:"The saved page doesn’t say its web address."};
+  if(!/^https?:\/\//i.test(url))return{ok:false,why:W.savedPageNoAddress};
   for(const e of doc.querySelectorAll("script,style,noscript,svg,template,iframe"))e.remove();
   const out=[];
   const BLOCK=/^(?:P|DIV|SECTION|ARTICLE|MAIN|HEADER|FOOTER|NAV|ASIDE|UL|OL|TABLE|TR|DL|DT|DD|FIGURE|FIGCAPTION|BLOCKQUOTE|FORM|FIELDSET)$/;
@@ -105,9 +105,9 @@ async function writePendingPages(list){
 // (pastedPage, pasteFaults; her decision). Any length of text is read.
 function pastedPageReply(url,text){
   const u=String(url||"").trim();
-  if(!/^https?:\/\/\S+$/i.test(u))return{ok:false,why:"The link box holds no web address."};
+  if(!/^https?:\/\/\S+$/i.test(u))return{ok:false,why:W.linkBoxNoAddress};
   const lines=String(text||"").replace(/\r/g,"").split("\n").map(l=>l.replace(/[ \t]+/g," ").trim());
-  if(!lines.some(Boolean))return{ok:false,why:"The text box is empty."};
+  if(!lines.some(Boolean))return{ok:false,why:W.textBoxEmpty};
   return{ok:true,res:{url:withoutTracking(u),text:lines.join("\n").replace(/\n{3,}/g,"\n\n").trim()}};
 }
 //@piece pastedPage
@@ -131,6 +131,7 @@ const inPasted=(part,text)=>pasteWords(part).trim()!==""&&pasteWords(text).inclu
 const pasteTitle=t=>String(t||"").replace(/\s+/g," ").trim().replace(/\s+:\s+/g,": ").replace(/[\s.:;,]+$/,"");
 //@piece pasteFaults
 
+// Not words: each fault is said to Claude when its answer is refused (changing one changes the answer).
 function pasteFaults(o,page){
   const a=linkAnswer(o), faults=[];
   if(!a.pasteTitle)faults.push("no title given");

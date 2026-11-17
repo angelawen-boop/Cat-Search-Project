@@ -71,5 +71,6 @@ log (`node build/lookup_log.js` says how), then `node build/lookup_proof_check.j
 Each fixture file opens with what it proves; case IDs (AL-, C-, R-, KP-…) are found by grep. `page_loads.js` asks whether the app page
 LOADS, `page_renders.js` whether it DRAWS (the load check once passed while the live page was black). The harness lifts the intake out
 of the JSX by **anchors on prose, never line numbers**; an early `return` in a fixture file exits the whole suite silently — **await,
-never return.** **JSX validation:** `tsc check.tsx --jsx preserve --noEmit --skipLibCheck --allowJs --target esnext`, filtering for
+never return.** **A test looks for the app's sentences in its words list** (`scraper/fixtures/words.js`; `docs/restructure.md`, "The
+words list"), never retyped; a test that lifts part of the page puts `wordsSource(src)` in front of it. **JSX validation:** `tsc check.tsx --jsx preserve --noEmit --skipLibCheck --allowJs --target esnext`, filtering for
 `error TS1[0-9]{3}[^0-9]`.

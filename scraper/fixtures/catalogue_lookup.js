@@ -20,6 +20,7 @@
  * Details panel and ISBN 9781588398130 with the panel collapsed.
  */
 'use strict';
+const { WORDS, wordsRe } = require('./words.js');   // the app's sentences, from its words list
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
@@ -162,7 +163,7 @@ function runtime(answer, log) {
     eq(a.publisher, 'The Metropolitan Museum of Art', 'C-015: and a missing publisher with it');
 
     const b = api.applyIsbnFill({ ...row, publisher: 'Yale University Press' },
-                                { isbn13: '9781588398130', publisher: 'Amazon' });
+                                { isbn13: '9781588398130', publisher: WORDS.amazon });
     eq(b.publisher, 'Yale University Press',
        'C-016: a publisher we already had is not overwritten by the shop page');
 
@@ -233,7 +234,7 @@ function runtime(answer, log) {
     // Her ruling, 2 Oct: a venue with no shop is never offered a shop link.
     for (const id of ['borghese', 'capo', 'dellav']) {
       const names = api.buyLinks({ museumId: id, title: 'X', isbn13: null }).map(l => l.name);
-      eq(names.some(n => /Museum shop/.test(n)), false, 'C-145: ' + id + ' has no shop, so no Museum shop link');
+      eq(names.some(n => wordsRe(WORDS.museumShop).test(n)), false, 'C-145: ' + id + ' has no shop, so no Museum shop link');
     }
     const pg = [{ url: 'x', excerpts: ['Exhibition catalogue Experience of Nature \u20ac42'] }];
     eq(api.titleAsPrinted('Experience of Nature. Art in Prague at the Court of Rudolf II', pg).title, 'Experience of Nature',
@@ -459,13 +460,13 @@ function runtime(answer, log) {
        'C-061: and nothing that is not an address gets through');
 
     // What the button is allowed to claim.
-    eq(api.publisherLinkLabel('container'), 'Publisher’s section',
+    eq(api.publisherLinkLabel('container'), WORDS.publishersSection,
        'C-062: a section is called a section');
-    eq(api.publisherLinkLabel('site'), 'Publisher’s website',
+    eq(api.publisherLinkLabel('site'), WORDS.publishersWebsite,
        'C-062a: and a front door is called a website');
-    eq(api.publisherLinkLabel('product'), 'Publisher',
+    eq(api.publisherLinkLabel('product'), WORDS.publisher,
        'C-062b: a verified page is called the publisher');
-    eq(api.publisherLinkLabel(null), 'Publisher',
+    eq(api.publisherLinkLabel(null), WORDS.publisher,
        'C-062c: a link from an older ledger makes no claim either way');
   }
 
@@ -560,17 +561,17 @@ function runtime(answer, log) {
     const api = lift({ document: {}, localStorage: {} });
 
     // The wording, hers. The status implies the history; none is kept.
-    eq(api.shopHeadline('shop', null), 'In the museum shop.', 'C-079: the plain green sentence');
-    eq(api.shopHeadline('shop', 'now'), 'Now in the museum shop.', 'C-079a: wasn’t there, now is');
-    eq(api.shopHeadline('shop', 'back'), 'Back in the museum shop.', 'C-079b: was there, went, came back');
-    eq(api.shopHeadline('shop', 'still'), 'Still in the museum shop.', 'C-079c: a Re-check found it there again (her design, 59.1)');
-    eq(api.shopHeadline('gone', null), 'No longer in the museum shop.', 'C-080: the red one says it plainly');
+    eq(api.shopHeadline('shop', null), WORDS.inShop, 'C-079: the plain green sentence');
+    eq(api.shopHeadline('shop', 'now'), WORDS.nowInShop, 'C-079a: wasn’t there, now is');
+    eq(api.shopHeadline('shop', 'back'), WORDS.backInShop, 'C-079b: was there, went, came back');
+    eq(api.shopHeadline('shop', 'still'), WORDS.stillInShop, 'C-079c: a Re-check found it there again (her design, 59.1)');
+    eq(api.shopHeadline('gone', null), WORDS.noLongerInShop, 'C-080: the red one says it plainly');
     eq(api.shopHeadline('web', 'gone'), null,
        'C-080a: a 22 Sep "web"+"gone" row, with no link kept, reads as plain "not in the shop"');
     eq(api.shopHeadline('web', null), null, 'C-080b: an ordinary miss adds no headline at all');
     eq(api.shopHeadline('none', null), null, 'C-080c: nor does a row with no catalogue');
-    eq(api.shopLinkLabel('gone'), 'Museum shop (last seen)', 'C-081: a gone book’s link says "(last seen)"');
-    eq(api.shopLinkLabel('shop'), 'Museum shop', 'C-081a: an in-shop one does not');
+    eq(api.shopLinkLabel('gone'), WORDS.museumShopLastSeen, 'C-081: a gone book’s link says "(last seen)"');
+    eq(api.shopLinkLabel('shop'), WORDS.museumShop, 'C-081a: an in-shop one does not');
 
     const had = { looked: true, hasCatalogue: 'yes', catalogueTitle: 'Old', isbn13: '9781588397751',
       publisher: 'Pub', publisherUrl: 'https://pub.test/b', publisherResult: 'product',
@@ -706,9 +707,9 @@ function runtime(answer, log) {
   // ── C-140 to C-142, C-158: the Booko button — her shapes, 1 Oct ─────────
   {
     const api = lift({ document: {}, localStorage: {} });
-    const booko = r => (api.buyLinks(r).find(l => l.name === 'Booko') || {}).href;
+    const booko = r => (api.buyLinks(r).find(l => l.name === WORDS.booko) || {}).href;
     const names = api.buyLinks({ museumId: 'moma', title: 'X', isbn13: '9781633451971' }).map(l => l.name);
-    eq(names[names.length - 1], 'Booko', 'C-140: "Booko" is the last buy link, after Alibris');
+    eq(names[names.length - 1], WORDS.booko, 'C-140: "Booko" is the last buy link, after Alibris');
     eq(names.slice(-4).join(' | '), 'Amazon | AbeBooks | Alibris | Booko', 'C-158: the bookseller buttons carry no "AU" (her decision)');
     eq(booko({ museumId: 'moma', title: 'Brancusi', catalogueTitle: 'Brancusi: The Artist and His Studio', isbn13: '9781633451971' }),
        'https://booko.au/9781633451971', 'C-141: with an ISBN, Booko’s own page for it');

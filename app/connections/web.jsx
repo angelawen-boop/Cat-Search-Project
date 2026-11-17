@@ -8,6 +8,7 @@
 // never report a page that was not found.
 // SEARCH_SERVER must match the connector name in the page's published `mcp`
 // capability (docs/app.md §1).
+// Not words: the connector's name, as the platform knows it.
 const SEARCH_SERVER = "Parallel Search Key";
 //@piece SEARCH_TOOL
 
@@ -30,14 +31,14 @@ const SEARCH_SESSION = "catwatch" + Math.random().toString(16).slice(2).padEnd(1
 // would hide the fix.
 function mcpTrouble(e){
   const code=String((e&&e.code)||"");
-  if(code==="server_not_connected")return "Add the \u201cParallel Search Key\u201d connector in claude.ai \u2192 Settings \u2192 Connectors, then try again.";
-  if(code==="needs_reauth")       return "Reconnect \u201cParallel Search Key\u201d in claude.ai \u2192 Settings \u2192 Connectors \u2014 its access has lapsed.";
-  if(code==="not_in_manifest")    return "This page isn\u2019t allowed to use \u201cParallel Search Key\u201d \u2014 you may have turned it off for this artifact.";
-  if(code==="selection_required") return "You have more than one \u201cParallel Search Key\u201d connector. Pick one when Claude asks, then try again.";
-  if(code==="blocked_by_policy")  return "Your organisation blocks this connector.";
-  if(code==="server_unavailable") return "The search service didn\u2019t answer. Worth one more try in a moment.";
-  if(code==="cancelled")          return "Search stopped.";
-  return "Search failed ("+(code||"unknown")+").";
+  if(code==="server_not_connected")return W.connectorMissing;
+  if(code==="needs_reauth")       return W.connectorLapsed;
+  if(code==="not_in_manifest")    return W.connectorNotAllowed;
+  if(code==="selection_required") return W.connectorPickOne;
+  if(code==="blocked_by_policy")  return W.connectorBlocked;
+  if(code==="server_unavailable") return W.searchNoAnswer;
+  if(code==="cancelled")          return W.searchStopped;
+  return say(W.searchFailedCode,{code:code||"unknown"});
 }
 //@piece onCall
 
@@ -59,7 +60,7 @@ async function searchWeb(objective,queries){
 
 async function searchWebCall(objective,queries){
   const mcp=await useCap("mcp");
-  if(!mcp)return{ok:false,results:[],detail:"No connector access in this viewer. The page must be opened from its claude.ai link."};
+  if(!mcp)return{ok:false,results:[],detail:W.noConnectorOpenFromLink};
   let res;
   try{
     res=await mcp.callTool(SEARCH_SERVER,SEARCH_TOOL,{
@@ -72,7 +73,7 @@ async function searchWebCall(objective,queries){
   }
   const p=res&&res.payload;
   const results=(p&&Array.isArray(p.results))?p.results:[];
-  return{ok:true,results,detail:"search: "+results.length+" results for "+JSON.stringify(queries)};
+  return{ok:true,results,detail:say(W.searchResultsFor,{n:results.length,queries:JSON.stringify(queries)})};
 }
 //@piece fetchPage
 
@@ -91,9 +92,9 @@ async function fetchPage(url,objective,queries,opts){
 
 async function fetchPageCall(url,objective,queries,opts){
   const urls=Array.isArray(url)?url.filter(Boolean):[url];
-  if(!urls.length)return{ok:false,results:[],detail:"No page to open."};
+  if(!urls.length)return{ok:false,results:[],detail:W.noPageToOpen};
   const mcp=await useCap("mcp");
-  if(!mcp)return{ok:false,results:[],detail:"No connector access in this viewer."};
+  if(!mcp)return{ok:false,results:[],detail:W.noConnector};
   let res;
   try{
     res=await mcp.callTool(SEARCH_SERVER,FETCH_TOOL,{
@@ -111,8 +112,8 @@ async function fetchPageCall(url,objective,queries,opts){
   // The connector names each address it could not read, with its HTTP status.
   // Re-check reads a 404 off this as "the page is gone" — see recheckLinkedPage.
   const errors=(p&&Array.isArray(p.errors))?p.errors:[];
-  return{ok:true,results,errors,detail:"opened "+urls.join(" + ")+": "+results.length+" page(s)"
-    +(errors.length?", "+errors.length+" refused ("+errors.map(e=>String((e&&e.http_status_code)||(e&&e.error_type)||"?")).join(", ")+")":"")};
+  return{ok:true,results,errors,detail:say(W.openedPages,{urls:urls.join(" + "),n:results.length})
+    +(errors.length?say(W.pagesRefused,{n:errors.length,codes:errors.map(e=>String((e&&e.http_status_code)||(e&&e.error_type)||"?")).join(", ")}):"")};
 }
 //@piece SHELL_CHARS
 

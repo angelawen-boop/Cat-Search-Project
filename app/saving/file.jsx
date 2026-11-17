@@ -39,26 +39,26 @@ function labelSlug(label){return String(label||"").toLowerCase().replace(/[^a-z0
 //@piece rollbackSafetyLabel
 
 // The label of the safety copy kept before a roll-back to the save made at `at`.
-function rollbackSafetyLabel(at){return "Safety snapshot before roll-back to snapshot of "+localReadable(at);}
+function rollbackSafetyLabel(at){return say(W.safetyBeforeRollbackTo,{when:localReadable(at)});}
 //@piece snapTitle
 
 // A cloud save's name in the list (her wording): a Save's copy 'Export: "description"';
 // a safety copy, its own label. Older labels are renamed on screen, never in the store.
 function snapTitle(s,all){
   if(!s)return "";
-  if(s.kind!=="safety")return "Export"+(s.label?": \u201c"+s.label+"\u201d":"");
+  if(s.kind!=="safety")return s.label?say(W.exportLabel,{label:s.label}):W.export;
   const l=String(s.label||"");
   // Roll-back copies name the save by its time (her ask; CL-T1–3). Older copies stored
   // only the target's name; its time is read off the one earlier save carrying that name
   // — two or none, the name as before.
   const m=l.match(/^Before rolling back to (.*)$/);
   if(m){
-    const was=m[1].replace(/^Cloud copy before /,"Safety snapshot before ");
+    const was=m[1].replace(/^Cloud copy before /,say(W.safetySnapshotBefore,{what:""}));
     const hits=(all||[]).filter(o=>o&&o!==s&&o.at<s.at&&snapTitle(o)===was);
     return hits.length===1?rollbackSafetyLabel(hits[0].at)
-      :"Safety snapshot before roll-back to \u201c"+was+"\u201d";
+      :say(W.safetyBeforeRollbackNamed,{was});
   }
-  return l.replace(/^Cloud copy before /,"Safety snapshot before ").replace(/^(Safety snapshot before roll-back to )(?!snapshot of )/,"$1snapshot of ")||"Safety snapshot";
+  return l.replace(/^Cloud copy before /,say(W.safetySnapshotBefore,{what:""})).replace(/^(Safety snapshot before roll-back to )(?!snapshot of )/,"$1"+W.snapshotOf)||W.safetySnapshot;
 }
 //@piece loadQuestion
 
@@ -66,7 +66,7 @@ function snapTitle(s,all){
 // they ask first WHENEVER there is unsaved work showing. The question to ask before Loading
 // a file, or null when the screen may go straight to the file picker.
 function loadQuestion(rowsCount,dirty,cloudNotSaving){
-  if(rowsCount>0&&dirty&&cloudNotSaving)return "Loading replaces everything on screen. The cloud copy is NOT saving, so your changes since your last Save are on screen only and will be lost. Continue?";
+  if(rowsCount>0&&dirty&&cloudNotSaving)return W.loadQuestion;
   return null;
 }
 //@piece resetQuestion
@@ -74,8 +74,8 @@ function loadQuestion(rowsCount,dirty,cloudNotSaving){
 // Reset to Seed always asks while a ledger is on screen (her decision): the question to ask,
 // or null when nothing is on screen and Reset may go straight ahead.
 function resetQuestion(rowsCount,dirty,cloudNotSaving){
-  if(rowsCount>0&&dirty&&cloudNotSaving)return "This loads the built-in starter set and replaces everything on screen. The cloud copy is NOT saving, so your changes since your last Save are on screen only and will be lost. Continue?";
-  if(rowsCount>0)return "This loads the seed set and replaces everything on screen. Continue?";
+  if(rowsCount>0&&dirty&&cloudNotSaving)return W.resetQuestionUnsaved;
+  if(rowsCount>0)return W.resetQuestion;
   return null;
 }
 //@piece readLedgerFile
@@ -85,10 +85,10 @@ function resetQuestion(rowsCount,dirty,cloudNotSaving){
 // (note: the screen's line when no cloud safety copy spoke first; debug: the debug line).
 function readLedgerFile(text){
   let d;
-  try{d=JSON.parse(text);}catch{return {error:"Could not read that file \u2014 it may not be a valid ledger backup."};}
-  if(!(d&&Array.isArray(d.rows)))return {error:"That file didn't contain a ledger (no entries found)."};
+  try{d=JSON.parse(text);}catch{return {error:W.fileUnreadable};}
+  if(!(d&&Array.isArray(d.rows)))return {error:W.fileNoLedger};
   const rows=d.rows.map(r=>({...r,watching:r.watching||false})),ignored=Array.isArray(d.ignored)?d.ignored:[];
   return {rows,ignored,lastRun:d.lastRun||null,
-    note:"Loaded "+d.rows.length+" exhibitions from your file \u2014 no edits yet.",
-    debug:"Loaded "+d.rows.length+" exhibitions from your file. It matches your file, so it's not counted as unsaved until you change something."};
+    note:say(W.loadedNote,{n:d.rows.length}),
+    debug:say(W.loadedDebug,{n:d.rows.length})};
 }

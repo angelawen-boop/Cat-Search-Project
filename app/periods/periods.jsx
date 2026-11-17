@@ -10,6 +10,7 @@
 // where two compete); Georgian before Neoclassicism, Belle Époque before Symbolism, Postwar
 // Europe after Abstract Expressionism (her reorder). The groups after Contemporary (her decision) take what cannot
 // file in the chronology: surveys, stragglers, non-Western art. Themes are labels, never groups.
+// Not words: the period and theme tables, the one home of their names and of what Claude is told of each.
 const PERIODS=[
   {key:"antiquity",name:"Antiquity",span:"before c. 400; ancient art from anywhere"},
   {key:"medieval",name:"Byzantine and Early Medieval",span:"c. 400–1150, Romanesque included"},
@@ -77,6 +78,7 @@ const PERIOD_BATCH=40;
 // THEMES (her design): a show of a kind of thing still sits in its period; its themes are
 // labels, any number per show, for the filter row. A chip may hold several labels
 // (Fashion & Jewellery), so she can regroup chips without relabelling.
+// Not words: the period and theme tables, the one home of their names and of what Claude is told of each.
 const THEMES=[
   {key:"fashion",name:"Fashion",chip:"fashion",rule:"clothes, dress, costume, and cloth made for clothes"},
   {key:"jewellery",name:"Jewellery",chip:"fashion",rule:"jewellery"},
@@ -101,7 +103,7 @@ const THEME_NAME=Object.fromEntries(THEMES.map(t=>[t.key,t.name]));
 
 // Her chips, in her order; Ex-themes is every labelled show with no theme, Surveys and
 // Non-Western Art included (they are groups, not themes).
-const THEME_CHIPS=[["fashion","Fashion & Jewellery"],["architecture","Architecture"],["sculpture","Sculpture"],["animals","Animals"],["nature","Nature"],["photography","Photography"],["dechard","Decorative – Hard"],["decsoft","Decorative – Soft"],["books","Books"],["exthemes","Ex-themes"]];
+const THEME_CHIPS=[["fashion",W.themeFashion],["architecture",W.themeArchitecture],["sculpture",W.themeSculpture],["animals",W.themeAnimals],["nature",W.themeNature],["photography",W.themePhotography],["dechard",W.themeDecHard],["decsoft",W.themeDecSoft],["books",W.themeBooks],["exthemes",W.themeExThemes]];
 //@piece THEME_CHIP_OF
 
 const THEME_CHIP_OF=Object.fromEntries(THEMES.map(t=>[t.key,t.chip]));
@@ -128,7 +130,7 @@ const lastLabel=r=>(r&&(r.relabelledAt||r.labelledAt))||"";
 const labelDone=r=>periodLabelled(r)&&Array.isArray(r.themes)&&!PERIOD_RETIRED[r.period];
 //@piece periodYearText
 
-const periodYearText=y=>"c. "+(y<0?(-y)+" BC":y);
+const periodYearText=y=>say(W.circa,{year:y<0?say(W.yearBc,{n:-y}):y});
 //@piece periodText
 
 const periodText=r=>periodLabelled(r)?[PERIOD_NAME[r.period],periodYearText(r.periodYear),...(r.themes||[]).map(k=>THEME_NAME[k])].join(" · "):"";
@@ -174,6 +176,7 @@ function periodCompare(a,b,byArtist){
 
 
 // One question for up to PERIOD_BATCH shows; each line carries its index i.
+// Not words: sent to Claude.
 function periodPrompt(shows){
   return [
     "You are an art historian. For each exhibition below, name the art period of the art it shows, and one year.",
@@ -246,11 +249,11 @@ const LABEL_WAITS={retry:[15000,60000],lastGo:60000};
 // Label's own words for a failed ask: the lookup's wording speaks of search results.
 function labelWhy(ask){
   const code=ask.code||"";
-  if(code==="not_granted")return "You declined to let this page use Claude.";
-  if(code==="invalid_json")return "Claude\u2019s answer came back unreadable.";
-  if(code==="rate_limited")return "Claude is rate-limited.";
+  if(code==="not_granted")return W.labelDeclined;
+  if(code==="invalid_json")return W.labelUnreadable;
+  if(code==="rate_limited")return W.claudeRateLimited;
   if(code==="unavailable")return ask.detail;
-  return "Claude didn\u2019t answer ("+(code||"unknown")+").";
+  return say(W.claudeDidntAnswer,{code:code||"unknown"});
 }
 //@piece labelPeriods
 
@@ -264,7 +267,7 @@ async function labelPeriods(shows,onBatch,waits=LABEL_WAITS){
     if(!res.ok){ b.why=labelWhy(res); b.stop=res.code==="not_granted"||res.code==="unavailable"; return; }
     const want=new Set(b.batch.map(s=>s.i));
     for(const [i,v] of periodAnswers(res.data))if(want.has(i)&&!labels.has(i)){ labels.set(i,v); b.labelled++; }
-    b.why=b.labelled<b.batch.length?(b.batch.length-b.labelled)+" left out of Claude\u2019s answer":null;
+    b.why=b.labelled<b.batch.length?say(W.leftOutOfAnswer,{n:b.batch.length-b.labelled}):null;
   };
   for(let n=0;n<shows.length;n+=PERIOD_BATCH){
     const b={batch:shows.slice(n,n+PERIOD_BATCH),labelled:0,tries:0,why:null,stop:false};
@@ -282,9 +285,9 @@ async function labelPeriods(shows,onBatch,waits=LABEL_WAITS){
 // Her line after a Label: all done, or how many were not and why.
 function labelSummary(total,batches){
   const done=batches.reduce((a,b)=>a+b.labelled,0);
-  if(done===total)return {ok:true,text:"Label: all "+total+" exhibitions labelled."};
+  if(done===total)return {ok:true,text:say(W.labelAll,{n:total})};
   const whys=[...new Set(batches.filter(b=>b.why).map(b=>b.why.replace(/\.$/,"")))];
-  return {ok:false,text:"Label: "+done+" of "+total+" exhibitions labelled; "+(total-done)+" not — "+whys.join("; ")+"."};
+  return {ok:false,text:say(W.labelSome,{done,total,not:total-done,whys:whys.join("; ")})};
 }
 //@piece periodShow
 

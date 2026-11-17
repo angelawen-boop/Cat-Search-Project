@@ -270,7 +270,7 @@ function useLedgerDocument({showError,showDiagnostic,ask:askHer,onLoaded}){
     if(roStop())return;
     const at=new Date().toISOString();
     setQuarantine(prev=>{ const next=mergeQuarantine(prev,{[x.key]:{venueId:x.venueId,title:x.title,at,state:"released"}});
-      writeQuarantine(next).then(ok=>{ if(!ok) setQuarWhy("That release couldn\u2019t be saved to this page\u2019s store, so it may come back when you reload."); });
+      writeQuarantine(next).then(ok=>{ if(!ok) setQuarWhy(W.releaseNotSaved); });
       return next; });
     setDirty(true);};
 

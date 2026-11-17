@@ -137,18 +137,20 @@ function inStockByRule(url,results){
 
 async function readShopPage(book,url,io,opened){
   const f=opened||await openShopPage(io?io.fetch:fetchPage,url,
+    // Not words: asked of the web.
     "Whether the book “"+book+"” can be bought on this page now: its product page, price, "
       +"add to cart, pre-order, sold out, out of stock, unavailable.",
-    [book+" add to cart sold out"],{full:true});
+    /* Not words: asked of the web. */[book+" add to cart sold out"],{full:true});
   if(!f.ok)return{kind:"norun",detail:f.detail,why:f.detail.split("[")[0].trim()};
   const dead=(f.errors||[]).find(e=>GONE_HTTP.has(Number(e&&e.http_status_code)));
   if(dead)return{kind:"gone",status:dead.http_status_code,
-    detail:f.detail+"\nThe shop answered "+dead.http_status_code+": that page no longer exists."};
+    detail:f.detail+say(W.logShopAnswered,{status:dead.http_status_code})};
   if(!f.results.length||pageIsShell(f.results)){
     const why=(f.errors||[]).map(e=>String((e&&e.error_type)||"")+(e&&e.http_status_code?" "+e.http_status_code:"")).filter(Boolean).join(", ");
     return{kind:"unreadable",why,detail:f.detail+(why?"\n"+why:"")};
   }
   const served=f.results.map(r=>String((r&&r.url)||"")).filter(Boolean).join(" ");
+  // Not words: sent to Claude.
   const rd=await (io?io.read:readResults)(
     "You are reading ONE page from a museum shop. Decide whether the book named below can be bought "
    +"on it NOW.\nUse ONLY what this page says.\n"
@@ -174,7 +176,7 @@ async function readShopPage(book,url,io,opened){
   if(typeof d.forSale!=="boolean")return{kind:"badanswer",detail:f.detail+"\n"+JSON.stringify(d)};
   const why=String(d.why||"").trim();
   if(!d.forSale&&inStockByRule(url,f.results)){
-    const said="The page\u2019s own status line says In Stock (this shop draws its Add to Cart by script).";
+    const said=W.inStockByRule;
     return{kind:"read",forSale:true,why:said,results:f.results,detail:f.detail+"\n"+rd.detail+(why?"\n"+why:"")+"\n"+said};
   }
   return{kind:"read",forSale:d.forSale,why,results:f.results,detail:f.detail+"\n"+rd.detail+(why?"\n"+why:"")};
@@ -191,20 +193,20 @@ async function recheckLinkedPage(row){
   const book=row.catalogueTitle||row.title;
   const p=await readShopPage(book,row.shopUrl);
   const hadIt=row.shopState==="shop";
-  if(p.kind==="norun")return{ok:false,detail:p.detail,said:"Re-check didn’t run — "+p.why};
+  if(p.kind==="norun")return{ok:false,detail:p.detail,said:say(W.recheckDidntRun,{why:p.why})};
   if(p.kind==="gone")return{ok:true,detail:p.detail,row:{...row,shopState:"gone",shopChange:null},
-    said:hadIt?"Re-checked: page no longer exists."
-              :"Re-checked: shop page has not returned. Still no longer in the museum shop."};
+    said:hadIt?W.recheckedPageGone
+              :W.recheckedNotReturned};
   if(p.kind==="unreadable")return{ok:false,detail:p.detail,
-    said:"Re-check didn’t work — shop page couldn’t be read"+(p.why?" ("+p.why+")":"")+"."};
-  if(p.kind==="noread")return{ok:false,detail:p.detail,said:"Re-check didn’t finish — "+p.why};
-  if(p.kind==="badanswer")return{ok:false,detail:p.detail,said:"Re-check didn’t finish — answer came back unreadable."};
+    said:say(W.recheckPageUnread,{why:p.why?" ("+p.why+")":""})};
+  if(p.kind==="noread")return{ok:false,detail:p.detail,said:say(W.recheckDidntFinish,{why:p.why})};
+  if(p.kind==="badanswer")return{ok:false,detail:p.detail,said:say(W.recheckDidntFinish,{why:W.answerUnreadable})};
   if(p.forSale){
-    if(hadIt)return{ok:true,detail:p.detail,row:stillInShop(row),said:"Re-checked: still for sale in the museum shop."};
-    return{ok:true,detail:p.detail,row:{...row,shopState:"shop",shopChange:"back"},said:"Re-checked: back in the museum shop."};
+    if(hadIt)return{ok:true,detail:p.detail,row:stillInShop(row),said:W.recheckedStillForSale};
+    return{ok:true,detail:p.detail,row:{...row,shopState:"shop",shopChange:"back"},said:W.recheckedBack};
   }
   return{ok:true,detail:p.detail,row:{...row,shopState:"gone",shopChange:null},
-    said:hadIt?"Re-checked: no longer for sale in the museum shop."+(p.why?" "+p.why:""):"Re-checked: still not for sale in the museum shop."};
+    said:hadIt?W.recheckedNoLongerForSale+(p.why?" "+p.why:""):W.recheckedStillNotForSale};
 }
 //@piece pickedVersion
 
@@ -240,7 +242,7 @@ async function recheckShopCore(found,hooks){
   const row=ticket?{...found,shopUrl:null,shopState:"web",shopChange:null}:found;
   let out;
   if(row.shopUrl&&(row.shopState==="shop"||row.shopState==="gone")){
-    if(hooks&&hooks.label)hooks.label("Re-reading the shop page\u2026");
+    if(hooks&&hooks.label)hooks.label(W.rereadingShopPage);
     out=await recheckLinkedPage(row);
   } else {
     const io=lookupIo(hooks,{upTo:1});
@@ -253,13 +255,13 @@ async function recheckShopCore(found,hooks){
     const answered=shopUnread(row.shopState)?{...row,shopState:row.hasCatalogue==="yes"?"web":"none"}:row;
     // The ticket link is dropped silently (her decision).
     const dropped="";
-    if(!s.ran)out={ok:false,detail:"",said:"Re-check didn’t run — venue has no shop."};
-    else if(!s.ok)out={ok:false,detail:s.detail,said:"Re-check didn’t run — "+s.detail.split("\n").pop().split("[")[0].trim()};
+    if(!s.ran)out={ok:false,detail:"",said:say(W.recheckDidntRun,{why:W.venueNoShop})};
+    else if(!s.ok)out={ok:false,detail:s.detail,said:say(W.recheckDidntRun,{why:s.detail.split("\n").pop().split("[")[0].trim()})};
     // A blocked shop is a failed check and changes nothing — except a ticket
     // link, which was wrong whatever the shop says.
     else if(s.blocked)out=ticket
-      ?{ok:true,detail:s.detail,row:{...row,shopState:s.blocked},said:dropped+"Re-check didn’t work — museum shop "+shopUnreadSaid(s.blocked)+"."}
-      :{ok:false,detail:s.detail,said:"Re-check didn’t work — museum shop "+shopUnreadSaid(s.blocked)+"."};
+      ?{ok:true,detail:s.detail,row:{...row,shopState:s.blocked},said:dropped+say(W.recheckShopUnread,{why:shopUnreadSaid(s.blocked)})}
+      :{ok:false,detail:s.detail,said:say(W.recheckShopUnread,{why:shopUnreadSaid(s.blocked)})};
     // The shop's book is the picked one only when its ISBN says so; otherwise the picked
     // book is looked for on the list the shop step read, as the lookup does.
     else if(pickedVersion(row)&&!(o.found&&o.isbn13&&[pickedVersion(row).isbn13,pickedVersion(row).alsoIsbn13].includes(o.isbn13))){
@@ -267,18 +269,18 @@ async function recheckShopCore(found,hooks){
       const F={title:row.catalogueTitle||v.title,isbn:row.isbn13||v.isbn13,publisher:row.publisher||v.publisher};
       const {url,failed}=await bookOnShelfAfterWeb(F,v,s.results,dom,new Set(shopPagesFor(MU[row.museumId],String(row.title||"").trim()).map(normalizeUrlKey)),io,log);
       const detail=[s.detail].concat(log).join("\n");
-      out=failed?{ok:false,detail,said:"Re-check didn’t work — shop page couldn’t be read."}
-        :url?{ok:true,detail,row:{...answered,shopState:"shop",shopUrl:url,shopChange:row.shopState==="shop"?"still":"now"},said:dropped+(row.shopState==="shop"?"Re-checked: still in the museum shop.":"Re-checked: now in the museum shop.")}
-        :{ok:true,detail,row:{...answered,shopState:"web",shopUrl:null},said:dropped+"Re-checked: not in the museum shop."};
+      out=failed?{ok:false,detail,said:say(W.recheckPageUnread,{why:""})}
+        :url?{ok:true,detail,row:{...answered,shopState:"shop",shopUrl:url,shopChange:row.shopState==="shop"?"still":"now"},said:dropped+(row.shopState==="shop"?W.recheckedStillInShop:W.recheckedNowInShop)}
+        :{ok:true,detail,row:{...answered,shopState:"web",shopUrl:null},said:dropped+W.recheckedNotInShop};
     }
     else if(o.found&&(o.catalogueTitle||o.isbn13)&&(onShop||o.listedOnly)){
       // Reading the book's page for a blank ISBN is part of the shop step —
       // the page IS the shop's. Web search and the publisher are never run.
       const hit=await readBookPage({ok:true,detail:s.detail,pageUrl:o.shopUrl,row:foundInShop(row,o)},
         MU[row.museumId]?.name||"",dom,io);
-      out={ok:true,detail:hit.detail,row:row.shopState==="shop"?stillInShop(hit.row):hit.row,said:dropped+(row.shopState==="shop"?"Re-checked: still in the museum shop.":"Re-checked: now in the museum shop.")};
+      out={ok:true,detail:hit.detail,row:row.shopState==="shop"?stillInShop(hit.row):hit.row,said:dropped+(row.shopState==="shop"?W.recheckedStillInShop:W.recheckedNowInShop)};
     }
-    else out={ok:true,detail:s.detail,row:answered,said:dropped+"Re-checked: not in the museum shop."};
+    else out={ok:true,detail:s.detail,row:answered,said:dropped+W.recheckedNotInShop};
   }
   return out;
 }
@@ -295,12 +297,12 @@ async function recheckShopCore(found,hooks){
 function sameBookOnPage(results,F,v){
   const text=pageTextOf(results);
   const isbns=isbnsLabelled(text);
-  if(isbns.size)return [F.isbn,v&&v.alsoIsbn13].filter(Boolean).some(i=>isbns.has(i))?"the same ISBN":null;
+  if(isbns.size)return [F.isbn,v&&v.alsoIsbn13].filter(Boolean).some(i=>isbns.has(i))?W.sameIsbn:null;
   const printed=(text.match(/(?<![0-9])(\d{2,4})\s*(?:pages|pp\b)/i)||[])[1];
   if(v&&v.pages&&printed&&Number(printed)!==Number(v.pages))return null;
-  if(v&&v.pages&&printed)return "the same page count";
+  if(v&&v.pages&&printed)return W.samePageCount;
   const pub=F.publisher?normPublisher(F.publisher):"";
-  if(pub.length>=4&&(" "+normPublisher(text)+" ").includes(" "+pub+" "))return "the same publisher";
+  if(pub.length>=4&&(" "+normPublisher(text)+" ").includes(" "+pub+" "))return W.samePublisher;
   return null;
 }
 //@piece bookOnShelfAfterWeb
@@ -311,26 +313,27 @@ async function bookOnShelfAfterWeb(F,v,shelf,dom,opened,io,log,seen){
   const links=shelfLinksFor(shelf,F.title,dom,opened)||[];
   if(!links.length)return{url:null,failed:null};
   let failed=null;
-  const miss=(url,why)=>{ if(!failed)failed="couldn’t read "+url+(why?" ("+why+")":""); };
-  log.push("The book found on the web, looked for on the shop’s own list: "+links.length+" link"+(links.length===1?"":"s")+" carrying “"+F.title+"”.");
+  const miss=(url,why)=>{ if(!failed)failed=say(W.couldntReadUrl,{url,why:why?" ("+why+")":""}); };
+  log.push(say(W.logLookedForOnList,{n:links.length,s:links.length===1?"":"s",title:F.title}));
   for(const url of links){
     const key=normalizeUrlKey(url), had=seen&&seen.get(key);
     const f=had?had.f:await openShopPage(io.fetch,url,
+      // Not words: asked of the web.
       "Whether the book “"+F.title+"” can be bought on this page now: its ISBN, pages, publisher, price, add to cart, sold out.",
-      [F.title+" ISBN add to cart"],{full:true});
+      /* Not words: asked of the web. */[F.title+" ISBN add to cart"],{full:true});
     if(seen&&!had)seen.set(key,{f});
     if(!had)log.push(f.detail);
-    if(!f.ok||!f.results.length||pageIsShell(f.results)){ miss(url,f.ok?"blank page":f.detail.split("\n").pop().split("[")[0].trim()); continue; }
+    if(!f.ok||!f.results.length||pageIsShell(f.results)){ miss(url,f.ok?W.blankPage:f.detail.split("\n").pop().split("[")[0].trim()); continue; }
     const same=sameBookOnPage(f.results,F,v);
-    if(!same){ log.push("Not this book: "+url); continue; }
+    if(!same){ log.push(say(W.logNotThisBook,{url})); continue; }
     const mem=seen&&seen.get(key);
     const p=mem&&mem.p?mem.p:await readShopPage(F.title,url,io,f);
     if(mem&&!mem.p)mem.p=p;
     log.push(p.detail);
-    if(p.kind==="read"&&p.forSale){ log.push("In the museum shop ("+same+"): "+url); return{url,failed:null}; }
+    if(p.kind==="read"&&p.forSale){ log.push(say(W.logInShopBy,{same,url})); return{url,failed:null}; }
     if(p.kind!=="read"&&p.kind!=="gone")miss(url,p.why);
   }
-  if(failed)log.push("Not settled: "+failed+".");
+  if(failed)log.push(say(W.logNotSettled,{why:failed}));
   return{url:null,failed};
 }
 //@piece shopStep
@@ -351,13 +354,14 @@ async function shopStep(row,io){
   if(!dom||!shopPages.length)return{ran:false,ok:false,detail:"",data:null};
   io.phase("shop");
   const s1=await io.fetch(shopPages,
+    // Not words: asked of the web.
     "The printed exhibition catalogue for “"+title+"”: the book’s own product page "
       +"on this shop, its full title and its price.",
-    [title+" exhibition catalogue book"]);
+    /* Not words: asked of the web. */[title+" exhibition catalogue book"]);
   if(!s1.ok)return{ran:true,ok:false,detail:s1.detail,data:null};
   // Every page refused is not "nothing there": the shop could not be read (KHM).
   if(!s1.results.length&&(s1.errors||[]).length)
-    return{ran:true,ok:true,blocked:"blocked",detail:s1.detail+"\nThe museum shop refused every page, so it could not be searched.",data:null};
+    return{ran:true,ok:true,blocked:"blocked",detail:s1.detail+W.logShopRefusedAll,data:null};
   if(!s1.results.length)return{ran:true,ok:true,detail:s1.detail,data:null};
   // A venue whose books Parallel drops (the Städel), a shop drawn by script (Basel), or a section she confirmed
   // unread (Berlin's English one): no priced line, even read whole, is "parallel", "script" or "unconfirmed".
@@ -366,7 +370,7 @@ async function shopStep(row,io){
     const whole=await io.fetch(shopPages,SHOP_BOOKS_ASK,null,{full:true});
     if(!whole.ok)return{ran:true,ok:false,detail:s1.detail+"\n"+whole.detail,data:null};
     if(!priced(whole))
-      return{ran:true,ok:true,blocked:mu.shopUnseen,detail:s1.detail+"\n"+whole.detail+(mu.shopUnseen==="parallel"?"\nParallel brought back this shop’s pages without their books, so it could not be searched.":"\nThe shop’s pages came back without their books, so it could not be searched."),data:null};
+      return{ran:true,ok:true,blocked:mu.shopUnseen,detail:s1.detail+"\n"+whole.detail+(mu.shopUnseen==="parallel"?W.logParallelNoBooks:W.logPagesNoBooks),data:null};
   }
   // Every page empty: drawn by script (her decision, MoMA Brancusi), "script". But short excerpts are not an empty page (her Watteau): the pages are
   // opened again whole, and the shop is unread only if they are still empty or show
@@ -382,14 +386,15 @@ async function shopStep(row,io){
     const listed=books.length?null:whole.results.find(r=>!pageIsShell([r]));
     if(listed&&await firstProductIsBook(io.fetch,oneText(listed),dom,listed.url))books=[listed];
     if(!books.length)
-      return{out:{ran:true,ok:true,blocked:"script",detail:s1.detail+"\n"+whole.detail+"\nThe museum shop’s pages came back with no books on them, so it could not be searched.",data:null}};
+      return{out:{ran:true,ok:true,blocked:"script",detail:s1.detail+"\n"+whole.detail+W.logPagesNoBooksOnThem,data:null}};
     return{whole};
   };
   if(s1.results.every(r=>pageIsShell([r]))){
     const w=await readWhole();
     if(w.out)return w.out;
-    shop={...w.whole,detail:s1.detail+"\n"+w.whole.detail+"\nThe shop’s pages, read whole: books on them, none about this show in the excerpts."};
+    shop={...w.whole,detail:s1.detail+"\n"+w.whole.detail+W.logReadWhole};
   }
+  // Not words: sent to Claude.
   const r1=await io.read(READ_RULES
     +"\nExhibition: "+title+"\nVenue: "+venue
     +"\nBelow are the venue’s OWN shop pages, opened directly at "+dom
@@ -414,8 +419,8 @@ async function shopStep(row,io){
   // The title as the shop's pages print it — titleAsPrinted.
   if(data.found&&data.catalogueTitle){
     const tp=titleAsPrinted(data.catalogueTitle,shop.results);
-    if(tp.cut)detail+="\nTitle cut to what the shop prints: “"+tp.title+"” (the read gave “"+data.catalogueTitle+"”).";
-    else if(!tp.onPage)detail+="\nThe title the read gave is not on the shop’s pages as written.";
+    if(tp.cut)detail+=say(W.logTitleCut,{title:tp.title,read:data.catalogueTitle});
+    else if(!tp.onPage)detail+=W.logTitleNotOnPages;
     data.catalogueTitle=tp.title;
   }
   // A list is not the book (her decision, KHM Canaletto): a link that is one of the
@@ -428,12 +433,12 @@ async function shopStep(row,io){
   if(data.found&&(listed||!data.shopUrl)){
     const own=bookLinkOnShelf(shop.results,data.catalogueTitle,dom,opened);
     if(own){
-      detail+="\nThe book’s own link, read off the shop’s listing: "+own;
+      detail+=say(W.logOwnLinkOnListing,{url:own});
       return{ran:true,ok:true,detail,results:shop.results,data:{...data,shopUrl:own}};
     }
   }
   if(listed){
-    detail+="\nThe link given was the shop's own listing, not the book's page — kept as in the shop, without a link of its own.";
+    detail+=W.logLinkWasListing;
     return{ran:true,ok:true,detail,results:shop.results,data:{...data,shopUrl:null,listedOnly:true}};
   }
   return{ran:true,ok:true,detail,results:shop.results,data};
@@ -451,15 +456,15 @@ async function confirmShopLink(hit,io){
   const p=await readShopPage(hit.row.catalogueTitle||hit.row.title,link,io);
   if(p.kind==="read"&&p.forSale){
     return{...hit,shopCandidate:null,pageResults:p.results,
-      detail:hit.detail+"\n"+p.detail+"\nThe shop link from the web search opened and is the book, for sale.",
+      detail:hit.detail+"\n"+p.detail+W.logShopLinkIsBook,
       row:{...hit.row,shopState:"shop",shopChange:null,shopUrl:link}};
   }
-  const why=p.kind==="read"?"isn’t this book for sale"+(p.why?" ("+p.why+")":"")
-    :p.kind==="gone"?"no longer exists ("+p.status+")"
-    :p.kind==="unreadable"?"didn’t open"+(p.why?" ("+p.why+")":"")
-    :"couldn’t be checked";
+  const why=p.kind==="read"?W.isntThisBookForSale+(p.why?" ("+p.why+")":"")
+    :p.kind==="gone"?say(W.noLongerExists,{status:p.status})
+    :p.kind==="unreadable"?W.didntOpen+(p.why?" ("+p.why+")":"")
+    :W.couldntBeChecked;
   return{...hit,shopCandidate:null,pageUrl:null,
-    detail:hit.detail+"\n"+p.detail+"\nThe shop link from the web search "+why+", so it is not filed as in the museum shop.",
+    detail:hit.detail+"\n"+p.detail+say(W.logShopLinkNot,{why}),
     trouble:(p.kind==="norun"||p.kind==="noread")?p.detail:hit.trouble};
 }
 //@piece readBookPage
@@ -475,12 +480,13 @@ async function readBookPage(hit,venue,dom,io){
   // The venue's own shop page gets the blank-page retry (openShopPage); a publisher's does not.
   const f=await (shopLinkOf({shopUrl:hit.pageUrl},dom)?(...a)=>openShopPage(io.fetch,...a):io.fetch)(hit.pageUrl,
     bookPageAsk(book),
-    [book+" ISBN publisher details"],{full:true});
+    /* Not words: asked of the web. */[book+" ISBN publisher details"],{full:true});
   let detail=hit.detail+"\n"+f.detail;
   if(!f.ok)return{...hit,detail,trouble:f.detail};
   if(!f.results.length)return{...hit,detail};
   const coded=r.isbn13?null:isbnOnPage(pageTextOf(f.results));
-  if(coded)detail=detail+"\nISBN read off the page in code: "+coded;
+  if(coded)detail=detail+say(W.logIsbnOffPageCode,{isbn:coded});
+  // Not words: sent to Claude.
   const rd=await io.read(PAGE_RULES
     +"\nBook: "+book+"\nExhibition venue: "+venue+"\n\n"
     +pageForPrompt(f.results)+PAGE_SHAPE);
@@ -491,7 +497,7 @@ async function readBookPage(hit,venue,dom,io){
   }
   const o={...(rd.data||{}),...(coded?{isbn13:coded}:{})};
   const filled=applyIsbnFill(r,o,dom,resultsText(f.results));
-  detail=detail+(filled.isbn13?"\nISBN read off the page: "+filled.isbn13
-                              :"\nNo ISBN on that page either.");
+  detail=detail+(filled.isbn13?say(W.logIsbnOffPage,{isbn:filled.isbn13})
+                              :W.logNoIsbnEither);
   return{...hit,detail,row:filled};
 }

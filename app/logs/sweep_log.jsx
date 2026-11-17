@@ -28,9 +28,9 @@ async function readSweepLog(){
     return {log,why:null};
   }catch(e){
     const code=String((e&&e.code)||"");
-    if(code==="no_store") return {log:{},why:"This page can\u2019t reach its sweep log in this viewer."};
-    if(code==="not_granted") return {log:{},why:"You declined this page access to its sweep log."};
-    return {log:{},why:"Couldn\u2019t read the sweep log ("+(code||"unknown")+")."};
+    if(code==="no_store") return {log:{},why:W.sweepLogUnreachable};
+    if(code==="not_granted") return {log:{},why:W.sweepLogDeclined};
+    return {log:{},why:say(W.sweepLogUnreadCode,{code:code||"unknown"})};
   }
 }
 //@piece writeSweepLog

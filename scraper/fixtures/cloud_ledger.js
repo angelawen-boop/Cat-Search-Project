@@ -21,7 +21,8 @@ const A = '// ── THE CLOUD LEDGER — storage';
 const B = '// ── END OF THE CLOUD LEDGER';
 const a = src.indexOf(A), b = src.indexOf(B, a);
 if (a < 0 || b < 0) throw new Error('cloud_ledger: anchors not found');
-const section = src.slice(a, b);
+const { wordsSource } = require('./words.js');
+const section = wordsSource(src) + src.slice(a, b);   // the section, with the words list it names
 
 const { fakeStore, onStore } = require('./fake_store.js');
 
@@ -197,7 +198,7 @@ const info = d => ({ rows: d.rows.length, quarantined: d.ignored.length });
     const fn = src.slice(src.indexOf('function snapTitle(s,all){'));
     // snapTitle with the label-maker it names, both lifted from the page.
     const label = src.slice(src.indexOf('function rollbackSafetyLabel(at){'));
-    const snapTitle = new Function('localReadable', label.slice(0, label.indexOf('\n')) + '\n' + fn.slice(0, fn.indexOf('\n}\n') + 3) + 'return snapTitle;')(iso => 'AT ' + iso);
+    const snapTitle = new Function('localReadable', wordsSource(src) + label.slice(0, label.indexOf('\n')) + '\n' + fn.slice(0, fn.indexOf('\n}\n') + 3) + 'return snapTitle;')(iso => 'AT ' + iso);
     const recs = [
       { at: '2026-09-26T05:48:21.354Z', kind: 'safety', label: 'Cloud copy before Load' },
       { at: '2026-09-26T04:13:14.315Z', kind: 'safety', label: 'Cloud copy before Load' },

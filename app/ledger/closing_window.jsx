@@ -32,15 +32,15 @@ const TIER_SETS = {
 //@piece TIER_TEXT
 
 const TIER_TEXT = {
-    upcoming: { label: "Announced", note: "Not open yet. Catalogue usually appears at opening.", time: "upcoming", ord: 2 },
-    recent: { label: "Recently opened", note: "Just opened. Catalogue should be available now.", time: "current", ord: 0 },
-    current: { label: "On now", note: "In print. Cheapest it will ever be.", time: "current", ord: 1 },
-    fresh: { label: "Closed under 3 months", note: "Still stocked. Comfortable window.", time: "past", ord: 4 },
-    closing: { label: "Closed 3\u20136 months", note: "Shop stock thinning. Buy now if you want it.", time: "past", ord: 5 },
-    urgent: { label: "Closed 6\u201312 months", note: "Final call. Reprints are rare.", time: "past", ord: 6 },
-    lapsed: { label: "Closed over a year", note: "Assume out of print. Secondhand only.", time: "past", ord: 7 },
+    upcoming: { label: W.whenAnnounced, note: W.tierUpcoming, time: "upcoming", ord: 2 },
+    recent: { label: W.recentlyOpened, note: W.tierRecent, time: "current", ord: 0 },
+    current: { label: W.onNow, note: W.tierCurrent, time: "current", ord: 1 },
+    fresh: { label: W.closedUnder3, note: W.tierFresh, time: "past", ord: 4 },
+    closing: { label: W.closed3to6, note: W.tierClosing, time: "past", ord: 5 },
+    urgent: { label: W.closed6to12, note: W.tierUrgent, time: "past", ord: 6 },
+    lapsed: { label: W.closedOverYear, note: W.tierLapsed, time: "past", ord: 7 },
     // After Announced — her ordering.
-    unknown: { label: "Dates unclear", note: "No reliable end date found.", time: "current", ord: 3 },
+    unknown: { label: W.datesUnclear, note: W.tierUnknown, time: "current", ord: 3 },
 };
 //@piece tiersFor
 

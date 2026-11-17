@@ -3,6 +3,7 @@
 
 
 // The seed set: ~110 rows read before the scraper existed (docs/app.md §6).
+// Not words: exhibitions, not the app's own sentences.
 const S=[
 ["met","Musical Bodies","2026-06-07","2026-09-27","Instruments as sculptural and bodily objects from the Met's collection.","musical-bodies"],
 ["met","Costume Art","2026-05-10","2027-01-10","Costume Institute spring show. Inaugurates new fashion galleries.","costume-art"],
@@ -139,6 +140,6 @@ function mergeSeedInto(existing){const byId=new Map(existing.map(r=>[r.id,r]));f
 function resetSeed(){
   const rows=buildSeed();
   return {rows,
-    note:"Starter set loaded ("+rows.length+" exhibitions) \u2014 not saved to a file.",
-    debug:"Reset: loaded the built-in starter set ("+rows.length+" exhibitions). It isn't in any file \u2014 Save if you want one."};
+    note:say(W.starterLoaded,{n:rows.length}),
+    debug:say(W.resetDebug,{n:rows.length})};
 }

@@ -109,6 +109,13 @@ if (layerId && joined) {
   fc.status === 0 ? pass('fact check: every venue fact is in venues/register.js; no sentence, list or rule written twice (the copies listed for 4B–4F aside)') : fail('fact check:\n' + lines.join('\n'));
 }
 
+// ── The words list: every sentence the app shows on it, each filled with its own gaps; the tests read it ──
+{
+  const wc = spawnSync(process.execPath, [path.join(__dirname, 'words_check.js'), '--root', ROOT], { encoding: 'utf8', maxBuffer: 64 << 20 });
+  const lines = ((wc.stdout || '') + (wc.stderr || '')).split('\n').filter(l => /^(FAIL|PASS|WORDS)/.test(l));
+  wc.status === 0 ? pass('words check: every sentence the app shows is on the words list, filled with its own gaps; the tests read them from it') : fail('words check:\n' + lines.join('\n'));
+}
+
 // ── Identity, then Gate 3 ───────────────────────────────────────────────────
 const identical = nowText === baseText;
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'cw-gates-'));

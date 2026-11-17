@@ -3,12 +3,15 @@
 
 // The Occasional venues (no chip of their own) follow, by country: the United States, the rest of that group
 // (Australia), then Europe in her country order (her decision). A venue's country is on its register entry.
+// Not words: country names as the register and the store write them.
 const OCC_COUNTRY_ORDER=["United States","United Kingdom","Germany","Belgium","France","Switzerland","Italy","Spain","Netherlands"];
 //@piece OCC_EUROPE_ELSE
 
+// Not words: country names as the register and the store write them.
 const OCC_EUROPE_ELSE=["Austria","Denmark","Sweden","Norway","Finland","Portugal","Ireland","Poland","Czechia","Hungary","Greece","Luxembourg"];
 //@piece OCC_COUNTRY_NAMES
 
+// Not words: country names as the register and the store write them.
 const OCC_COUNTRY_NAMES={"usa":"United States","us":"United States","united states of america":"United States","uk":"United Kingdom","great britain":"United Kingdom","england":"United Kingdom","scotland":"United Kingdom","wales":"United Kingdom","northern ireland":"United Kingdom","the netherlands":"Netherlands","holland":"Netherlands","czech republic":"Czechia","deutschland":"Germany"};
 //@piece occCountry
 
@@ -26,7 +29,7 @@ const occRegion=id=>{ const c=occCountry(id); if(c)return(OCC_COUNTRY_ORDER.incl
   const m=/-([a-z]{2})$/.exec(String(id)); return m&&OCC_EUROPE_TLD.includes(m[1])?"eu":"us"; };
 //@piece OCC_CHIPS
 
-const OCC_CHIPS=[["occ:us","Occ - US"],["occ:eu","Occ - Europe"]];
+const OCC_CHIPS=[["occ:us",W.occUs],["occ:eu",W.occEurope]];
 //@piece hasNoChip
 
 const hasNoChip=id=>REG[id]?!REG[id].names.chip:isOcc(id);
@@ -71,6 +74,7 @@ const chipVenues=()=>VENUE_REGISTER.filter(e=>e.names.chip).map(e=>e.id).filter(
 // resort), asked only once Claude has said so: the museum's own website, to file the show under,
 // and the show's full title, since such a page's title can be anything (Enfilade's PDF was
 // titled "Joshua Reynolds"; AL-052h).
+// Not words: sent to Claude.
 function elsewherePrompt(page,url,a){
   return "You are reading a page about a museum exhibition, published by someone other than the museum that held it. Your ONLY output is one JSON object.\n\n"
     +"PAGE ADDRESS: "+url+"\n"
@@ -177,7 +181,7 @@ function linkVenue(url,page){
   const own=occVenueId(hostOf(siteUrlOf(url)));
   if(REG[own])return{id:own};
   const names=houses.map(([id])=>REG[id].names.card);
-  return{id:null,why:"The page doesn’t say which museum the show is in ("+names.slice(0,-1).join(", ")+" or "+names[names.length-1]+")."};
+  return{id:null,why:say(W.pageNoMuseum,{names:names.slice(0,-1).join(", "),last:names[names.length-1]})};
 }
 //@piece linkReadVenue
 

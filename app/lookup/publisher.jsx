@@ -34,6 +34,7 @@ function publisherDomainFrom(results,name){
 // Its "publisher page" is the museum shop, so looking costs searches for nothing.
 // SELF_PUBLISHERS is her list, grown only when she adds one. A blockbuster printed by
 // an art-book house, or a joint show printed by the other museum, is still looked for.
+// Not words: publishers' names as matched.
 const SELF_PUBLISHERS = new Set([
   "national gallery global",              // ng — her row, Zurbaran
   "national gallery london",              // ng — the same imprint as Yale (its distributor) names it, her addition (Millet)
@@ -266,7 +267,7 @@ function carriesBook(x,book,isbn){ return !!((isbn&&isbnInText(isbn,resultText(x
 
 // The trust order for a publisher: read off the ISBN's results, then printed on the
 // book's own shop or publisher page, then Claude's read of general results (a guess).
-const PUBLISHER_TRUST={"the ISBN’s results":3,"the museum shop":2,"the book’s page":2,"general results":1};
+const PUBLISHER_TRUST={[W.fromIsbnResults]:3,[W.fromMuseumShop]:2,[W.fromBookPage]:2,[W.fromGeneralResults]:1};
 //@piece sameHouse
 
 function sameHouse(a,b){
@@ -298,7 +299,7 @@ function siteOfHouses(results,pub,museumId){
 async function findPublisherPage(F,c){
   const {io,log,row,dom,venue}=c;
   if(isSelfPublisher(F.publisher,row.museumId)){
-    log.push(F.publisher+" is a museum’s own imprint — no publisher page to look for.");
+    log.push(say(W.logOwnImprint,{name:F.publisher}));
     F.publisherUrl=null; F.publisherResult="selfpublished";
     return{};
   }
@@ -311,23 +312,23 @@ async function findPublisherPage(F,c){
   const given=F.publisherUrl;
   if(given){
     // A link a read handed over stands; it is opened only to see the editions it lists.
-    if(!c.wantEditions){ log.push("Publisher’s page, given by a read: "+given); return{}; }
+    if(!c.wantEditions){ log.push(say(W.logPublisherGiven,{url:given})); return{}; }
     pubHost=hostOf(given); candidates=[given];
   } else {
     pubHost=siteOfHouses(c.found,pub,row.museumId);
-    if(pubHost)log.push("The publisher’s site, read off the results already found: "+pubHost);
-    else if((pubHost=listedPublisherSite(pub)))log.push("The publisher’s site, from her list of joint publishers: "+pubHost);
+    if(pubHost)log.push(say(W.logPublisherSiteResults,{host:pubHost}));
+    else if((pubHost=listedPublisherSite(pub)))log.push(say(W.logPublisherSiteListed,{host:pubHost}));
     else{
       const d1=await io.search("The official website of the art-book publisher “"+pub+"”.",[pub,pub+" art book publisher"]);
       log.push(d1.detail);
       if(!d1.ok)return{trouble:d1.detail};
       pubHost=siteOfHouses(d1.results,pub,row.museumId);
-      if(!pubHost){ log.push("Couldn’t identify the publisher’s own website."); F.publisherResult="nosite"; return{}; }
+      if(!pubHost){ log.push(W.logNoPublisherSite); F.publisherResult="nosite"; return{}; }
     }
     const known=onHost(c.found,pubHost).filter(x=>carriesBook(x,book,isbn)).map(x=>cleanPublisherUrl(x.url,dom)).filter(Boolean);
     candidates=[];
     for(const u of known)if(!candidates.some(x=>sameAddress(x,u))&&candidates.length<2)candidates.push(u);
-    if(candidates.length)log.push("A page for this book on "+pubHost+", among the results already found: "+candidates.join(" + "));
+    if(candidates.length)log.push(say(W.logPageAmongResults,{host:pubHost,pages:candidates.join(" + ")}));
     else{
       const sp=await io.search(
         "The page on "+pubHost+" for the book “"+book+"”"+(isbn?", ISBN "+isbn:"")+".",
@@ -336,12 +337,13 @@ async function findPublisherPage(F,c){
       log.push(sp.detail);
       if(!sp.ok)return{trouble:sp.detail};
       const onSite=onHost(sp.results,pubHost);
-      if(!onSite.length)return siteOnly(F,pubHost,log,"Nothing for this book on "+pubHost+".");
+      if(!onSite.length)return siteOnly(F,pubHost,log,say(W.logNothingOnSite,{host:pubHost}));
       candidates=rankPublisherPages(onSite,book,isbn,dom);
-      if(candidates.length)log.push("Ranked in code: "+candidates.join(" + "));
+      if(candidates.length)log.push(say(W.logRankedInCode,{pages:candidates.join(" + ")}));
       else{
         // TWO CANDIDATES, THEN THE FALLBACK (her decision): if the best two are wrong
         // the site does not have the book. No new search.
+        // Not words: sent to Claude.
         const rd=await io.read(
           "These are pages from ONE publisher’s own website. Put them in order, best first, "
          +"by how likely each is to BE the page for this book or to LEAD to it.\n"
@@ -362,7 +364,7 @@ async function findPublisherPage(F,c){
           if(candidates.length>=2)break;
         }
       }
-      if(!candidates.length)return siteOnly(F,pubHost,log,"No page for this book on "+pubHost+".");
+      if(!candidates.length)return siteOnly(F,pubHost,log,say(W.logNoPageOnSite,{host:pubHost}));
     }
   }
 
@@ -370,8 +372,9 @@ async function findPublisherPage(F,c){
   for(let i=0;i<candidates.length;i++){
     const candidate=candidates[i];
     let res=c.pages.get(normalizeUrlKey(candidate));
-    if(res)log.push("The publisher’s page, already open: "+candidate);
+    if(res)log.push(say(W.logPublisherPageOpen,{url:candidate}));
     else{
+      // Not words: asked of the web.
       const fp=await io.fetch(candidate,
         "Whether this page is the book “"+book+"” itself, and any link on it to that book."
           +(c.wantEditions?" Every language edition of it this page lists, with ISBNs.":""),
@@ -383,10 +386,11 @@ async function findPublisherPage(F,c){
     // A script-drawn page comes back empty: kept as the section, never claimed as the
     // book, and not counted as read.
     if(pageIsShell(res)){
-      log.push("That page came back empty — kept as the publisher’s section, not the book’s own page.");
+      log.push(W.logPublisherPageEmpty);
       F.publisherUrl=candidate; F.publisherResult="container";
       return{};
     }
+    // Not words: sent to Claude.
     const vr=await io.read(
       "You are reading ONE page from a publisher’s own website, in full. Decide what it is.\n"
      +"Use ONLY what this page says. Never use outside knowledge and never invent a link.\n"
@@ -415,9 +419,9 @@ async function findPublisherPage(F,c){
         // The deep link is checked, not trusted: on the publisher's own host and not
         // the listing we are standing on.
         const deep=deepLinkOn(v.bookUrl,pubHost,candidate);
-        if(deep){ link=deep; log.push("Book’s own page, read off the publisher’s list: "+deep); }
-        else{ result="container"; log.push("The publisher lists books here but gives this one no page of its own — kept as the section."); }
-      } else log.push("Publisher’s page for the book: "+candidate);
+        if(deep){ link=deep; log.push(say(W.logBookPageFromList,{url:deep})); }
+        else{ result="container"; log.push(W.logKeptAsSection); }
+      } else log.push(say(W.logPublisherPageForBook,{url:candidate}));
       F.publisherUrl=link; F.publisherResult=result;
       // Read means fetched, not empty, and the very page the card links (Canaletto).
       F.pubPageRead=link===candidate;
@@ -429,10 +433,10 @@ async function findPublisherPage(F,c){
       return{};
     }
     // "other": try the next candidate; otherwise fall to the site.
-    log.push("That page is not about this book."+(i+1<candidates.length?" Trying the next result.":""));
+    log.push(W.logPageNotAboutBook+(i+1<candidates.length?W.logTryingNext:""));
   }
-  if(given){ log.push("The link the read gave stands, unconfirmed."); return{}; }
-  return siteOnly(F,pubHost,log,"None of the pages on "+pubHost+" was this book.");
+  if(given){ log.push(W.logGivenLinkStands); return{}; }
+  return siteOnly(F,pubHost,log,say(W.logNoneWasBook,{host:pubHost}));
 }
 //@piece siteOnly
 

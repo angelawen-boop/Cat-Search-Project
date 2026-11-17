@@ -20,6 +20,7 @@ const GALLERY_WAY_PATH=new RegExp("^\\/(?:"+LANG_PART+"\\/)?(?:"+GALLERY_WAY_WOR
 //@piece SITE_MENU_ASK
 
 // What Claude is asked to read from a gallery's home page.
+// Not words: asked of the web, or kept as how the shop was found.
 const SITE_MENU_ASK="The site's menu and footer links: shop, books, publications, library.";
 //@piece GALLERY_BUY
 
@@ -91,6 +92,7 @@ async function galleryShop(page,museumHost,venueName,turnedDown,trace,foreign){
   const open=async(url,objective)=>{
     if(g.opens>=GALLERY_OPENS)return null;
     g.opens++;
+    // Not words: asked of the web, or kept as how the shop was found.
     const f=await openShopPage(fetchPage,url,objective||"The page's links: the shop, books and publications, and the books with their prices.",null,{full:true});
     if(!f.ok||!f.results.length)return null;
     const t=pageTextOf(f.results); g.seen+="\n"+t;
@@ -135,6 +137,7 @@ async function galleryShop(page,museumHost,venueName,turnedDown,trace,foreign){
     const at=String(text).search(/^#+\s*.*(?:catalog|books?|publication|livres|publikation|libri)/im);
     const after=at>=0?items.find(u=>String(text).indexOf(u,at)>at):null;
     for(const u of [...new Set([after,items[0]].filter(Boolean))]){
+      // Not words: asked of the web, or kept as how the shop was found.
       const b=await open(u,"This book's title, price, binding, page count and ISBN.");
       if(!b||!galleryBookPage(b))continue;
       // The book bought in a shop elsewhere (Lévy Gorvy Dayan's Library: "Buy" → its shop): that shop.
@@ -152,6 +155,7 @@ async function galleryShop(page,museumHost,venueName,turnedDown,trace,foreign){
         .sort((a,b)=>a.rank-b.rank||(a.count||Infinity)-(b.count||Infinity));
       for(const c of ranked.slice(0,4)){
         const pj=shopifyProductsUrl(c.url);
+        // Not words: asked of the web, or kept as how the shop was found.
         if(pj){ if(g.opens>=GALLERY_OPENS)break; g.opens++; const j=await fetchPage(pj,"The products in this list: titles, types and prices.",null,{full:true}); if(j.ok&&shopifyShelfIsBooks(pageTextOf(j.results),false))return{url:c.url,how}; continue; }
         const t=await open(c.url); if(t&&await sells(t,c.url)===true)return{url:c.url,how};
       }
@@ -159,24 +163,31 @@ async function galleryShop(page,museumHost,venueName,turnedDown,trace,foreign){
     };
     if(g.opens<GALLERY_OPENS){
       g.opens++;
+      // Not words: asked of the web, or kept as how the shop was found.
       const f=await fetchPage(o+"collections.json?limit=250","The shop's lists: titles and handles.",null,{full:true});
       let t=f.ok?pageTextOf(f.results):"";
       if(/"collections"\s*:/.test(t)){
         // A list of 250 is read on (Perrotin's "Perrotin Editions - Books" is on its second page).
+        // Not words: asked of the web, or kept as how the shop was found.
         for(let page=2,last=t;page<=SHOPIFY_LIST_PAGES&&(last.match(/"handle"\s*:/g)||[]).length>=250&&g.opens<GALLERY_OPENS;page++){ g.opens++; const n=await fetchPage(o+"collections.json?limit=250&page="+page,"The shop's lists: titles and handles.",null,{full:true}); last=n.ok?pageTextOf(n.results):""; t+="\n"+last; }
         const lists=shopifySections(t,o).map(c=>({...c,count:+shopifyCountIn(t.split('"handle":"'+c.handle+'"')[1]||"")||0}));
+        // Not words: asked of the web, or kept as how the shop was found.
         const r=await pick(lists,"the shop's lists");
         if(r)return r;
+        // Not words: asked of the web, or kept as how the shop was found.
         if(g.opens<GALLERY_OPENS){ g.opens++; const j=await fetchPage(o+"collections/all/products.json?limit=8","The products in this shop: titles, types and prices.",null,{full:true}); if(j.ok&&shopifyShelfIsBooks(pageTextOf(j.results),false))return{url:o+"collections/all",how:"the shop's whole list"}; }
         // Products with no type given (Lévy Gorvy Dayan's): the whole list read as a page, one of its books opened.
         const all=await open(o+"collections/all");
+        // Not words: asked of the web, or kept as how the shop was found.
         return all&&await sells(all,o+"collections/all")===true?{url:o+"collections/all",how:"the shop's whole list"}:null;
       }
     }
     const t=await open(front);
     if(!t)return null;
+    // Not words: asked of the web, or kept as how the shop was found.
     const r=await pick(menuLinks(t,hostOf(front)).map(c=>({...c,words:c.label||c.words})),"the shop's menu");
     if(r)return r;
+    // Not words: asked of the web, or kept as how the shop was found.
     return await sells(t,front)===true?{url:front,how:"the shop's front page"}:null;
   };
   // A page of the gallery's own: a link on it to a shop elsewhere is followed; else it is the shop when it sells
@@ -219,6 +230,7 @@ async function galleryShop(page,museumHost,venueName,turnedDown,trace,foreign){
       const ours=lines(listText), same=et?[...lines(et)].filter(l=>ours.has(l)).length:0;
       if(et&&pageLanguage(eu,et)==="en"&&(same>=5||await sells(et,eu)===true))list=eu;
     }
+    // Not words: asked of the web, or kept as how the shop was found.
     return{url:list,how:"the gallery's own page",home:originOf(url)};
   };
   const tryAll=async(cands,step)=>{
@@ -241,7 +253,7 @@ async function galleryShop(page,museumHost,venueName,turnedDown,trace,foreign){
     const moved=t&&t.trim().length<SHELL_CHARS&&/redirect/i.test(t)?mdLinks(t).find(l=>!own(l.url))||(t.match(/<(https?:\/\/[^>\s]+)>/)?{url:t.match(/<(https?:\/\/[^>\s]+)>/)[1]}:null):null;
     if(moved){ g.host=hostOf(moved.url); home=originOf(moved.url); t=await open(home,SITE_MENU_ASK); }
     g.home=t||"";
-    if(!t||t.trim().length<SHELL_CHARS)g.unread="The gallery's site could not be read.";
+    if(!t||t.trim().length<SHELL_CHARS)g.unread=W.gallerySiteUnread;
     note("home",{home,read:!!t,chars:(t||"").length});
     if(t)hit=await tryAll(waysIn(t),"home");
   }
@@ -249,6 +261,7 @@ async function galleryShop(page,museumHost,venueName,turnedDown,trace,foreign){
   if(!hit&&g.opens<GALLERY_OPENS){
     const o="https://"+g.host+"/", paths=["shop","store","books","publications","publishing","en/shop","en/books","en/publications","en/publishing"];
     g.opens++;
+    // Not words: asked of the web, or kept as how the shop was found.
     const f=await fetchPage(paths.map(p=>o+p),"The page's books with their prices, and its links to the shop.",null,{full:true});
     const answers=f.ok?paths.map(p=>(f.results||[]).find(r=>r&&normalizeUrlKey(r.url)===normalizeUrlKey(o+p))).filter(Boolean):[];
     for(const r of answers){
@@ -264,6 +277,7 @@ async function galleryShop(page,museumHost,venueName,turnedDown,trace,foreign){
   // 4. A search, its results judged as the pages were: a shop site, a page of the gallery's own named for its books.
   if(!hit&&g.opens<GALLERY_OPENS){
     g.opens++;
+    // Not words: asked of the web, or kept as how the shop was found.
     const s=await searchWeb("Where "+venueName+" sells its books and exhibition catalogues online.",[venueName+" shop books",venueName+" publications catalogues buy"]);
     const res=s.ok?s.results||[]:[];
     const cands=[...res.filter(r=>shopSite(r.url)).map(r=>({kind:"away",url:originOf(r.url)})),

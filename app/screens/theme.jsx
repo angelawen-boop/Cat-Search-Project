@@ -1,4 +1,4 @@
-//@ The two colour palettes, the card draw step and the link-button style.
+//@ The two colour palettes, the card draw step, the link-button style, and Say (a words-list pattern with a link or bold words in it).
 //@piece PALETTES
 
 
@@ -32,3 +32,9 @@ const DRAW_STEP=200;
 
 // The card's link buttons (Museum shop, Publisher, the bookstores), in a palette's colours.
 const linkButton=C=>({fontSize:11,fontWeight:500,color:C.ink,background:C.card,border:"1px solid "+C.rule,borderRadius:3,padding:"4px 9px",textDecoration:"none",display:"inline-block",whiteSpace:"nowrap"});
+//@piece Say
+
+// A pattern from the words list with a link or bold words in a gap (sayParts).
+function Say({text,gaps}){
+  return React.createElement(React.Fragment,null,...sayParts(text,gaps));
+}

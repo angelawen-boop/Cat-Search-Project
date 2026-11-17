@@ -99,17 +99,17 @@ function foldDuplicateRows(raws){
 
 // The note on a card whose file date is not YYYY-MM-DD; `which` is "Start" or "End".
 function unreadableDateNote(which,value){
-  return which+" date \u201c"+value+"\u201d couldn't be read (needs YYYY-MM-DD) \u2014 left blank.";
+  return say(W.unreadableDate,{which,value});
 }
 //@piece analyzeProForma
 
 // `rows` is her ledger as it stands; the cards are what the file would change in it.
 function analyzeProForma(text,rows,ignoredKeys,opts){
   const table=csvParse(text);
-  if(!table.length) return {error:"That file was empty."};
+  if(!table.length) return {error:W.fileEmpty};
   const header=table[0].map(h=>String(h).trim().toLowerCase());
   const idx=n=>header.indexOf(n);
-  if(idx("venue_code")<0||idx("title")<0) return {error:"That file doesn't look like a pro forma (no venue_code / title columns)."};
+  if(idx("venue_code")<0||idx("title")<0) return {error:W.notProForma};
   const get=(r,n)=>{const j=idx(n);return j>=0?String(r[j]||"").trim():"";};
   const props=[];
   const coverage=[];   // marker rows: listing pages that could not be read
@@ -136,7 +136,7 @@ function analyzeProForma(text,rows,ignoredKeys,opts){
     const sweptAt=get(r,"swept_at");
     if(KNOWN_VENUES.has(vc)) attempted[vc]=later(attempted[vc],sweptAt);
     if(isMarkerRow(rowNote)){
-      coverage.push({venueId:KNOWN_VENUES.has(vc)?vc:null,venueShort:KNOWN_VENUES.has(vc)?MU[vc].card:(vc||"(blank)"),what:title||"(a listing page)",why:rowNote,url:get(r,"url"),line});
+      coverage.push({venueId:KNOWN_VENUES.has(vc)?vc:null,venueShort:KNOWN_VENUES.has(vc)?MU[vc].card:(vc||W.blank),what:title||W.aListingPage,why:rowNote,url:get(r,"url"),line});
       continue;
     }
     if(KNOWN_VENUES.has(vc)&&title) returned[vc]=later(returned[vc],sweptAt);
@@ -145,25 +145,24 @@ function analyzeProForma(text,rows,ignoredKeys,opts){
     // A row with no title or no known venue code is a data fault, not hers to fix (her
     // decision): the whole file is refused, naming the lines. qc.js stops it upstream;
     // this is the last line of defence.
-    if(!vc||!KNOWN_VENUES.has(vc)){ faults.push("line "+line+": venue code "+(vc?("\u201c"+vc+"\u201d"):"is blank")+(vc?" isn\u2019t one of the venues":"")); continue; }
-    if(!title){ faults.push("line "+line+": no exhibition title"+(get(r,"url")?" \u2014 "+get(r,"url"):"")); continue; }
+    if(!vc||!KNOWN_VENUES.has(vc)){ faults.push(vc?say(W.faultVenueUnknown,{line,code:vc}):say(W.faultVenueBlank,{line})); continue; }
+    if(!title){ faults.push(say(W.faultNoTitle,{line})+(get(r,"url")?" \u2014 "+get(r,"url"):"")); continue; }
     let sd=get(r,"start_date"), ed=get(r,"end_date"), url=get(r,"url");
-    if(sd&&!isValidYMD(sd)){notes.push(unreadableDateNote("Start",sd));sd="";}
-    if(ed&&!isValidYMD(ed)){notes.push(unreadableDateNote("End",ed));ed="";}
-    if(url&&!urlLooksValid(url)){notes.push("Exhibition link \u201c"+url+"\u201d looks garbled \u2014 left blank.");url="";}
+    if(sd&&!isValidYMD(sd)){notes.push(unreadableDateNote(W.start,sd));sd="";}
+    if(ed&&!isValidYMD(ed)){notes.push(unreadableDateNote(W.end,ed));ed="";}
+    if(url&&!urlLooksValid(url)){notes.push(say(W.linkGarbled,{url}));url="";}
     // Quarantined: dropped before anything else sees it. Counted, never silent.
     if(ignoredKeys&&ignoredKeys.has(ignoreKeyFor(vc,url,title))){ blocked++; continue; }
     parsed.push({venueCode:vc,title,startDate:sd,endDate:ed,summary:get(r,"summary"),url,topic:topicOf(rowNote),
-                 rowNotes:rowNote?[((opts&&opts.notePrefix!=null)?opts.notePrefix:"Sweeper note: ")+rowNote]:[],parseNotes:notes,line});
+                 rowNotes:rowNote?[((opts&&opts.notePrefix!=null)?opts.notePrefix:W.sweeperNote)+rowNote]:[],parseNotes:notes,line});
   }
 
   // THE FILE IS REFUSED WHOLE, not row by row. A sweep that produced a
   // nameless row is a sweep to re-run, and importing the rest of it would
   // quietly leave that exhibition out.
   if(faults.length){
-    return { error:"This sweep file has "+faults.length+" faulty row"+(faults.length===1?"":"s")+
-      " and hasn\u2019t been imported. Nothing here is for you to fix \u2014 give these line numbers back to Claude:\n\n"+
-      faults.slice(0,12).join("\n")+(faults.length>12?"\n\u2026and "+(faults.length-12)+" more.":"") };
+    return { error:say(W.fileRefused,{n:faults.length,s:faults.length===1?"":"s"})+
+      faults.slice(0,12).join("\n")+(faults.length>12?say(W.andMore,{n:faults.length-12}):"") };
   }
   // ── PASS TWO: fold rows that are the same exhibition. ────────────────────
   const folded=foldDuplicateRows(parsed);
@@ -172,13 +171,13 @@ function analyzeProForma(text,rows,ignoredKeys,opts){
   for(const p of folded){
     const vc=p.venueCode, title=p.title, sd=p.startDate, ed=p.endDate, summary=p.summary, url=p.url;
     const notes=p.parseNotes.slice();
-    if(!sd)notes.push("No start date.");
-    if(!ed)notes.push("No end date.");
-    if(!summary)notes.push("No description.");
-    if(!url)notes.push("No exhibition link.");
+    if(!sd)notes.push(W.noStartDate);
+    if(!ed)notes.push(W.noEndDate);
+    if(!summary)notes.push(W.noDescription);
+    if(!url)notes.push(W.noExhibitionLink);
     for(const n of p.rowNotes) notes.push(n);
     // Say when rows were folded, so the count matches the file.
-    if(p.mergedFrom) notes.push("Rows "+p.mergedFrom.join(", ")+" of the file describe this same exhibition \u2014 combined into one.");
+    if(p.mergedFrom) notes.push(say(W.rowsCombined,{rows:p.mergedFrom.join(", ")}));
 
     const cand={museumId:vc,title,startDate:sd||null,endDate:ed||null,summary,exUrl:url};
     const exact=url?rows.find(x=>x.museumId===vc&&x.exUrl&&x.exUrl===url):null;
@@ -188,7 +187,7 @@ function analyzeProForma(text,rows,ignoredKeys,opts){
     // The fuller value is ticked, and marked as a guess; both are shown.
     const choices=p.conflicts?Object.keys(p.conflicts).map(f=>({
       field:f,
-      label:{title:"Title",startDate:"Start date",endDate:"End date",summary:"Description"}[f]||f,
+      label:{title:W.title,startDate:W.startDate,endDate:W.endDate,summary:W.description}[f]||f,
       options:p.conflicts[f],
       picked:p[f],
     })):null;
@@ -200,11 +199,11 @@ function analyzeProForma(text,rows,ignoredKeys,opts){
     // recorded in capitals is corrected in her ledger, never masked on screen.
     { const sq=v=>String(v||"").replace(/\s+/g," ").trim();
       if(title&&match.title&&sq(title)!==sq(match.title))
-        upd.push({field:"title",label:"Title",oldVal:String(match.title),newVal:String(title),kind:"change"}); }
-    consider("startDate","Start date",match.startDate,sd);
-    consider("endDate","End date",match.endDate,ed);
-    consider("summary","Description",match.summary,summary);
-    consider("exUrl","Link",match.exUrl,url);
+        upd.push({field:"title",label:W.title,oldVal:String(match.title),newVal:String(title),kind:"change"}); }
+    consider("startDate",W.startDate,match.startDate,sd);
+    consider("endDate",W.endDate,match.endDate,ed);
+    consider("summary",W.description,match.summary,summary);
+    consider("exUrl",W.linkBox,match.exUrl,url);
     if(!upd.length&&!choices){ silent++; continue; }  // identical — nothing to propose
     const hasChange=upd.some(u=>u.kind==="change");
     props.push({type:hasChange?"change":"fill",venueId:vc,venueShort:MU[vc].card,title,cand,matchId:match.id,upd,notes,line:p.line,choices,merged:!!p.mergedFrom});
@@ -228,18 +227,18 @@ function analyzeProForma(text,rows,ignoredKeys,opts){
 function readSweepFile(text,rows,ignored){
   const res=analyzeProForma(text,rows,new Set(ignored.map(x=>x.key)));
   if(res.error||res.props.length)return res;
-  return {...res,nothingNew:"Read the refresh file, but nothing new to propose \u2014 your ledger already matches it."+((res.coverage||[]).length?" ("+res.coverage.length+" listing page"+(res.coverage.length===1?"":"s")+" couldn\u2019t be read \u2014 see below.)":"")};
+  return {...res,nothingNew:W.nothingNew+((res.coverage||[]).length?say(W.listingPagesUnread,{n:res.coverage.length,s:res.coverage.length===1?"":"s"}):"")};
 }
 //@piece saveSweepLog
 
 // The sweep log written to the store; resolves to why it was not saved, or null.
 function saveSweepLog(log){
-  return writeSweepLog(log).then(ok=>ok?null:"The sweep log couldn\u2019t be saved to this page\u2019s store, so it may reset when you reload.");
+  return writeSweepLog(log).then(ok=>ok?null:W.sweepLogNotSaved);
 }
 //@piece saveImportQuarantine
 
 // An import's new quarantine written to the store, the copy that survives a Reset (the export
 // carries the list too); resolves to why it was not saved, or null.
 function saveImportQuarantine(list){
-  return writeQuarantine(list).then(ok=>ok?null:"The quarantine couldn\u2019t be saved to this page\u2019s store, so it may reset when you reload. Save to keep it.");
+  return writeQuarantine(list).then(ok=>ok?null:W.quarantineNotSaved);
 }

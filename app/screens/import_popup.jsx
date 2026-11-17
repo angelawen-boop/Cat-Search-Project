@@ -13,7 +13,7 @@ function ReadStatus({ui,busy,prog,linkNote,linkFails,failAs}){
     </div>}
     {linkNote&&<div style={{marginTop:6,fontSize:11.5,color:C.soft,lineHeight:1.45}}>{linkNote}</div>}
     {linkFails.map((f,i)=><div key={i} style={{marginTop:6,fontSize:11.5,color:TH.urgent.ink,lineHeight:1.4,overflowWrap:"anywhere"}}>
-      {f.url?failAs(f):""}{f.url?" \u2014 ":""}{f.why}
+      {f.url?failAs(f):""}{f.url?W.failDash:""}{f.why}
     </div>)}
   </>);
 }
@@ -34,7 +34,7 @@ function ImportPopup({ui,importMode,cancelImportPopup,children}){
             {/* Cancel always answers: a catalogue search also sets busy, and once locked the
                 pop-up out until the search ended (her report). */}
             <div style={{textAlign:"center",marginTop:10}}>
-              <button onClick={cancelImportPopup} style={{background:"none",border:"none",color:C.soft,fontSize:10,textDecoration:"underline",cursor:"pointer",padding:0}}>Cancel</button>
+              <button onClick={cancelImportPopup} style={{background:"none",border:"none",color:C.soft,fontSize:10,textDecoration:"underline",cursor:"pointer",padding:0}}>{W.cancel}</button>
             </div>
           </div>
         </div>
@@ -50,10 +50,10 @@ function ImportNeedLedger({ui,importMode,openCloudFromImport,loadFromImport}){
             {/* IMPORT NEEDS A LEDGER OPEN: on an empty page it offers only the ways to open
                 one (her design), so an import can never become the whole ledger. */}
             {importMode==="needLedger"&&<div style={{textAlign:"center"}}>
-              <div style={{fontSize:13,color:C.ink,marginBottom:10}}>Your ledger needs to be opened first.</div>
+              <div style={{fontSize:13,color:C.ink,marginBottom:10}}>{W.ledgerFirst}</div>
               <div style={{display:"flex",gap:5,justifyContent:"center"}}>
-                <button onClick={openCloudFromImport} style={sBtn}>Open last cloud save</button>
-                <button onClick={loadFromImport} style={sBtn}>Load</button>
+                <button onClick={openCloudFromImport} style={sBtn}>{W.openLastCloudSave}</button>
+                <button onClick={loadFromImport} style={sBtn}>{W.load}</button>
               </div>
             </div>}
   </>);
@@ -65,10 +65,10 @@ function ImportTabs({ui,importMode,busy,chooseCsvImport,pickImportTab}){
   const{sBtn,pBtn}=ui;
   return(<>
             {importMode!=="needLedger"&&<div style={{display:"flex",gap:5,justifyContent:"center"}}>
-              <button onClick={chooseCsvImport} disabled={busy} style={sBtn}>CSV</button>
-              <button onClick={()=>pickImportTab("links")} disabled={busy} style={importMode==="links"?{...pBtn,opacity:1}:sBtn}>Links</button>
-              <button onClick={()=>pickImportTab("pages")} disabled={busy} style={importMode==="pages"?{...pBtn,opacity:1}:sBtn}>Pages</button>
-              <button onClick={()=>pickImportTab("paste")} disabled={busy} style={importMode==="paste"?{...pBtn,opacity:1}:sBtn}>Paste</button>
+              <button onClick={chooseCsvImport} disabled={busy} style={sBtn}>{W.tabCsv}</button>
+              <button onClick={()=>pickImportTab("links")} disabled={busy} style={importMode==="links"?{...pBtn,opacity:1}:sBtn}>{W.tabLinks}</button>
+              <button onClick={()=>pickImportTab("pages")} disabled={busy} style={importMode==="pages"?{...pBtn,opacity:1}:sBtn}>{W.tabPages}</button>
+              <button onClick={()=>pickImportTab("paste")} disabled={busy} style={importMode==="paste"?{...pBtn,opacity:1}:sBtn}>{W.tabPaste}</button>
             </div>}
   </>);
 }
@@ -86,20 +86,20 @@ function ImportPaste({ui,importMode,busy,pastes,typeInPasteBox,clearPasteBox,cle
                 const set=(k,v)=>typeInPasteBox(x.id,k,v);
                 const field={width:"100%",boxSizing:"border-box",fontSize:12.5,fontFamily:"inherit",padding:"6px 10px",border:"1px solid "+C.rule,borderRadius:4,background:C.card,color:C.ink,display:"block"};
                 return <div key={x.id} style={{marginBottom:10,position:"relative"}}>
-                  <input value={x.url} onChange={e=>set("url",e.target.value)} disabled={busy} placeholder="Link" aria-label="Link" inputMode="url" autoCapitalize="off" autoCorrect="off" spellCheck={false} style={{...field,paddingRight:52}}/>
+                  <input value={x.url} onChange={e=>set("url",e.target.value)} disabled={busy} placeholder={W.linkBox} aria-label={W.linkBox} inputMode="url" autoCapitalize="off" autoCorrect="off" spellCheck={false} style={{...field,paddingRight:52}}/>
                   {filledBox(x)&&<button onClick={()=>clearPasteBox(x.id)} disabled={busy}
-                    style={{position:"absolute",top:7,right:8,background:"none",border:"none",color:C.soft,fontSize:11,textDecoration:"underline",cursor:"pointer",padding:0}}>Clear</button>}
-                  <textarea value={x.text} onChange={e=>set("text",e.target.value)} disabled={busy} aria-label="Text" rows={5} style={{...field,marginTop:4,resize:"vertical"}}/>
+                    style={{position:"absolute",top:7,right:8,background:"none",border:"none",color:C.soft,fontSize:11,textDecoration:"underline",cursor:"pointer",padding:0}}>{W.clear}</button>}
+                  <textarea value={x.text} onChange={e=>set("text",e.target.value)} disabled={busy} aria-label={W.textBox} rows={5} style={{...field,marginTop:4,resize:"vertical"}}/>
                 </div>;
               })}
               {/* "Clear all" in the row with + and Read, centred as Cancel is (her design). */}
               <div style={{display:"grid",gridTemplateColumns:"1fr auto 1fr",alignItems:"center"}}>
                 <span/>
                 <span>{pastes.some(filledBox)&&<button onClick={clearAllPasteBoxes} disabled={busy}
-                  style={{background:"none",border:"none",color:C.soft,fontSize:11,textDecoration:"underline",cursor:"pointer",padding:0}}>Clear all</button>}</span>
+                  style={{background:"none",border:"none",color:C.soft,fontSize:11,textDecoration:"underline",cursor:"pointer",padding:0}}>{W.clearAll}</button>}</span>
                 <div style={{display:"flex",justifyContent:"flex-end",gap:5}}>
-                <button onClick={addPasteBox} disabled={busy} aria-label="Add a box" style={sBtn}>+</button>
-                <button onClick={()=>readLinks("paste")} disabled={busy} style={pBtn}>Read</button>
+                <button onClick={addPasteBox} disabled={busy} aria-label={W.addABox} style={sBtn}>+</button>
+                <button onClick={()=>readLinks("paste")} disabled={busy} style={pBtn}>{W.read}</button>
                 </div>
               </div>
               {<ReadStatus ui={ui} busy={busy} prog={prog} linkNote={linkNote} linkFails={linkFails} failAs={f=>f.url}/>}
@@ -120,11 +120,11 @@ function ImportPages({ui,importMode,busy,pages,pagesFileRef,pickPages,clearPages
                 {pages.length?pages.map(p=><div key={p.url} style={{overflowWrap:"anywhere",lineHeight:1.5}}>{p.title||p.name||p.url}</div>)
                   :null}
                 {pages.length>0&&<button onClick={clearPages} disabled={busy}
-                  style={{position:"absolute",top:6,right:8,background:"none",border:"none",color:C.soft,fontSize:11,textDecoration:"underline",cursor:"pointer",padding:0}}>Clear</button>}
+                  style={{position:"absolute",top:6,right:8,background:"none",border:"none",color:C.soft,fontSize:11,textDecoration:"underline",cursor:"pointer",padding:0}}>{W.clear}</button>}
               </div>
               <div style={{display:"flex",justifyContent:"flex-end",gap:5,marginTop:8}}>
-                <button onClick={()=>pagesFileRef.current?.click()} disabled={busy} style={sBtn}>Choose pages</button>
-                <button onClick={()=>readLinks("pages")} disabled={busy||!pages.length} style={pBtn}>Read</button>
+                <button onClick={()=>pagesFileRef.current?.click()} disabled={busy} style={sBtn}>{W.choosePages}</button>
+                <button onClick={()=>readLinks("pages")} disabled={busy||!pages.length} style={pBtn}>{W.read}</button>
               </div>
               {<ReadStatus ui={ui} busy={busy} prog={prog} linkNote={linkNote} linkFails={linkFails} failAs={f=>{ const pg=pages.find(p=>p.url===f.url); return (pg&&(pg.title||pg.name))||f.url; }}/>}
             </div>}
@@ -143,10 +143,10 @@ function ImportLinks({ui,importMode,busy,linkText,typeLinkText,clearLinkText,rea
                 <textarea value={linkText} onChange={e=>typeLinkText(e.target.value)} rows={8} disabled={busy}
                   style={{width:"100%",boxSizing:"border-box",fontSize:12.5,fontFamily:"inherit",padding:"8px 52px 8px 10px",border:"1px solid "+C.rule,borderRadius:4,background:C.card,color:C.ink,resize:"vertical",display:"block"}}/>
                 {linkText.trim()&&<button onClick={clearLinkText} disabled={busy}
-                  style={{position:"absolute",top:6,right:8,background:"none",border:"none",color:C.soft,fontSize:11,textDecoration:"underline",cursor:"pointer",padding:0}}>Clear</button>}
+                  style={{position:"absolute",top:6,right:8,background:"none",border:"none",color:C.soft,fontSize:11,textDecoration:"underline",cursor:"pointer",padding:0}}>{W.clear}</button>}
               </div>
               <div style={{display:"flex",justifyContent:"flex-end",marginTop:8}}>
-                <button onClick={()=>readLinks("links")} disabled={busy} style={pBtn}>Read</button>
+                <button onClick={()=>readLinks("links")} disabled={busy} style={pBtn}>{W.read}</button>
               </div>
               {<ReadStatus ui={ui} busy={busy} prog={prog} linkNote={linkNote} linkFails={linkFails} failAs={f=><a href={f.url} target="_blank" rel="noopener noreferrer" style={{color:TH.urgent.ink}}>{f.url}</a>}/>}
             </div>}

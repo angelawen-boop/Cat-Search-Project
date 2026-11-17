@@ -12,22 +12,22 @@ function ProposalCard({ui,p,i,decisions,setCardMode,setChoice,setFieldDec}){
 
 
         {p.type==="add"&&<div style={{fontSize:11.5,color:C.ink,lineHeight:1.5}}>
-          <div style={{fontWeight:700,marginBottom:3}}>{"New show \u2014 not in your ledger yet."}</div>
-          {infoRow("Dates",dateRange(p.cand))}
-          {infoRow("Description",p.cand.summary)}
-          {infoRow("Link",p.cand.exUrl&&<a href={p.cand.exUrl} target="_blank" rel="noopener noreferrer" style={{color:C.ink}}>{p.cand.exUrl}</a>)}
-          {infoRow("Period",periodText(p.cand))}
+          <div style={{fontWeight:700,marginBottom:3}}>{W.newShow}</div>
+          {infoRow(W.dates,dateRange(p.cand))}
+          {infoRow(W.description,p.cand.summary)}
+          {infoRow(W.linkBox,p.cand.exUrl&&<a href={p.cand.exUrl} target="_blank" rel="noopener noreferrer" style={{color:C.ink}}>{p.cand.exUrl}</a>)}
+          {infoRow(W.sortPeriod,periodText(p.cand))}
         </div>}
 
         {(p.type==="fill"||p.type==="change")&&<div style={{fontSize:11.5,color:C.ink}}>
-          <div style={{fontWeight:700,marginBottom:5}}>{"Existing entry \u2014 decide each change:"}</div>
+          <div style={{fontWeight:700,marginBottom:5}}>{W.existingEntry}</div>
           {dec.mode==="addnew"
-            ? <div style={{fontStyle:"italic",color:C.action}}>Will be added as a separate new entry instead of changing the existing one.</div>
+            ? <div style={{fontStyle:"italic",color:C.action}}>{W.willBeAddedSeparately}</div>
             : p.upd.map((u,j)=>{const fd=(dec.fields||{})[j];return(
                 <div key={j} style={{display:"flex",gap:8,alignItems:"flex-start",marginBottom:5}}>
-                  <div style={{flex:1,minWidth:0,lineHeight:1.4,overflowWrap:"anywhere"}}><b style={{color:C.ink}}>{u.label}:</b> <span style={{color:C.soft}}>{u.kind==="fill"?("add \u201c"+u.newVal+"\u201d"):("\u201c"+u.oldVal+"\u201d \u2192 \u201c"+u.newVal+"\u201d")}</span></div>
-                  <button onClick={()=>setFieldDec(i,j,"accept")} style={decBtn(fd==="accept",C.okEdge)}>{fd==="accept"?"\u2713 ":""}Accept edit</button>
-                  <button onClick={()=>setFieldDec(i,j,"reject")} style={decBtn(fd==="reject",C.rejectInk)}>Reject</button>
+                  <div style={{flex:1,minWidth:0,lineHeight:1.4,overflowWrap:"anywhere"}}><b style={{color:C.ink}}>{u.label}:</b> <span style={{color:C.soft}}>{u.kind==="fill"?say(W.fillValue,{value:u.newVal}):("\u201c"+u.oldVal+"\u201d \u2192 \u201c"+u.newVal+"\u201d")}</span></div>
+                  <button onClick={()=>setFieldDec(i,j,"accept")} style={decBtn(fd==="accept",C.okEdge)}>{fd==="accept"?"\u2713 ":""}{W.acceptEdit}</button>
+                  <button onClick={()=>setFieldDec(i,j,"reject")} style={decBtn(fd==="reject",C.rejectInk)}>{W.reject}</button>
                 </div>
               );})}
         </div>}
@@ -35,7 +35,7 @@ function ProposalCard({ui,p,i,decisions,setCardMode,setChoice,setFieldDec}){
         {/* The file disagreed with itself: both values shown, the fuller one ticked as
             a starting point, one tap switches (her decision). */}
         {p.choices&&p.choices.length>0&&<div style={{marginTop:7,paddingTop:6,borderTop:"1px dotted "+C.rule}}>
-          <div style={{fontSize:10.5,color:C.soft,lineHeight:1.5,marginBottom:5}}>The sweep file gave two different answers here. The longer one is picked for you {"\u2014"} change it if it{"\u2019"}s wrong.</div>
+          <div style={{fontSize:10.5,color:C.soft,lineHeight:1.5,marginBottom:5}}>{W.twoAnswers}</div>
           {p.choices.map((ch,j)=>(
             <div key={j} style={{marginBottom:6}}>
               <div style={{fontSize:11,fontWeight:700,color:C.ink,marginBottom:3}}>{ch.label}</div>
@@ -45,7 +45,7 @@ function ProposalCard({ui,p,i,decisions,setCardMode,setChoice,setFieldDec}){
                 return(
                   <button key={k} onClick={()=>setChoice(i,ch.field,opt)}
                     style={{...decBtn(chosen,C.okEdge),display:"block",width:"100%",textAlign:"left",marginBottom:3,whiteSpace:"normal",lineHeight:1.4}}>
-                    {chosen?"\u2713 ":"\u00a0\u00a0"}{opt&&String(opt).trim()?opt:"(blank)"}
+                    {chosen?"\u2713 ":"\u00a0\u00a0"}{opt&&String(opt).trim()?opt:W.blank}
                   </button>
                 );
               })}
@@ -60,16 +60,16 @@ function ProposalCard({ui,p,i,decisions,setCardMode,setChoice,setFieldDec}){
             duplicate, a dead link) — not for a show she is not interested in, which is
             accepted and then dismissed. */}
         {p.type==="add"&&<div style={{marginTop:8,display:"flex",gap:6,flexWrap:"wrap"}}>
-          <button onClick={()=>setCardMode(i,"accept")} style={decBtn(dec.mode==="accept",C.okEdge)}>{dec.mode==="accept"?"\u2713 ":""}Add new entry</button>
-          <button onClick={()=>setCardMode(i,"reject")} style={decBtn(dec.mode==="reject",C.rejectInk)}>{dec.mode==="reject"?"\u2713 ":""}Reject</button>
-          <button onClick={()=>setCardMode(i,"never")} style={decBtn(dec.mode==="never",C.neverInk)}>{dec.mode==="never"?"\u2713 ":""}{"Never add this"}</button>
+          <button onClick={()=>setCardMode(i,"accept")} style={decBtn(dec.mode==="accept",C.okEdge)}>{dec.mode==="accept"?"\u2713 ":""}{W.addNewEntry}</button>
+          <button onClick={()=>setCardMode(i,"reject")} style={decBtn(dec.mode==="reject",C.rejectInk)}>{dec.mode==="reject"?"\u2713 ":""}{W.reject}</button>
+          <button onClick={()=>setCardMode(i,"never")} style={decBtn(dec.mode==="never",C.neverInk)}>{dec.mode==="never"?"\u2713 ":""}{W.neverAddThis}</button>
         </div>}
         {p.type==="add"&&dec.mode==="never"&&<div style={{marginTop:5,fontSize:10.5,color:C.soft,lineHeight:1.45}}>
-          {"Won\u2019t be offered again on future sweeps."}
+          {W.wontBeOffered}
         </div>}
 
         {p.type==="change"&&<div style={{marginTop:8}}>
-          <button onClick={()=>setCardMode(i,"addnew")} style={decBtn(dec.mode==="addnew","#4A5A6B")}>{dec.mode==="addnew"?"\u2713 ":""}{"No \u2014 this is a different show, add as separate entry"}</button>
+          <button onClick={()=>setCardMode(i,"addnew")} style={decBtn(dec.mode==="addnew","#4A5A6B")}>{dec.mode==="addnew"?"\u2713 ":""}{W.differentShow}</button>
         </div>}
 
       </div>
@@ -82,7 +82,7 @@ function ReviewHeading({ui,proposals,tally}){
   const{C}=ui;
   return(
             <div style={{padding:"14px 18px",borderBottom:"1px solid "+C.rule}}>
-              <div style={{fontFamily:"'Fraunces',Georgia,serif",fontSize:20,fontWeight:500,color:C.ink}}>{proposals.length} proposed change{proposals.length===1?"":"s"} found</div>
+              <div style={{fontFamily:"'Fraunces',Georgia,serif",fontSize:20,fontWeight:500,color:C.ink}}>{say(W.proposedChanges,{n:proposals.length,s:proposals.length===1?"":"s"})}</div>
               {/* The counts, her wording: two sentences, each ending in the number the
                   next starts from (docs/app.md §3). Every term stays — drop one and the
                   arithmetic stops closing. */}
@@ -92,18 +92,12 @@ function ReviewHeading({ui,proposals,tally}){
                 return (
                 <div style={{fontSize:11.5,color:C.soft,marginTop:6,lineHeight:1.6}}>
                   <div>
-                    From {n(tally.fileRows)} row{tally.fileRows===1?"":"s"} in the file
-                    {" \u2014 "}{n(tally.markers)} marker row{tally.markers===1?"":"s"}
-                    {tally.blocked>0&&<>{", "}{n(tally.blocked)} you{"\u2019"}d said never to add</>}
-                    {", "}{n(tally.folded)} duplicate row{tally.folded===1?"":"s"} reconciled/de-duped
-                    {", "}{n(tally.silent)} already matching ledger
-                    {" = "}{n(cards)} entries considered for import
+                    <Say text={W.tallyRows} gaps={{rows:n(tally.fileRows),s1:tally.fileRows===1?"":"s",markers:n(tally.markers),s2:tally.markers===1?"":"s",
+                      blocked:tally.blocked>0&&<Say text={W.tallyBlocked} gaps={{n:n(tally.blocked)}}/>,
+                      folded:n(tally.folded),s3:tally.folded===1?"":"s",silent:n(tally.silent),cards:n(cards)}}/>
                   </div>
                   <div style={{marginTop:2}}>
-                    From {n(cards)} entr{cards===1?"y":"ies"}
-                    {" \u2014 "}{n(tally.fill)} fill a gap
-                    {", "}{n(tally.change)} edit existing data
-                    {", "}{n(tally.add)} new exhibition{tally.add===1?"":"s"}
+                    <Say text={W.tallyCards} gaps={{cards:n(cards),y:cards===1?"y":"ies",fill:n(tally.fill),change:n(tally.change),add:n(tally.add),s:tally.add===1?"":"s"}}/>
                   </div>
                 </div>
                 );
@@ -191,16 +185,16 @@ function ReviewBody({ui,proposals,coverage,decisions,setFieldDec,setCardMode,set
                 return(<div style={{overflow:"auto",padding:"12px 18px",flex:1}}>
                   {oddCount>0&&(
                     <div style={{marginBottom:16,paddingBottom:12,borderBottom:"2px solid "+C.rule}}>
-                      <div style={{fontFamily:"'Fraunces',Georgia,serif",fontSize:15,color:C.ink,marginBottom:8}}>Odd cases {"\u00b7"} {oddCount}</div>
-                      {coverage.length>0&&band("markers","1. Marker rows",undefined,coverage.length,false,markerBlocks)}
-                      {mergedOnly.length>0&&band("merged","2. Combined rows \u00b7 identical rows were de-duped or reconciled",undefined,mergedOnly.length,false,byVenueBlocks(mergedOnly))}
-                      {mergedConf.length>0&&band("mergedconf","3. Combined rows \u00b7 identical rows produced conflicts \u2014 yours to choose",C.accent,mergedConf.length,true,byVenueBlocks(mergedConf))}
-                      {noLink.length>0&&band("nolink","4. No exhibition url \u00b7 link goes to venue\u2019s listing page",undefined,noLink.length,true,byVenueBlocks(noLink))}
+                      <div style={{fontFamily:"'Fraunces',Georgia,serif",fontSize:15,color:C.ink,marginBottom:8}}>{W.oddCases}{"\u00b7"} {oddCount}</div>
+                      {coverage.length>0&&band("markers",W.bandMarkers,undefined,coverage.length,false,markerBlocks)}
+                      {mergedOnly.length>0&&band("merged",W.bandMerged,undefined,mergedOnly.length,false,byVenueBlocks(mergedOnly))}
+                      {mergedConf.length>0&&band("mergedconf",W.bandMergedConflicts,C.accent,mergedConf.length,true,byVenueBlocks(mergedConf))}
+                      {noLink.length>0&&band("nolink",W.bandNoLink,undefined,noLink.length,true,byVenueBlocks(noLink))}
                     </div>
                   )}
                   {notForYou.length>0&&(
                     <div style={{marginBottom:16,paddingBottom:12,borderBottom:"2px solid "+C.rule}}>
-                      <div style={{fontFamily:"'Fraunces',Georgia,serif",fontSize:15,color:C.ink,marginBottom:8}}>Probably not for you {"\u00b7"} {notForYou.length}</div>
+                      <div style={{fontFamily:"'Fraunces',Georgia,serif",fontSize:15,color:C.ink,marginBottom:8}}>{W.notForYou}{"\u00b7"} {notForYou.length}</div>
                       {byVenueBlocks(notForYou)}
                     </div>
                   )}
@@ -212,14 +206,14 @@ function ReviewBody({ui,proposals,coverage,decisions,setFieldDec,setCardMode,set
                     return(
                     <div style={{marginBottom:12,display:"flex",alignItems:"flex-end",gap:12,flexWrap:"wrap"}}>
                       <div style={{flex:"1 1 260px",minWidth:0}}>
-                        <div style={{fontFamily:"'Fraunces',Georgia,serif",fontSize:15,color:C.ink,marginBottom:2}}>Normal cases {"\u00b7"} {ordinary.length}</div>
-                        <div style={{fontSize:11.5,color:C.soft,lineHeight:1.55}}>Nothing unusual about these {"\u2014"} one row in the file, nothing combined, nothing disagreeing.</div>
+                        <div style={{fontFamily:"'Fraunces',Georgia,serif",fontSize:15,color:C.ink,marginBottom:2}}>{W.normalCases}{"\u00b7"} {ordinary.length}</div>
+                        <div style={{fontSize:11.5,color:C.soft,lineHeight:1.55}}>{W.nothingUnusual}</div>
                       </div>
                       <button onClick={()=>{
                           const next={};
                           for(const id of venuesHere) next[id]=!anyOpen;
                           setVenuesOpen(next);
-                        }} style={sBtn}>{anyOpen?"Collapse all venues":"Expand all venues"}</button>
+                        }} style={sBtn}>{anyOpen?W.collapseAllVenues:W.expandAllVenues}</button>
                     </div>
                   );})()}
                   {/* Order inside a venue (her decision): fills, then edits, then new;
@@ -247,7 +241,7 @@ function ReviewBody({ui,proposals,coverage,decisions,setFieldDec,setCardMode,set
                             closed venue still declares what it holds; a "0" is clutter
                             (her decision). */}
                         {(()=>{const u=grp.filter(({p,i})=>isUndecided(p,i)).length;
-                          return u>0?<span style={{fontSize:11,fontWeight:600,color:C.soft}}>{"\u00b7 "+u+" to decide"}</span>:null;})()}
+                          return u>0?<span style={{fontSize:11,fontWeight:600,color:C.soft}}>{say(W.venueToDecide,{n:u})}</span>:null;})()}
                       </button>
                       {vOpen&&grp.map(({p,i})=><ProposalCard key={i} ui={ui} p={p} i={i} decisions={decisions} setCardMode={setCardMode} setChoice={setChoice} setFieldDec={setFieldDec}/>)}
                     </div>
@@ -262,11 +256,11 @@ function ReviewButtons({ui,proposals,decisions,cancelRefresh,askPartialApply,pro
   const{acceptedCount,undecidedCount,quarantinedCount,rejectedCount}=countDecisions(proposals,decisions);
   return(
             <div style={{padding:"12px 18px",borderTop:"1px solid "+C.rule,display:"flex",gap:10,alignItems:"center",flexWrap:"wrap"}}>
-              <button onClick={cancelRefresh} style={sBtn}>Cancel import</button>
+              <button onClick={cancelRefresh} style={sBtn}>{W.cancelImport}</button>
               {/* Rejected and quarantined are named only when there is one (her ask);
                   what is named adds up to what is decided. */}
               <span style={{fontSize:11.5,color:C.soft,marginLeft:"auto"}}>
-                {(rejectedCount?rejectedCount+" rejected, ":"")+(quarantinedCount?quarantinedCount+" quarantined, ":"")+acceptedCount+" to apply"}</span>
+                {(rejectedCount?say(W.nRejected,{n:rejectedCount}):"")+(quarantinedCount?say(W.nQuarantined,{n:quarantinedCount}):"")+say(W.nToApply,{n:acceptedCount})}</span>
               {/* No separate "N to decide" link here (her decision: clutter) — the venue
                   headings say where the cards are. */}
               {/* Every card must be decided before the ledger moves — a hard block, her
@@ -286,11 +280,11 @@ function ReviewButtons({ui,proposals,decisions,cancelRefresh,askPartialApply,pro
               {/* "Next" when a new venue's shop is still to confirm (her design): the
                   ledger moves only after the shop screen. */}
               <button onClick={()=>proceedRefresh(false)} disabled={undecidedCount>0}
-                title={undecidedCount>0?"Decide every card first — "+undecidedCount+" still undecided.":""}
+                title={undecidedCount>0?say(W.decideEveryCard,{n:undecidedCount}):""}
                 style={{...pBtn,...(undecidedCount>0?{background:C.muted,cursor:"not-allowed",opacity:1}:{})}}>
                 {undecidedCount>0
-                  ? undecidedCount+" still to decide"
-                  : venuesToConfirm().length?"Next":"Go ahead and update the ledger"}</button>
+                  ? say(W.stillToDecide,{n:undecidedCount})
+                  : venuesToConfirm().length?W.next:W.goAhead}</button>
             </div>
   );
 }

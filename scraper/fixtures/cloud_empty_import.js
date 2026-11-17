@@ -10,6 +10,7 @@
  *   node scraper/fixtures/cloud_empty_import.js
  */
 'use strict';
+const { WORDS, wordsRe } = require('./words.js');   // the app's sentences, from its words list
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
@@ -48,7 +49,8 @@ const hers = JSON.parse(HERS_TEXT);
 // The storage code, lifted the same way cloud_ledger.js lifts it, to READ
 // what the page wrote.
 const src = fs.readFileSync(path.join(ROOT, 'Cat_Watch.jsx'), 'utf8');
-const sec = src.slice(src.indexOf('// ── THE CLOUD LEDGER — storage'), src.indexOf('// ── END OF THE CLOUD LEDGER'));
+const sec = require('./words.js').wordsSource(src)   // the section, with the words list it names
+  + src.slice(src.indexOf('// ── THE CLOUD LEDGER — storage'), src.indexOf('// ── END OF THE CLOUD LEDGER'));
 const C = onStore(useCap => new Function('useCap', sec + '\nreturn {cloudReadLive,cloudSaveLive,cloudListSnapshots};')(useCap),
   ['cloudReadLive', 'cloudSaveLive', 'cloudListSnapshots']);
 
@@ -101,55 +103,55 @@ const until = async (fn, ms = 8000) => { const t = Date.now(); while (Date.now()
   const two = JSON.stringify({ rows: hers.rows.slice(0, 2), ignored: hers.ignored, lastRun: null });
 
   try {
-    await until(() => /Open it/.test(text()));
+    await until(() => wordsRe(WORDS.openIt).test(text()));
 
     // 1. Empty page: Import offers only the ways to open her ledger.
-    click(button('Import'));
-    await until(() => /Your ledger needs to be opened first\./.test(text()));
-    ok(/Your ledger needs to be opened first\./.test(text()), 'EI-001: Import on an empty page says "Your ledger needs to be opened first."');
-    ok(button('Open last cloud save') && button('Load') && !button('CSV') && !button('Links'),
+    click(button(WORDS.importButton));
+    await until(() => wordsRe(WORDS.ledgerFirst).test(text()));
+    ok(wordsRe(WORDS.ledgerFirst).test(text()), 'EI-001: Import on an empty page says "Your ledger needs to be opened first."');
+    ok(button(WORDS.openLastCloudSave) && button(WORDS.load) && !button(WORDS.tabCsv) && !button(WORDS.tabLinks),
       'EI-001b: it offers "Open last cloud save" and Load, and no CSV or Links');
 
     // 2. Open last cloud save: her ledger is on screen, and Import works.
-    click(button('Open last cloud save'));
+    click(button(WORDS.openLastCloudSave));
     ok(await until(() => new RegExp('Opened the cloud copy saved .* \\u2014 ' + N + ' exhibitions').test(text())),
       `EI-002: "Open last cloud save" opens her ${N}-row cloud copy`);
     ok(!/Your ledger needs to be opened first/.test(text()), 'EI-002b: and the message goes');
-    click(button('Import'));
-    ok(await until(() => button('CSV') && button('Links')), 'EI-002c: with her ledger open, Import offers CSV and Links');
-    click(button('Cancel'));
+    click(button(WORDS.importButton));
+    ok(await until(() => button(WORDS.tabCsv) && button(WORDS.tabLinks)), 'EI-002c: with her ledger open, Import offers CSV and Links');
+    click(button(WORDS.cancel));
 
     // 3. A 2-row file loaded over it; Save asks before writing it.
     await loadText(two);
     ok(await until(async () => (await liveRows()) === 2), 'EI-003: a 2-row file loaded becomes the cloud copy (its safety copy taken first)');
     const snapsBefore = snapCount();
-    click(button('Save'));
-    await until(() => button('Save now'));
-    click(button('Save now'));
+    click(button(WORDS.save));
+    await until(() => button(WORDS.saveNow));
+    click(button(WORDS.saveNow));
     const asked = new RegExp('You\\u2019re saving 2 exhibitions; your last cloud save has ' + N + '\\. Save anyway\\?');
     ok(await until(() => asked.test(text())), `EI-003b: Save asks "You're saving 2 exhibitions; your last cloud save has ${N}. Save anyway?"`);
     ok(saved.length === 0 && snapCount() === snapsBefore, 'EI-003c: nothing is written while it asks');
 
     // 4. Cancel: nothing written.
-    { const c = buttons('Cancel'); click(c[c.length - 1]); }
+    { const c = buttons(WORDS.cancel); click(c[c.length - 1]); }
     await settle(200);
     ok(!asked.test(text()) && saved.length === 0 && snapCount() === snapsBefore, 'EI-004: Cancel writes nothing');
 
     // 5. Save anyway: written as asked.
-    click(button('Save now'));
-    await until(() => button('Save anyway'));
-    click(button('Save anyway'));
+    click(button(WORDS.saveNow));
+    await until(() => button(WORDS.saveAnyway));
+    click(button(WORDS.saveAnyway));
     ok(await until(() => saved.length === 1 && snapCount() === snapsBefore + 1), 'EI-005: "Save anyway" saves the file and its cloud copy');
     ok(JSON.parse(saved[0].data).rows.length === 2, 'EI-005b: holding the 2 rows on screen');
 
     // 6. Her full ledger again: same size as the cloud, so Save asks nothing.
     await loadText(HERS_TEXT);
     await until(async () => (await liveRows()) === N);
-    if (!button('Save now')) click(button('Save'));
-    await until(() => button('Save now'));
-    click(button('Save now'));
+    if (!button(WORDS.saveNow)) click(button(WORDS.save));
+    await until(() => button(WORDS.saveNow));
+    click(button(WORDS.saveNow));
     ok(await until(() => saved.length === 2), 'EI-006: a Save no smaller than the cloud asks nothing');
-    ok(!/Save a smaller ledger\?/.test(text()), 'EI-006b: no question on screen');
+    ok(!wordsRe(WORDS.saveSmaller).test(text()), 'EI-006b: no question on screen');
 
     const real = shouted.filter(x => !/not wrapped in act|testing environment is not configured/.test(x));
     ok(real.length === 0, 'EI-007: nothing written to the console as an error throughout', real.slice(0, 2).join(' | '));

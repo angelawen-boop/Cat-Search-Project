@@ -8,6 +8,7 @@
  *   node scraper/fixtures/app_decisions.js
  */
 'use strict';
+const { WORDS } = require('./words.js');   // the app's sentences, from its words list
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
@@ -128,7 +129,7 @@ async function mount({ save, db = true, starMetrics } = {}) {
       await act(async () => { input.dispatchEvent(new win.Event('change', { bubbles: true })); });
       for (let i = 0; i < 5; i++) await settle();   // FileReader answers a few ticks later
     },
-    confirmShowing: () => page.buttons('Continue').length > 0 && page.buttons('Cancel').length > 0,
+    confirmShowing: () => page.buttons(WORDS.continue).length > 0 && page.buttons(WORDS.cancel).length > 0,
     // The row holding Load/Import and Save; the theme switch sits in it on both branches.
     buttonRow: () => doc.querySelector('button[title^="Switch to"]').parentElement,
 
@@ -136,18 +137,18 @@ async function mount({ save, db = true, starMetrics } = {}) {
     // branch: "Load", "Save" → "Save now", and the banner off (her decision), so
     // unsaved work shows only in Reset to Seed's wording while the cloud copy is
     // not saving.
-    cloud: () => page.buttons('Load').length > 0,
+    cloud: () => page.buttons(WORDS.load).length > 0,
     async save() {
       if (!page.cloud()) return page.press('Export / Save');
-      await page.press('Save');
-      await page.press('Save now');
+      await page.press(WORDS.save);
+      await page.press(WORDS.saveNow);
     },
     async unsaved() {
       if (!page.cloud()) return /UNSAVED CHANGES/.test(page.text());
-      await page.press('Reset to Seed');
+      await page.press(WORDS.resetToSeed);
       if (!page.confirmShowing()) throw new Error('Reset to Seed did not ask (AD-001), so unsaved work cannot be read here');
       const said = /changes since your last Save/.test(page.text());
-      await page.press('Cancel');
+      await page.press(WORDS.cancel);
       return said;
     },
     // The card whose heading is this title.
@@ -176,27 +177,27 @@ async function resetToSeedAsksFirst() {
   const NAME = 'AD-001 Reset to Seed always asks first while a ledger is open';
   const page = await mount();
   try {
-    await page.press('Reset to Seed');
+    await page.press(WORDS.resetToSeed);
     check(NAME + ': with no ledger open it loads straight away',
       !page.confirmShowing() && /Starter set loaded/.test(page.text()));
 
     await page.loadFile(LEDGER);
     check(NAME + ': (setup) her two-show ledger is open', !!page.card(ALPHA) && !!page.card(BETA));
 
-    await page.press('Reset to Seed');
+    await page.press(WORDS.resetToSeed);
     check(NAME + ': asks with no unsaved changes', page.confirmShowing());
     check(NAME + ': nothing replaced while it asks (no unsaved changes)',
       !!page.card(ALPHA) && !/Starter set loaded/.test(page.text()));
-    await page.press('Cancel');
+    await page.press(WORDS.cancel);
     check(NAME + ': Cancel keeps her ledger', !!page.card(ALPHA) && !page.confirmShowing());
 
     await makeAnEdit(page, ALPHA);
     check(NAME + ': (setup) the edit left unsaved changes', await page.unsaved());
-    await page.press('Reset to Seed');
+    await page.press(WORDS.resetToSeed);
     check(NAME + ': asks with unsaved changes', page.confirmShowing());
     check(NAME + ': nothing replaced while it asks (unsaved changes)', !!page.card(ALPHA));
 
-    await page.press('Continue');
+    await page.press(WORDS.continue);
     check(NAME + ': replaced only once she confirms',
       !page.card(ALPHA) && /Starter set loaded/.test(page.text()));
   } finally { await page.close(); }
@@ -242,12 +243,12 @@ async function buyNextDot() {
 
     await page.click(dot());
     const fill = () => dot()?.querySelector('circle').getAttribute('fill');
-    check(NAME + ': (setup) the dot turns on', page.buttons('Not buying next').length === 1 && fill() !== 'none');
+    check(NAME + ': (setup) the dot turns on', page.buttons(WORDS.notBuyingNext).length === 1 && fill() !== 'none');
 
     const no = [...page.card(ALPHA).querySelectorAll('button')].find(b => b.textContent.trim() === 'No');
     await page.click(no);
     check(NAME + ': gone once the card leaves Yes', !dot());
-    const yes = [...page.card(ALPHA).querySelectorAll('button')].find(b => b.textContent.trim() === 'Yes');
+    const yes = [...page.card(ALPHA).querySelectorAll('button')].find(b => b.textContent.trim() === WORDS.yes);
     await page.click(yes);
     check(NAME + ': leaving Yes cleared it — back on Yes it is off', !!dot() && fill() === 'none');
   } finally { await page.close(); }
@@ -280,13 +281,13 @@ async function dismissToast() {
   try {
     await page.loadFile(LEDGER);
     await page.click(page.card(BETA).querySelector('button[title="Not interested"]'));
-    const undo = page.buttons('Undo')[0];
+    const undo = page.buttons(WORDS.undo)[0];
     const words = undo && undo.previousElementSibling;
-    check(NAME, !!undo && undo.tagName === 'BUTTON' && words && words.textContent.trim() === 'Dismissed',
+    check(NAME, !!undo && undo.tagName === 'BUTTON' && words && words.textContent.trim() === WORDS.chipDismissed,
       undo ? 'beside Undo: "' + (words ? words.textContent.trim() : '') + '"' : 'no Undo button');
     if (undo) {
       await page.click(undo);
-      check(NAME + ': Undo brings the card back', !!page.card(BETA) && !page.buttons('Undo').length);
+      check(NAME + ': Undo brings the card back', !!page.card(BETA) && !page.buttons(WORDS.undo).length);
     }
   } finally { await page.close(); }
 }
@@ -369,9 +370,9 @@ async function versionCards() {
     card = await openCard(page, old.title);
     check(NAME + ': a card saved with nothing picked — the blocks and only the Museum shop button, no line asking her to pick',
       versionLinesOn(card).every(l => l[0] === '○') && !card.textContent.includes('Pick a version')
-      && JSON.stringify(buttonsOn(card)) === JSON.stringify(['Museum shop']), JSON.stringify(buttonsOn(card)));
+      && JSON.stringify(buttonsOn(card)) === JSON.stringify([WORDS.museumShop]), JSON.stringify(buttonsOn(card)));
     check(NAME + ': a card saved with nothing picked — the Museum shop button searches the exhibition’s title, and no status line shows',
-      [...card.querySelectorAll('a')].some(a => a.textContent.startsWith('Museum shop') && a.href.endsWith(encodeURIComponent(old.title)))
+      [...card.querySelectorAll('a')].some(a => a.textContent.startsWith(WORDS.museumShop) && a.href.endsWith(encodeURIComponent(old.title)))
       && !/Not in the museum shop|In the museum shop/.test(card.textContent));
     const H = hrL.editions;
     card = await openCard(page, hrL.title);
@@ -407,7 +408,7 @@ async function oneVersionUnchanged() {
       const a = await openCard(page, r.title), b = await openCard(page, strip(r).title);
       const html = el => el.innerHTML.split(encodeURIComponent(strip(r).title)).join(encodeURIComponent(r.title)).split(strip(r).title).join(r.title).split(strip(r).id).join(r.id);
       check(NAME + ': ' + r.title.replace(/^Case \d+ /, '') + ' — the same card as a row with no versions, no markers',
-        !!a && !!b && html(a) === html(b) && !a.querySelector('[aria-pressed]') && a.textContent.includes('ISBN ' + r.isbn13.slice(0, 3) + '-' + r.isbn13.slice(3)),
+        !!a && !!b && html(a) === html(b) && !a.querySelector('[aria-pressed]') && a.textContent.includes(WORDS.isbnLabel + r.isbn13.slice(0, 3) + '-' + r.isbn13.slice(3)),
         a && b ? (() => { const x = html(a), y = html(b); let k = 0; while (k < x.length && x[k] === y[k]) k++; return x.slice(k - 80, k + 80) + ' ≠ ' + y.slice(k - 80, k + 80); })() : 'no card');
     }
   } finally { await page.close(); }
@@ -502,7 +503,7 @@ async function buyNextOrder() {
     await page.loadFile(L);
     for (const n of ['One', 'Two', 'Three'])
       await page.click(page.card('Fixture Buy ' + n).querySelector('button[title="Buy next"]'));
-    const chip = [...page.doc.querySelectorAll('button')].find(b => b.textContent.trim() === 'Buy next' && !b.getAttribute('title'));
+    const chip = [...page.doc.querySelectorAll('button')].find(b => b.textContent.trim() === WORDS.buyNext && !b.getAttribute('title'));
     await page.click(chip);
     const order = () => [...page.doc.querySelectorAll('[data-buynext] article h3')].map(h => h.textContent.replace(/^.*Fixture Buy (\w+).*$/s, '$1')).join(' ');
     check(NAME + ': a newly marked card goes to the top', order() === 'Three Two One', order());
@@ -534,7 +535,7 @@ async function buyNextOrder() {
     await act(async () => { touch('touchmove', page.doc, 140); touch('touchend', page.doc, 140); });
     await act(async () => { await new Promise(r => setTimeout(r, 5)); });
     check(NAME + ': on touch, hold then drag moves it, with a buzz', order() === 'One Three Two' && buzz === 1, order() + ', buzz ' + buzz);
-    await page.press('Recently edited');
+    await page.press(WORDS.recentlyEdited);
     check(NAME + ': the sort chips do not change it', order() === 'One Three Two', order());
     const no = [...page.card('Fixture Buy Two').querySelectorAll('button')].find(b => b.textContent.trim() === 'No');
     await page.click(no);

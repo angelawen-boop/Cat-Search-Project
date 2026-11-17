@@ -39,7 +39,7 @@ async function cloudLetGo(){
 //@piece STORE_UNREACHED_NOT_SAVING
 
 // The sentence for a viewer with no store, said where it means no cloud copy is being written.
-const STORE_UNREACHED_NOT_SAVING=STORE_UNREACHED.replace(/\.$/,"")+", so nothing is being saved to the cloud copy.";
+const STORE_UNREACHED_NOT_SAVING=say(W.storeUnreachedNotSaving,{why:STORE_UNREACHED.replace(/\.$/,"")});
 //@piece cloudOpenRead
 
 // The cloud copy, read on open. Hands back `live` for the readout ({rec,data} / {rec:null} /
@@ -107,30 +107,30 @@ async function cloudCheckBeforeReplace(tr,incoming,reason,noted){
   if(!await storeReached())return {check:null,said:false};
   let live;
   try{ live=await cloudReadLive(); }
-  catch(e){ const check="The cloud copy couldn’t be read ("+cloudTrouble(e,"read")+"). It was left in the store untouched; this ledger is saved as the new cloud copy."; tr.prev=null; tr.fp=null; return {check,said:true}; }
-  if(!live.rec)return {check:"No cloud copy existed yet — this ledger is now the first one.",said:true};
+  catch(e){ const check=say(W.cloudCopyUnreadOnLoad,{why:cloudTrouble(e,"read")}); tr.prev=null; tr.fp=null; return {check,said:true}; }
+  if(!live.rec)return {check:W.firstCloudCopy,said:true};
   const data=JSON.parse(live.text);
   tr.prev=live.rec; tr.fp=ledgerFingerprintText(data);
   const when=localReadable(live.rec.savedAt);
   const diff=ledgerDifference(data,incoming);
-  if(!diff)return {check:"✓ The file you just loaded is identical to the last cloud save ("+when+"). No snapshot of the last cloud state was needed before loading your file.",said:true};
+  if(!diff)return {check:say(W.loadedIdentical,{when}),said:true};
   // Her format: one count of differences, the cloud save's time, and what was done;
   // the breakdown goes to the diagnostic.
   const bits=[];
-  if(diff.onlyA)bits.push(diff.onlyA+" exhibition"+(diff.onlyA===1?"":"s")+" only in the cloud copy");
-  if(diff.onlyB)bits.push(diff.onlyB+" only in "+(reason==="reset"?"the starter set":"this file"));
-  if(diff.changed)bits.push(diff.changed+" different in some field");
-  if(diff.quarantineDiffers)bits.push(diff.qDiff+" quarantine entr"+(diff.qDiff===1?"y":"ies")+" different ("+diff.qa+" in the cloud copy, "+diff.qb+" here)");
+  if(diff.onlyA)bits.push(say(W.diffOnlyCloud,{n:diff.onlyA,s:diff.onlyA===1?"":"s"}));
+  if(diff.onlyB)bits.push(say(W.diffOnlyIn,{n:diff.onlyB,where:reason==="reset"?W.theStarterSet:W.thisFile}));
+  if(diff.changed)bits.push(say(W.diffChanged,{n:diff.changed}));
+  if(diff.quarantineDiffers)bits.push(say(W.diffQuarantine,{n:diff.qDiff,y:diff.qDiff===1?"y":"ies",cloud:diff.qa,here:diff.qb}));
   // Never "0 differences" beside a ledger that does differ.
   const n=Math.max(1,diff.onlyA+diff.onlyB+diff.changed+(diff.quarantineDiffers?diff.qDiff:0));
-  const what=reason==="reset"?"The starter set":"The file you just loaded";
-  const head=what+" differs from the last cloud save ("+when+"): "+n+" difference"+(n===1?"":"s")+".";
-  noted("Compared with the last cloud save ("+when+"): "+bits.join(", ")+".");
+  const what=reason==="reset"?W.theStarterSetCap:W.theFileLoaded;
+  const head=say(W.differsFromCloud,{what,when,n,s:n===1?"":"s"});
+  noted(say(W.comparedWithCloud,{when,bits:bits.join(", ")}));
   try{
-    await cloudTakeSnapshot(live.text,{label:"Safety snapshot before "+(reason==="reset"?"Reset":"Load"),kind:"safety",rows:data.rows.length,quarantined:(data.ignored||[]).length});
-    return {check:head+" A snapshot of the last cloud state was taken before loading "+(reason==="reset"?"it":"your file")+".",said:true,snapped:true};
+    await cloudTakeSnapshot(live.text,{label:say(W.safetySnapshotBefore,{what:reason==="reset"?W.reset:W.load}),kind:"safety",rows:data.rows.length,quarantined:(data.ignored||[]).length});
+    return {check:head+say(W.snapshotTaken,{what:reason==="reset"?W.it:W.yourFile}),said:true,snapped:true};
   }catch(e){
-    return {check:head+" A snapshot of the last cloud state could NOT be taken ("+cloudTrouble(e,"save")+"), so "+(reason==="reset"?"it":"your file")+" was not loaded.",said:false,failed:e};
+    return {check:head+say(W.snapshotNotTaken,{why:cloudTrouble(e,"save"),what:reason==="reset"?W.it:W.yourFile}),said:false,failed:e};
   }
 }
 //@piece cloudOpening
@@ -138,7 +138,7 @@ async function cloudCheckBeforeReplace(tr,incoming,reason,noted){
 // OPEN THE CLOUD COPY: the ledger it holds, as the screen opens it, and the line to show.
 function cloudOpening(tr,rec,data){
   const out={rows:(data.rows||[]).map(r=>({...r,watching:r.watching||false})),lastRun:data.lastRun||null,
-    info:"Opened the cloud copy saved "+localReadable(rec.savedAt)+" — "+(data.rows||[]).length+" exhibitions.",
+    info:say(W.openedCloudCopy,{when:localReadable(rec.savedAt),n:(data.rows||[]).length}),
     ignored:Array.isArray(data.ignored)?data.ignored:[]};
   tr.prev=rec; tr.fp=ledgerFingerprintText(data);
   return out;
@@ -146,7 +146,7 @@ function cloudOpening(tr,rec,data){
 //@piece cloudOpenQuestion
 
 // "Open it" asks first while unsaved work shows and the cloud copy is not saving.
-function cloudOpenQuestion(){ return "Opening the cloud copy replaces everything on screen. The cloud copy is NOT saving, so your changes since your last Save are on screen only and will be lost. Continue?"; }
+function cloudOpenQuestion(){ return W.openCloudQuestion; }
 //@piece cloudReadToOpen
 
 // "Open it": the cloud copy read and handed to `open(rec,data)`. Hands back the line to show
@@ -156,10 +156,10 @@ async function cloudReadToOpen(open){
   if(!await storeReached())return null;
   try{
     const {rec,text}=await cloudReadLive();
-    if(!rec)return "There is no cloud copy yet.";
+    if(!rec)return W.noCloudCopyYet;
     open(rec,JSON.parse(text));
     return null;
-  }catch(e){ return "The cloud copy couldn’t be opened: "+cloudTrouble(e,"read"); }
+  }catch(e){ return say(W.cloudCopyNotOpened,{why:cloudTrouble(e,"read")}); }
 }
 //@piece cloudSavesRead
 
@@ -167,14 +167,14 @@ async function cloudReadToOpen(open){
 async function cloudSavesRead(){
   if(!await storeReached())return {snaps:[],why:STORE_UNREACHED};
   try{ return {snaps:await cloudListSnapshots(),why:null}; }
-  catch(e){ return {snaps:[],why:"Couldn’t read the cloud saves ("+cloudTrouble(e,"read")+")."}; }
+  catch(e){ return {snaps:[],why:say(W.cloudSavesUnread,{why:cloudTrouble(e,"read")})}; }
 }
 //@piece cloudRollbackQuestion
 
 // Roll back's question, for Cloud Save `s` among `all`.
 function cloudRollbackQuestion(s,all){
-  return {title:"Roll back to this cloud save?",
-    text:"The ledger becomes the cloud save “"+snapTitle(s,all)+"” from "+localReadable(s.at)+" ("+s.rows+" exhibitions). What you have now is kept in Cloud Saves first, so this can be undone."};
+  return {title:W.rollBackQuestion,
+    text:say(W.rollBackText,{title:snapTitle(s,all),when:localReadable(s.at),n:s.rows})};
 }
 //@piece cloudRollback
 
@@ -194,13 +194,13 @@ async function cloudRollback(tr,s,all,{current,started}){
     if(curText)await cloudTakeSnapshot(curText,{label:rollbackSafetyLabel(s.at),kind:"safety",rows:curRows,quarantined:curQ});
     const data=JSON.parse(await cloudReadSnapshot(s));
     return {rows:(data.rows||[]).map(r=>({...r,watching:r.watching||false})),lastRun:data.lastRun||null,
-      info:"Rolled back to the cloud save “"+snapTitle(s,all)+"” from "+localReadable(s.at)+" — "+(data.rows||[]).length+" exhibitions.",
+      info:say(W.rolledBack,{title:snapTitle(s,all),when:localReadable(s.at),n:(data.rows||[]).length}),
       ignored:Array.isArray(data.ignored)?data.ignored:[]};
   }catch(e){ return {why:cloudRollbackNotDone(e)}; }
 }
 //@piece cloudRollbackNotDone
 
-function cloudRollbackNotDone(e){ return "Rollback NOT done — "+cloudTrouble(e,"read")+" Nothing was replaced."; }
+function cloudRollbackNotDone(e){ return say(W.rollbackNotDone,{why:cloudTrouble(e,"read")}); }
 //@piece cloudSaveDownload
 
 // Cloud Saves' Download: the copy handed over as a file. Hands back the line to show, or null
@@ -214,12 +214,12 @@ async function cloudSaveDownload(s){
     const slug=labelSlug(s.label);
     const filename=s.filename||("art-watch-snapshot-"+localStamp(s.at)+(slug?"-"+slug:"")+".json");
     const route=await offerFile(filename,JSON.stringify(JSON.parse(text),null,2));
-    return route==="runtime"?"Saved "+filename+".":"A download of "+filename+" was started — this viewer can’t confirm it arrived; check your downloads folder.";
+    return route==="runtime"?say(W.savedFile,{file:filename}):say(W.downloadStarted,{file:filename});
   }catch(e){
-    const why=e&&e.route==="browser"?"the download couldn’t start"
+    const why=e&&e.route==="browser"?W.downloadCouldntStart
       :e&&["missing_part","fingerprint"].includes(e.code)?String(e.message)
-      :"the save was refused or cancelled ("+String((e&&(e.code||e.message))||e)+")";
-    return "Download NOT done — "+why+".";
+      :say(W.saveRefused,{why:String((e&&(e.code||e.message))||e)});
+    return say(W.downloadNotDone,{why});
   }
 }
 //@piece saveShrinkQuestion
@@ -233,7 +233,7 @@ async function saveShrinkQuestion(count){
   // The live record alone carries the count; its parts (the whole ledger) are not read.
   if(!cloudReadOnly){ try{ const ls=await storeRead(CLOUD_LIVE_DOC); const live=ls.exists?ls.data:null; const snap=(await cloudListSnapshots(1))[0];
       most=Math.max(live?live.rows||0:0,snap?snap.rows||0:0); }catch{} }
-  if(count<most)return {title:"Save a smaller ledger?",text:"You’re saving "+count+" exhibition"+(count===1?"":"s")+"; your last cloud save has "+most+". Save anyway?",yes:"Save anyway"};
+  if(count<most)return {title:W.saveSmaller,text:say(W.saveSmallerText,{n:count,s:count===1?"":"s",most}),yes:W.saveAnyway};
   return null;
 }
 //@piece saveFile
@@ -252,7 +252,7 @@ function saveFile({rows,ignored,lastRun,typed}){
   let data;
   try{
     data=JSON.stringify({rows,ignored,lastRun,exportedAt:at,exportedLocal:localReadable(at),...(label?{label}:{})},null,2);
-  }catch(e){ return {note:{ok:false,text:"NOT SAVED — the file couldn’t be built: "+String(e?.message||e)}}; }
+  }catch(e){ return {note:{ok:false,text:say(W.fileNotBuilt,{why:String(e?.message||e)})}}; }
   return {rows,ignored,at,label,filename,data};
 }
 //@piece saveLedger
@@ -267,7 +267,7 @@ async function saveLedger(f,toCloud,{kept,refused}){
   // awaited: the file question opens while the copy is written (her decision).
   const cloudDone=(async()=>{
     if(!toCloud||cloudReadOnly)return null;
-    if(!await storeReached())return "this viewer can’t reach the page’s store";
+    if(!await storeReached())return W.cantReachStore;
     try{
       await cloudTakeSnapshot(data,{label,kind:"manual",rows:rows.length,quarantined:ignored.length,filename,at});
       kept();
@@ -280,31 +280,31 @@ async function saveLedger(f,toCloud,{kept,refused}){
   let file;
   try{ file=(await offerFile(filename,data))==="runtime"?"saved":"browser"; }
   catch(e){
-    file=e&&e.route==="browser"?"the download couldn’t start"
-      :e&&e.code==="declined"?"cancelled"
-      :"refused ("+String(e?.code||e?.message||e)+")";
-    refused("Save: the file was not saved — "+String(e?.code||"")+" "+String(e?.message||e));
+    file=e&&e.route==="browser"?W.downloadCouldntStart
+      :e&&e.code==="declined"?W.cancelled
+      :say(W.refusedWhy,{why:String(e?.code||e?.message||e)});
+    refused(say(W.saveFileNotSaved,{code:String(e?.code||""),why:String(e?.message||e)}));
   }
   const cloud=await cloudDone;
-  const cloudBit=cloud===true?null:cloud===null?"":"Cloud copy NOT kept — "+cloud+".";
+  const cloudBit=cloud===true?null:cloud===null?"":say(W.cloudCopyNotKept,{why:cloud});
   let text,ok;
   if(file==="saved"){
     ok=cloud!==null&&cloud!==true?false:true;
-    text=cloud===true?"Local file saved. Extra copy also sent to the cloud."
-      :cloud===null?"Local file saved."
-      :"Local file saved. "+cloudBit;
+    text=cloud===true?W.savedBoth
+      :cloud===null?W.localSaved
+      :say(W.localSavedCloudNot,{cloud:cloudBit});
   }else if(file==="browser"){
     ok=false;
-    text=(cloud===true?"Extra copy sent to the cloud. ":cloud===null?"":cloudBit+" ")
-      +"A download of the local file was started — this viewer can’t confirm it arrived; check your downloads folder.";
+    text=(cloud===true?W.extraCopySent:cloud===null?"":cloudBit+" ")
+      +W.localDownloadStarted;
   }else{
     ok=false;
-    text=cloud===true?"Cloud copy kept. Local file not saved - "+file+"."
-      :cloud===null?"Local file not saved - "+file+"."
-      :"NOTHING SAVED — local file not saved - "+file+". "+cloudBit;
+    text=cloud===true?say(W.cloudKeptLocalNot,{why:file})
+      :cloud===null?say(W.localNotSaved,{why:file})
+      :say(W.nothingSaved,{why:file,cloud:cloudBit});
   }
   return {ok,text,file,cloud,
-    debug:"Save "+filename+" ("+localReadable(at)+"): file "+(file==="saved"?"confirmed by the viewer":file)+"; cloud "+(cloud===true?"kept":cloud===null?"not asked for":cloud)+"."};
+    debug:say(W.saveDebug,{file:filename,when:localReadable(at),fileSaid:file==="saved"?W.confirmedByViewer:file,cloudSaid:cloud===true?W.kept:cloud===null?W.notAskedFor:cloud})};
 }
 //@piece cloudStatusLine
 
@@ -312,14 +312,14 @@ async function saveLedger(f,toCloud,{kept,refused}){
 // then the line says when it last worked (her ask): how far back the cloud copy stands.
 function cloudStatusLine({saveState,saveErr,lastSaved,cloudLive,hasLedger}){
   if(saveState==="failed"||saveState==="off")
-    return {trouble:true,text:"CLOUD COPY NOT SAVING — "+(saveErr||"reason unknown.")
-      +(lastSaved&&lastSaved.savedAt?" Last cloud save: "+localReadable(lastSaved.savedAt)+" ("+relTime(lastSaved.savedAt)+")."
-        :" Nothing has been saved to the cloud yet.")
-      +(hasLedger?" Changes since then are on screen only — tap Save to keep them in a file.":"")};
+    return {trouble:true,text:say(W.cloudNotSaving,{why:saveErr||W.reasonUnknown})
+      +(lastSaved&&lastSaved.savedAt?say(W.lastCloudSaveWas,{when:localReadable(lastSaved.savedAt),ago:relTime(lastSaved.savedAt)})
+        :W.nothingSavedToCloud)
+      +(hasLedger?W.changesOnScreenOnly:"")};
   return {trouble:false,text:
-    saveState==="saving"?"Saving to the cloud copy…"
-    :lastSaved?("Last cloud save: "+localReadable(lastSaved.savedAt)+" ("+relTime(lastSaved.savedAt)+") · "+lastSaved.rows+" exhibitions")
-    :cloudLive&&cloudLive.why?("Cloud copy: "+cloudLive.why)
-    :cloudLive&&cloudLive.rec===null?"No cloud copy yet — it starts when you open your ledger."
-    :"Checking the cloud copy…"};
+    saveState==="saving"?W.savingToCloud
+    :lastSaved?say(W.lastCloudSave,{when:localReadable(lastSaved.savedAt),ago:relTime(lastSaved.savedAt),n:lastSaved.rows})
+    :cloudLive&&cloudLive.why?say(W.cloudCopyWhy,{why:cloudLive.why})
+    :cloudLive&&cloudLive.rec===null?W.noCloudCopyStarts
+    :W.checkingCloud};
 }

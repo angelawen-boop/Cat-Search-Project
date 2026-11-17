@@ -10,6 +10,7 @@ async function labelCardsJob(props){
   const shows=[];
   props.forEach((p,i)=>{ if(p.type==="add")shows.push(periodShow(i,p.cand)); });
   if(!shows.length)return null;
+  // Not words: the lookup log's name and title for the record.
   const tape=tapeStart("Label import cards",{title:shows.length+" new shows"});
   const {labels,batches}=await labelPeriods(shows);
   const said=labelSummary(shows.length,batches);
@@ -29,7 +30,7 @@ const labelsOntoCards=(cur,props,{labels,at})=>cur!==props?cur:props.map((p,i)=>
 // What there is to label: {todo}, or {said} when there is nothing.
 function labelLedgerStart(rows){
   const todo=rows.filter(r=>!labelDone(r));
-  if(!todo.length)return {said:{ok:true,text:"Label: every exhibition already has a period."}};
+  if(!todo.length)return {said:{ok:true,text:W.labelNothingToDo}};
   return {todo};
 }
 //@piece labelLedgerJob
@@ -38,19 +39,20 @@ function labelLedgerStart(rows){
 // Hands back `labels` (Map id → label, or null when none came back; labelsOntoRows writes them),
 // `said` — her line — and `debug`, the diagnostic.
 async function labelLedgerJob(todo,progress){
-  progress({done:0,total:todo.length,label:"Labelling periods…"});
+  progress({done:0,total:todo.length,label:W.labellingPeriods});
   // Each run is one record in the lookup log: every question, Claude's answer, each batch's outcome.
+  // Not words: the lookup log's name and title for the record.
   const tape=tapeStart("Label periods",{title:todo.length+" exhibitions"});
-  let said={ok:false,text:"Label: didn’t finish."}, batches=[], labels=null;
+  let said={ok:false,text:W.labelDidntFinish}, batches=[], labels=null;
   try{
-    const res=await labelPeriods(todo.map((r,i)=>periodShow(i,r)),(done,total)=>progress({done,total,label:"Labelling periods…"}));
+    const res=await labelPeriods(todo.map((r,i)=>periodShow(i,r)),(done,total)=>progress({done,total,label:W.labellingPeriods}));
     batches=res.batches;
     const at=new Date().toISOString();
     const byId=new Map(); res.labels.forEach((v,i)=>byId.set(todo[i].id,{...v,labelledAt:at}));
     if(byId.size)labels=byId;
     said=labelSummary(todo.length,batches);
-  }catch(e){ said={ok:false,text:"Label: didn’t finish — "+String((e&&e.message)||e)+"."}; }
-  const debug=said.text+"\n"+batches.map((b,j)=>"Batch "+(j+1)+": "+b.labelled+" of "+b.shows+" labelled, "+b.tries+" "+(b.tries===1?"try":"tries")+(b.why?" — "+b.why:"")).join("\n");
+  }catch(e){ said={ok:false,text:say(W.labelDidntFinishWhy,{why:String((e&&e.message)||e)})}; }
+  const debug=said.text+"\n"+batches.map((b,j)=>say(W.labelBatch,{n:j+1,labelled:b.labelled,of:b.shows,tries:b.tries,word:b.tries===1?W.try:W.tries,why:b.why?" \u2014 "+b.why:""})).join("\n");
   saveLookupTape(tape,{ok:said.ok,said:said.text,detail:JSON.stringify(batches)});
   return {labels,said,debug};
 }
@@ -66,6 +68,7 @@ const labelsOntoRows=(rows,byId)=>rows.map(r=>byId.has(r.id)&&!labelDone(r)?{...
 // Hands back `rows` to put in place (or null) and `said`, the line for the card {id,failed,text,regrouped}.
 async function relabelJob(r,latest){
   const id=r.id;
+  // Not words: the lookup log's name for the record.
   const tape=tapeStart("Relabel",r);
   let said, rows=null;
   try{
@@ -75,13 +78,13 @@ async function relabelJob(r,latest){
       const next=landOnCard(latest(),id,r,{...r,...v});
       rows=next;
       const nr={...r,...v}, shown=periodOf(nr,artistPeriods(next));
-      said={id,failed:false,regrouped:shown!==nr.period,text:"Relabelled: "+periodText(nr)+(shown!==nr.period?" — shown with "+nr.periodArtist+"’s other shows, under "+PERIOD_NAME[shown]:"")+"."};
-    }else said={id,failed:true,text:"Relabel didn’t finish — "+(batches[0]&&batches[0].why||"no answer")+"."};
-  }catch(e){ said={id,failed:true,text:"Relabel didn’t finish — "+String((e&&e.message)||e)+"."}; }
+      said={id,failed:false,regrouped:shown!==nr.period,text:say(W.relabelled,{period:periodText(nr),regrouped:shown!==nr.period?say(W.shownWithArtist,{artist:nr.periodArtist,period:PERIOD_NAME[shown]}):""})};
+    }else said={id,failed:true,text:say(W.relabelDidntFinish,{why:batches[0]&&batches[0].why||W.noAnswer})};
+  }catch(e){ said={id,failed:true,text:say(W.relabelDidntFinish,{why:String((e&&e.message)||e)})}; }
   finally{ saveLookupTape(tape,{ok:!said.failed,said:said.text}); }
   return {rows,said};
 }
 //@piece keptPeriodSaid
 
 // "Keep this period"'s line for the card; `r` is the card before the mark.
-const keptPeriodSaid=(id,r)=>({id,failed:false,text:"Relabelled: "+periodText(r)+" — no regrouping."});
+const keptPeriodSaid=(id,r)=>({id,failed:false,text:say(W.relabelledKept,{period:periodText(r)})});

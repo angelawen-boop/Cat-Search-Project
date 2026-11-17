@@ -10,4 +10,5 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 const APP_VERSION = "59.2";
 //@piece APP_VERSION_DATE
 
+// Not words: the date of this version.
 const APP_VERSION_DATE = "17 Nov 2026";

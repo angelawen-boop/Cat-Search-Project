@@ -198,13 +198,13 @@ function sameCatalogue(edPublisher,origPublisher,isbnResults,museumId){
 // publisher guessed from general results must be one the ISBN's own records name,
 // when they name any; else the one they name replaces it, or none if they disagree.
 function oneBook(F,results,log,dom,museumId){
-  if(!F.isbn||!F.publisher||F.pubFrom!=="general results")return;
+  if(!F.isbn||!F.publisher||F.pubFrom!==W.fromGeneralResults)return;
   const groups=publisherGroups(results,F.isbn);
   if(!groups.length||groups.some(g=>g.names.some(n=>sameHouse(n,F.publisher))))return;
   const top=groups[0], tied=groups[1]&&groups[1].votes===top.votes;
   const name=tied?null:groupName(top);
-  log.push("Publisher “"+F.publisher+"” is not the one the ISBN’s records name ("+groups.map(groupName).join(", ")+")"
-    +(name?" — "+name+" taken.":" — no publisher filed."));
+  log.push(say(W.logNotIsbnsPublisher,{name:F.publisher,named:groups.map(groupName).join(", ")})
+    +(name?say(W.logTaken,{name}):W.logNoPublisherFiled));
   F.publisher=name;
   F.publisherUrl=name?publisherLinkOf(F.publisherUrl,name,dom,museumId):null;
   if(!name)F.pubFrom=null;
@@ -215,6 +215,7 @@ function oneBook(F,results,log,dom,museumId){
 // The show's catalogue in the venue's own language (her decision, Hammershøi, listed
 // only in French): the show's name before any colon, the venue's name, "exhibition
 // catalogue" in its language (the venue's register entry) and the opening year. Non-English venues only.
+// Not words: asked of the web.
 const CATALOGUE_WORDS={French:"catalogue exposition",German:"Ausstellungskatalog",Dutch:"tentoonstellingscatalogus",Italian:"catalogo mostra"};
 //@piece localCatalogueQuery
 
@@ -229,16 +230,19 @@ function localCatalogueQuery(mu,row){
 
 // The instruction that a "Sold by" line names the shop; every prompt that reads a book's page or search
 // results carries it (Orsay; docs/app.md).
+// Not words: sent to Claude.
 const SOLD_BY_RULE=
   "\"Sold by …\" (“vendu par”, “venduto da”) names the SHOP, never the publisher — "
  +"the Orsay’s shop says “Sold by GrandPalaisRmn” for books Hazan printed. Never report it as publisher.\n";
 //@piece REPLY_JSON_ONLY
 
 // The line that opens the shape of the reply every lookup prompt asks for.
+// Not words: sent to Claude.
 const REPLY_JSON_ONLY="\nReply with ONLY this JSON object and nothing else:\n";
 //@piece bookPageAsk
 
 // What Claude is asked to read from a book's own page.
+// Not words: sent to Claude.
 function bookPageAsk(title){
   return "The ISBN-13, the publisher, and any link to the publisher’s own page for the book "
     +"“"+title+"”, including any details or specification panel on the page.";
@@ -250,6 +254,7 @@ function bookPageAsk(title){
 // At top level so a fixture can run it whole with the connector and Claude faked.
 // Steps gather facts; code decides each fact in a set order of trust; composeRow
 // writes the row once. No step writes card text; the card reads the row.
+// Not words: sent to Claude.
 const READ_RULES=
   "You are reading real web search results to find the PRINTED EXHIBITION CATALOGUE for one exhibition.\n"
  +"Use ONLY what the results below actually say. Never use outside knowledge, never guess an ISBN, "
@@ -278,12 +283,14 @@ const READ_RULES=
 
 // At a non-English venue the web read takes the venue's own book; whether an English
 // edition is the same catalogue is decided once, in code (editionsOf; Hubert Robert).
+// Not words: sent to Claude.
 const READ_RULES_FOREIGN=READ_RULES.replace(/If the same catalogue is sold in more than one language, take the ENGLISH edition\.\n$/,
   "If the catalogue is sold in more than one language, take the edition in the venue's own language — "
  +"an English edition is checked separately.\n");
 //@piece READ_SHAPE
 
 
+// Not words: sent to Claude.
 const READ_SHAPE=
   REPLY_JSON_ONLY
  +'{"found": true|false, "catalogueTitle": string|null, "isbn13": string|null, '
@@ -296,6 +303,7 @@ const READ_SHAPE=
 
 
 // The book's own page, read once: the ISBN, the publisher and any publisher link.
+// Not words: sent to Claude.
 const PAGE_RULES=
   "You are reading ONE web page in full: the page selling or describing a printed exhibition "
  +"catalogue. Read the ISBN, publisher and author off THIS PAGE only.\n"
@@ -311,6 +319,7 @@ const PAGE_RULES=
  +SOLD_BY_RULE;
 //@piece PAGE_SHAPE
 
+// Not words: sent to Claude.
 const PAGE_SHAPE=
   REPLY_JSON_ONLY
  +'{"isbn13": string|null, "publisher": string|null, "publisherUrl": string|null}\n'
@@ -329,6 +338,7 @@ const pageForPrompt=(list,cap)=>list.slice(0,2).map(r=>
 
 // The facts round's one read: the book's own page (at a non-English venue, read here
 // rather than on its own), the facts search and the edition search.
+// Not words: sent to Claude.
 function factsPrompt(q){
   const item='{"title": string, "isbn13": string, "language": string, "publisher": string|null, "pages": string|null, "year": string|null, "venueCity": string|null, "evidenceUrl": string}';
   const shape='{"isbn13": string|null, "publisher": string|null, "pages": string|null, "versions": ['+item+']'

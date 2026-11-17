@@ -52,9 +52,9 @@ async function readQuarantine(){
     return {map:(d.rows&&typeof d.rows==="object")?d.rows:{},why:null};
   }catch(e){
     const code=String((e&&e.code)||"");
-    if(code==="no_store") return {map:{},why:"This page can\u2019t reach its quarantine list in this viewer, so nothing is being blocked."};
-    if(code==="not_granted") return {map:{},why:"You declined this page access to its quarantine list."};
-    return {map:{},why:"Couldn\u2019t read the quarantine list ("+(code||"unknown")+")."};
+    if(code==="no_store") return {map:{},why:W.quarantineUnreachable};
+    if(code==="not_granted") return {map:{},why:W.quarantineDeclined};
+    return {map:{},why:say(W.quarantineUnreadCode,{code:code||"unknown"})};
   }
 }
 //@piece writeQuarantine

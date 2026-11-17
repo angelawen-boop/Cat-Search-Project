@@ -15,6 +15,7 @@
  *   node scraper/fixtures/lookup_log.js
  */
 'use strict';
+const { WORDS } = require('./words.js');   // the app's sentences, from its words list
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
@@ -116,12 +117,12 @@ const script = {
   {
     const store = fakeDb();
     const api = lift(script, store.api);
-    const tape = api.tapeStart('Find catalogue', row);
+    const tape = api.tapeStart(WORDS.findCatalogue, row);
     const out = await api.lookupCatalogue(row, {});
     eq(await api.saveLookupTape(tape, out), true, 'LL-001: the record is saved');
     const dir = saveToDir(store.docs);
     const list = reader.listRecords(dir);
-    eq([list.length, list[0].complete, list[0].action, list[0].title, list[0].enc], [1, true, 'Find catalogue', row.title, 'gzip-base64'], 'LL-001: one complete record, compressed, named by its card');
+    eq([list.length, list[0].complete, list[0].action, list[0].title, list[0].enc], [1, true, WORDS.findCatalogue, row.title, 'gzip-base64'], 'LL-001: one complete record, compressed, named by its card');
     const { record } = reader.readRecord(dir, list[0].id);
     const search = record.calls.find(c => c.kind === 'search');
     ok(search && search.input.queries.some(q => q.includes('Hubert Robert')) && search.output.results[0].excerpts[0] === PRESS,
@@ -139,7 +140,7 @@ const script = {
     const store = fakeDb();
     const big = 'x'.repeat(50) + Array.from({ length: 60000 }, (_, i) => (i * 7919).toString(36)).join(' ');
     const api = lift({ ...script, mcp: () => ({ payload: { results: [{ url: 'https://b.test', title: 'Big', full_content: big }] } }) }, store.api);
-    const tape = api.tapeStart('Search again', row);
+    const tape = api.tapeStart(WORDS.searchAgain, row);
     await api.searchWeb('big', ['big']);
     await api.searchWeb('big', ['big']);
     await api.saveLookupTape(tape, { ok: true, row, detail: 'd' });
@@ -157,7 +158,7 @@ const script = {
     const store = fakeDb();
     const api = lift(script, store.api);
     for (let i = 0; i < api.LOOKUP_KEEP + 2; i++) {
-      const tape = api.tapeStart('Find catalogue', { ...row, title: 'Show ' + i });
+      const tape = api.tapeStart(WORDS.findCatalogue, { ...row, title: 'Show ' + i });
       tape.t0 = Date.UTC(2026, 0, 1) + i * 60000;
       await api.saveLookupTape(tape, { ok: true, row, detail: '' });
     }
@@ -171,16 +172,16 @@ const script = {
   // ── LL-006..LL-008: the log never breaks a lookup ──────────────────────────
   {
     const api = lift(script, null);
-    const tape = api.tapeStart('Find catalogue', row);
+    const tape = api.tapeStart(WORDS.findCatalogue, row);
     const out = await api.lookupCatalogue(row, {});
     eq([out.ok, await api.saveLookupTape(tape, out)], [true, false], 'LL-006: no store — the lookup finishes, nothing saved');
     const broken = fakeDb({ broken: true });
     const api2 = lift(script, broken.api);
-    const t2 = api2.tapeStart('Find catalogue', row);
+    const t2 = api2.tapeStart(WORDS.findCatalogue, row);
     eq(await api2.saveLookupTape(t2, await api2.lookupCatalogue(row, {})), false, 'LL-007: a failing store — no throw');
     const store = fakeDb();
     const api3 = lift(script, store.api);
-    const t3 = api3.tapeStart('Find catalogue', row);
+    const t3 = api3.tapeStart(WORDS.findCatalogue, row);
     await api3.saveLookupTape(t3, { ok: true, row, detail: '' });
     await api3.searchWeb('after', ['after']);
     eq(t3.calls.length, 0, 'LL-008: a call after the lookup ended is not recorded');
@@ -202,7 +203,7 @@ const script = {
     const store = fakeDb();
     const api = lift(millet, store.api);
     const mRow = { ...row, id: 'ng-millet', museumId: 'ng', title: 'Millet: Life on the Land' };
-    let tape = api.tapeStart('Find catalogue', mRow);
+    let tape = api.tapeStart(WORDS.findCatalogue, mRow);
     await api.saveLookupTape(tape, await api.lookupCatalogue(mRow, {}));
     const vRow = { ...row, id: 'louvre-vasari', museumId: 'louvre', title: 'Giorgio Vasari: The Book of Drawings' };
     const wrong = { ...vRow, looked: true, hasCatalogue: 'yes', editionPick: 2, editions: [
@@ -218,7 +219,7 @@ const script = {
     let res = check(dir);
     ok(res.status === 0 && /Case 9 — Millet: Life on the Land \(ng\): as agreed/.test(res.stdout) && /Case 1 — .*: no lookup in the log/.test(res.stdout),
       'PC-001: a lookup as agreed passes; a case with no lookup is listed, not counted', res.stdout + res.stderr);
-    tape = api.tapeStart('Search again', vRow);
+    tape = api.tapeStart(WORDS.searchAgain, vRow);
     await api.saveLookupTape(tape, { ok: true, row: wrong, detail: '' });
     dir = dirOf();
     res = check(dir);
@@ -268,21 +269,21 @@ const script = {
       await act(async () => { root.render(React.createElement(App)); });
       const button = t => [...win.document.querySelectorAll('button')].find(b => b.textContent.trim() === t);
       // "Import Refresh" on main; "Import" on the cloud-ledger branch.
-      await act(async () => { (button('Import Refresh') || button('Import')).click(); });
+      await act(async () => { (button('Import Refresh') || button(WORDS.importButton)).click(); });
       // The cloud-ledger branch: Import on an empty page asks for a ledger first.
-      if (button('Open last cloud save')) {
-        await act(async () => { button('Cancel').click(); });
-        await act(async () => { button('Reset to Seed').click(); });
+      if (button(WORDS.openLastCloudSave)) {
+        await act(async () => { button(WORDS.cancel).click(); });
+        await act(async () => { button(WORDS.resetToSeed).click(); });
         for (let i = 0; i < 50 && !/Starter set loaded/.test(win.document.body.textContent); i++)
           await act(async () => { await new Promise(r => setTimeout(r, 20)); });
-        await act(async () => { button('Import').click(); });
+        await act(async () => { button(WORDS.importButton).click(); });
       }
-      await act(async () => { button('Links').click(); });
+      await act(async () => { button(WORDS.tabLinks).click(); });
       const box = win.document.querySelector('textarea');
       // Typed through the box's own handler: jsdom's input events do not reach React here.
       const props = box[Object.keys(box).find(k => k.startsWith('__reactProps'))];
       await act(async () => { props.onChange({ target: { value: GOOD + '\n' + BAD } }); });
-      await act(async () => { button('Read').click(); });
+      await act(async () => { button(WORDS.read).click(); });
       for (let i = 0; i < 50 && [...store.docs.values()].filter(v => v.complete).length < 2; i++)
         await act(async () => { await new Promise(r => setTimeout(r, 20)); });
       const dir = saveToDir(store.docs);

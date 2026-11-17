@@ -16,24 +16,24 @@ async function readResults(prompt,tier="default"){
 
 async function readResultsCall(prompt,tier){
   const sample=await useCap("sample");
-  if(!sample)return{ok:false,data:null,code:"unavailable",detail:"Claude isn\u2019t available to this page in this viewer."};
+  if(!sample)return{ok:false,data:null,code:"unavailable",detail:W.claudeUnavailable};
   try{
     // Never a replayed answer: the platform replays an identical question asked within five minutes,
     // so Relabel, Search again and Re-check would not ask again (her Metamorphoses Relabel).
     const data=await sample.json(prompt,{modelTier:tier||"default",cache:false});
-    return{ok:true,data,detail:"read the results"};
+    return{ok:true,data,detail:W.readTheResults};
   }catch(e){
     const code=String((e&&e.code)||"");
     // A reply holding two answers ("Wait — here is the corrected object", Hubert Robert):
     // the last one is Claude's own correction. TW-001 to TW-004.
     if(code==="invalid_json"&&e&&e.text){
       const data=lastJsonObject(e.text);
-      if(data)return{ok:true,data,detail:"read the results (the reply held more than one answer; the last was taken)"};
+      if(data)return{ok:true,data,detail:W.readTheResultsLast};
     }
-    let why="Couldn\u2019t read the search results ("+(code||"unknown")+").";
-    if(code==="not_granted")       why="You declined to let this page use Claude. Reload and allow it to search.";
-    else if(code==="rate_limited") why="Claude is rate-limited.";
-    else if(code==="invalid_json") why="Claude\u2019s answer came back unreadable. Try again.";
+    let why=say(W.couldntReadResults,{code:code||"unknown"});
+    if(code==="not_granted")       why=W.claudeDeclined;
+    else if(code==="rate_limited") why=W.claudeRateLimited;
+    else if(code==="invalid_json") why=W.claudeUnreadable;
     return{ok:false,data:null,code,partial:(e&&e.text)||null,detail:why+"  ["+String((e&&e.message)||e)+"]"};
   }
 }

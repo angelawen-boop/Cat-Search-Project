@@ -4,7 +4,7 @@
 // Her digital catalogue (`digitalUrl`: a PDF or online catalogue she pasted in; her design): the link
 // button's shape on a green ground, last in the row. Kept through Search again, Re-check and Reset cards.
 function DigitalLink({r,C,lnk}){
-  return r.digitalUrl?<a href={r.digitalUrl} target="_blank" rel="noopener noreferrer" style={{...lnk,background:C.okBg,border:"1px solid "+C.okEdge,color:C.okInk}}>Digital catalogue {"\u2197"}</a>:null;
+  return r.digitalUrl?<a href={r.digitalUrl} target="_blank" rel="noopener noreferrer" style={{...lnk,background:C.okBg,border:"1px solid "+C.okEdge,color:C.okInk}}>{W.digitalCatalogue+" \u2197"}</a>:null;
 }
 //@piece LedgerCard
 
@@ -14,10 +14,10 @@ function DigitalLink({r,C,lnk}){
 // a venue's MU entry is replaced, never edited, so `mu` changes when its shop does).
 const LedgerCard=React.memo(function LedgerCard({r,mu,isOpen,isBusy,busy,rechecking,lookLabel,said,relabelling,digitalOpen,C,TH,chip,pBtn,lnk,act}){
   const t=tierFor(r),tier=TH[t],mo=moSince(r.endDate),noCat=r.looked&&r.hasCatalogue==="no",isAcq=r.acquiring==="acquired",dismissed=!r.interested;
-  const searchingLabel=lookLabel||"Searching\u2026";
+  const searchingLabel=lookLabel||W.searching;
   // Two buttons share one busy row; only the one pressed shows progress.
-  const againLabel=isBusy&&!rechecking?searchingLabel:"Search again";
-  const recheckLabel=isBusy&&rechecking?searchingLabel:"Re-check museum shop";
+  const againLabel=isBusy&&!rechecking?searchingLabel:W.searchAgain;
+  const recheckLabel=isBusy&&rechecking?searchingLabel:W.recheckShop;
   // No shop at all (Borghese, Capodimonte, the Accademia; her decision): no
   // Re-check button, and the line says only "Venue has no shop."
   const noShop=!(mu&&(mu.shopSearch||mu.shopHome));
@@ -35,7 +35,7 @@ const LedgerCard=React.memo(function LedgerCard({r,mu,isOpen,isBusy,busy,recheck
     <article style={{background:C.dim,border:"1px solid "+C.rule,borderLeft:"4px solid "+C.muted,borderRadius:5,padding:"10px 14px",opacity:0.55}}>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline"}}>
         <span style={{fontSize:9,letterSpacing:"0.14em",textTransform:"uppercase",color:C.soft}}>{mu?.card}</span>
-        <button onClick={()=>act("restore",r.id)} style={{background:"none",border:"1px solid "+C.action,borderRadius:3,color:C.action,fontSize:10,fontWeight:500,cursor:"pointer",padding:"2px 8px"}}>Restore</button>
+        <button onClick={()=>act("restore",r.id)} style={{background:"none",border:"1px solid "+C.action,borderRadius:3,color:C.action,fontSize:10,fontWeight:500,cursor:"pointer",padding:"2px 8px"}}>{W.restore}</button>
       </div>
       <div style={{fontFamily:"'Fraunces',Georgia,serif",fontSize:15,fontWeight:500,marginTop:3,color:C.soft}}>{r.title}</div>
       <div style={{fontSize:10.5,color:C.muted,marginTop:2}}>{dateRange(r)}</div>
@@ -48,7 +48,7 @@ const LedgerCard=React.memo(function LedgerCard({r,mu,isOpen,isBusy,busy,recheck
           <span style={{fontSize:9,letterSpacing:"0.14em",textTransform:"uppercase",color:C.soft,marginTop:2}}>{mu?.card}</span>
           {/* No "No catalogue" tag (her decision): the corner says how long ago the
               show closed; the Catalogue button carries the cross. */}
-          {isAcq?<span style={{fontSize:9,fontWeight:600,letterSpacing:"0.06em",textTransform:"uppercase",color:C.owned,background:C.ownedBg,padding:"2px 7px",borderRadius:3}}>Owned</span>
+          {isAcq?<span style={{fontSize:9,fontWeight:600,letterSpacing:"0.06em",textTransform:"uppercase",color:C.owned,background:C.ownedBg,padding:"2px 7px",borderRadius:3}}>{W.chipOwned}</span>
           :<span style={{fontSize:9,fontWeight:600,letterSpacing:"0.06em",textTransform:"uppercase",color:tier.ink,background:tier.wash,padding:"2px 7px",borderRadius:3}}>{tier.label}</span>}
         </div>
         <div style={{display:"flex",alignItems:"baseline",gap:0,marginTop:5}}>
@@ -57,9 +57,9 @@ const LedgerCard=React.memo(function LedgerCard({r,mu,isOpen,isBusy,busy,recheck
             {r.exUrl&&<a href={r.exUrl} target="_blank" rel="noopener noreferrer" style={{color:C.action,textDecoration:"none",marginLeft:5,fontSize:13,fontWeight:400}}>{"\u2197"}</a>}
           </h3>
           <div style={{display:"flex",gap:8,alignItems:"center",marginLeft:8,flexShrink:0}}>
-            {r.acquiring==="yes"&&(()=>{const k=starInk();return <button onClick={()=>act("toggleBuyNext",r.id)} title={r.buyNext?"Not buying next":"Buy next"} style={{background:"none",border:"none",cursor:"pointer",padding:0,fontSize:16,lineHeight:1}}><svg width={k.D} height={k.D} style={{display:"inline-block",verticalAlign:k.v}} aria-hidden="true"><circle cx={k.D/2} cy={k.D/2} r={k.D/2-0.75} fill={r.buyNext?C.buyNext:"none"} stroke={r.buyNext?C.buyNext:C.muted} strokeWidth="1.5"/></svg></button>;})()}
-            <button onClick={()=>act("toggleWatch",r.id)} title={r.watching?"Unwatch":"Watch"} style={{background:"none",border:"none",cursor:"pointer",padding:0,fontSize:16,lineHeight:1,color:r.watching?C.star:C.muted}}>{r.watching?"\u2605":"\u2606"}</button>
-            {!isAcq&&<button onClick={()=>act("dismiss",r.id)} title="Not interested" style={{background:"none",border:"none",cursor:"pointer",padding:0,fontSize:18,lineHeight:1,color:C.muted}}>{"\u00d7"}</button>}
+            {r.acquiring==="yes"&&(()=>{const k=starInk();return <button onClick={()=>act("toggleBuyNext",r.id)} title={r.buyNext?W.notBuyingNext:W.buyNext} style={{background:"none",border:"none",cursor:"pointer",padding:0,fontSize:16,lineHeight:1}}><svg width={k.D} height={k.D} style={{display:"inline-block",verticalAlign:k.v}} aria-hidden="true"><circle cx={k.D/2} cy={k.D/2} r={k.D/2-0.75} fill={r.buyNext?C.buyNext:"none"} stroke={r.buyNext?C.buyNext:C.muted} strokeWidth="1.5"/></svg></button>;})()}
+            <button onClick={()=>act("toggleWatch",r.id)} title={r.watching?W.unwatch:W.watch} style={{background:"none",border:"none",cursor:"pointer",padding:0,fontSize:16,lineHeight:1,color:r.watching?C.star:C.muted}}>{r.watching?"\u2605":"\u2606"}</button>
+            {!isAcq&&<button onClick={()=>act("dismiss",r.id)} title={W.notInterested} style={{background:"none",border:"none",cursor:"pointer",padding:0,fontSize:18,lineHeight:1,color:C.muted}}>{"\u00d7"}</button>}
           </div>
         </div>
         <div style={{fontSize:11,color:C.soft,marginTop:3,marginBottom:6}}>{dateRange(r)}</div>
@@ -70,16 +70,16 @@ const LedgerCard=React.memo(function LedgerCard({r,mu,isOpen,isBusy,busy,recheck
               <div style={{height:"100%",width:Math.min(100,(mo/12)*100)+"%",background:tier.ink,borderRadius:3}}/>
               {[3,6].map(k=><span key={k} style={{position:"absolute",left:(k/12*100)+"%",top:-2,width:1,height:10,background:C.soft,opacity:0.5}}/>)}
             </div>
-            <div style={{display:"flex",justifyContent:"space-between",fontSize:8.5,color:C.soft,marginTop:3,letterSpacing:"0.05em"}}><span>CLOSED</span><span>3 MO</span><span>6 MO</span><span>12 MO</span></div>
+            <div style={{display:"flex",justifyContent:"space-between",fontSize:8.5,color:C.soft,marginTop:3,letterSpacing:"0.05em"}}><span>{W.barClosed}</span><span>{W.bar3}</span><span>{W.bar6}</span><span>{W.bar12}</span></div>
           </div>
         )}
                 <div style={{display:"flex",alignItems:"center",gap:5,flexWrap:"wrap",paddingTop:8,borderTop:"1px solid "+C.rule}}>
-          <span style={{fontSize:9,letterSpacing:"0.1em",textTransform:"uppercase",color:C.soft}}>Want the catalogue?</span>
-          <button onClick={()=>act("setAcq",r.id,"yes")} style={chip(r.acquiring==="yes")}>Yes</button>
-          <button onClick={()=>act("setAcq",r.id,"no")} style={chip(r.acquiring==="no")}>No</button>
-          <button onClick={()=>act("setAcq",r.id,"acquired")} style={chip(r.acquiring==="acquired")}>Acquired</button>
+          <span style={{fontSize:9,letterSpacing:"0.1em",textTransform:"uppercase",color:C.soft}}>{W.wantCatalogue}</span>
+          <button onClick={()=>act("setAcq",r.id,"yes")} style={chip(r.acquiring==="yes")}>{W.yes}</button>
+          <button onClick={()=>act("setAcq",r.id,"no")} style={chip(r.acquiring==="no")}>{W.no}</button>
+          <button onClick={()=>act("setAcq",r.id,"acquired")} style={chip(r.acquiring==="acquired")}>{W.acquired}</button>
           <button onClick={()=>act("toggleOpen",r.id)} style={{marginLeft:"auto",background:"none",border:"none",color:C.action,fontSize:11,fontWeight:600,cursor:"pointer",padding:"3px 0"}}>
-            {isOpen?"Hide":(r.looked&&r.hasCatalogue==="yes")?"\u2713 Catalogue"+(r.digitalUrl?" + digital":""):(r.looked&&r.hasCatalogue==="no")?(r.digitalUrl?"\u2717 Catalogue \u2014 digital only":"\u2717 Catalogue"):"Catalogue"}
+            {isOpen?W.hide:(r.looked&&r.hasCatalogue==="yes")?W.catalogueFound+(r.digitalUrl?W.plusDigital:""):(r.looked&&r.hasCatalogue==="no")?(r.digitalUrl?W.catalogueNoneDigitalOnly:W.catalogueNone):W.catalogue}
           </button>
         </div>
       </div>
@@ -87,8 +87,8 @@ const LedgerCard=React.memo(function LedgerCard({r,mu,isOpen,isBusy,busy,recheck
         <div style={{background:C.panel,borderTop:"1px solid "+C.rule,padding:"12px 14px"}}>
           {!r.looked?(
             <div>
-              <p style={{fontSize:12,color:C.soft,margin:"0 0 8px"}}>No catalogue search run yet.</p>
-              <button onClick={()=>act("findOneCat",r.id)} disabled={busy} style={{...pBtn,padding:"6px 12px",fontSize:12}}>{isBusy?searchingLabel:"Find catalogue"}</button>
+              <p style={{fontSize:12,color:C.soft,margin:"0 0 8px"}}>{W.noSearchYet}</p>
+              <button onClick={()=>act("findOneCat",r.id)} disabled={busy} style={{...pBtn,padding:"6px 12px",fontSize:12}}>{isBusy?searchingLabel:W.findCatalogue}</button>
               {said&&<div style={{marginTop:6,fontSize:11,color:said.failed?TH.urgent.ink:C.soft,fontWeight:said.failed?700:400}}>{said.text}</div>}
             </div>
           ):noCat?(
@@ -96,7 +96,7 @@ const LedgerCard=React.memo(function LedgerCard({r,mu,isOpen,isBusy,busy,recheck
               <div style={{display:"flex",flexWrap:"wrap",gap:14}}>
                 <button onClick={()=>act("findOneCat",r.id)} disabled={busy} style={{background:"none",border:"none",color:C.soft,fontSize:11,textDecoration:"underline",cursor:"pointer",padding:0}}>{againLabel}</button>
                 {!noShop&&<button onClick={()=>act("recheckShop",r.id)} disabled={busy} style={{background:"none",border:"none",color:C.soft,fontSize:11,textDecoration:"underline",cursor:"pointer",padding:0}}>{recheckLabel}</button>}
-                <button onClick={()=>act("openDigital",r.id)} style={{background:"none",border:"none",color:C.soft,fontSize:11,textDecoration:"underline",cursor:"pointer",padding:0}}>Digital catalogue</button>
+                <button onClick={()=>act("openDigital",r.id)} style={{background:"none",border:"none",color:C.soft,fontSize:11,textDecoration:"underline",cursor:"pointer",padding:0}}>{W.digitalCatalogue}</button>
               </div>
               {digitalBox}
               {said&&<div style={{marginTop:6,fontSize:11,color:said.failed?TH.urgent.ink:C.soft,fontWeight:said.failed?700:400}}>{said.text}</div>}
@@ -107,7 +107,7 @@ const LedgerCard=React.memo(function LedgerCard({r,mu,isOpen,isBusy,busy,recheck
               <div style={{marginTop:8,display:"flex",flexWrap:"wrap",gap:14}}>
                 <button onClick={()=>act("findOneCat",r.id)} disabled={busy} style={{background:"none",border:"none",color:C.soft,fontSize:10.5,textDecoration:"underline",cursor:"pointer",padding:0}}>{againLabel}</button>
                 {!noShop&&<button onClick={()=>act("recheckShop",r.id)} disabled={busy} style={{background:"none",border:"none",color:C.soft,fontSize:10.5,textDecoration:"underline",cursor:"pointer",padding:0}}>{recheckLabel}</button>}
-                <button onClick={()=>act("openDigital",r.id)} style={{background:"none",border:"none",color:C.soft,fontSize:10.5,textDecoration:"underline",cursor:"pointer",padding:0}}>Digital catalogue</button>
+                <button onClick={()=>act("openDigital",r.id)} style={{background:"none",border:"none",color:C.soft,fontSize:10.5,textDecoration:"underline",cursor:"pointer",padding:0}}>{W.digitalCatalogue}</button>
               </div>
               {digitalBox}
               {said&&<div style={{marginTop:6,fontSize:11,color:said.failed?TH.urgent.ink:C.soft,fontWeight:said.failed?700:400}}>{said.text}</div>}
@@ -115,8 +115,8 @@ const LedgerCard=React.memo(function LedgerCard({r,mu,isOpen,isBusy,busy,recheck
           )}
           {/* Relabel, on its own line at the foot of the drawer (her design; the Period trial). */}
           <div style={{marginTop:10}}>
-            <button onClick={()=>act("relabel",r.id)} disabled={busy||relabelling} style={{background:"none",border:"none",color:C.soft,fontSize:10.5,textDecoration:"underline",cursor:"pointer",padding:0}}>{relabelling?"Relabelling\u2026":"Relabel"}</button>
-            {said&&said.regrouped&&<button onClick={()=>act("keepPeriod",r.id)} disabled={busy} style={{background:"none",border:"none",color:C.soft,fontSize:10.5,textDecoration:"underline",cursor:"pointer",padding:0,marginLeft:14}}>Do not regroup</button>}
+            <button onClick={()=>act("relabel",r.id)} disabled={busy||relabelling} style={{background:"none",border:"none",color:C.soft,fontSize:10.5,textDecoration:"underline",cursor:"pointer",padding:0}}>{relabelling?W.relabelling:W.relabel}</button>
+            {said&&said.regrouped&&<button onClick={()=>act("keepPeriod",r.id)} disabled={busy} style={{background:"none",border:"none",color:C.soft,fontSize:10.5,textDecoration:"underline",cursor:"pointer",padding:0,marginLeft:14}}>{W.doNotRegroup}</button>}
           </div>
         </div>
       )}
@@ -152,8 +152,8 @@ function CatalogueBox({r,mu,C,TH,lnk,isAcq,noShop,vl,picked,onPick,actions}){
       {/* The dash is a JS string: a bare — in JSX text prints those
           six characters. */}
       {r.shopState==="web"&&<div style={{fontSize:11,color:C.soft,marginBottom:6}}>
-        {noShop?(MU[r.museumId]&&MU[r.museumId].shopUnknown?"Museum shop not found.":"Venue has no shop.")
-          :"Not in the museum shop \u2014 shop link opens the general store."}
+        {noShop?(MU[r.museumId]&&MU[r.museumId].shopUnknown?W.shopNotFound:W.venueHasNoShop)
+          :W.notInShopGeneralStore}
         {publisherNote(r.publisherResult,!!r.publisherUrl)&&(" "+publisherNote(r.publisherResult,!!r.publisherUrl))}
       </div>}
       {shopUnread(r.shopState)&&<div style={{fontSize:11,color:C.soft,marginBottom:6}}>
@@ -164,7 +164,7 @@ function CatalogueBox({r,mu,C,TH,lnk,isAcq,noShop,vl,picked,onPick,actions}){
       {vl?(
         // Each block is the single-book block, the marker in its own column; the
         // whole block picks it. Blocks never move when she picks.
-        <div role="radiogroup" aria-label="Versions" style={{marginBottom:10}}>
+        <div role="radiogroup" aria-label={W.versions} style={{marginBottom:10}}>
           {vl.map((b,k)=>(
             <div key={b.i} role="radio" aria-checked={b.picked} tabIndex={0} onClick={()=>onPick(b.i)}
               onKeyDown={e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); onPick(b.i); } }}
@@ -174,12 +174,12 @@ function CatalogueBox({r,mu,C,TH,lnk,isAcq,noShop,vl,picked,onPick,actions}){
                 {b.title&&<div style={{fontFamily:"'Fraunces',Georgia,serif",fontSize:14.5,fontWeight:500,marginBottom:2,lineHeight:1.3}}>{b.title}</div>}
                 {b.publisher&&<div style={{fontSize:11,color:C.soft,marginBottom:2,lineHeight:1.4}}>{b.publisher}</div>}
                 <div style={{fontSize:11.5,fontFamily:"ui-monospace,monospace",lineHeight:1.5,color:b.isbn?C.ink:C.soft}}>
-                  {b.isbn?<>ISBN <span style={{whiteSpace:"nowrap"}}>{b.isbn}</span>{b.also&&<>; <span style={{whiteSpace:"nowrap"}}>{b.also.isbn}</span> ({b.also.whose})</>}</>
+                  {b.isbn?<>{W.isbnLabel}<span style={{whiteSpace:"nowrap"}}>{b.isbn}</span>{b.also&&<>; <span style={{whiteSpace:"nowrap"}}>{b.also.isbn}</span> ({b.also.whose})</>}</>
                     :ISBN_UNCONFIRMED}
                 </div>
                 {b.facts&&<div style={{fontSize:11,color:C.soft,marginTop:2,marginBottom:2,lineHeight:1.4}}>{b.facts}</div>}
                 {(b.why||b.source)&&<div style={{fontSize:11,color:C.soft,marginTop:3,lineHeight:1.45}}>
-                  {b.why}{b.source&&<>{b.why?" ":""}Source: <a href={b.source.url} target="_blank" rel="noopener noreferrer" onClick={e=>e.stopPropagation()} style={{color:C.soft}}>{b.source.host}</a></>}
+                  {b.why}{b.source&&<>{b.why?" ":""}{W.sourceLabel}<a href={b.source.url} target="_blank" rel="noopener noreferrer" onClick={e=>e.stopPropagation()} style={{color:C.soft}}>{b.source.host}</a></>}
                 </div>}
               </div>
             </div>
@@ -189,7 +189,7 @@ function CatalogueBox({r,mu,C,TH,lnk,isAcq,noShop,vl,picked,onPick,actions}){
         {r.catalogueTitle&&<div style={{fontFamily:"'Fraunces',Georgia,serif",fontSize:14.5,fontWeight:500,marginBottom:2,lineHeight:1.3}}>{r.catalogueTitle}</div>}
         {r.publisher&&<div style={{fontSize:11,color:C.soft,marginBottom:2}}>{r.publisher}</div>}
         <div style={{fontSize:11.5,fontFamily:"ui-monospace,monospace",marginBottom:englishLine(r)?2:10,color:r.isbn13?C.ink:C.soft}}>
-          {r.isbn13?"ISBN "+fmtIsbn(r.isbn13)+(r.alsoVersion?" \u00b7 "+alsoLine(r.alsoVersion):""):ISBN_UNCONFIRMED}
+          {r.isbn13?W.isbnLabel+fmtIsbn(r.isbn13)+(r.alsoVersion?" \u00b7 "+alsoLine(r.alsoVersion):""):ISBN_UNCONFIRMED}
         </div>
         {englishLine(r)&&<div style={{fontSize:11,color:C.soft,marginBottom:10}}>{englishLine(r)}</div>}
       </>)}
@@ -204,7 +204,7 @@ function CatalogueBox({r,mu,C,TH,lnk,isAcq,noShop,vl,picked,onPick,actions}){
           <DigitalLink r={r} C={C} lnk={lnk}/>
         </div>
       </>):(<>
-        {(shopButtonUrl(mu,r.title)||r.digitalUrl)&&<div style={{display:"flex",flexWrap:"wrap",gap:5}}>{shopButtonUrl(mu,r.title)&&<a href={shopButtonUrl(mu,r.title)} target="_blank" rel="noopener noreferrer" style={lnk}>Museum shop {"\u2197"}</a>}<DigitalLink r={r} C={C} lnk={lnk}/></div>}
+        {(shopButtonUrl(mu,r.title)||r.digitalUrl)&&<div style={{display:"flex",flexWrap:"wrap",gap:5}}>{shopButtonUrl(mu,r.title)&&<a href={shopButtonUrl(mu,r.title)} target="_blank" rel="noopener noreferrer" style={lnk}>{W.museumShop+" \u2197"}</a>}<DigitalLink r={r} C={C} lnk={lnk}/></div>}
       </>)}
       {actions}
     </div>
@@ -224,12 +224,12 @@ function CatalogueNone({r,mu,C,TH,lnk,actions}){
           {/* "Search manually" needs somewhere to press: the shop's own
               search with the title in it, as on a found card. */}
           <div style={{display:"flex",flexWrap:"wrap",gap:5}}>
-            {shopButtonUrl(mu,r.title)&&<a href={shopButtonUrl(mu,r.title)} target="_blank" rel="noopener noreferrer" style={lnk}>Museum shop {"\u2197"}</a>}
+            {shopButtonUrl(mu,r.title)&&<a href={shopButtonUrl(mu,r.title)} target="_blank" rel="noopener noreferrer" style={lnk}>{W.museumShop+" \u2197"}</a>}
             <DigitalLink r={r} C={C} lnk={lnk}/>
           </div>
         </div>
       ):<>
-        <p style={{fontSize:12,color:C.soft,margin:"0 0 8px"}}>No catalogue found for this exhibition.</p>
+        <p style={{fontSize:12,color:C.soft,margin:"0 0 8px"}}>{W.noCatalogueFound}</p>
         {r.digitalUrl&&<div style={{display:"flex",flexWrap:"wrap",gap:5,marginBottom:8}}><DigitalLink r={r} C={C} lnk={lnk}/></div>}
       </>}
       {actions}

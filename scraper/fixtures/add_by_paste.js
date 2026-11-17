@@ -12,6 +12,7 @@
  *   node scraper/fixtures/add_by_paste.js
  */
 'use strict';
+const { WORDS, wordsRe } = require('./words.js');   // the app's sentences, from its words list
 const { batchReply } = require('./batch_reply.js');
 const fs = require('fs');
 const os = require('os');
@@ -173,7 +174,7 @@ const runtime = () => ({
   ok(links().length === 2 && texts().length === 2, 'PS-011: two boxes to start, each a link box and a separate text box (her design)', links().length + '/' + texts().length);
   await click(buttons(/^\+$/)[0]);
   ok(links().length === 3 && texts().length === 3, 'PS-012: + adds a box', links().length);
-  ok(links().every(l => l.getAttribute('placeholder') === 'Link') && !win.document.querySelector('textarea[placeholder]'),
+  ok(links().every(l => l.getAttribute('placeholder') === WORDS.linkBox) && !win.document.querySelector('textarea[placeholder]'),
     'PS-013: a faint "Link" in each link box, nothing in the text boxes (her ask)');
   for (const [i, p] of PASTES.entries()) { await type(links()[i], p.url); await type(texts()[i], p.text); }
   await act(async () => { await new Promise(r => setTimeout(r, 900)); });
@@ -218,7 +219,7 @@ const runtime = () => ({
   // A box with text and no link stays, with why; the others are read and leave.
   await type(links()[2], '');
   await click(buttons(/^Read$/).pop());
-  ok(/The link box holds no web address\./.test(win.document.body.textContent), 'PS-021: a box with no link is a line saying why, never read');
+  ok(wordsRe(WORDS.linkBoxNoAddress).test(win.document.body.textContent), 'PS-021: a box with no link is a line saying why, never read');
   await click(buttons(/^Cancel import$/)[0]);
   if (!links().length) { await click(buttons(/^Import$/)[0]); await click(buttons(/^Paste$/)[0]); }
   {

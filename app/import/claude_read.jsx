@@ -17,15 +17,18 @@ const SHORT_NAME_EXAMPLES=()=>VENUE_REGISTER.filter(e=>e.kind==="manual"&&e.name
 
 // Her renames of Claude's card names (`notCard`), each with the name Claude gave: so Claude learns her style.
 // The full name is the entry's, else the one Claude gave, as the store holds it (MU).
+// Not words: sent to Claude.
 const SHORT_NAME_RENAMES=()=>VENUE_REGISTER.filter(e=>e.kind==="manual"&&e.names.hers&&e.names.replaced.length)
   .map(e=>"for "+JSON.stringify(e.names.full||e.names.card)+": "+JSON.stringify(e.names.card)+", not "+e.names.replaced.map(x=>JSON.stringify(x)).join(" or "));
 //@piece pageTitleLine
 
 // The title line a prompt gives Claude for a page read in code.
+// Not words: sent to Claude.
 const pageTitleLine=page=>"EXHIBITION TITLE, as the page gives it: "+JSON.stringify(page.base)+"\n";
 //@piece pageRawBlock
 
 // The page's raw text, fenced, as a prompt gives it to Claude.
+// Not words: sent to Claude.
 const pageRawBlock=page=>"RAW TEXT (the page under the title, dates taken out):\n\"\"\"\n"+page.raw+"\n\"\"\"";
 //@piece linkItem
 
@@ -34,6 +37,7 @@ const pageRawBlock=page=>"RAW TEXT (the page under the title, dates taken out):\
 // sends them, then each page as an item. A page's own questions (a pasted box's title and dates, a
 // subtitle, a new venue's names) are asked inside its item. linkItem is one page; linkBatchPrompt the request.
 // A pasted box (page.pasted): the whole text, and Claude asked for the title and the date words too.
+// Not words: sent to Claude.
 function linkItem(page,askVenue,url,vc){
   const museum=page.pasted&&!askVenue&&MU[vc]?MU[vc].name:"";
   const keys=[
@@ -59,6 +63,7 @@ function linkItem(page,askVenue,url,vc){
 //@piece LINK_KEYS
 
 // Every item's answer has these keys.
+// Not words: sent to Claude.
 const LINK_KEYS="\"summary\": the summary, following the rules above — or null if the item's raw text does not describe an exhibition.\n"
   +"\"english\": the exhibition's title in natural English if it is not in English; \"\" if it already is, names aside. Keep every name as written and the title's own full stops. Plain words: no \"In English\", no quotation marks.\n"
   +"\"englishSpeaking\": true if the museum is in an English-speaking country, false if not.\n"
@@ -67,6 +72,7 @@ const LINK_KEYS="\"summary\": the summary, following the rules above — or null
 
 // entries: [{key, item, refused?: {faults, answer}}]. A refused answer is shown back inside its item,
 // to be fixed rather than started afresh (her Memling link; AL-062c).
+// Not words: sent to Claude.
 function linkBatchPrompt(entries){
   const items=entries.map(e=>"===== ITEM "+e.key+" =====\n"+e.item
     +(e.refused?"\n\nYOUR LAST ANSWER WAS REFUSED: "+e.refused.faults.join("; ")+".\nTHE ANSWER REFUSED: "+JSON.stringify(e.refused.answer)
@@ -133,6 +139,7 @@ function batchAnswers(data,text){
 // (declined, rate-limited) is not repeated: each page goes on with no description, as one page did.
 // Each page's lookup-log record holds every request its page was in. `stopped` says whether Cancel was pressed.
 async function readLinkBatch(work,stopped){
+  // Not words: a fault is said to Claude when its answer is refused.
   for(const w of work){ w.ask=null; w.faults=["no answer"]; }
   let pending=work.slice();
   for(let round=0;round<=LINK_ASK_AGAIN&&pending.length;round++){
@@ -146,9 +153,9 @@ async function readLinkBatch(work,stopped){
         const w=e.w, t=w.tape;
         t.calls.push({n:t.calls.length+1,kind:"claude",at:t0-t.t0,ms:Date.now()-t0,input:{prompt,item:e.key},output:out});
         const d=got[e.key];
-        if(d!==undefined){ w.ask={ok:true,data:d,detail:out.detail||"read the results"}; w.faults=answerFaults(d,w.page); }
+        if(d!==undefined){ w.ask={ok:true,data:d,detail:out.detail||W.readTheResults}; w.faults=answerFaults(d,w.page); }
         else if(!out.ok&&out.code!=="invalid_json"){ w.ask=out; w.faults=[]; }
-        else { w.ask={ok:true,data:null,detail:"no answer for this page"}; w.faults=["no answer"]; }
+        else { w.ask={ok:true,data:null,detail:W.noAnswerForPage}; /* Not words: said to Claude. */w.faults=["no answer"]; }
         if(w.faults.length&&d!==undefined){ w.refused={faults:w.faults,answer:d}; w.seen.refused=[...(w.seen.refused||[]),{answer:d,faults:w.faults}]; }
       }
     }
@@ -178,6 +185,7 @@ function linkAnswer(a){
 const LINK_ASK_AGAIN=2;
 //@piece answerFaults
 
+// Not words: each fault is said to Claude when its answer is refused (changing one changes the answer).
 function answerFaults(raw,page){
   const o=raw&&typeof raw==="object"?raw:null;
   if(!o)return["no answer"];

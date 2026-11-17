@@ -21,6 +21,7 @@
  *   node scraper/fixtures/recheck_shop.js
  */
 'use strict';
+const { WORDS, wordsRe } = require('./words.js');   // the app's sentences, from its words list
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
@@ -217,12 +218,12 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
   const card = title => [...win.document.querySelectorAll('article')].find(a => a.textContent.includes(title));
   const button = (el, re) => el && [...el.querySelectorAll('button')].find(b => re.test(b.textContent));
   const click = async el => { await act(async () => { el.dispatchEvent(new win.MouseEvent('click', { bubbles: true })); }); await settle(); };
-  const shopLink = el => el && [...el.querySelectorAll('a')].find(a => /Museum shop/.test(a.textContent));
+  const shopLink = el => el && [...el.querySelectorAll('a')].find(a => wordsRe(WORDS.museumShop).test(a.textContent));
 
   for (const t of [miller.title, webRow.title, noCatRow.title]) {
     const c = card(t);
     if (!c) { fail('the card for "' + t + '" is not on screen after Load — nothing below can run'); continue; }
-    await click(button(c, /Catalogue/));
+    await click(button(c, wordsRe(WORDS.catalogue)));
   }
 
   // ── V-001: Levy on its chip and its cards (her decision).
@@ -236,7 +237,7 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
   {
     const c = card(noCatRow.title);
     const head = c ? c.textContent.slice(0, 40) : '';
-    ok(c && !/No catalogue/.test(head) && /Recently opened|On now/.test(head), 'V-002: a no-catalogue card keeps its time tag in the corner', head);
+    ok(c && !wordsRe(WORDS.chipNoCatalogue).test(head) && /Recently opened|On now/.test(head), 'V-002: a no-catalogue card keeps its time tag in the corner', head);
   }
 
   // ── R-001..R-004: CASE 1, the page is gone (a real 404's shape) ─────────
@@ -252,9 +253,9 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
     if (btn) await click(btn);
     c = card(miller.title);
     const t = c ? c.textContent : '';
-    ok(/No longer in the museum shop\./.test(t), 'R-002: a 404 turns the card red: "No longer in the museum shop."', t.slice(0, 200));
+    ok(wordsRe(WORDS.noLongerInShop).test(t), 'R-002: a 404 turns the card red: "No longer in the museum shop."', t.slice(0, 200));
     const a = shopLink(c);
-    ok(a && a.textContent.includes('Museum shop (last seen)'), 'R-003: the link stays, now "Museum shop (last seen)"', a && a.textContent);
+    ok(a && a.textContent.includes(WORDS.museumShopLastSeen), 'R-003: the link stays, now "Museum shop (last seen)"', a && a.textContent);
     ok(a && a.getAttribute('href') === miller.shopUrl, 'R-003a:   and still goes to the same page');
     ok(calls.filter(x => x.kind === 'mcp').length === 1 && calls[0].tool === 'web_fetch'
        && calls[0].args.urls.length === 1 && calls[0].args.urls[0] === miller.shopUrl,
@@ -270,7 +271,7 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
     await click(button(card(miller.title), /^Re-check museum shop$/));
     const c = card(miller.title);
     const t = c ? c.textContent : '';
-    ok(/Back in the museum shop\./.test(t), 'R-005: buyable again reads "Back in the museum shop."', t.slice(0, 200));
+    ok(wordsRe(WORDS.backInShop).test(t), 'R-005: buyable again reads "Back in the museum shop."', t.slice(0, 200));
     const a = shopLink(c);
     ok(a && /^Museum shop\s*↗?$/.test(a.textContent.trim()), 'R-006: and the link is plain "Museum shop" again', a && a.textContent);
     ok(!/No longer/.test(t), 'R-007: the red line is gone');
@@ -284,7 +285,7 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
     const t = card(miller.title).textContent;
     ok(/Re-check didn’t run/.test(t), 'R-008: a refused connector says the re-check didn’t run', t.slice(0, 300));
     ok(/Re-check didn’t run — The search service didn’t answer\. Worth one more try in a moment\.(Relabel)?$/.test(t) && !/Nothing changed/.test(t), 'R-009:   and the line stops at the reason', t.slice(-200));
-    ok(/Back in the museum shop\./.test(t) && !/No longer/.test(t), 'R-010: the status is exactly as before, not red');
+    ok(wordsRe(WORDS.backInShop).test(t) && !/No longer/.test(t), 'R-010: the status is exactly as before, not red');
   }
 
   // ── R-011..R-012: sold out on a page that still exists ──────────────────
@@ -294,7 +295,7 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
     script.sample = () => ({ forSale: false, why: 'The page says Sold out.' });
     await click(button(card(miller.title), /^Re-check museum shop$/));
     const t = card(miller.title).textContent;
-    ok(/No longer in the museum shop\./.test(t), 'R-011: sold out reads "No longer in the museum shop."', t.slice(0, 200));
+    ok(wordsRe(WORDS.noLongerInShop).test(t), 'R-011: sold out reads "No longer in the museum shop."', t.slice(0, 200));
     ok(shopLink(card(miller.title)).textContent.includes('(last seen)'), 'R-012: with the link kept as "(last seen)"');
   }
 
@@ -336,14 +337,14 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
     ok(!/Catalogue search failed/.test(win.document.body.textContent),
       'R-011c:   and no red banner at the top of the page — her ruling, 30 Sep');
     const doc = win.document;
-    const show = [...doc.querySelectorAll('button')].find(b => b.textContent === 'Show diagnostic');
+    const show = [...doc.querySelectorAll('button')].find(b => b.textContent === WORDS.showDiagnostic);
     if (show) await click(show);
-    const copy = [...doc.querySelectorAll('button')].find(b => b.getAttribute('aria-label') === 'Copy');
+    const copy = [...doc.querySelectorAll('button')].find(b => b.getAttribute('aria-label') === WORDS.copy);
     ok(!!copy && copy.textContent === '\u29c9' && !!copy.closest('div').querySelector('pre'),
       'R-011d: the open diagnostic has a copy icon, no word, inside the tray', copy && copy.textContent);
     if (copy) {
       await click(copy);
-      ok(copy.textContent === '\u2717' && !/Copied/.test(doc.body.textContent),
+      ok(copy.textContent === '\u2717' && !wordsRe(WORDS.copied).test(doc.body.textContent),
         'R-011d:   with no clipboard it shows a cross, never a tick', copy.textContent);
       let got = null;
       // The page reads whichever navigator is global here — jsdom's, or
@@ -367,7 +368,7 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
     await click(button(card(webRow.title), /^Re-check museum shop$/));
     const c = card(webRow.title);
     const t = c ? c.textContent : '';
-    ok(/Now in the museum shop\./.test(t), 'R-013: found in the shop reads "Now in the museum shop."', t.slice(0, 200));
+    ok(wordsRe(WORDS.nowInShop).test(t), 'R-013: found in the shop reads "Now in the museum shop."', t.slice(0, 200));
     const a = shopLink(c);
     ok(a && a.getAttribute('href') === found, 'R-014: the Museum shop link is the book’s page just found', a && a.getAttribute('href'));
     ok(t.includes('Test Show: The Catalogue') && !t.includes('A Different Title'), 'R-015: the known title is kept, not replaced');
@@ -386,7 +387,7 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
     ok(!!btn, 'R-018: a "no catalogue" tray has the button too');
     if (btn) await click(btn);
     const t = card(noCatRow.title).textContent;
-    ok(/Re-checked: not in the museum shop\./.test(t) && /No catalogue found/.test(t), 'R-019: nothing found says so, and the card is unchanged', t.slice(0, 200));
+    ok(wordsRe(WORDS.recheckedNotInShop).test(t) && /No catalogue found/.test(t), 'R-019: nothing found says so, and the card is unchanged', t.slice(0, 200));
   }
 
   // ── DG-001..DG-004: "Digital catalogue" — her link to a PDF or online catalogue (her design) ──
@@ -428,7 +429,7 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
     const before = card(webRow.title).textContent;
     await click(button(card(webRow.title), /^Search again$/));
     let t = card(webRow.title).textContent;
-    ok(/978-1857096972/.test(t) && t.includes('Hannibal Books') && /Now in the museum shop\./.test(before) && /Now in the museum shop\./.test(t),
+    ok(/978-1857096972/.test(t) && t.includes('Hannibal Books') && wordsRe(WORDS.nowInShop).test(before) && wordsRe(WORDS.nowInShop).test(t),
       'R-020: a Search again that fails changes nothing on the card', t.slice(0, 300));
     ok(/Search again didn\u2019t (run|finish)/.test(t) && !/Nothing changed/.test(t), 'R-021:   and says so on the card', t.slice(0, 400));
 
@@ -441,7 +442,7 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
     t = card(webRow.title).textContent;
     ok(/978-0300000009/.test(t) && !/978-1857096972/.test(t) && t.includes('Test Show (bookseller)') && !t.includes('Hannibal Books'),
        'R-022: a Search again that finishes replaces the card with what it found', t.slice(0, 400));
-    ok(/Not in the museum shop/.test(t) && !/Now in the museum shop\./.test(t), 'R-023:   the shop line too', t.slice(0, 400));
+    ok(/Not in the museum shop/.test(t) && !wordsRe(WORDS.nowInShop).test(t), 'R-023:   the shop line too', t.slice(0, 400));
     const d = digital(card(webRow.title));
     ok(d && d.getAttribute('href') === 'https://example.org/new.pdf', 'DG-004: Search again keeps her digital link (her decision)');
   }
@@ -457,7 +458,7 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
     await click(button(card(noCatRow.title), /^Hide$/)); await click(button(card(webRow.title), /^Hide$/));
     ok(!!button(card(noCatRow.title), /^✗ Catalogue — digital only$/) && !!button(card(webRow.title), /^✓ Catalogue \+ digital$/),
       'DG-006: closed, it reads "✗ Catalogue — digital only"; a card with both kinds reads "✓ Catalogue + digital" (her wording)');
-    await click(button(card(noCatRow.title), /Catalogue/)); await click(button(card(webRow.title), /Catalogue/));
+    await click(button(card(noCatRow.title), wordsRe(WORDS.catalogue))); await click(button(card(webRow.title), wordsRe(WORDS.catalogue)));
   }
 
   // ── DG-007: the Digital catalogue chip, last in Acquiring?, after Buy next moved to follow Owned (her design) ──
@@ -465,12 +466,12 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
     const chips = () => [...win.document.querySelectorAll('button')].filter(b => !b.closest('article'));
     const names = chips().map(b => b.textContent.trim());
     const at = n => names.indexOf(n);
-    ok(at('Buy next') === at('Owned') + 1 && at('Digital catalogue') === at('No catalogue') + 1 && at('Watched') > at('Digital catalogue'),
-      'DG-007: Acquiring? reads Wanted, Owned, Buy next, … No catalogue, Digital catalogue', names.slice(at('Wanted'), at('Digital catalogue') + 1).join(', '));
-    const dig = chips().find(b => b.textContent.trim() === 'Digital catalogue');
+    ok(at(WORDS.buyNext) === at(WORDS.chipOwned) + 1 && at(WORDS.digitalCatalogue) === at(WORDS.chipNoCatalogue) + 1 && at(WORDS.chipWatched) > at(WORDS.digitalCatalogue),
+      'DG-007: Acquiring? reads Wanted, Owned, Buy next, … No catalogue, Digital catalogue', names.slice(at(WORDS.chipWanted), at(WORDS.digitalCatalogue) + 1).join(', '));
+    const dig = chips().find(b => b.textContent.trim() === WORDS.digitalCatalogue);
     await click(dig);
     ok(!!card(noCatRow.title) && !!card(webRow.title) && !card(lgdRow.title), 'DG-007a: Digital catalogue shows only cards with her digital link');
-    const no = chips().find(b => b.textContent.trim() === 'No catalogue');
+    const no = chips().find(b => b.textContent.trim() === WORDS.chipNoCatalogue);
     await click(no);
     ok(!!card(noCatRow.title) && !!card(webRow.title), 'DG-007b: with No catalogue too, they widen one another, as Has and No catalogue do');
     await click(no); await click(dig);
@@ -485,7 +486,7 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
   const BLOCKED_NONE = 'The museum shop is blocked. The catalogue also does not appear to exist elsewhere. Search manually to confirm.';
   const r307 = u => ({ url: u, error_type: 'http_error', http_status_code: 307, content: null });
   const isKhm = u => /shop\.khm\.at/.test(u);
-  const openTray = async t => { const c = card(t); if (c && !button(c, /Find catalogue|Search again|Re-check/)) await click(button(c, /Catalogue/)); };
+  const openTray = async t => { const c = card(t); if (c && !button(c, /Find catalogue|Search again|Re-check/)) await click(button(c, wordsRe(WORDS.catalogue))); };
   const kind = p => /"forSale"/.test(p) ? 'forsale' : /venue’s OWN shop pages/.test(p) ? 'shop' : /^\{"isbn13"|"isbn13": string\|null, "publisher": string\|null, "publisherUrl": string\|null\}/m.test(p) && !/"found"/.test(p) ? 'page' : 'web';
   const PRODUCT = 'https://shop.khm.at/en/products/ausstellungskatalog-2026-canaletto-bellotto-sprache-englisch-100000000039076-3631-02';
 
@@ -499,7 +500,7 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
     script.sample = p => kind(p) === 'web'
       ? { found: true, thisVenue: true, catalogueTitle: 'Alpha. Exhibition Catalogue 2026', isbn13: null, publisher: null, publisherUrl: null, shopUrl: TICKET }
       : { found: false };
-    await click(button(card(khmA.title), /Find catalogue/));
+    await click(button(card(khmA.title), wordsRe(WORDS.findCatalogue)));
     const c = card(khmA.title), t = c ? c.textContent : '';
     ok(t.includes(BLOCKED_FOUND), 'L-001: shop refused, book found elsewhere — her sentence', t.slice(0, 300));
     ok(!/In the museum shop/.test(t), 'L-002: never "In the museum shop"');
@@ -512,7 +513,7 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
   // ── L-004a: the blocked headline is its own red, bold span; the rest grey.
   {
     const c = card(khmA.title);
-    const head = c && [...c.querySelectorAll('span')].find(x => x.textContent === 'The museum shop is blocked');
+    const head = c && [...c.querySelectorAll('span')].find(x => x.textContent === WORDS.shopBlockedHead);
     ok(head && head.style.fontWeight === '700' && head.style.color !== '' && head.parentElement.style.fontWeight === '',
        'L-004a: "The museum shop is blocked" is bold and coloured on its own; the rest of the line is plain');
   }
@@ -523,12 +524,12 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
     calls.length = 0;
     await openTray(khmB.title);
     script.mcp = (tool, args) => tool === 'web_search'
-      ? { payload: { results: [{ url: PRODUCT, title: 'Ausstellungskatalog 2026', excerpts: ['Catalogue'] }] } }
+      ? { payload: { results: [{ url: PRODUCT, title: 'Ausstellungskatalog 2026', excerpts: [WORDS.catalogue] }] } }
       : { payload: { results: [], errors: args.urls.map(r307) } };
     script.sample = p => kind(p) === 'web'
       ? { found: true, thisVenue: true, catalogueTitle: 'Test KHM Show Beta: The Catalogue', isbn13: '9781857096972', publisher: null, publisherUrl: null, shopUrl: PRODUCT }
       : { found: false };
-    await click(button(card(khmB.title), /Find catalogue/));
+    await click(button(card(khmB.title), wordsRe(WORDS.findCatalogue)));
     const t = card(khmB.title).textContent;
     ok(t.includes(BLOCKED_FOUND) && !/In the museum shop/.test(t), 'L-005: a shop link that will not open is not "In the museum shop"', t.slice(0, 300));
     ok(calls.filter(x => x.tool === 'web_fetch' && x.args.urls.includes(PRODUCT)).length === 1, 'L-006: it was opened once — never again by the ISBN step after failing');
@@ -542,7 +543,7 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
       ? { payload: { results: [{ url: 'https://news.test/x', title: 'Show review', excerpts: ['A review.'] }] } }
       : { payload: { results: [], errors: args.urls.map(r307) } };
     script.sample = () => ({ found: false, catalogueTitle: null, isbn13: null, publisher: null, publisherUrl: null, shopUrl: null });
-    await click(button(card(khmC.title), /Find catalogue/));
+    await click(button(card(khmC.title), wordsRe(WORDS.findCatalogue)));
     const c = card(khmC.title), t = c ? c.textContent : '';
     ok(t.includes(BLOCKED_NONE) && !/No catalogue found for this exhibition/.test(t), 'L-008: shop refused, nothing elsewhere — her sentence, not "No catalogue found"', t.slice(0, 300));
     const a = shopLink(c);
@@ -563,9 +564,9 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
     script.sample = p => ({ forsale: { forSale: true, why: 'Add to basket.' },
       shop: { found: false }, page: { isbn13: null, publisher: 'Yale', publisherUrl: null },
       web: { found: true, thisVenue: true, catalogueTitle: 'Test NG Show Opens: Catalogue', isbn13: '9780300000009', publisher: null, publisherUrl: null, shopUrl: link } })[kind(p)];
-    await click(button(card(ngA.title), /Find catalogue/));
+    await click(button(card(ngA.title), wordsRe(WORDS.findCatalogue)));
     const c = card(ngA.title), t = c ? c.textContent : '';
-    ok(/In the museum shop\./.test(t), 'L-010: a web-found shop link that opens and is for sale — "In the museum shop."', t.slice(0, 300));
+    ok(wordsRe(WORDS.inShop).test(t), 'L-010: a web-found shop link that opens and is for sale — "In the museum shop."', t.slice(0, 300));
     ok(shopLink(c) && shopLink(c).getAttribute('href') === link, 'L-011: the Museum shop link is that page');
     ok(calls.filter(x => x.tool === 'web_fetch' && x.args.urls.includes(link)).length === 1, 'L-012: the page was opened once, and the ISBN step reused it');
   }
@@ -582,9 +583,9 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
     script.sample = p => kind(p) === 'web'
       ? { found: true, thisVenue: true, catalogueTitle: 'Dead Link Catalogue', isbn13: '9780300000009', publisher: 'Yale', publisherUrl: null, shopUrl: link }
       : { found: false };
-    await click(button(card(ngB.title), /Find catalogue/));
+    await click(button(card(ngB.title), wordsRe(WORDS.findCatalogue)));
     const t = card(ngB.title).textContent;
-    ok(/Not in the museum shop/.test(t) && !/In the museum shop\./.test(t), 'L-013: a web-found shop link that is gone is filed as found on the web', t.slice(0, 300));
+    ok(/Not in the museum shop/.test(t) && !wordsRe(WORDS.inShop).test(t), 'L-013: a web-found shop link that is gone is filed as found on the web', t.slice(0, 300));
   }
 
   // ── P-001..P-002: her Timeless Tintoretto, 25 Sep. The shop finds the book
@@ -600,9 +601,9 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
     };
     script.sample = () => ({ found: true, thisVenue: true, catalogueTitle: 'Publisher Dies: The Catalogue', isbn13: '9782754117418',
       publisher: 'Editions Hazan', publisherUrl: null, shopUrl: link });
-    await click(button(card(ngPub.title), /Find catalogue/));
+    await click(button(card(ngPub.title), wordsRe(WORDS.findCatalogue)));
     const t = card(ngPub.title).textContent;
-    ok(/In the museum shop\./.test(t) && !/No separate publisher page/.test(t),
+    ok(wordsRe(WORDS.inShop).test(t) && !/No separate publisher page/.test(t),
        'P-001: a publisher search that failed part-way claims nothing on the card', t.slice(0, 300));
     ok(/stopped part-way/.test(win.document.body.textContent), 'P-002: the banner says the search stopped part-way');
   }
@@ -615,13 +616,13 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
     const searchUrl = 'https://shop.khm.at/en/products?shop%5Bq%5D=' + encodeURIComponent(khmList.title);
     script.mcp = (tool, args) => tool === 'web_search'
       ? { payload: { results: [] } }
-      : { payload: { results: args.urls.map(u => ({ url: u, title: 'Search', excerpts: ['Test KHM Listed Only. Exhibition Catalogue 2026 €39.90 ' + 'x '.repeat(300)] })), errors: [] } };
+      : { payload: { results: args.urls.map(u => ({ url: u, title: WORDS.search, excerpts: ['Test KHM Listed Only. Exhibition Catalogue 2026 €39.90 ' + 'x '.repeat(300)] })), errors: [] } };
     script.sample = p => /"found"/.test(p)
       ? { found: true, thisVenue: true, catalogueTitle: 'Listed Only. Exhibition Catalogue 2026', isbn13: null, publisher: null, publisherUrl: null, shopUrl: searchUrl }
       : { isbn13: null, publisher: null, publisherUrl: null };
-    await click(button(card(khmList.title), /Find catalogue/));
+    await click(button(card(khmList.title), wordsRe(WORDS.findCatalogue)));
     const c = card(khmList.title), t = c ? c.textContent : '';
-    ok(/In the museum shop\./.test(t) && !/Not in the museum shop/.test(t), 'L-020: a book read off the shop’s own results is in the museum shop', t.slice(0, 300));
+    ok(wordsRe(WORDS.inShop).test(t) && !/Not in the museum shop/.test(t), 'L-020: a book read off the shop’s own results is in the museum shop', t.slice(0, 300));
     ok(shopLink(c) && shopLink(c).getAttribute('href') === searchUrl, 'L-021: its Museum shop link is the shop’s search for the show — not filed as the book’s page', shopLink(c) && shopLink(c).getAttribute('href'));
     ok(calls.filter(x => x.tool === 'web_fetch' && x.args.urls.includes(searchUrl)).length === 1, 'L-022: the search page is not re-opened as though it were the book');
   }
@@ -629,13 +630,13 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
     // Her card from the older file: Re-check drops the ticket; the shop answers.
     await openTray(khmOld.title);
     const searchUrl = 'https://shop.khm.at/en/products?shop%5Bq%5D=' + encodeURIComponent(khmOld.title);
-    script.mcp = (tool, args) => ({ payload: { results: args.urls.map(u => ({ url: u, title: 'Search', excerpts: ['Canaletto and Bellotto. Exhibition Catalogue 2026 €39.90 ' + 'x '.repeat(300)] })), errors: [] } });
+    script.mcp = (tool, args) => ({ payload: { results: args.urls.map(u => ({ url: u, title: WORDS.search, excerpts: ['Canaletto and Bellotto. Exhibition Catalogue 2026 €39.90 ' + 'x '.repeat(300)] })), errors: [] } });
     script.sample = p => /"found"/.test(p)
       ? { found: true, thisVenue: true, catalogueTitle: 'Canaletto & Bellotto. Exhibition Catalogue 2026', isbn13: null, publisher: null, publisherUrl: null, shopUrl: searchUrl }
       : { isbn13: null, publisher: null, publisherUrl: null };
     await click(button(card(khmOld.title), /^Re-check museum shop$/));
     const c = card(khmOld.title), t = c ? c.textContent : '';
-    ok(/Now in the museum shop\./.test(t) && shopLink(c) && shopLink(c).getAttribute('href') === searchUrl && !/tickets/.test(c.innerHTML),
+    ok(wordsRe(WORDS.nowInShop).test(t) && shopLink(c) && shopLink(c).getAttribute('href') === searchUrl && !/tickets/.test(c.innerHTML),
        'L-023: her older card — one Re-check: ticket gone, "Now in the museum shop.", link opens KHM’s search', (shopLink(c) && shopLink(c).getAttribute('href')) + ' | ' + t.slice(0, 200));
   }
 
@@ -662,7 +663,7 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
       : { isbn13: null, publisher: null, publisherUrl: null };
     await click(button(card(khmBad.title), /^Re-check museum shop$/));
     const c = card(khmBad.title), t = c ? c.textContent : '';
-    ok(/Now in the museum shop\./.test(t) && !t.includes(BLOCKED_FOUND), 'L-017: the shop answering moves "blocked" to "Now in the museum shop."', t.slice(0, 300));
+    ok(wordsRe(WORDS.nowInShop).test(t) && !t.includes(BLOCKED_FOUND), 'L-017: the shop answering moves "blocked" to "Now in the museum shop."', t.slice(0, 300));
     ok(shopLink(c) && shopLink(c).getAttribute('href') === PRODUCT, 'L-018: with the book’s real page as the link');
   }
 
@@ -699,22 +700,22 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
 
     await openTray(madShelf.title);
     script.sample = found('Test MAD Shelf : A brilliant story');
-    await click(button(card(madShelf.title), /Find catalogue/));
+    await click(button(card(madShelf.title), wordsRe(WORDS.findCatalogue)));
     let c = card(madShelf.title), t = c ? c.textContent : '';
     ok(shopLink(c) && shopLink(c).getAttribute('href') === BOOK, 'M-001: the read hands back the shelf, and the book’s own link on it becomes her Museum shop link', shopLink(c) && shopLink(c).getAttribute('href'));
-    ok(/In the museum shop\./.test(t), 'M-002:   filed as in the museum shop', t.slice(0, 200));
+    ok(wordsRe(WORDS.inShop).test(t), 'M-002:   filed as in the museum shop', t.slice(0, 200));
 
     await openTray(madListed.title);
     script.sample = found('Test MAD Listed : A brilliant story');
     await click(button(card(madListed.title), /^Re-check museum shop$/));
     c = card(madListed.title); t = c ? c.textContent : '';
     ok(shopLink(c) && shopLink(c).getAttribute('href') === LISTED, 'M-003: her card in the shop with no link — Re-check reads the link off the shelf', shopLink(c) && shopLink(c).getAttribute('href'));
-    ok(/Still in the museum shop\./.test(t) && !/Now in the museum shop/.test(t), 'M-004:   and the headline reads "Still in the museum shop." — never "Now", it was there already', t.slice(0, 200));
-    ok(/Re-checked: still in the museum shop\./.test(t), 'M-005:   Re-check says it is still there', t.slice(0, 400));
+    ok(wordsRe(WORDS.stillInShop).test(t) && !/Now in the museum shop/.test(t), 'M-004:   and the headline reads "Still in the museum shop." — never "Now", it was there already', t.slice(0, 200));
+    ok(wordsRe(WORDS.recheckedStillInShop).test(t), 'M-005:   Re-check says it is still there', t.slice(0, 400));
 
     await openTray(madTwo.title);
     script.sample = found('Test MAD Two Books');
-    await click(button(card(madTwo.title), /Find catalogue/));
+    await click(button(card(madTwo.title), wordsRe(WORDS.findCatalogue)));
     c = card(madTwo.title);
     ok(shopLink(c) && shopLink(c).getAttribute('href') === 'https://boutique.madparis.fr/en/mads-publications/c462/1/',
       'M-006: two different links carry the title — neither is taken; the button opens the shelf', shopLink(c) && shopLink(c).getAttribute('href'));
@@ -739,7 +740,7 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
     calls.length = 0;
     await openTray(orsayA.title);
     script.sample = reads(null);
-    await click(button(card(orsayA.title), /Find catalogue/));
+    await click(button(card(orsayA.title), wordsRe(WORDS.findCatalogue)));
     let t = card(orsayA.title) ? card(orsayA.title).textContent : '';
     const pageCall = calls.find(c => c.kind === 'mcp' && c.args.urls && c.args.urls.includes(PAGE));
     ok(pageCall && pageCall.args.full_content === true, 'O-001: the book’s own page is asked for in full', pageCall && JSON.stringify(pageCall.args));
@@ -751,7 +752,7 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
 
     await openTray(orsayB.title);
     script.sample = reads('9781588398130');
-    await click(button(card(orsayB.title), /Find catalogue/));
+    await click(button(card(orsayB.title), wordsRe(WORDS.findCatalogue)));
     t = card(orsayB.title) ? card(orsayB.title).textContent : '';
     ok(/978-2754117425/.test(t) && !/978-1588398130/.test(t), 'O-005: the number on the page beats a different one from Claude', t.slice(0, 400));
   }
@@ -768,9 +769,9 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
           errors: args.urls.filter(u => /[?&]q=/.test(u)).map(u => ({ url: u, error_type: 'http_error', http_status_code: 403, content: null })) } };
     script.sample = () => ({ found: true, thisVenue: true, catalogueTitle: 'Test MoMA Brancusi Show', isbn13: '9781633451971', publisher: 'The Museum of Modern Art', publisherUrl: null, shopUrl: null });
     await openTray(momaRow.title);
-    await click(button(card(momaRow.title), /Find catalogue/));
+    await click(button(card(momaRow.title), wordsRe(WORDS.findCatalogue)));
     const t = card(momaRow.title) ? card(momaRow.title).textContent : '';
-    ok(t.includes('The museum shop contents cannot be seen — JS-rendering — search it manually. The catalogue is stocked elsewhere.') && !t.includes('The museum shop is blocked'),
+    ok(t.includes('The museum shop contents cannot be seen — JS-rendering — search it manually. The catalogue is stocked elsewhere.') && !t.includes(WORDS.shopBlockedHead),
        'B-001: a shelf with no books on it (drawn by script) reads "contents cannot be seen — JS-rendering", not blocked — her wording', t.slice(0, 300));
     ok(!/Not in the museum shop/.test(t), 'B-002:   never "Not in the museum shop"');
     ok(!calls.some(x => x.kind === 'sample' && /OWN shop pages, opened directly/.test(x.prompt)), 'B-003:   and Claude is not asked to read the empty shelf');
@@ -792,9 +793,9 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
     const t3 = card(momaRow.title) ? card(momaRow.title).textContent : '';
     ok(/Re-check didn’t work — museum shop contents cannot be seen — JS-rendering\./.test(t3) && !/not in the museum shop/i.test(t3),
       'B-007: MoMA’s real pop-up (no price, no product link) reads "contents cannot be seen — JS-rendering", never "not in the museum shop"', t3.slice(0, 400));
-    await click(button(card(momaRow.title), /Search again/));
+    await click(button(card(momaRow.title), wordsRe(WORDS.searchAgain)));
     const t4 = card(momaRow.title) ? card(momaRow.title).textContent : '';
-    ok(t4.includes('The museum shop contents cannot be seen — JS-rendering') && !/Not in the museum shop/i.test(t4),
+    ok(t4.includes(WORDS.shopScriptHead) && !/Not in the museum shop/i.test(t4),
       'B-007a:  and a fresh lookup says the same', t4.slice(0, 400));
   }
 
@@ -807,9 +808,9 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
           excerpts: ['Exhibition catalogs'], ...(args.full_content ? { full_content: shelf('# Exhibition catalogs') } : {}) })) } };
     script.sample = p => /OWN shop pages, opened directly/.test(p) ? { found: false } : { found: false };
     await openTray(jqWatteau.title);
-    await click(button(card(jqWatteau.title), /Find catalogue/));
+    await click(button(card(jqWatteau.title), wordsRe(WORDS.findCatalogue)));
     const t = card(jqWatteau.title) ? card(jqWatteau.title).textContent : '';
-    ok(!t.includes('The museum shop is blocked'), 'B-004: a shelf whose excerpts are short but whose whole page lists priced books is not blocked', t.slice(0, 300));
+    ok(!t.includes(WORDS.shopBlockedHead), 'B-004: a shelf whose excerpts are short but whose whole page lists priced books is not blocked', t.slice(0, 300));
     ok(calls.some(x => x.kind === 'mcp' && x.args.full_content === true && x.args.urls.some(u => /116-exhibition-catalogs/.test(u))), 'B-005:   the shelf was opened once more, whole');
     ok(calls.some(x => x.kind === 'sample' && /OWN shop pages, opened directly/.test(x.prompt)), 'B-006:   and Claude read it');
   }
@@ -828,7 +829,7 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
       ? { found: true, thisVenue: true, catalogueTitle: BOOK, isbn13: null, publisher: null, publisherUrl: null, shopUrl: PAGE }
       : { isbn13: null, publisher: null, publisherUrl: null };
     await openTray(bloomRow.title);
-    await click(button(card(bloomRow.title), /Find catalogue/));
+    await click(button(card(bloomRow.title), wordsRe(WORDS.findCatalogue)));
     const t = card(bloomRow.title) ? card(bloomRow.title).textContent : '';
     ok(/978-1910807743/.test(t), 'W-001: the ISBN in the web results reaches her card, though Claude read none', t.slice(0, 400));
     const q = (calls.find(c => c.tool === 'web_search') || { args: { search_queries: [] } }).args.search_queries;
@@ -851,7 +852,7 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
       ? { found: true, thisVenue: true, catalogueTitle: BOOK, isbn13: null, publisher: null, publisherUrl: null, shopUrl: PAGE }
       : { isbn13: null, publisher: null, publisherUrl: null };
     await openTray(bloomOpen.title);
-    await click(button(card(bloomOpen.title), /Find catalogue/));
+    await click(button(card(bloomOpen.title), wordsRe(WORDS.findCatalogue)));
     const t = card(bloomOpen.title) ? card(bloomOpen.title).textContent : '';
     const opened = calls.find(c => c.tool === 'web_fetch' && c.args.urls.includes(SELLER));
     ok(opened && opened.args.full_content === true, 'W-004: no ISBN in the results — the result about this book is opened, whole');
@@ -925,16 +926,16 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
     ok(/978-9059962514/.test(t), 'VN-005:   the ISBN already found stands', t.slice(0, 400));
     await openTray(webLine.title);
     const w = card(webLine.title) ? card(webLine.title).textContent : '';
-    ok(/Not in the museum shop \u2014 shop link opens the general store\./.test(w), 'VN-006: a venue with a shop \u2014 the line as it was before 37.2, word for word', w.slice(0, 300));
+    ok(wordsRe(WORDS.notInShopGeneralStore).test(w), 'VN-006: a venue with a shop \u2014 the line as it was before 37.2, word for word', w.slice(0, 300));
     await openTray(noShop.title);
     const ns = card(noShop.title);
     const nt = ns ? ns.textContent : '';
-    ok(/Venue has no shop\./.test(nt) && !/Not in the museum shop/.test(nt) && !/shop link opens/.test(nt), 'VN-007: a venue with no shop \u2014 her line, word for word', nt.slice(0, 300));
-    ok(ns && ![...ns.querySelectorAll('a')].some(a => /Museum shop/.test(a.textContent)), 'VN-008:   and no Museum shop button');
-    ok(ns && ![...ns.querySelectorAll('button')].some(b => /Re-check museum shop/.test(b.textContent)), 'VN-009:   and no Re-check museum shop button');
+    ok(wordsRe(WORDS.venueHasNoShop).test(nt) && !/Not in the museum shop/.test(nt) && !/shop link opens/.test(nt), 'VN-007: a venue with no shop \u2014 her line, word for word', nt.slice(0, 300));
+    ok(ns && ![...ns.querySelectorAll('a')].some(a => wordsRe(WORDS.museumShop).test(a.textContent)), 'VN-008:   and no Museum shop button');
+    ok(ns && ![...ns.querySelectorAll('button')].some(b => wordsRe(WORDS.recheckShop).test(b.textContent)), 'VN-009:   and no Re-check museum shop button');
     await openTray(noCatRow.title);
     const nc = card(noCatRow.title);
-    ok(nc && [...nc.querySelectorAll('button')].some(b => /Re-check museum shop/.test(b.textContent)), 'VN-010: a venue with a shop keeps its Re-check button');
+    ok(nc && [...nc.querySelectorAll('button')].some(b => wordsRe(WORDS.recheckShop).test(b.textContent)), 'VN-010: a venue with a shop keeps its Re-check button');
   }
 
   // ── LG-001..LG-012: the book's language, and an English edition ─────────
@@ -956,7 +957,7 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
           if (pubFound && q.startsWith('site:www.lienart.fr')) return { payload: { results: [{ url: PUB_PAGE, title: OWN, excerpts: [OWN] }] } };
           if (/English edition/.test(q) && en && enIsbnPub) return { payload: { results: ['a', 'b'].map(k => ({ url: 'https://books.test/en-' + k, title: en, excerpts: [en + '. ISBN ' + EN + '\nPublisher: ' + enIsbnPub + ', 2025'] })) } };
           if (/English edition/.test(q) && enFail) throw Object.assign(new Error('upstream'), { code: 'upstream_error' });
-          if (/English edition/.test(q) && en) return { payload: { results: [{ url: 'https://books.test/en', title: en, excerpts: [en + ' \u2014 English edition' + (enVenue ? ' of the catalogue for the exhibition at the Louvre' : '') + '. ' + (enPrinted ? 'ISBN ' + EN : 'Paperback.')] }] } };
+          if (/English edition/.test(q) && en) return { payload: { results: [{ url: 'https://books.test/en', title: en, excerpts: [en + ' \u2014 English edition' + (enVenue ? ' of the catalogue for the exhibition at the Louvre' : '') + '. ' + (enPrinted ? WORDS.isbnLabel + EN : 'Paperback.')] }] } };
           if (/English edition/.test(q) && pubPage) return { payload: { results: [{ url: PUB_PAGE, title: OWN + ' | Lienart \u00e9ditions', excerpts: [OWN + '. Lienart, 2025.'] }] } };
           return { payload: { results: [] } };
         }
@@ -985,7 +986,7 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
     ok(!/Art in Prague at the Court/.test(t), 'LG-002:   never the show\u2019s English subtitle', t.slice(0, 400));
     ok(/978-2359064612/.test(t) && /In the museum shop/.test(t), 'LG-003:   no English edition \u2014 the shop\u2019s book stays, in the museum shop', t.slice(0, 400));
     ok(searches().some(q => q.some(x => /English edition/.test(x))), 'LG-004:   an English edition was looked for', JSON.stringify(searches()));
-    ok(/No English edition found in bookshops\./.test(t) && !/publisher\u2019s own page/.test(t), 'LG-012:   the card says how far it was looked for: bookshops only', t.slice(0, 600));
+    ok(wordsRe(WORDS.noEnglishShops).test(t) && !/publisher\u2019s own page/.test(t), 'LG-012:   the card says how far it was looked for: bookshops only', t.slice(0, 600));
 
     t = await run(louEnglish, { en: 'Test The Experience of Nature (English edition)' });
     // Two versions: her version blocks, English first, replace the book block.
@@ -1019,19 +1020,19 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
     // Her ruling, 7 Oct (Watteau): the publisher lists every edition it printed.
     t = await run(louPub, { pub: 'Lienart', pubPage: true });
     ok(calls.some(c => c.tool === 'web_fetch' && c.args.urls.includes(PUB_PAGE)), 'LG-013: the publisher\u2019s own page for the book, found in the search, is opened whole');
-    ok(t.includes("No English edition — checked publisher's site and bookshops."), 'LG-013a:  and the card says so', t.slice(0, 600));
+    ok(t.includes(WORDS.noEnglishPublisher), 'LG-013a:  and the card says so', t.slice(0, 600));
     ok(searches().some(q => q.some(x => /^originally published in French as /.test(x))), 'LG-013b:  the edition search asks where a translation is recorded, not only "English edition"', JSON.stringify(searches()));
     // Her Canaletto, 7 Oct: the page the publisher step found is the one the
     // English check reads — and it is opened once.
     t = await run(louPubKnown, { pub: 'Lienart', pubFound: true });
-    ok(t.includes("No English edition — checked publisher's site and bookshops."), 'LG-020: the publisher\u2019s page the card links is the one the English check read', t.slice(0, 600));
+    ok(t.includes(WORDS.noEnglishPublisher), 'LG-020: the publisher\u2019s page the card links is the one the English check read', t.slice(0, 600));
     ok(calls.filter(c => c.tool === 'web_fetch' && c.args.urls.includes(PUB_PAGE)).length === 1, 'LG-020a:  opened once, not twice');
     // Her ruling, 7 Oct: an English edition's publisher is read off its ISBN in
     // code. Claude naming the original's publisher does not get a look-alike in.
     t = await run(louEnClaim, { en: 'Test Claimed Monograph', enVenue: false, enPub: 'Lienart', pub: 'Lienart', enIsbnPub: 'Reaktion Books' });
     ok(!/Test Claimed Monograph/.test(t) && t.includes(OWN), 'LG-021: an English book whose ISBN names another publisher is refused, whatever the read said', t.slice(0, 600));
     t = await run(louStop, { enFail: true });
-    ok(/English edition not checked \u2014 the search stopped part-way\. Search again to retry\./.test(t), 'LG-014: a search that died says the check was not done', t.slice(0, 600));
+    ok(wordsRe(WORDS.englishStopped).test(t), 'LG-014: a search that died says the check was not done', t.slice(0, 600));
     t = await run(louStop, { enFail: true, shopTitle: 'Test Changed Shop Title' });
     ok(!t.includes('Test Changed Shop Title') && /Search again didn\u2019t finish/.test(t) && !/Nothing changed/.test(t),
       'LG-019: a Search again where a later step fails changes nothing, and says it didn\u2019t finish', t.slice(0, 600));
@@ -1055,7 +1056,7 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
       : /"found"/.test(p) ? { found: true, thisVenue: true, catalogueTitle: 'Test Association Book', isbn13: '9780847877645', publisher: 'Morgan Library & Museum in association with Rizzoli Electa', publisherUrl: null, shopUrl: null }
       : { isbn13: null, publisher: null, publisherUrl: null };
     await openTray(morganAssoc.title);
-    await click(button(card(morganAssoc.title), /Find catalogue/));
+    await click(button(card(morganAssoc.title), wordsRe(WORDS.findCatalogue)));
     const firsts = calls.filter(c => c.tool === 'web_search').map(c => c.args.search_queries[0]);
     // Rizzoli Electa's site comes from her list (PUBLISHER_SITES), so the step searches inside it.
     ok(firsts.some(q => q.startsWith('site:www.rizzoliusa.com')) && !firsts.some(q => /in association with/.test(q)), 'PA-001: the publisher step looks for Rizzoli Electa, not the whole line', JSON.stringify(firsts));
@@ -1067,9 +1068,9 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
   {
     const doc = win.document;
     const btns = () => [...doc.querySelectorAll('button')];
-    const footer = btns().find(b => b.textContent === 'Reset to Seed');
+    const footer = btns().find(b => b.textContent === WORDS.resetToSeed);
     ok(!!footer && !/starter set from venue pages|force-loads/.test(doc.body.textContent), 'RC-001: the footer says only "Reset to Seed" \u2014 no sentence', doc.body.textContent.match(/.{0,40}Reset to Seed.{0,40}/));
-    const rc = btns().find(b => b.textContent === 'Clear search');
+    const rc = btns().find(b => b.textContent === WORDS.clearSearch);
     ok(!!rc && rc.parentElement === footer.parentElement, 'RC-002:   with "Clear search" beside it');
     await click(rc);
     const box = [...doc.querySelectorAll('input:not([type])')].find(i => !i.closest('header'));
@@ -1078,7 +1079,7 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
     await type('nature show');
     const pick = () => btns().find(b => b.textContent === louNature.title);
     ok(!!pick() && !btns().some(b => b.textContent === louKnown.title), 'RC-004:   typing finds the searched card, and only cards that match');
-    const chipStyle = () => { const c = card(louNature.title); const y = c && [...c.querySelectorAll('button')].find(b => b.textContent === 'Yes'); return y ? y.getAttribute('style') : null; };
+    const chipStyle = () => { const c = card(louNature.title); const y = c && [...c.querySelectorAll('button')].find(b => b.textContent === WORDS.yes); return y ? y.getAttribute('style') : null; };
     const markBefore = chipStyle();
     const before = card(louNature.title).textContent;
     await click(pick());
@@ -1086,14 +1087,14 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
     const inConf = label => conf() && [...conf().querySelectorAll('button')].find(b => b.textContent === label);
     const ct = conf() ? conf().textContent : '';
     ok(ct === 'Reset this search?CancelYes', 'RC-005:   picking it asks only "Reset this search?", Yes or Cancel', ct);
-    await click(inConf('Cancel'));
+    await click(inConf(WORDS.cancel));
     ok(!conf() && card(louNature.title).textContent === before, 'RC-006:   Cancel changes nothing');
     await click(pick());
-    await click(inConf('Yes'));
+    await click(inConf(WORDS.yes));
     await openTray(louNature.title);
     const after = card(louNature.title);
     const at = after ? after.textContent : '';
-    ok(/Find catalogue/.test(at) && !/978-2359064612/.test(at) && !/Exp\u00e9rience/.test(at), 'RC-007:   Yes clears the card back to "Find catalogue"', at.slice(0, 300));
+    ok(wordsRe(WORDS.findCatalogue).test(at) && !/978-2359064612/.test(at) && !/Exp\u00e9rience/.test(at), 'RC-007:   Yes clears the card back to "Find catalogue"', at.slice(0, 300));
     ok(markBefore && chipStyle() === markBefore, 'RC-008:   her "Yes, want the catalogue" mark is kept');
     ok(!btns().some(b => b.textContent === louNature.title), 'RC-009:   the box empties once the card is reset');
   }
@@ -1102,10 +1103,10 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
   {
     const doc = win.document;
     const before = doc.querySelectorAll('article').length;
-    await click([...doc.querySelectorAll('button')].find(b => b.textContent === 'Reset to Seed'));
+    await click([...doc.querySelectorAll('button')].find(b => b.textContent === WORDS.resetToSeed));
     const conf = [...doc.querySelectorAll('div')].find(d => d.style && d.style.zIndex === '1200');
     ok(!!conf && /replaces everything on screen/.test(conf.textContent), 'RS-001: Reset to Seed asks before replacing the ledger', conf ? conf.textContent : 'no box');
-    if (conf) await click([...conf.querySelectorAll('button')].find(b => b.textContent === 'Cancel'));
+    if (conf) await click([...conf.querySelectorAll('button')].find(b => b.textContent === WORDS.cancel));
     ok(doc.querySelectorAll('article').length === before, 'RS-002:   Cancel leaves the ledger as it was');
   }
 
@@ -1116,16 +1117,16 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
     const head = doc.querySelector('header');
     const ht = head ? head.textContent : '';
     const at = w => ht.indexOf(w);
-    ok(at('Watched') >= 0 && at('Watched') < at('Wanted') && at('Wanted') < at('Owned') && at('Owned') < at('Closing Window'), 'CT-001: the counts line reads Watched, Wanted, Owned, Closing Window', ht.slice(0, 300));
+    ok(at(WORDS.chipWatched) >= 0 && at(WORDS.chipWatched) < at(WORDS.chipWanted) && at(WORDS.chipWanted) < at(WORDS.chipOwned) && at(WORDS.chipOwned) < at('Closing Window'), 'CT-001: the counts line reads Watched, Wanted, Owned, Closing Window', ht.slice(0, 300));
     ok(!/Tracked|Dismissed/.test(ht), 'CT-002:   Tracked and Dismissed are not on it until Details opens', ht.slice(0, 300));
-    const det = btns().find(b => b.textContent === 'Details');
+    const det = btns().find(b => b.textContent === WORDS.details);
     ok(!!det, 'CT-003: the drawer button reads "Details"');
     if (det) await click(det);
     const ht2 = doc.querySelector('header').textContent;
     ok(/\d+ Tracked/.test(ht2) && ht2.indexOf('Tracked') < ht2.indexOf('When each venue'), 'CT-004:   Details opens with Tracked at the top, above the sweep dates', ht2.slice(0, 400));
     const ph = [...doc.querySelectorAll('input[placeholder]')].map(i => i.getAttribute('placeholder'));
     ok(ph.every(x => !/\\u/.test(x)), 'CT-005: no search box shows a raw \\u code', JSON.stringify(ph));
-    const hide = btns().find(b => b.textContent === 'Hide details'); if (hide) await click(hide);
+    const hide = btns().find(b => b.textContent === WORDS.hideDetails); if (hide) await click(hide);
   }
 
   // ── S-001..S-003: the search narrows WITH the filters — her finding, 25 Sep.
@@ -1137,7 +1138,7 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
     // through IE's attachEvent, which jsdom lacks. A no-op stands in for it.
     win.HTMLElement.prototype.attachEvent = function () {};
     win.HTMLElement.prototype.detachEvent = function () {};
-    await click([...doc.querySelectorAll('button')].find(b => b.title === 'Search'));
+    await click([...doc.querySelectorAll('button')].find(b => b.title === WORDS.search));
     const box = doc.querySelector('header input:not([type=file])');
     // React was loaded before this jsdom existed, so it cannot hear a synthetic
     // input event here. Its own onChange is called instead — the same handler
@@ -1175,14 +1176,14 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
     const doc = win.document;
     const btns = () => [...doc.querySelectorAll('button')];
     const typeIn = async (box, v) => { const props = box[Object.keys(box).find(k => k.startsWith('__reactProps'))]; await act(async () => { props.onChange({ target: { value: v } }); }); await settle(); };
-    const searchBtn = () => btns().find(b => b.title === 'Search');
+    const searchBtn = () => btns().find(b => b.title === WORDS.search);
     const sbox = () => doc.querySelector('header input:not([type=file])');
     if (!sbox()) await click(searchBtn());
     await typeIn(sbox(), 'Test');
     await click(searchBtn());
     await click(searchBtn());
     ok(sbox() && sbox().value === '', 'SC-001: closing the search bar and opening it again finds it empty', sbox() && sbox().value);
-    const rc = () => btns().find(b => b.textContent === 'Clear search');
+    const rc = () => btns().find(b => b.textContent === WORDS.clearSearch);
     const rbox = () => [...doc.querySelectorAll('input:not([type])')].find(i => !i.closest('header'));
     if (!rbox()) await click(rc());
     await typeIn(rbox(), 'nature');
@@ -1198,29 +1199,29 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
     const btns = () => [...doc.querySelectorAll('button')];
     const chipNamed = t => btns().find(b => b.textContent === t);
     const shown = () => [...doc.querySelectorAll('article')].map(a => a.textContent);
-    await click(chipNamed('Clear all'));
-    const dotOf = t => { const c = card(t); return c && [...c.querySelectorAll('button')].find(b => b.title === 'Buy next' || b.title === 'Not buying next'); };
+    await click(chipNamed(WORDS.clearAll));
+    const dotOf = t => { const c = card(t); return c && [...c.querySelectorAll('button')].find(b => b.title === WORDS.buyNext || b.title === WORDS.notBuyingNext); };
     const d = dotOf(webRow.title);
     const star = d && d.nextElementSibling;
     ok(!!d && !!star && /^(Watch|Unwatch)$/.test(star.title), 'BN-001: a card marked Yes has the dot, just left of the star', d && star && star.title);
-    const acq = [...doc.querySelectorAll('span')].find(s => s.textContent === 'Acquiring?');
+    const acq = [...doc.querySelectorAll('span')].find(s => s.textContent === WORDS.acquiringRow);
     const row = acq ? [...acq.parentElement.querySelectorAll('button')].map(b => b.textContent) : [];
     ok(row.join('|') === 'Wanted|Owned|Buy next|3+ mos|6+ mos closing window|Has catalogue|No catalogue|Digital catalogue',
       'BN-002: the Acquiring row is Wanted, Owned, Buy next, … Has catalogue, No catalogue, Digital catalogue (her order, 56.1)', row.join('|'));
     await click(d);
-    ok(dotOf(webRow.title).title === 'Not buying next', 'BN-003: pressing the dot marks it');
-    await click(chipNamed('Buy next'));
+    ok(dotOf(webRow.title).title === WORDS.notBuyingNext, 'BN-003: pressing the dot marks it');
+    await click(chipNamed(WORDS.buyNext));
     const bn = shown();
     ok(bn.length === 1 && bn[0].includes(webRow.title), 'BN-004:   Buy next shows only the marked card', bn.length);
-    await click(chipNamed('Buy next'));
-    await click(chipNamed('Has catalogue'));
+    await click(chipNamed(WORDS.buyNext));
+    await click(chipNamed(WORDS.chipHasCatalogue));
     const has = shown();
     ok(has.some(x => x.includes(webRow.title)) && !has.some(x => x.includes(noCatRow.title)), 'BN-005: Has catalogue keeps the found book and drops the one with none', has.length);
-    await click(chipNamed('Has catalogue'));
+    await click(chipNamed(WORDS.chipHasCatalogue));
     await click([...card(webRow.title).querySelectorAll('button')].find(b => b.textContent === 'No'));
     ok(!dotOf(webRow.title), 'BN-006: a card not on Yes has no dot');
-    await click([...card(webRow.title).querySelectorAll('button')].find(b => b.textContent === 'Yes'));
-    ok(dotOf(webRow.title) && dotOf(webRow.title).title === 'Buy next', 'BN-007:   and back on Yes its dot starts unmarked — leaving Yes cleared it');
+    await click([...card(webRow.title).querySelectorAll('button')].find(b => b.textContent === WORDS.yes));
+    ok(dotOf(webRow.title) && dotOf(webRow.title).title === WORDS.buyNext, 'BN-007:   and back on Yes its dot starts unmarked — leaving Yes cleared it');
   }
   // ── LC-001..LC-003: A LOOKUP LANDS ON THE CARD AS IT IS NOW — her finding, 25 Oct: she
   // starred a card and pressed Yes while its search ran, and both were gone when it finished.
@@ -1228,7 +1229,7 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
   {
     const doc = win.document;
     const btns = () => [...doc.querySelectorAll('button')];
-    await click(btns().find(b => b.textContent === 'Clear all'));
+    await click(btns().find(b => b.textContent === WORDS.clearAll));
     const starOf = t => { const c = card(t); return c && [...c.querySelectorAll('button')].find(b => /^(Watch|Unwatch)$/.test(b.title)); };
     const chipOn = (t, name) => { const c = card(t); const b = c && [...c.querySelectorAll('button')].find(x => x.textContent === name); return b && b.style.background; };
     const pressHeld = async (title, re, answer) => {
@@ -1240,7 +1241,7 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
       return release;
     };
     // Re-check: a 404 turns the card red.
-    const yesBefore = chipOn(noCatRow.title, 'Yes');
+    const yesBefore = chipOn(noCatRow.title, WORDS.yes);
     const release = await pressHeld(miller.title, /^Re-check museum shop$/, (tool, args) => ({ payload: { results: [], errors: [
       { url: args.urls[0], error_type: 'http_error', http_status_code: 404, content: null }] } }));
     ok(!!release, 'LC-000: Re-check museum shop was pressed');
@@ -1250,12 +1251,12 @@ const refused = code => { const e = new Error('refused'); e.code = code; return 
     if (release) release();
     await settle(); await settle();
     const t = card(miller.title).textContent;
-    ok(/No longer in the museum shop\./.test(t), 'LC-001: the Re-check’s answer lands on the card', t.slice(0, 160));
+    ok(wordsRe(WORDS.noLongerInShop).test(t), 'LC-001: the Re-check’s answer lands on the card', t.slice(0, 160));
     ok(starOf(miller.title).title !== wasWatched, 'LC-002:   and the star she changed while it ran is kept', wasWatched + ' → ' + starOf(miller.title).title);
-    ok(chipOn(noCatRow.title, 'No') === yesBefore && chipOn(noCatRow.title, 'Yes') !== yesBefore,
+    ok(chipOn(noCatRow.title, 'No') === yesBefore && chipOn(noCatRow.title, WORDS.yes) !== yesBefore,
       'LC-003:   and another card she marked meanwhile keeps its mark');
     // Find catalogue on a card never searched: nothing found, while she stars it and presses No.
-    const tray = button(card(landRow.title), /Catalogue/); if (tray) await click(tray);
+    const tray = button(card(landRow.title), wordsRe(WORDS.catalogue)); if (tray) await click(tray);
     const r2 = await pressHeld(landRow.title, /^Find catalogue$/, () => ({ payload: { results: [], errors: [] } }));
     script.sample = () => ({});
     ok(!!r2, 'LC-004a: Find catalogue was pressed');

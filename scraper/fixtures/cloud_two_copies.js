@@ -6,6 +6,7 @@
  *   node scraper/fixtures/cloud_two_copies.js
  */
 'use strict';
+const { WORDS } = require('./words.js');   // the app's sentences, from its words list
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
@@ -63,7 +64,7 @@ const until = async (fn, ms = 8000) => { const t = Date.now(); while (Date.now()
       win, doc,
       text: () => doc.getElementById('root').textContent,
       click: el => el.dispatchEvent(new win.MouseEvent('click', { bubbles: true })),
-      star: () => [...doc.querySelectorAll('button')].find(b => b.title === 'Watch'),
+      star: () => [...doc.querySelectorAll('button')].find(b => b.title === WORDS.watch),
       importText: t => {
         const input = doc.querySelector('input[type=file][accept=".json"]');
         Object.defineProperty(input, 'files', { value: [new win.File([t], 'ledger.json', { type: 'application/json' })], configurable: true });
@@ -89,7 +90,7 @@ const until = async (fn, ms = 8000) => { const t = Date.now(); while (Date.now()
     // It opens NOTHING by itself (her ruling, 4 Oct); "Open it" shows the cloud copy.
     await settle(600);
     ok(!B.star() && !/Opened the cloud copy/.test(B.text()), 'TC-003: a read-only copy opens nothing by itself');
-    B.click([...B.doc.querySelectorAll('button')].find(b => b.textContent === 'Open it'));
+    B.click([...B.doc.querySelectorAll('button')].find(b => b.textContent === WORDS.openIt));
     ok(await until(() => new RegExp('Opened the cloud copy saved .* — ' + hers.rows.length + ' exhibitions').test(B.text())), 'TC-003b:   "Open it" shows the cloud copy — all ' + hers.rows.length + ' exhibitions');
     ok(session().id === aId, 'TC-004:   the edit record still names the first copy');
 

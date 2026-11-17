@@ -121,6 +121,9 @@ if (gitBranch === 'main' && !shellFrom && !localOnly) {
 {
   const j = spawnSync('node', [path.join(__dirname, 'app_join.js'), '--check'], { encoding: 'utf8' });
   if (j.status !== 0) die((j.stderr || j.stdout || 'app_join.js --check failed').trim());
+  // Every sentence the page shows is on its words list (docs/restructure.md, "The words list").
+  const w = spawnSync('node', [path.join(__dirname, 'words_check.js')], { encoding: 'utf8' });
+  if (w.status !== 0) die((w.stdout || w.stderr || 'words_check.js failed').trim());
 }
 
 // ── the shell, and how to re-take it from a live page ───────────────────────
@@ -163,8 +166,9 @@ execFileSync('node', [path.join(__dirname, 'sync_shared.js')], { stdio: 'inherit
 // than one, and the render check is the only thing standing between a typo and
 // a black screen.
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'cw-build-'));
-const FOOTER = 'Art Watch {"\u00b7"} v {APP_VERSION}';
-const TEST_FOOTER = 'Art Watch {"\u00b7"} TEST PAGE \u2014 not your app {"\u00b7"} v {APP_VERSION}';
+// The footer's entry on the words list (app/foundations/words.jsx).
+const FOOTER = 'footer:"Art Watch \u00b7 v {version}';
+const TEST_FOOTER = 'footer:"Art Watch \u00b7 TEST PAGE \u2014 not your app \u00b7 v {version}';
 const forRestructure = process.argv.includes('--test-page');
 const source = fs.readFileSync(JSX, 'utf8');
 // The restructure test page says in its footer that it is not her app (her ask).

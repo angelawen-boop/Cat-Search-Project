@@ -10,6 +10,7 @@
 // stored — it is a fact about one attempt. C-043 to C-045.
 async function findCatalogueJob(row,hooks,latest){
   const id=row.id;
+  // Not words: the lookup log's names for the two buttons.
   const tape=tapeStart(row.looked?"Search again":"Find catalogue",row);
   const out=await lookupCatalogue(row,hooks);
   saveLookupTape(tape,out);
@@ -17,20 +18,16 @@ async function findCatalogueJob(row,hooks,latest){
   // SEARCH AGAIN REPLACES THE CARD ONLY WHEN IT FINISHED. Any step that
   // failed → the card stays as it was, and says so.
   if(row.looked&&out.ok&&out.trouble){
-    res.card={id,failed:true,text:"Search again didn’t finish — "+out.trouble.split("[")[0].trim()};
+    res.card={id,failed:true,text:say(W.searchAgainDidntFinish,{why:out.trouble.split("[")[0].trim()})};
   } else if(out.ok){
     res.rows=landOnCard(latest(),id,row,out.row);
-    if(out.trouble&&out.troubleLang)res.banner="Found the catalogue for “"+row.title+"”, but the language check "
-      +"stopped part-way, so the title may be the shop’s translation and an English edition may be missed. "
-      +out.trouble.split("[")[0].trim();
-    else if(out.trouble)res.banner="Found the catalogue for “"+row.title+"”, but the search "
-      +"stopped part-way, so the ISBN or the publisher’s page may be missing when they "
-      +"exist. "+out.trouble.split("[")[0].trim()+" Press “Search again”.";
+    if(out.trouble&&out.troubleLang)res.banner=say(W.foundButLanguageStopped,{title:row.title,why:out.trouble.split("[")[0].trim()});
+    else if(out.trouble)res.banner=say(W.foundButSearchStopped,{title:row.title,why:out.trouble.split("[")[0].trim()});
   } else {
     // On the card, not in a banner (her decision): Re-check's line word for word,
     // "Re-check" swapped for "Search" or "Search again".
     const why=String(out.detail||"").split("\n").pop().split("[")[0].trim();
-    res.card={id,failed:true,text:(row.looked?"Search again":"Search")+" didn’t run — "+why};
+    res.card={id,failed:true,text:say(W.didntRun,{what:row.looked?W.searchAgain:W.search,why})};
   }
   return res;
 }
@@ -42,6 +39,7 @@ async function findCatalogueJob(row,hooks,latest){
 // pressed, `hooks` the lookup's, `latest()` the ledger as it stands when the answer arrives.
 // Hands back `rows` to commit (or null), `card` {id,text,failed}, and `detail`, the diagnostic.
 async function recheckShopJob(found,hooks,latest){
+  // Not words: the lookup log's name for the button.
   const tape=tapeStart("Re-check museum shop",found);
   const out=await recheckShopRow(found,hooks);
   saveLookupTape(tape,out);

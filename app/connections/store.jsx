@@ -15,9 +15,9 @@ let storeUnreadSeen=()=>{};
 function markUnread(what){ STORE_UNREAD.add(what); storeUnreadSeen([...STORE_UNREAD]); }
 //@piece UNREAD_OCC,UNREAD_LINKS,UNREAD_PAGES,UNREAD_PASTES,UNREAD_SWEEPS,UNREAD_QUAR
 
-const UNREAD_OCC="the link venues", UNREAD_LINKS="the links waiting in the Links box", UNREAD_PAGES="the pages waiting in the Pages list",
-  UNREAD_PASTES="the boxes waiting in Paste",
-  UNREAD_SWEEPS="the sweep log", UNREAD_QUAR="the quarantine list";
+const UNREAD_OCC=W.unreadOcc, UNREAD_LINKS=W.unreadLinks, UNREAD_PAGES=W.unreadPages,
+  UNREAD_PASTES=W.unreadPastes,
+  UNREAD_SWEEPS=W.unreadSweeps, UNREAD_QUAR=W.unreadQuarantine;
 //@piece useCap
 
 
@@ -51,12 +51,12 @@ function storeRef(db,path){
 //@piece STORE_UNREACHED
 
 // The sentence for a viewer with no store.
-const STORE_UNREACHED="This viewer can\u2019t reach the page\u2019s store.";
+const STORE_UNREACHED=W.storeUnreached;
 //@piece storeNo
 
 function storeNo(code){
-  return code==="read_only"?{code,message:"This copy is read only."}
-    :code==="unread"?{code,message:"This part of the store could not be read, so it is not written."}
+  return code==="read_only"?{code,message:W.copyReadOnly}
+    :code==="unread"?{code,message:W.partUnreadNotWritten}
     :{code,message:STORE_UNREACHED};
 }
 //@piece storeReached

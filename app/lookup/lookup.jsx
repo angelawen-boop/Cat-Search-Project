@@ -49,9 +49,9 @@ const LOOKUP_STAGE={shop:1,web:2,page:3,facts:3,publisher:4};
 //@piece lookupLabel
 
 function lookupLabel(n,foreign){
-  return n===1?"Searching venue shop\u2026":n===2?"Searching more broadly\u2026"
-    :n===3?(foreign?"Finding the ISBN, publisher and English edition\u2026":"Finding the ISBN and publisher\u2026")
-    :n===4?"Looking for the publisher\u2019s page\u2026":"";
+  return n===1?W.stageShop:n===2?W.stageWeb
+    :n===3?(foreign?W.stageFactsForeign:W.stageFacts)
+    :n===4?W.stagePublisher:"";
 }
 //@piece slots
 
@@ -92,9 +92,8 @@ function lookupIo(hooks,opts){
     // Calls launched together count as one wait.
     together:async jobs=>{ st.waits++; st.group++; try{ return await Promise.all(jobs.map(j=>j())); }finally{ st.group--; } },
     counts:()=>({search:st.search,fetch:st.fetch,read:st.read,calls:st.search+st.fetch+st.read,waits:st.waits}),
-    summary:()=>"Lookup: "+(st.search+st.fetch+st.read)+" calls ("+st.search+" searches, "+st.fetch+" page opens, "+st.read
-      +" Claude reads), "+st.waits+" waits in a row. Time in calls: "
-      +(st.order.map(k=>k+" "+(st.ms[k]/1000).toFixed(1)+"s").join(", ")||"none")+".",
+    summary:()=>say(W.lookupSummary,{calls:st.search+st.fetch+st.read,search:st.search,fetch:st.fetch,read:st.read,waits:st.waits,
+      times:st.order.map(k=>k+" "+(st.ms[k]/1000).toFixed(1)+"s").join(", ")||W.none}),
   };
 }
 //@piece settle
@@ -158,6 +157,7 @@ async function lookupCatalogue(row,hooks){
   if(!hit){
     io.phase("web");
     const s2=await io.search(
+      // Not words: asked of the web.
       "Confirm whether a printed catalogue was published for the exhibition “"+title+"” at "
         +venue+", and give its exact title, ISBN-13 and publisher. Museums often state these in a "
         +"press release; art-book publishers and booksellers list them too.",
@@ -168,6 +168,7 @@ async function lookupCatalogue(row,hooks){
     if(!s2.ok)return done({row,ok:false});
     webRes=s2.results||[];
     if(!s2.results.length)return done({ok:true,row:composeRow(row,{found:false,blocked})});
+    // Not words: sent to Claude.
     const r2=await io.read((foreign?READ_RULES_FOREIGN:READ_RULES)
       +"\nExhibition: "+title+"\nVenue: "+venue+(dom?"\nIts shop is at "+dom:"")+"\n\n"
       // Read whole (the shop step's cap), never cut to 700 characters (Botticelli).
@@ -179,11 +180,11 @@ async function lookupCatalogue(row,hooks){
     // (catalogueLinkOn), goes to the check that opens shop links when the read found
     // the book and gave no shop link of its own.
     const catLink=catalogueLinkOn(s2.results,dom);
-    if(catLink&&d2.found&&!d2.shopUrl){ d2={...d2,shopUrl:catLink}; log.push("A catalogue link onto the museum shop, read off the results: "+catLink); }
+    if(catLink&&d2.found&&!d2.shopUrl){ d2={...d2,shopUrl:catLink}; log.push(say(W.logCatalogueLink,{link:catLink})); }
     // Another venue's catalogue is not this show's (her decision, NG van Hemessen): a
     // book found on the web counts only when the read ties it to THIS venue's show.
     if(d2.found&&d2.thisVenue!==true){
-      log.push("Not filed: “"+(d2.catalogueTitle||"the book found")+"” is not tied to this venue’s show in the results.");
+      log.push(say(W.logNotTied,{title:d2.catalogueTitle||W.theBookFound}));
       d2={};
     }
     // A catalogue tied to this venue but named by neither title nor ISBN (a press release's
@@ -191,7 +192,7 @@ async function lookupCatalogue(row,hooks){
     // for both; neither found there → no catalogue. UN-001 to UN-003.
     if(d2.found&&d2.thisVenue===true&&!d2.catalogueTitle&&!d2.isbn13){
       unnamed=true;
-      log.push("The results say a catalogue exists"+(d2.publisher?" ("+d2.publisher+")":"")+" but give no title or ISBN — looking for them.");
+      log.push(say(W.logCatalogueExists,{publisher:d2.publisher?" ("+d2.publisher+")":""}));
       hit={ok:true,pageUrl:null,row:{...row,looked:true,hasCatalogue:"yes",shopState:blocked||"web",shopChange:null,
         catalogueTitle:null,isbn13:null,publisher:d2.publisher||null,
         publisherUrl:publisherLinkOf(d2.publisherUrl,d2.publisher,dom,row.museumId),publisherResult:null,shopUrl:null}};
@@ -204,7 +205,7 @@ async function lookupCatalogue(row,hooks){
 
   const r=hit.row;
   const F={found:true,title:r.catalogueTitle,isbn:cleanIsbn(r.isbn13),publisher:r.publisher,
-    pubFrom:r.publisher?(fromShop?"the museum shop":"general results"):null,
+    pubFrom:r.publisher?(fromShop?W.fromMuseumShop:W.fromGeneralResults):null,
     publisherUrl:r.publisherUrl,publisherResult:null,shopState:r.shopState,shopUrl:r.shopUrl,
     blocked,englishCheck:null,pubPageRead:false};
   let trouble=hit.trouble||null, troubleLang=false;
@@ -220,7 +221,7 @@ async function lookupCatalogue(row,hooks){
     if(!F.publisher){ F.publisher=n; F.pubFrom=from; return; }
     if(sameHouse(F.publisher,n)){ if(PUBLISHER_TRUST[from]>PUBLISHER_TRUST[F.pubFrom])F.pubFrom=from; return; }
     if(PUBLISHER_TRUST[from]>PUBLISHER_TRUST[F.pubFrom]){
-      log.push("Publisher: "+n+" (from "+from+"), replacing “"+F.publisher+"” (from "+F.pubFrom+").");
+      log.push(say(W.logPublisherReplaced,{n,from,was:F.publisher,wasFrom:F.pubFrom}));
       F.publisher=n; F.pubFrom=from;
       F.publisherUrl=publisherLinkOf(F.publisherUrl,n,dom,row.museumId);
     }
@@ -234,27 +235,28 @@ async function lookupCatalogue(row,hooks){
     io.phase("page");
     const key=normalizeUrlKey(hit.pageUrl);
     let res=pages.get(key);
-    if(res)log.push("The book’s page, already open.");
+    if(res)log.push(W.logBookPageOpen);
     else{
       // The venue's own shop page gets the blank-page retry (openShopPage); a publisher's does not.
       const f=await (shopLinkOf({shopUrl:hit.pageUrl},dom)?(...a)=>openShopPage(io.fetch,...a):io.fetch)(hit.pageUrl,
         bookPageAsk(F.title||title),
-        [(F.title||title)+" ISBN publisher details"],{full:true});
+        /* Not words: asked of the web. */[(F.title||title)+" ISBN publisher details"],{full:true});
       log.push(f.detail);
       if(!f.ok)fault(f.detail);
       else{ res=f.results; pages.set(key,res); }
     }
     if(res&&res.length){
       bookPage={url:hit.pageUrl,results:res};
-      if(!F.isbn){ const c=isbnOnPage(pageTextOf(res)); if(c){ F.isbn=c; log.push("ISBN read off the book’s page in code: "+c); } }
+      if(!F.isbn){ const c=isbnOnPage(pageTextOf(res)); if(c){ F.isbn=c; log.push(say(W.logIsbnPageCode,{isbn:c})); } }
       if(!foreign&&(!F.publisher||!F.isbn)){
+        // Not words: sent to Claude.
         const rd=await io.read(PAGE_RULES+"\nBook: "+(F.title||title)+"\nExhibition venue: "+venue+"\n\n"+pageForPrompt(res)+PAGE_SHAPE);
         log.push(rd.detail);
         if(!rd.ok)fault(rd.detail);
         else{
           const d=rd.data||{};
-          if(!F.isbn){ const c=toIsbn13(d.isbn13,resultsText(res)); if(c){ F.isbn=c; log.push("ISBN read off the book’s page: "+c); } }
-          offerPublisher(d.publisher,"the book’s page");
+          if(!F.isbn){ const c=toIsbn13(d.isbn13,resultsText(res)); if(c){ F.isbn=c; log.push(say(W.logIsbnPage,{isbn:c})); } }
+          offerPublisher(d.publisher,W.fromBookPage);
           if(!F.publisherUrl)F.publisherUrl=publisherLinkOf(d.publisherUrl,F.publisher,dom,row.museumId);
         }
       }
@@ -263,7 +265,7 @@ async function lookupCatalogue(row,hooks){
 
   // ── PHASE 2b: THE FACTS ROUND, in one go. The facts search and, at a non-English
   // venue, the edition search run together; one Claude read covers both.
-  const needFacts=foreign||!F.isbn||!F.publisher||F.pubFrom==="general results";
+  const needFacts=foreign||!F.isbn||!F.publisher||F.pubFrom===W.fromGeneralResults;
   let factsRes=[], edRes=[], factsOk=false, langStopped=false, read=null;
   const found2=[];      // every phase-2 result, for the publisher's site
   if(needFacts){
@@ -300,22 +302,22 @@ async function lookupCatalogue(row,hooks){
     // The book's own title, for a catalogue known so far by no title (unnamed), as printed.
     if(unnamed&&!F.title&&!foreign&&read&&read.title){
       const tp=titleAsPrinted(read.title,given);
-      if(tp.onPage){ F.title=tp.title; log.push("The book’s title, from the results: “"+tp.title+"”."); }
+      if(tp.onPage){ F.title=tp.title; log.push(say(W.logTitleFromResults,{title:tp.title})); }
     }
     // The ISBN: the book's page in code (above), the results in code, then Claude's —
     // only if the text it was given prints it.
     // Matched on the book's title once it is known, never the show's (Hubert Robert: the
     // show's dates matched only a French bookseller's listing).
-    if(!F.isbn){ const c=isbnInResults(factsRes,F.title||book); if(c){ F.isbn=c; log.push("ISBN read off the search results in code: "+c); } }
-    if(!F.isbn&&read){ const c=toIsbn13(read.isbn13,resultsText(given)); if(c){ F.isbn=c; log.push("ISBN from the read, printed in the results: "+c); } }
+    if(!F.isbn){ const c=isbnInResults(factsRes,F.title||book); if(c){ F.isbn=c; log.push(say(W.logIsbnResultsCode,{isbn:c})); } }
+    if(!F.isbn&&read){ const c=toIsbn13(read.isbn13,resultsText(given)); if(c){ F.isbn=c; log.push(say(W.logIsbnFromRead,{isbn:c})); } }
     if(read)notABooklet(F,given,pagesPrinted(read.pages,given),log);
     // The publisher, in order of trust (her decision, Botticelli).
     const onIsbn=F.isbn?publisherOnIsbnResults(given,F.isbn):null;
-    if(onIsbn)offerPublisher(onIsbn,"the ISBN’s results");
-    else if(F.isbn&&factsOk)log.push("Publisher from the ISBN: the results carrying it don’t agree on one.");
+    if(onIsbn)offerPublisher(onIsbn,W.fromIsbnResults);
+    else if(F.isbn&&factsOk)log.push(W.logPublisherDisagree);
     if(read){
-      offerPublisher(read.pagePublisher,"the book’s page");
-      offerPublisher(read.publisher,"general results");
+      offerPublisher(read.pagePublisher,W.fromBookPage);
+      offerPublisher(read.publisher,W.fromGeneralResults);
       if(!F.publisherUrl&&read.pagePublisherUrl)F.publisherUrl=publisherLinkOf(read.pagePublisherUrl,F.publisher,dom,row.museumId);
     }
     oneBook(F,given,log,dom,row.museumId);
@@ -329,40 +331,42 @@ async function lookupCatalogue(row,hooks){
     const opened=already.flatMap(x=>pages.get(normalizeUrlKey(x.url)));
     let onPages=opened.length?isbnInResults(opened,F.title||title):null;
     if(!onPages&&fresh.length){
+      // Not words: asked of the web.
       const fp=await io.fetch(fresh,"The ISBN of the book “"+(F.title||title)+"”.",[(F.title||title)+" ISBN"],{full:true});
       log.push(fp.detail);
       if(!fp.ok)fault(fp.detail);
       else{ for(const x of fp.results){ pages.set(normalizeUrlKey(x.url),[x]); opened.push(x); } onPages=isbnInResults(fp.results,F.title||title); }
     }
-    if(onPages&&onPages===F.notIsbn){ log.push("The pages found give the booklet’s ISBN again — not filed."); onPages=null; }
+    if(onPages&&onPages===F.notIsbn){ log.push(W.logBookletIsbn); onPages=null; }
     if(onPages){
-      F.isbn=onPages; log.push("ISBN read off the pages about this book, in code: "+onPages);
+      F.isbn=onPages; log.push(say(W.logIsbnPagesCode,{isbn:onPages}));
       const p=publisherOnIsbnResults([...found2,...opened],onPages);
-      if(p)offerPublisher(p,"the ISBN’s results");
+      if(p)offerPublisher(p,W.fromIsbnResults);
     }
-    else log.push("No ISBN in the web search, or on the pages it found about this book.");
+    else log.push(W.logNoIsbn);
   }
   if(unnamed&&!F.title&&!F.isbn){
-    log.push("No title or ISBN found for the catalogue the results mention, so it is not filed.");
+    log.push(W.logNoTitleOrIsbn);
     return done({ok:true,row:composeRow(row,{found:false,blocked}),...(trouble?{trouble}:{})});
   }
-  if(F.publisher)log.push("Publisher: "+F.publisher+" — from "+F.pubFrom+(F.pubFrom==="general results"?" (a guess).":"."));
+  if(F.publisher)log.push(say(W.logPublisherFrom,{name:F.publisher,from:F.pubFrom,guess:F.pubFrom===W.fromGeneralResults?W.aGuess:"."}));
 
   // ── PHASE 3: EVERY VERSION, IN HER ORDER (code only; docs/catalogue_versions.md).
   // The book found so far is this showing's catalogue; the read's other printings and
   // editions join it only when proved. putInOrder sorts them; the first starts picked.
   const everything=[...(bookPage?bookPage.results:[]),...factsRes,...edRes,...webRes,...[...pages.values()].flat()];
   const said=read&&read.language?String(read.language):"";
+  // Not words: a language's name, as a version records it.
   const lang=foreign?langName(said):"English";
   if(foreign){
     if(langStopped){ F.englishCheck="stopped"; troubleLang=true; }
-    else if(!said){ F.englishCheck="unknownlang"; log.push("Language check: nothing says, so the book stands as found."); }
-    else if(isEnglishLang(said)){ F.englishCheck="english"; log.push("Language check: "+said+"."); }
+    else if(!said){ F.englishCheck="unknownlang"; log.push(W.logLanguageNothing); }
+    else if(isEnglishLang(said)){ F.englishCheck="english"; log.push(say(W.logLanguage,{lang:said,own:"."})); }
     else{
       // The book's own title, if the results print it.
       const own=read.title?titleAsPrinted(read.title,[...(bookPage?bookPage.results:[]),...factsRes,...edRes]):null;
       if(own&&own.onPage)F.title=own.title;
-      log.push("Language check: "+said+(own&&own.onPage?" — its own title “"+own.title+"”.":"."));
+      log.push(say(W.logLanguage,{lang:said,own:own&&own.onPage?say(W.logOwnTitle,{title:own.title}):"."}));
     }
   }
   const found=foundVersion(F,foreign&&langStopped?null:lang,read?pagesPrinted(read.pages,everything):null,everything,row.museumId,hit.pageUrl||F.shopUrl);
@@ -383,12 +387,12 @@ async function lookupCatalogue(row,hooks){
   const notEnglish=foreign&&!!found.lang&&!isEnglishLang(found.lang);
   if(notEnglish){
     F.englishCheck=thisEnglish()?"english":"shops";
-    if(!thisEnglish()&&Array.isArray(read.editions)&&read.editions.length)log.push("English edition: none proved to be this catalogue's.");
+    if(!thisEnglish()&&Array.isArray(read.editions)&&read.editions.length)log.push(W.logNoEnglishProved);
   }
   const F0={...F};   // the book as found, before any pick
   putInOrder(versions,row.museumId);
   const pick=0;
-  log.push(versions.length+" version"+(versions.length===1?"":"s")+" found; first in her order: "+(versions[0].isbn13||"the book found")+".");
+  log.push(say(W.logVersionsFound,{n:versions.length,s:versions.length===1?"":"s",first:versions[0].isbn13||W.theBookFound}));
   takeVersion(F,versions[0],log);
 
   // ── PHASE 4: THE PUBLISHER'S PAGE, ONCE, FOR THE PICKED BOOK. When it is this show's
@@ -399,7 +403,8 @@ async function lookupCatalogue(row,hooks){
     if(p4.trouble)fault(p4.trouble);
     const ed=p4.edition;
     if(ed&&!versions.some(v=>v.isbn13===ed.isbn13||v.alsoIsbn13===ed.isbn13)){
-      log.push("English edition on the publisher’s own page: “"+ed.title+"”, ISBN "+ed.isbn13+".");
+      log.push(say(W.logEnglishOnPublisher,{title:ed.title,isbn:ed.isbn13}));
+      // Not words: a language's name and a version's note, as the versions store them.
       const en={title:ed.title,lang:"English",binding:null,pages:null,publisher:found.publisher,isbn13:ed.isbn13,
         alsoIsbn13:null,showing:"this",proofUrl:ed.link,note:"the publisher’s own page lists it",_pub:F.publisher};
       versions.push(en);
@@ -413,7 +418,7 @@ async function lookupCatalogue(row,hooks){
     } else if(wantEditions){
       // "Checked the publisher's site" only when its page was really read (Canaletto).
       F.englishCheck=F.pubPageRead?"publisher":"shops";
-      log.push("English edition: none found"+(F.pubPageRead?" — the publisher’s own page read ("+F.publisherUrl+").":"; the publisher’s own page for it was not read."));
+      log.push(W.logEnglishNone+(F.pubPageRead?say(W.logPublisherPageRead,{url:F.publisherUrl}):W.logPublisherPageNotRead));
     }
   }
   // ── PHASE 4b: EVERY BOOK FOUND ON THE WEB, LOOKED FOR AGAIN ON THE SHOP'S LIST READ IN
@@ -426,7 +431,7 @@ async function lookupCatalogue(row,hooks){
     const {url,failed}=await bookOnShelfAfterWeb(G,v,s1.results,dom,shelfSkip,io,log,shelfSeen);
     if(url){ G.shopState="shop"; G.shopUrl=url; }
     // Not known: no shop answer for this book, and the lookup did not finish.
-    else if(failed){ G.shopState=null; fault("The museum shop’s page for “"+G.title+"” couldn’t be read — "+failed+"."); }
+    else if(failed){ G.shopState=null; fault(say(W.shopPageUnread,{title:G.title,why:failed})); }
   };
   await onShelf(F,versions[pick]);
   // Each version's book fields, for a change of pick on the card; the pick's are final.
@@ -443,7 +448,7 @@ async function lookupCatalogue(row,hooks){
   putInOrder(versions,row.museumId);
   if(versions[pick]!==was){
     const c=versions[pick].card;
-    log.push("In the museum shop, so first: “"+c.catalogueTitle+"”"+(c.isbn13?", ISBN "+c.isbn13:"")+".");
+    log.push(say(W.logInShopFirst,{title:c.catalogueTitle,isbn:c.isbn13?say(W.commaIsbn,{isbn:c.isbn13}):""}));
     F.title=c.catalogueTitle; F.isbn=c.isbn13; F.publisher=c.publisher; F.publisherUrl=c.publisherUrl;
     F.publisherResult=c.publisherResult; F.shopState=c.shopState; F.shopUrl=c.shopUrl;
   }

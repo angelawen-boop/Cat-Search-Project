@@ -11,6 +11,7 @@
 function editionQueries(mu,row,book,isbn,pub){
   const lang=mu&&mu.language;
   const head=String(row.title||"").split(/\s*:\s*/)[0].trim();
+  // Not words: asked of the web.
   return [book+" English edition"]
     .concat(lang?["originally published in "+lang+" as "+book]:[])
     .concat(isbn?[isbn+" English edition"]:[])
@@ -84,8 +85,8 @@ function notABooklet(F,results,bookPages,log){
   for(const x of resultsCarrying(results,F.title))for(const d of isbnsIn(x))
     if(d!==F.isbn){ const n=pagesOfIsbn(results,d); if(n&&!differentBook(n,bookPages))other.add(d); }
   const swap=other.size===1?[...other][0]:null;
-  log.push("ISBN "+F.isbn+" is a "+own+"-page book; the catalogue has "+bookPages+" pages"
-    +(swap?" — ISBN "+swap+", printed with "+bookPages+" pages, taken.":" — no ISBN for the catalogue itself found, so none is filed."));
+  log.push(say(W.logBookletPages,{isbn:F.isbn,own,pages:bookPages})
+    +(swap?say(W.logSwapTaken,{isbn:swap,pages:bookPages}):W.logNoneFiled));
   F.notIsbn=F.isbn;
   F.isbn=swap;
 }
@@ -288,8 +289,8 @@ function printingsOf(cands,card,results,museumId){
     if(aMagazine(c.title,pub,onV))continue;
     out.push({title:titleAsPrinted(c.title,onV).title,lang:card.lang||null,binding:bindingOfIsbn(results,isbn),pages:pages||null,
       publisher:venueFirst(pub,museumId),isbn13:isbn,alsoIsbn13:null,showing:"this",proofUrl:proofOf(onV,c.evidenceUrl),
-      note:"another printing",city:cityOf(c.venueCity,pub,results,museumId),year:yearOf(c.year,onV),
-      _pub:pub,_pubFrom:coded?"the ISBN’s results":"general results"});
+      note:W.anotherPrinting,city:cityOf(c.venueCity,pub,results,museumId),year:yearOf(c.year,onV),
+      _pub:pub,_pubFrom:coded?W.fromIsbnResults:W.fromGeneralResults});
   }
   return out;
 }
@@ -312,7 +313,7 @@ function editionsOf(editions,orig,results,museumId,log){
     if(!isbn||isbn===orig.isbn13||out.some(v=>v.isbn13===isbn))continue;
     const onV=onIsbn(results,isbn);
     const coded=publisherOnIsbnResults(onV,isbn);
-    let pub=coded||(ed.publisher?String(ed.publisher).trim():null), from=coded?"the ISBN’s results":"general results", pubUrl=null;
+    let pub=coded||(ed.publisher?String(ed.publisher).trim():null), from=coded?W.fromIsbnResults:W.fromGeneralResults, pubUrl=null;
     const pages=pagesPrinted(ed.pages,results);
     const title=titleAsPrinted(ed.title,onV).title;
     if(aMagazine(ed.title,pub,onV))continue;
@@ -321,29 +322,29 @@ function editionsOf(editions,orig,results,museumId,log){
       city:cityOf(ed.venueCity,pub,results,museumId),year:yearOf(ed.year,onV)};
     if(differentBook(pages,orig.pages)){
       const said=onV.some(x=>SHOW_WORDS.test(resultText(x)));
-      if(log)log.push("“"+ed.title+"” (ISBN "+isbn+", "+pages+" pages) is a different book from this one ("+orig.pages+" pages)"
-        +(said?" — listed as another showing’s.":" — and nothing calls it a catalogue, so it is left off."));
-      if(said)out.push({...v,publisher:venueFirst(pub,museumId),showing:"other",note:"a different book: "+pages+" pages against "+orig.pages,_pub:pub,_pubFrom:from});
+      if(log)log.push(say(W.logDifferentBook,{title:ed.title,isbn,pages,orig:orig.pages})
+        +(said?W.logAnotherShowings:W.logLeftOff));
+      if(said)out.push({...v,publisher:venueFirst(pub,museumId),showing:"other",note:say(W.differentBookPages,{pages,orig:orig.pages}),_pub:pub,_pubFrom:from});
       continue;
     }
     let why=null;
-    if(sameCatalogue(pub,origPub,[],museumId)||houses.some(h=>sameCatalogue(pub,h,[],museumId)))why="the same publisher as the original";
-    else if(sameCatalogue(pub,origPub,onV,museumId))why="the venue named";
-    else if(orig.isbn13&&onV.some(x=>isbnInText(orig.isbn13,resultText(x))))why="a record carrying both ISBNs";
+    if(sameCatalogue(pub,origPub,[],museumId)||houses.some(h=>sameCatalogue(pub,h,[],museumId)))why=W.whySamePublisher;
+    else if(sameCatalogue(pub,origPub,onV,museumId))why=W.whyVenueNamed;
+    else if(orig.isbn13&&onV.some(x=>isbnInText(orig.isbn13,resultText(x))))why=W.whyBothIsbns;
     else if(keys.length&&onV.some(x=>{ const t=foldText(resultText(x)); return EDITION_LINK.test(t)&&keys.every(w=>t.includes(w)); }))
-      why="a record naming it a translation of the original";
+      why=W.whyTranslation;
     if(!why)continue;
     // Named by no house: the original's, when a page on that house's own site carries
     // this ISBN (Lienart's page for Vasari).
-    let inherit=why==="the same publisher as the original";
+    let inherit=why===W.whySamePublisher;
     if(!pub&&orig.publisher){
       for(const part of String(orig.publisher).split(HOUSE_SPLIT).filter(Boolean)){
         const page=onV.find(x=>publisherDomainFrom([x],part));
-        if(page){ pub=part.trim(); from="the book’s page"; pubUrl=page.url; inherit=true;
-          if(log)log.push("Publisher of “"+title+"”: "+pub+" — its own page carries this ISBN ("+page.url+")."); break; }
+        if(page){ pub=part.trim(); from=W.fromBookPage; pubUrl=page.url; inherit=true;
+          if(log)log.push(say(W.logPublisherOfEdition,{title,pub,url:page.url})); break; }
       }
     }
-    if(log)log.push("Edition: “"+title+"”, "+v.lang+", ISBN "+isbn+" — "+why+" ("+v.proofUrl+").");
+    if(log)log.push(say(W.logEdition,{title,lang:v.lang,isbn,why,url:v.proofUrl}));
     // Printed by the original's house: shown with the original's publishers.
     out.push({...v,publisher:venueFirst(inherit?orig.publisher:pub,museumId),note:why,_pub:pub,_pubFrom:pub?from:null,_pubUrl:pubUrl});
   }
@@ -392,7 +393,7 @@ function foldCoEditions(versions,results,museumId,log){
     const swap=own(v.isbn13)&&!own(n);
     v.alsoIsbn13=swap?v.isbn13:n;
     v.isbn13=swap?n:v.isbn13;
-    if(log)log.push("One book, two numbers: ISBN "+v.isbn13+", also "+v.alsoIsbn13+" — a record lists both.");
+    if(log)log.push(say(W.logTwoNumbers,{isbn:v.isbn13,also:v.alsoIsbn13}));
   }
 }
 //@piece rankedOwn
@@ -443,7 +444,7 @@ function storedVersion(v){
 // The picked version becomes the card's book, as a found book does.
 function takeVersion(F,v,log){
   if(v._found){ F.isbn=v.isbn13; return; }
-  log.push("The card’s book: “"+v.title+"”"+(v.isbn13?", ISBN "+v.isbn13:"")+".");
+  log.push(say(W.logCardsBook,{title:v.title,isbn:v.isbn13?say(W.commaIsbn,{isbn:v.isbn13}):""}));
   F.title=v.title; F.isbn=v.isbn13; F.publisher=v._pub||null; F.pubFrom=v._pub?v._pubFrom:null;
   F.publisherUrl=v._pubUrl||null; F.publisherResult=v._pubUrl?"product":null;
   // A shop that could not be read stays unread for every book.
@@ -476,14 +477,14 @@ function sourceOf(u){
 //@piece ENGLISH_LATER
 
 // The note on an English edition published after the show opened; the block reads it back to add the year.
-const ENGLISH_LATER="the English edition, published later";
+const ENGLISH_LATER=W.englishLater;
 //@piece versionNote
 
 function versionNote(vs,i,row){
   const v=vs[i], mu=MU[row.museumId], id=row.museumId;
   const vc=v.city||(venueNamedIn(v.publisher,id)||{}).city||null;
-  const where=vc?"from the show's "+vc+" exhibition":"from the show's other exhibition";
-  if(v.showing==="other")return "a different book, "+where;
+  const where=vc?say(W.fromShowsExhibition,{city:vc}):W.fromShowsOther;
+  if(v.showing==="other")return say(W.aDifferentBook,{where});
   const mine=vs.filter(x=>x.showing==="this");
   // One house, the versions differing only in language (Metamorphoses): no notes.
   const langs=new Set(mine.map(x=>foldText(x.lang||"")));
@@ -491,13 +492,13 @@ function versionNote(vs,i,row){
   // Printed for another showing: another museum's own, or a city not this venue's (its city, or any of its galleries).
   const cities=mu?[mu.city,...(mu.places||[])].filter(Boolean).map(foldText):[];
   if(!venuePrinting(v.publisher,id)&&((vc&&!cities.includes(foldText(vc)))||(v.publisher&&museumImprintOnly(v.publisher,id))))return where;
-  if(vs.some(x=>x.showing==="other"))return "this showing's catalogue";
+  if(vs.some(x=>x.showing==="other"))return W.thisShowingsCatalogue;
   const english=isEnglishLang(v.lang), hasEnglish=mine.some(x=>isEnglishLang(x.lang)), hasOriginal=mine.some(x=>x.lang&&!isEnglishLang(x.lang));
-  if(!english&&v.lang&&hasEnglish)return "the original edition";
+  if(!english&&v.lang&&hasEnglish)return W.theOriginalEdition;
   if(english&&hasOriginal){
-    if(venuePrinting(v.publisher,id))return "this venue's English edition";
+    if(venuePrinting(v.publisher,id))return W.thisVenuesEnglish;
     const start=parseInt(String(row.startDate||"").slice(0,4),10);
-    return v.year&&start&&v.year>start?ENGLISH_LATER:"the English edition";
+    return v.year&&start&&v.year>start?ENGLISH_LATER:W.theEnglishEdition;
   }
   return null;
 }
@@ -510,12 +511,12 @@ function versionBlock(vs,i,row){
   const v=vs[i], mu=venueNamedIn(v.publisher)||MU[row.museumId];
   const note=versionNote(vs,i,row);
   const later=note===ENGLISH_LATER&&v.year;
-  const bind=v.binding==="hardcover"?"Hardcover":v.binding==="paperback"?"Paperback":null;
-  const facts=[v.lang,bind,v.pages?v.pages+" pp":null].filter(Boolean).join(" \u00b7 ");
+  const bind=v.binding==="hardcover"?W.hardcover:v.binding==="paperback"?W.paperback:null;
+  const facts=[v.lang,bind,v.pages?say(W.pagesPp,{n:v.pages}):null].filter(Boolean).join(" \u00b7 ");
   return{i,picked:row.editionPick===i,title:v.title||null,
     publisher:v.publisher?v.publisher+(later?" \u00b7 "+v.year:""):null,facts:facts||null,
     isbn:v.isbn13?fmtIsbn(v.isbn13):null,
-    also:v.isbn13&&v.alsoIsbn13?{isbn:fmtIsbn(v.alsoIsbn13),whose:(mu?mu.card:"venue")+"\u2019s own number for the same book"}:null,
+    also:v.isbn13&&v.alsoIsbn13?{isbn:fmtIsbn(v.alsoIsbn13),whose:say(W.ownNumber,{who:mu?mu.card:W.venueWord})}:null,
     why:note?note.charAt(0).toUpperCase()+note.slice(1)+".":null,source:sourceOf(v.proofUrl)};
 }
 //@piece versionBlocks
@@ -533,5 +534,5 @@ function versionBlocks(row){
 function alsoLine(v){
   if(!v||!v.isbn13)return "";
   const bits=[v.binding,v.publisher].filter(Boolean);
-  return "also "+fmtIsbn(v.isbn13)+(bits.length?" ("+bits.join(", ")+")":"");
+  return say(W.alsoIsbn,{isbn:fmtIsbn(v.isbn13)})+(bits.length?" ("+bits.join(", ")+")":"");
 }

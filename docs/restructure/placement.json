@@ -10,6 +10,7 @@
    "name": "Foundations — depend on nothing else in the app",
    "files": {
     "foundations/version.jsx": "The import line and the version number shown in the footer.",
+    "foundations/words.jsx": "The words list: every sentence, button, label and line the app shows her, written once; a sentence with a gap is a pattern filled by say().",
     "foundations/venues.jsx": "The 28 venues and the occasional ones: their order, chips and regions, and the lookup by id (MU).",
     "foundations/shared_with_scraper.jsx": "The date reader and summary rules, written into the page by the join from the scraper's files; only the summary examples are stored in the part.",
     "foundations/text.jsx": "Small text and address tools: folding letters, Markdown and HTML entities, hosts, URL keys, the clipboard.",
@@ -96,7 +97,7 @@
    "id": "5a",
    "name": "Screens: the screen pieces moved into their parts (the main screen whole, in screens/app.jsx)",
    "files": {
-    "screens/theme.jsx": "The two colour palettes, the card draw step and the link-button style.",
+    "screens/theme.jsx": "The two colour palettes, the card draw step, the link-button style, and Say (a words-list pattern with a link or bold words in it).",
     "screens/period_scrubber.jsx": "The period scrubber.",
     "screens/ledger_card.jsx": "An exhibition card, its digital-catalogue link and its catalogue box.",
     "screens/app.jsx": "The whole main screen, to be split into its screens in layer 5b."
@@ -223,6 +224,9 @@
   "import": "foundations/version.jsx",
   "APP_VERSION": "foundations/version.jsx",
   "APP_VERSION_DATE": "foundations/version.jsx",
+  "W": "foundations/words.jsx",
+  "say": "foundations/words.jsx",
+  "sayParts": "foundations/words.jsx",
   "MUSEUMS": "foundations/venues.jsx",
   "OCC_COUNTRY_ORDER": "import/link_venues.jsx",
   "OCC_EUROPE_ELSE": "import/link_venues.jsx",
@@ -698,6 +702,7 @@
   "PALETTES": "screens/theme.jsx",
   "DRAW_STEP": "screens/theme.jsx",
   "linkButton": "screens/theme.jsx",
+  "Say": "screens/theme.jsx",
   "SCRUB_ROW,SCRUB_BULGE,SCRUB_ZONE,SCRUB_HOLD,SCRUB_SLOP": "screens/period_scrubber.jsx",
   "scrubName": "screens/period_scrubber.jsx",
   "PeriodScrubber": "screens/period_scrubber.jsx",

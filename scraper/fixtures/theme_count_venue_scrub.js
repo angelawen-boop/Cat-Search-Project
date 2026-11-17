@@ -7,6 +7,7 @@
  *   node scraper/run_tests.js --only theme_count_venue_scrub
  */
 'use strict';
+const { WORDS } = require('./words.js');   // the app's sentences, from its words list
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
@@ -62,30 +63,30 @@ const settle = (ms = 60) => new Promise(r => setTimeout(r, ms));
     const cards = () => [...doc.querySelectorAll('article')];
     const click = el => el.dispatchEvent(new win.MouseEvent('click', { bubbles: true }));
     const rowOf = label => { const s = [...doc.querySelectorAll('span')].find(x => x.textContent === label); return s ? [...s.parentNode.querySelectorAll('button')] : []; };
-    const theme = t => rowOf('Theme').find(b => b.textContent === t || b.textContent.startsWith(t + ' · '));
-    const venue = t => rowOf('Venue').find(b => b.textContent === t);
-    const sortBtn = t => rowOf('Sort').find(b => b.textContent.replace(/[↑↓ ]+$/, '') === t);
+    const theme = t => rowOf(WORDS.themeRow).find(b => b.textContent === t || b.textContent.startsWith(t + ' · '));
+    const venue = t => rowOf(WORDS.sortVenue).find(b => b.textContent === t);
+    const sortBtn = t => rowOf(WORDS.sortRow).find(b => b.textContent.replace(/[↑↓ ]+$/, '') === t);
     const marks = () => [...doc.querySelectorAll('[data-period]')];
     const zone = () => doc.querySelector('[data-scrubber="zone"]');
 
     // TC — a picked Theme chip shows its own count after a dot; unpicked, the count goes (her design).
-    ok(rowOf('Theme').every(b => !b.textContent.includes('·')), 'TC-001: no Theme chip shows a count until it is picked');
-    click(theme('Sculpture')); await settle(150);
-    ok(theme('Sculpture').textContent === 'Sculpture · 3' && cards().length === 3, 'TC-002: picked, the chip reads "Sculpture · 3" and three cards show', theme('Sculpture').textContent + ', ' + cards().length + ' cards');
-    click(theme('Nature')); await settle(150);
-    ok(theme('Sculpture').textContent === 'Sculpture · 3' && theme('Nature').textContent === 'Nature · 3' && cards().length === 4,
-      'TC-003: with two picked, each shows its own count (3 and 3) while the list holds the four shows with either', theme('Sculpture').textContent + ' | ' + theme('Nature').textContent + ', ' + cards().length + ' cards');
-    click(theme('Sculpture')); await settle(150);
-    ok(theme('Sculpture').textContent === 'Sculpture' && theme('Nature').textContent === 'Nature · 3', 'TC-004: unpicked, the count goes; the other keeps its own', theme('Sculpture').textContent + ' | ' + theme('Nature').textContent);
-    click(theme('Nature')); await settle(150);
+    ok(rowOf(WORDS.themeRow).every(b => !b.textContent.includes('·')), 'TC-001: no Theme chip shows a count until it is picked');
+    click(theme(WORDS.themeSculpture)); await settle(150);
+    ok(theme(WORDS.themeSculpture).textContent === 'Sculpture · 3' && cards().length === 3, 'TC-002: picked, the chip reads "Sculpture · 3" and three cards show', theme(WORDS.themeSculpture).textContent + ', ' + cards().length + ' cards');
+    click(theme(WORDS.themeNature)); await settle(150);
+    ok(theme(WORDS.themeSculpture).textContent === 'Sculpture · 3' && theme(WORDS.themeNature).textContent === 'Nature · 3' && cards().length === 4,
+      'TC-003: with two picked, each shows its own count (3 and 3) while the list holds the four shows with either', theme(WORDS.themeSculpture).textContent + ' | ' + theme(WORDS.themeNature).textContent + ', ' + cards().length + ' cards');
+    click(theme(WORDS.themeSculpture)); await settle(150);
+    ok(theme(WORDS.themeSculpture).textContent === WORDS.themeSculpture && theme(WORDS.themeNature).textContent === 'Nature · 3', 'TC-004: unpicked, the count goes; the other keeps its own', theme(WORDS.themeSculpture).textContent + ' | ' + theme(WORDS.themeNature).textContent);
+    click(theme(WORDS.themeNature)); await settle(150);
 
     // VS — the venue scrubber: an Occ group picked AND the list sorted by venue (her design).
-    click(venue('Occ - US')); await settle(150);
+    click(venue(WORDS.occUs)); await settle(150);
     ok(cards().length === 2 && !zone() && !marks().length, 'VS-001: an Occ group sorted by date has no scrubber', cards().length + ' cards');
-    click(sortBtn('Venue')); await settle(150);
+    click(sortBtn(WORDS.sortVenue)); await settle(150);
     ok(!!zone() && marks().length === 1 && marks()[0].getAttribute('data-period') === 'venue:occ-clevelandart-org',
       'VS-002: sorted by venue, the scrubber is there and each venue\'s first card carries its mark', marks().map(m => m.getAttribute('data-period')).join());
-    click(venue('Occ - Europe')); await settle(150);
+    click(venue(WORDS.occEurope)); await settle(150);
     const order = marks().map(m => m.getAttribute('data-period'));
     ok(cards().length === 5 && order.join() === 'venue:occ-clevelandart-org,venue:occ-courtauld-ac-uk,venue:occ-mauritshuis-nl',
       'VS-003: with both groups, one mark per venue, in the order Sort by venue gives', order.join());
@@ -96,7 +97,7 @@ const settle = (ms = 60) => new Promise(r => setTimeout(r, ms));
     const before = scrolls.length;
     win.dispatchEvent(new win.MouseEvent('mouseup', { bubbles: true })); await settle(150);
     ok(scrolls.length === before + 1 && !doc.querySelector('[data-scrub-row]'), 'VS-005: lifting jumps to the picked venue and the scrubber closes', (scrolls.length - before) + ' jump(s)');
-    click(venue('Occ - US')); click(venue('Occ - Europe')); await settle(150);
+    click(venue(WORDS.occUs)); click(venue(WORDS.occEurope)); await settle(150);
     ok(!zone() && !marks().length, 'VS-006: sorted by venue with no Occ group picked, there is no scrubber');
     ok(!shouted.some(s => /Error|Warning/.test(s)), 'TC-005: nothing written to the console as an error', shouted.slice(0, 2).join(' | '));
     root.unmount();

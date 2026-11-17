@@ -244,6 +244,7 @@ async function firstProductIsBook(open,text,host,list){
   let items=productLinksOn(text,host), under=false;
   if(items.length<2&&list){ items=itemsUnder(text,host,list); under=true; }
   if(items.length<2)return false;
+  // Not words: asked of the web, or kept as how the shop was found.
   const b=await openShopPage(open,items[0],"This book's title, price and ISBN.",null,{full:true});
   // A book under its list's address is read as a gallery's book page: "80 €" with no cents counts.
   return b.ok&&(looksLikeOneBook(pageTextOf(b.results))||(under&&galleryBookPage(pageTextOf(b.results))));
@@ -293,9 +294,11 @@ function shopifyProductsUrl(u){
 //@piece SHOP_BOOKS_ASK
 
 // What Claude is asked to read from a shop section's page (a section's books, or a Shopify section's products).
+// Not words: asked of the web, or kept as how the shop was found.
 const SHOP_BOOKS_ASK="The books in this section of the shop, with their prices.";
 //@piece SHOP_PRODUCTS_ASK
 
+// Not words: asked of the web, or kept as how the shop was found.
 const SHOP_PRODUCTS_ASK="The products in this section: titles, types and prices.";
 //@piece shopifyCountIn
 
@@ -439,6 +442,7 @@ async function proveShopSearch(text,home){
   for(const shapes of [SEARCH_SHAPES,SEARCH_SHAPES_LATER]){
     const tries=[];
     for(const b of bases)for(const sh of shapes)for(const bk of books)tries.push({search:b+sh,path:bk.path,label:bk.label,url:b+sh+encodeURIComponent(bk.label)});
+    // Not words: asked of the web, or kept as how the shop was found.
     const f=await fetchPage(tries.map(t=>t.url),"The products this shop search returns: their names and links.",null,{full:true});
     if(!f.ok)return undefined;
     const answer=t=>f.results.find(x=>x&&key(x.url)===key(t.url));
@@ -495,6 +499,7 @@ async function shopElsewhere(urls,museumHost){
     seen.add(normalizeUrlKey(u));
     if(opened>=2)break;
     opened++;
+    // Not words: asked of the web, or kept as how the shop was found.
     const f=await fetchPage(u,"The link to the museum's online shop.",null,{full:true});
     if(!f.ok){ died=f.detail; continue; }
     const t=pageTextOf(f.results);
@@ -648,6 +653,7 @@ async function tryShelves(sf,cands,how,inside){
   }
   if(inside||!ranked.mixed.length)return null;
   const m=ranked.mixed[0];
+  // Not words: asked of the web, or kept as how the shop was found.
   const f=await openShopPage(fetchPage,m.url,"The sections listed on this page: their names and links.",null,{full:true});
   if(!f.ok){ sf.died=f.detail; return null; }
   const t=pageTextOf(f.results); sf.seenText+="\n"+t;
@@ -665,6 +671,7 @@ function shopFromRule(sf){
   const{own,no}=sf;
   if(!(own.shopCatalogues&&!no.has(normalizeUrlKey(own.shopCatalogues))))return null;
   sf.note("rule",{found:own.shopCatalogues});
+  // Not words: asked of the web, or kept as how the shop was found.
   return{shop:"found",shopHome:own.shopHome||originOf(own.shopCatalogues),shopCatalogues:own.shopCatalogues,shopSearch:null,foundBy:"the venue's rule",finder:3,searchRule:SEARCH_RULE};
 }
 //@piece searchForShop
@@ -683,9 +690,12 @@ async function searchForShop(sf){
   let english=false, again=false, s=null;
   if(sf.foreign&&!own.shopQueries){
     english=true;
+    // Not words: asked of the web, or kept as how the shop was found.
     s=await ask("The English-language version of the online museum shop of "+venueName+": its exhibition catalogues or books section.",[venueName+" English language shop exhibition catalogues",venueName+" English language shop books publications"]);
   }
+  // Not words: asked of the web, or kept as how the shop was found.
   if(!sf.mine.length)s=await ask("The museum shop's exhibition catalogues or books section of "+(own.shopQueries?own.name:venueName)+".",own.shopQueries||[venueName+" shop exhibition catalogues",venueName+" shop books publications"]);
+  // Not words: asked of the web, or kept as how the shop was found.
   if(!sf.mine.length&&!pageShop&&!own.shopQueries){ again=true; s=await ask("The online shop of "+venueName+".",[venueName+" online shop",venueName+" museum shop books"]); }
   // Results in two languages: the English one is taken; a shop's pages in another language are dropped.
   const enHosts=new Set(sf.mine.filter(r=>isEnglishUrl(r.url)).map(r=>hostOf(r.url)));
@@ -739,6 +749,7 @@ async function shopifySectionList(sf){
   const listOf=async(base,first)=>{
     const all=[];
     for(let page=1;page<=SHOPIFY_LIST_PAGES;page++){
+      // Not words: asked of the web, or kept as how the shop was found.
       const f=await fetchPage(base+"collections.json?limit=250"+(page>1?"&page="+page:""),"The shop's sections: titles and handles.",null,{full:true});
       if(!f.ok){ if(page===1&&first)sf.died=f.detail; break; }
       const t=pageTextOf(f.results);
@@ -749,6 +760,7 @@ async function shopifySectionList(sf){
   };
   // In the shop's own language part: the English shop's list names its sections in English (Thyssen's "/en/").
   const all=await listOf(shopRootOf(sf.root),true);
+  // Not words: asked of the web, or kept as how the shop was found.
   if(all.length&&!sf.pick){ sf.opens=0; sf.consider(await tryShelves(sf,all,"the shop's list of sections")); }
   // An exhibition-catalogues section under a translated address lists no products there (Thyssen's
   // "/en/collections/exhibitions"): its number finds it in the shop's own-language list, and its products are
@@ -760,6 +772,7 @@ async function shopifySectionList(sf){
       if(sf.pick||!home.length)break;
       let id=c.id;
       if(!id){
+        // Not words: asked of the web, or kept as how the shop was found.
         const cj=await fetchPage(c.url.replace(/\/$/,"")+".json","The section's id and handle.",null,{full:true});
         id=cj.ok?(pageTextOf(cj.results).match(/"collection"\s*:\s*\{\s*"id"\s*:\s*(\d+)/)||[])[1]:null;
       }
@@ -785,6 +798,7 @@ async function openToWalk(sf,url){
   if(sf.texts.has(k))return sf.texts.get(k);
   if(sf.walkOpens>=WALK_OPENS)return null;
   sf.walkOpens++;
+  // Not words: asked of the web, or kept as how the shop was found.
   const f=await openShopPage(fetchPage,url,"The shop's menu: its exhibition catalogues and books sections.",null,{full:true});
   if(!f.ok){ sf.died=f.detail; return null; }
   const t=pageTextOf(f.results); sf.texts.set(k,t); sf.seenText+="\n"+t;
@@ -801,7 +815,7 @@ async function walkShop(sf){
     pages.push(page);
     const here=menuLinks(t,host);
     links.push(...here);
-    sf.opens=0; sf.consider(await tryShelves(sf,here,"the shop's menu",true));
+    sf.opens=0; sf.consider(await tryShelves(sf,here,/* Not words: kept as how the shop was found. */"the shop's menu",true));
     if(sf.pick||sf.walkOpens>=WALK_OPENS)break;
     // Next: the best section link seen and not yet walked into.
     const ranked=rankShelves(links.map(c=>({...c,url:firstPageOf(c.url)})),sf.ownName);
@@ -839,6 +853,7 @@ async function englishVersion(sf){
   const o=originOf(at), bare=withoutWww(host), b=baseDomain(host);
   const links=mdLinks(own).filter(l=>EN_LABEL.test(foldText(l.label).trim())&&baseDomain(hostOf(l.url))===b).map(l=>l.url);
   const tries=[...new Set([...links,...EN_PATHS.map(p=>o+p),"https://en."+bare+"/"])].filter(u=>normalizeUrlKey(u)!==normalizeUrlKey(at)).slice(0,8);
+  // Not words: asked of the web, or kept as how the shop was found.
   const f=await fetchPage(tries,"The shop's front page and its menu, in English.",null,{full:true});
   const hit=f.ok?tries.map(u=>({u,r:f.results.find(x=>x&&normalizeUrlKey(x.url)===normalizeUrlKey(u))})).find(({u,r})=>{
     const t=r?pageTextOf([r]):"";
@@ -891,7 +906,7 @@ async function shopResult(sf){
   const fp=root?front||sf.homeOf(root):"", ft=fp?sf.texts.get(normalizeUrlKey(fp))||"":"";
   if(ft&&(looksLikeBookShelf(ft)||(sf.walkOpens<WALK_OPENS&&(sf.walkOpens++,await firstProductIsBook(fetchPage,ft,hostOf(fp)))))){
     const out={shop:"found",shopHome:fp,shopCatalogues:fp,shelfKind:"front",
-      shopSearch:searchFor(seenText,root)||(await proveShopSearch(seenText,root))||null,foundBy:"the shop's front page",finder:3,searchRule:SEARCH_RULE};
+      shopSearch:searchFor(seenText,root)||(await proveShopSearch(seenText,root))||null,/* Not words: kept as how the shop was found. */foundBy:"the shop's front page",finder:3,searchRule:SEARCH_RULE};
     sf.note("result",{shop:out.shop,shopCatalogues:out.shopCatalogues,shopSearch:out.shopSearch,foundBy:out.foundBy});
     return out;
   }

@@ -6,6 +6,7 @@
  *   node scraper/fixtures/period_render.js
  */
 'use strict';
+const { WORDS, wordsRe } = require('./words.js');   // the app's sentences, from its words list
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
@@ -101,7 +102,7 @@ const until = async (fn, ms = 8000) => { const t = Date.now(); while (Date.now()
     ok(!!period, 'PR-001: the sort row has Period');
     const sortRow = [...period.parentNode.querySelectorAll('button')].map(b => b.textContent.replace(/[\u2191\u2193 ]+$/, ''));
     ok(sortRow.slice(0, 3).join() === 'Date,Venue,Period', 'PR-017: Period is the third sort chip (her decision)', sortRow.join());
-    const themeRow = [...doc.querySelectorAll('span')].find(x => x.textContent === 'Theme');
+    const themeRow = [...doc.querySelectorAll('span')].find(x => x.textContent === WORDS.themeRow);
     ok(themeRow && [...themeRow.parentNode.querySelectorAll('button')].map(b => b.textContent).join('|')
       === 'Fashion & Jewellery|Architecture|Sculpture|Animals|Nature|Photography|Decorative \u2013 Hard|Decorative \u2013 Soft|Books|Ex-themes',
       'PR-018: a Theme row of her chips, in her order', themeRow && themeRow.parentNode.textContent);
@@ -149,24 +150,24 @@ const until = async (fn, ms = 8000) => { const t = Date.now(); while (Date.now()
     const unlabelled = rows.filter(x => !x.period).length;
     const shownAfter = rows.filter(x => x.interested).length;
     failNext = 1e6;   // Claude refuses every question: nothing labelled, and her line says so
-    click([...doc.querySelectorAll('button')].find(b => b.textContent === 'Label'));
+    click([...doc.querySelectorAll('button')].find(b => b.textContent === WORDS.label));
     await until(() => /Label: 0 of/.test(doc.body.textContent));
     ok(doc.body.textContent.includes(`Label: 0 of ${unlabelled} exhibitions labelled; ${unlabelled} not \u2014 Claude is rate-limited.`),
       'PR-013: a run that fails says how many were not labelled, and why', (doc.body.textContent.match(/Label:[^.]*\./) || [''])[0]);
     ok(asked.length === 4 * Math.ceil(unlabelled / 40), 'PR-013: each failed batch was asked three times, then once more at the end, no more', String(asked.length));
     asked.length = 0;
     failNext = 1;   // the first question fails once, then the retry answers
-    click([...doc.querySelectorAll('button')].find(b => b.textContent === 'Label'));
+    click([...doc.querySelectorAll('button')].find(b => b.textContent === WORDS.label));
     await until(() => cards().length === shownAfter && /Label: all/.test(doc.body.textContent));
     ok(asked.slice(1).reduce((a, b) => a + b, 0) === unlabelled && asked.every(n => n <= 40) && asked[0] === asked[1],
       `PR-007: Label asks about every unlabelled show at every venue (stage 3), dismissed included (${unlabelled}), 40 at a time; a failed batch is asked again`, asked.join(','));
     ok(doc.body.textContent.includes(`Label: all ${unlabelled} exhibitions labelled.`), 'PR-012: after a full run her line says every show was labelled');
     ok(cards().length === shownAfter, `PR-008: after Label, Period shows every not-dismissed show (${shownAfter})`, String(cards().length));
     // The Recently labelled sort is back on the Sort line (her ask, 26 Oct), beside the Showing line's filter (PR-034).
-    const sortLine = [...doc.querySelectorAll('span')].find(x => x.textContent === 'Sort');
+    const sortLine = [...doc.querySelectorAll('span')].find(x => x.textContent === WORDS.sortRow);
     const sortNames = sortLine ? [...sortLine.parentNode.querySelectorAll('button')].map(b => b.textContent.replace(/[\u2191\u2193 ]+$/, '')) : [];
-    ok(sortNames.length > 0 && sortNames[sortNames.length - 1] === 'Recently labelled', 'PR-035: the Sort line ends with Recently labelled again (her ask)', sortNames.join());
-    const whenLine = [...doc.querySelectorAll('span')].find(x => x.textContent === 'When');
+    ok(sortNames.length > 0 && sortNames[sortNames.length - 1] === WORDS.recentlyLabelled, 'PR-035: the Sort line ends with Recently labelled again (her ask)', sortNames.join());
+    const whenLine = [...doc.querySelectorAll('span')].find(x => x.textContent === WORDS.whenRow);
     const whenRow = whenLine ? [...whenLine.parentNode.querySelectorAll('button')].map(b => b.textContent) : [];
     ok(whenRow.slice(0, 3).join() === 'Current,Past,Announced', 'PR-036: the When line starts Current, Past, Announced (her order)', whenRow.join());
     // Period is still reversed from above.
@@ -175,8 +176,8 @@ const until = async (fn, ms = 8000) => { const t = Date.now(); while (Date.now()
     // Relabel, at the foot of a card's drawer, replaces that one show's label.
     const first = cards()[0], firstTitle = first.querySelector('h3').textContent;
     click([...first.querySelectorAll('button')].find(b => /Catalogue|Hide/.test(b.textContent)));
-    await until(() => [...cards()[0].querySelectorAll('button')].some(b => b.textContent === 'Relabel'));
-    const rb = [...cards()[0].querySelectorAll('button')].find(b => b.textContent === 'Relabel');
+    await until(() => [...cards()[0].querySelectorAll('button')].some(b => b.textContent === WORDS.relabel));
+    const rb = [...cards()[0].querySelectorAll('button')].find(b => b.textContent === WORDS.relabel);
     ok(!!rb, 'PR-014: the drawer of a card has Relabel');
     relabelNext = true; const nAsked = asked.length;
     // LC-005: her star, changed while the Relabel runs, is kept when its answer lands (her 25 Oct finding).
@@ -198,100 +199,100 @@ const until = async (fn, ms = 8000) => { const t = Date.now(); while (Date.now()
     const m2 = () => cards().find(c => has(c, met3));
     const btn = (el, t) => el && [...el.querySelectorAll('button')].find(b => b.textContent === t);
     const divider = t => [...doc.querySelectorAll('span')].some(x => x.textContent === t);
-    click(btn(m2(), 'Catalogue') || btn(m2(), 'Hide') || [...m2().querySelectorAll('button')].find(b => /Catalogue/.test(b.textContent)));
-    await until(() => !!btn(m2(), 'Relabel'));
+    click(btn(m2(), WORDS.catalogue) || btn(m2(), WORDS.hide) || [...m2().querySelectorAll('button')].find(b => wordsRe(WORDS.catalogue).test(b.textContent)));
+    await until(() => !!btn(m2(), WORDS.relabel));
     relabelWith = { period: 'earlymodern', year: 1912, themes: [], artist: 'Marc Chagall' };
-    relabelNext = true; click(btn(m2(), 'Relabel'));
+    relabelNext = true; click(btn(m2(), WORDS.relabel));
     await until(() => /Relabelled: Early Modernism/.test(doc.body.textContent));
     ok(doc.body.textContent.includes('Relabelled: Early Modernism \u00b7 c. 1912 \u2014 shown with Marc Chagall\u2019s other shows, under High Renaissance.') && !divider('Early Modernism'),
       'PR-038: a Relabel that regroups says so, and the show sits with its artist\'s other shows', m2() && m2().textContent.slice(-200));
-    ok(!!btn(m2(), 'Do not regroup') && btn(m2(), 'Relabel').parentNode === btn(m2(), 'Do not regroup').parentNode, 'PR-038: Do not regroup sits next to Relabel');
-    ok(!btn(cards().find(c => c.querySelector('h3').textContent === firstTitle), 'Do not regroup'), 'PR-038: no Do not regroup on a Relabel that did not regroup');
-    click(btn(m2(), 'Do not regroup'));
+    ok(!!btn(m2(), WORDS.doNotRegroup) && btn(m2(), WORDS.relabel).parentNode === btn(m2(), WORDS.doNotRegroup).parentNode, 'PR-038: Do not regroup sits next to Relabel');
+    ok(!btn(cards().find(c => c.querySelector('h3').textContent === firstTitle), WORDS.doNotRegroup), 'PR-038: no Do not regroup on a Relabel that did not regroup');
+    click(btn(m2(), WORDS.doNotRegroup));
     await until(() => /no regrouping/.test(doc.body.textContent));
-    ok(doc.body.textContent.includes('Relabelled: Early Modernism \u00b7 c. 1912 \u2014 no regrouping.') && !btn(m2(), 'Do not regroup') && divider('Early Modernism'),
+    ok(doc.body.textContent.includes('Relabelled: Early Modernism \u00b7 c. 1912 \u2014 no regrouping.') && !btn(m2(), WORDS.doNotRegroup) && divider('Early Modernism'),
       'PR-039: Do not regroup keeps Claude\'s answer: the line says "no regrouping." and the show goes under its own period', m2() && m2().textContent.slice(-200));
-    relabelNext = true; click(btn(m2(), 'Relabel'));
+    relabelNext = true; click(btn(m2(), WORDS.relabel));
     await until(() => /shown with Marc Chagall/.test(doc.body.textContent));
-    ok(!divider('Early Modernism') && !!btn(m2(), 'Do not regroup'), 'PR-040: the next Relabel remembers nothing: regrouped again, the button offered again');
+    ok(!divider('Early Modernism') && !!btn(m2(), WORDS.doNotRegroup), 'PR-040: the next Relabel remembers nothing: regrouped again, the button offered again');
     relabelWith = null;
     // The Theme row filters; Ex-themes is every labelled show with no theme.
     // A picked Theme chip reads "Sculpture · 1" (59.1): found by its name, with or without its count.
     const chipBtn = t => [...doc.querySelectorAll('button')].find(b => b.textContent === t || b.textContent.startsWith(t + ' \u00b7 '));
     const allShown = cards().length;
-    click(chipBtn('Sculpture')); await settle(150);
+    click(chipBtn(WORDS.themeSculpture)); await settle(150);
     ok(cards().length === 1 && cards()[0].querySelector('h3').textContent === firstTitle, 'PR-019: Sculpture shows only the show labelled Sculpture', String(cards().length));
-    click(chipBtn('Sculpture')); click(chipBtn('Ex-themes')); await settle(150);
+    click(chipBtn(WORDS.themeSculpture)); click(chipBtn(WORDS.themeExThemes)); await settle(150);
     ok(cards().length === allShown - 1 && !cards().some(c => c.querySelector('h3').textContent === firstTitle), 'PR-020: Ex-themes shows every show but the themed one', String(cards().length));
-    click(chipBtn('Sculpture')); await settle(150);
+    click(chipBtn(WORDS.themeSculpture)); await settle(150);
     ok(cards().length === allShown, 'PR-021: two theme chips show either, as the Venue row does', String(cards().length));
-    click(chipBtn('Sculpture')); click(chipBtn('Ex-themes')); await settle(150);
+    click(chipBtn(WORDS.themeSculpture)); click(chipBtn(WORDS.themeExThemes)); await settle(150);
     // Every theme chip plus Ex-themes, all picked: exactly the Period view, nothing lost or doubled.
-    const themeNames = [...[...doc.querySelectorAll('span')].find(x => x.textContent === 'Theme').parentNode.querySelectorAll('button')].map(b => b.textContent);
+    const themeNames = [...[...doc.querySelectorAll('span')].find(x => x.textContent === WORDS.themeRow).parentNode.querySelectorAll('button')].map(b => b.textContent);
     themeNames.forEach(t => click(chipBtn(t))); await settle(150);
     ok(cards().length === allShown, 'PR-022: the theme chips and Ex-themes together hold every show in the Period view, once', cards().length + ' of ' + allShown);
     themeNames.forEach(t => click(chipBtn(t))); await settle(150);
-    click(chipBtnSort('Period')); await settle(150);   // Period in its usual order again
+    click(chipBtnSort(WORDS.sortPeriod)); await settle(150);   // Period in its usual order again
     // The Recently labelled filter, on the Showing line after Dismissed: the newest Label run, in period order.
-    const showing = [...doc.querySelectorAll('span')].find(x => x.textContent === 'Showing');
+    const showing = [...doc.querySelectorAll('span')].find(x => x.textContent === WORDS.showingRow);
     const showRow = showing ? [...showing.parentNode.querySelectorAll('button')].map(b => b.textContent) : [];
-    ok(showRow.indexOf('Recently labelled') === showRow.indexOf('Dismissed') + 1, 'PR-034: the Recently labelled filter sits after Dismissed on the Showing line', showRow.join());
-    click([...showing.parentNode.querySelectorAll('button')].find(b => b.textContent === 'Recently labelled')); await settle(150);
+    ok(showRow.indexOf(WORDS.recentlyLabelled) === showRow.indexOf(WORDS.chipDismissed) + 1, 'PR-034: the Recently labelled filter sits after Dismissed on the Showing line', showRow.join());
+    click([...showing.parentNode.querySelectorAll('button')].find(b => b.textContent === WORDS.recentlyLabelled)); await settle(150);
     const run = cards();
     ok(run.length === shownAfter - 4 && !run.some(a => [ng1, ng2, met1, met2].some(x => is(a, x)))
       && !!doc.querySelector('[data-period="baroque"]'),
       'PR-034: with Period, it shows only the last Label run under its period dividers; a stage 1 show relabelled stays out', run.length + ' of ' + (shownAfter - 4));
-    click([...showing.parentNode.querySelectorAll('button')].find(b => b.textContent === 'Recently labelled')); await settle(150);
+    click([...showing.parentNode.querySelectorAll('button')].find(b => b.textContent === WORDS.recentlyLabelled)); await settle(150);
 
     // BP-001..BP-004: Buy next by period (her design): Period switches between her dragged order and period order.
-    const buyNext = () => [...doc.querySelectorAll('button')].find(b => b.textContent === 'Buy next');
+    const buyNext = () => [...doc.querySelectorAll('button')].find(b => b.textContent === WORDS.buyNext);
     const grab = () => cards().some(a => { let e = a; for (let i = 0; i < 3 && e; i++, e = e.parentElement) if (e.style && e.style.cursor === 'grab') return true; return false; });
     click(buyNext()); await settle(150);
     let bn = cards();
     ok(bn.length === 2 && has(bn[0], met1) && has(bn[1], ng2) && !doc.querySelector('[data-period]') && grab(),
       'BP-001: Buy next shows her dragged order, no dividers, and she can drag', bn.map(x => x.querySelector('h3').textContent).join(' | '));
-    click(chipBtnSort('Period')); await settle(150);
+    click(chipBtnSort(WORDS.sortPeriod)); await settle(150);
     bn = cards();
     ok(bn.length === 2 && has(bn[0], ng2) && has(bn[1], met1) && !!doc.querySelector('[data-period="antiquity"]') && !!doc.querySelector('[data-period="highren"]'),
       'BP-002: Period in Buy next puts the same cards in period order under their dividers', bn.map(x => x.querySelector('h3').textContent).join(' | '));
     ok(!grab(), 'BP-003:   with no dragging in period order');
-    click(chipBtnSort('Period')); await settle(150);
+    click(chipBtnSort(WORDS.sortPeriod)); await settle(150);
     bn = cards();
     ok(bn.length === 2 && has(bn[0], met1) && has(bn[1], ng2) && !!doc.querySelector('[data-period="highren"]') && !grab()
-      && chipBtnSort('Period').textContent.includes('\u2191'),
+      && chipBtnSort(WORDS.sortPeriod).textContent.includes('\u2191'),
       'BP-004: tapping Period again reverses the period order (her ask), still with dividers and no dragging', bn.map(x => x.querySelector('h3').textContent).join(' | '));
-    click(chipBtnSort('Period')); await settle(150);
+    click(chipBtnSort(WORDS.sortPeriod)); await settle(150);
     bn = cards();
     ok(bn.length === 2 && has(bn[0], met1) && has(bn[1], ng2) && !doc.querySelector('[data-period]') && grab(),
       'BP-005: a third tap goes back to her order', bn.map(x => x.querySelector('h3').textContent).join(' | '));
     // BP-012..BP-014: Buy next by date (her ask): the Date chip's taps, as Period's.
     const names = () => cards().map(x => x.querySelector('h3').textContent);
-    click(chipBtnSort('Date')); await settle(150);
+    click(chipBtnSort(WORDS.sortDate)); await settle(150);
     const byDate = names();
-    ok(byDate.length === 2 && !grab() && !doc.querySelector('[data-period]') && chipBtnSort('Date').textContent.includes('\u2193'),
+    ok(byDate.length === 2 && !grab() && !doc.querySelector('[data-period]') && chipBtnSort(WORDS.sortDate).textContent.includes('\u2193'),
       'BP-012: Date in Buy next sorts the same cards by date, with no dragging', byDate.join(' | '));
-    click(chipBtnSort('Date')); await settle(150);
-    ok(names().join('|') === byDate.slice().reverse().join('|') && chipBtnSort('Date').textContent.includes('\u2191'), 'BP-013: a second tap reverses the date order', names().join(' | '));
-    click(chipBtnSort('Date')); await settle(150);
+    click(chipBtnSort(WORDS.sortDate)); await settle(150);
+    ok(names().join('|') === byDate.slice().reverse().join('|') && chipBtnSort(WORDS.sortDate).textContent.includes('\u2191'), 'BP-013: a second tap reverses the date order', names().join(' | '));
+    click(chipBtnSort(WORDS.sortDate)); await settle(150);
     bn = cards();
     ok(bn.length === 2 && has(bn[0], met1) && has(bn[1], ng2) && grab(), 'BP-014: a third tap goes back to her dragged order', names().join(' | '));
-    const wantedChip = [...doc.querySelectorAll('button')].find(b => b.textContent === 'Wanted');
+    const wantedChip = [...doc.querySelectorAll('button')].find(b => b.textContent === WORDS.chipWanted);
     click(wantedChip); await settle(150);
     ok(cards().length === 2 && cards().some(x => has(x, met1)) && cards().some(x => has(x, ng2)), 'BP-010: Buy next with Wanted still shows only the Buy next books, a part of Wanted', String(cards().length));
     click(wantedChip); await settle(150);
-    ok(!/Assume out of print|Secondhand only|Buy now if you want it/.test(doc.body.textContent) && !/Reset to Seed|Last refreshed|acquisition window/i.test(doc.body.textContent.replace(/Reset to Seed/g, '')),
+    ok(!/Assume out of print|Secondhand only|Buy now if you want it/.test(doc.body.textContent) && !/Reset to Seed|Last refreshed|acquisition window/i.test(doc.body.textContent.replace(wordsRe(WORDS.resetToSeed,'g'), '')),
       'BP-011: no tier sentence on the cards, no "acquisition window" in the heading');
     // Buy next with Owned shows both lists (her ask), sorted like any list, nothing draggable; Wanted keeps Buy next a subset.
-    const owned = () => [...doc.querySelectorAll('button')].find(b => b.textContent === 'Owned');
+    const owned = () => [...doc.querySelectorAll('button')].find(b => b.textContent === WORDS.chipOwned);
     click(owned()); await settle(150);
     bn = cards();
     const sortNow = () => doc.querySelector('[data-period]');
     ok(bn.length > 2 && bn.some(x => has(x, met1)) && bn.some(x => has(x, ng2)) && bn.some(x => has(x, met2)),
       'BP-006: Buy next with Owned shows both lists together', bn.map(x => x.querySelector('h3').textContent).join(' | '));
     ok([...doc.querySelectorAll('[data-buynext]')].length === 0 && !grab(), 'BP-007:   and nothing can be dragged');
-    click(chipBtnSort('Date')); await settle(150);
+    click(chipBtnSort(WORDS.sortDate)); await settle(150);
     ok(!sortNow() && bn.length === cards().length, 'BP-008:   Date sorts them as any list, no dividers, nobody lost');
-    click(chipBtnSort('Period')); await settle(150);
+    click(chipBtnSort(WORDS.sortPeriod)); await settle(150);
     ok(!!sortNow(), 'BP-009:   Period sorts the combined list under its dividers');
     click(owned()); await settle(150);
     click(buyNext()); await settle(150);

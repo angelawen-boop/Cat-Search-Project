@@ -4,6 +4,7 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 // Numbering, her decision: a whole number for a substantial change, a decimal for a
 // small one, one number per publish. Bump it with the change it describes.
 const APP_VERSION = "59.2";
+// Not words: the date of this version.
 const APP_VERSION_DATE = "17 Nov 2026";
 
 // ===== THE VENUE REGISTER — the join writes venues/register.js in below, every venue's facts in her venue order; never edit it here. Edit venues/register.js, then run `node build/app_join.js`. =====
@@ -916,6 +917,678 @@ const VENUES = [
 const NAMES_FILED_AT = "2026-11-15T10:23:16.303Z";
 return VENUES;
 })();
+// THE WORDS LIST (her decision): every sentence the app shows her, written once, here. Every place
+// that shows one names its entry, so a change of wording is made once and reaches everywhere;
+// build/words_check.js fails a sentence written anywhere else. A gap — a title, a count, a venue —
+// is written {name} and filled by say(). The wording sent to Claude or the web is not on this list:
+// changing it changes what the app does. Grouped by where she sees it.
+const W={  // ── the header: title, toolbar, Save panel, status lines, banners, diagnostic, sweep log, counts ──
+  appName:"Art Watch",
+  headline:"Before it goes",
+  headlineEnd:" out of print",
+  load:"Load",
+  save:"Save",
+  switchToLight:"Switch to light",
+  switchToDark:"Switch to dark",
+  lightButton:"\u2600 Light",
+  darkButton:"\u263D Dark",
+  importButton:"Import",
+  saveDescription:"Description (optional) \u2014 e.g. after 30 lookups",
+  saving:"Saving\u2026",
+  saveNow:"Save now",
+  cancel:"Cancel",
+  alsoSaveToCloud:"Also save a copy to cloud",
+  fileName:"File name: ",
+  openIt:"Open it",
+  dismiss:"Dismiss",
+  downloadUnconfirmed:"A download of {file} was started. This viewer can\u2019t tell us whether it arrived, so your ledger is still marked unsaved \u2014 check your downloads folder. If the file is there, you\u2019re safe.",
+  unsavedChanges:"UNSAVED CHANGES \u2014 what's on screen is not saved to a file. Tap \u201cSave\u201d before you close this tab or your work is lost.",
+  storeNotRead:"STORE NOT READ \u2014 {parts} couldn\u2019t be read from store, refresh to re-check. Current incorrect information will not overwrite the store until the read corrects.",
+  quarantineBanner:"QUARANTINE \u2014 {why}",
+  hideDiagnostic:"Hide diagnostic",
+  showDiagnostic:"Show diagnostic",
+  copied:"Copied",
+  couldntCopy:"Couldn\u2019t copy",
+  copy:"Copy",
+  lastSweep:"Last sweep: ",
+  unknown:"Unknown",
+  hideDetails:"Hide details",
+  details:"Details",
+  tracked:" Tracked",
+  dismissed:" Dismissed",
+  sweepLogLead:"When each venue was last swept, and when it last gave us exhibitions.",
+  sweepLogEmpty:"The store holds no sweep dates, so when each venue was last swept is unknown.",
+  sweptAt:"swept ",
+  rowsAt:"rows ",
+  noRowsRefused:"no rows \u2014 refused",
+  notInAnySweep:"Not in any sweep yet: {venues}.",
+  watched:" Watched",
+  wanted:" Wanted",
+  owned:" Owned",
+  closingWindowCount:" Closing Window",
+  search:"Search",
+  clearSearch:"Clear search",
+  clear:"Clear",
+  // ── the chip rows ──
+  sortRow:"Sort",
+  sortDate:"Date",
+  sortVenue:"Venue",
+  sortPeriod:"Period",
+  recentlyAdded:"Recently added",
+  recentlyEdited:"Recently edited",
+  recentlyLabelled:"Recently labelled",
+  justRefreshedFirst:"\u2191 just-refreshed entries shown first",
+  whenRow:"When",
+  whenCurrent:"Current",
+  whenPast:"Past",
+  whenAnnounced:"Announced",
+  recentlyOpened:"Recently opened",
+  themeRow:"Theme",
+  acquiringRow:"Acquiring?",
+  chipWanted:"Wanted",
+  chipOwned:"Owned",
+  buyNext:"Buy next",
+  chip3mo:"3+ mos",
+  chip6mo:"6+ mos closing window",
+  chipHasCatalogue:"Has catalogue",
+  chipNoCatalogue:"No catalogue",
+  digitalCatalogue:"Digital catalogue",
+  showingRow:"Showing",
+  chipWatched:"Watched",
+  chipDismissed:"Dismissed",
+  showAll:"Show all",
+  clearAll:"Clear all",
+  // ── the list of cards ──
+  nothingMatches:"Nothing matches those filters.",
+  bandThisImport:"This import",
+  bandEarlierImports:"Earlier imports",
+  bandOriginalSet:"Original set",
+  bandThisImportsEdits:"This import's edits",
+  bandEarlierEdits:"Earlier edits",
+  bandNeverEdited:"Never edited",
+  bandThisLabelling:"This labelling",
+  bandEarlierLabellings:"Earlier labellings",
+  bandStage1:"Stage 1",
+  bandNotLabelled:"Not labelled",
+  bandRestOfList:"Rest of the list",
+  // ── the tools row and its drawers: Cloud Saves, Quarantine, Clear search ──
+  resetToSeed:"Reset to Seed",
+  label:"Label",
+  cloudSaves:"Cloud Saves",
+  quarantine:"Quarantine",
+  cloudSavesCount:"{n} cloud save{s}. ",
+  cloudSavesLead:"From exports also saved to the cloud and safety snapshots (taken before a Load, Reset or roll-back to an earlier snapshot).",
+  readingCloudSaves:"Reading cloud saves…",
+  noCloudSaves:"No cloud saves yet.",
+  exportLabel:"Export: \u201c{label}\u201d",
+  snapRows:" · {n} exhibitions",
+  download:"Download",
+  rollBack:"Roll back",
+  quarantineUnread:"Quarantine can\u2019t be read: {why}",
+  quarantineEmpty:"Nothing in quarantine.",
+  noSearchedCards:"No searched cards match.",
+  inQuarantine:"{n} in quarantine. ",
+  quarantineLead:"Entries excluded from all future imports. Removing them from quarantine will re-offer them in future sweeps \u2014 it does not immediately add them to your ledger.",
+  noTitle:"(no title)",
+  remove:"Remove",
+  // ── the floating buttons, the undo bar, the confirm box, the footer ──
+  returnToTop:"Return to top",
+  jumpToBottom:"Jump to bottom",
+  undo:"Undo",
+  replaceOnScreen:"Replace what's on screen?",
+  continue:"Continue",
+  footer:"Art Watch · v {version} · {date}",
+  // ── the Import pop-up ──
+  failDash:" \u2014 ",
+  ledgerFirst:"Your ledger needs to be opened first.",
+  openLastCloudSave:"Open last cloud save",
+  tabCsv:"CSV",
+  tabLinks:"Links",
+  tabPages:"Pages",
+  tabPaste:"Paste",
+  linkBox:"Link",
+  textBox:"Text",
+  addABox:"Add a box",
+  read:"Read",
+  choosePages:"Choose pages",
+  // ── an exhibition card and its catalogue box ──
+  searching:"Searching\u2026",
+  searchAgain:"Search again",
+  recheckShop:"Re-check museum shop",
+  restore:"Restore",
+  notBuyingNext:"Not buying next",
+  unwatch:"Unwatch",
+  watch:"Watch",
+  notInterested:"Not interested",
+  barClosed:"CLOSED",
+  bar3:"3 MO",
+  bar6:"6 MO",
+  bar12:"12 MO",
+  wantCatalogue:"Want the catalogue?",
+  yes:"Yes",
+  no:"No",
+  acquired:"Acquired",
+  hide:"Hide",
+  catalogueFound:"\u2713 Catalogue",
+  plusDigital:" + digital",
+  catalogueNoneDigitalOnly:"\u2717 Catalogue \u2014 digital only",
+  catalogueNone:"\u2717 Catalogue",
+  catalogue:"Catalogue",
+  noSearchYet:"No catalogue search run yet.",
+  findCatalogue:"Find catalogue",
+  relabelling:"Relabelling\u2026",
+  relabel:"Relabel",
+  doNotRegroup:"Do not regroup",
+  shopNotFound:"Museum shop not found.",
+  venueHasNoShop:"Venue has no shop.",
+  notInShopGeneralStore:"Not in the museum shop \u2014 shop link opens the general store.",
+  versions:"Versions",
+  isbnLabel:"ISBN ",
+  sourceLabel:"Source: ",
+  museumShop:"Museum shop",
+  noCatalogueFound:"No catalogue found for this exhibition.",
+  // ── the review of an import ──
+  newShow:"New show \u2014 not in your ledger yet.",
+  dates:"Dates",
+  description:"Description",
+  existingEntry:"Existing entry \u2014 decide each change:",
+  willBeAddedSeparately:"Will be added as a separate new entry instead of changing the existing one.",
+  fillValue:"add \u201c{value}\u201d",
+  acceptEdit:"Accept edit",
+  reject:"Reject",
+  twoAnswers:"The sweep file gave two different answers here. The longer one is picked for you \u2014 change it if it\u2019s wrong.",
+  blank:"(blank)",
+  addNewEntry:"Add new entry",
+  neverAddThis:"Never add this",
+  wontBeOffered:"Won\u2019t be offered again on future sweeps.",
+  differentShow:"No \u2014 this is a different show, add as separate entry",
+  proposedChanges:"{n} proposed change{s} found",
+  tallyRows:"From {rows} row{s1} in the file \u2014 {markers} marker row{s2}{blocked}, {folded} duplicate row{s3} reconciled/de-duped, {silent} already matching ledger = {cards} entries considered for import",
+  tallyBlocked:", {n} you\u2019d said never to add",
+  tallyCards:"From {cards} entr{y} \u2014 {fill} fill a gap, {change} edit existing data, {add} new exhibition{s}",
+  oddCases:"Odd cases ",
+  bandMarkers:"1. Marker rows",
+  bandMerged:"2. Combined rows \u00b7 identical rows were de-duped or reconciled",
+  bandMergedConflicts:"3. Combined rows \u00b7 identical rows produced conflicts \u2014 yours to choose",
+  bandNoLink:"4. No exhibition url \u00b7 link goes to venue\u2019s listing page",
+  notForYou:"Probably not for you ",
+  normalCases:"Normal cases ",
+  nothingUnusual:"Nothing unusual about these \u2014 one row in the file, nothing combined, nothing disagreeing.",
+  collapseAllVenues:"Collapse all venues",
+  expandAllVenues:"Expand all venues",
+  venueToDecide:"\u00b7 {n} to decide",
+  cancelImport:"Cancel import",
+  nRejected:"{n} rejected, ",
+  nQuarantined:"{n} quarantined, ",
+  nToApply:"{n} to apply",
+  decideEveryCard:"Decide every card first \u2014 {n} still undecided.",
+  stillToDecide:"{n} still to decide",
+  next:"Next",
+  goAhead:"Go ahead and update the ledger",
+  // ── the screen ──
+  resetThisSearch:"Reset this search?",
+  openingLedger:"Opening the ledger\u2026",
+  // ── the shop screen ──
+  shopNoBooksSection:"Shop found, but not its books section: ",
+  searchFailed:"Search failed.",
+  noMuseumShopFound:"No museum shop found.",
+  shopNoCataloguesSection:"Shop found, but not its catalogues section ",
+  looking:"Looking\u2026",
+  confirm:"Confirm",
+  lookAgain:"Look again",
+  noShop:"No shop",
+  add:"Add",
+  newVenueShops:"New Venue Shops",
+  back:"Back",
+  releaseNotSaved:"That release couldn\u2019t be saved to this page\u2019s store, so it may come back when you reload.",
+  // ── saving: the cloud copy, Cloud Saves, Save now ──
+  storeUnreachedNotSaving:"{why}, so nothing is being saved to the cloud copy.",
+  cloudCopyUnreadOnLoad:"The cloud copy couldn\u2019t be read ({why}). It was left in the store untouched; this ledger is saved as the new cloud copy.",
+  firstCloudCopy:"No cloud copy existed yet \u2014 this ledger is now the first one.",
+  loadedIdentical:"\u2713 The file you just loaded is identical to the last cloud save ({when}). No snapshot of the last cloud state was needed before loading your file.",
+  diffOnlyCloud:"{n} exhibition{s} only in the cloud copy",
+  diffOnlyIn:"{n} only in {where}",
+  theStarterSet:"the starter set",
+  thisFile:"this file",
+  diffChanged:"{n} different in some field",
+  diffQuarantine:"{n} quarantine entr{y} different ({cloud} in the cloud copy, {here} here)",
+  theStarterSetCap:"The starter set",
+  theFileLoaded:"The file you just loaded",
+  differsFromCloud:"{what} differs from the last cloud save ({when}): {n} difference{s}.",
+  comparedWithCloud:"Compared with the last cloud save ({when}): {bits}.",
+  safetySnapshotBefore:"Safety snapshot before {what}",
+  reset:"Reset",
+  it:"it",
+  yourFile:"your file",
+  snapshotTaken:" A snapshot of the last cloud state was taken before loading {what}.",
+  snapshotNotTaken:" A snapshot of the last cloud state could NOT be taken ({why}), so {what} was not loaded.",
+  openedCloudCopy:"Opened the cloud copy saved {when} \u2014 {n} exhibitions.",
+  openCloudQuestion:"Opening the cloud copy replaces everything on screen. The cloud copy is NOT saving, so your changes since your last Save are on screen only and will be lost. Continue?",
+  noCloudCopyYet:"There is no cloud copy yet.",
+  cloudCopyNotOpened:"The cloud copy couldn\u2019t be opened: {why}",
+  cloudSavesUnread:"Couldn\u2019t read the cloud saves ({why}).",
+  rollBackQuestion:"Roll back to this cloud save?",
+  rollBackText:"The ledger becomes the cloud save \u201c{title}\u201d from {when} ({n} exhibitions). What you have now is kept in Cloud Saves first, so this can be undone.",
+  rolledBack:"Rolled back to the cloud save \u201c{title}\u201d from {when} \u2014 {n} exhibitions.",
+  rollbackNotDone:"Rollback NOT done \u2014 {why} Nothing was replaced.",
+  savedFile:"Saved {file}.",
+  downloadStarted:"A download of {file} was started \u2014 this viewer can\u2019t confirm it arrived; check your downloads folder.",
+  downloadCouldntStart:"the download couldn\u2019t start",
+  saveRefused:"the save was refused or cancelled ({why})",
+  downloadNotDone:"Download NOT done \u2014 {why}.",
+  saveSmaller:"Save a smaller ledger?",
+  saveSmallerText:"You\u2019re saving {n} exhibition{s}; your last cloud save has {most}. Save anyway?",
+  saveAnyway:"Save anyway",
+  fileNotBuilt:"NOT SAVED \u2014 the file couldn\u2019t be built: {why}",
+  cantReachStore:"this viewer can\u2019t reach the page\u2019s store",
+  cancelled:"cancelled",
+  refusedWhy:"refused ({why})",
+  saveFileNotSaved:"Save: the file was not saved \u2014 {code} {why}",
+  cloudCopyNotKept:"Cloud copy NOT kept \u2014 {why}.",
+  savedBoth:"Local file saved. Extra copy also sent to the cloud.",
+  localSaved:"Local file saved.",
+  localSavedCloudNot:"Local file saved. {cloud}",
+  extraCopySent:"Extra copy sent to the cloud. ",
+  localDownloadStarted:"A download of the local file was started \u2014 this viewer can\u2019t confirm it arrived; check your downloads folder.",
+  cloudKeptLocalNot:"Cloud copy kept. Local file not saved - {why}.",
+  localNotSaved:"Local file not saved - {why}.",
+  nothingSaved:"NOTHING SAVED \u2014 local file not saved - {why}. {cloud}",
+  saveDebug:"Save {file} ({when}): file {fileSaid}; cloud {cloudSaid}.",
+  confirmedByViewer:"confirmed by the viewer",
+  kept:"kept",
+  notAskedFor:"not asked for",
+  cloudNotSaving:"CLOUD COPY NOT SAVING \u2014 {why}",
+  reasonUnknown:"reason unknown.",
+  lastCloudSaveWas:" Last cloud save: {when} ({ago}).",
+  nothingSavedToCloud:" Nothing has been saved to the cloud yet.",
+  changesOnScreenOnly:" Changes since then are on screen only \u2014 tap Save to keep them in a file.",
+  savingToCloud:"Saving to the cloud copy\u2026",
+  lastCloudSave:"Last cloud save: {when} ({ago}) \u00b7 {n} exhibitions",
+  cloudCopyWhy:"Cloud copy: {why}",
+  noCloudCopyStarts:"No cloud copy yet \u2014 it starts when you open your ledger.",
+  checkingCloud:"Checking the cloud copy\u2026",
+  // ── the connections: Claude, the web, the store (said in the error line and the diagnostic) ──
+  claudeUnavailable:"Claude isn\u2019t available to this page in this viewer.",
+  readTheResults:"read the results",
+  readTheResultsLast:"read the results (the reply held more than one answer; the last was taken)",
+  couldntReadResults:"Couldn\u2019t read the search results ({code}).",
+  claudeDeclined:"You declined to let this page use Claude. Reload and allow it to search.",
+  claudeRateLimited:"Claude is rate-limited.",
+  claudeUnreadable:"Claude\u2019s answer came back unreadable. Try again.",
+  unreadOcc:"the link venues",
+  unreadLinks:"the links waiting in the Links box",
+  unreadPages:"the pages waiting in the Pages list",
+  unreadPastes:"the boxes waiting in Paste",
+  unreadSweeps:"the sweep log",
+  unreadQuarantine:"the quarantine list",
+  storeUnreached:"This viewer can\u2019t reach the page\u2019s store.",
+  copyReadOnly:"This copy is read only.",
+  partUnreadNotWritten:"This part of the store could not be read, so it is not written.",
+  connectorMissing:"Add the \u201cParallel Search Key\u201d connector in claude.ai \u2192 Settings \u2192 Connectors, then try again.",
+  connectorLapsed:"Reconnect \u201cParallel Search Key\u201d in claude.ai \u2192 Settings \u2192 Connectors \u2014 its access has lapsed.",
+  connectorNotAllowed:"This page isn\u2019t allowed to use \u201cParallel Search Key\u201d \u2014 you may have turned it off for this artifact.",
+  connectorPickOne:"You have more than one \u201cParallel Search Key\u201d connector. Pick one when Claude asks, then try again.",
+  connectorBlocked:"Your organisation blocks this connector.",
+  searchNoAnswer:"The search service didn\u2019t answer. Worth one more try in a moment.",
+  searchStopped:"Search stopped.",
+  searchFailedCode:"Search failed ({code}).",
+  noConnectorOpenFromLink:"No connector access in this viewer. The page must be opened from its claude.ai link.",
+  searchResultsFor:"search: {n} results for {queries}",
+  noPageToOpen:"No page to open.",
+  noConnector:"No connector access in this viewer.",
+  openedPages:"opened {urls}: {n} page(s)",
+  pagesRefused:", {n} refused ({codes})",
+  // ── the logs: quarantine and sweep log ──
+  quarantineUnreachable:"This page can\u2019t reach its quarantine list in this viewer, so nothing is being blocked.",
+  quarantineDeclined:"You declined this page access to its quarantine list.",
+  quarantineUnreadCode:"Couldn\u2019t read the quarantine list ({code}).",
+  sweepLogUnreachable:"This page can\u2019t reach its sweep log in this viewer.",
+  sweepLogDeclined:"You declined this page access to its sweep log.",
+  sweepLogUnreadCode:"Couldn\u2019t read the sweep log ({code}).",
+  partMissing:"Part {i} of {n} is missing.",
+  fingerprintMismatch:"The copy doesn\u2019t match its fingerprint, so it was not used.",
+  actRead:"read",
+  actSaveTo:"save to",
+  storeDeclined:"You declined this page access to its store.",
+  storeFull:"The page\u2019s store is full ({why}).",
+  tooManySaves:"Too many saves in a row just now \u2014 it will try again on your next change.",
+  storeRevoked:"This page lost access to its store while open. Reload the page.",
+  couldntCloud:"Couldn\u2019t {act} the cloud copy ({why}).",
+  readOnlyLine:"Read only \u2014 Art Watch is open in another tab or device. Close it there, then reload this one.",
+  // ── saving: the file, Load and Reset ──
+  safetyBeforeRollbackTo:"Safety snapshot before roll-back to snapshot of {when}",
+  export:"Export",
+  safetyBeforeRollbackNamed:"Safety snapshot before roll-back to \u201c{was}\u201d",
+  snapshotOf:"snapshot of ",
+  safetySnapshot:"Safety snapshot",
+  loadQuestion:"Loading replaces everything on screen. The cloud copy is NOT saving, so your changes since your last Save are on screen only and will be lost. Continue?",
+  resetQuestionUnsaved:"This loads the built-in starter set and replaces everything on screen. The cloud copy is NOT saving, so your changes since your last Save are on screen only and will be lost. Continue?",
+  resetQuestion:"This loads the seed set and replaces everything on screen. Continue?",
+  fileUnreadable:"Could not read that file \u2014 it may not be a valid ledger backup.",
+  fileNoLedger:"That file didn't contain a ledger (no entries found).",
+  loadedNote:"Loaded {n} exhibitions from your file \u2014 no edits yet.",
+  loadedDebug:"Loaded {n} exhibitions from your file. It matches your file, so it's not counted as unsaved until you change something.",
+  // ── how dates and times are written ──
+  justNow:"just now",
+  minutesAgo:"{n} minute{s} ago",
+  hoursAgo:"{n} hour{s} ago",
+  daysAgo:"{n} day{s} ago",
+  monthsShort:["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],
+  never:"never",
+  until:"until {date}",
+  openSince:"open since {date}",
+  opens:"opens {date}",
+  datesUnknown:"dates unknown",
+  starterLoaded:"Starter set loaded ({n} exhibitions) \u2014 not saved to a file.",
+  resetDebug:"Reset: loaded the built-in starter set ({n} exhibitions). It isn't in any file \u2014 Save if you want one.",
+  // ── the closing window: each card's corner label and its note ──
+  tierUpcoming:"Not open yet. Catalogue usually appears at opening.",
+  tierRecent:"Just opened. Catalogue should be available now.",
+  onNow:"On now",
+  tierCurrent:"In print. Cheapest it will ever be.",
+  closedUnder3:"Closed under 3 months",
+  tierFresh:"Still stocked. Comfortable window.",
+  closed3to6:"Closed 3\u20136 months",
+  tierClosing:"Shop stock thinning. Buy now if you want it.",
+  closed6to12:"Closed 6\u201312 months",
+  tierUrgent:"Final call. Reprints are rare.",
+  closedOverYear:"Closed over a year",
+  tierLapsed:"Assume out of print. Secondhand only.",
+  datesUnclear:"Dates unclear",
+  tierUnknown:"No reliable end date found.",
+  // ── a sweep file read: its cards' notes and why a file is refused ──
+  unreadableDate:"{which} date \u201c{value}\u201d couldn't be read (needs YYYY-MM-DD) \u2014 left blank.",
+  fileEmpty:"That file was empty.",
+  notProForma:"That file doesn't look like a pro forma (no venue_code / title columns).",
+  aListingPage:"(a listing page)",
+  faultVenueUnknown:"line {line}: venue code \u201c{code}\u201d isn\u2019t one of the venues",
+  faultVenueBlank:"line {line}: venue code is blank",
+  faultNoTitle:"line {line}: no exhibition title",
+  start:"Start",
+  end:"End",
+  linkGarbled:"Exhibition link \u201c{url}\u201d looks garbled \u2014 left blank.",
+  sweeperNote:"Sweeper note: ",
+  fileRefused:"This sweep file has {n} faulty row{s} and hasn\u2019t been imported. Nothing here is for you to fix \u2014 give these line numbers back to Claude:\n\n",
+  andMore:"\n\u2026and {n} more.",
+  noStartDate:"No start date.",
+  noEndDate:"No end date.",
+  noDescription:"No description.",
+  noExhibitionLink:"No exhibition link.",
+  rowsCombined:"Rows {rows} of the file describe this same exhibition \u2014 combined into one.",
+  title:"Title",
+  startDate:"Start date",
+  endDate:"End date",
+  nothingNew:"Read the refresh file, but nothing new to propose \u2014 your ledger already matches it.",
+  listingPagesUnread:" ({n} listing page{s} couldn\u2019t be read \u2014 see below.)",
+  sweepLogNotSaved:"The sweep log couldn\u2019t be saved to this page\u2019s store, so it may reset when you reload.",
+  quarantineNotSaved:"The quarantine couldn\u2019t be saved to this page\u2019s store, so it may reset when you reload. Save to keep it.",
+  // ── the review's machinery: Look again, the partial apply, Import complete ──
+  couldntLook:"Couldn\u2019t look ({why}).",
+  partialTitle:"Complete this partial import?",
+  partialText:"{n} decided {cards} will go into your ledger now. {left} undecided {leftCards} will be left behind \u2014 import them using the same sweep file.",
+  card:"card",
+  cards:"cards",
+  partialHover:"Apply the {n} you have decided and come back to the rest later.",
+  partialButton:"Update with the {n} I\u2019ve decided",
+  importComplete:"Import complete. Save it now.",
+  importCounts:"{added} added, {filled} filled in, {changed} updated",
+  importQuarantined:", {n} quarantined",
+  importLeft:", {n} left undecided",
+  // ── manual import: Links, Pages and Paste ──
+  fileNoPage:"The file holds no web page.",
+  savedPageNoAddress:"The saved page doesn\u2019t say its web address.",
+  linkBoxNoAddress:"The link box holds no web address.",
+  textBoxEmpty:"The text box is empty.",
+  nothingPasted:"Nothing pasted.",
+  noPagesChosen:"No pages chosen.",
+  noLinksFound:"No links found in the box.",
+  readingNofM:"Reading {n} of {m}\u2026",
+  couldntReadIt:"Couldn\u2019t read it ({why}).",
+  descriptionFailedCheck:"Claude\u2019s description failed check and re-attempt multiple times ({faults})",
+  claudeCouldntReadText:"Claude couldn\u2019t read the text ({why}).",
+  readingLookingForShop:"Reading {n} of {m}\u2026 looking for {name}\u2019s shop",
+  descriptionNotWritten:"Description not written \u2014 {why}",
+  readButNothing:"Read {n}{what}{s}, but ",
+  page:" page",
+  link:" link",
+  alreadyQuarantined:"nothing to add \u2014 already in your quarantine.",
+  alreadyMatches:"nothing new to propose \u2014 your ledger already matches {them}.",
+  them:"them",
+  stoppingAfter:"Stopping after this {what}\u2026",
+  pageWord:"page",
+  linkWord:"link",
+  occUs:"Occ - US",
+  occEurope:"Occ - Europe",
+  pageNoMuseum:"The page doesn\u2019t say which museum the show is in ({names} or {last}).",
+  noAnswerForPage:"no answer for this page",
+  noTitleOnPage:"Couldn\u2019t find the show\u2019s title on the page.",
+  pageParallelFault:"The page contents cannot be seen \u2014 Parallel fault. Import the full saved page.",
+  museumRefusedPage:"The museum refused the page ({why}).",
+  noReasonGiven:"no reason given",
+  pageEmpty:"The page came back empty.",
+  datesJsRendering:"Dates cannot be seen \u2014 JS-rendering.",
+  noYearPublished:"no year is published anywhere",
+  // ── the shop finder ──
+  gallerySiteUnread:"The gallery's site could not be read.",
+  // ── a card's catalogue: shop lines, publisher lines, buy links, the English edition ──
+  amazon:"Amazon",
+  abeBooks:"AbeBooks",
+  alibris:"Alibris",
+  booko:"Booko",
+  publishersSection:"Publisher\u2019s section",
+  publishersWebsite:"Publisher\u2019s website",
+  publisher:"Publisher",
+  pubNoteSection:"Publisher\u2019s link opens the section this book sits in, not the book\u2019s own page.",
+  pubNoteSite:"Couldn\u2019t find this book on the publisher\u2019s site \u2014 the link opens their home page.",
+  pubNoteNoSite:"Couldn\u2019t work out the publisher\u2019s own website, so there\u2019s no link to it.",
+  pubNoteUnnamed:"No publisher was named for this book, so none was looked for.",
+  backInShop:"Back in the museum shop.",
+  nowInShop:"Now in the museum shop.",
+  stillInShop:"Still in the museum shop.",
+  inShop:"In the museum shop.",
+  noLongerInShop:"No longer in the museum shop.",
+  shopBlockedHead:"The museum shop is blocked",
+  shopScriptHead:"The museum shop contents cannot be seen \u2014 JS-rendering",
+  shopParallelHead:"The museum shop contents cannot be seen \u2014 Parallel fault",
+  shopUnconfirmedHead:"The museum shop contents cannot be seen \u2014 unconfirmed page problem",
+  saidScript:"contents cannot be seen \u2014 JS-rendering",
+  saidParallel:"contents cannot be seen \u2014 Parallel fault",
+  saidUnconfirmed:"contents cannot be seen \u2014 unconfirmed page problem",
+  saidBlocked:"is blocked",
+  shopBlockedFoundRest:" \u2014 search it manually. The catalogue is stocked elsewhere.",
+  shopBlockedNoneRest:". The catalogue also does not appear to exist elsewhere. Search manually to confirm.",
+  isbnUnconfirmed:"ISBN not confirmed \u2014 verify before buying",
+  otherVenueBook:"No English edition. An English catalogue from the show\u2019s other venue is a different book: {title}{publisher}, ISBN {isbn}.",
+  englishEditionOf:"English edition of \u201c{title}\u201d{publisher}.",
+  noEnglishPublisher:"No English edition \u2014 checked publisher's site and bookshops.",
+  noEnglishShops:"No English edition found in bookshops.",
+  englishUnknownLang:"The book\u2019s language couldn\u2019t be confirmed, so no English edition was looked for.",
+  englishStopped:"English edition not checked \u2014 the search stopped part-way. Search again to retry.",
+  museumShopLastSeen:"Museum shop (last seen)",
+  searchAgainDidntFinish:"Search again didn\u2019t finish \u2014 {why}",
+  foundButLanguageStopped:"Found the catalogue for \u201c{title}\u201d, but the language check stopped part-way, so the title may be the shop\u2019s translation and an English edition may be missed. {why}",
+  foundButSearchStopped:"Found the catalogue for \u201c{title}\u201d, but the search stopped part-way, so the ISBN or the publisher\u2019s page may be missing when they exist. {why} Press \u201cSearch again\u201d.",
+  didntRun:"{what} didn\u2019t run \u2014 {why}",
+  // ── the catalogue lookup: where a publisher was read (also each one's trust), and the diagnostic ──
+  fromIsbnResults:"the ISBN\u2019s results",
+  fromMuseumShop:"the museum shop",
+  fromBookPage:"the book\u2019s page",
+  fromGeneralResults:"general results",
+  stageShop:"Searching venue shop\u2026",
+  stageWeb:"Searching more broadly\u2026",
+  stageFactsForeign:"Finding the ISBN, publisher and English edition\u2026",
+  stageFacts:"Finding the ISBN and publisher\u2026",
+  stagePublisher:"Looking for the publisher\u2019s page\u2026",
+  lookupSummary:"Lookup: {calls} calls ({search} searches, {fetch} page opens, {read} Claude reads), {waits} waits in a row. Time in calls: {times}.",
+  none:"none",
+  logCatalogueLink:"A catalogue link onto the museum shop, read off the results: {link}",
+  logNotTied:"Not filed: \u201c{title}\u201d is not tied to this venue\u2019s show in the results.",
+  theBookFound:"the book found",
+  logCatalogueExists:"The results say a catalogue exists{publisher} but give no title or ISBN \u2014 looking for them.",
+  logPublisherReplaced:"Publisher: {n} (from {from}), replacing \u201c{was}\u201d (from {wasFrom}).",
+  logBookPageOpen:"The book\u2019s page, already open.",
+  logIsbnPageCode:"ISBN read off the book\u2019s page in code: {isbn}",
+  logIsbnPage:"ISBN read off the book\u2019s page: {isbn}",
+  logTitleFromResults:"The book\u2019s title, from the results: \u201c{title}\u201d.",
+  logIsbnResultsCode:"ISBN read off the search results in code: {isbn}",
+  logIsbnFromRead:"ISBN from the read, printed in the results: {isbn}",
+  logPublisherDisagree:"Publisher from the ISBN: the results carrying it don\u2019t agree on one.",
+  logBookletIsbn:"The pages found give the booklet\u2019s ISBN again \u2014 not filed.",
+  logIsbnPagesCode:"ISBN read off the pages about this book, in code: {isbn}",
+  logNoIsbn:"No ISBN in the web search, or on the pages it found about this book.",
+  logNoTitleOrIsbn:"No title or ISBN found for the catalogue the results mention, so it is not filed.",
+  logPublisherFrom:"Publisher: {name} \u2014 from {from}{guess}",
+  aGuess:" (a guess).",
+  logLanguageNothing:"Language check: nothing says, so the book stands as found.",
+  logLanguage:"Language check: {lang}{own}",
+  logOwnTitle:" \u2014 its own title \u201c{title}\u201d.",
+  logNoEnglishProved:"English edition: none proved to be this catalogue's.",
+  logVersionsFound:"{n} version{s} found; first in her order: {first}.",
+  logEnglishOnPublisher:"English edition on the publisher\u2019s own page: \u201c{title}\u201d, ISBN {isbn}.",
+  logEnglishNone:"English edition: none found",
+  logPublisherPageRead:" \u2014 the publisher\u2019s own page read ({url}).",
+  logPublisherPageNotRead:"; the publisher\u2019s own page for it was not read.",
+  shopPageUnread:"The museum shop\u2019s page for \u201c{title}\u201d couldn\u2019t be read \u2014 {why}.",
+  logInShopFirst:"In the museum shop, so first: \u201c{title}\u201d{isbn}.",
+  commaIsbn:", ISBN {isbn}",
+  logOwnImprint:"{name} is a museum\u2019s own imprint \u2014 no publisher page to look for.",
+  logPublisherGiven:"Publisher\u2019s page, given by a read: {url}",
+  logPublisherSiteResults:"The publisher\u2019s site, read off the results already found: {host}",
+  logPublisherSiteListed:"The publisher\u2019s site, from her list of joint publishers: {host}",
+  logNoPublisherSite:"Couldn\u2019t identify the publisher\u2019s own website.",
+  logPageAmongResults:"A page for this book on {host}, among the results already found: {pages}",
+  logNothingOnSite:"Nothing for this book on {host}.",
+  logRankedInCode:"Ranked in code: {pages}",
+  logNoPageOnSite:"No page for this book on {host}.",
+  logPublisherPageOpen:"The publisher\u2019s page, already open: {url}",
+  logPublisherPageEmpty:"That page came back empty \u2014 kept as the publisher\u2019s section, not the book\u2019s own page.",
+  logBookPageFromList:"Book\u2019s own page, read off the publisher\u2019s list: {url}",
+  logKeptAsSection:"The publisher lists books here but gives this one no page of its own \u2014 kept as the section.",
+  logPublisherPageForBook:"Publisher\u2019s page for the book: {url}",
+  logPageNotAboutBook:"That page is not about this book.",
+  logTryingNext:" Trying the next result.",
+  logGivenLinkStands:"The link the read gave stands, unconfirmed.",
+  logNoneWasBook:"None of the pages on {host} was this book.",
+  logBookletPages:"ISBN {isbn} is a {own}-page book; the catalogue has {pages} pages",
+  logSwapTaken:" \u2014 ISBN {isbn}, printed with {pages} pages, taken.",
+  logNoneFiled:" \u2014 no ISBN for the catalogue itself found, so none is filed.",
+  anotherPrinting:"another printing",
+  logDifferentBook:"\u201c{title}\u201d (ISBN {isbn}, {pages} pages) is a different book from this one ({orig} pages)",
+  logAnotherShowings:" \u2014 listed as another showing\u2019s.",
+  logLeftOff:" \u2014 and nothing calls it a catalogue, so it is left off.",
+  differentBookPages:"a different book: {pages} pages against {orig}",
+  whySamePublisher:"the same publisher as the original",
+  whyVenueNamed:"the venue named",
+  whyBothIsbns:"a record carrying both ISBNs",
+  whyTranslation:"a record naming it a translation of the original",
+  logPublisherOfEdition:"Publisher of \u201c{title}\u201d: {pub} \u2014 its own page carries this ISBN ({url}).",
+  logEdition:"Edition: \u201c{title}\u201d, {lang}, ISBN {isbn} \u2014 {why} ({url}).",
+  logTwoNumbers:"One book, two numbers: ISBN {isbn}, also {also} \u2014 a record lists both.",
+  logCardsBook:"The card\u2019s book: \u201c{title}\u201d{isbn}.",
+  englishLater:"the English edition, published later",
+  fromShowsExhibition:"from the show's {city} exhibition",
+  fromShowsOther:"from the show's other exhibition",
+  aDifferentBook:"a different book, {where}",
+  thisShowingsCatalogue:"this showing's catalogue",
+  theOriginalEdition:"the original edition",
+  thisVenuesEnglish:"this venue's English edition",
+  theEnglishEdition:"the English edition",
+  hardcover:"Hardcover",
+  paperback:"Paperback",
+  pagesPp:"{n} pp",
+  ownNumber:"{who}\u2019s own number for the same book",
+  venueWord:"venue",
+  alsoIsbn:"also {isbn}",
+  logNotIsbnsPublisher:"Publisher \u201c{name}\u201d is not the one the ISBN\u2019s records name ({named})",
+  logTaken:" \u2014 {name} taken.",
+  logNoPublisherFiled:" \u2014 no publisher filed.",
+  // ── Re-check museum shop, and the shop step ──
+  logShopAnswered:"\nThe shop answered {status}: that page no longer exists.",
+  inStockByRule:"The page\u2019s own status line says In Stock (this shop draws its Add to Cart by script).",
+  recheckDidntRun:"Re-check didn\u2019t run \u2014 {why}",
+  recheckedPageGone:"Re-checked: page no longer exists.",
+  recheckedNotReturned:"Re-checked: shop page has not returned. Still no longer in the museum shop.",
+  recheckPageUnread:"Re-check didn\u2019t work \u2014 shop page couldn\u2019t be read{why}.",
+  recheckDidntFinish:"Re-check didn\u2019t finish \u2014 {why}",
+  answerUnreadable:"answer came back unreadable.",
+  recheckedStillForSale:"Re-checked: still for sale in the museum shop.",
+  recheckedBack:"Re-checked: back in the museum shop.",
+  recheckedNoLongerForSale:"Re-checked: no longer for sale in the museum shop.",
+  recheckedStillNotForSale:"Re-checked: still not for sale in the museum shop.",
+  rereadingShopPage:"Re-reading the shop page\u2026",
+  venueNoShop:"venue has no shop.",
+  recheckShopUnread:"Re-check didn\u2019t work \u2014 museum shop {why}.",
+  recheckedStillInShop:"Re-checked: still in the museum shop.",
+  recheckedNowInShop:"Re-checked: now in the museum shop.",
+  recheckedNotInShop:"Re-checked: not in the museum shop.",
+  sameIsbn:"the same ISBN",
+  samePageCount:"the same page count",
+  samePublisher:"the same publisher",
+  couldntReadUrl:"couldn\u2019t read {url}{why}",
+  logLookedForOnList:"The book found on the web, looked for on the shop\u2019s own list: {n} link{s} carrying \u201c{title}\u201d.",
+  blankPage:"blank page",
+  logNotThisBook:"Not this book: {url}",
+  logInShopBy:"In the museum shop ({same}): {url}",
+  logNotSettled:"Not settled: {why}.",
+  logShopRefusedAll:"\nThe museum shop refused every page, so it could not be searched.",
+  logParallelNoBooks:"\nParallel brought back this shop\u2019s pages without their books, so it could not be searched.",
+  logPagesNoBooks:"\nThe shop\u2019s pages came back without their books, so it could not be searched.",
+  logPagesNoBooksOnThem:"\nThe museum shop\u2019s pages came back with no books on them, so it could not be searched.",
+  logReadWhole:"\nThe shop\u2019s pages, read whole: books on them, none about this show in the excerpts.",
+  logTitleCut:"\nTitle cut to what the shop prints: \u201c{title}\u201d (the read gave \u201c{read}\u201d).",
+  logTitleNotOnPages:"\nThe title the read gave is not on the shop\u2019s pages as written.",
+  logOwnLinkOnListing:"\nThe book\u2019s own link, read off the shop\u2019s listing: {url}",
+  logLinkWasListing:"\nThe link given was the shop's own listing, not the book's page \u2014 kept as in the shop, without a link of its own.",
+  logShopLinkIsBook:"\nThe shop link from the web search opened and is the book, for sale.",
+  isntThisBookForSale:"isn\u2019t this book for sale",
+  noLongerExists:"no longer exists ({status})",
+  didntOpen:"didn\u2019t open",
+  couldntBeChecked:"couldn\u2019t be checked",
+  logShopLinkNot:"\nThe shop link from the web search {why}, so it is not filed as in the museum shop.",
+  logIsbnOffPageCode:"\nISBN read off the page in code: {isbn}",
+  logIsbnOffPage:"\nISBN read off the page: {isbn}",
+  logNoIsbnEither:"\nNo ISBN on that page either.",
+  // ── the Period sort: theme chips, a year, Label and Relabel ──
+  themeFashion:"Fashion & Jewellery",
+  themeArchitecture:"Architecture",
+  themeSculpture:"Sculpture",
+  themeAnimals:"Animals",
+  themeNature:"Nature",
+  themePhotography:"Photography",
+  themeDecHard:"Decorative \u2013 Hard",
+  themeDecSoft:"Decorative \u2013 Soft",
+  themeBooks:"Books",
+  themeExThemes:"Ex-themes",
+  circa:"c. {year}",
+  yearBc:"{n} BC",
+  labelDeclined:"You declined to let this page use Claude.",
+  labelUnreadable:"Claude\u2019s answer came back unreadable.",
+  claudeDidntAnswer:"Claude didn\u2019t answer ({code}).",
+  leftOutOfAnswer:"{n} left out of Claude\u2019s answer",
+  labelAll:"Label: all {n} exhibitions labelled.",
+  labelSome:"Label: {done} of {total} exhibitions labelled; {not} not \u2014 {whys}.",
+  labelNothingToDo:"Label: every exhibition already has a period.",
+  labellingPeriods:"Labelling periods\u2026",
+  labelDidntFinish:"Label: didn\u2019t finish.",
+  labelDidntFinishWhy:"Label: didn\u2019t finish \u2014 {why}.",
+  labelBatch:"Batch {n}: {labelled} of {of} labelled, {tries} {word}{why}",
+  try:"try",
+  tries:"tries",
+  relabelled:"Relabelled: {period}{regrouped}.",
+  shownWithArtist:" \u2014 shown with {artist}\u2019s other shows, under {period}",
+  relabelDidntFinish:"Relabel didn\u2019t finish \u2014 {why}.",
+  noAnswer:"no answer",
+  relabelledKept:"Relabelled: {period} \u2014 no regrouping.",
+};
+// A pattern with its gaps filled: each {name} becomes that value, as text.
+function say(text,gaps){
+  return text.replace(/\{(\w+)\}/g,(m,k)=>gaps&&k in gaps?String(gaps[k]):m);
+}
+// A pattern cut at its gaps, the gaps' values left as they are, so a screen can put a link or bold
+// words in a gap (Say, in screens/theme.jsx).
+function sayParts(text,gaps){
+  return text.split(/(\{\w+\})/).filter(s=>s!=="").map(s=>{ const m=/^\{(\w+)\}$/.exec(s); return m&&gaps&&m[1] in gaps?gaps[m[1]]:s; });
+}
 // Each venue's register entry, by id.
 const REG=Object.fromEntries(VENUE_REGISTER.map(e=>[e.id,e]));
 // How Links, Pages and Paste read a venue's pages: its link options, with its galleries (Acquavella's places).
@@ -956,8 +1629,11 @@ const venueNames=v=>[...new Set([v&&v.name,v&&v.nameInEnglish,v&&v.card,v&&v.loo
 const MUSEUMS=VENUE_REGISTER.filter(e=>e.kind==="swept").map(e=>venueView(e));
 // The Occasional venues (no chip of their own) follow, by country: the United States, the rest of that group
 // (Australia), then Europe in her country order (her decision). A venue's country is on its register entry.
+// Not words: country names as the register and the store write them.
 const OCC_COUNTRY_ORDER=["United States","United Kingdom","Germany","Belgium","France","Switzerland","Italy","Spain","Netherlands"];
+// Not words: country names as the register and the store write them.
 const OCC_EUROPE_ELSE=["Austria","Denmark","Sweden","Norway","Finland","Portugal","Ireland","Poland","Czechia","Hungary","Greece","Luxembourg"];
+// Not words: country names as the register and the store write them.
 const OCC_COUNTRY_NAMES={"usa":"United States","us":"United States","united states of america":"United States","uk":"United Kingdom","great britain":"United Kingdom","england":"United Kingdom","scotland":"United Kingdom","wales":"United Kingdom","northern ireland":"United Kingdom","the netherlands":"Netherlands","holland":"Netherlands","czech republic":"Czechia","deutschland":"Germany"};
 // A venue's country as MU shows it, else its register entry's (a venue not yet shown).
 const occCountry=id=>{ const c=String((MU[id]||REG[id]||{}).country||"").trim(); return OCC_COUNTRY_NAMES[c.toLowerCase()]||c; };
@@ -967,7 +1643,7 @@ const occCountry=id=>{ const c=String((MU[id]||REG[id]||{}).country||"").trim();
 const OCC_EUROPE_TLD=["uk","de","be","fr","ch","it","es","nl","at","dk","se","no","fi","pt","ie","pl","cz","hu","gr","lu"];
 const occRegion=id=>{ const c=occCountry(id); if(c)return(OCC_COUNTRY_ORDER.includes(c)&&c!=="United States")||OCC_EUROPE_ELSE.includes(c)?"eu":"us";
   const m=/-([a-z]{2})$/.exec(String(id)); return m&&OCC_EUROPE_TLD.includes(m[1])?"eu":"us"; };
-const OCC_CHIPS=[["occ:us","Occ - US"],["occ:eu","Occ - Europe"]];
+const OCC_CHIPS=[["occ:us",W.occUs],["occ:eu",W.occEurope]];
 const hasNoChip=id=>REG[id]?!REG[id].names.chip:isOcc(id);// Her order for the venues with a chip of their own: the register's.
 const CHIP_RANK=Object.fromEntries(VENUE_REGISTER.filter(e=>e.names.chip).map((e,i)=>[e.id,i]));
 // A venue with no chip of its own sorts by country, then in the register's order; a venue met since the
@@ -2186,7 +2862,7 @@ function splitPageTitle(t,host){
 }
 const TITLE_LABEL=/^(?:exhibitions?|mostra|ausstellung|exposition|exposición|tentoonstelling)$/i;
 // Why a page is refused when no title can be read from it.
-const NO_TITLE_ON_PAGE="Couldn’t find the show’s title on the page.";
+const NO_TITLE_ON_PAGE=W.noTitleOnPage;
 // Words too general to name a show.
 const GENERIC_TITLE_WORDS=new Set(["exhibition","exhibitions","mostra","ausstellung","exposition","tentoonstelling","the","a","an","and","of"]);
 
@@ -2347,8 +3023,8 @@ function joinTitle(name,sub,dashAfterColon){
 // Why a link came back with no page. Parallel answering 202 ("accepted", no page sent) for a page the
 // site serves to anyone (the Borghese's archive site) is Parallel's fault, said as the shop's line says it.
 function pageUnreadWhy(e){
-  if(e&&e.http_status_code===202)return "The page contents cannot be seen \u2014 Parallel fault. Import the full saved page.";
-  return e?"The museum refused the page ("+String(e.http_status_code||e.error_type||"no reason given")+").":"The page came back empty.";
+  if(e&&e.http_status_code===202)return W.pageParallelFault;
+  return e?say(W.museumRefusedPage,{why:String(e.http_status_code||e.error_type||W.noReasonGiven)}):W.pageEmpty;
 }
 
 // ── THE SHOW PAGE READER ── Where the sweep has met a case and she has decided it, this reader follows the
@@ -2361,7 +3037,7 @@ function pageUnreadWhy(e){
 // One page → {ok, base, between, under, afterDates, start, end, raw, site, link, noDates, shown, shownWhy, dateLine, dateNote} or {ok:false, why}.
 // A link's page whose dates a script draws after loading (her wording); and the sign of it, a template
 // placeholder the script never filled ("{{daysLeft(exhibition.end)}}").
-const SCRIPT_DATES_NOTE="Dates cannot be seen \u2014 JS-rendering.";
+const SCRIPT_DATES_NOTE=W.datesJsRendering;
 const SCRIPT_PLACEHOLDER=/\{\{[^{}\n]{1,80}\}\}/;
 function readShowPage(res,url,vc,rules){
   const pg=pageToRead(res,url,vc,rules);
@@ -2384,7 +3060,7 @@ function pageToRead(res,url,vc,rules){
   const rule=t=>{ if(rules&&!rules.includes(t))rules.push(t); };
   const lr=linkOptions(vc);
   const text=String(oneText(res)||"");
-  if(text.trim().length<SHELL_CHARS){ rule("fail:empty"); return{fail:{ok:false,why:"The page came back empty."}}; }
+  if(text.trim().length<SHELL_CHARS){ rule("fail:empty"); return{fail:{ok:false,why:W.pageEmpty}}; }
   // A bot check in place of the page (the sweep's own test, shared): never read as a show.
   const head=(text.match(/^\s*#\s+(.+)$/m)||[])[1];
   if(CHALLENGE_TITLE.test(String(res&&res.title||""))||CHALLENGE_TITLE.test(stripMd(head))){ rule("fail:bot-check"); return{fail:{ok:false,why:BOT_CHECK_SAID.charAt(0).toUpperCase()+BOT_CHECK_SAID.slice(1)+"."}}; }
@@ -2400,6 +3076,7 @@ function pageToRead(res,url,vc,rules){
   if(TITLE_LABEL.test(decodeEntities(stripMd(res&&res.title)).split(" | ")[0].trim()))rule("tab:label");
   // A venue's own date forms rewritten before reading: two-digit years (shortYear, NGV), "as of" for
   // "to" (asOfTo, Palazzo Reale Milano).
+  // Not words: the date reader's own reading.
   const dateText=l=>lr&&lr.shortYear?withLongYears(l):lr&&lr.asOfTo?String(l).replace(/\s+as of\s+/gi," to "):l;
   // The venue an all-number date's order is looked up under (DATE_ORDER, dates.js): its own site's,
   // whether or not it has an entry here.
@@ -2562,7 +3239,7 @@ function findDates(pg){
     h=h0; rule("title:"+candRule[cands.indexOf(h0)]);
     found=mo&&mo.r.orderUnknown?{d:mo.k,range:{start:"",end:""},noDates:true,orderUnknown:true,via:"dates:order-unknown"}
       :mo?{d:mo.k,range:{start:"",end:""},noDates:true,shown:mo.r.shownText,shownWhy:mo.r.shownWhy,via:"dates:shown-only"}
-      :ny?{d:ny.k,range:{start:"",end:""},noDates:true,shown:ny.t,shownWhy:"no year is published anywhere",via:"dates:no-year"}
+      :ny?{d:ny.k,range:{start:"",end:""},noDates:true,shown:ny.t,shownWhy:W.noYearPublished,via:"dates:no-year"}
       :{d:h0,range:{start:"",end:""},noDates:true,via:"dates:none"};
     // No dates, and the page still holds a script's unfilled placeholder ("{{daysLeft(exhibition.end)}}", Getty):
     // its dates are drawn by script, so the card says so (SCRIPT_DATES_NOTE).
@@ -2603,6 +3280,7 @@ function findDates(pg){
 // show, or the line when it runs on.
 function settleName(pg){
   const{lr,lines,rule,dateText,dateVenue,h,heading,show,site,broken,after,words,host}=pg;
+  // Not words: a key for matching names.
   const flatName=x=>foldText(stripMd(x)).replace(/&/g," and ").replace(/[^a-z0-9]/g,"");
   const nameWords=x=>foldText(stripMd(x)).replace(/&/g," and ").split(/[^a-z0-9]+/).filter(w=>w&&!GENERIC_TITLE_WORDS.has(w));
   const isHeading=/^\s*#{1,6}\s/.test(lines[h])||h===broken||(after>=0&&h===after);
@@ -2827,17 +3505,21 @@ function nameInLines(page,vc){
 const SHORT_NAME_EXAMPLES=()=>VENUE_REGISTER.filter(e=>e.kind==="manual"&&e.names.hers).map(e=>e.names.card).filter(Boolean);
 // Her renames of Claude's card names (`notCard`), each with the name Claude gave: so Claude learns her style.
 // The full name is the entry's, else the one Claude gave, as the store holds it (MU).
+// Not words: sent to Claude.
 const SHORT_NAME_RENAMES=()=>VENUE_REGISTER.filter(e=>e.kind==="manual"&&e.names.hers&&e.names.replaced.length)
   .map(e=>"for "+JSON.stringify(e.names.full||e.names.card)+": "+JSON.stringify(e.names.card)+", not "+e.names.replaced.map(x=>JSON.stringify(x)).join(" or "));
 // The title line a prompt gives Claude for a page read in code.
+// Not words: sent to Claude.
 const pageTitleLine=page=>"EXHIBITION TITLE, as the page gives it: "+JSON.stringify(page.base)+"\n";
 // The page's raw text, fenced, as a prompt gives it to Claude.
+// Not words: sent to Claude.
 const pageRawBlock=page=>"RAW TEXT (the page under the title, dates taken out):\n\"\"\"\n"+page.raw+"\n\"\"\"";
 // ONE REQUEST FOR THE WHOLE IMPORT (her decision): every page of a Links, Pages or Paste import goes
 // to Claude in one request — the opening, the examples and the rules once, as the sweep's compressor
 // sends them, then each page as an item. A page's own questions (a pasted box's title and dates, a
 // subtitle, a new venue's names) are asked inside its item. linkItem is one page; linkBatchPrompt the request.
 // A pasted box (page.pasted): the whole text, and Claude asked for the title and the date words too.
+// Not words: sent to Claude.
 function linkItem(page,askVenue,url,vc){
   const museum=page.pasted&&!askVenue&&MU[vc]?MU[vc].name:"";
   const keys=[
@@ -2861,12 +3543,14 @@ function linkItem(page,askVenue,url,vc){
     +(keys.length?"\n\nTHIS ITEM'S ANSWER ALSO HAS THESE KEYS:\n"+keys.join("\n"):"");
 }
 // Every item's answer has these keys.
+// Not words: sent to Claude.
 const LINK_KEYS="\"summary\": the summary, following the rules above — or null if the item's raw text does not describe an exhibition.\n"
   +"\"english\": the exhibition's title in natural English if it is not in English; \"\" if it already is, names aside. Keep every name as written and the title's own full stops. Plain words: no \"In English\", no quotation marks.\n"
   +"\"englishSpeaking\": true if the museum is in an English-speaking country, false if not.\n"
   +"\"gallery\": true if the venue that held the exhibition is a commercial art gallery (a dealer that shows and sells artists' work), false if it is a museum or another public institution.";
 // entries: [{key, item, refused?: {faults, answer}}]. A refused answer is shown back inside its item,
 // to be fixed rather than started afresh (her Memling link; AL-062c).
+// Not words: sent to Claude.
 function linkBatchPrompt(entries){
   const items=entries.map(e=>"===== ITEM "+e.key+" =====\n"+e.item
     +(e.refused?"\n\nYOUR LAST ANSWER WAS REFUSED: "+e.refused.faults.join("; ")+".\nTHE ANSWER REFUSED: "+JSON.stringify(e.refused.answer)
@@ -2924,6 +3608,7 @@ function batchAnswers(data,text){
 // (declined, rate-limited) is not repeated: each page goes on with no description, as one page did.
 // Each page's lookup-log record holds every request its page was in. `stopped` says whether Cancel was pressed.
 async function readLinkBatch(work,stopped){
+  // Not words: a fault is said to Claude when its answer is refused.
   for(const w of work){ w.ask=null; w.faults=["no answer"]; }
   let pending=work.slice();
   for(let round=0;round<=LINK_ASK_AGAIN&&pending.length;round++){
@@ -2937,9 +3622,9 @@ async function readLinkBatch(work,stopped){
         const w=e.w, t=w.tape;
         t.calls.push({n:t.calls.length+1,kind:"claude",at:t0-t.t0,ms:Date.now()-t0,input:{prompt,item:e.key},output:out});
         const d=got[e.key];
-        if(d!==undefined){ w.ask={ok:true,data:d,detail:out.detail||"read the results"}; w.faults=answerFaults(d,w.page); }
+        if(d!==undefined){ w.ask={ok:true,data:d,detail:out.detail||W.readTheResults}; w.faults=answerFaults(d,w.page); }
         else if(!out.ok&&out.code!=="invalid_json"){ w.ask=out; w.faults=[]; }
-        else { w.ask={ok:true,data:null,detail:"no answer for this page"}; w.faults=["no answer"]; }
+        else { w.ask={ok:true,data:null,detail:W.noAnswerForPage}; /* Not words: said to Claude. */w.faults=["no answer"]; }
         if(w.faults.length&&d!==undefined){ w.refused={faults:w.faults,answer:d}; w.seen.refused=[...(w.seen.refused||[]),{answer:d,faults:w.faults}]; }
       }
     }
@@ -2963,6 +3648,7 @@ function linkAnswer(a){
 // show's description) is Claude's decision and passes. A failed answer is asked for again
 // (LINK_ASK_AGAIN times); one that never passes leaves the link unread (her decision).
 const LINK_ASK_AGAIN=2;
+// Not words: each fault is said to Claude when its answer is refused (changing one changes the answer).
 function answerFaults(raw,page){
   const o=raw&&typeof raw==="object"?raw:null;
   if(!o)return["no answer"];
@@ -2990,6 +3676,7 @@ function answerFaults(raw,page){
 // resort), asked only once Claude has said so: the museum's own website, to file the show under,
 // and the show's full title, since such a page's title can be anything (Enfilade's PDF was
 // titled "Joshua Reynolds"; AL-052h).
+// Not words: sent to Claude.
 function elsewherePrompt(page,url,a){
   return "You are reading a page about a museum exhibition, published by someone other than the museum that held it. Your ONLY output is one JSON object.\n\n"
     +"PAGE ADDRESS: "+url+"\n"
@@ -3074,7 +3761,7 @@ function linkVenue(url,page){
   const own=occVenueId(hostOf(siteUrlOf(url)));
   if(REG[own])return{id:own};
   const names=houses.map(([id])=>REG[id].names.card);
-  return{id:null,why:"The page doesn’t say which museum the show is in ("+names.slice(0,-1).join(", ")+" or "+names[names.length-1]+")."};
+  return{id:null,why:say(W.pageNoMuseum,{names:names.slice(0,-1).join(", "),last:names[names.length-1]})};
 }
 
 // The venue whose link options read a page: a swept venue, or a manual-import venue in the register.
@@ -3143,9 +3830,9 @@ function registerUnseenOccasional(rows){
 const STORE_UNREAD=new Set();
 let storeUnreadSeen=()=>{};   // the page's banner, told when a read fails
 function markUnread(what){ STORE_UNREAD.add(what); storeUnreadSeen([...STORE_UNREAD]); }
-const UNREAD_OCC="the link venues", UNREAD_LINKS="the links waiting in the Links box", UNREAD_PAGES="the pages waiting in the Pages list",
-  UNREAD_PASTES="the boxes waiting in Paste",
-  UNREAD_SWEEPS="the sweep log", UNREAD_QUAR="the quarantine list";
+const UNREAD_OCC=W.unreadOcc, UNREAD_LINKS=W.unreadLinks, UNREAD_PAGES=W.unreadPages,
+  UNREAD_PASTES=W.unreadPastes,
+  UNREAD_SWEEPS=W.unreadSweeps, UNREAD_QUAR=W.unreadQuarantine;
 // The venues met by Links, Pages and Paste: each register entry the store has met (recordOf), and over
 // them the waiting room, the store's venues/occasional. A read that failed leaves the register's own.
 async function readOccasional(){
@@ -3227,11 +3914,11 @@ function savedPageHtml(text){
 // parse: html → a Document (the page's own DOMParser; a test hands in jsdom's).
 function savedPageReply(text,parse){
   const got=savedPageHtml(text);
-  if(!got.html.trim())return{ok:false,why:"The file holds no web page."};
+  if(!got.html.trim())return{ok:false,why:W.fileNoPage};
   const doc=parse(got.html);
   const meta=sel=>{ const e=doc.querySelector(sel); return e?(e.getAttribute("href")||e.getAttribute("content")||"").trim():""; };
   const url=got.url||meta('link[rel="canonical"]')||meta('meta[property="og:url"]')||((String(text).match(/saved from url=\(\d+\)(\S+?)\s*-->/i)||[])[1]||"");
-  if(!/^https?:\/\//i.test(url))return{ok:false,why:"The saved page doesn’t say its web address."};
+  if(!/^https?:\/\//i.test(url))return{ok:false,why:W.savedPageNoAddress};
   for(const e of doc.querySelectorAll("script,style,noscript,svg,template,iframe"))e.remove();
   const out=[];
   const BLOCK=/^(?:P|DIV|SECTION|ARTICLE|MAIN|HEADER|FOOTER|NAV|ASIDE|UL|OL|TABLE|TR|DL|DT|DD|FIGURE|FIGCAPTION|BLOCKQUOTE|FORM|FIELDSET)$/;
@@ -3283,9 +3970,9 @@ async function writePendingPages(list){
 // (pastedPage, pasteFaults; her decision). Any length of text is read.
 function pastedPageReply(url,text){
   const u=String(url||"").trim();
-  if(!/^https?:\/\/\S+$/i.test(u))return{ok:false,why:"The link box holds no web address."};
+  if(!/^https?:\/\/\S+$/i.test(u))return{ok:false,why:W.linkBoxNoAddress};
   const lines=String(text||"").replace(/\r/g,"").split("\n").map(l=>l.replace(/[ \t]+/g," ").trim());
-  if(!lines.some(Boolean))return{ok:false,why:"The text box is empty."};
+  if(!lines.some(Boolean))return{ok:false,why:W.textBoxEmpty};
   return{ok:true,res:{url:withoutTracking(u),text:lines.join("\n").replace(/\n{3,}/g,"\n\n").trim()}};
 }
 // A pasted box as the rest of the road takes a page: Claude is handed the text (the description's
@@ -3299,6 +3986,7 @@ const pasteWords=t=>" "+foldText(String(t||"")).replace(/[^\p{L}\p{N}]+/gu," ").
 const inPasted=(part,text)=>pasteWords(part).trim()!==""&&pasteWords(text).includes(pasteWords(part));
 // A library record's " : " as ": ", and no closing full stop (George Stubbs : a celebration.).
 const pasteTitle=t=>String(t||"").replace(/\s+/g," ").trim().replace(/\s+:\s+/g,": ").replace(/[\s.:;,]+$/,"");
+// Not words: each fault is said to Claude when its answer is refused (changing one changes the answer).
 function pasteFaults(o,page){
   const a=linkAnswer(o), faults=[];
   if(!a.pasteTitle)faults.push("no title given");
@@ -3561,6 +4249,7 @@ async function firstProductIsBook(open,text,host,list){
   let items=productLinksOn(text,host), under=false;
   if(items.length<2&&list){ items=itemsUnder(text,host,list); under=true; }
   if(items.length<2)return false;
+  // Not words: asked of the web, or kept as how the shop was found.
   const b=await openShopPage(open,items[0],"This book's title, price and ISBN.",null,{full:true});
   // A book under its list's address is read as a gallery's book page: "80 €" with no cents counts.
   return b.ok&&(looksLikeOneBook(pageTextOf(b.results))||(under&&galleryBookPage(pageTextOf(b.results))));
@@ -3602,7 +4291,9 @@ function shopifyProductsUrl(u){
   try{ const x=new URL(u); return new RegExp("^\\/(?:"+LANG_PART+"\\/)?collections\\/[^/]+\\/?$","i").test(x.pathname)?x.origin+x.pathname.replace(/\/$/,"")+"/products.json?limit=8":""; }catch{ return ""; }
 }
 // What Claude is asked to read from a shop section's page (a section's books, or a Shopify section's products).
+// Not words: asked of the web, or kept as how the shop was found.
 const SHOP_BOOKS_ASK="The books in this section of the shop, with their prices.";
+// Not words: asked of the web, or kept as how the shop was found.
 const SHOP_PRODUCTS_ASK="The products in this section: titles, types and prices.";
 // The product count a Shopify section's text gives, as digits, or undefined when it gives none.
 function shopifyCountIn(text){ return (text.match(/"products_count"\s*:\s*(\d+)/)||[])[1]; }
@@ -3708,6 +4399,7 @@ async function proveShopSearch(text,home){
   for(const shapes of [SEARCH_SHAPES,SEARCH_SHAPES_LATER]){
     const tries=[];
     for(const b of bases)for(const sh of shapes)for(const bk of books)tries.push({search:b+sh,path:bk.path,label:bk.label,url:b+sh+encodeURIComponent(bk.label)});
+    // Not words: asked of the web, or kept as how the shop was found.
     const f=await fetchPage(tries.map(t=>t.url),"The products this shop search returns: their names and links.",null,{full:true});
     if(!f.ok)return undefined;
     const answer=t=>f.results.find(x=>x&&key(x.url)===key(t.url));
@@ -3758,6 +4450,7 @@ async function shopElsewhere(urls,museumHost){
     seen.add(normalizeUrlKey(u));
     if(opened>=2)break;
     opened++;
+    // Not words: asked of the web, or kept as how the shop was found.
     const f=await fetchPage(u,"The link to the museum's online shop.",null,{full:true});
     if(!f.ok){ died=f.detail; continue; }
     const t=pageTextOf(f.results);
@@ -3897,6 +4590,7 @@ async function tryShelves(sf,cands,how,inside){
   }
   if(inside||!ranked.mixed.length)return null;
   const m=ranked.mixed[0];
+  // Not words: asked of the web, or kept as how the shop was found.
   const f=await openShopPage(fetchPage,m.url,"The sections listed on this page: their names and links.",null,{full:true});
   if(!f.ok){ sf.died=f.detail; return null; }
   const t=pageTextOf(f.results); sf.seenText+="\n"+t;
@@ -3912,6 +4606,7 @@ function shopFromRule(sf){
   const{own,no}=sf;
   if(!(own.shopCatalogues&&!no.has(normalizeUrlKey(own.shopCatalogues))))return null;
   sf.note("rule",{found:own.shopCatalogues});
+  // Not words: asked of the web, or kept as how the shop was found.
   return{shop:"found",shopHome:own.shopHome||originOf(own.shopCatalogues),shopCatalogues:own.shopCatalogues,shopSearch:null,foundBy:"the venue's rule",finder:3,searchRule:SEARCH_RULE};
 }
 
@@ -3928,9 +4623,12 @@ async function searchForShop(sf){
   let english=false, again=false, s=null;
   if(sf.foreign&&!own.shopQueries){
     english=true;
+    // Not words: asked of the web, or kept as how the shop was found.
     s=await ask("The English-language version of the online museum shop of "+venueName+": its exhibition catalogues or books section.",[venueName+" English language shop exhibition catalogues",venueName+" English language shop books publications"]);
   }
+  // Not words: asked of the web, or kept as how the shop was found.
   if(!sf.mine.length)s=await ask("The museum shop's exhibition catalogues or books section of "+(own.shopQueries?own.name:venueName)+".",own.shopQueries||[venueName+" shop exhibition catalogues",venueName+" shop books publications"]);
+  // Not words: asked of the web, or kept as how the shop was found.
   if(!sf.mine.length&&!pageShop&&!own.shopQueries){ again=true; s=await ask("The online shop of "+venueName+".",[venueName+" online shop",venueName+" museum shop books"]); }
   // Results in two languages: the English one is taken; a shop's pages in another language are dropped.
   const enHosts=new Set(sf.mine.filter(r=>isEnglishUrl(r.url)).map(r=>hostOf(r.url)));
@@ -3976,6 +4674,7 @@ async function shopifySectionList(sf){
   const listOf=async(base,first)=>{
     const all=[];
     for(let page=1;page<=SHOPIFY_LIST_PAGES;page++){
+      // Not words: asked of the web, or kept as how the shop was found.
       const f=await fetchPage(base+"collections.json?limit=250"+(page>1?"&page="+page:""),"The shop's sections: titles and handles.",null,{full:true});
       if(!f.ok){ if(page===1&&first)sf.died=f.detail; break; }
       const t=pageTextOf(f.results);
@@ -3986,6 +4685,7 @@ async function shopifySectionList(sf){
   };
   // In the shop's own language part: the English shop's list names its sections in English (Thyssen's "/en/").
   const all=await listOf(shopRootOf(sf.root),true);
+  // Not words: asked of the web, or kept as how the shop was found.
   if(all.length&&!sf.pick){ sf.opens=0; sf.consider(await tryShelves(sf,all,"the shop's list of sections")); }
   // An exhibition-catalogues section under a translated address lists no products there (Thyssen's
   // "/en/collections/exhibitions"): its number finds it in the shop's own-language list, and its products are
@@ -3997,6 +4697,7 @@ async function shopifySectionList(sf){
       if(sf.pick||!home.length)break;
       let id=c.id;
       if(!id){
+        // Not words: asked of the web, or kept as how the shop was found.
         const cj=await fetchPage(c.url.replace(/\/$/,"")+".json","The section's id and handle.",null,{full:true});
         id=cj.ok?(pageTextOf(cj.results).match(/"collection"\s*:\s*\{\s*"id"\s*:\s*(\d+)/)||[])[1]:null;
       }
@@ -4020,6 +4721,7 @@ async function openToWalk(sf,url){
   if(sf.texts.has(k))return sf.texts.get(k);
   if(sf.walkOpens>=WALK_OPENS)return null;
   sf.walkOpens++;
+  // Not words: asked of the web, or kept as how the shop was found.
   const f=await openShopPage(fetchPage,url,"The shop's menu: its exhibition catalogues and books sections.",null,{full:true});
   if(!f.ok){ sf.died=f.detail; return null; }
   const t=pageTextOf(f.results); sf.texts.set(k,t); sf.seenText+="\n"+t;
@@ -4034,7 +4736,7 @@ async function walkShop(sf){
     pages.push(page);
     const here=menuLinks(t,host);
     links.push(...here);
-    sf.opens=0; sf.consider(await tryShelves(sf,here,"the shop's menu",true));
+    sf.opens=0; sf.consider(await tryShelves(sf,here,/* Not words: kept as how the shop was found. */"the shop's menu",true));
     if(sf.pick||sf.walkOpens>=WALK_OPENS)break;
     // Next: the best section link seen and not yet walked into.
     const ranked=rankShelves(links.map(c=>({...c,url:firstPageOf(c.url)})),sf.ownName);
@@ -4070,6 +4772,7 @@ async function englishVersion(sf){
   const o=originOf(at), bare=withoutWww(host), b=baseDomain(host);
   const links=mdLinks(own).filter(l=>EN_LABEL.test(foldText(l.label).trim())&&baseDomain(hostOf(l.url))===b).map(l=>l.url);
   const tries=[...new Set([...links,...EN_PATHS.map(p=>o+p),"https://en."+bare+"/"])].filter(u=>normalizeUrlKey(u)!==normalizeUrlKey(at)).slice(0,8);
+  // Not words: asked of the web, or kept as how the shop was found.
   const f=await fetchPage(tries,"The shop's front page and its menu, in English.",null,{full:true});
   const hit=f.ok?tries.map(u=>({u,r:f.results.find(x=>x&&normalizeUrlKey(x.url)===normalizeUrlKey(u))})).find(({u,r})=>{
     const t=r?pageTextOf([r]):"";
@@ -4120,7 +4823,7 @@ async function shopResult(sf){
   const fp=root?front||sf.homeOf(root):"", ft=fp?sf.texts.get(normalizeUrlKey(fp))||"":"";
   if(ft&&(looksLikeBookShelf(ft)||(sf.walkOpens<WALK_OPENS&&(sf.walkOpens++,await firstProductIsBook(fetchPage,ft,hostOf(fp)))))){
     const out={shop:"found",shopHome:fp,shopCatalogues:fp,shelfKind:"front",
-      shopSearch:searchFor(seenText,root)||(await proveShopSearch(seenText,root))||null,foundBy:"the shop's front page",finder:3,searchRule:SEARCH_RULE};
+      shopSearch:searchFor(seenText,root)||(await proveShopSearch(seenText,root))||null,/* Not words: kept as how the shop was found. */foundBy:"the shop's front page",finder:3,searchRule:SEARCH_RULE};
     sf.note("result",{shop:out.shop,shopCatalogues:out.shopCatalogues,shopSearch:out.shopSearch,foundBy:out.foundBy});
     return out;
   }
@@ -4139,6 +4842,7 @@ const GALLERY_WAY_WORD="shop|store|boutique|bookshop|bookstore|books?|publicatio
 const GALLERY_WAY=new RegExp("^(?:the\\s+|our\\s+|online\\s+|alle\\s+)*(?:"+GALLERY_WAY_WORD+")(?:\\s+online)?$");
 const GALLERY_WAY_PATH=new RegExp("^\\/(?:"+LANG_PART+"\\/)?(?:"+GALLERY_WAY_WORD+")\\/?$","i");
 // What Claude is asked to read from a gallery's home page.
+// Not words: asked of the web, or kept as how the shop was found.
 const SITE_MENU_ASK="The site's menu and footer links: shop, books, publications, library.";
 const GALLERY_BUY=/^(?:purchase|buy(?: now)?|add to (?:cart|bag|basket)|shop now|order|acheter|kaufen|in den warenkorb|comprar|acquista)$/;
 const GALLERY_SHOP_IN=/\b(?:shop|store|boutique)\b/;
@@ -4184,6 +4888,7 @@ async function galleryShop(page,museumHost,venueName,turnedDown,trace,foreign){
   const open=async(url,objective)=>{
     if(g.opens>=GALLERY_OPENS)return null;
     g.opens++;
+    // Not words: asked of the web, or kept as how the shop was found.
     const f=await openShopPage(fetchPage,url,objective||"The page's links: the shop, books and publications, and the books with their prices.",null,{full:true});
     if(!f.ok||!f.results.length)return null;
     const t=pageTextOf(f.results); g.seen+="\n"+t;
@@ -4228,6 +4933,7 @@ async function galleryShop(page,museumHost,venueName,turnedDown,trace,foreign){
     const at=String(text).search(/^#+\s*.*(?:catalog|books?|publication|livres|publikation|libri)/im);
     const after=at>=0?items.find(u=>String(text).indexOf(u,at)>at):null;
     for(const u of [...new Set([after,items[0]].filter(Boolean))]){
+      // Not words: asked of the web, or kept as how the shop was found.
       const b=await open(u,"This book's title, price, binding, page count and ISBN.");
       if(!b||!galleryBookPage(b))continue;
       // The book bought in a shop elsewhere (Lévy Gorvy Dayan's Library: "Buy" → its shop): that shop.
@@ -4245,6 +4951,7 @@ async function galleryShop(page,museumHost,venueName,turnedDown,trace,foreign){
         .sort((a,b)=>a.rank-b.rank||(a.count||Infinity)-(b.count||Infinity));
       for(const c of ranked.slice(0,4)){
         const pj=shopifyProductsUrl(c.url);
+        // Not words: asked of the web, or kept as how the shop was found.
         if(pj){ if(g.opens>=GALLERY_OPENS)break; g.opens++; const j=await fetchPage(pj,"The products in this list: titles, types and prices.",null,{full:true}); if(j.ok&&shopifyShelfIsBooks(pageTextOf(j.results),false))return{url:c.url,how}; continue; }
         const t=await open(c.url); if(t&&await sells(t,c.url)===true)return{url:c.url,how};
       }
@@ -4252,24 +4959,31 @@ async function galleryShop(page,museumHost,venueName,turnedDown,trace,foreign){
     };
     if(g.opens<GALLERY_OPENS){
       g.opens++;
+      // Not words: asked of the web, or kept as how the shop was found.
       const f=await fetchPage(o+"collections.json?limit=250","The shop's lists: titles and handles.",null,{full:true});
       let t=f.ok?pageTextOf(f.results):"";
       if(/"collections"\s*:/.test(t)){
         // A list of 250 is read on (Perrotin's "Perrotin Editions - Books" is on its second page).
+        // Not words: asked of the web, or kept as how the shop was found.
         for(let page=2,last=t;page<=SHOPIFY_LIST_PAGES&&(last.match(/"handle"\s*:/g)||[]).length>=250&&g.opens<GALLERY_OPENS;page++){ g.opens++; const n=await fetchPage(o+"collections.json?limit=250&page="+page,"The shop's lists: titles and handles.",null,{full:true}); last=n.ok?pageTextOf(n.results):""; t+="\n"+last; }
         const lists=shopifySections(t,o).map(c=>({...c,count:+shopifyCountIn(t.split('"handle":"'+c.handle+'"')[1]||"")||0}));
+        // Not words: asked of the web, or kept as how the shop was found.
         const r=await pick(lists,"the shop's lists");
         if(r)return r;
+        // Not words: asked of the web, or kept as how the shop was found.
         if(g.opens<GALLERY_OPENS){ g.opens++; const j=await fetchPage(o+"collections/all/products.json?limit=8","The products in this shop: titles, types and prices.",null,{full:true}); if(j.ok&&shopifyShelfIsBooks(pageTextOf(j.results),false))return{url:o+"collections/all",how:"the shop's whole list"}; }
         // Products with no type given (Lévy Gorvy Dayan's): the whole list read as a page, one of its books opened.
         const all=await open(o+"collections/all");
+        // Not words: asked of the web, or kept as how the shop was found.
         return all&&await sells(all,o+"collections/all")===true?{url:o+"collections/all",how:"the shop's whole list"}:null;
       }
     }
     const t=await open(front);
     if(!t)return null;
+    // Not words: asked of the web, or kept as how the shop was found.
     const r=await pick(menuLinks(t,hostOf(front)).map(c=>({...c,words:c.label||c.words})),"the shop's menu");
     if(r)return r;
+    // Not words: asked of the web, or kept as how the shop was found.
     return await sells(t,front)===true?{url:front,how:"the shop's front page"}:null;
   };
   // A page of the gallery's own: a link on it to a shop elsewhere is followed; else it is the shop when it sells
@@ -4312,6 +5026,7 @@ async function galleryShop(page,museumHost,venueName,turnedDown,trace,foreign){
       const ours=lines(listText), same=et?[...lines(et)].filter(l=>ours.has(l)).length:0;
       if(et&&pageLanguage(eu,et)==="en"&&(same>=5||await sells(et,eu)===true))list=eu;
     }
+    // Not words: asked of the web, or kept as how the shop was found.
     return{url:list,how:"the gallery's own page",home:originOf(url)};
   };
   const tryAll=async(cands,step)=>{
@@ -4334,7 +5049,7 @@ async function galleryShop(page,museumHost,venueName,turnedDown,trace,foreign){
     const moved=t&&t.trim().length<SHELL_CHARS&&/redirect/i.test(t)?mdLinks(t).find(l=>!own(l.url))||(t.match(/<(https?:\/\/[^>\s]+)>/)?{url:t.match(/<(https?:\/\/[^>\s]+)>/)[1]}:null):null;
     if(moved){ g.host=hostOf(moved.url); home=originOf(moved.url); t=await open(home,SITE_MENU_ASK); }
     g.home=t||"";
-    if(!t||t.trim().length<SHELL_CHARS)g.unread="The gallery's site could not be read.";
+    if(!t||t.trim().length<SHELL_CHARS)g.unread=W.gallerySiteUnread;
     note("home",{home,read:!!t,chars:(t||"").length});
     if(t)hit=await tryAll(waysIn(t),"home");
   }
@@ -4342,6 +5057,7 @@ async function galleryShop(page,museumHost,venueName,turnedDown,trace,foreign){
   if(!hit&&g.opens<GALLERY_OPENS){
     const o="https://"+g.host+"/", paths=["shop","store","books","publications","publishing","en/shop","en/books","en/publications","en/publishing"];
     g.opens++;
+    // Not words: asked of the web, or kept as how the shop was found.
     const f=await fetchPage(paths.map(p=>o+p),"The page's books with their prices, and its links to the shop.",null,{full:true});
     const answers=f.ok?paths.map(p=>(f.results||[]).find(r=>r&&normalizeUrlKey(r.url)===normalizeUrlKey(o+p))).filter(Boolean):[];
     for(const r of answers){
@@ -4357,6 +5073,7 @@ async function galleryShop(page,museumHost,venueName,turnedDown,trace,foreign){
   // 4. A search, its results judged as the pages were: a shop site, a page of the gallery's own named for its books.
   if(!hit&&g.opens<GALLERY_OPENS){
     g.opens++;
+    // Not words: asked of the web, or kept as how the shop was found.
     const s=await searchWeb("Where "+venueName+" sells its books and exhibition catalogues online.",[venueName+" shop books",venueName+" publications catalogues buy"]);
     const res=s.ok?s.results||[]:[];
     const cands=[...res.filter(r=>shopSite(r.url)).map(r=>({kind:"away",url:originOf(r.url)})),
@@ -4395,6 +5112,7 @@ function csvParse(text){
 const ignoreKeyFor=(venueId,url,title)=>
   venueId+"|"+(url?normalizeUrlKey(url):"t:"+normalizeTitle(title));
 // Conservative duplicate matching for incoming refresh results.
+// Not words: a key for matching titles, never shown.
 const normalizeTitle = v => foldText(v)
   .replace(/&/g," and ").replace(/\+/g," and ")
   .replace(/[’‘`]/g,"'").replace(/['"]/g,"")
@@ -4464,15 +5182,15 @@ function foldDuplicateRows(raws){
 }
 // The note on a card whose file date is not YYYY-MM-DD; `which` is "Start" or "End".
 function unreadableDateNote(which,value){
-  return which+" date \u201c"+value+"\u201d couldn't be read (needs YYYY-MM-DD) \u2014 left blank.";
+  return say(W.unreadableDate,{which,value});
 }
 // `rows` is her ledger as it stands; the cards are what the file would change in it.
 function analyzeProForma(text,rows,ignoredKeys,opts){
   const table=csvParse(text);
-  if(!table.length) return {error:"That file was empty."};
+  if(!table.length) return {error:W.fileEmpty};
   const header=table[0].map(h=>String(h).trim().toLowerCase());
   const idx=n=>header.indexOf(n);
-  if(idx("venue_code")<0||idx("title")<0) return {error:"That file doesn't look like a pro forma (no venue_code / title columns)."};
+  if(idx("venue_code")<0||idx("title")<0) return {error:W.notProForma};
   const get=(r,n)=>{const j=idx(n);return j>=0?String(r[j]||"").trim():"";};
   const props=[];
   const coverage=[];   // marker rows: listing pages that could not be read
@@ -4499,7 +5217,7 @@ function analyzeProForma(text,rows,ignoredKeys,opts){
     const sweptAt=get(r,"swept_at");
     if(KNOWN_VENUES.has(vc)) attempted[vc]=later(attempted[vc],sweptAt);
     if(isMarkerRow(rowNote)){
-      coverage.push({venueId:KNOWN_VENUES.has(vc)?vc:null,venueShort:KNOWN_VENUES.has(vc)?MU[vc].card:(vc||"(blank)"),what:title||"(a listing page)",why:rowNote,url:get(r,"url"),line});
+      coverage.push({venueId:KNOWN_VENUES.has(vc)?vc:null,venueShort:KNOWN_VENUES.has(vc)?MU[vc].card:(vc||W.blank),what:title||W.aListingPage,why:rowNote,url:get(r,"url"),line});
       continue;
     }
     if(KNOWN_VENUES.has(vc)&&title) returned[vc]=later(returned[vc],sweptAt);
@@ -4508,25 +5226,24 @@ function analyzeProForma(text,rows,ignoredKeys,opts){
     // A row with no title or no known venue code is a data fault, not hers to fix (her
     // decision): the whole file is refused, naming the lines. qc.js stops it upstream;
     // this is the last line of defence.
-    if(!vc||!KNOWN_VENUES.has(vc)){ faults.push("line "+line+": venue code "+(vc?("\u201c"+vc+"\u201d"):"is blank")+(vc?" isn\u2019t one of the venues":"")); continue; }
-    if(!title){ faults.push("line "+line+": no exhibition title"+(get(r,"url")?" \u2014 "+get(r,"url"):"")); continue; }
+    if(!vc||!KNOWN_VENUES.has(vc)){ faults.push(vc?say(W.faultVenueUnknown,{line,code:vc}):say(W.faultVenueBlank,{line})); continue; }
+    if(!title){ faults.push(say(W.faultNoTitle,{line})+(get(r,"url")?" \u2014 "+get(r,"url"):"")); continue; }
     let sd=get(r,"start_date"), ed=get(r,"end_date"), url=get(r,"url");
-    if(sd&&!isValidYMD(sd)){notes.push(unreadableDateNote("Start",sd));sd="";}
-    if(ed&&!isValidYMD(ed)){notes.push(unreadableDateNote("End",ed));ed="";}
-    if(url&&!urlLooksValid(url)){notes.push("Exhibition link \u201c"+url+"\u201d looks garbled \u2014 left blank.");url="";}
+    if(sd&&!isValidYMD(sd)){notes.push(unreadableDateNote(W.start,sd));sd="";}
+    if(ed&&!isValidYMD(ed)){notes.push(unreadableDateNote(W.end,ed));ed="";}
+    if(url&&!urlLooksValid(url)){notes.push(say(W.linkGarbled,{url}));url="";}
     // Quarantined: dropped before anything else sees it. Counted, never silent.
     if(ignoredKeys&&ignoredKeys.has(ignoreKeyFor(vc,url,title))){ blocked++; continue; }
     parsed.push({venueCode:vc,title,startDate:sd,endDate:ed,summary:get(r,"summary"),url,topic:topicOf(rowNote),
-                 rowNotes:rowNote?[((opts&&opts.notePrefix!=null)?opts.notePrefix:"Sweeper note: ")+rowNote]:[],parseNotes:notes,line});
+                 rowNotes:rowNote?[((opts&&opts.notePrefix!=null)?opts.notePrefix:W.sweeperNote)+rowNote]:[],parseNotes:notes,line});
   }
 
   // THE FILE IS REFUSED WHOLE, not row by row. A sweep that produced a
   // nameless row is a sweep to re-run, and importing the rest of it would
   // quietly leave that exhibition out.
   if(faults.length){
-    return { error:"This sweep file has "+faults.length+" faulty row"+(faults.length===1?"":"s")+
-      " and hasn\u2019t been imported. Nothing here is for you to fix \u2014 give these line numbers back to Claude:\n\n"+
-      faults.slice(0,12).join("\n")+(faults.length>12?"\n\u2026and "+(faults.length-12)+" more.":"") };
+    return { error:say(W.fileRefused,{n:faults.length,s:faults.length===1?"":"s"})+
+      faults.slice(0,12).join("\n")+(faults.length>12?say(W.andMore,{n:faults.length-12}):"") };
   }
   // ── PASS TWO: fold rows that are the same exhibition. ────────────────────
   const folded=foldDuplicateRows(parsed);
@@ -4535,13 +5252,13 @@ function analyzeProForma(text,rows,ignoredKeys,opts){
   for(const p of folded){
     const vc=p.venueCode, title=p.title, sd=p.startDate, ed=p.endDate, summary=p.summary, url=p.url;
     const notes=p.parseNotes.slice();
-    if(!sd)notes.push("No start date.");
-    if(!ed)notes.push("No end date.");
-    if(!summary)notes.push("No description.");
-    if(!url)notes.push("No exhibition link.");
+    if(!sd)notes.push(W.noStartDate);
+    if(!ed)notes.push(W.noEndDate);
+    if(!summary)notes.push(W.noDescription);
+    if(!url)notes.push(W.noExhibitionLink);
     for(const n of p.rowNotes) notes.push(n);
     // Say when rows were folded, so the count matches the file.
-    if(p.mergedFrom) notes.push("Rows "+p.mergedFrom.join(", ")+" of the file describe this same exhibition \u2014 combined into one.");
+    if(p.mergedFrom) notes.push(say(W.rowsCombined,{rows:p.mergedFrom.join(", ")}));
 
     const cand={museumId:vc,title,startDate:sd||null,endDate:ed||null,summary,exUrl:url};
     const exact=url?rows.find(x=>x.museumId===vc&&x.exUrl&&x.exUrl===url):null;
@@ -4551,7 +5268,7 @@ function analyzeProForma(text,rows,ignoredKeys,opts){
     // The fuller value is ticked, and marked as a guess; both are shown.
     const choices=p.conflicts?Object.keys(p.conflicts).map(f=>({
       field:f,
-      label:{title:"Title",startDate:"Start date",endDate:"End date",summary:"Description"}[f]||f,
+      label:{title:W.title,startDate:W.startDate,endDate:W.endDate,summary:W.description}[f]||f,
       options:p.conflicts[f],
       picked:p[f],
     })):null;
@@ -4563,11 +5280,11 @@ function analyzeProForma(text,rows,ignoredKeys,opts){
     // recorded in capitals is corrected in her ledger, never masked on screen.
     { const sq=v=>String(v||"").replace(/\s+/g," ").trim();
       if(title&&match.title&&sq(title)!==sq(match.title))
-        upd.push({field:"title",label:"Title",oldVal:String(match.title),newVal:String(title),kind:"change"}); }
-    consider("startDate","Start date",match.startDate,sd);
-    consider("endDate","End date",match.endDate,ed);
-    consider("summary","Description",match.summary,summary);
-    consider("exUrl","Link",match.exUrl,url);
+        upd.push({field:"title",label:W.title,oldVal:String(match.title),newVal:String(title),kind:"change"}); }
+    consider("startDate",W.startDate,match.startDate,sd);
+    consider("endDate",W.endDate,match.endDate,ed);
+    consider("summary",W.description,match.summary,summary);
+    consider("exUrl",W.linkBox,match.exUrl,url);
     if(!upd.length&&!choices){ silent++; continue; }  // identical — nothing to propose
     const hasChange=upd.some(u=>u.kind==="change");
     props.push({type:hasChange?"change":"fill",venueId:vc,venueShort:MU[vc].card,title,cand,matchId:match.id,upd,notes,line:p.line,choices,merged:!!p.mergedFrom});
@@ -4589,16 +5306,16 @@ function analyzeProForma(text,rows,ignoredKeys,opts){
 function readSweepFile(text,rows,ignored){
   const res=analyzeProForma(text,rows,new Set(ignored.map(x=>x.key)));
   if(res.error||res.props.length)return res;
-  return {...res,nothingNew:"Read the refresh file, but nothing new to propose \u2014 your ledger already matches it."+((res.coverage||[]).length?" ("+res.coverage.length+" listing page"+(res.coverage.length===1?"":"s")+" couldn\u2019t be read \u2014 see below.)":"")};
+  return {...res,nothingNew:W.nothingNew+((res.coverage||[]).length?say(W.listingPagesUnread,{n:res.coverage.length,s:res.coverage.length===1?"":"s"}):"")};
 }
 // The sweep log written to the store; resolves to why it was not saved, or null.
 function saveSweepLog(log){
-  return writeSweepLog(log).then(ok=>ok?null:"The sweep log couldn\u2019t be saved to this page\u2019s store, so it may reset when you reload.");
+  return writeSweepLog(log).then(ok=>ok?null:W.sweepLogNotSaved);
 }
 // An import's new quarantine written to the store, the copy that survives a Reset (the export
 // carries the list too); resolves to why it was not saved, or null.
 function saveImportQuarantine(list){
-  return writeQuarantine(list).then(ok=>ok?null:"The quarantine couldn\u2019t be saved to this page\u2019s store, so it may reset when you reload. Save to keep it.");
+  return writeQuarantine(list).then(ok=>ok?null:W.quarantineNotSaved);
 }
 
 // The ledger gate counts undecided cards; it lives outside the component so fixtures
@@ -4636,6 +5353,7 @@ function topicPresets(props){
 // where two compete); Georgian before Neoclassicism, Belle Époque before Symbolism, Postwar
 // Europe after Abstract Expressionism (her reorder). The groups after Contemporary (her decision) take what cannot
 // file in the chronology: surveys, stragglers, non-Western art. Themes are labels, never groups.
+// Not words: the period and theme tables, the one home of their names and of what Claude is told of each.
 const PERIODS=[
   {key:"antiquity",name:"Antiquity",span:"before c. 400; ancient art from anywhere"},
   {key:"medieval",name:"Byzantine and Early Medieval",span:"c. 400–1150, Romanesque included"},
@@ -4691,6 +5409,7 @@ const PERIOD_BATCH=40;
 // THEMES (her design): a show of a kind of thing still sits in its period; its themes are
 // labels, any number per show, for the filter row. A chip may hold several labels
 // (Fashion & Jewellery), so she can regroup chips without relabelling.
+// Not words: the period and theme tables, the one home of their names and of what Claude is told of each.
 const THEMES=[
   {key:"fashion",name:"Fashion",chip:"fashion",rule:"clothes, dress, costume, and cloth made for clothes"},
   {key:"jewellery",name:"Jewellery",chip:"fashion",rule:"jewellery"},
@@ -4709,7 +5428,7 @@ const THEME_KEYS=new Set(THEMES.map(t=>t.key));
 const THEME_NAME=Object.fromEntries(THEMES.map(t=>[t.key,t.name]));
 // Her chips, in her order; Ex-themes is every labelled show with no theme, Surveys and
 // Non-Western Art included (they are groups, not themes).
-const THEME_CHIPS=[["fashion","Fashion & Jewellery"],["architecture","Architecture"],["sculpture","Sculpture"],["animals","Animals"],["nature","Nature"],["photography","Photography"],["dechard","Decorative – Hard"],["decsoft","Decorative – Soft"],["books","Books"],["exthemes","Ex-themes"]];
+const THEME_CHIPS=[["fashion",W.themeFashion],["architecture",W.themeArchitecture],["sculpture",W.themeSculpture],["animals",W.themeAnimals],["nature",W.themeNature],["photography",W.themePhotography],["dechard",W.themeDecHard],["decsoft",W.themeDecSoft],["books",W.themeBooks],["exthemes",W.themeExThemes]];
 const THEME_CHIP_OF=Object.fromEntries(THEMES.map(t=>[t.key,t.chip]));
 // A theme chip set and a labelled show: in when any of its themes is under a picked chip,
 // or Ex-themes is picked and it has none. A show never asked about themes is in none.
@@ -4725,7 +5444,7 @@ const isBuyNext=r=>!!r&&r.acquiring==="yes"&&!!r.buyNext;
 // When a show was last labelled: a Relabel, else its Label run or import (the Recently labelled sort).
 const lastLabel=r=>(r&&(r.relabelledAt||r.labelledAt))||"";
 const labelDone=r=>periodLabelled(r)&&Array.isArray(r.themes)&&!PERIOD_RETIRED[r.period];
-const periodYearText=y=>"c. "+(y<0?(-y)+" BC":y);
+const periodYearText=y=>say(W.circa,{year:y<0?say(W.yearBc,{n:-y}):y});
 const periodText=r=>periodLabelled(r)?[PERIOD_NAME[r.period],periodYearText(r.periodYear),...(r.themes||[]).map(k=>THEME_NAME[k])].join(" · "):"";
 // The two stragglers' groups split at 1900 (her cut-off) — decided here, not by Claude.
 // Claude's Misc answers stand: the bins show what no rule yet files (her decision).
@@ -4757,6 +5476,7 @@ function periodCompare(a,b,byArtist){
 }
 
 // One question for up to PERIOD_BATCH shows; each line carries its index i.
+// Not words: sent to Claude.
 function periodPrompt(shows){
   return [
     "You are an art historian. For each exhibition below, name the art period of the art it shows, and one year.",
@@ -4824,11 +5544,11 @@ const pause=ms=>new Promise(res=>setTimeout(res,ms));
 // Label's own words for a failed ask: the lookup's wording speaks of search results.
 function labelWhy(ask){
   const code=ask.code||"";
-  if(code==="not_granted")return "You declined to let this page use Claude.";
-  if(code==="invalid_json")return "Claude\u2019s answer came back unreadable.";
-  if(code==="rate_limited")return "Claude is rate-limited.";
+  if(code==="not_granted")return W.labelDeclined;
+  if(code==="invalid_json")return W.labelUnreadable;
+  if(code==="rate_limited")return W.claudeRateLimited;
   if(code==="unavailable")return ask.detail;
-  return "Claude didn\u2019t answer ("+(code||"unknown")+").";
+  return say(W.claudeDidntAnswer,{code:code||"unknown"});
 }
 // Labels shows ({i, venue, title, dates, summary}) in batches. onBatch(done,total) reports
 // progress. Returns {labels: Map i → label, batches: [{shows, labelled, tries, why}]}.
@@ -4840,7 +5560,7 @@ async function labelPeriods(shows,onBatch,waits=LABEL_WAITS){
     if(!res.ok){ b.why=labelWhy(res); b.stop=res.code==="not_granted"||res.code==="unavailable"; return; }
     const want=new Set(b.batch.map(s=>s.i));
     for(const [i,v] of periodAnswers(res.data))if(want.has(i)&&!labels.has(i)){ labels.set(i,v); b.labelled++; }
-    b.why=b.labelled<b.batch.length?(b.batch.length-b.labelled)+" left out of Claude\u2019s answer":null;
+    b.why=b.labelled<b.batch.length?say(W.leftOutOfAnswer,{n:b.batch.length-b.labelled}):null;
   };
   for(let n=0;n<shows.length;n+=PERIOD_BATCH){
     const b={batch:shows.slice(n,n+PERIOD_BATCH),labelled:0,tries:0,why:null,stop:false};
@@ -4856,9 +5576,9 @@ async function labelPeriods(shows,onBatch,waits=LABEL_WAITS){
 // Her line after a Label: all done, or how many were not and why.
 function labelSummary(total,batches){
   const done=batches.reduce((a,b)=>a+b.labelled,0);
-  if(done===total)return {ok:true,text:"Label: all "+total+" exhibitions labelled."};
+  if(done===total)return {ok:true,text:say(W.labelAll,{n:total})};
   const whys=[...new Set(batches.filter(b=>b.why).map(b=>b.why.replace(/\.$/,"")))];
-  return {ok:false,text:"Label: "+done+" of "+total+" exhibitions labelled; "+(total-done)+" not — "+whys.join("; ")+"."};
+  return {ok:false,text:say(W.labelSome,{done,total,not:total-done,whys:whys.join("; ")})};
 }
 const periodShow=(i,r)=>({i,venue:(MU[r.museumId]||{}).nameInEnglish||(MU[r.museumId]||{}).name||r.museumId,title:r.title,dates:dateRange(r),summary:r.summary});
 
@@ -4898,7 +5618,7 @@ function venuesNoShop(venues,id){ const v=venues[id]; if(!v)return venues; retur
 // at the venue's first lookup (fillShopSearch).
 function venuesShopAdded(venues,id,href){
   const v=venues[id]; if(!v)return venues;
-  return {...venues,[id]:{...v,beforeAnswer:v.beforeAnswer||foundShop(v),shop:"found",...SHOP_RESET,shopHome:originOf(href),shopCatalogues:href,searchRule:null,shopAdded:true,foundBy:"her link",confirmed:true}};
+  return {...venues,[id]:{...v,beforeAnswer:v.beforeAnswer||foundShop(v),shop:"found",...SHOP_RESET,shopHome:originOf(href),shopCatalogues:href,searchRule:null,shopAdded:true,/* Not words: how the shop was found, kept in the store. */foundBy:"her link",confirmed:true}};
 }
 // "Look again": a new search NOW, skipping only the pages she turned down, never the
 // whole site. The venue's record in; out come the shop found and the pages turned down.
@@ -4906,7 +5626,7 @@ async function lookAgainJob(v){
   const turnedDown=[...(v.turnedDown||[]),v.shopCatalogues].filter(Boolean);
   let shop;
   try{ shop=await discoverShop(v.pageShop||"",v.host,venueSearchName(v.id,v),turnedDown,v.id,null,v.english===false,v.gallery===true); }
-  catch(e){ shop={shop:"failed",why:"Couldn’t look ("+String((e&&e.message)||e)+")."}; }
+  catch(e){ shop={shop:"failed",why:say(W.couldntLook,{why:String((e&&e.message)||e)})}; }
   return {shop,turnedDown};
 }
 // What Look again found (lookAgainJob), put onto the venues as they stand when it arrives.
@@ -4956,12 +5676,10 @@ function shopVenuesToConfirm(proposals,decisions,venues,saved){
 // naming what is left behind and the way back.
 function partialApplyWords({acceptedCount,undecidedCount}){
   return {
-    title:"Complete this partial import?",
-    text:acceptedCount+" decided "+(acceptedCount===1?"card":"cards")+" will go into your ledger now. "
-      +undecidedCount+" undecided "+(undecidedCount===1?"card":"cards")+" will be left behind — "
-      +"import them using the same sweep file.",
-    hover:"Apply the "+acceptedCount+" you have decided and come back to the rest later.",
-    button:"Update with the "+acceptedCount+" I’ve decided",
+    title:W.partialTitle,
+    text:say(W.partialText,{n:acceptedCount,cards:acceptedCount===1?W.card:W.cards,left:undecidedCount,leftCards:undecidedCount===1?W.card:W.cards}),
+    hover:say(W.partialHover,{n:acceptedCount}),
+    button:say(W.partialButton,{n:acceptedCount}),
   };
 }
 function makeLedgerRow(c,now){
@@ -5028,8 +5746,8 @@ function applyCards(rows,proposals,decisions,partial){
 // numbers adding up.
 function importComplete(done){
   return {
-    head:"Import complete. Save it now.",
-    counts:done.added+" added, "+done.filled+" filled in, "+done.changed+" updated"+(done.never?", "+done.never+" quarantined":"")+(done.left?", "+done.left+" left undecided":"")+".",
+    head:W.importComplete,
+    counts:say(W.importCounts,{added:done.added,filled:done.filled,changed:done.changed})+(done.never?say(W.importQuarantined,{n:done.never}):"")+(done.left?say(W.importLeft,{n:done.left}):"")+".",
   };
 }
 
@@ -5044,7 +5762,7 @@ function readInputs(kind,{linkText,pages,pastes}){
   const items=fromPasted?pasted:fromPages?pages:linksIn(linkText).map(url=>({url}));
   const urls=items.map(x=>x.url);
   const input={kind:fromPasted?"paste":fromPages?"pages":"links",items,urls,pasted,pasteBad};
-  if(!urls.length)input.nothing=pasteBad.length?pasteBad:[{url:"",why:fromPasted?"Nothing pasted.":fromPages?"No pages chosen.":"No links found in the box."}];
+  if(!urls.length)input.nothing=pasteBad.length?pasteBad:[{url:"",why:fromPasted?W.nothingPasted:fromPages?W.noPagesChosen:W.noLinksFound}];
   return input;
 }
 
@@ -5065,15 +5783,16 @@ async function readShows(input,occVenues,{progress,stopped}){
   for(let n=0;n<urls.length;n++){
     if(stopped())break;
     const url=urls[n];
-    progress({done:n,total:urls.length,label:"Reading "+(n+1)+" of "+urls.length+"\u2026"});
+    progress({done:n,total:urls.length,label:say(W.readingNofM,{n:n+1,m:urls.length})});
     const item=items[n];
     // Each link's reading is one record in the lookup log: what code read off the
     // page, Claude's answer and the title made from them.
+    // Not words: the lookup log's names for the three ways in.
     const tape=tapeStart(fromPasted?"Add by paste":fromPages?"Add by page":"Add by link",{title:url,exUrl:url}), seen={url};
     const failsBefore=fails.length;
     let queued=false;
     try{
-      const f=fromPages?{ok:true,results:[{url,title:item.title,full_content:item.text}]}:await fetchPage(url,"The exhibition's title, dates and description.",null,{full:true});
+      const f=fromPages?{ok:true,results:[{url,title:item.title,full_content:item.text}]}:await fetchPage(url,/* Not words: sent to the web. */"The exhibition's title, dates and description.",null,{full:true});
       if(!f.ok){ fails.push({url,why:f.detail}); continue; }
       const res=f.results[0];
       if(!res){
@@ -5102,7 +5821,7 @@ async function readShows(input,occVenues,{progress,stopped}){
       if(askFresh)namedNow.add(vc);
       work.push({n,url,item,res,page,vc,host,askFresh,askVenue,ownSite,tape,seen,entry:linkItem(page,askVenue,url,vc)});
       queued=true;
-    }catch(e){ fails.push({url,why:"Couldn\u2019t read it ("+String((e&&e.message)||e)+")."}); }
+    }catch(e){ fails.push({url,why:say(W.couldntReadIt,{why:String((e&&e.message)||e)})}); }
     finally{
       if(!queued){ tape.link={...seen,row:null}; saveLookupTape(tape,{ok:false,said:fails.length>failsBefore?fails[fails.length-1].why:null}); }
     }
@@ -5118,11 +5837,11 @@ async function readShows(input,occVenues,{progress,stopped}){
     const ask=w.ask, faults=w.faults;
     lookupTape=tape;
     try{
-      if(faults.length){ fails.push({url,why:"Claude\u2019s description failed check and re-attempt multiple times ("+faults.join("; ")+")"}); continue; }
+      if(faults.length){ fails.push({url,why:say(W.descriptionFailedCheck,{faults:faults.join("; ")})}); continue; }
       let a=linkAnswer(ask.ok?ask.data:null);
       // A pasted box: no title, no box read (the title is Claude's, checked; her decision).
       if(page.pasted){
-        if(!ask.ok){ fails.push({url,why:"Claude couldn\u2019t read the text ("+ask.detail.replace(/\s+\[.*$/,"")+")."}); continue; }
+        if(!ask.ok){ fails.push({url,why:say(W.claudeCouldntReadText,{why:ask.detail.replace(/\s+\[.*$/,"")})}); continue; }
         page=pasteDates({...page,base:pasteTitle(a.pasteTitle)},a.pasteDates,vc); seen.page=page;
       }
       if(askFresh&&ownSite&&maybeElsewhere(a,host)){ const more=await readResults(elsewherePrompt(page,url,a)); if(more.ok)a={...a,...elsewhereAnswer(more.data)}; }
@@ -5141,7 +5860,7 @@ async function readShows(input,occVenues,{progress,stopped}){
         if(!looked.has(vc)&&(!had||(!had.confirmed&&(!(had.finder>=2)||had.shop!=="found")))){
           looked.add(vc);
           const name=venueSearchName(vc,{...(had&&!namedByAddress(had)?had:{name:page.site}),...(named&&(!had||namedByAddress(had))?{name:named.name}:{}),...(named?{aka:named.aka,city:named.city,country:named.country}:{})});
-          progress({done:n,total:urls.length,label:"Reading "+(n+1)+" of "+urls.length+"\u2026 looking for "+name+"\u2019s shop"});
+          progress({done:n,total:urls.length,label:say(W.readingLookingForShop,{n:n+1,m:urls.length,name})});
           const pageShop=away?"":shopLinkOnPage(oneText(res),host);
           const gallery=had&&had.gallery!==undefined?had.gallery:ask.ok&&a.gallery;
           const shop=await discoverShop(pageShop,host,name,had?had.turnedDown:[],vc,null,(had&&had.english===false)||(ask.ok&&a.englishSpeaking===false),gallery&&!away?{page:oneText(res),url}:gallery);
@@ -5168,8 +5887,8 @@ async function readShows(input,occVenues,{progress,stopped}){
       got.push({venue_code:vc,title,start_date:page.start,end_date:page.end,
         summary:a.summary?composeSummary(cardTitle(a.english,vc),ANSWER_CHECK.withoutPlaceOpener(a.summary,title,REG[vc]?REG[vc].read.places:[])):"",url:page.link,
         notes:[page.noDates?(page.orderUnknown?DATES.ORDER_UNKNOWN_NOTE:page.shown?DATES.shownOnlyNote(page.shown,page.shownWhy):page.scriptDates?SCRIPT_DATES_NOTE:DATES.NO_DATES_NOTE):"",page.dateNote||"",
-          ask.ok?"":"Description not written \u2014 "+ask.detail.replace(/\s+\[.*$/,"")].filter(Boolean).join(" ")});
-    }catch(e){ fails.push({url,why:"Couldn\u2019t read it ("+String((e&&e.message)||e)+")."}); }
+          ask.ok?"":say(W.descriptionNotWritten,{why:ask.detail.replace(/\s+\[.*$/,"")})].filter(Boolean).join(" ")});
+    }catch(e){ fails.push({url,why:say(W.couldntReadIt,{why:String((e&&e.message)||e)})}); }
     finally{
       const failed=fails.length>failsBefore;
       tape.link={...seen,row:failed?null:got[got.length-1]};
@@ -5197,13 +5916,13 @@ function readOutcome(input,out,{pages,pastes,rows,ignored}){
   if(!res.props.length){
     // Every one quarantined: it says so, not "your ledger already matches" (her wording).
     return {pending,finished:true,tally:res.tally||null,
-      note:"Read "+got.length+(fromPages?" page":" link")+(got.length===1?"":"s")+", but "+(res.tally&&res.tally.blocked>=got.length?"nothing to add \u2014 already in your quarantine.":"nothing new to propose \u2014 your ledger already matches "+(got.length===1?"it":"them")+".")};
+      note:say(W.readButNothing,{n:got.length,what:fromPages?W.page:W.link,s:got.length===1?"":"s"})+(res.tally&&res.tally.blocked>=got.length?W.alreadyQuarantined:say(W.alreadyMatches,{them:got.length===1?W.it:W.them}))};
   }
   return {pending,props:res.props,tally:res.tally||null,
     held:{kind,items:fromPasted?pasted.map(p=>({...p.box,url:p.url})):fromPages?items:urls}};
 }
 // The progress line once Cancel is pressed mid-Read.
-const readStopping=kind=>"Stopping after this "+(kind==="pages"||kind==="paste"?"page":"link")+"\u2026";
+const readStopping=kind=>say(W.stoppingAfter,{what:kind==="pages"||kind==="paste"?W.pageWord:W.linkWord});
 
 // The import is finished: back in the box go the unread links plus the links of rejected cards,
 // and of cards a partial apply left undecided (her decision); in Pages and Paste, those pages and
@@ -5235,7 +5954,7 @@ function pickedPages(pages,files,parse){
   for(const f of files){
     let r;
     try{ if(f.failed)throw f.error; r=savedPageReply(f.text,parse); }
-    catch(err){ r={ok:false,why:"Couldn\u2019t read it ("+String((err&&err.message)||err)+")."}; }
+    catch(err){ r={ok:false,why:say(W.couldntReadIt,{why:String((err&&err.message)||err)})}; }
     if(r.ok)add.push({url:r.res.url,title:r.res.title,name:f.name,text:r.res.full_content});
     else bad.push({url:"",why:f.name+": "+r.why});
   }
@@ -5305,15 +6024,15 @@ const TIER_SETS = {
   },
 };
 const TIER_TEXT = {
-    upcoming: { label: "Announced", note: "Not open yet. Catalogue usually appears at opening.", time: "upcoming", ord: 2 },
-    recent: { label: "Recently opened", note: "Just opened. Catalogue should be available now.", time: "current", ord: 0 },
-    current: { label: "On now", note: "In print. Cheapest it will ever be.", time: "current", ord: 1 },
-    fresh: { label: "Closed under 3 months", note: "Still stocked. Comfortable window.", time: "past", ord: 4 },
-    closing: { label: "Closed 3\u20136 months", note: "Shop stock thinning. Buy now if you want it.", time: "past", ord: 5 },
-    urgent: { label: "Closed 6\u201312 months", note: "Final call. Reprints are rare.", time: "past", ord: 6 },
-    lapsed: { label: "Closed over a year", note: "Assume out of print. Secondhand only.", time: "past", ord: 7 },
+    upcoming: { label: W.whenAnnounced, note: W.tierUpcoming, time: "upcoming", ord: 2 },
+    recent: { label: W.recentlyOpened, note: W.tierRecent, time: "current", ord: 0 },
+    current: { label: W.onNow, note: W.tierCurrent, time: "current", ord: 1 },
+    fresh: { label: W.closedUnder3, note: W.tierFresh, time: "past", ord: 4 },
+    closing: { label: W.closed3to6, note: W.tierClosing, time: "past", ord: 5 },
+    urgent: { label: W.closed6to12, note: W.tierUrgent, time: "past", ord: 6 },
+    lapsed: { label: W.closedOverYear, note: W.tierLapsed, time: "past", ord: 7 },
     // After Announced — her ordering.
-    unknown: { label: "Dates unclear", note: "No reliable end date found.", time: "current", ord: 3 },
+    unknown: { label: W.datesUnclear, note: W.tierUnknown, time: "current", ord: 3 },
 };
 const tiersFor = mode => Object.fromEntries(Object.keys(TIER_TEXT).map(
   k => [k, { ...TIER_TEXT[k], ...TIER_SETS[mode][k] }]));
@@ -5321,7 +6040,7 @@ const tiersFor = mode => Object.fromEntries(Object.keys(TIER_TEXT).map(
 // from the component's themed copy.
 const TIERS = tiersFor("light");
 
-function relTime(iso){if(!iso)return null;const d=new Date(iso);if(isNaN(d))return null;const s=Math.max(0,Math.floor((Date.now()-d.getTime())/1000));if(s<60)return"just now";const m=Math.floor(s/60);if(m<60)return m+" minute"+(m===1?"":"s")+" ago";const h=Math.floor(m/60);if(h<24)return h+" hour"+(h===1?"":"s")+" ago";const day=Math.floor(h/24);return day+" day"+(day===1?"":"s")+" ago";}
+function relTime(iso){if(!iso)return null;const d=new Date(iso);if(isNaN(d))return null;const s=Math.max(0,Math.floor((Date.now()-d.getTime())/1000));if(s<60)return W.justNow;const m=Math.floor(s/60);if(m<60)return say(W.minutesAgo,{n:m,s:m===1?"":"s"});const h=Math.floor(m/60);if(h<24)return say(W.hoursAgo,{n:h,s:h===1?"":"s"});const day=Math.floor(h/24);return say(W.daysAgo,{n:day,s:day===1?"":"s"});}
 function minsSinceIso(iso){if(!iso)return Infinity;const d=new Date(iso);if(isNaN(d))return Infinity;return(Date.now()-d.getTime())/60000;}
 const MS_MO=1e3*60*60*24*30.44, MS_WK=1e3*60*60*24*7;
 const moSince=d=>{if(!d)return null;const x=new Date(d+"T00:00:00");return isNaN(x)?null:(Date.now()-x)/MS_MO;};
@@ -5361,6 +6080,7 @@ function tierFor(r){
 }
 
 // The seed set: ~110 rows read before the scraper existed (docs/app.md §6).
+// Not words: exhibitions, not the app's own sentences.
 const S=[
 ["met","Musical Bodies","2026-06-07","2026-09-27","Instruments as sculptural and bodily objects from the Met's collection.","musical-bodies"],
 ["met","Costume Art","2026-05-10","2027-01-10","Costume Institute spring show. Inaugurates new fashion galleries.","costume-art"],
@@ -5487,8 +6207,8 @@ function mergeSeedInto(existing){const byId=new Map(existing.map(r=>[r.id,r]));f
 function resetSeed(){
   const rows=buildSeed();
   return {rows,
-    note:"Starter set loaded ("+rows.length+" exhibitions) \u2014 not saved to a file.",
-    debug:"Reset: loaded the built-in starter set ("+rows.length+" exhibitions). It isn't in any file \u2014 Save if you want one."};
+    note:say(W.starterLoaded,{n:rows.length}),
+    debug:say(W.resetDebug,{n:rows.length})};
 }
 
 const cleanIsbn=v=>{if(!v)return null;const d=isbnDigits(v);return d.length===13?d:null;};
@@ -5545,17 +6265,17 @@ function isbnInText(isbn,text){
 }
 // A 13-digit 978/979 number with no digit beside it; group 1 is the number.
 const ISBN13_STANDALONE=/(?<![0-9])(97[89]\d{10})(?![0-9])/g;
-const MON3=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+const MON3=W.monthsShort;
 const fmtDate=d=>{if(!d)return null;const x=new Date(d+"T00:00:00");if(isNaN(x))return d;return x.getDate()+" "+MON3[x.getMonth()]+" "+x.getFullYear();};
-function fmtRefresh(iso){if(!iso)return"never";const d=new Date(iso);if(isNaN(d))return"never";const mon=MON3[d.getMonth()];let h=d.getHours();const ap=h<12?"am":"pm";h=h%12;if(h===0)h=12;const mm=String(d.getMinutes()).padStart(2,"0");return mon+" "+d.getDate()+", "+d.getFullYear()+" "+h+":"+mm+ap;}
+function fmtRefresh(iso){if(!iso)return W.never;const d=new Date(iso);if(isNaN(d))return W.never;const mon=MON3[d.getMonth()];let h=d.getHours();const ap=h<12?"am":"pm";h=h%12;if(h===0)h=12;const mm=String(d.getMinutes()).padStart(2,"0");return mon+" "+d.getDate()+", "+d.getFullYear()+" "+h+":"+mm+ap;}
 // A sweep moment on two lines, the date then the time, so every row of the Details table wraps the same way.
 function momentLines(label,iso){const t=fmtRefresh(iso),i=t.lastIndexOf(" ");return i<0?label+t:<>{label+t.slice(0,i)}<br/>{t.slice(i+1)}</>;}
-function dateRange(r){const a=fmtDate(r.startDate),b=fmtDate(r.endDate);if(a&&b)return a+" \u2014 "+b;if(b)return"until "+b;if(a){const st=new Date(r.startDate+"T00:00:00");const past=!isNaN(st)&&st<=new Date();return(past?"open since ":"opens ")+a;}return"dates unknown";}
+function dateRange(r){const a=fmtDate(r.startDate),b=fmtDate(r.endDate);if(a&&b)return a+" \u2014 "+b;if(b)return say(W.until,{date:b});if(a){const st=new Date(r.startDate+"T00:00:00");const past=!isNaN(st)&&st<=new Date();return past?say(W.openSince,{date:a}):say(W.opens,{date:a});}return W.datesUnknown;}
 
 // The shop link searches by the EXHIBITION's title (her decision): shops index the
 // show's name; resellers use the ISBN or the book's title. Booko: booko.au/<isbn>,
 // or its title search with no ISBN.
-function buyLinks(r){const isbn=cleanIsbn(r.isbn13),title=r.catalogueTitle||r.title,q=encodeURIComponent(isbn||title),tq=encodeURIComponent(title),mu=MU[r.museumId],out=[];if(r.shopUrl)out.push({name:shopLinkLabel(r.shopState),href:r.shopUrl});else if(shopButtonUrl(mu,r.title))out.push({name:"Museum shop",href:shopButtonUrl(mu,r.title)});if(r.publisherUrl)out.push({name:publisherLinkLabel(r.publisherResult),href:r.publisherUrl});out.push({name:"Amazon",href:"https://www.amazon.com.au/s?k="+q},{name:"AbeBooks",href:"https://www.abebooks.com/servlet/SearchResults?ds=30&dym=on&kn="+(isbn||tq)+"&rollup=on&sortby=17"},{name:"Alibris",href:"https://www.alibris.com/booksearch?keyword="+q},{name:"Booko",href:isbn?"https://booko.au/"+isbn:"https://booko.au/search?query_type=1&q="+tq.replace(/%20/g,"+")});return out;}
+function buyLinks(r){const isbn=cleanIsbn(r.isbn13),title=r.catalogueTitle||r.title,q=encodeURIComponent(isbn||title),tq=encodeURIComponent(title),mu=MU[r.museumId],out=[];if(r.shopUrl)out.push({name:shopLinkLabel(r.shopState),href:r.shopUrl});else if(shopButtonUrl(mu,r.title))out.push({name:W.museumShop,href:shopButtonUrl(mu,r.title)});if(r.publisherUrl)out.push({name:publisherLinkLabel(r.publisherResult),href:r.publisherUrl});out.push({name:W.amazon,href:"https://www.amazon.com.au/s?k="+q},{name:W.abeBooks,href:"https://www.abebooks.com/servlet/SearchResults?ds=30&dym=on&kn="+(isbn||tq)+"&rollup=on&sortby=17"},{name:W.alibris,href:"https://www.alibris.com/booksearch?keyword="+q},{name:W.booko,href:isbn?"https://booko.au/"+isbn:"https://booko.au/search?query_type=1&q="+tq.replace(/%20/g,"+")});return out;}
 
 // ── FINDING A CATALOGUE (docs/app.md §1; CLAUDE.md §5.1 "Catalogue lookup") ────
 // The page cannot reach the internet, so searching and reading go through her keyed
@@ -5563,6 +6283,7 @@ function buyLinks(r){const isbn=cleanIsbn(r.isbn13),title=r.catalogueTitle||r.ti
 // never report a page that was not found.
 // SEARCH_SERVER must match the connector name in the page's published `mcp`
 // capability (docs/app.md §1).
+// Not words: the connector's name, as the platform knows it.
 const SEARCH_SERVER = "Parallel Search Key";
 const SEARCH_TOOL   = "web_search";
 // Reads a whole page, not a snippet.
@@ -5586,14 +6307,14 @@ async function useCap(name){
 // would hide the fix.
 function mcpTrouble(e){
   const code=String((e&&e.code)||"");
-  if(code==="server_not_connected")return "Add the \u201cParallel Search Key\u201d connector in claude.ai \u2192 Settings \u2192 Connectors, then try again.";
-  if(code==="needs_reauth")       return "Reconnect \u201cParallel Search Key\u201d in claude.ai \u2192 Settings \u2192 Connectors \u2014 its access has lapsed.";
-  if(code==="not_in_manifest")    return "This page isn\u2019t allowed to use \u201cParallel Search Key\u201d \u2014 you may have turned it off for this artifact.";
-  if(code==="selection_required") return "You have more than one \u201cParallel Search Key\u201d connector. Pick one when Claude asks, then try again.";
-  if(code==="blocked_by_policy")  return "Your organisation blocks this connector.";
-  if(code==="server_unavailable") return "The search service didn\u2019t answer. Worth one more try in a moment.";
-  if(code==="cancelled")          return "Search stopped.";
-  return "Search failed ("+(code||"unknown")+").";
+  if(code==="server_not_connected")return W.connectorMissing;
+  if(code==="needs_reauth")       return W.connectorLapsed;
+  if(code==="not_in_manifest")    return W.connectorNotAllowed;
+  if(code==="selection_required") return W.connectorPickOne;
+  if(code==="blocked_by_policy")  return W.connectorBlocked;
+  if(code==="server_unavailable") return W.searchNoAnswer;
+  if(code==="cancelled")          return W.searchStopped;
+  return say(W.searchFailedCode,{code:code||"unknown"});
 }
 // Who is told of each search, page open and Claude call: a part registers with onCall; the connections never name it.
 function onCall(fn){ (onCall.listeners=onCall.listeners||[]).push(fn); }
@@ -5607,7 +6328,7 @@ async function searchWeb(objective,queries){
 }
 async function searchWebCall(objective,queries){
   const mcp=await useCap("mcp");
-  if(!mcp)return{ok:false,results:[],detail:"No connector access in this viewer. The page must be opened from its claude.ai link."};
+  if(!mcp)return{ok:false,results:[],detail:W.noConnectorOpenFromLink};
   let res;
   try{
     res=await mcp.callTool(SEARCH_SERVER,SEARCH_TOOL,{
@@ -5620,7 +6341,7 @@ async function searchWebCall(objective,queries){
   }
   const p=res&&res.payload;
   const results=(p&&Array.isArray(p.results))?p.results:[];
-  return{ok:true,results,detail:"search: "+results.length+" results for "+JSON.stringify(queries)};
+  return{ok:true,results,detail:say(W.searchResultsFor,{n:results.length,queries:JSON.stringify(queries)})};
 }
 
 // Read one page or several (the shelf and the search box go in ONE call). An ISBN sits
@@ -5635,9 +6356,9 @@ async function fetchPage(url,objective,queries,opts){
 }
 async function fetchPageCall(url,objective,queries,opts){
   const urls=Array.isArray(url)?url.filter(Boolean):[url];
-  if(!urls.length)return{ok:false,results:[],detail:"No page to open."};
+  if(!urls.length)return{ok:false,results:[],detail:W.noPageToOpen};
   const mcp=await useCap("mcp");
-  if(!mcp)return{ok:false,results:[],detail:"No connector access in this viewer."};
+  if(!mcp)return{ok:false,results:[],detail:W.noConnector};
   let res;
   try{
     res=await mcp.callTool(SEARCH_SERVER,FETCH_TOOL,{
@@ -5655,8 +6376,8 @@ async function fetchPageCall(url,objective,queries,opts){
   // The connector names each address it could not read, with its HTTP status.
   // Re-check reads a 404 off this as "the page is gone" — see recheckLinkedPage.
   const errors=(p&&Array.isArray(p.errors))?p.errors:[];
-  return{ok:true,results,errors,detail:"opened "+urls.join(" + ")+": "+results.length+" page(s)"
-    +(errors.length?", "+errors.length+" refused ("+errors.map(e=>String((e&&e.http_status_code)||(e&&e.error_type)||"?")).join(", ")+")":"")};
+  return{ok:true,results,errors,detail:say(W.openedPages,{urls:urls.join(" + "),n:results.length})
+    +(errors.length?say(W.pagesRefused,{n:errors.length,codes:errors.map(e=>String((e&&e.http_status_code)||(e&&e.error_type)||"?")).join(", ")}):"")};
 }
 
 // The pages step one opens: the shelf where the shop has one, then its search box with
@@ -5699,24 +6420,24 @@ async function readResults(prompt,tier="default"){
 }
 async function readResultsCall(prompt,tier){
   const sample=await useCap("sample");
-  if(!sample)return{ok:false,data:null,code:"unavailable",detail:"Claude isn\u2019t available to this page in this viewer."};
+  if(!sample)return{ok:false,data:null,code:"unavailable",detail:W.claudeUnavailable};
   try{
     // Never a replayed answer: the platform replays an identical question asked within five minutes,
     // so Relabel, Search again and Re-check would not ask again (her Metamorphoses Relabel).
     const data=await sample.json(prompt,{modelTier:tier||"default",cache:false});
-    return{ok:true,data,detail:"read the results"};
+    return{ok:true,data,detail:W.readTheResults};
   }catch(e){
     const code=String((e&&e.code)||"");
     // A reply holding two answers ("Wait — here is the corrected object", Hubert Robert):
     // the last one is Claude's own correction. TW-001 to TW-004.
     if(code==="invalid_json"&&e&&e.text){
       const data=lastJsonObject(e.text);
-      if(data)return{ok:true,data,detail:"read the results (the reply held more than one answer; the last was taken)"};
+      if(data)return{ok:true,data,detail:W.readTheResultsLast};
     }
-    let why="Couldn\u2019t read the search results ("+(code||"unknown")+").";
-    if(code==="not_granted")       why="You declined to let this page use Claude. Reload and allow it to search.";
-    else if(code==="rate_limited") why="Claude is rate-limited.";
-    else if(code==="invalid_json") why="Claude\u2019s answer came back unreadable. Try again.";
+    let why=say(W.couldntReadResults,{code:code||"unknown"});
+    if(code==="not_granted")       why=W.claudeDeclined;
+    else if(code==="rate_limited") why=W.claudeRateLimited;
+    else if(code==="invalid_json") why=W.claudeUnreadable;
     return{ok:false,data:null,code,partial:(e&&e.text)||null,detail:why+"  ["+String((e&&e.message)||e)+"]"};
   }
 }
@@ -5822,9 +6543,9 @@ async function readSweepLog(){
     return {log,why:null};
   }catch(e){
     const code=String((e&&e.code)||"");
-    if(code==="no_store") return {log:{},why:"This page can\u2019t reach its sweep log in this viewer."};
-    if(code==="not_granted") return {log:{},why:"You declined this page access to its sweep log."};
-    return {log:{},why:"Couldn\u2019t read the sweep log ("+(code||"unknown")+")."};
+    if(code==="no_store") return {log:{},why:W.sweepLogUnreachable};
+    if(code==="not_granted") return {log:{},why:W.sweepLogDeclined};
+    return {log:{},why:say(W.sweepLogUnreadCode,{code:code||"unknown"})};
   }
 }
 
@@ -5841,9 +6562,9 @@ async function readQuarantine(){
     return {map:(d.rows&&typeof d.rows==="object")?d.rows:{},why:null};
   }catch(e){
     const code=String((e&&e.code)||"");
-    if(code==="no_store") return {map:{},why:"This page can\u2019t reach its quarantine list in this viewer, so nothing is being blocked."};
-    if(code==="not_granted") return {map:{},why:"You declined this page access to its quarantine list."};
-    return {map:{},why:"Couldn\u2019t read the quarantine list ("+(code||"unknown")+")."};
+    if(code==="no_store") return {map:{},why:W.quarantineUnreachable};
+    if(code==="not_granted") return {map:{},why:W.quarantineDeclined};
+    return {map:{},why:say(W.quarantineUnreadCode,{code:code||"unknown"})};
   }
 }
 
@@ -5880,14 +6601,14 @@ async function offerFile(filename,data){
 // they ask first WHENEVER there is unsaved work showing. The question to ask before Loading
 // a file, or null when the screen may go straight to the file picker.
 function loadQuestion(rowsCount,dirty,cloudNotSaving){
-  if(rowsCount>0&&dirty&&cloudNotSaving)return "Loading replaces everything on screen. The cloud copy is NOT saving, so your changes since your last Save are on screen only and will be lost. Continue?";
+  if(rowsCount>0&&dirty&&cloudNotSaving)return W.loadQuestion;
   return null;
 }
 // Reset to Seed always asks while a ledger is on screen (her decision): the question to ask,
 // or null when nothing is on screen and Reset may go straight ahead.
 function resetQuestion(rowsCount,dirty,cloudNotSaving){
-  if(rowsCount>0&&dirty&&cloudNotSaving)return "This loads the built-in starter set and replaces everything on screen. The cloud copy is NOT saving, so your changes since your last Save are on screen only and will be lost. Continue?";
-  if(rowsCount>0)return "This loads the seed set and replaces everything on screen. Continue?";
+  if(rowsCount>0&&dirty&&cloudNotSaving)return W.resetQuestionUnsaved;
+  if(rowsCount>0)return W.resetQuestion;
   return null;
 }
 // Load's job: read the text of a ledger backup file. Hands back {error} with the sentence to show,
@@ -5895,12 +6616,12 @@ function resetQuestion(rowsCount,dirty,cloudNotSaving){
 // (note: the screen's line when no cloud safety copy spoke first; debug: the debug line).
 function readLedgerFile(text){
   let d;
-  try{d=JSON.parse(text);}catch{return {error:"Could not read that file \u2014 it may not be a valid ledger backup."};}
-  if(!(d&&Array.isArray(d.rows)))return {error:"That file didn't contain a ledger (no entries found)."};
+  try{d=JSON.parse(text);}catch{return {error:W.fileUnreadable};}
+  if(!(d&&Array.isArray(d.rows)))return {error:W.fileNoLedger};
   const rows=d.rows.map(r=>({...r,watching:r.watching||false})),ignored=Array.isArray(d.ignored)?d.ignored:[];
   return {rows,ignored,lastRun:d.lastRun||null,
-    note:"Loaded "+d.rows.length+" exhibitions from your file \u2014 no edits yet.",
-    debug:"Loaded "+d.rows.length+" exhibitions from your file. It matches your file, so it's not counted as unsaved until you change something."};
+    note:say(W.loadedNote,{n:d.rows.length}),
+    debug:say(W.loadedDebug,{n:d.rows.length})};
 }
 
 // ── THE CLOUD LEDGER — storage ────────────────────────────────────────────────
@@ -5952,11 +6673,11 @@ async function cloudReadParts(coll,meta){
   let z="";
   for(let i=0;i<meta.parts;i++){
     const snap=await storeRead(coll+"/"+meta.id+"-"+i);
-    if(!snap.exists)throw {code:"missing_part",message:"Part "+(i+1)+" of "+meta.parts+" is missing."};
+    if(!snap.exists)throw {code:"missing_part",message:say(W.partMissing,{i:i+1,n:meta.parts})};
     z+=String((snap.data||{}).z||"");
   }
   const text=await cloudGunzip(z);
-  if(await cloudSha(text)!==meta.sha)throw {code:"fingerprint",message:"The copy doesn’t match its fingerprint, so it was not used."};
+  if(await cloudSha(text)!==meta.sha)throw {code:"fingerprint",message:W.fingerprintMismatch};
   return text;
 }
 async function cloudDeleteParts(coll,id,parts){
@@ -6027,20 +6748,20 @@ function ledgerDifference(a,b){
 // Every failure that has its own fix gets its own sentence (mcpTrouble's rule).
 function cloudTrouble(e,verb){
   const code=String((e&&e.code)||"");
-  const act=verb==="read"?"read":"save to";
-  if(code==="not_granted")        return "You declined this page access to its store.";
-  if(code==="quota_exceeded")     return "The page’s store is full ("+String((e&&e.message)||"")+").";
-  if(code==="resource_exhausted") return "Too many saves in a row just now — it will try again on your next change.";
-  if(code==="revoked")            return "This page lost access to its store while open. Reload the page.";
+  const act=verb==="read"?W.actRead:W.actSaveTo;
+  if(code==="not_granted")        return W.storeDeclined;
+  if(code==="quota_exceeded")     return say(W.storeFull,{why:String((e&&e.message)||"")});
+  if(code==="resource_exhausted") return W.tooManySaves;
+  if(code==="revoked")            return W.storeRevoked;
   if(code==="missing_part"||code==="fingerprint") return String(e.message);
-  return "Couldn’t "+act+" the cloud copy ("+(code||String((e&&e.message)||e||"unknown"))+").";
+  return say(W.couldntCloud,{act,why:code||String((e&&e.message)||e||"unknown")});
 }
 // ONE COPY EDITS AT A TIME (her decision; TC-001–010). The copy that opens while another
 // edits is READ ONLY until reloaded. Each editing copy beats its id into one record every
 // SESSION_BEAT_MS; a record older than SESSION_STALE_MS is a closed copy, taken over.
 // Every save checks the record first, so a copy waking from sleep never overwrites it.
 const CLOUD_SESSION_DOC="ledger/session";
-const RO_LINE="Read only — Art Watch is open in another tab or device. Close it there, then reload this one.";
+const RO_LINE=W.readOnlyLine;
 const SESSION_BEAT_MS=20000;
 const SESSION_STALE_MS=60000;
 const CLOUD_SESSION_ID=cloudNewId("t");
@@ -6060,10 +6781,10 @@ function storeRef(db,path){
   return r;
 }
 // The sentence for a viewer with no store.
-const STORE_UNREACHED="This viewer can\u2019t reach the page\u2019s store.";
+const STORE_UNREACHED=W.storeUnreached;
 function storeNo(code){
-  return code==="read_only"?{code,message:"This copy is read only."}
-    :code==="unread"?{code,message:"This part of the store could not be read, so it is not written."}
+  return code==="read_only"?{code,message:W.copyReadOnly}
+    :code==="unread"?{code,message:W.partUnreadNotWritten}
     :{code,message:STORE_UNREACHED};
 }
 // True when the store is reached and, with {part}, that part is not unread: a write may go ahead.
@@ -6149,7 +6870,7 @@ async function cloudLetGo(){
   try{ const snap=await storeRead(CLOUD_SESSION_DOC); if(snap.exists&&(snap.data||{}).id===CLOUD_SESSION_ID)await storeDelete(CLOUD_SESSION_DOC,{claim:true}); }catch{}
 }
 // The sentence for a viewer with no store, said where it means no cloud copy is being written.
-const STORE_UNREACHED_NOT_SAVING=STORE_UNREACHED.replace(/\.$/,"")+", so nothing is being saved to the cloud copy.";
+const STORE_UNREACHED_NOT_SAVING=say(W.storeUnreachedNotSaving,{why:STORE_UNREACHED.replace(/\.$/,"")});
 // The cloud copy, read on open. Hands back `live` for the readout ({rec,data} / {rec:null} /
 // {why}); `off`, why nothing is being saved; `open` when the page opens it by itself (CLOUD_OPENS).
 async function cloudOpenRead(tr){
@@ -6211,42 +6932,42 @@ async function cloudCheckBeforeReplace(tr,incoming,reason,noted){
   if(!await storeReached())return {check:null,said:false};
   let live;
   try{ live=await cloudReadLive(); }
-  catch(e){ const check="The cloud copy couldn’t be read ("+cloudTrouble(e,"read")+"). It was left in the store untouched; this ledger is saved as the new cloud copy."; tr.prev=null; tr.fp=null; return {check,said:true}; }
-  if(!live.rec)return {check:"No cloud copy existed yet — this ledger is now the first one.",said:true};
+  catch(e){ const check=say(W.cloudCopyUnreadOnLoad,{why:cloudTrouble(e,"read")}); tr.prev=null; tr.fp=null; return {check,said:true}; }
+  if(!live.rec)return {check:W.firstCloudCopy,said:true};
   const data=JSON.parse(live.text);
   tr.prev=live.rec; tr.fp=ledgerFingerprintText(data);
   const when=localReadable(live.rec.savedAt);
   const diff=ledgerDifference(data,incoming);
-  if(!diff)return {check:"✓ The file you just loaded is identical to the last cloud save ("+when+"). No snapshot of the last cloud state was needed before loading your file.",said:true};
+  if(!diff)return {check:say(W.loadedIdentical,{when}),said:true};
   // Her format: one count of differences, the cloud save's time, and what was done;
   // the breakdown goes to the diagnostic.
   const bits=[];
-  if(diff.onlyA)bits.push(diff.onlyA+" exhibition"+(diff.onlyA===1?"":"s")+" only in the cloud copy");
-  if(diff.onlyB)bits.push(diff.onlyB+" only in "+(reason==="reset"?"the starter set":"this file"));
-  if(diff.changed)bits.push(diff.changed+" different in some field");
-  if(diff.quarantineDiffers)bits.push(diff.qDiff+" quarantine entr"+(diff.qDiff===1?"y":"ies")+" different ("+diff.qa+" in the cloud copy, "+diff.qb+" here)");
+  if(diff.onlyA)bits.push(say(W.diffOnlyCloud,{n:diff.onlyA,s:diff.onlyA===1?"":"s"}));
+  if(diff.onlyB)bits.push(say(W.diffOnlyIn,{n:diff.onlyB,where:reason==="reset"?W.theStarterSet:W.thisFile}));
+  if(diff.changed)bits.push(say(W.diffChanged,{n:diff.changed}));
+  if(diff.quarantineDiffers)bits.push(say(W.diffQuarantine,{n:diff.qDiff,y:diff.qDiff===1?"y":"ies",cloud:diff.qa,here:diff.qb}));
   // Never "0 differences" beside a ledger that does differ.
   const n=Math.max(1,diff.onlyA+diff.onlyB+diff.changed+(diff.quarantineDiffers?diff.qDiff:0));
-  const what=reason==="reset"?"The starter set":"The file you just loaded";
-  const head=what+" differs from the last cloud save ("+when+"): "+n+" difference"+(n===1?"":"s")+".";
-  noted("Compared with the last cloud save ("+when+"): "+bits.join(", ")+".");
+  const what=reason==="reset"?W.theStarterSetCap:W.theFileLoaded;
+  const head=say(W.differsFromCloud,{what,when,n,s:n===1?"":"s"});
+  noted(say(W.comparedWithCloud,{when,bits:bits.join(", ")}));
   try{
-    await cloudTakeSnapshot(live.text,{label:"Safety snapshot before "+(reason==="reset"?"Reset":"Load"),kind:"safety",rows:data.rows.length,quarantined:(data.ignored||[]).length});
-    return {check:head+" A snapshot of the last cloud state was taken before loading "+(reason==="reset"?"it":"your file")+".",said:true,snapped:true};
+    await cloudTakeSnapshot(live.text,{label:say(W.safetySnapshotBefore,{what:reason==="reset"?W.reset:W.load}),kind:"safety",rows:data.rows.length,quarantined:(data.ignored||[]).length});
+    return {check:head+say(W.snapshotTaken,{what:reason==="reset"?W.it:W.yourFile}),said:true,snapped:true};
   }catch(e){
-    return {check:head+" A snapshot of the last cloud state could NOT be taken ("+cloudTrouble(e,"save")+"), so "+(reason==="reset"?"it":"your file")+" was not loaded.",said:false,failed:e};
+    return {check:head+say(W.snapshotNotTaken,{why:cloudTrouble(e,"save"),what:reason==="reset"?W.it:W.yourFile}),said:false,failed:e};
   }
 }
 // OPEN THE CLOUD COPY: the ledger it holds, as the screen opens it, and the line to show.
 function cloudOpening(tr,rec,data){
   const out={rows:(data.rows||[]).map(r=>({...r,watching:r.watching||false})),lastRun:data.lastRun||null,
-    info:"Opened the cloud copy saved "+localReadable(rec.savedAt)+" — "+(data.rows||[]).length+" exhibitions.",
+    info:say(W.openedCloudCopy,{when:localReadable(rec.savedAt),n:(data.rows||[]).length}),
     ignored:Array.isArray(data.ignored)?data.ignored:[]};
   tr.prev=rec; tr.fp=ledgerFingerprintText(data);
   return out;
 }
 // "Open it" asks first while unsaved work shows and the cloud copy is not saving.
-function cloudOpenQuestion(){ return "Opening the cloud copy replaces everything on screen. The cloud copy is NOT saving, so your changes since your last Save are on screen only and will be lost. Continue?"; }
+function cloudOpenQuestion(){ return W.openCloudQuestion; }
 // "Open it": the cloud copy read and handed to `open(rec,data)`. Hands back the line to show
 // when it cannot be, or null. Allowed in a read-only copy (her decision): it shows the cloud
 // copy, writes nothing.
@@ -6254,21 +6975,21 @@ async function cloudReadToOpen(open){
   if(!await storeReached())return null;
   try{
     const {rec,text}=await cloudReadLive();
-    if(!rec)return "There is no cloud copy yet.";
+    if(!rec)return W.noCloudCopyYet;
     open(rec,JSON.parse(text));
     return null;
-  }catch(e){ return "The cloud copy couldn’t be opened: "+cloudTrouble(e,"read"); }
+  }catch(e){ return say(W.cloudCopyNotOpened,{why:cloudTrouble(e,"read")}); }
 }
 // SNAPSHOTS. Cloud Saves' list, newest first, and why it is empty when it could not be read.
 async function cloudSavesRead(){
   if(!await storeReached())return {snaps:[],why:STORE_UNREACHED};
   try{ return {snaps:await cloudListSnapshots(),why:null}; }
-  catch(e){ return {snaps:[],why:"Couldn’t read the cloud saves ("+cloudTrouble(e,"read")+")."}; }
+  catch(e){ return {snaps:[],why:say(W.cloudSavesUnread,{why:cloudTrouble(e,"read")})}; }
 }
 // Roll back's question, for Cloud Save `s` among `all`.
 function cloudRollbackQuestion(s,all){
-  return {title:"Roll back to this cloud save?",
-    text:"The ledger becomes the cloud save “"+snapTitle(s,all)+"” from "+localReadable(s.at)+" ("+s.rows+" exhibitions). What you have now is kept in Cloud Saves first, so this can be undone."};
+  return {title:W.rollBackQuestion,
+    text:say(W.rollBackText,{title:snapTitle(s,all),when:localReadable(s.at),n:s.rows})};
 }
 // Roll back: the ledger it replaces is kept first as a safety snapshot (her decision),
 // so a roll-back can be undone; no safety copy, no roll-back.
@@ -6286,11 +7007,11 @@ async function cloudRollback(tr,s,all,{current,started}){
     if(curText)await cloudTakeSnapshot(curText,{label:rollbackSafetyLabel(s.at),kind:"safety",rows:curRows,quarantined:curQ});
     const data=JSON.parse(await cloudReadSnapshot(s));
     return {rows:(data.rows||[]).map(r=>({...r,watching:r.watching||false})),lastRun:data.lastRun||null,
-      info:"Rolled back to the cloud save “"+snapTitle(s,all)+"” from "+localReadable(s.at)+" — "+(data.rows||[]).length+" exhibitions.",
+      info:say(W.rolledBack,{title:snapTitle(s,all),when:localReadable(s.at),n:(data.rows||[]).length}),
       ignored:Array.isArray(data.ignored)?data.ignored:[]};
   }catch(e){ return {why:cloudRollbackNotDone(e)}; }
 }
-function cloudRollbackNotDone(e){ return "Rollback NOT done — "+cloudTrouble(e,"read")+" Nothing was replaced."; }
+function cloudRollbackNotDone(e){ return say(W.rollbackNotDone,{why:cloudTrouble(e,"read")}); }
 // Cloud Saves' Download: the copy handed over as a file. Hands back the line to show, or null
 // when the store is not reached.
 async function cloudSaveDownload(s){
@@ -6302,12 +7023,12 @@ async function cloudSaveDownload(s){
     const slug=labelSlug(s.label);
     const filename=s.filename||("art-watch-snapshot-"+localStamp(s.at)+(slug?"-"+slug:"")+".json");
     const route=await offerFile(filename,JSON.stringify(JSON.parse(text),null,2));
-    return route==="runtime"?"Saved "+filename+".":"A download of "+filename+" was started — this viewer can’t confirm it arrived; check your downloads folder.";
+    return route==="runtime"?say(W.savedFile,{file:filename}):say(W.downloadStarted,{file:filename});
   }catch(e){
-    const why=e&&e.route==="browser"?"the download couldn’t start"
+    const why=e&&e.route==="browser"?W.downloadCouldntStart
       :e&&["missing_part","fingerprint"].includes(e.code)?String(e.message)
-      :"the save was refused or cancelled ("+String((e&&(e.code||e.message))||e)+")";
-    return "Download NOT done — "+why+".";
+      :say(W.saveRefused,{why:String((e&&(e.code||e.message))||e)});
+    return say(W.downloadNotDone,{why});
   }
 }
 // SAVE ASKS BEFORE IT SHRINKS THE LEDGER: fewer exhibitions on screen than the
@@ -6319,7 +7040,7 @@ async function saveShrinkQuestion(count){
   // The live record alone carries the count; its parts (the whole ledger) are not read.
   if(!cloudReadOnly){ try{ const ls=await storeRead(CLOUD_LIVE_DOC); const live=ls.exists?ls.data:null; const snap=(await cloudListSnapshots(1))[0];
       most=Math.max(live?live.rows||0:0,snap?snap.rows||0:0); }catch{} }
-  if(count<most)return {title:"Save a smaller ledger?",text:"You’re saving "+count+" exhibition"+(count===1?"":"s")+"; your last cloud save has "+most+". Save anyway?",yes:"Save anyway"};
+  if(count<most)return {title:W.saveSmaller,text:say(W.saveSmallerText,{n:count,s:count===1?"":"s",most}),yes:W.saveAnyway};
   return null;
 }
 // Save (her design; docs/app.md §2): the offline file AND, when ticked, the same file in
@@ -6336,7 +7057,7 @@ function saveFile({rows,ignored,lastRun,typed}){
   let data;
   try{
     data=JSON.stringify({rows,ignored,lastRun,exportedAt:at,exportedLocal:localReadable(at),...(label?{label}:{})},null,2);
-  }catch(e){ return {note:{ok:false,text:"NOT SAVED — the file couldn’t be built: "+String(e?.message||e)}}; }
+  }catch(e){ return {note:{ok:false,text:say(W.fileNotBuilt,{why:String(e?.message||e)})}}; }
   return {rows,ignored,at,label,filename,data};
 }
 // Save now: the file from saveFile offered and, when `toCloud`, the same file kept in Cloud
@@ -6349,7 +7070,7 @@ async function saveLedger(f,toCloud,{kept,refused}){
   // awaited: the file question opens while the copy is written (her decision).
   const cloudDone=(async()=>{
     if(!toCloud||cloudReadOnly)return null;
-    if(!await storeReached())return "this viewer can’t reach the page’s store";
+    if(!await storeReached())return W.cantReachStore;
     try{
       await cloudTakeSnapshot(data,{label,kind:"manual",rows:rows.length,quarantined:ignored.length,filename,at});
       kept();
@@ -6362,46 +7083,46 @@ async function saveLedger(f,toCloud,{kept,refused}){
   let file;
   try{ file=(await offerFile(filename,data))==="runtime"?"saved":"browser"; }
   catch(e){
-    file=e&&e.route==="browser"?"the download couldn’t start"
-      :e&&e.code==="declined"?"cancelled"
-      :"refused ("+String(e?.code||e?.message||e)+")";
-    refused("Save: the file was not saved — "+String(e?.code||"")+" "+String(e?.message||e));
+    file=e&&e.route==="browser"?W.downloadCouldntStart
+      :e&&e.code==="declined"?W.cancelled
+      :say(W.refusedWhy,{why:String(e?.code||e?.message||e)});
+    refused(say(W.saveFileNotSaved,{code:String(e?.code||""),why:String(e?.message||e)}));
   }
   const cloud=await cloudDone;
-  const cloudBit=cloud===true?null:cloud===null?"":"Cloud copy NOT kept — "+cloud+".";
+  const cloudBit=cloud===true?null:cloud===null?"":say(W.cloudCopyNotKept,{why:cloud});
   let text,ok;
   if(file==="saved"){
     ok=cloud!==null&&cloud!==true?false:true;
-    text=cloud===true?"Local file saved. Extra copy also sent to the cloud."
-      :cloud===null?"Local file saved."
-      :"Local file saved. "+cloudBit;
+    text=cloud===true?W.savedBoth
+      :cloud===null?W.localSaved
+      :say(W.localSavedCloudNot,{cloud:cloudBit});
   }else if(file==="browser"){
     ok=false;
-    text=(cloud===true?"Extra copy sent to the cloud. ":cloud===null?"":cloudBit+" ")
-      +"A download of the local file was started — this viewer can’t confirm it arrived; check your downloads folder.";
+    text=(cloud===true?W.extraCopySent:cloud===null?"":cloudBit+" ")
+      +W.localDownloadStarted;
   }else{
     ok=false;
-    text=cloud===true?"Cloud copy kept. Local file not saved - "+file+"."
-      :cloud===null?"Local file not saved - "+file+"."
-      :"NOTHING SAVED — local file not saved - "+file+". "+cloudBit;
+    text=cloud===true?say(W.cloudKeptLocalNot,{why:file})
+      :cloud===null?say(W.localNotSaved,{why:file})
+      :say(W.nothingSaved,{why:file,cloud:cloudBit});
   }
   return {ok,text,file,cloud,
-    debug:"Save "+filename+" ("+localReadable(at)+"): file "+(file==="saved"?"confirmed by the viewer":file)+"; cloud "+(cloud===true?"kept":cloud===null?"not asked for":cloud)+"."};
+    debug:say(W.saveDebug,{file:filename,when:localReadable(at),fileSaid:file==="saved"?W.confirmedByViewer:file,cloudSaid:cloud===true?W.kept:cloud===null?W.notAskedFor:cloud})};
 }
 // The cloud readout, never silent (her ask): `trouble` when the cloud copy is not saving —
 // then the line says when it last worked (her ask): how far back the cloud copy stands.
 function cloudStatusLine({saveState,saveErr,lastSaved,cloudLive,hasLedger}){
   if(saveState==="failed"||saveState==="off")
-    return {trouble:true,text:"CLOUD COPY NOT SAVING — "+(saveErr||"reason unknown.")
-      +(lastSaved&&lastSaved.savedAt?" Last cloud save: "+localReadable(lastSaved.savedAt)+" ("+relTime(lastSaved.savedAt)+")."
-        :" Nothing has been saved to the cloud yet.")
-      +(hasLedger?" Changes since then are on screen only — tap Save to keep them in a file.":"")};
+    return {trouble:true,text:say(W.cloudNotSaving,{why:saveErr||W.reasonUnknown})
+      +(lastSaved&&lastSaved.savedAt?say(W.lastCloudSaveWas,{when:localReadable(lastSaved.savedAt),ago:relTime(lastSaved.savedAt)})
+        :W.nothingSavedToCloud)
+      +(hasLedger?W.changesOnScreenOnly:"")};
   return {trouble:false,text:
-    saveState==="saving"?"Saving to the cloud copy…"
-    :lastSaved?("Last cloud save: "+localReadable(lastSaved.savedAt)+" ("+relTime(lastSaved.savedAt)+") · "+lastSaved.rows+" exhibitions")
-    :cloudLive&&cloudLive.why?("Cloud copy: "+cloudLive.why)
-    :cloudLive&&cloudLive.rec===null?"No cloud copy yet — it starts when you open your ledger."
-    :"Checking the cloud copy…"};
+    saveState==="saving"?W.savingToCloud
+    :lastSaved?say(W.lastCloudSave,{when:localReadable(lastSaved.savedAt),ago:relTime(lastSaved.savedAt),n:lastSaved.rows})
+    :cloudLive&&cloudLive.why?say(W.cloudCopyWhy,{why:cloudLive.why})
+    :cloudLive&&cloudLive.rec===null?W.noCloudCopyStarts
+    :W.checkingCloud};
 }
 // ── END OF THE CLOUD LEDGER ──────────────────────────────────────────────────
 
@@ -6459,6 +7180,7 @@ function publisherDomainFrom(results,name){
 // Its "publisher page" is the museum shop, so looking costs searches for nothing.
 // SELF_PUBLISHERS is her list, grown only when she adds one. A blockbuster printed by
 // an art-book house, or a joint show printed by the other museum, is still looked for.
+// Not words: publishers' names as matched.
 const SELF_PUBLISHERS = new Set([
   "national gallery global",              // ng — her row, Zurbaran
   "national gallery london",              // ng — the same imprint as Yale (its distributor) names it, her addition (Millet)
@@ -6674,19 +7396,19 @@ function deepLinkOn(u,host,container){
 // the book's own page; "Publisher's section" = the section it sits in; "Publisher's
 // website" = the home page. An old row with no kind keeps the plain label.
 function publisherLinkLabel(kind){
-  if(kind==="container")return "Publisher\u2019s section";
-  if(kind==="site")return "Publisher\u2019s website";
-  return "Publisher";
+  if(kind==="container")return W.publishersSection;
+  if(kind==="site")return W.publishersWebsite;
+  return W.publisher;
 }
 
 // Each publisher-step outcome says which one it was, in one sentence (C-052 to
 // C-069a). No result recorded says nothing: the step did not finish, or the row
 // predates outcomes (her decision). Self-published and the book's own page say nothing.
 function publisherNote(result,hasUrl){
-  if(result==="container")return "Publisher\u2019s link opens the section this book sits in, not the book\u2019s own page.";
-  if(result==="site")     return "Couldn\u2019t find this book on the publisher\u2019s site — the link opens their home page.";
-  if(result==="nosite")   return "Couldn\u2019t work out the publisher\u2019s own website, so there\u2019s no link to it.";
-  if(result==="unnamed")  return "No publisher was named for this book, so none was looked for.";
+  if(result==="container")return W.pubNoteSection;
+  if(result==="site")     return W.pubNoteSite;
+  if(result==="nosite")   return W.pubNoteNoSite;
+  if(result==="unnamed")  return W.pubNoteUnnamed;
   // Self-published: no button is answer enough (her decision).
   if(result==="selfpublished")return "";
   if(result==="product")  return "";
@@ -6715,30 +7437,30 @@ function publisherNote(result,hasUrl){
 // `null` means the ordinary grey sentence stands on its own.
 function shopHeadline(shopState,shopChange){
   if(shopState==="shop"){
-    if(shopChange==="back")return "Back in the museum shop.";
-    if(shopChange==="now") return "Now in the museum shop.";
-    if(shopChange==="still")return "Still in the museum shop.";
-    return "In the museum shop.";
+    if(shopChange==="back")return W.backInShop;
+    if(shopChange==="now") return W.nowInShop;
+    if(shopChange==="still")return W.stillInShop;
+    return W.inShop;
   }
-  if(shopState==="gone")return "No longer in the museum shop.";
+  if(shopState==="gone")return W.noLongerInShop;
   return null;
 }
 
 // A blocked shop says so, in her wording (docs/app.md §1): the headline in the red and
 // weight of "No longer in the museum shop.", the rest grey.
-const SHOP_BLOCKED_HEAD="The museum shop is blocked";
-const SHOP_SCRIPT_HEAD="The museum shop contents cannot be seen — JS-rendering";
-const SHOP_PARALLEL_HEAD="The museum shop contents cannot be seen — Parallel fault";
-const SHOP_UNCONFIRMED_HEAD="The museum shop contents cannot be seen — unconfirmed page problem";
+const SHOP_BLOCKED_HEAD=W.shopBlockedHead;
+const SHOP_SCRIPT_HEAD=W.shopScriptHead;
+const SHOP_PARALLEL_HEAD=W.shopParallelHead;
+const SHOP_UNCONFIRMED_HEAD=W.shopUnconfirmedHead;
 // A shop the lookup could not read: refused, drawn by script, or dropped by Parallel (her wording for each).
 const shopUnread=s=>s==="blocked"||s==="script"||s==="parallel"||s==="unconfirmed";
 const shopUnreadHead=s=>s==="script"?SHOP_SCRIPT_HEAD:s==="parallel"?SHOP_PARALLEL_HEAD:s==="unconfirmed"?SHOP_UNCONFIRMED_HEAD:SHOP_BLOCKED_HEAD;
 // Re-check's line for each: "Re-check didn’t work — museum shop " + this.
-const shopUnreadSaid=s=>s==="script"?"contents cannot be seen — JS-rendering":s==="parallel"?"contents cannot be seen — Parallel fault":s==="unconfirmed"?"contents cannot be seen — unconfirmed page problem":"is blocked";
-const SHOP_BLOCKED_FOUND_REST=" — search it manually. The catalogue is stocked elsewhere.";
-const SHOP_BLOCKED_NONE_REST=". The catalogue also does not appear to exist elsewhere. Search manually to confirm.";
+const shopUnreadSaid=s=>s==="script"?W.saidScript:s==="parallel"?W.saidParallel:s==="unconfirmed"?W.saidUnconfirmed:W.saidBlocked;
+const SHOP_BLOCKED_FOUND_REST=W.shopBlockedFoundRest;
+const SHOP_BLOCKED_NONE_REST=W.shopBlockedNoneRest;
 // What a catalogue block shows when its book has no ISBN.
-const ISBN_UNCONFIRMED="ISBN not confirmed \u2014 verify before buying";
+const ISBN_UNCONFIRMED=W.isbnUnconfirmed;
 
 // A ticket is never a catalogue (her decision, KHM Canaletto & Bellotto): a link with
 // /ticket/ or /tickets/ in its path is never taken as the book. L-001 to L-019.
@@ -6899,13 +7621,13 @@ function publisherOnIsbnResults(results,isbn){
 // publisher guessed from general results must be one the ISBN's own records name,
 // when they name any; else the one they name replaces it, or none if they disagree.
 function oneBook(F,results,log,dom,museumId){
-  if(!F.isbn||!F.publisher||F.pubFrom!=="general results")return;
+  if(!F.isbn||!F.publisher||F.pubFrom!==W.fromGeneralResults)return;
   const groups=publisherGroups(results,F.isbn);
   if(!groups.length||groups.some(g=>g.names.some(n=>sameHouse(n,F.publisher))))return;
   const top=groups[0], tied=groups[1]&&groups[1].votes===top.votes;
   const name=tied?null:groupName(top);
-  log.push("Publisher “"+F.publisher+"” is not the one the ISBN’s records name ("+groups.map(groupName).join(", ")+")"
-    +(name?" — "+name+" taken.":" — no publisher filed."));
+  log.push(say(W.logNotIsbnsPublisher,{name:F.publisher,named:groups.map(groupName).join(", ")})
+    +(name?say(W.logTaken,{name}):W.logNoPublisherFiled));
   F.publisher=name;
   F.publisherUrl=name?publisherLinkOf(F.publisherUrl,name,dom,museumId):null;
   if(!name)F.pubFrom=null;
@@ -6914,6 +7636,7 @@ function oneBook(F,results,log,dom,museumId){
 // The show's catalogue in the venue's own language (her decision, Hammershøi, listed
 // only in French): the show's name before any colon, the venue's name, "exhibition
 // catalogue" in its language (the venue's register entry) and the opening year. Non-English venues only.
+// Not words: asked of the web.
 const CATALOGUE_WORDS={French:"catalogue exposition",German:"Ausstellungskatalog",Dutch:"tentoonstellingscatalogus",Italian:"catalogo mostra"};
 function localCatalogueQuery(mu,row){
   const word=mu&&mu.english===false&&CATALOGUE_WORDS[mu.language];
@@ -6924,12 +7647,15 @@ function localCatalogueQuery(mu,row){
 }
 // The instruction that a "Sold by" line names the shop; every prompt that reads a book's page or search
 // results carries it (Orsay; docs/app.md).
+// Not words: sent to Claude.
 const SOLD_BY_RULE=
   "\"Sold by …\" (“vendu par”, “venduto da”) names the SHOP, never the publisher — "
  +"the Orsay’s shop says “Sold by GrandPalaisRmn” for books Hazan printed. Never report it as publisher.\n";
 // The line that opens the shape of the reply every lookup prompt asks for.
+// Not words: sent to Claude.
 const REPLY_JSON_ONLY="\nReply with ONLY this JSON object and nothing else:\n";
 // What Claude is asked to read from a book's own page.
+// Not words: sent to Claude.
 function bookPageAsk(title){
   return "The ISBN-13, the publisher, and any link to the publisher’s own page for the book "
     +"“"+title+"”, including any details or specification panel on the page.";
@@ -6947,14 +7673,13 @@ function englishLine(r){
   // named for her, never filed as the card's book, no buy links.
   const b=r&&r.otherVenueBook;
   if((c==="publisher"||c==="shops")&&b&&b.title&&b.isbn13)
-    return "No English edition. An English catalogue from the show’s other venue is a different book: "
-      +b.title+(b.publisher?", "+b.publisher:"")+", ISBN "+fmtIsbn(b.isbn13)+".";
-  if(c==="english"&&o&&o.title)return "English edition of \u201c"+o.title+"\u201d"+(o.publisher?" ("+o.publisher+")":"")+".";
+    return say(W.otherVenueBook,{title:b.title,publisher:b.publisher?", "+b.publisher:"",isbn:fmtIsbn(b.isbn13)});
+  if(c==="english"&&o&&o.title)return say(W.englishEditionOf,{title:o.title,publisher:o.publisher?" ("+o.publisher+")":""});
   // Her wording; the publisher is printed above, so not again here (her decision).
-  if(c==="publisher")return "No English edition — checked publisher's site and bookshops.";
-  if(c==="shops")return "No English edition found in bookshops.";
-  if(c==="unknownlang")return "The book\u2019s language couldn\u2019t be confirmed, so no English edition was looked for.";
-  if(c==="stopped")return "English edition not checked \u2014 the search stopped part-way. Search again to retry.";
+  if(c==="publisher")return W.noEnglishPublisher;
+  if(c==="shops")return W.noEnglishShops;
+  if(c==="unknownlang")return W.englishUnknownLang;
+  if(c==="stopped")return W.englishStopped;
   return null;
 }
 
@@ -6966,7 +7691,7 @@ function shopButtonUrl(mu,title){
   if(!mu)return null;
   return mu.shopLink||(mu.shopSearch?mu.shopSearch+encodeURIComponent(title):mu.shopHome||null);
 }
-function shopLinkLabel(shopState){ return shopState==="gone"?"Museum shop (last seen)":"Museum shop"; }
+function shopLinkLabel(shopState){ return shopState==="gone"?W.museumShopLastSeen:W.museumShop; }
 
 // Reset cards (her design): every lookup field blank, her marks kept, so the next
 // "Find catalogue" runs the whole route.
@@ -7040,18 +7765,20 @@ function inStockByRule(url,results){
 }
 async function readShopPage(book,url,io,opened){
   const f=opened||await openShopPage(io?io.fetch:fetchPage,url,
+    // Not words: asked of the web.
     "Whether the book “"+book+"” can be bought on this page now: its product page, price, "
       +"add to cart, pre-order, sold out, out of stock, unavailable.",
-    [book+" add to cart sold out"],{full:true});
+    /* Not words: asked of the web. */[book+" add to cart sold out"],{full:true});
   if(!f.ok)return{kind:"norun",detail:f.detail,why:f.detail.split("[")[0].trim()};
   const dead=(f.errors||[]).find(e=>GONE_HTTP.has(Number(e&&e.http_status_code)));
   if(dead)return{kind:"gone",status:dead.http_status_code,
-    detail:f.detail+"\nThe shop answered "+dead.http_status_code+": that page no longer exists."};
+    detail:f.detail+say(W.logShopAnswered,{status:dead.http_status_code})};
   if(!f.results.length||pageIsShell(f.results)){
     const why=(f.errors||[]).map(e=>String((e&&e.error_type)||"")+(e&&e.http_status_code?" "+e.http_status_code:"")).filter(Boolean).join(", ");
     return{kind:"unreadable",why,detail:f.detail+(why?"\n"+why:"")};
   }
   const served=f.results.map(r=>String((r&&r.url)||"")).filter(Boolean).join(" ");
+  // Not words: sent to Claude.
   const rd=await (io?io.read:readResults)(
     "You are reading ONE page from a museum shop. Decide whether the book named below can be bought "
    +"on it NOW.\nUse ONLY what this page says.\n"
@@ -7077,7 +7804,7 @@ async function readShopPage(book,url,io,opened){
   if(typeof d.forSale!=="boolean")return{kind:"badanswer",detail:f.detail+"\n"+JSON.stringify(d)};
   const why=String(d.why||"").trim();
   if(!d.forSale&&inStockByRule(url,f.results)){
-    const said="The page\u2019s own status line says In Stock (this shop draws its Add to Cart by script).";
+    const said=W.inStockByRule;
     return{kind:"read",forSale:true,why:said,results:f.results,detail:f.detail+"\n"+rd.detail+(why?"\n"+why:"")+"\n"+said};
   }
   return{kind:"read",forSale:d.forSale,why,results:f.results,detail:f.detail+"\n"+rd.detail+(why?"\n"+why:"")};
@@ -7102,20 +7829,20 @@ async function recheckLinkedPage(row){
   const book=row.catalogueTitle||row.title;
   const p=await readShopPage(book,row.shopUrl);
   const hadIt=row.shopState==="shop";
-  if(p.kind==="norun")return{ok:false,detail:p.detail,said:"Re-check didn’t run — "+p.why};
+  if(p.kind==="norun")return{ok:false,detail:p.detail,said:say(W.recheckDidntRun,{why:p.why})};
   if(p.kind==="gone")return{ok:true,detail:p.detail,row:{...row,shopState:"gone",shopChange:null},
-    said:hadIt?"Re-checked: page no longer exists."
-              :"Re-checked: shop page has not returned. Still no longer in the museum shop."};
+    said:hadIt?W.recheckedPageGone
+              :W.recheckedNotReturned};
   if(p.kind==="unreadable")return{ok:false,detail:p.detail,
-    said:"Re-check didn’t work — shop page couldn’t be read"+(p.why?" ("+p.why+")":"")+"."};
-  if(p.kind==="noread")return{ok:false,detail:p.detail,said:"Re-check didn’t finish — "+p.why};
-  if(p.kind==="badanswer")return{ok:false,detail:p.detail,said:"Re-check didn’t finish — answer came back unreadable."};
+    said:say(W.recheckPageUnread,{why:p.why?" ("+p.why+")":""})};
+  if(p.kind==="noread")return{ok:false,detail:p.detail,said:say(W.recheckDidntFinish,{why:p.why})};
+  if(p.kind==="badanswer")return{ok:false,detail:p.detail,said:say(W.recheckDidntFinish,{why:W.answerUnreadable})};
   if(p.forSale){
-    if(hadIt)return{ok:true,detail:p.detail,row:stillInShop(row),said:"Re-checked: still for sale in the museum shop."};
-    return{ok:true,detail:p.detail,row:{...row,shopState:"shop",shopChange:"back"},said:"Re-checked: back in the museum shop."};
+    if(hadIt)return{ok:true,detail:p.detail,row:stillInShop(row),said:W.recheckedStillForSale};
+    return{ok:true,detail:p.detail,row:{...row,shopState:"shop",shopChange:"back"},said:W.recheckedBack};
   }
   return{ok:true,detail:p.detail,row:{...row,shopState:"gone",shopChange:null},
-    said:hadIt?"Re-checked: no longer for sale in the museum shop."+(p.why?" "+p.why:""):"Re-checked: still not for sale in the museum shop."};
+    said:hadIt?W.recheckedNoLongerForSale+(p.why?" "+p.why:""):W.recheckedStillNotForSale};
 }
 
 // "Re-check museum shop" on one card → {ok, detail, row?, said}. At top level so the
@@ -7143,7 +7870,7 @@ async function recheckShopCore(found,hooks){
   const row=ticket?{...found,shopUrl:null,shopState:"web",shopChange:null}:found;
   let out;
   if(row.shopUrl&&(row.shopState==="shop"||row.shopState==="gone")){
-    if(hooks&&hooks.label)hooks.label("Re-reading the shop page\u2026");
+    if(hooks&&hooks.label)hooks.label(W.rereadingShopPage);
     out=await recheckLinkedPage(row);
   } else {
     const io=lookupIo(hooks,{upTo:1});
@@ -7156,13 +7883,13 @@ async function recheckShopCore(found,hooks){
     const answered=shopUnread(row.shopState)?{...row,shopState:row.hasCatalogue==="yes"?"web":"none"}:row;
     // The ticket link is dropped silently (her decision).
     const dropped="";
-    if(!s.ran)out={ok:false,detail:"",said:"Re-check didn’t run — venue has no shop."};
-    else if(!s.ok)out={ok:false,detail:s.detail,said:"Re-check didn’t run — "+s.detail.split("\n").pop().split("[")[0].trim()};
+    if(!s.ran)out={ok:false,detail:"",said:say(W.recheckDidntRun,{why:W.venueNoShop})};
+    else if(!s.ok)out={ok:false,detail:s.detail,said:say(W.recheckDidntRun,{why:s.detail.split("\n").pop().split("[")[0].trim()})};
     // A blocked shop is a failed check and changes nothing — except a ticket
     // link, which was wrong whatever the shop says.
     else if(s.blocked)out=ticket
-      ?{ok:true,detail:s.detail,row:{...row,shopState:s.blocked},said:dropped+"Re-check didn’t work — museum shop "+shopUnreadSaid(s.blocked)+"."}
-      :{ok:false,detail:s.detail,said:"Re-check didn’t work — museum shop "+shopUnreadSaid(s.blocked)+"."};
+      ?{ok:true,detail:s.detail,row:{...row,shopState:s.blocked},said:dropped+say(W.recheckShopUnread,{why:shopUnreadSaid(s.blocked)})}
+      :{ok:false,detail:s.detail,said:say(W.recheckShopUnread,{why:shopUnreadSaid(s.blocked)})};
     // The shop's book is the picked one only when its ISBN says so; otherwise the picked
     // book is looked for on the list the shop step read, as the lookup does.
     else if(pickedVersion(row)&&!(o.found&&o.isbn13&&[pickedVersion(row).isbn13,pickedVersion(row).alsoIsbn13].includes(o.isbn13))){
@@ -7170,18 +7897,18 @@ async function recheckShopCore(found,hooks){
       const F={title:row.catalogueTitle||v.title,isbn:row.isbn13||v.isbn13,publisher:row.publisher||v.publisher};
       const {url,failed}=await bookOnShelfAfterWeb(F,v,s.results,dom,new Set(shopPagesFor(MU[row.museumId],String(row.title||"").trim()).map(normalizeUrlKey)),io,log);
       const detail=[s.detail].concat(log).join("\n");
-      out=failed?{ok:false,detail,said:"Re-check didn’t work — shop page couldn’t be read."}
-        :url?{ok:true,detail,row:{...answered,shopState:"shop",shopUrl:url,shopChange:row.shopState==="shop"?"still":"now"},said:dropped+(row.shopState==="shop"?"Re-checked: still in the museum shop.":"Re-checked: now in the museum shop.")}
-        :{ok:true,detail,row:{...answered,shopState:"web",shopUrl:null},said:dropped+"Re-checked: not in the museum shop."};
+      out=failed?{ok:false,detail,said:say(W.recheckPageUnread,{why:""})}
+        :url?{ok:true,detail,row:{...answered,shopState:"shop",shopUrl:url,shopChange:row.shopState==="shop"?"still":"now"},said:dropped+(row.shopState==="shop"?W.recheckedStillInShop:W.recheckedNowInShop)}
+        :{ok:true,detail,row:{...answered,shopState:"web",shopUrl:null},said:dropped+W.recheckedNotInShop};
     }
     else if(o.found&&(o.catalogueTitle||o.isbn13)&&(onShop||o.listedOnly)){
       // Reading the book's page for a blank ISBN is part of the shop step —
       // the page IS the shop's. Web search and the publisher are never run.
       const hit=await readBookPage({ok:true,detail:s.detail,pageUrl:o.shopUrl,row:foundInShop(row,o)},
         MU[row.museumId]?.name||"",dom,io);
-      out={ok:true,detail:hit.detail,row:row.shopState==="shop"?stillInShop(hit.row):hit.row,said:dropped+(row.shopState==="shop"?"Re-checked: still in the museum shop.":"Re-checked: now in the museum shop.")};
+      out={ok:true,detail:hit.detail,row:row.shopState==="shop"?stillInShop(hit.row):hit.row,said:dropped+(row.shopState==="shop"?W.recheckedStillInShop:W.recheckedNowInShop)};
     }
-    else out={ok:true,detail:s.detail,row:answered,said:dropped+"Re-checked: not in the museum shop."};
+    else out={ok:true,detail:s.detail,row:answered,said:dropped+W.recheckedNotInShop};
   }
   return out;
 }
@@ -7196,12 +7923,12 @@ async function recheckShopCore(found,hooks){
 function sameBookOnPage(results,F,v){
   const text=pageTextOf(results);
   const isbns=isbnsLabelled(text);
-  if(isbns.size)return [F.isbn,v&&v.alsoIsbn13].filter(Boolean).some(i=>isbns.has(i))?"the same ISBN":null;
+  if(isbns.size)return [F.isbn,v&&v.alsoIsbn13].filter(Boolean).some(i=>isbns.has(i))?W.sameIsbn:null;
   const printed=(text.match(/(?<![0-9])(\d{2,4})\s*(?:pages|pp\b)/i)||[])[1];
   if(v&&v.pages&&printed&&Number(printed)!==Number(v.pages))return null;
-  if(v&&v.pages&&printed)return "the same page count";
+  if(v&&v.pages&&printed)return W.samePageCount;
   const pub=F.publisher?normPublisher(F.publisher):"";
-  if(pub.length>=4&&(" "+normPublisher(text)+" ").includes(" "+pub+" "))return "the same publisher";
+  if(pub.length>=4&&(" "+normPublisher(text)+" ").includes(" "+pub+" "))return W.samePublisher;
   return null;
 }
 // `seen` (optional): pages already opened and read in this lookup, by address, so a page
@@ -7210,26 +7937,27 @@ async function bookOnShelfAfterWeb(F,v,shelf,dom,opened,io,log,seen){
   const links=shelfLinksFor(shelf,F.title,dom,opened)||[];
   if(!links.length)return{url:null,failed:null};
   let failed=null;
-  const miss=(url,why)=>{ if(!failed)failed="couldn’t read "+url+(why?" ("+why+")":""); };
-  log.push("The book found on the web, looked for on the shop’s own list: "+links.length+" link"+(links.length===1?"":"s")+" carrying “"+F.title+"”.");
+  const miss=(url,why)=>{ if(!failed)failed=say(W.couldntReadUrl,{url,why:why?" ("+why+")":""}); };
+  log.push(say(W.logLookedForOnList,{n:links.length,s:links.length===1?"":"s",title:F.title}));
   for(const url of links){
     const key=normalizeUrlKey(url), had=seen&&seen.get(key);
     const f=had?had.f:await openShopPage(io.fetch,url,
+      // Not words: asked of the web.
       "Whether the book “"+F.title+"” can be bought on this page now: its ISBN, pages, publisher, price, add to cart, sold out.",
-      [F.title+" ISBN add to cart"],{full:true});
+      /* Not words: asked of the web. */[F.title+" ISBN add to cart"],{full:true});
     if(seen&&!had)seen.set(key,{f});
     if(!had)log.push(f.detail);
-    if(!f.ok||!f.results.length||pageIsShell(f.results)){ miss(url,f.ok?"blank page":f.detail.split("\n").pop().split("[")[0].trim()); continue; }
+    if(!f.ok||!f.results.length||pageIsShell(f.results)){ miss(url,f.ok?W.blankPage:f.detail.split("\n").pop().split("[")[0].trim()); continue; }
     const same=sameBookOnPage(f.results,F,v);
-    if(!same){ log.push("Not this book: "+url); continue; }
+    if(!same){ log.push(say(W.logNotThisBook,{url})); continue; }
     const mem=seen&&seen.get(key);
     const p=mem&&mem.p?mem.p:await readShopPage(F.title,url,io,f);
     if(mem&&!mem.p)mem.p=p;
     log.push(p.detail);
-    if(p.kind==="read"&&p.forSale){ log.push("In the museum shop ("+same+"): "+url); return{url,failed:null}; }
+    if(p.kind==="read"&&p.forSale){ log.push(say(W.logInShopBy,{same,url})); return{url,failed:null}; }
     if(p.kind!=="read"&&p.kind!=="gone")miss(url,p.why);
   }
-  if(failed)log.push("Not settled: "+failed+".");
+  if(failed)log.push(say(W.logNotSettled,{why:failed}));
   return{url:null,failed};
 }
 
@@ -7237,6 +7965,7 @@ async function bookOnShelfAfterWeb(F,v,shelf,dom,opened,io,log,seen){
 // At top level so a fixture can run it whole with the connector and Claude faked.
 // Steps gather facts; code decides each fact in a set order of trust; composeRow
 // writes the row once. No step writes card text; the card reads the row.
+// Not words: sent to Claude.
 const READ_RULES=
   "You are reading real web search results to find the PRINTED EXHIBITION CATALOGUE for one exhibition.\n"
  +"Use ONLY what the results below actually say. Never use outside knowledge, never guess an ISBN, "
@@ -7263,10 +7992,12 @@ const READ_RULES=
  +"If the same catalogue is sold in more than one language, take the ENGLISH edition.\n";
 // At a non-English venue the web read takes the venue's own book; whether an English
 // edition is the same catalogue is decided once, in code (editionsOf; Hubert Robert).
+// Not words: sent to Claude.
 const READ_RULES_FOREIGN=READ_RULES.replace(/If the same catalogue is sold in more than one language, take the ENGLISH edition\.\n$/,
   "If the catalogue is sold in more than one language, take the edition in the venue's own language — "
  +"an English edition is checked separately.\n");
 
+// Not words: sent to Claude.
 const READ_SHAPE=
   REPLY_JSON_ONLY
  +'{"found": true|false, "catalogueTitle": string|null, "isbn13": string|null, '
@@ -7277,6 +8008,7 @@ const READ_SHAPE=
  +'Set "found" false and every other field null when these results show no catalogue.';
 
 // The book's own page, read once: the ISBN, the publisher and any publisher link.
+// Not words: sent to Claude.
 const PAGE_RULES=
   "You are reading ONE web page in full: the page selling or describing a printed exhibition "
  +"catalogue. Read the ISBN, publisher and author off THIS PAGE only.\n"
@@ -7290,6 +8022,7 @@ const PAGE_RULES=
  +"A link to this shop, to Amazon or to another bookseller is NOT it — answer null.\n"
  +"If this page is not about the book named below, set every field null.\n"
  +SOLD_BY_RULE;
+// Not words: sent to Claude.
 const PAGE_SHAPE=
   REPLY_JSON_ONLY
  +'{"isbn13": string|null, "publisher": string|null, "publisherUrl": string|null}\n'
@@ -7307,9 +8040,9 @@ const pageForPrompt=(list,cap)=>list.slice(0,2).map(r=>
 // Re-check stops at the first (upTo). PL-001 to PL-005.
 const LOOKUP_STAGE={shop:1,web:2,page:3,facts:3,publisher:4};
 function lookupLabel(n,foreign){
-  return n===1?"Searching venue shop\u2026":n===2?"Searching more broadly\u2026"
-    :n===3?(foreign?"Finding the ISBN, publisher and English edition\u2026":"Finding the ISBN and publisher\u2026")
-    :n===4?"Looking for the publisher\u2019s page\u2026":"";
+  return n===1?W.stageShop:n===2?W.stageWeb
+    :n===3?(foreign?W.stageFactsForeign:W.stageFacts)
+    :n===4?W.stagePublisher:"";
 }
 
 // The lookup's calls, counted and timed for the diagnostic. At most three connector
@@ -7346,9 +8079,8 @@ function lookupIo(hooks,opts){
     // Calls launched together count as one wait.
     together:async jobs=>{ st.waits++; st.group++; try{ return await Promise.all(jobs.map(j=>j())); }finally{ st.group--; } },
     counts:()=>({search:st.search,fetch:st.fetch,read:st.read,calls:st.search+st.fetch+st.read,waits:st.waits}),
-    summary:()=>"Lookup: "+(st.search+st.fetch+st.read)+" calls ("+st.search+" searches, "+st.fetch+" page opens, "+st.read
-      +" Claude reads), "+st.waits+" waits in a row. Time in calls: "
-      +(st.order.map(k=>k+" "+(st.ms[k]/1000).toFixed(1)+"s").join(", ")||"none")+".",
+    summary:()=>say(W.lookupSummary,{calls:st.search+st.fetch+st.read,search:st.search,fetch:st.fetch,read:st.read,waits:st.waits,
+      times:st.order.map(k=>k+" "+(st.ms[k]/1000).toFixed(1)+"s").join(", ")||W.none}),
   };
 }
 
@@ -7391,13 +8123,14 @@ async function shopStep(row,io){
   if(!dom||!shopPages.length)return{ran:false,ok:false,detail:"",data:null};
   io.phase("shop");
   const s1=await io.fetch(shopPages,
+    // Not words: asked of the web.
     "The printed exhibition catalogue for “"+title+"”: the book’s own product page "
       +"on this shop, its full title and its price.",
-    [title+" exhibition catalogue book"]);
+    /* Not words: asked of the web. */[title+" exhibition catalogue book"]);
   if(!s1.ok)return{ran:true,ok:false,detail:s1.detail,data:null};
   // Every page refused is not "nothing there": the shop could not be read (KHM).
   if(!s1.results.length&&(s1.errors||[]).length)
-    return{ran:true,ok:true,blocked:"blocked",detail:s1.detail+"\nThe museum shop refused every page, so it could not be searched.",data:null};
+    return{ran:true,ok:true,blocked:"blocked",detail:s1.detail+W.logShopRefusedAll,data:null};
   if(!s1.results.length)return{ran:true,ok:true,detail:s1.detail,data:null};
   // A venue whose books Parallel drops (the Städel), a shop drawn by script (Basel), or a section she confirmed
   // unread (Berlin's English one): no priced line, even read whole, is "parallel", "script" or "unconfirmed".
@@ -7406,7 +8139,7 @@ async function shopStep(row,io){
     const whole=await io.fetch(shopPages,SHOP_BOOKS_ASK,null,{full:true});
     if(!whole.ok)return{ran:true,ok:false,detail:s1.detail+"\n"+whole.detail,data:null};
     if(!priced(whole))
-      return{ran:true,ok:true,blocked:mu.shopUnseen,detail:s1.detail+"\n"+whole.detail+(mu.shopUnseen==="parallel"?"\nParallel brought back this shop’s pages without their books, so it could not be searched.":"\nThe shop’s pages came back without their books, so it could not be searched."),data:null};
+      return{ran:true,ok:true,blocked:mu.shopUnseen,detail:s1.detail+"\n"+whole.detail+(mu.shopUnseen==="parallel"?W.logParallelNoBooks:W.logPagesNoBooks),data:null};
   }
   // Every page empty: drawn by script (her decision, MoMA Brancusi), "script". But short excerpts are not an empty page (her Watteau): the pages are
   // opened again whole, and the shop is unread only if they are still empty or show
@@ -7422,14 +8155,15 @@ async function shopStep(row,io){
     const listed=books.length?null:whole.results.find(r=>!pageIsShell([r]));
     if(listed&&await firstProductIsBook(io.fetch,oneText(listed),dom,listed.url))books=[listed];
     if(!books.length)
-      return{out:{ran:true,ok:true,blocked:"script",detail:s1.detail+"\n"+whole.detail+"\nThe museum shop’s pages came back with no books on them, so it could not be searched.",data:null}};
+      return{out:{ran:true,ok:true,blocked:"script",detail:s1.detail+"\n"+whole.detail+W.logPagesNoBooksOnThem,data:null}};
     return{whole};
   };
   if(s1.results.every(r=>pageIsShell([r]))){
     const w=await readWhole();
     if(w.out)return w.out;
-    shop={...w.whole,detail:s1.detail+"\n"+w.whole.detail+"\nThe shop’s pages, read whole: books on them, none about this show in the excerpts."};
+    shop={...w.whole,detail:s1.detail+"\n"+w.whole.detail+W.logReadWhole};
   }
+  // Not words: sent to Claude.
   const r1=await io.read(READ_RULES
     +"\nExhibition: "+title+"\nVenue: "+venue
     +"\nBelow are the venue’s OWN shop pages, opened directly at "+dom
@@ -7454,8 +8188,8 @@ async function shopStep(row,io){
   // The title as the shop's pages print it — titleAsPrinted.
   if(data.found&&data.catalogueTitle){
     const tp=titleAsPrinted(data.catalogueTitle,shop.results);
-    if(tp.cut)detail+="\nTitle cut to what the shop prints: “"+tp.title+"” (the read gave “"+data.catalogueTitle+"”).";
-    else if(!tp.onPage)detail+="\nThe title the read gave is not on the shop’s pages as written.";
+    if(tp.cut)detail+=say(W.logTitleCut,{title:tp.title,read:data.catalogueTitle});
+    else if(!tp.onPage)detail+=W.logTitleNotOnPages;
     data.catalogueTitle=tp.title;
   }
   // A list is not the book (her decision, KHM Canaletto): a link that is one of the
@@ -7468,12 +8202,12 @@ async function shopStep(row,io){
   if(data.found&&(listed||!data.shopUrl)){
     const own=bookLinkOnShelf(shop.results,data.catalogueTitle,dom,opened);
     if(own){
-      detail+="\nThe book’s own link, read off the shop’s listing: "+own;
+      detail+=say(W.logOwnLinkOnListing,{url:own});
       return{ran:true,ok:true,detail,results:shop.results,data:{...data,shopUrl:own}};
     }
   }
   if(listed){
-    detail+="\nThe link given was the shop's own listing, not the book's page — kept as in the shop, without a link of its own.";
+    detail+=W.logLinkWasListing;
     return{ran:true,ok:true,detail,results:shop.results,data:{...data,shopUrl:null,listedOnly:true}};
   }
   return{ran:true,ok:true,detail,results:shop.results,data};
@@ -7489,15 +8223,15 @@ async function confirmShopLink(hit,io){
   const p=await readShopPage(hit.row.catalogueTitle||hit.row.title,link,io);
   if(p.kind==="read"&&p.forSale){
     return{...hit,shopCandidate:null,pageResults:p.results,
-      detail:hit.detail+"\n"+p.detail+"\nThe shop link from the web search opened and is the book, for sale.",
+      detail:hit.detail+"\n"+p.detail+W.logShopLinkIsBook,
       row:{...hit.row,shopState:"shop",shopChange:null,shopUrl:link}};
   }
-  const why=p.kind==="read"?"isn’t this book for sale"+(p.why?" ("+p.why+")":"")
-    :p.kind==="gone"?"no longer exists ("+p.status+")"
-    :p.kind==="unreadable"?"didn’t open"+(p.why?" ("+p.why+")":"")
-    :"couldn’t be checked";
+  const why=p.kind==="read"?W.isntThisBookForSale+(p.why?" ("+p.why+")":"")
+    :p.kind==="gone"?say(W.noLongerExists,{status:p.status})
+    :p.kind==="unreadable"?W.didntOpen+(p.why?" ("+p.why+")":"")
+    :W.couldntBeChecked;
   return{...hit,shopCandidate:null,pageUrl:null,
-    detail:hit.detail+"\n"+p.detail+"\nThe shop link from the web search "+why+", so it is not filed as in the museum shop.",
+    detail:hit.detail+"\n"+p.detail+say(W.logShopLinkNot,{why}),
     trouble:(p.kind==="norun"||p.kind==="noread")?p.detail:hit.trouble};
 }
 
@@ -7511,12 +8245,13 @@ async function readBookPage(hit,venue,dom,io){
   // The venue's own shop page gets the blank-page retry (openShopPage); a publisher's does not.
   const f=await (shopLinkOf({shopUrl:hit.pageUrl},dom)?(...a)=>openShopPage(io.fetch,...a):io.fetch)(hit.pageUrl,
     bookPageAsk(book),
-    [book+" ISBN publisher details"],{full:true});
+    /* Not words: asked of the web. */[book+" ISBN publisher details"],{full:true});
   let detail=hit.detail+"\n"+f.detail;
   if(!f.ok)return{...hit,detail,trouble:f.detail};
   if(!f.results.length)return{...hit,detail};
   const coded=r.isbn13?null:isbnOnPage(pageTextOf(f.results));
-  if(coded)detail=detail+"\nISBN read off the page in code: "+coded;
+  if(coded)detail=detail+say(W.logIsbnOffPageCode,{isbn:coded});
+  // Not words: sent to Claude.
   const rd=await io.read(PAGE_RULES
     +"\nBook: "+book+"\nExhibition venue: "+venue+"\n\n"
     +pageForPrompt(f.results)+PAGE_SHAPE);
@@ -7527,8 +8262,8 @@ async function readBookPage(hit,venue,dom,io){
   }
   const o={...(rd.data||{}),...(coded?{isbn13:coded}:{})};
   const filled=applyIsbnFill(r,o,dom,resultsText(f.results));
-  detail=detail+(filled.isbn13?"\nISBN read off the page: "+filled.isbn13
-                              :"\nNo ISBN on that page either.");
+  detail=detail+(filled.isbn13?say(W.logIsbnOffPage,{isbn:filled.isbn13})
+                              :W.logNoIsbnEither);
   return{...hit,detail,row:filled};
 }
 
@@ -7541,6 +8276,7 @@ async function readBookPage(hit,venue,dom,io){
 function editionQueries(mu,row,book,isbn,pub){
   const lang=mu&&mu.language;
   const head=String(row.title||"").split(/\s*:\s*/)[0].trim();
+  // Not words: asked of the web.
   return [book+" English edition"]
     .concat(lang?["originally published in "+lang+" as "+book]:[])
     .concat(isbn?[isbn+" English edition"]:[])
@@ -7596,8 +8332,8 @@ function notABooklet(F,results,bookPages,log){
   for(const x of resultsCarrying(results,F.title))for(const d of isbnsIn(x))
     if(d!==F.isbn){ const n=pagesOfIsbn(results,d); if(n&&!differentBook(n,bookPages))other.add(d); }
   const swap=other.size===1?[...other][0]:null;
-  log.push("ISBN "+F.isbn+" is a "+own+"-page book; the catalogue has "+bookPages+" pages"
-    +(swap?" — ISBN "+swap+", printed with "+bookPages+" pages, taken.":" — no ISBN for the catalogue itself found, so none is filed."));
+  log.push(say(W.logBookletPages,{isbn:F.isbn,own,pages:bookPages})
+    +(swap?say(W.logSwapTaken,{isbn:swap,pages:bookPages}):W.logNoneFiled));
   F.notIsbn=F.isbn;
   F.isbn=swap;
 }
@@ -7750,8 +8486,8 @@ function printingsOf(cands,card,results,museumId){
     if(aMagazine(c.title,pub,onV))continue;
     out.push({title:titleAsPrinted(c.title,onV).title,lang:card.lang||null,binding:bindingOfIsbn(results,isbn),pages:pages||null,
       publisher:venueFirst(pub,museumId),isbn13:isbn,alsoIsbn13:null,showing:"this",proofUrl:proofOf(onV,c.evidenceUrl),
-      note:"another printing",city:cityOf(c.venueCity,pub,results,museumId),year:yearOf(c.year,onV),
-      _pub:pub,_pubFrom:coded?"the ISBN’s results":"general results"});
+      note:W.anotherPrinting,city:cityOf(c.venueCity,pub,results,museumId),year:yearOf(c.year,onV),
+      _pub:pub,_pubFrom:coded?W.fromIsbnResults:W.fromGeneralResults});
   }
   return out;
 }
@@ -7777,7 +8513,7 @@ function editionsOf(editions,orig,results,museumId,log){
     if(!isbn||isbn===orig.isbn13||out.some(v=>v.isbn13===isbn))continue;
     const onV=onIsbn(results,isbn);
     const coded=publisherOnIsbnResults(onV,isbn);
-    let pub=coded||(ed.publisher?String(ed.publisher).trim():null), from=coded?"the ISBN’s results":"general results", pubUrl=null;
+    let pub=coded||(ed.publisher?String(ed.publisher).trim():null), from=coded?W.fromIsbnResults:W.fromGeneralResults, pubUrl=null;
     const pages=pagesPrinted(ed.pages,results);
     const title=titleAsPrinted(ed.title,onV).title;
     if(aMagazine(ed.title,pub,onV))continue;
@@ -7786,29 +8522,29 @@ function editionsOf(editions,orig,results,museumId,log){
       city:cityOf(ed.venueCity,pub,results,museumId),year:yearOf(ed.year,onV)};
     if(differentBook(pages,orig.pages)){
       const said=onV.some(x=>SHOW_WORDS.test(resultText(x)));
-      if(log)log.push("“"+ed.title+"” (ISBN "+isbn+", "+pages+" pages) is a different book from this one ("+orig.pages+" pages)"
-        +(said?" — listed as another showing’s.":" — and nothing calls it a catalogue, so it is left off."));
-      if(said)out.push({...v,publisher:venueFirst(pub,museumId),showing:"other",note:"a different book: "+pages+" pages against "+orig.pages,_pub:pub,_pubFrom:from});
+      if(log)log.push(say(W.logDifferentBook,{title:ed.title,isbn,pages,orig:orig.pages})
+        +(said?W.logAnotherShowings:W.logLeftOff));
+      if(said)out.push({...v,publisher:venueFirst(pub,museumId),showing:"other",note:say(W.differentBookPages,{pages,orig:orig.pages}),_pub:pub,_pubFrom:from});
       continue;
     }
     let why=null;
-    if(sameCatalogue(pub,origPub,[],museumId)||houses.some(h=>sameCatalogue(pub,h,[],museumId)))why="the same publisher as the original";
-    else if(sameCatalogue(pub,origPub,onV,museumId))why="the venue named";
-    else if(orig.isbn13&&onV.some(x=>isbnInText(orig.isbn13,resultText(x))))why="a record carrying both ISBNs";
+    if(sameCatalogue(pub,origPub,[],museumId)||houses.some(h=>sameCatalogue(pub,h,[],museumId)))why=W.whySamePublisher;
+    else if(sameCatalogue(pub,origPub,onV,museumId))why=W.whyVenueNamed;
+    else if(orig.isbn13&&onV.some(x=>isbnInText(orig.isbn13,resultText(x))))why=W.whyBothIsbns;
     else if(keys.length&&onV.some(x=>{ const t=foldText(resultText(x)); return EDITION_LINK.test(t)&&keys.every(w=>t.includes(w)); }))
-      why="a record naming it a translation of the original";
+      why=W.whyTranslation;
     if(!why)continue;
     // Named by no house: the original's, when a page on that house's own site carries
     // this ISBN (Lienart's page for Vasari).
-    let inherit=why==="the same publisher as the original";
+    let inherit=why===W.whySamePublisher;
     if(!pub&&orig.publisher){
       for(const part of String(orig.publisher).split(HOUSE_SPLIT).filter(Boolean)){
         const page=onV.find(x=>publisherDomainFrom([x],part));
-        if(page){ pub=part.trim(); from="the book’s page"; pubUrl=page.url; inherit=true;
-          if(log)log.push("Publisher of “"+title+"”: "+pub+" — its own page carries this ISBN ("+page.url+")."); break; }
+        if(page){ pub=part.trim(); from=W.fromBookPage; pubUrl=page.url; inherit=true;
+          if(log)log.push(say(W.logPublisherOfEdition,{title,pub,url:page.url})); break; }
       }
     }
-    if(log)log.push("Edition: “"+title+"”, "+v.lang+", ISBN "+isbn+" — "+why+" ("+v.proofUrl+").");
+    if(log)log.push(say(W.logEdition,{title,lang:v.lang,isbn,why,url:v.proofUrl}));
     // Printed by the original's house: shown with the original's publishers.
     out.push({...v,publisher:venueFirst(inherit?orig.publisher:pub,museumId),note:why,_pub:pub,_pubFrom:pub?from:null,_pubUrl:pubUrl});
   }
@@ -7851,7 +8587,7 @@ function foldCoEditions(versions,results,museumId,log){
     const swap=own(v.isbn13)&&!own(n);
     v.alsoIsbn13=swap?v.isbn13:n;
     v.isbn13=swap?n:v.isbn13;
-    if(log)log.push("One book, two numbers: ISBN "+v.isbn13+", also "+v.alsoIsbn13+" — a record lists both.");
+    if(log)log.push(say(W.logTwoNumbers,{isbn:v.isbn13,also:v.alsoIsbn13}));
   }
 }
 
@@ -7890,7 +8626,7 @@ function storedVersion(v){
 // The picked version becomes the card's book, as a found book does.
 function takeVersion(F,v,log){
   if(v._found){ F.isbn=v.isbn13; return; }
-  log.push("The card’s book: “"+v.title+"”"+(v.isbn13?", ISBN "+v.isbn13:"")+".");
+  log.push(say(W.logCardsBook,{title:v.title,isbn:v.isbn13?say(W.commaIsbn,{isbn:v.isbn13}):""}));
   F.title=v.title; F.isbn=v.isbn13; F.publisher=v._pub||null; F.pubFrom=v._pub?v._pubFrom:null;
   F.publisherUrl=v._pubUrl||null; F.publisherResult=v._pubUrl?"product":null;
   // A shop that could not be read stays unread for every book.
@@ -7915,12 +8651,12 @@ function sourceOf(u){
   try{ const h=withoutWww(new URL(String(u||"")).hostname); return h?{url:String(u),host:h}:null; }catch{ return null; }
 }
 // The note on an English edition published after the show opened; the block reads it back to add the year.
-const ENGLISH_LATER="the English edition, published later";
+const ENGLISH_LATER=W.englishLater;
 function versionNote(vs,i,row){
   const v=vs[i], mu=MU[row.museumId], id=row.museumId;
   const vc=v.city||(venueNamedIn(v.publisher,id)||{}).city||null;
-  const where=vc?"from the show's "+vc+" exhibition":"from the show's other exhibition";
-  if(v.showing==="other")return "a different book, "+where;
+  const where=vc?say(W.fromShowsExhibition,{city:vc}):W.fromShowsOther;
+  if(v.showing==="other")return say(W.aDifferentBook,{where});
   const mine=vs.filter(x=>x.showing==="this");
   // One house, the versions differing only in language (Metamorphoses): no notes.
   const langs=new Set(mine.map(x=>foldText(x.lang||"")));
@@ -7928,13 +8664,13 @@ function versionNote(vs,i,row){
   // Printed for another showing: another museum's own, or a city not this venue's (its city, or any of its galleries).
   const cities=mu?[mu.city,...(mu.places||[])].filter(Boolean).map(foldText):[];
   if(!venuePrinting(v.publisher,id)&&((vc&&!cities.includes(foldText(vc)))||(v.publisher&&museumImprintOnly(v.publisher,id))))return where;
-  if(vs.some(x=>x.showing==="other"))return "this showing's catalogue";
+  if(vs.some(x=>x.showing==="other"))return W.thisShowingsCatalogue;
   const english=isEnglishLang(v.lang), hasEnglish=mine.some(x=>isEnglishLang(x.lang)), hasOriginal=mine.some(x=>x.lang&&!isEnglishLang(x.lang));
-  if(!english&&v.lang&&hasEnglish)return "the original edition";
+  if(!english&&v.lang&&hasEnglish)return W.theOriginalEdition;
   if(english&&hasOriginal){
-    if(venuePrinting(v.publisher,id))return "this venue's English edition";
+    if(venuePrinting(v.publisher,id))return W.thisVenuesEnglish;
     const start=parseInt(String(row.startDate||"").slice(0,4),10);
-    return v.year&&start&&v.year>start?ENGLISH_LATER:"the English edition";
+    return v.year&&start&&v.year>start?ENGLISH_LATER:W.theEnglishEdition;
   }
   return null;
 }
@@ -7945,12 +8681,12 @@ function versionBlock(vs,i,row){
   const v=vs[i], mu=venueNamedIn(v.publisher)||MU[row.museumId];
   const note=versionNote(vs,i,row);
   const later=note===ENGLISH_LATER&&v.year;
-  const bind=v.binding==="hardcover"?"Hardcover":v.binding==="paperback"?"Paperback":null;
-  const facts=[v.lang,bind,v.pages?v.pages+" pp":null].filter(Boolean).join(" \u00b7 ");
+  const bind=v.binding==="hardcover"?W.hardcover:v.binding==="paperback"?W.paperback:null;
+  const facts=[v.lang,bind,v.pages?say(W.pagesPp,{n:v.pages}):null].filter(Boolean).join(" \u00b7 ");
   return{i,picked:row.editionPick===i,title:v.title||null,
     publisher:v.publisher?v.publisher+(later?" \u00b7 "+v.year:""):null,facts:facts||null,
     isbn:v.isbn13?fmtIsbn(v.isbn13):null,
-    also:v.isbn13&&v.alsoIsbn13?{isbn:fmtIsbn(v.alsoIsbn13),whose:(mu?mu.card:"venue")+"\u2019s own number for the same book"}:null,
+    also:v.isbn13&&v.alsoIsbn13?{isbn:fmtIsbn(v.alsoIsbn13),whose:say(W.ownNumber,{who:mu?mu.card:W.venueWord})}:null,
     why:note?note.charAt(0).toUpperCase()+note.slice(1)+".":null,source:sourceOf(v.proofUrl)};
 }
 // Null for a card with fewer than two versions.
@@ -7964,7 +8700,7 @@ function versionBlocks(row){
 function alsoLine(v){
   if(!v||!v.isbn13)return "";
   const bits=[v.binding,v.publisher].filter(Boolean);
-  return "also "+fmtIsbn(v.isbn13)+(bits.length?" ("+bits.join(", ")+")":"");
+  return say(W.alsoIsbn,{isbn:fmtIsbn(v.isbn13)})+(bits.length?" ("+bits.join(", ")+")":"");
 }
 
 // An English edition the publisher's own page lists with its own ISBN: the same house
@@ -7999,6 +8735,7 @@ function carriesBook(x,book,isbn){ return !!((isbn&&isbnInText(isbn,resultText(x
 
 // The facts round's one read: the book's own page (at a non-English venue, read here
 // rather than on its own), the facts search and the edition search.
+// Not words: sent to Claude.
 function factsPrompt(q){
   const item='{"title": string, "isbn13": string, "language": string, "publisher": string|null, "pages": string|null, "year": string|null, "venueCity": string|null, "evidenceUrl": string}';
   const shape='{"isbn13": string|null, "publisher": string|null, "pages": string|null, "versions": ['+item+']'
@@ -8050,7 +8787,7 @@ function factsPrompt(q){
 
 // The trust order for a publisher: read off the ISBN's results, then printed on the
 // book's own shop or publisher page, then Claude's read of general results (a guess).
-const PUBLISHER_TRUST={"the ISBN’s results":3,"the museum shop":2,"the book’s page":2,"general results":1};
+const PUBLISHER_TRUST={[W.fromIsbnResults]:3,[W.fromMuseumShop]:2,[W.fromBookPage]:2,[W.fromGeneralResults]:1};
 function sameHouse(a,b){
   const x=houseWords(a), y=houseWords(b);
   return x.some(p=>y.some(q=>p.includes(q)||q.includes(p)));
@@ -8076,7 +8813,7 @@ function siteOfHouses(results,pub,museumId){
 async function findPublisherPage(F,c){
   const {io,log,row,dom,venue}=c;
   if(isSelfPublisher(F.publisher,row.museumId)){
-    log.push(F.publisher+" is a museum’s own imprint — no publisher page to look for.");
+    log.push(say(W.logOwnImprint,{name:F.publisher}));
     F.publisherUrl=null; F.publisherResult="selfpublished";
     return{};
   }
@@ -8089,23 +8826,23 @@ async function findPublisherPage(F,c){
   const given=F.publisherUrl;
   if(given){
     // A link a read handed over stands; it is opened only to see the editions it lists.
-    if(!c.wantEditions){ log.push("Publisher’s page, given by a read: "+given); return{}; }
+    if(!c.wantEditions){ log.push(say(W.logPublisherGiven,{url:given})); return{}; }
     pubHost=hostOf(given); candidates=[given];
   } else {
     pubHost=siteOfHouses(c.found,pub,row.museumId);
-    if(pubHost)log.push("The publisher’s site, read off the results already found: "+pubHost);
-    else if((pubHost=listedPublisherSite(pub)))log.push("The publisher’s site, from her list of joint publishers: "+pubHost);
+    if(pubHost)log.push(say(W.logPublisherSiteResults,{host:pubHost}));
+    else if((pubHost=listedPublisherSite(pub)))log.push(say(W.logPublisherSiteListed,{host:pubHost}));
     else{
       const d1=await io.search("The official website of the art-book publisher “"+pub+"”.",[pub,pub+" art book publisher"]);
       log.push(d1.detail);
       if(!d1.ok)return{trouble:d1.detail};
       pubHost=siteOfHouses(d1.results,pub,row.museumId);
-      if(!pubHost){ log.push("Couldn’t identify the publisher’s own website."); F.publisherResult="nosite"; return{}; }
+      if(!pubHost){ log.push(W.logNoPublisherSite); F.publisherResult="nosite"; return{}; }
     }
     const known=onHost(c.found,pubHost).filter(x=>carriesBook(x,book,isbn)).map(x=>cleanPublisherUrl(x.url,dom)).filter(Boolean);
     candidates=[];
     for(const u of known)if(!candidates.some(x=>sameAddress(x,u))&&candidates.length<2)candidates.push(u);
-    if(candidates.length)log.push("A page for this book on "+pubHost+", among the results already found: "+candidates.join(" + "));
+    if(candidates.length)log.push(say(W.logPageAmongResults,{host:pubHost,pages:candidates.join(" + ")}));
     else{
       const sp=await io.search(
         "The page on "+pubHost+" for the book “"+book+"”"+(isbn?", ISBN "+isbn:"")+".",
@@ -8114,12 +8851,13 @@ async function findPublisherPage(F,c){
       log.push(sp.detail);
       if(!sp.ok)return{trouble:sp.detail};
       const onSite=onHost(sp.results,pubHost);
-      if(!onSite.length)return siteOnly(F,pubHost,log,"Nothing for this book on "+pubHost+".");
+      if(!onSite.length)return siteOnly(F,pubHost,log,say(W.logNothingOnSite,{host:pubHost}));
       candidates=rankPublisherPages(onSite,book,isbn,dom);
-      if(candidates.length)log.push("Ranked in code: "+candidates.join(" + "));
+      if(candidates.length)log.push(say(W.logRankedInCode,{pages:candidates.join(" + ")}));
       else{
         // TWO CANDIDATES, THEN THE FALLBACK (her decision): if the best two are wrong
         // the site does not have the book. No new search.
+        // Not words: sent to Claude.
         const rd=await io.read(
           "These are pages from ONE publisher’s own website. Put them in order, best first, "
          +"by how likely each is to BE the page for this book or to LEAD to it.\n"
@@ -8140,7 +8878,7 @@ async function findPublisherPage(F,c){
           if(candidates.length>=2)break;
         }
       }
-      if(!candidates.length)return siteOnly(F,pubHost,log,"No page for this book on "+pubHost+".");
+      if(!candidates.length)return siteOnly(F,pubHost,log,say(W.logNoPageOnSite,{host:pubHost}));
     }
   }
 
@@ -8148,8 +8886,9 @@ async function findPublisherPage(F,c){
   for(let i=0;i<candidates.length;i++){
     const candidate=candidates[i];
     let res=c.pages.get(normalizeUrlKey(candidate));
-    if(res)log.push("The publisher’s page, already open: "+candidate);
+    if(res)log.push(say(W.logPublisherPageOpen,{url:candidate}));
     else{
+      // Not words: asked of the web.
       const fp=await io.fetch(candidate,
         "Whether this page is the book “"+book+"” itself, and any link on it to that book."
           +(c.wantEditions?" Every language edition of it this page lists, with ISBNs.":""),
@@ -8161,10 +8900,11 @@ async function findPublisherPage(F,c){
     // A script-drawn page comes back empty: kept as the section, never claimed as the
     // book, and not counted as read.
     if(pageIsShell(res)){
-      log.push("That page came back empty — kept as the publisher’s section, not the book’s own page.");
+      log.push(W.logPublisherPageEmpty);
       F.publisherUrl=candidate; F.publisherResult="container";
       return{};
     }
+    // Not words: sent to Claude.
     const vr=await io.read(
       "You are reading ONE page from a publisher’s own website, in full. Decide what it is.\n"
      +"Use ONLY what this page says. Never use outside knowledge and never invent a link.\n"
@@ -8193,9 +8933,9 @@ async function findPublisherPage(F,c){
         // The deep link is checked, not trusted: on the publisher's own host and not
         // the listing we are standing on.
         const deep=deepLinkOn(v.bookUrl,pubHost,candidate);
-        if(deep){ link=deep; log.push("Book’s own page, read off the publisher’s list: "+deep); }
-        else{ result="container"; log.push("The publisher lists books here but gives this one no page of its own — kept as the section."); }
-      } else log.push("Publisher’s page for the book: "+candidate);
+        if(deep){ link=deep; log.push(say(W.logBookPageFromList,{url:deep})); }
+        else{ result="container"; log.push(W.logKeptAsSection); }
+      } else log.push(say(W.logPublisherPageForBook,{url:candidate}));
       F.publisherUrl=link; F.publisherResult=result;
       // Read means fetched, not empty, and the very page the card links (Canaletto).
       F.pubPageRead=link===candidate;
@@ -8207,10 +8947,10 @@ async function findPublisherPage(F,c){
       return{};
     }
     // "other": try the next candidate; otherwise fall to the site.
-    log.push("That page is not about this book."+(i+1<candidates.length?" Trying the next result.":""));
+    log.push(W.logPageNotAboutBook+(i+1<candidates.length?W.logTryingNext:""));
   }
-  if(given){ log.push("The link the read gave stands, unconfirmed."); return{}; }
-  return siteOnly(F,pubHost,log,"None of the pages on "+pubHost+" was this book.");
+  if(given){ log.push(W.logGivenLinkStands); return{}; }
+  return siteOnly(F,pubHost,log,say(W.logNoneWasBook,{host:pubHost}));
 }
 // The weakest honest answer once the publisher is known: their own front door.
 function siteOnly(F,pubHost,log,why){
@@ -8269,6 +9009,7 @@ async function lookupCatalogue(row,hooks){
   if(!hit){
     io.phase("web");
     const s2=await io.search(
+      // Not words: asked of the web.
       "Confirm whether a printed catalogue was published for the exhibition “"+title+"” at "
         +venue+", and give its exact title, ISBN-13 and publisher. Museums often state these in a "
         +"press release; art-book publishers and booksellers list them too.",
@@ -8279,6 +9020,7 @@ async function lookupCatalogue(row,hooks){
     if(!s2.ok)return done({row,ok:false});
     webRes=s2.results||[];
     if(!s2.results.length)return done({ok:true,row:composeRow(row,{found:false,blocked})});
+    // Not words: sent to Claude.
     const r2=await io.read((foreign?READ_RULES_FOREIGN:READ_RULES)
       +"\nExhibition: "+title+"\nVenue: "+venue+(dom?"\nIts shop is at "+dom:"")+"\n\n"
       // Read whole (the shop step's cap), never cut to 700 characters (Botticelli).
@@ -8290,11 +9032,11 @@ async function lookupCatalogue(row,hooks){
     // (catalogueLinkOn), goes to the check that opens shop links when the read found
     // the book and gave no shop link of its own.
     const catLink=catalogueLinkOn(s2.results,dom);
-    if(catLink&&d2.found&&!d2.shopUrl){ d2={...d2,shopUrl:catLink}; log.push("A catalogue link onto the museum shop, read off the results: "+catLink); }
+    if(catLink&&d2.found&&!d2.shopUrl){ d2={...d2,shopUrl:catLink}; log.push(say(W.logCatalogueLink,{link:catLink})); }
     // Another venue's catalogue is not this show's (her decision, NG van Hemessen): a
     // book found on the web counts only when the read ties it to THIS venue's show.
     if(d2.found&&d2.thisVenue!==true){
-      log.push("Not filed: “"+(d2.catalogueTitle||"the book found")+"” is not tied to this venue’s show in the results.");
+      log.push(say(W.logNotTied,{title:d2.catalogueTitle||W.theBookFound}));
       d2={};
     }
     // A catalogue tied to this venue but named by neither title nor ISBN (a press release's
@@ -8302,7 +9044,7 @@ async function lookupCatalogue(row,hooks){
     // for both; neither found there → no catalogue. UN-001 to UN-003.
     if(d2.found&&d2.thisVenue===true&&!d2.catalogueTitle&&!d2.isbn13){
       unnamed=true;
-      log.push("The results say a catalogue exists"+(d2.publisher?" ("+d2.publisher+")":"")+" but give no title or ISBN — looking for them.");
+      log.push(say(W.logCatalogueExists,{publisher:d2.publisher?" ("+d2.publisher+")":""}));
       hit={ok:true,pageUrl:null,row:{...row,looked:true,hasCatalogue:"yes",shopState:blocked||"web",shopChange:null,
         catalogueTitle:null,isbn13:null,publisher:d2.publisher||null,
         publisherUrl:publisherLinkOf(d2.publisherUrl,d2.publisher,dom,row.museumId),publisherResult:null,shopUrl:null}};
@@ -8315,7 +9057,7 @@ async function lookupCatalogue(row,hooks){
 
   const r=hit.row;
   const F={found:true,title:r.catalogueTitle,isbn:cleanIsbn(r.isbn13),publisher:r.publisher,
-    pubFrom:r.publisher?(fromShop?"the museum shop":"general results"):null,
+    pubFrom:r.publisher?(fromShop?W.fromMuseumShop:W.fromGeneralResults):null,
     publisherUrl:r.publisherUrl,publisherResult:null,shopState:r.shopState,shopUrl:r.shopUrl,
     blocked,englishCheck:null,pubPageRead:false};
   let trouble=hit.trouble||null, troubleLang=false;
@@ -8331,7 +9073,7 @@ async function lookupCatalogue(row,hooks){
     if(!F.publisher){ F.publisher=n; F.pubFrom=from; return; }
     if(sameHouse(F.publisher,n)){ if(PUBLISHER_TRUST[from]>PUBLISHER_TRUST[F.pubFrom])F.pubFrom=from; return; }
     if(PUBLISHER_TRUST[from]>PUBLISHER_TRUST[F.pubFrom]){
-      log.push("Publisher: "+n+" (from "+from+"), replacing “"+F.publisher+"” (from "+F.pubFrom+").");
+      log.push(say(W.logPublisherReplaced,{n,from,was:F.publisher,wasFrom:F.pubFrom}));
       F.publisher=n; F.pubFrom=from;
       F.publisherUrl=publisherLinkOf(F.publisherUrl,n,dom,row.museumId);
     }
@@ -8345,27 +9087,28 @@ async function lookupCatalogue(row,hooks){
     io.phase("page");
     const key=normalizeUrlKey(hit.pageUrl);
     let res=pages.get(key);
-    if(res)log.push("The book’s page, already open.");
+    if(res)log.push(W.logBookPageOpen);
     else{
       // The venue's own shop page gets the blank-page retry (openShopPage); a publisher's does not.
       const f=await (shopLinkOf({shopUrl:hit.pageUrl},dom)?(...a)=>openShopPage(io.fetch,...a):io.fetch)(hit.pageUrl,
         bookPageAsk(F.title||title),
-        [(F.title||title)+" ISBN publisher details"],{full:true});
+        /* Not words: asked of the web. */[(F.title||title)+" ISBN publisher details"],{full:true});
       log.push(f.detail);
       if(!f.ok)fault(f.detail);
       else{ res=f.results; pages.set(key,res); }
     }
     if(res&&res.length){
       bookPage={url:hit.pageUrl,results:res};
-      if(!F.isbn){ const c=isbnOnPage(pageTextOf(res)); if(c){ F.isbn=c; log.push("ISBN read off the book’s page in code: "+c); } }
+      if(!F.isbn){ const c=isbnOnPage(pageTextOf(res)); if(c){ F.isbn=c; log.push(say(W.logIsbnPageCode,{isbn:c})); } }
       if(!foreign&&(!F.publisher||!F.isbn)){
+        // Not words: sent to Claude.
         const rd=await io.read(PAGE_RULES+"\nBook: "+(F.title||title)+"\nExhibition venue: "+venue+"\n\n"+pageForPrompt(res)+PAGE_SHAPE);
         log.push(rd.detail);
         if(!rd.ok)fault(rd.detail);
         else{
           const d=rd.data||{};
-          if(!F.isbn){ const c=toIsbn13(d.isbn13,resultsText(res)); if(c){ F.isbn=c; log.push("ISBN read off the book’s page: "+c); } }
-          offerPublisher(d.publisher,"the book’s page");
+          if(!F.isbn){ const c=toIsbn13(d.isbn13,resultsText(res)); if(c){ F.isbn=c; log.push(say(W.logIsbnPage,{isbn:c})); } }
+          offerPublisher(d.publisher,W.fromBookPage);
           if(!F.publisherUrl)F.publisherUrl=publisherLinkOf(d.publisherUrl,F.publisher,dom,row.museumId);
         }
       }
@@ -8374,7 +9117,7 @@ async function lookupCatalogue(row,hooks){
 
   // ── PHASE 2b: THE FACTS ROUND, in one go. The facts search and, at a non-English
   // venue, the edition search run together; one Claude read covers both.
-  const needFacts=foreign||!F.isbn||!F.publisher||F.pubFrom==="general results";
+  const needFacts=foreign||!F.isbn||!F.publisher||F.pubFrom===W.fromGeneralResults;
   let factsRes=[], edRes=[], factsOk=false, langStopped=false, read=null;
   const found2=[];      // every phase-2 result, for the publisher's site
   if(needFacts){
@@ -8411,22 +9154,22 @@ async function lookupCatalogue(row,hooks){
     // The book's own title, for a catalogue known so far by no title (unnamed), as printed.
     if(unnamed&&!F.title&&!foreign&&read&&read.title){
       const tp=titleAsPrinted(read.title,given);
-      if(tp.onPage){ F.title=tp.title; log.push("The book’s title, from the results: “"+tp.title+"”."); }
+      if(tp.onPage){ F.title=tp.title; log.push(say(W.logTitleFromResults,{title:tp.title})); }
     }
     // The ISBN: the book's page in code (above), the results in code, then Claude's —
     // only if the text it was given prints it.
     // Matched on the book's title once it is known, never the show's (Hubert Robert: the
     // show's dates matched only a French bookseller's listing).
-    if(!F.isbn){ const c=isbnInResults(factsRes,F.title||book); if(c){ F.isbn=c; log.push("ISBN read off the search results in code: "+c); } }
-    if(!F.isbn&&read){ const c=toIsbn13(read.isbn13,resultsText(given)); if(c){ F.isbn=c; log.push("ISBN from the read, printed in the results: "+c); } }
+    if(!F.isbn){ const c=isbnInResults(factsRes,F.title||book); if(c){ F.isbn=c; log.push(say(W.logIsbnResultsCode,{isbn:c})); } }
+    if(!F.isbn&&read){ const c=toIsbn13(read.isbn13,resultsText(given)); if(c){ F.isbn=c; log.push(say(W.logIsbnFromRead,{isbn:c})); } }
     if(read)notABooklet(F,given,pagesPrinted(read.pages,given),log);
     // The publisher, in order of trust (her decision, Botticelli).
     const onIsbn=F.isbn?publisherOnIsbnResults(given,F.isbn):null;
-    if(onIsbn)offerPublisher(onIsbn,"the ISBN’s results");
-    else if(F.isbn&&factsOk)log.push("Publisher from the ISBN: the results carrying it don’t agree on one.");
+    if(onIsbn)offerPublisher(onIsbn,W.fromIsbnResults);
+    else if(F.isbn&&factsOk)log.push(W.logPublisherDisagree);
     if(read){
-      offerPublisher(read.pagePublisher,"the book’s page");
-      offerPublisher(read.publisher,"general results");
+      offerPublisher(read.pagePublisher,W.fromBookPage);
+      offerPublisher(read.publisher,W.fromGeneralResults);
       if(!F.publisherUrl&&read.pagePublisherUrl)F.publisherUrl=publisherLinkOf(read.pagePublisherUrl,F.publisher,dom,row.museumId);
     }
     oneBook(F,given,log,dom,row.museumId);
@@ -8440,40 +9183,42 @@ async function lookupCatalogue(row,hooks){
     const opened=already.flatMap(x=>pages.get(normalizeUrlKey(x.url)));
     let onPages=opened.length?isbnInResults(opened,F.title||title):null;
     if(!onPages&&fresh.length){
+      // Not words: asked of the web.
       const fp=await io.fetch(fresh,"The ISBN of the book “"+(F.title||title)+"”.",[(F.title||title)+" ISBN"],{full:true});
       log.push(fp.detail);
       if(!fp.ok)fault(fp.detail);
       else{ for(const x of fp.results){ pages.set(normalizeUrlKey(x.url),[x]); opened.push(x); } onPages=isbnInResults(fp.results,F.title||title); }
     }
-    if(onPages&&onPages===F.notIsbn){ log.push("The pages found give the booklet’s ISBN again — not filed."); onPages=null; }
+    if(onPages&&onPages===F.notIsbn){ log.push(W.logBookletIsbn); onPages=null; }
     if(onPages){
-      F.isbn=onPages; log.push("ISBN read off the pages about this book, in code: "+onPages);
+      F.isbn=onPages; log.push(say(W.logIsbnPagesCode,{isbn:onPages}));
       const p=publisherOnIsbnResults([...found2,...opened],onPages);
-      if(p)offerPublisher(p,"the ISBN’s results");
+      if(p)offerPublisher(p,W.fromIsbnResults);
     }
-    else log.push("No ISBN in the web search, or on the pages it found about this book.");
+    else log.push(W.logNoIsbn);
   }
   if(unnamed&&!F.title&&!F.isbn){
-    log.push("No title or ISBN found for the catalogue the results mention, so it is not filed.");
+    log.push(W.logNoTitleOrIsbn);
     return done({ok:true,row:composeRow(row,{found:false,blocked}),...(trouble?{trouble}:{})});
   }
-  if(F.publisher)log.push("Publisher: "+F.publisher+" — from "+F.pubFrom+(F.pubFrom==="general results"?" (a guess).":"."));
+  if(F.publisher)log.push(say(W.logPublisherFrom,{name:F.publisher,from:F.pubFrom,guess:F.pubFrom===W.fromGeneralResults?W.aGuess:"."}));
 
   // ── PHASE 3: EVERY VERSION, IN HER ORDER (code only; docs/catalogue_versions.md).
   // The book found so far is this showing's catalogue; the read's other printings and
   // editions join it only when proved. putInOrder sorts them; the first starts picked.
   const everything=[...(bookPage?bookPage.results:[]),...factsRes,...edRes,...webRes,...[...pages.values()].flat()];
   const said=read&&read.language?String(read.language):"";
+  // Not words: a language's name, as a version records it.
   const lang=foreign?langName(said):"English";
   if(foreign){
     if(langStopped){ F.englishCheck="stopped"; troubleLang=true; }
-    else if(!said){ F.englishCheck="unknownlang"; log.push("Language check: nothing says, so the book stands as found."); }
-    else if(isEnglishLang(said)){ F.englishCheck="english"; log.push("Language check: "+said+"."); }
+    else if(!said){ F.englishCheck="unknownlang"; log.push(W.logLanguageNothing); }
+    else if(isEnglishLang(said)){ F.englishCheck="english"; log.push(say(W.logLanguage,{lang:said,own:"."})); }
     else{
       // The book's own title, if the results print it.
       const own=read.title?titleAsPrinted(read.title,[...(bookPage?bookPage.results:[]),...factsRes,...edRes]):null;
       if(own&&own.onPage)F.title=own.title;
-      log.push("Language check: "+said+(own&&own.onPage?" — its own title “"+own.title+"”.":"."));
+      log.push(say(W.logLanguage,{lang:said,own:own&&own.onPage?say(W.logOwnTitle,{title:own.title}):"."}));
     }
   }
   const found=foundVersion(F,foreign&&langStopped?null:lang,read?pagesPrinted(read.pages,everything):null,everything,row.museumId,hit.pageUrl||F.shopUrl);
@@ -8494,12 +9239,12 @@ async function lookupCatalogue(row,hooks){
   const notEnglish=foreign&&!!found.lang&&!isEnglishLang(found.lang);
   if(notEnglish){
     F.englishCheck=thisEnglish()?"english":"shops";
-    if(!thisEnglish()&&Array.isArray(read.editions)&&read.editions.length)log.push("English edition: none proved to be this catalogue's.");
+    if(!thisEnglish()&&Array.isArray(read.editions)&&read.editions.length)log.push(W.logNoEnglishProved);
   }
   const F0={...F};   // the book as found, before any pick
   putInOrder(versions,row.museumId);
   const pick=0;
-  log.push(versions.length+" version"+(versions.length===1?"":"s")+" found; first in her order: "+(versions[0].isbn13||"the book found")+".");
+  log.push(say(W.logVersionsFound,{n:versions.length,s:versions.length===1?"":"s",first:versions[0].isbn13||W.theBookFound}));
   takeVersion(F,versions[0],log);
 
   // ── PHASE 4: THE PUBLISHER'S PAGE, ONCE, FOR THE PICKED BOOK. When it is this show's
@@ -8510,7 +9255,8 @@ async function lookupCatalogue(row,hooks){
     if(p4.trouble)fault(p4.trouble);
     const ed=p4.edition;
     if(ed&&!versions.some(v=>v.isbn13===ed.isbn13||v.alsoIsbn13===ed.isbn13)){
-      log.push("English edition on the publisher’s own page: “"+ed.title+"”, ISBN "+ed.isbn13+".");
+      log.push(say(W.logEnglishOnPublisher,{title:ed.title,isbn:ed.isbn13}));
+      // Not words: a language's name and a version's note, as the versions store them.
       const en={title:ed.title,lang:"English",binding:null,pages:null,publisher:found.publisher,isbn13:ed.isbn13,
         alsoIsbn13:null,showing:"this",proofUrl:ed.link,note:"the publisher’s own page lists it",_pub:F.publisher};
       versions.push(en);
@@ -8524,7 +9270,7 @@ async function lookupCatalogue(row,hooks){
     } else if(wantEditions){
       // "Checked the publisher's site" only when its page was really read (Canaletto).
       F.englishCheck=F.pubPageRead?"publisher":"shops";
-      log.push("English edition: none found"+(F.pubPageRead?" — the publisher’s own page read ("+F.publisherUrl+").":"; the publisher’s own page for it was not read."));
+      log.push(W.logEnglishNone+(F.pubPageRead?say(W.logPublisherPageRead,{url:F.publisherUrl}):W.logPublisherPageNotRead));
     }
   }
   // ── PHASE 4b: EVERY BOOK FOUND ON THE WEB, LOOKED FOR AGAIN ON THE SHOP'S LIST READ IN
@@ -8537,7 +9283,7 @@ async function lookupCatalogue(row,hooks){
     const {url,failed}=await bookOnShelfAfterWeb(G,v,s1.results,dom,shelfSkip,io,log,shelfSeen);
     if(url){ G.shopState="shop"; G.shopUrl=url; }
     // Not known: no shop answer for this book, and the lookup did not finish.
-    else if(failed){ G.shopState=null; fault("The museum shop’s page for “"+G.title+"” couldn’t be read — "+failed+"."); }
+    else if(failed){ G.shopState=null; fault(say(W.shopPageUnread,{title:G.title,why:failed})); }
   };
   await onShelf(F,versions[pick]);
   // Each version's book fields, for a change of pick on the card; the pick's are final.
@@ -8554,7 +9300,7 @@ async function lookupCatalogue(row,hooks){
   putInOrder(versions,row.museumId);
   if(versions[pick]!==was){
     const c=versions[pick].card;
-    log.push("In the museum shop, so first: “"+c.catalogueTitle+"”"+(c.isbn13?", ISBN "+c.isbn13:"")+".");
+    log.push(say(W.logInShopFirst,{title:c.catalogueTitle,isbn:c.isbn13?say(W.commaIsbn,{isbn:c.isbn13}):""}));
     F.title=c.catalogueTitle; F.isbn=c.isbn13; F.publisher=c.publisher; F.publisherUrl=c.publisherUrl;
     F.publisherResult=c.publisherResult; F.shopState=c.shopState; F.shopUrl=c.shopUrl;
   }
@@ -8571,24 +9317,24 @@ const LEDGER_PREFIX="art-watch-ledger-";
 // A description, as it goes into a file name: lower case, words joined by hyphens.
 function labelSlug(label){return String(label||"").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"").slice(0,40);}
 // The label of the safety copy kept before a roll-back to the save made at `at`.
-function rollbackSafetyLabel(at){return "Safety snapshot before roll-back to snapshot of "+localReadable(at);}
+function rollbackSafetyLabel(at){return say(W.safetyBeforeRollbackTo,{when:localReadable(at)});}
 // A cloud save's name in the list (her wording): a Save's copy 'Export: "description"';
 // a safety copy, its own label. Older labels are renamed on screen, never in the store.
 function snapTitle(s,all){
   if(!s)return "";
-  if(s.kind!=="safety")return "Export"+(s.label?": \u201c"+s.label+"\u201d":"");
+  if(s.kind!=="safety")return s.label?say(W.exportLabel,{label:s.label}):W.export;
   const l=String(s.label||"");
   // Roll-back copies name the save by its time (her ask; CL-T1–3). Older copies stored
   // only the target's name; its time is read off the one earlier save carrying that name
   // — two or none, the name as before.
   const m=l.match(/^Before rolling back to (.*)$/);
   if(m){
-    const was=m[1].replace(/^Cloud copy before /,"Safety snapshot before ");
+    const was=m[1].replace(/^Cloud copy before /,say(W.safetySnapshotBefore,{what:""}));
     const hits=(all||[]).filter(o=>o&&o!==s&&o.at<s.at&&snapTitle(o)===was);
     return hits.length===1?rollbackSafetyLabel(hits[0].at)
-      :"Safety snapshot before roll-back to \u201c"+was+"\u201d";
+      :say(W.safetyBeforeRollbackNamed,{was});
   }
-  return l.replace(/^Cloud copy before /,"Safety snapshot before ").replace(/^(Safety snapshot before roll-back to )(?!snapshot of )/,"$1snapshot of ")||"Safety snapshot";
+  return l.replace(/^Cloud copy before /,say(W.safetySnapshotBefore,{what:""})).replace(/^(Safety snapshot before roll-back to )(?!snapshot of )/,"$1"+W.snapshotOf)||W.safetySnapshot;
 }
 function localStamp(iso){const d=iso?new Date(iso):new Date(),p=n=>String(n).padStart(2,"0");return d.getFullYear()+"-"+p(d.getMonth()+1)+"-"+p(d.getDate())+"-"+p(d.getHours())+p(d.getMinutes());}
 // One way to write a moment (her decision): "Sep 26, 2026 1:22pm", as "Last refreshed".
@@ -8693,10 +9439,14 @@ function PeriodScrubber({groups,C,onJump}){
 const DRAW_STEP=200;
 // The card's link buttons (Museum shop, Publisher, the bookstores), in a palette's colours.
 const linkButton=C=>({fontSize:11,fontWeight:500,color:C.ink,background:C.card,border:"1px solid "+C.rule,borderRadius:3,padding:"4px 9px",textDecoration:"none",display:"inline-block",whiteSpace:"nowrap"});
+// A pattern from the words list with a link or bold words in a gap (sayParts).
+function Say({text,gaps}){
+  return React.createElement(React.Fragment,null,...sayParts(text,gaps));
+}
 // Her digital catalogue (`digitalUrl`: a PDF or online catalogue she pasted in; her design): the link
 // button's shape on a green ground, last in the row. Kept through Search again, Re-check and Reset cards.
 function DigitalLink({r,C,lnk}){
-  return r.digitalUrl?<a href={r.digitalUrl} target="_blank" rel="noopener noreferrer" style={{...lnk,background:C.okBg,border:"1px solid "+C.okEdge,color:C.okInk}}>Digital catalogue {"\u2197"}</a>:null;
+  return r.digitalUrl?<a href={r.digitalUrl} target="_blank" rel="noopener noreferrer" style={{...lnk,background:C.okBg,border:"1px solid "+C.okEdge,color:C.okInk}}>{W.digitalCatalogue+" \u2197"}</a>:null;
 }
 
 // ONE LEDGER CARD. Memoised: a mark redraws only the card it changed, so every prop
@@ -8704,10 +9454,10 @@ function DigitalLink({r,C,lnk}){
 // a venue's MU entry is replaced, never edited, so `mu` changes when its shop does).
 const LedgerCard=React.memo(function LedgerCard({r,mu,isOpen,isBusy,busy,rechecking,lookLabel,said,relabelling,digitalOpen,C,TH,chip,pBtn,lnk,act}){
   const t=tierFor(r),tier=TH[t],mo=moSince(r.endDate),noCat=r.looked&&r.hasCatalogue==="no",isAcq=r.acquiring==="acquired",dismissed=!r.interested;
-  const searchingLabel=lookLabel||"Searching\u2026";
+  const searchingLabel=lookLabel||W.searching;
   // Two buttons share one busy row; only the one pressed shows progress.
-  const againLabel=isBusy&&!rechecking?searchingLabel:"Search again";
-  const recheckLabel=isBusy&&rechecking?searchingLabel:"Re-check museum shop";
+  const againLabel=isBusy&&!rechecking?searchingLabel:W.searchAgain;
+  const recheckLabel=isBusy&&rechecking?searchingLabel:W.recheckShop;
   // No shop at all (Borghese, Capodimonte, the Accademia; her decision): no
   // Re-check button, and the line says only "Venue has no shop."
   const noShop=!(mu&&(mu.shopSearch||mu.shopHome));
@@ -8725,7 +9475,7 @@ const LedgerCard=React.memo(function LedgerCard({r,mu,isOpen,isBusy,busy,recheck
     <article style={{background:C.dim,border:"1px solid "+C.rule,borderLeft:"4px solid "+C.muted,borderRadius:5,padding:"10px 14px",opacity:0.55}}>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline"}}>
         <span style={{fontSize:9,letterSpacing:"0.14em",textTransform:"uppercase",color:C.soft}}>{mu?.card}</span>
-        <button onClick={()=>act("restore",r.id)} style={{background:"none",border:"1px solid "+C.action,borderRadius:3,color:C.action,fontSize:10,fontWeight:500,cursor:"pointer",padding:"2px 8px"}}>Restore</button>
+        <button onClick={()=>act("restore",r.id)} style={{background:"none",border:"1px solid "+C.action,borderRadius:3,color:C.action,fontSize:10,fontWeight:500,cursor:"pointer",padding:"2px 8px"}}>{W.restore}</button>
       </div>
       <div style={{fontFamily:"'Fraunces',Georgia,serif",fontSize:15,fontWeight:500,marginTop:3,color:C.soft}}>{r.title}</div>
       <div style={{fontSize:10.5,color:C.muted,marginTop:2}}>{dateRange(r)}</div>
@@ -8738,7 +9488,7 @@ const LedgerCard=React.memo(function LedgerCard({r,mu,isOpen,isBusy,busy,recheck
           <span style={{fontSize:9,letterSpacing:"0.14em",textTransform:"uppercase",color:C.soft,marginTop:2}}>{mu?.card}</span>
           {/* No "No catalogue" tag (her decision): the corner says how long ago the
               show closed; the Catalogue button carries the cross. */}
-          {isAcq?<span style={{fontSize:9,fontWeight:600,letterSpacing:"0.06em",textTransform:"uppercase",color:C.owned,background:C.ownedBg,padding:"2px 7px",borderRadius:3}}>Owned</span>
+          {isAcq?<span style={{fontSize:9,fontWeight:600,letterSpacing:"0.06em",textTransform:"uppercase",color:C.owned,background:C.ownedBg,padding:"2px 7px",borderRadius:3}}>{W.chipOwned}</span>
           :<span style={{fontSize:9,fontWeight:600,letterSpacing:"0.06em",textTransform:"uppercase",color:tier.ink,background:tier.wash,padding:"2px 7px",borderRadius:3}}>{tier.label}</span>}
         </div>
         <div style={{display:"flex",alignItems:"baseline",gap:0,marginTop:5}}>
@@ -8747,9 +9497,9 @@ const LedgerCard=React.memo(function LedgerCard({r,mu,isOpen,isBusy,busy,recheck
             {r.exUrl&&<a href={r.exUrl} target="_blank" rel="noopener noreferrer" style={{color:C.action,textDecoration:"none",marginLeft:5,fontSize:13,fontWeight:400}}>{"\u2197"}</a>}
           </h3>
           <div style={{display:"flex",gap:8,alignItems:"center",marginLeft:8,flexShrink:0}}>
-            {r.acquiring==="yes"&&(()=>{const k=starInk();return <button onClick={()=>act("toggleBuyNext",r.id)} title={r.buyNext?"Not buying next":"Buy next"} style={{background:"none",border:"none",cursor:"pointer",padding:0,fontSize:16,lineHeight:1}}><svg width={k.D} height={k.D} style={{display:"inline-block",verticalAlign:k.v}} aria-hidden="true"><circle cx={k.D/2} cy={k.D/2} r={k.D/2-0.75} fill={r.buyNext?C.buyNext:"none"} stroke={r.buyNext?C.buyNext:C.muted} strokeWidth="1.5"/></svg></button>;})()}
-            <button onClick={()=>act("toggleWatch",r.id)} title={r.watching?"Unwatch":"Watch"} style={{background:"none",border:"none",cursor:"pointer",padding:0,fontSize:16,lineHeight:1,color:r.watching?C.star:C.muted}}>{r.watching?"\u2605":"\u2606"}</button>
-            {!isAcq&&<button onClick={()=>act("dismiss",r.id)} title="Not interested" style={{background:"none",border:"none",cursor:"pointer",padding:0,fontSize:18,lineHeight:1,color:C.muted}}>{"\u00d7"}</button>}
+            {r.acquiring==="yes"&&(()=>{const k=starInk();return <button onClick={()=>act("toggleBuyNext",r.id)} title={r.buyNext?W.notBuyingNext:W.buyNext} style={{background:"none",border:"none",cursor:"pointer",padding:0,fontSize:16,lineHeight:1}}><svg width={k.D} height={k.D} style={{display:"inline-block",verticalAlign:k.v}} aria-hidden="true"><circle cx={k.D/2} cy={k.D/2} r={k.D/2-0.75} fill={r.buyNext?C.buyNext:"none"} stroke={r.buyNext?C.buyNext:C.muted} strokeWidth="1.5"/></svg></button>;})()}
+            <button onClick={()=>act("toggleWatch",r.id)} title={r.watching?W.unwatch:W.watch} style={{background:"none",border:"none",cursor:"pointer",padding:0,fontSize:16,lineHeight:1,color:r.watching?C.star:C.muted}}>{r.watching?"\u2605":"\u2606"}</button>
+            {!isAcq&&<button onClick={()=>act("dismiss",r.id)} title={W.notInterested} style={{background:"none",border:"none",cursor:"pointer",padding:0,fontSize:18,lineHeight:1,color:C.muted}}>{"\u00d7"}</button>}
           </div>
         </div>
         <div style={{fontSize:11,color:C.soft,marginTop:3,marginBottom:6}}>{dateRange(r)}</div>
@@ -8760,16 +9510,16 @@ const LedgerCard=React.memo(function LedgerCard({r,mu,isOpen,isBusy,busy,recheck
               <div style={{height:"100%",width:Math.min(100,(mo/12)*100)+"%",background:tier.ink,borderRadius:3}}/>
               {[3,6].map(k=><span key={k} style={{position:"absolute",left:(k/12*100)+"%",top:-2,width:1,height:10,background:C.soft,opacity:0.5}}/>)}
             </div>
-            <div style={{display:"flex",justifyContent:"space-between",fontSize:8.5,color:C.soft,marginTop:3,letterSpacing:"0.05em"}}><span>CLOSED</span><span>3 MO</span><span>6 MO</span><span>12 MO</span></div>
+            <div style={{display:"flex",justifyContent:"space-between",fontSize:8.5,color:C.soft,marginTop:3,letterSpacing:"0.05em"}}><span>{W.barClosed}</span><span>{W.bar3}</span><span>{W.bar6}</span><span>{W.bar12}</span></div>
           </div>
         )}
                 <div style={{display:"flex",alignItems:"center",gap:5,flexWrap:"wrap",paddingTop:8,borderTop:"1px solid "+C.rule}}>
-          <span style={{fontSize:9,letterSpacing:"0.1em",textTransform:"uppercase",color:C.soft}}>Want the catalogue?</span>
-          <button onClick={()=>act("setAcq",r.id,"yes")} style={chip(r.acquiring==="yes")}>Yes</button>
-          <button onClick={()=>act("setAcq",r.id,"no")} style={chip(r.acquiring==="no")}>No</button>
-          <button onClick={()=>act("setAcq",r.id,"acquired")} style={chip(r.acquiring==="acquired")}>Acquired</button>
+          <span style={{fontSize:9,letterSpacing:"0.1em",textTransform:"uppercase",color:C.soft}}>{W.wantCatalogue}</span>
+          <button onClick={()=>act("setAcq",r.id,"yes")} style={chip(r.acquiring==="yes")}>{W.yes}</button>
+          <button onClick={()=>act("setAcq",r.id,"no")} style={chip(r.acquiring==="no")}>{W.no}</button>
+          <button onClick={()=>act("setAcq",r.id,"acquired")} style={chip(r.acquiring==="acquired")}>{W.acquired}</button>
           <button onClick={()=>act("toggleOpen",r.id)} style={{marginLeft:"auto",background:"none",border:"none",color:C.action,fontSize:11,fontWeight:600,cursor:"pointer",padding:"3px 0"}}>
-            {isOpen?"Hide":(r.looked&&r.hasCatalogue==="yes")?"\u2713 Catalogue"+(r.digitalUrl?" + digital":""):(r.looked&&r.hasCatalogue==="no")?(r.digitalUrl?"\u2717 Catalogue \u2014 digital only":"\u2717 Catalogue"):"Catalogue"}
+            {isOpen?W.hide:(r.looked&&r.hasCatalogue==="yes")?W.catalogueFound+(r.digitalUrl?W.plusDigital:""):(r.looked&&r.hasCatalogue==="no")?(r.digitalUrl?W.catalogueNoneDigitalOnly:W.catalogueNone):W.catalogue}
           </button>
         </div>
       </div>
@@ -8777,8 +9527,8 @@ const LedgerCard=React.memo(function LedgerCard({r,mu,isOpen,isBusy,busy,recheck
         <div style={{background:C.panel,borderTop:"1px solid "+C.rule,padding:"12px 14px"}}>
           {!r.looked?(
             <div>
-              <p style={{fontSize:12,color:C.soft,margin:"0 0 8px"}}>No catalogue search run yet.</p>
-              <button onClick={()=>act("findOneCat",r.id)} disabled={busy} style={{...pBtn,padding:"6px 12px",fontSize:12}}>{isBusy?searchingLabel:"Find catalogue"}</button>
+              <p style={{fontSize:12,color:C.soft,margin:"0 0 8px"}}>{W.noSearchYet}</p>
+              <button onClick={()=>act("findOneCat",r.id)} disabled={busy} style={{...pBtn,padding:"6px 12px",fontSize:12}}>{isBusy?searchingLabel:W.findCatalogue}</button>
               {said&&<div style={{marginTop:6,fontSize:11,color:said.failed?TH.urgent.ink:C.soft,fontWeight:said.failed?700:400}}>{said.text}</div>}
             </div>
           ):noCat?(
@@ -8786,7 +9536,7 @@ const LedgerCard=React.memo(function LedgerCard({r,mu,isOpen,isBusy,busy,recheck
               <div style={{display:"flex",flexWrap:"wrap",gap:14}}>
                 <button onClick={()=>act("findOneCat",r.id)} disabled={busy} style={{background:"none",border:"none",color:C.soft,fontSize:11,textDecoration:"underline",cursor:"pointer",padding:0}}>{againLabel}</button>
                 {!noShop&&<button onClick={()=>act("recheckShop",r.id)} disabled={busy} style={{background:"none",border:"none",color:C.soft,fontSize:11,textDecoration:"underline",cursor:"pointer",padding:0}}>{recheckLabel}</button>}
-                <button onClick={()=>act("openDigital",r.id)} style={{background:"none",border:"none",color:C.soft,fontSize:11,textDecoration:"underline",cursor:"pointer",padding:0}}>Digital catalogue</button>
+                <button onClick={()=>act("openDigital",r.id)} style={{background:"none",border:"none",color:C.soft,fontSize:11,textDecoration:"underline",cursor:"pointer",padding:0}}>{W.digitalCatalogue}</button>
               </div>
               {digitalBox}
               {said&&<div style={{marginTop:6,fontSize:11,color:said.failed?TH.urgent.ink:C.soft,fontWeight:said.failed?700:400}}>{said.text}</div>}
@@ -8797,7 +9547,7 @@ const LedgerCard=React.memo(function LedgerCard({r,mu,isOpen,isBusy,busy,recheck
               <div style={{marginTop:8,display:"flex",flexWrap:"wrap",gap:14}}>
                 <button onClick={()=>act("findOneCat",r.id)} disabled={busy} style={{background:"none",border:"none",color:C.soft,fontSize:10.5,textDecoration:"underline",cursor:"pointer",padding:0}}>{againLabel}</button>
                 {!noShop&&<button onClick={()=>act("recheckShop",r.id)} disabled={busy} style={{background:"none",border:"none",color:C.soft,fontSize:10.5,textDecoration:"underline",cursor:"pointer",padding:0}}>{recheckLabel}</button>}
-                <button onClick={()=>act("openDigital",r.id)} style={{background:"none",border:"none",color:C.soft,fontSize:10.5,textDecoration:"underline",cursor:"pointer",padding:0}}>Digital catalogue</button>
+                <button onClick={()=>act("openDigital",r.id)} style={{background:"none",border:"none",color:C.soft,fontSize:10.5,textDecoration:"underline",cursor:"pointer",padding:0}}>{W.digitalCatalogue}</button>
               </div>
               {digitalBox}
               {said&&<div style={{marginTop:6,fontSize:11,color:said.failed?TH.urgent.ink:C.soft,fontWeight:said.failed?700:400}}>{said.text}</div>}
@@ -8805,8 +9555,8 @@ const LedgerCard=React.memo(function LedgerCard({r,mu,isOpen,isBusy,busy,recheck
           )}
           {/* Relabel, on its own line at the foot of the drawer (her design; the Period trial). */}
           <div style={{marginTop:10}}>
-            <button onClick={()=>act("relabel",r.id)} disabled={busy||relabelling} style={{background:"none",border:"none",color:C.soft,fontSize:10.5,textDecoration:"underline",cursor:"pointer",padding:0}}>{relabelling?"Relabelling\u2026":"Relabel"}</button>
-            {said&&said.regrouped&&<button onClick={()=>act("keepPeriod",r.id)} disabled={busy} style={{background:"none",border:"none",color:C.soft,fontSize:10.5,textDecoration:"underline",cursor:"pointer",padding:0,marginLeft:14}}>Do not regroup</button>}
+            <button onClick={()=>act("relabel",r.id)} disabled={busy||relabelling} style={{background:"none",border:"none",color:C.soft,fontSize:10.5,textDecoration:"underline",cursor:"pointer",padding:0}}>{relabelling?W.relabelling:W.relabel}</button>
+            {said&&said.regrouped&&<button onClick={()=>act("keepPeriod",r.id)} disabled={busy} style={{background:"none",border:"none",color:C.soft,fontSize:10.5,textDecoration:"underline",cursor:"pointer",padding:0,marginLeft:14}}>{W.doNotRegroup}</button>}
           </div>
         </div>
       )}
@@ -8840,8 +9590,8 @@ function CatalogueBox({r,mu,C,TH,lnk,isAcq,noShop,vl,picked,onPick,actions}){
       {/* The dash is a JS string: a bare — in JSX text prints those
           six characters. */}
       {r.shopState==="web"&&<div style={{fontSize:11,color:C.soft,marginBottom:6}}>
-        {noShop?(MU[r.museumId]&&MU[r.museumId].shopUnknown?"Museum shop not found.":"Venue has no shop.")
-          :"Not in the museum shop \u2014 shop link opens the general store."}
+        {noShop?(MU[r.museumId]&&MU[r.museumId].shopUnknown?W.shopNotFound:W.venueHasNoShop)
+          :W.notInShopGeneralStore}
         {publisherNote(r.publisherResult,!!r.publisherUrl)&&(" "+publisherNote(r.publisherResult,!!r.publisherUrl))}
       </div>}
       {shopUnread(r.shopState)&&<div style={{fontSize:11,color:C.soft,marginBottom:6}}>
@@ -8852,7 +9602,7 @@ function CatalogueBox({r,mu,C,TH,lnk,isAcq,noShop,vl,picked,onPick,actions}){
       {vl?(
         // Each block is the single-book block, the marker in its own column; the
         // whole block picks it. Blocks never move when she picks.
-        <div role="radiogroup" aria-label="Versions" style={{marginBottom:10}}>
+        <div role="radiogroup" aria-label={W.versions} style={{marginBottom:10}}>
           {vl.map((b,k)=>(
             <div key={b.i} role="radio" aria-checked={b.picked} tabIndex={0} onClick={()=>onPick(b.i)}
               onKeyDown={e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); onPick(b.i); } }}
@@ -8862,12 +9612,12 @@ function CatalogueBox({r,mu,C,TH,lnk,isAcq,noShop,vl,picked,onPick,actions}){
                 {b.title&&<div style={{fontFamily:"'Fraunces',Georgia,serif",fontSize:14.5,fontWeight:500,marginBottom:2,lineHeight:1.3}}>{b.title}</div>}
                 {b.publisher&&<div style={{fontSize:11,color:C.soft,marginBottom:2,lineHeight:1.4}}>{b.publisher}</div>}
                 <div style={{fontSize:11.5,fontFamily:"ui-monospace,monospace",lineHeight:1.5,color:b.isbn?C.ink:C.soft}}>
-                  {b.isbn?<>ISBN <span style={{whiteSpace:"nowrap"}}>{b.isbn}</span>{b.also&&<>; <span style={{whiteSpace:"nowrap"}}>{b.also.isbn}</span> ({b.also.whose})</>}</>
+                  {b.isbn?<>{W.isbnLabel}<span style={{whiteSpace:"nowrap"}}>{b.isbn}</span>{b.also&&<>; <span style={{whiteSpace:"nowrap"}}>{b.also.isbn}</span> ({b.also.whose})</>}</>
                     :ISBN_UNCONFIRMED}
                 </div>
                 {b.facts&&<div style={{fontSize:11,color:C.soft,marginTop:2,marginBottom:2,lineHeight:1.4}}>{b.facts}</div>}
                 {(b.why||b.source)&&<div style={{fontSize:11,color:C.soft,marginTop:3,lineHeight:1.45}}>
-                  {b.why}{b.source&&<>{b.why?" ":""}Source: <a href={b.source.url} target="_blank" rel="noopener noreferrer" onClick={e=>e.stopPropagation()} style={{color:C.soft}}>{b.source.host}</a></>}
+                  {b.why}{b.source&&<>{b.why?" ":""}{W.sourceLabel}<a href={b.source.url} target="_blank" rel="noopener noreferrer" onClick={e=>e.stopPropagation()} style={{color:C.soft}}>{b.source.host}</a></>}
                 </div>}
               </div>
             </div>
@@ -8877,7 +9627,7 @@ function CatalogueBox({r,mu,C,TH,lnk,isAcq,noShop,vl,picked,onPick,actions}){
         {r.catalogueTitle&&<div style={{fontFamily:"'Fraunces',Georgia,serif",fontSize:14.5,fontWeight:500,marginBottom:2,lineHeight:1.3}}>{r.catalogueTitle}</div>}
         {r.publisher&&<div style={{fontSize:11,color:C.soft,marginBottom:2}}>{r.publisher}</div>}
         <div style={{fontSize:11.5,fontFamily:"ui-monospace,monospace",marginBottom:englishLine(r)?2:10,color:r.isbn13?C.ink:C.soft}}>
-          {r.isbn13?"ISBN "+fmtIsbn(r.isbn13)+(r.alsoVersion?" \u00b7 "+alsoLine(r.alsoVersion):""):ISBN_UNCONFIRMED}
+          {r.isbn13?W.isbnLabel+fmtIsbn(r.isbn13)+(r.alsoVersion?" \u00b7 "+alsoLine(r.alsoVersion):""):ISBN_UNCONFIRMED}
         </div>
         {englishLine(r)&&<div style={{fontSize:11,color:C.soft,marginBottom:10}}>{englishLine(r)}</div>}
       </>)}
@@ -8892,7 +9642,7 @@ function CatalogueBox({r,mu,C,TH,lnk,isAcq,noShop,vl,picked,onPick,actions}){
           <DigitalLink r={r} C={C} lnk={lnk}/>
         </div>
       </>):(<>
-        {(shopButtonUrl(mu,r.title)||r.digitalUrl)&&<div style={{display:"flex",flexWrap:"wrap",gap:5}}>{shopButtonUrl(mu,r.title)&&<a href={shopButtonUrl(mu,r.title)} target="_blank" rel="noopener noreferrer" style={lnk}>Museum shop {"\u2197"}</a>}<DigitalLink r={r} C={C} lnk={lnk}/></div>}
+        {(shopButtonUrl(mu,r.title)||r.digitalUrl)&&<div style={{display:"flex",flexWrap:"wrap",gap:5}}>{shopButtonUrl(mu,r.title)&&<a href={shopButtonUrl(mu,r.title)} target="_blank" rel="noopener noreferrer" style={lnk}>{W.museumShop+" \u2197"}</a>}<DigitalLink r={r} C={C} lnk={lnk}/></div>}
       </>)}
       {actions}
     </div>
@@ -8910,12 +9660,12 @@ function CatalogueNone({r,mu,C,TH,lnk,actions}){
           {/* "Search manually" needs somewhere to press: the shop's own
               search with the title in it, as on a found card. */}
           <div style={{display:"flex",flexWrap:"wrap",gap:5}}>
-            {shopButtonUrl(mu,r.title)&&<a href={shopButtonUrl(mu,r.title)} target="_blank" rel="noopener noreferrer" style={lnk}>Museum shop {"\u2197"}</a>}
+            {shopButtonUrl(mu,r.title)&&<a href={shopButtonUrl(mu,r.title)} target="_blank" rel="noopener noreferrer" style={lnk}>{W.museumShop+" \u2197"}</a>}
             <DigitalLink r={r} C={C} lnk={lnk}/>
           </div>
         </div>
       ):<>
-        <p style={{fontSize:12,color:C.soft,margin:"0 0 8px"}}>No catalogue found for this exhibition.</p>
+        <p style={{fontSize:12,color:C.soft,margin:"0 0 8px"}}>{W.noCatalogueFound}</p>
         {r.digitalUrl&&<div style={{display:"flex",flexWrap:"wrap",gap:5,marginBottom:8}}><DigitalLink r={r} C={C} lnk={lnk}/></div>}
       </>}
       {actions}
@@ -9058,6 +9808,7 @@ function themeCounts(rows,filters,sort,byArtist){
 // stored — it is a fact about one attempt. C-043 to C-045.
 async function findCatalogueJob(row,hooks,latest){
   const id=row.id;
+  // Not words: the lookup log's names for the two buttons.
   const tape=tapeStart(row.looked?"Search again":"Find catalogue",row);
   const out=await lookupCatalogue(row,hooks);
   saveLookupTape(tape,out);
@@ -9065,20 +9816,16 @@ async function findCatalogueJob(row,hooks,latest){
   // SEARCH AGAIN REPLACES THE CARD ONLY WHEN IT FINISHED. Any step that
   // failed → the card stays as it was, and says so.
   if(row.looked&&out.ok&&out.trouble){
-    res.card={id,failed:true,text:"Search again didn’t finish — "+out.trouble.split("[")[0].trim()};
+    res.card={id,failed:true,text:say(W.searchAgainDidntFinish,{why:out.trouble.split("[")[0].trim()})};
   } else if(out.ok){
     res.rows=landOnCard(latest(),id,row,out.row);
-    if(out.trouble&&out.troubleLang)res.banner="Found the catalogue for “"+row.title+"”, but the language check "
-      +"stopped part-way, so the title may be the shop’s translation and an English edition may be missed. "
-      +out.trouble.split("[")[0].trim();
-    else if(out.trouble)res.banner="Found the catalogue for “"+row.title+"”, but the search "
-      +"stopped part-way, so the ISBN or the publisher’s page may be missing when they "
-      +"exist. "+out.trouble.split("[")[0].trim()+" Press “Search again”.";
+    if(out.trouble&&out.troubleLang)res.banner=say(W.foundButLanguageStopped,{title:row.title,why:out.trouble.split("[")[0].trim()});
+    else if(out.trouble)res.banner=say(W.foundButSearchStopped,{title:row.title,why:out.trouble.split("[")[0].trim()});
   } else {
     // On the card, not in a banner (her decision): Re-check's line word for word,
     // "Re-check" swapped for "Search" or "Search again".
     const why=String(out.detail||"").split("\n").pop().split("[")[0].trim();
-    res.card={id,failed:true,text:(row.looked?"Search again":"Search")+" didn’t run — "+why};
+    res.card={id,failed:true,text:say(W.didntRun,{what:row.looked?W.searchAgain:W.search,why})};
   }
   return res;
 }
@@ -9088,6 +9835,7 @@ async function findCatalogueJob(row,hooks,latest){
 // pressed, `hooks` the lookup's, `latest()` the ledger as it stands when the answer arrives.
 // Hands back `rows` to commit (or null), `card` {id,text,failed}, and `detail`, the diagnostic.
 async function recheckShopJob(found,hooks,latest){
+  // Not words: the lookup log's name for the button.
   const tape=tapeStart("Re-check museum shop",found);
   const out=await recheckShopRow(found,hooks);
   saveLookupTape(tape,out);
@@ -9105,6 +9853,7 @@ async function labelCardsJob(props){
   const shows=[];
   props.forEach((p,i)=>{ if(p.type==="add")shows.push(periodShow(i,p.cand)); });
   if(!shows.length)return null;
+  // Not words: the lookup log's name and title for the record.
   const tape=tapeStart("Label import cards",{title:shows.length+" new shows"});
   const {labels,batches}=await labelPeriods(shows);
   const said=labelSummary(shows.length,batches);
@@ -9120,26 +9869,27 @@ const labelsOntoCards=(cur,props,{labels,at})=>cur!==props?cur:props.map((p,i)=>
 // What there is to label: {todo}, or {said} when there is nothing.
 function labelLedgerStart(rows){
   const todo=rows.filter(r=>!labelDone(r));
-  if(!todo.length)return {said:{ok:true,text:"Label: every exhibition already has a period."}};
+  if(!todo.length)return {said:{ok:true,text:W.labelNothingToDo}};
   return {todo};
 }
 // Label's job on `todo` (labelLedgerStart). `progress` takes each progress line {done,total,label}.
 // Hands back `labels` (Map id → label, or null when none came back; labelsOntoRows writes them),
 // `said` — her line — and `debug`, the diagnostic.
 async function labelLedgerJob(todo,progress){
-  progress({done:0,total:todo.length,label:"Labelling periods…"});
+  progress({done:0,total:todo.length,label:W.labellingPeriods});
   // Each run is one record in the lookup log: every question, Claude's answer, each batch's outcome.
+  // Not words: the lookup log's name and title for the record.
   const tape=tapeStart("Label periods",{title:todo.length+" exhibitions"});
-  let said={ok:false,text:"Label: didn’t finish."}, batches=[], labels=null;
+  let said={ok:false,text:W.labelDidntFinish}, batches=[], labels=null;
   try{
-    const res=await labelPeriods(todo.map((r,i)=>periodShow(i,r)),(done,total)=>progress({done,total,label:"Labelling periods…"}));
+    const res=await labelPeriods(todo.map((r,i)=>periodShow(i,r)),(done,total)=>progress({done,total,label:W.labellingPeriods}));
     batches=res.batches;
     const at=new Date().toISOString();
     const byId=new Map(); res.labels.forEach((v,i)=>byId.set(todo[i].id,{...v,labelledAt:at}));
     if(byId.size)labels=byId;
     said=labelSummary(todo.length,batches);
-  }catch(e){ said={ok:false,text:"Label: didn’t finish — "+String((e&&e.message)||e)+"."}; }
-  const debug=said.text+"\n"+batches.map((b,j)=>"Batch "+(j+1)+": "+b.labelled+" of "+b.shows+" labelled, "+b.tries+" "+(b.tries===1?"try":"tries")+(b.why?" — "+b.why:"")).join("\n");
+  }catch(e){ said={ok:false,text:say(W.labelDidntFinishWhy,{why:String((e&&e.message)||e)})}; }
+  const debug=said.text+"\n"+batches.map((b,j)=>say(W.labelBatch,{n:j+1,labelled:b.labelled,of:b.shows,tries:b.tries,word:b.tries===1?W.try:W.tries,why:b.why?" \u2014 "+b.why:""})).join("\n");
   saveLookupTape(tape,{ok:said.ok,said:said.text,detail:JSON.stringify(batches)});
   return {labels,said,debug};
 }
@@ -9151,6 +9901,7 @@ const labelsOntoRows=(rows,byId)=>rows.map(r=>byId.has(r.id)&&!labelDone(r)?{...
 // Hands back `rows` to put in place (or null) and `said`, the line for the card {id,failed,text,regrouped}.
 async function relabelJob(r,latest){
   const id=r.id;
+  // Not words: the lookup log's name for the record.
   const tape=tapeStart("Relabel",r);
   let said, rows=null;
   try{
@@ -9160,31 +9911,31 @@ async function relabelJob(r,latest){
       const next=landOnCard(latest(),id,r,{...r,...v});
       rows=next;
       const nr={...r,...v}, shown=periodOf(nr,artistPeriods(next));
-      said={id,failed:false,regrouped:shown!==nr.period,text:"Relabelled: "+periodText(nr)+(shown!==nr.period?" — shown with "+nr.periodArtist+"’s other shows, under "+PERIOD_NAME[shown]:"")+"."};
-    }else said={id,failed:true,text:"Relabel didn’t finish — "+(batches[0]&&batches[0].why||"no answer")+"."};
-  }catch(e){ said={id,failed:true,text:"Relabel didn’t finish — "+String((e&&e.message)||e)+"."}; }
+      said={id,failed:false,regrouped:shown!==nr.period,text:say(W.relabelled,{period:periodText(nr),regrouped:shown!==nr.period?say(W.shownWithArtist,{artist:nr.periodArtist,period:PERIOD_NAME[shown]}):""})};
+    }else said={id,failed:true,text:say(W.relabelDidntFinish,{why:batches[0]&&batches[0].why||W.noAnswer})};
+  }catch(e){ said={id,failed:true,text:say(W.relabelDidntFinish,{why:String((e&&e.message)||e)})}; }
   finally{ saveLookupTape(tape,{ok:!said.failed,said:said.text}); }
   return {rows,said};
 }
 // "Keep this period"'s line for the card; `r` is the card before the mark.
-const keptPeriodSaid=(id,r)=>({id,failed:false,text:"Relabelled: "+periodText(r)+" — no regrouping."});
+const keptPeriodSaid=(id,r)=>({id,failed:false,text:say(W.relabelledKept,{period:periodText(r)})});
 // The title and the toolbar: Load, Save, the theme switch and Import.
 function Toolbar({ui,theme,hasLedger,fileRef,refreshFileRef,requestImport,handleImport,handleRefreshFile,toggleTheme,toggleSavePanel,openImportChoice}){
   const{C,sBtn,pBtn}=ui;
   return(<>
-        <div style={{fontSize:10,letterSpacing:"0.18em",textTransform:"uppercase",color:C.soft,marginBottom:4}}>Art Watch</div>
-        <h1 style={{fontFamily:"'Fraunces',Georgia,serif",fontSize:36,lineHeight:1,fontWeight:500,margin:0,letterSpacing:"-0.02em"}}>Before it goes<span style={{color:C.accent}}> out of print</span></h1>
+        <div style={{fontSize:10,letterSpacing:"0.18em",textTransform:"uppercase",color:C.soft,marginBottom:4}}>{W.appName}</div>
+        <h1 style={{fontFamily:"'Fraunces',Georgia,serif",fontSize:36,lineHeight:1,fontWeight:500,margin:0,letterSpacing:"-0.02em"}}>{W.headline}<span style={{color:C.accent}}>{W.headlineEnd}</span></h1>
         <div style={{marginTop:14,display:"flex",flexWrap:"wrap",gap:5,alignItems:"center"}}>
           {/* Load and Import (her decision): Load opens a ledger file; Import brings in a
               sweep CSV as cards. */}
-          <button onClick={requestImport} style={sBtn}>Load</button>
-          <button onClick={toggleSavePanel} disabled={!hasLedger} style={{...pBtn,opacity:hasLedger?1:0.4,cursor:hasLedger?"pointer":"not-allowed"}}>Save</button>
+          <button onClick={requestImport} style={sBtn}>{W.load}</button>
+          <button onClick={toggleSavePanel} disabled={!hasLedger} style={{...pBtn,opacity:hasLedger?1:0.4,cursor:hasLedger?"pointer":"not-allowed"}}>{W.save}</button>
           <input ref={fileRef} type="file" accept=".json" onChange={handleImport} style={{display:"none"}}/>
           {/* Small and out of the way: it is a comfort control, not part of the
               work. Says what it will DO, not what is currently on. */}
-          <button onClick={toggleTheme} title={theme==="dark"?"Switch to light":"Switch to dark"}
-            style={{...sBtn,marginLeft:"auto",padding:"5px 9px"}}>{theme==="dark"?"\u2600 Light":"\u263D Dark"}</button>
-          <button onClick={openImportChoice} style={sBtn}>Import</button>
+          <button onClick={toggleTheme} title={theme==="dark"?W.switchToLight:W.switchToDark}
+            style={{...sBtn,marginLeft:"auto",padding:"5px 9px"}}>{theme==="dark"?W.lightButton:W.darkButton}</button>
+          <button onClick={openImportChoice} style={sBtn}>{W.importButton}</button>
           <input ref={refreshFileRef} type="file" accept=".csv,text/csv" onChange={handleRefreshFile} style={{display:"none"}}/>
         </div>
   </>);
@@ -9197,17 +9948,17 @@ function SavePanel({ui,showSave,hasLedger,saveLabel,saveCloud,saveBusy,typeSaveL
             cloud twin; the tick starts on. */}
         {showSave&&hasLedger&&<div style={{marginTop:8,padding:"10px 12px",background:C.drawer,border:"1px solid "+C.rule,borderRadius:4}}>
           <div style={{display:"flex",gap:6,alignItems:"center",flexWrap:"wrap"}}>
-            <input value={saveLabel} onChange={e=>typeSaveLabel(e.target.value)} maxLength={80} placeholder={"Description (optional) \u2014 e.g. after 30 lookups"}
+            <input value={saveLabel} onChange={e=>typeSaveLabel(e.target.value)} maxLength={80} placeholder={W.saveDescription}
               onKeyDown={e=>{if(e.key==="Enter")handleSave();}}
               style={{flex:"1 1 220px",minWidth:0,padding:"5px 8px",fontSize:12.5,border:"1px solid "+C.rule,borderRadius:4,background:C.card,color:C.ink,fontFamily:"inherit"}}/>
-            <button onClick={handleSave} disabled={saveBusy} style={{...pBtn,opacity:saveBusy?0.4:1,cursor:saveBusy?"not-allowed":"pointer"}}>{saveBusy?"Saving\u2026":"Save now"}</button>
-            <button onClick={closeSavePanel} style={sBtn}>Cancel</button>
+            <button onClick={handleSave} disabled={saveBusy} style={{...pBtn,opacity:saveBusy?0.4:1,cursor:saveBusy?"not-allowed":"pointer"}}>{saveBusy?W.saving:W.saveNow}</button>
+            <button onClick={closeSavePanel} style={sBtn}>{W.cancel}</button>
           </div>
           <label style={{display:"flex",gap:6,alignItems:"center",marginTop:8,fontSize:12.5,color:C.ink,cursor:"pointer"}}>
             <input type="checkbox" checked={saveCloud} onChange={e=>chooseSaveCloud(e.target.checked)}/>
-            {"Also save a copy to cloud"}
+            {W.alsoSaveToCloud}
           </label>
-          <div style={{marginTop:6,fontSize:11,color:C.soft,wordBreak:"break-all"}}>{"File name: "+LEDGER_PREFIX+localStamp()+(labelSlug(saveLabel)?"-"+labelSlug(saveLabel):"")+".json"}</div>
+          <div style={{marginTop:6,fontSize:11,color:C.soft,wordBreak:"break-all"}}>{W.fileName+LEDGER_PREFIX+localStamp()+(labelSlug(saveLabel)?"-"+labelSlug(saveLabel):"")+".json"}</div>
         </div>}
   </>);
 }
@@ -9225,7 +9976,7 @@ function StatusLines({ui,cloudStatus,hasLedger,cloudLive,requestOpenCloud,savedT
           </div>
         :<div style={{marginTop:6,fontSize:11,color:C.okEdge,fontWeight:600,display:"flex",gap:8,alignItems:"baseline",flexWrap:"wrap"}}>
           <span>{"☁ "}{cloudStatus.text}</span>
-          {!hasLedger&&cloudLive&&cloudLive.rec&&<button onClick={requestOpenCloud} style={{background:"none",border:"none",color:C.action,fontSize:11,fontWeight:600,textDecoration:"underline",cursor:"pointer",padding:0}}>Open it</button>}
+          {!hasLedger&&cloudLive&&cloudLive.rec&&<button onClick={requestOpenCloud} style={{background:"none",border:"none",color:C.action,fontSize:11,fontWeight:600,textDecoration:"underline",cursor:"pointer",padding:0}}>{W.openIt}</button>}
         </div>}
         <div style={{marginTop:16}}>
           {savedText&&<div style={{fontSize:11,color:C.ink,lineHeight:1.45}}>{savedText}</div>}
@@ -9233,7 +9984,7 @@ function StatusLines({ui,cloudStatus,hasLedger,cloudLive,requestOpenCloud,savedT
               line that fades can vanish unread. */}
           {cloudCheck&&<div style={{marginTop:2,fontSize:11,color:C.ink,lineHeight:1.45,display:"flex",gap:8,alignItems:"baseline"}}>
             <span style={{flex:1}}>{cloudCheck}</span>
-            <button onClick={dismissCloudCheck} title="Dismiss" aria-label="Dismiss" style={{background:"none",border:"none",color:C.soft,fontSize:14,lineHeight:1,cursor:"pointer",padding:0}}>{"\u00d7"}</button>
+            <button onClick={dismissCloudCheck} title={W.dismiss} aria-label={W.dismiss} style={{background:"none",border:"none",color:C.soft,fontSize:14,lineHeight:1,cursor:"pointer",padding:0}}>{"\u00d7"}</button>
           </div>}
           {hasLedger&&saveNote&&<div style={{marginTop:6,fontSize:11,lineHeight:1.45}}>
             <span style={{color:saveNote.ok?C.okEdge:C.warnInk,fontWeight:saveNote.ok?600:700}}>{saveNote.text}</span>
@@ -9259,22 +10010,22 @@ function Banners({ui,hasLedger,refreshDone,unconfirmedSave,showUnsavedBanner,sto
         </div>}
         {hasLedger&&unconfirmedSave&&<div style={{marginTop:8,padding:"9px 12px",background:C.holdBg,border:"2px solid "+C.soft,borderRadius:5,fontSize:12.5,color:C.ink,lineHeight:1.45,display:"flex",alignItems:"flex-start",gap:9}}>
           <span style={{fontSize:16,lineHeight:1.1}}>{"\u2193"}</span>
-          <span>{"A download of "+unconfirmedSave+" was started. This viewer can\u2019t tell us whether it arrived, so your ledger is still marked unsaved \u2014 check your downloads folder. If the file is there, you\u2019re safe."}</span>
+          <span>{say(W.downloadUnconfirmed,{file:unconfirmedSave})}</span>
         </div>}
         {showUnsavedBanner&&!refreshDone&&<div style={{marginTop:8,padding:"9px 12px",background:C.warnBg,border:"2px solid #B5791A",borderRadius:5,fontSize:12.5,fontWeight:700,color:C.warnInk,lineHeight:1.4,display:"flex",alignItems:"center",gap:9}}>
           <span style={{fontSize:17,lineHeight:1}}>{"\u26A0"}</span>
-          <span>{"UNSAVED CHANGES \u2014 what's on screen is not saved to a file. Tap \u201cSave\u201d before you close this tab or your work is lost."}</span>
+          <span>{W.unsavedChanges}</span>
         </div>}
         {/* A quarantine that isn't saving is a banner, not a footnote (her decision),
             shown with or without a ledger open. */}
         {/* A part of the store that could not be read (the quarantine has its own banner). */}
         {storeUnread.filter(w=>w!==UNREAD_QUAR).length>0&&<div style={{marginTop:8,padding:"9px 12px",background:C.warnBg,border:"2px solid "+C.warnEdge,borderRadius:5,fontSize:12.5,fontWeight:700,color:C.warnInk,lineHeight:1.4,display:"flex",alignItems:"flex-start",gap:9}}>
           <span style={{fontSize:17,lineHeight:1.1}}>{"\u26A0"}</span>
-          <span>{"STORE NOT READ \u2014 "+storeUnread.filter(w=>w!==UNREAD_QUAR).join(", ")+" couldn\u2019t be read from store, refresh to re-check. Current incorrect information will not overwrite the store until the read corrects."}</span>
+          <span>{say(W.storeNotRead,{parts:storeUnread.filter(w=>w!==UNREAD_QUAR).join(", ")})}</span>
         </div>}
         {quarWhy&&<div style={{marginTop:8,padding:"9px 12px",background:C.warnBg,border:"2px solid "+C.warnEdge,borderRadius:5,fontSize:12.5,fontWeight:700,color:C.warnInk,lineHeight:1.4,display:"flex",alignItems:"flex-start",gap:9}}>
           <span style={{fontSize:17,lineHeight:1.1}}>{"\u26A0"}</span>
-          <span>{"QUARANTINE \u2014 "+quarWhy}</span>
+          <span>{say(W.quarantineBanner,{why:quarWhy})}</span>
         </div>}
         {busy&&prog.total>0&&!importMode&&<div style={{marginTop:8}}><div style={{height:3,background:C.rule,borderRadius:2,overflow:"hidden"}}><div style={{height:"100%",width:(prog.done/prog.total*100)+"%",background:C.action,transition:"width .3s ease"}}/></div><div style={{fontSize:10,color:C.soft,marginTop:3}}>{prog.done}/{prog.total} · {prog.label}</div></div>}
         {labelSaid&&<div style={labelSaid.ok?{marginTop:8,fontSize:11.5,color:C.soft}:{marginTop:8,padding:"7px 11px",background:TH.urgent.wash,border:"1px solid "+TH.urgent.ink,borderRadius:4,fontSize:11.5,color:TH.urgent.ink}}>{labelSaid.text}</div>}
@@ -9289,13 +10040,13 @@ function DiagnosticBox({ui,debug}){
   const[copySaid,setCopySaid]=useState(null);       // "ok" / "no": what the diagnostic's copy icon last managed
   useEffect(()=>setCopySaid(null),[debug]); // a new diagnostic has not been copied
   return(<>
-        {debug&&<div style={{marginTop:4}}><button onClick={()=>setShowDebug(v=>!v)} style={{background:"none",border:"none",color:C.soft,fontSize:10,textDecoration:"underline",cursor:"pointer",padding:0}}>{showDebug?"Hide diagnostic":"Show diagnostic"}</button>
+        {debug&&<div style={{marginTop:4}}><button onClick={()=>setShowDebug(v=>!v)} style={{background:"none",border:"none",color:C.soft,fontSize:10,textDecoration:"underline",cursor:"pointer",padding:0}}>{showDebug?W.hideDiagnostic:W.showDiagnostic}</button>
           {/* Copy: an icon alone, bottom right of the tray (her ask). A tick only if the
               copy happened — a frame can refuse the clipboard — else a cross; back to
               the icon after two seconds. */}
           {showDebug&&<div style={{position:"relative",marginTop:4}}>
             <pre style={{margin:0,padding:"7px 28px 7px 7px",background:C.drawer,border:"1px solid "+C.rule,borderRadius:4,fontSize:9.5,whiteSpace:"pre-wrap",wordBreak:"break-word",color:C.soft,maxHeight:160,overflow:"auto"}}>{debug}</pre>
-            <button aria-label={copySaid==="ok"?"Copied":copySaid==="no"?"Couldn\u2019t copy":"Copy"} title={copySaid==="ok"?"Copied":copySaid==="no"?"Couldn\u2019t copy":"Copy"}
+            <button aria-label={copySaid==="ok"?W.copied:copySaid==="no"?W.couldntCopy:W.copy} title={copySaid==="ok"?W.copied:copySaid==="no"?W.couldntCopy:W.copy}
               onClick={async()=>{const r=await copyText(debug)?"ok":"no";setCopySaid(r);setTimeout(()=>setCopySaid(v=>v===r?null:v),2000);}}
               style={{position:"absolute",right:5,bottom:5,background:"none",border:"none",color:C.soft,fontSize:13,lineHeight:1,cursor:"pointer",padding:2}}>{copySaid==="ok"?"\u2713":copySaid==="no"?"\u2717":"\u29c9"}</button>
           </div>}</div>}
@@ -9310,21 +10061,21 @@ function SweepLog({ui,lastSweep,venueSeen,freshWhy,counts}){
         <div style={{marginTop:6,fontSize:10.5,color:C.soft,display:"flex",gap:12,flexWrap:"wrap",alignItems:"center"}}>
           {/* "Unknown", never "never" (her decision): an empty store is not evidence
               that no sweep ran. */}
-          <span>Last sweep: {lastSweep?fmtRefresh(lastSweep):"Unknown"}</span>
+          <span>{W.lastSweep}{lastSweep?fmtRefresh(lastSweep):W.unknown}</span>
           {/* Per-venue freshness: collapsed by default, ALWAYS shown — a control that
               disappears when the log is empty cannot report anything. */}
-          <button onClick={()=>setShowFresh(v=>!v)} style={{background:"none",border:"none",color:C.soft,fontSize:10.5,textDecoration:"underline",cursor:"pointer",padding:0}}>{showFresh?"Hide details":"Details"}</button>
+          <button onClick={()=>setShowFresh(v=>!v)} style={{background:"none",border:"none",color:C.soft,fontSize:10.5,textDecoration:"underline",cursor:"pointer",padding:0}}>{showFresh?W.hideDetails:W.details}</button>
         </div>
 
         {/* Not gated on a ledger: the sweep log survives Reset. */}
         {showFresh&&<div style={{marginTop:6,padding:"8px 10px",background:C.drawer,border:"1px solid "+C.rule,borderRadius:4}}>
           {/* Tracked and Dismissed live here, at the top of Details (her decision). */}
           <div style={{display:"flex",gap:14,fontSize:10.5,color:C.soft,flexWrap:"wrap",marginBottom:8}}>
-            <span><b style={{color:C.ink}}>{counts.total}</b> Tracked</span>
-            {counts.dismissed>0&&<span><b>{counts.dismissed}</b> Dismissed</span>}
+            <span><b style={{color:C.ink}}>{counts.total}</b>{W.tracked}</span>
+            {counts.dismissed>0&&<span><b>{counts.dismissed}</b>{W.dismissed}</span>}
           </div>
           <div style={{fontSize:10,color:C.soft,marginBottom:6,lineHeight:1.5}}>
-            {"When each venue was last swept, and when it last gave us exhibitions."}
+            {W.sweepLogLead}
           </div>
           {/* "NO SWEEPS YET" AND "COULDN'T READ THE STORE" LOOK IDENTICAL AND
               MEAN OPPOSITE THINGS, so an empty panel always says which. */}
@@ -9332,23 +10083,23 @@ function SweepLog({ui,lastSweep,venueSeen,freshWhy,counts}){
           {/* An empty store says nothing about whether a sweep ran (her decision), so no
               "No sweep imported yet". Unlike freshWhy, here the store did answer. */}
           {!freshWhy&&Object.keys(venueSeen).length===0&&
-            <div style={{fontSize:11,color:C.soft,marginBottom:6}}>{"The store holds no sweep dates, so when each venue was last swept is unknown."}</div>}
+            <div style={{fontSize:11,color:C.soft,marginBottom:6}}>{W.sweepLogEmpty}</div>}
           {MUSEUMS.map(m=>{
             const v=venueSeen[m.id]; if(!v)return null;
             const stale=v.returned&&v.attempted&&v.returned!==v.attempted;
             return(
               <div key={m.id} style={{display:"grid",gridTemplateColumns:"minmax(0,1.1fr) minmax(0,1fr) minmax(0,1fr)",gap:8,fontSize:10.5,color:C.soft,padding:"3px 0",alignItems:"baseline"}}>
                 <span style={{color:C.ink}}>{m.card}</span>
-                <span>{momentLines("swept ",v.attempted)}</span>
+                <span>{momentLines(W.sweptAt,v.attempted)}</span>
                 <span style={{color:v.returned?(stale?TH.urgent.ink:C.soft):TH.urgent.ink,fontWeight:stale||!v.returned?600:400}}>
-                  {v.returned?momentLines("rows ",v.returned):"no rows \u2014 refused"}
+                  {v.returned?momentLines(W.rowsAt,v.returned):W.noRowsRefused}
                 </span>
               </div>
             );
           })}
           {MUSEUMS.filter(m=>!venueSeen[m.id]).length>0&&
             <div style={{fontSize:10.5,color:C.soft,marginTop:6,paddingTop:5,borderTop:"1px solid "+C.rule}}>
-              {"Not in any sweep yet: "+MUSEUMS.filter(m=>!venueSeen[m.id]).map(m=>m.card).join(", ")+"."}
+              {say(W.notInAnySweep,{venues:MUSEUMS.filter(m=>!venueSeen[m.id]).map(m=>m.card).join(", ")})}
             </div>}
         </div>}
   </>);
@@ -9358,11 +10109,11 @@ function CountsRow({ui,counts,toggleSearchBox}){
   const{C,TH}=ui;
   return(
         <div style={{marginTop:10,paddingTop:8,borderTop:"1px solid "+C.rule,display:"flex",gap:14,fontSize:10.5,color:C.soft,flexWrap:"wrap",alignItems:"center"}}>
-          <span><b style={{color:C.ink}}>{counts.watched}</b> Watched</span>
-          <span><b style={{color:C.ink}}>{counts.wanted}</b> Wanted</span>
-          <span><b style={{color:C.owned}}>{counts.owned}</b> Owned</span>
-          <span><b style={{color:TH.urgent.ink}}>{counts.pressing}</b> Closing Window</span>
-          <button onClick={toggleSearchBox} style={{marginLeft:"auto",background:"none",border:"none",cursor:"pointer",fontSize:16,color:C.soft,padding:0,lineHeight:1}} title="Search">{"\uD83D\uDD0D"}</button>
+          <span><b style={{color:C.ink}}>{counts.watched}</b>{W.watched}</span>
+          <span><b style={{color:C.ink}}>{counts.wanted}</b>{W.wanted}</span>
+          <span><b style={{color:C.owned}}>{counts.owned}</b>{W.owned}</span>
+          <span><b style={{color:TH.urgent.ink}}>{counts.pressing}</b>{W.closingWindowCount}</span>
+          <button onClick={toggleSearchBox} style={{marginLeft:"auto",background:"none",border:"none",cursor:"pointer",fontSize:16,color:C.soft,padding:0,lineHeight:1}} title={W.search}>{"\uD83D\uDD0D"}</button>
         </div>
   );
 }
@@ -9372,7 +10123,7 @@ function SearchRow({ui,showSearch,search,searchRef,typeSearch,clearSearchText}){
   return(<>
         {/* The cross clears what she typed (her ask): right-aligned, shown while there is text. */}
         {showSearch&&<div style={{marginTop:6,position:"relative"}}><input ref={searchRef} value={search} onChange={e=>typeSearch(e.target.value)} style={{width:"100%",padding:"7px 30px 7px 10px",border:"1px solid "+C.rule,borderRadius:4,background:C.card,color:C.ink,fontSize:12.5,fontFamily:"inherit",boxSizing:"border-box"}}/>
-          {search&&<button onClick={clearSearchText} aria-label="Clear search" title="Clear"
+          {search&&<button onClick={clearSearchText} aria-label={W.clearSearch} title={W.clear}
             style={{position:"absolute",right:6,top:"50%",transform:"translateY(-50%)",background:"none",border:"none",color:C.soft,fontSize:16,lineHeight:1,cursor:"pointer",padding:"2px 4px"}}>{"\u00d7"}</button>}</div>}
   </>);
 }
@@ -9383,9 +10134,9 @@ function SortRow({ui,sort,filters,bnOnly,pickSort}){
   const{bnPeriod,bnDate}=filters;
   return(
         <div style={{display:"flex",gap:4,flexWrap:"wrap",alignItems:"center"}}>
-          <span style={{fontSize:9,letterSpacing:"0.12em",textTransform:"uppercase",color:C.soft,marginRight:2}}>Sort</span>
-          {[["date","Date"],["venue","Venue"],["period","Period"],["added","Recently added"],["edited","Recently edited"],["labelled","Recently labelled"]].map(([k,l])=><button key={k} onClick={()=>pickSort(k)} style={chip(bnOnly?((k==="period"&&bnPeriod)||(k==="date"&&bnDate)):(sortBy===k&&!pinTouched))}>{l}{(bnOnly?(k==="period"&&bnPeriod)||(k==="date"&&bnDate):(k==="date"||k==="period")&&sortBy===k&&!pinTouched)?(dateReversed?" \u2191":" \u2193"):""}</button>)}
-          {pinTouched&&<span style={{fontSize:10.5,color:C.action,fontWeight:600}}>{"\u2191 just-refreshed entries shown first"}</span>}
+          <span style={{fontSize:9,letterSpacing:"0.12em",textTransform:"uppercase",color:C.soft,marginRight:2}}>{W.sortRow}</span>
+          {[["date",W.sortDate],["venue",W.sortVenue],["period",W.sortPeriod],["added",W.recentlyAdded],["edited",W.recentlyEdited],["labelled",W.recentlyLabelled]].map(([k,l])=><button key={k} onClick={()=>pickSort(k)} style={chip(bnOnly?((k==="period"&&bnPeriod)||(k==="date"&&bnDate)):(sortBy===k&&!pinTouched))}>{l}{(bnOnly?(k==="period"&&bnPeriod)||(k==="date"&&bnDate):(k==="date"||k==="period")&&sortBy===k&&!pinTouched)?(dateReversed?" \u2191":" \u2193"):""}</button>)}
+          {pinTouched&&<span style={{fontSize:10.5,color:C.action,fontWeight:600}}>{W.justRefreshedFirst}</span>}
         </div>
   );
 }
@@ -9395,8 +10146,8 @@ function WhenRow({ui,filters,toggleSet}){
   const{timeF}=filters;
   return(
         <div style={{display:"flex",gap:4,flexWrap:"wrap",alignItems:"center"}}>
-          <span style={{fontSize:9,letterSpacing:"0.12em",textTransform:"uppercase",color:C.soft,marginRight:2}}>When</span>
-          {[["current","Current"],["past","Past"],["upcoming","Announced"],["recent","Recently opened"]].map(([k,l])=><button key={k} onClick={()=>toggleSet("timeF",k)} style={chip(timeF.has(k))}>{l}</button>)}
+          <span style={{fontSize:9,letterSpacing:"0.12em",textTransform:"uppercase",color:C.soft,marginRight:2}}>{W.whenRow}</span>
+          {[["current",W.whenCurrent],["past",W.whenPast],["upcoming",W.whenAnnounced],["recent",W.recentlyOpened]].map(([k,l])=><button key={k} onClick={()=>toggleSet("timeF",k)} style={chip(timeF.has(k))}>{l}</button>)}
         </div>
   );
 }
@@ -9406,7 +10157,7 @@ function VenueRow({ui,filters,toggleSet}){
   const{venueF}=filters;
   return(
         <div style={{display:"flex",gap:4,flexWrap:"wrap",alignItems:"center"}}>
-          <span style={{fontSize:9,letterSpacing:"0.12em",textTransform:"uppercase",color:C.soft,marginRight:2}}>Venue</span>
+          <span style={{fontSize:9,letterSpacing:"0.12em",textTransform:"uppercase",color:C.soft,marginRight:2}}>{W.sortVenue}</span>
           {chipVenues().map(id=><button key={chipKey(id)} onClick={()=>toggleSet("venueF",chipKey(id))} style={chip(venueF.has(chipKey(id)))}>{REG[id].names.chip}</button>)}
           {OCC_CHIPS.map(([k,l])=><button key={k} onClick={()=>toggleSet("venueF",k)} style={chip(venueF.has(k))}>{l}</button>)}
         </div>
@@ -9418,7 +10169,7 @@ function ThemeRow({ui,filters,toggleSet,themeCount}){
   const{themeF}=filters;
   return(
         <div style={{display:"flex",gap:4,flexWrap:"wrap",alignItems:"center"}}>
-          <span style={{fontSize:9,letterSpacing:"0.12em",textTransform:"uppercase",color:C.soft,marginRight:2}}>Theme</span>
+          <span style={{fontSize:9,letterSpacing:"0.12em",textTransform:"uppercase",color:C.soft,marginRight:2}}>{W.themeRow}</span>
           {THEME_CHIPS.map(([k,l])=><button key={k} onClick={()=>toggleSet("themeF",k)} style={chip(themeF.has(k))}>{l}{themeF.has(k)?" \u00b7 "+themeCount[k]:""}</button>)}
         </div>
   );
@@ -9429,15 +10180,15 @@ function AcquiringRow({ui,filters,toggleAcqWanted,toggleAcqOwned,toggleBuyNextVi
   const{acqWanted,acqOwned,acq3mo,acq6mo,acqHasCat,acqNoCat,acqDigital,acqBuyNext}=filters;
   return(
         <div style={{display:"flex",gap:4,flexWrap:"wrap",alignItems:"center"}}>
-          <span style={{fontSize:9,letterSpacing:"0.12em",textTransform:"uppercase",color:C.soft,marginRight:2}}>Acquiring?</span>
-          <button onClick={toggleAcqWanted} style={chip(acqWanted)}>Wanted</button>
-          <button onClick={toggleAcqOwned} style={chip(acqOwned)}>Owned</button>
-          <button onClick={toggleBuyNextView} style={chip(acqBuyNext)}>Buy next</button>
-          <button onClick={toggleAcq3mo} style={chip(acq3mo)}>3+ mos</button>
-          <button onClick={toggleAcq6mo} style={chip(acq6mo)}>6+ mos closing window</button>
-          <button onClick={toggleAcqHasCat} style={chip(acqHasCat)}>Has catalogue</button>
-          <button onClick={toggleAcqNoCat} style={chip(acqNoCat)}>No catalogue</button>
-          <button onClick={toggleAcqDigital} style={chip(acqDigital)}>Digital catalogue</button>
+          <span style={{fontSize:9,letterSpacing:"0.12em",textTransform:"uppercase",color:C.soft,marginRight:2}}>{W.acquiringRow}</span>
+          <button onClick={toggleAcqWanted} style={chip(acqWanted)}>{W.chipWanted}</button>
+          <button onClick={toggleAcqOwned} style={chip(acqOwned)}>{W.chipOwned}</button>
+          <button onClick={toggleBuyNextView} style={chip(acqBuyNext)}>{W.buyNext}</button>
+          <button onClick={toggleAcq3mo} style={chip(acq3mo)}>{W.chip3mo}</button>
+          <button onClick={toggleAcq6mo} style={chip(acq6mo)}>{W.chip6mo}</button>
+          <button onClick={toggleAcqHasCat} style={chip(acqHasCat)}>{W.chipHasCatalogue}</button>
+          <button onClick={toggleAcqNoCat} style={chip(acqNoCat)}>{W.chipNoCatalogue}</button>
+          <button onClick={toggleAcqDigital} style={chip(acqDigital)}>{W.digitalCatalogue}</button>
         </div>
   );
 }
@@ -9447,12 +10198,12 @@ function ShowingRow({ui,filters,toggleWatchedOnly,toggleDismissedOnly,toggleLabe
   const{showAll,dismissedOnly,labelledF,watchedF}=filters;
   return(
         <div style={{display:"flex",gap:4,flexWrap:"wrap",alignItems:"center"}}>
-          <span style={{fontSize:9,letterSpacing:"0.12em",textTransform:"uppercase",color:C.soft,marginRight:2}}>Showing</span>
-          <button onClick={toggleWatchedOnly} style={chip(watchedF)}>Watched</button>
-          <button onClick={toggleDismissedOnly} style={chip(dismissedOnly)}>Dismissed</button>
-          <button onClick={toggleLabelledOnly} style={chip(labelledF)}>Recently labelled</button>
-          <button onClick={toggleShowAll} style={chip(showAll)}>Show all</button>
-          <button onClick={clearFilters} style={{...chip(false),color:C.muted,borderColor:C.muted}}>Clear all</button>
+          <span style={{fontSize:9,letterSpacing:"0.12em",textTransform:"uppercase",color:C.soft,marginRight:2}}>{W.showingRow}</span>
+          <button onClick={toggleWatchedOnly} style={chip(watchedF)}>{W.chipWatched}</button>
+          <button onClick={toggleDismissedOnly} style={chip(dismissedOnly)}>{W.chipDismissed}</button>
+          <button onClick={toggleLabelledOnly} style={chip(labelledF)}>{W.recentlyLabelled}</button>
+          <button onClick={toggleShowAll} style={chip(showAll)}>{W.showAll}</button>
+          <button onClick={clearFilters} style={{...chip(false),color:C.muted,borderColor:C.muted}}>{W.clearAll}</button>
         </div>
   );
 }
@@ -9463,7 +10214,7 @@ function CardList({ui,view,sort,bnOnly,periodView,venueScrub,byArtist,drawLimit,
   const{busyId,busy,rechecking,lookLabel,recheckSaid,relabelId,digitalBox,openCards}=cardState;
   return(
       <div data-card-list="1" style={{maxWidth:760,margin:"0 auto",display:"flex",flexDirection:"column",gap:10}}>
-        {view.length===0&&<div style={{background:C.card,border:"1px solid "+C.rule,borderRadius:5,padding:18,fontSize:12.5,color:C.soft}}>Nothing matches those filters.</div>}
+        {view.length===0&&<div style={{background:C.card,border:"1px solid "+C.rule,borderRadius:5,padding:18,fontSize:12.5,color:C.soft}}>{W.nothingMatches}</div>}
         {(()=>{
           const pinnedCount=pinTouched&&!bnOnly?view.filter(x=>refreshTouched.includes(x.id)).length:0;
           // Band headers for the "recently" sorts (only when not in the post-import pinned snapshot).
@@ -9478,10 +10229,10 @@ function CardList({ui,view,sort,bnOnly,periodView,venueScrub,byArtist,drawLimit,
             if(bandMode==="labelled")return lastLabel(x)?(lastLabel(x)===newestLabel?"lab_this":"lab_earlier"):(periodLabelled(x)?"lab_stage1":"lab_never");
             return null;
           };
-          const BAND_LABEL={add_this:"This import",add_earlier:"Earlier imports",seed:"Original set",ed_this:"This import's edits",ed_earlier:"Earlier edits",ed_never:"Never edited",lab_this:"This labelling",lab_earlier:"Earlier labellings",lab_stage1:"Stage 1",lab_never:"Not labelled"};
+          const BAND_LABEL={add_this:W.bandThisImport,add_earlier:W.bandEarlierImports,seed:W.bandOriginalSet,ed_this:W.bandThisImportsEdits,ed_earlier:W.bandEarlierEdits,ed_never:W.bandNeverEdited,lab_this:W.bandThisLabelling,lab_earlier:W.bandEarlierLabellings,lab_stage1:W.bandStage1,lab_never:W.bandNotLabelled};
           const bandDivider=(txt,pk)=><div data-period={pk} style={{display:"flex",alignItems:"center",gap:8,margin:"2px 2px",color:C.soft}}><div style={{flex:1,height:1,background:C.rule}}/><span style={{fontSize:9.5,letterSpacing:"0.1em",textTransform:"uppercase"}}>{txt}</span><div style={{flex:1,height:1,background:C.rule}}/></div>;
           return view.slice(0,drawLimit).map((r,i)=>{
-          const brk=(pinTouched&&pinnedCount>0&&pinnedCount<view.length&&i===pinnedCount)?bandDivider("Rest of the list"):null;
+          const brk=(pinTouched&&pinnedCount>0&&pinnedCount<view.length&&i===pinnedCount)?bandDivider(W.bandRestOfList):null;
           let header=null;
           if(periodView&&(i===0||periodOf(view[i-1],byArtist)!==periodOf(r,byArtist)))header=bandDivider(PERIOD_NAME[periodOf(r,byArtist)],periodOf(r,byArtist));
           if(bandMode){const b=bandOf(r);const pb=i>0?bandOf(view[i-1]):null;if(b!==pb)header=bandDivider(BAND_LABEL[b]||"");}
@@ -9509,7 +10260,7 @@ function SelectedWordsButton({ui,selPick,searchPick}){
       {/* Top on the left, bottom on the right (her layout), shown once she has scrolled down. */}
       {/* Filled as the "Recently opened" tag, edged in the action green (her choice), in both themes. */}
       {selPick&&<button onMouseDown={e=>e.preventDefault()} onClick={searchPick}
-        style={{position:"fixed",top:selPick.y,left:selPick.x,transform:"translateX(-50%)",zIndex:1000,background:TH.recent.wash,border:"1px solid "+C.action,borderRadius:4,color:TH.recent.ink,fontSize:12,fontWeight:500,cursor:"pointer",padding:"6px 12px",whiteSpace:"nowrap",boxShadow:"0 2px 8px rgba(0,0,0,0.18)"}}>Search</button>}
+        style={{position:"fixed",top:selPick.y,left:selPick.x,transform:"translateX(-50%)",zIndex:1000,background:TH.recent.wash,border:"1px solid "+C.action,borderRadius:4,color:TH.recent.ink,fontSize:12,fontWeight:500,cursor:"pointer",padding:"6px 12px",whiteSpace:"nowrap",boxShadow:"0 2px 8px rgba(0,0,0,0.18)"}}>{W.search}</button>}
   </>);
 }
 // Return to top and Jump to bottom, shown once she has scrolled down.
@@ -9517,9 +10268,9 @@ function JumpButtons({ui,showTop,undo,jumpToBottom}){
   const{C}=ui;
   return(<>
       {showTop&&(<>
-        <button onClick={()=>window.scrollTo({top:0,behavior:"smooth"})} aria-label="Return to top"
+        <button onClick={()=>window.scrollTo({top:0,behavior:"smooth"})} aria-label={W.returnToTop}
           style={{position:"fixed",bottom:undo?64:20,left:"50%",transform:"translateX(calc(-100% - 5px))",zIndex:998,width:38,height:38,borderRadius:"50%",background:C.card,border:"1px solid "+C.rule,color:C.ink,fontSize:16,lineHeight:1,cursor:"pointer",boxShadow:"0 2px 8px rgba(0,0,0,0.18)"}}>{"\u2191"}</button>
-        <button onClick={jumpToBottom} aria-label="Jump to bottom"
+        <button onClick={jumpToBottom} aria-label={W.jumpToBottom}
           style={{position:"fixed",bottom:undo?64:20,left:"50%",transform:"translateX(5px)",zIndex:998,width:38,height:38,borderRadius:"50%",background:C.card,border:"1px solid "+C.rule,color:C.ink,fontSize:16,lineHeight:1,cursor:"pointer",boxShadow:"0 2px 8px rgba(0,0,0,0.18)"}}>{"\u2193"}</button>
       </>)}
   </>);
@@ -9532,8 +10283,8 @@ function UndoBar({ui,undo,undoDismiss}){
         <div style={{position:"fixed",bottom:20,left:"50%",transform:"translateX(-50%)",background:C.ink,color:C.onAction,borderRadius:4,padding:"7px 14px",fontSize:12,display:"flex",gap:10,alignItems:"center",zIndex:999,boxShadow:"0 2px 8px rgba(0,0,0,0.2)"}}>
           {/* "Undo", the same size as the word before it (her decision). A <button>
               does not inherit the page's font, so it is told to. */}
-          <span style={{fontSize:14,lineHeight:"20px"}}>Dismissed</span>
-          <button onClick={undoDismiss} style={{background:"none",border:"1px solid rgba(255,255,255,0.5)",borderRadius:3,color:C.onAction,fontFamily:"inherit",fontSize:14,lineHeight:"20px",fontWeight:600,cursor:"pointer",padding:"1px 8px",margin:0}}>Undo</button>
+          <span style={{fontSize:14,lineHeight:"20px"}}>{W.chipDismissed}</span>
+          <button onClick={undoDismiss} style={{background:"none",border:"1px solid rgba(255,255,255,0.5)",borderRadius:3,color:C.onAction,fontFamily:"inherit",fontSize:14,lineHeight:"20px",fontWeight:600,cursor:"pointer",padding:"1px 8px",margin:0}}>{W.undo}</button>
         </div>
       )}
   </>);
@@ -9547,16 +10298,16 @@ function ToolsRow({ui,requestReset,labelLedger,toggleResetCards,toggleCloudSaves
         {/* Two buttons on the left, no sentence (her decision), spaced like the drawers on the right. */}
         <span style={{display:"flex",gap:14}}>
           {/* Reset to Seed is unwired from her page (her decision), requestReset kept; drawn only for the tests. */}
-          {typeof window!=="undefined"&&window.__catWatchTest&&<button onClick={requestReset} style={{background:"none",border:"none",color:C.soft,fontSize:10,textDecoration:"underline",cursor:"pointer",padding:0}}>Reset to Seed</button>}
-          <button onClick={labelLedger} style={{background:"none",border:"none",color:C.soft,fontSize:10,textDecoration:"underline",cursor:"pointer",padding:0}}>Label</button>
-          <button onClick={toggleResetCards} style={{background:"none",border:"none",color:C.soft,fontSize:10,textDecoration:"underline",cursor:"pointer",padding:0}}>Clear search</button>
+          {typeof window!=="undefined"&&window.__catWatchTest&&<button onClick={requestReset} style={{background:"none",border:"none",color:C.soft,fontSize:10,textDecoration:"underline",cursor:"pointer",padding:0}}>{W.resetToSeed}</button>}
+          <button onClick={labelLedger} style={{background:"none",border:"none",color:C.soft,fontSize:10,textDecoration:"underline",cursor:"pointer",padding:0}}>{W.label}</button>
+          <button onClick={toggleResetCards} style={{background:"none",border:"none",color:C.soft,fontSize:10,textDecoration:"underline",cursor:"pointer",padding:0}}>{W.clearSearch}</button>
         </span>
         <span style={{marginLeft:"auto",display:"flex",gap:14}}>
           {/* Cloud Saves sit beside Quarantine, in the same type, always drawn — a control
               that appears only with something to show can't say "none yet" (her decision). */}
-          <button onClick={toggleCloudSaves} style={{background:"none",border:"none",color:C.soft,fontSize:10,textDecoration:"underline",cursor:"pointer",padding:0}}>{"Cloud Saves"}</button>
+          <button onClick={toggleCloudSaves} style={{background:"none",border:"none",color:C.soft,fontSize:10,textDecoration:"underline",cursor:"pointer",padding:0}}>{W.cloudSaves}</button>
           {/* Quarantine's link is always drawn too (her catch): an empty one vanished. */}
-          {<button onClick={toggleQuarantine} style={{background:"none",border:"none",color:C.soft,fontSize:10,textDecoration:"underline",cursor:"pointer",padding:0}}>{"Quarantine"}</button>}
+          {<button onClick={toggleQuarantine} style={{background:"none",border:"none",color:C.soft,fontSize:10,textDecoration:"underline",cursor:"pointer",padding:0}}>{W.quarantine}</button>}
         </span>
       </div>
   </>);
@@ -9570,12 +10321,12 @@ function CloudSaves({ui,showSnaps,snaps,snapWhy,snapBusy,downloadSnapshot,reques
           {/* A list, like Quarantine (her design): copies come from Save and the two
               automatic safety copies. */}
           <div style={{fontSize:12,color:C.ink,marginBottom:8,lineHeight:1.55}}>
-            {snaps&&snaps.length>0&&<b>{snaps.length+" cloud save"+(snaps.length===1?"":"s")+". "}</b>}
-            {"From exports also saved to the cloud and safety snapshots (taken before a Load, Reset or roll-back to an earlier snapshot)."}
+            {snaps&&snaps.length>0&&<b>{say(W.cloudSavesCount,{n:snaps.length,s:snaps.length===1?"":"s"})}</b>}
+            {W.cloudSavesLead}
           </div>
           {snapWhy&&<div style={{fontSize:12,fontWeight:600,color:C.warnInk,background:C.warnBg,border:"1px solid "+C.warnEdge,borderRadius:4,padding:"5px 8px",marginBottom:8}}>{snapWhy}</div>}
-          {snaps===null?<div style={{fontSize:12,color:C.soft}}>{"Reading cloud saves…"}</div>
-          :snaps.length===0?<div style={{fontSize:12,color:C.soft}}>{"No cloud saves yet."}</div>
+          {snaps===null?<div style={{fontSize:12,color:C.soft}}>{W.readingCloudSaves}</div>
+          :snaps.length===0?<div style={{fontSize:12,color:C.soft}}>{W.noCloudSaves}</div>
           :snaps.map(s=>(
             <div key={s.id} style={{display:"flex",gap:10,fontSize:12.5,color:C.ink,padding:"5px 0",alignItems:"baseline",borderTop:"1px dotted "+C.rule,flexWrap:"wrap"}}>
               {/* One width for every time (her ask): 15em fits the longest, with
@@ -9583,9 +10334,9 @@ function CloudSaves({ui,showSnaps,snaps,snapWhy,snapBusy,downloadSnapshot,reques
               <span style={{flex:"0 0 auto",minWidth:"15em",fontWeight:600,whiteSpace:"nowrap",fontVariantNumeric:"tabular-nums"}}>{localReadable(s.at)}</span>
               {/* No "automatic" tag (her decision): her own copies are marked by her
                   description in bold. */}
-              <span style={{flex:"1 1 160px"}}>{s.kind!=="safety"&&s.label?<>{"Export: \u201c"}<b>{s.label}</b>{"\u201d"}</>:snapTitle(s,snaps)}<span style={{color:C.soft}}>{" · "+s.rows+" exhibitions"}</span>{s.filename&&<span style={{display:"block",fontSize:11,color:C.soft,wordBreak:"break-all"}}>{s.filename}</span>}</span>
-              <button onClick={()=>downloadSnapshot(s)} style={{background:"none",border:"none",color:C.action,fontSize:12.5,fontWeight:600,textDecoration:"underline",cursor:"pointer",padding:0,whiteSpace:"nowrap"}}>Download</button>
-              <button onClick={()=>requestRollback(s)} disabled={snapBusy} style={{background:"none",border:"none",color:C.accent,fontSize:12.5,fontWeight:600,textDecoration:"underline",cursor:"pointer",padding:0,whiteSpace:"nowrap"}}>Roll back</button>
+              <span style={{flex:"1 1 160px"}}>{s.kind!=="safety"&&s.label?<Say text={W.exportLabel} gaps={{label:<b>{s.label}</b>}}/>:snapTitle(s,snaps)}<span style={{color:C.soft}}>{say(W.snapRows,{n:s.rows})}</span>{s.filename&&<span style={{display:"block",fontSize:11,color:C.soft,wordBreak:"break-all"}}>{s.filename}</span>}</span>
+              <button onClick={()=>downloadSnapshot(s)} style={{background:"none",border:"none",color:C.action,fontSize:12.5,fontWeight:600,textDecoration:"underline",cursor:"pointer",padding:0,whiteSpace:"nowrap"}}>{W.download}</button>
+              <button onClick={()=>requestRollback(s)} disabled={snapBusy} style={{background:"none",border:"none",color:C.accent,fontSize:12.5,fontWeight:600,textDecoration:"underline",cursor:"pointer",padding:0,whiteSpace:"nowrap"}}>{W.rollBack}</button>
             </div>
           ))}
         </div>}
@@ -9597,7 +10348,7 @@ function ResetAndQuarantine({ui,rows,showIgnored,ignored,ignoredByVenue,quarWhy,
   const{C,chip}=ui;
   return(
       <div style={{maxWidth:760,margin:"0 auto"}}>
-        {showIgnored&&ignored.length===0&&<div style={{marginTop:6,padding:"8px 10px",background:C.drawer,border:"1px solid "+C.rule,borderRadius:4,fontSize:12,color:C.soft}}>{quarWhy?"Quarantine can\u2019t be read: "+quarWhy:"Nothing in quarantine."}</div>}
+        {showIgnored&&ignored.length===0&&<div style={{marginTop:6,padding:"8px 10px",background:C.drawer,border:"1px solid "+C.rule,borderRadius:4,fontSize:12,color:C.soft}}>{quarWhy?say(W.quarantineUnread,{why:quarWhy}):W.quarantineEmpty}</div>}
         {/* Reset cards (her design): find a card by typing, pick it, confirm; its catalogue
             result is cleared (resetCard) and it shows "Find catalogue" again. Her marks
             stay. One card per confirm. */}
@@ -9605,7 +10356,7 @@ function ResetAndQuarantine({ui,rows,showIgnored,ignored,ignoredByVenue,quarWhy,
           <input value={resetQuery} onChange={e=>typeResetQuery(e.target.value)} style={{width:"100%",padding:"7px 10px",border:"1px solid "+C.rule,borderRadius:4,background:C.card,color:C.ink,fontSize:12.5,fontFamily:"inherit",boxSizing:"border-box"}}/>
           {resetQuery.trim()&&(()=>{
             const hits=cardsToReset(rows,resetQuery);
-            if(!hits.length)return <div style={{fontSize:12,color:C.soft,marginTop:8}}>{"No searched cards match."}</div>;
+            if(!hits.length)return <div style={{fontSize:12,color:C.soft,marginTop:8}}>{W.noSearchedCards}</div>;
             return hits.map(r=>(
               <div key={r.id} style={{display:"flex",gap:10,fontSize:12.5,color:C.ink,padding:"4px 0",alignItems:"baseline",marginTop:4}}>
                 <span style={{minWidth:130,fontWeight:600}}>{MU[r.museumId]?MU[r.museumId].card:r.museumId}</span>
@@ -9618,14 +10369,14 @@ function ResetAndQuarantine({ui,rows,showIgnored,ignored,ignoredByVenue,quarWhy,
               ink, at chip size or above. */}
           <div style={{fontSize:12,color:C.ink,marginBottom:8,lineHeight:1.55}}>
             {/* The count lives in here (her decision); the footer button just says Quarantine. */}
-            <b>{ignored.length+" in quarantine. "}</b>{"Entries excluded from all future imports. Removing them from quarantine will re-offer them in future sweeps \u2014 it does not immediately add them to your ledger."}
+            <b>{say(W.inQuarantine,{n:ignored.length})}</b>{W.quarantineLead}
           </div>
           {/* By venue only (her decision): venues in the app's order, titles A–Z. */}
           {ignoredByVenue.map(x=>(
             <div key={x.key} style={{display:"grid",gridTemplateColumns:"minmax(60px,0.7fr) minmax(0,2fr) auto",gap:10,fontSize:12.5,color:C.ink,padding:"4px 0",alignItems:"baseline"}}>
               <span style={{fontWeight:600}}>{MU[x.venueId]?MU[x.venueId].card:x.venueId}</span>
-              <span>{x.title||"(no title)"}</span>
-              <button onClick={()=>releaseFromQuarantine(x)} style={{background:"none",border:"none",color:C.action,fontSize:12.5,fontWeight:600,textDecoration:"underline",cursor:"pointer",padding:0,whiteSpace:"nowrap"}}>Remove</button>
+              <span>{x.title||W.noTitle}</span>
+              <button onClick={()=>releaseFromQuarantine(x)} style={{background:"none",border:"none",color:C.action,fontSize:12.5,fontWeight:600,textDecoration:"underline",cursor:"pointer",padding:0,whiteSpace:"nowrap"}}>{W.remove}</button>
             </div>
           ))}
         </div>}
@@ -9643,11 +10394,11 @@ function ConfirmBox({ui,confirmBox,dismissConfirm,answerConfirm}){
         <div style={{position:"fixed",inset:0,background:C.scrim,display:"grid",placeItems:"center",zIndex:1200,padding:16}}>
           <div style={{background:C.card,border:"1px solid "+C.rule,borderRadius:8,maxWidth:420,padding:"18px 20px",boxShadow:"0 6px 24px rgba(0,0,0,0.25)"}}>
             {/* The heading is the caller's; the default keeps the old wording. */}
-            <div style={{fontSize:14,fontWeight:700,color:C.ink,marginBottom:8}}>{confirmBox.title||"Replace what's on screen?"}</div>
+            <div style={{fontSize:14,fontWeight:700,color:C.ink,marginBottom:8}}>{confirmBox.title||W.replaceOnScreen}</div>
             {confirmBox.text?<div style={{fontSize:12.5,color:C.body,lineHeight:1.5,marginBottom:16}}>{confirmBox.text}</div>:<div style={{height:8}}/>}
             <div style={{display:"flex",gap:8,justifyContent:"flex-end"}}>
-              <button onClick={dismissConfirm} style={sBtn}>Cancel</button>
-              <button onClick={answerConfirm} style={{...pBtn,background:C.accent}}>{confirmBox.yes||"Continue"}</button>
+              <button onClick={dismissConfirm} style={sBtn}>{W.cancel}</button>
+              <button onClick={answerConfirm} style={{...pBtn,background:C.accent}}>{confirmBox.yes||W.continue}</button>
             </div>
           </div>
         </div>
@@ -9661,7 +10412,7 @@ function Footer({ui}){
       {/* The version, small and grey: something she checks, not acts on. Reads
           APP_VERSION, so there is one copy of the number. */}
       <footer style={{maxWidth:760,margin:"28px auto 0",fontSize:10.5,color:C.soft,textAlign:"center"}}>
-        Art Watch {"·"} v {APP_VERSION} {"·"} {APP_VERSION_DATE}
+        {say(W.footer,{version:APP_VERSION,date:APP_VERSION_DATE})}
       </footer>
   </>);
 }
@@ -9677,7 +10428,7 @@ function ReadStatus({ui,busy,prog,linkNote,linkFails,failAs}){
     </div>}
     {linkNote&&<div style={{marginTop:6,fontSize:11.5,color:C.soft,lineHeight:1.45}}>{linkNote}</div>}
     {linkFails.map((f,i)=><div key={i} style={{marginTop:6,fontSize:11.5,color:TH.urgent.ink,lineHeight:1.4,overflowWrap:"anywhere"}}>
-      {f.url?failAs(f):""}{f.url?" \u2014 ":""}{f.why}
+      {f.url?failAs(f):""}{f.url?W.failDash:""}{f.why}
     </div>)}
   </>);
 }
@@ -9696,7 +10447,7 @@ function ImportPopup({ui,importMode,cancelImportPopup,children}){
             {/* Cancel always answers: a catalogue search also sets busy, and once locked the
                 pop-up out until the search ended (her report). */}
             <div style={{textAlign:"center",marginTop:10}}>
-              <button onClick={cancelImportPopup} style={{background:"none",border:"none",color:C.soft,fontSize:10,textDecoration:"underline",cursor:"pointer",padding:0}}>Cancel</button>
+              <button onClick={cancelImportPopup} style={{background:"none",border:"none",color:C.soft,fontSize:10,textDecoration:"underline",cursor:"pointer",padding:0}}>{W.cancel}</button>
             </div>
           </div>
         </div>
@@ -9710,10 +10461,10 @@ function ImportNeedLedger({ui,importMode,openCloudFromImport,loadFromImport}){
             {/* IMPORT NEEDS A LEDGER OPEN: on an empty page it offers only the ways to open
                 one (her design), so an import can never become the whole ledger. */}
             {importMode==="needLedger"&&<div style={{textAlign:"center"}}>
-              <div style={{fontSize:13,color:C.ink,marginBottom:10}}>Your ledger needs to be opened first.</div>
+              <div style={{fontSize:13,color:C.ink,marginBottom:10}}>{W.ledgerFirst}</div>
               <div style={{display:"flex",gap:5,justifyContent:"center"}}>
-                <button onClick={openCloudFromImport} style={sBtn}>Open last cloud save</button>
-                <button onClick={loadFromImport} style={sBtn}>Load</button>
+                <button onClick={openCloudFromImport} style={sBtn}>{W.openLastCloudSave}</button>
+                <button onClick={loadFromImport} style={sBtn}>{W.load}</button>
               </div>
             </div>}
   </>);
@@ -9723,10 +10474,10 @@ function ImportTabs({ui,importMode,busy,chooseCsvImport,pickImportTab}){
   const{sBtn,pBtn}=ui;
   return(<>
             {importMode!=="needLedger"&&<div style={{display:"flex",gap:5,justifyContent:"center"}}>
-              <button onClick={chooseCsvImport} disabled={busy} style={sBtn}>CSV</button>
-              <button onClick={()=>pickImportTab("links")} disabled={busy} style={importMode==="links"?{...pBtn,opacity:1}:sBtn}>Links</button>
-              <button onClick={()=>pickImportTab("pages")} disabled={busy} style={importMode==="pages"?{...pBtn,opacity:1}:sBtn}>Pages</button>
-              <button onClick={()=>pickImportTab("paste")} disabled={busy} style={importMode==="paste"?{...pBtn,opacity:1}:sBtn}>Paste</button>
+              <button onClick={chooseCsvImport} disabled={busy} style={sBtn}>{W.tabCsv}</button>
+              <button onClick={()=>pickImportTab("links")} disabled={busy} style={importMode==="links"?{...pBtn,opacity:1}:sBtn}>{W.tabLinks}</button>
+              <button onClick={()=>pickImportTab("pages")} disabled={busy} style={importMode==="pages"?{...pBtn,opacity:1}:sBtn}>{W.tabPages}</button>
+              <button onClick={()=>pickImportTab("paste")} disabled={busy} style={importMode==="paste"?{...pBtn,opacity:1}:sBtn}>{W.tabPaste}</button>
             </div>}
   </>);
 }
@@ -9742,20 +10493,20 @@ function ImportPaste({ui,importMode,busy,pastes,typeInPasteBox,clearPasteBox,cle
                 const set=(k,v)=>typeInPasteBox(x.id,k,v);
                 const field={width:"100%",boxSizing:"border-box",fontSize:12.5,fontFamily:"inherit",padding:"6px 10px",border:"1px solid "+C.rule,borderRadius:4,background:C.card,color:C.ink,display:"block"};
                 return <div key={x.id} style={{marginBottom:10,position:"relative"}}>
-                  <input value={x.url} onChange={e=>set("url",e.target.value)} disabled={busy} placeholder="Link" aria-label="Link" inputMode="url" autoCapitalize="off" autoCorrect="off" spellCheck={false} style={{...field,paddingRight:52}}/>
+                  <input value={x.url} onChange={e=>set("url",e.target.value)} disabled={busy} placeholder={W.linkBox} aria-label={W.linkBox} inputMode="url" autoCapitalize="off" autoCorrect="off" spellCheck={false} style={{...field,paddingRight:52}}/>
                   {filledBox(x)&&<button onClick={()=>clearPasteBox(x.id)} disabled={busy}
-                    style={{position:"absolute",top:7,right:8,background:"none",border:"none",color:C.soft,fontSize:11,textDecoration:"underline",cursor:"pointer",padding:0}}>Clear</button>}
-                  <textarea value={x.text} onChange={e=>set("text",e.target.value)} disabled={busy} aria-label="Text" rows={5} style={{...field,marginTop:4,resize:"vertical"}}/>
+                    style={{position:"absolute",top:7,right:8,background:"none",border:"none",color:C.soft,fontSize:11,textDecoration:"underline",cursor:"pointer",padding:0}}>{W.clear}</button>}
+                  <textarea value={x.text} onChange={e=>set("text",e.target.value)} disabled={busy} aria-label={W.textBox} rows={5} style={{...field,marginTop:4,resize:"vertical"}}/>
                 </div>;
               })}
               {/* "Clear all" in the row with + and Read, centred as Cancel is (her design). */}
               <div style={{display:"grid",gridTemplateColumns:"1fr auto 1fr",alignItems:"center"}}>
                 <span/>
                 <span>{pastes.some(filledBox)&&<button onClick={clearAllPasteBoxes} disabled={busy}
-                  style={{background:"none",border:"none",color:C.soft,fontSize:11,textDecoration:"underline",cursor:"pointer",padding:0}}>Clear all</button>}</span>
+                  style={{background:"none",border:"none",color:C.soft,fontSize:11,textDecoration:"underline",cursor:"pointer",padding:0}}>{W.clearAll}</button>}</span>
                 <div style={{display:"flex",justifyContent:"flex-end",gap:5}}>
-                <button onClick={addPasteBox} disabled={busy} aria-label="Add a box" style={sBtn}>+</button>
-                <button onClick={()=>readLinks("paste")} disabled={busy} style={pBtn}>Read</button>
+                <button onClick={addPasteBox} disabled={busy} aria-label={W.addABox} style={sBtn}>+</button>
+                <button onClick={()=>readLinks("paste")} disabled={busy} style={pBtn}>{W.read}</button>
                 </div>
               </div>
               {<ReadStatus ui={ui} busy={busy} prog={prog} linkNote={linkNote} linkFails={linkFails} failAs={f=>f.url}/>}
@@ -9774,11 +10525,11 @@ function ImportPages({ui,importMode,busy,pages,pagesFileRef,pickPages,clearPages
                 {pages.length?pages.map(p=><div key={p.url} style={{overflowWrap:"anywhere",lineHeight:1.5}}>{p.title||p.name||p.url}</div>)
                   :null}
                 {pages.length>0&&<button onClick={clearPages} disabled={busy}
-                  style={{position:"absolute",top:6,right:8,background:"none",border:"none",color:C.soft,fontSize:11,textDecoration:"underline",cursor:"pointer",padding:0}}>Clear</button>}
+                  style={{position:"absolute",top:6,right:8,background:"none",border:"none",color:C.soft,fontSize:11,textDecoration:"underline",cursor:"pointer",padding:0}}>{W.clear}</button>}
               </div>
               <div style={{display:"flex",justifyContent:"flex-end",gap:5,marginTop:8}}>
-                <button onClick={()=>pagesFileRef.current?.click()} disabled={busy} style={sBtn}>Choose pages</button>
-                <button onClick={()=>readLinks("pages")} disabled={busy||!pages.length} style={pBtn}>Read</button>
+                <button onClick={()=>pagesFileRef.current?.click()} disabled={busy} style={sBtn}>{W.choosePages}</button>
+                <button onClick={()=>readLinks("pages")} disabled={busy||!pages.length} style={pBtn}>{W.read}</button>
               </div>
               {<ReadStatus ui={ui} busy={busy} prog={prog} linkNote={linkNote} linkFails={linkFails} failAs={f=>{ const pg=pages.find(p=>p.url===f.url); return (pg&&(pg.title||pg.name))||f.url; }}/>}
             </div>}
@@ -9795,10 +10546,10 @@ function ImportLinks({ui,importMode,busy,linkText,typeLinkText,clearLinkText,rea
                 <textarea value={linkText} onChange={e=>typeLinkText(e.target.value)} rows={8} disabled={busy}
                   style={{width:"100%",boxSizing:"border-box",fontSize:12.5,fontFamily:"inherit",padding:"8px 52px 8px 10px",border:"1px solid "+C.rule,borderRadius:4,background:C.card,color:C.ink,resize:"vertical",display:"block"}}/>
                 {linkText.trim()&&<button onClick={clearLinkText} disabled={busy}
-                  style={{position:"absolute",top:6,right:8,background:"none",border:"none",color:C.soft,fontSize:11,textDecoration:"underline",cursor:"pointer",padding:0}}>Clear</button>}
+                  style={{position:"absolute",top:6,right:8,background:"none",border:"none",color:C.soft,fontSize:11,textDecoration:"underline",cursor:"pointer",padding:0}}>{W.clear}</button>}
               </div>
               <div style={{display:"flex",justifyContent:"flex-end",marginTop:8}}>
-                <button onClick={()=>readLinks("links")} disabled={busy} style={pBtn}>Read</button>
+                <button onClick={()=>readLinks("links")} disabled={busy} style={pBtn}>{W.read}</button>
               </div>
               {<ReadStatus ui={ui} busy={busy} prog={prog} linkNote={linkNote} linkFails={linkFails} failAs={f=><a href={f.url} target="_blank" rel="noopener noreferrer" style={{color:TH.urgent.ink}}>{f.url}</a>}/>}
             </div>}
@@ -9815,22 +10566,22 @@ function ProposalCard({ui,p,i,decisions,setCardMode,setChoice,setFieldDec}){
 
 
         {p.type==="add"&&<div style={{fontSize:11.5,color:C.ink,lineHeight:1.5}}>
-          <div style={{fontWeight:700,marginBottom:3}}>{"New show \u2014 not in your ledger yet."}</div>
-          {infoRow("Dates",dateRange(p.cand))}
-          {infoRow("Description",p.cand.summary)}
-          {infoRow("Link",p.cand.exUrl&&<a href={p.cand.exUrl} target="_blank" rel="noopener noreferrer" style={{color:C.ink}}>{p.cand.exUrl}</a>)}
-          {infoRow("Period",periodText(p.cand))}
+          <div style={{fontWeight:700,marginBottom:3}}>{W.newShow}</div>
+          {infoRow(W.dates,dateRange(p.cand))}
+          {infoRow(W.description,p.cand.summary)}
+          {infoRow(W.linkBox,p.cand.exUrl&&<a href={p.cand.exUrl} target="_blank" rel="noopener noreferrer" style={{color:C.ink}}>{p.cand.exUrl}</a>)}
+          {infoRow(W.sortPeriod,periodText(p.cand))}
         </div>}
 
         {(p.type==="fill"||p.type==="change")&&<div style={{fontSize:11.5,color:C.ink}}>
-          <div style={{fontWeight:700,marginBottom:5}}>{"Existing entry \u2014 decide each change:"}</div>
+          <div style={{fontWeight:700,marginBottom:5}}>{W.existingEntry}</div>
           {dec.mode==="addnew"
-            ? <div style={{fontStyle:"italic",color:C.action}}>Will be added as a separate new entry instead of changing the existing one.</div>
+            ? <div style={{fontStyle:"italic",color:C.action}}>{W.willBeAddedSeparately}</div>
             : p.upd.map((u,j)=>{const fd=(dec.fields||{})[j];return(
                 <div key={j} style={{display:"flex",gap:8,alignItems:"flex-start",marginBottom:5}}>
-                  <div style={{flex:1,minWidth:0,lineHeight:1.4,overflowWrap:"anywhere"}}><b style={{color:C.ink}}>{u.label}:</b> <span style={{color:C.soft}}>{u.kind==="fill"?("add \u201c"+u.newVal+"\u201d"):("\u201c"+u.oldVal+"\u201d \u2192 \u201c"+u.newVal+"\u201d")}</span></div>
-                  <button onClick={()=>setFieldDec(i,j,"accept")} style={decBtn(fd==="accept",C.okEdge)}>{fd==="accept"?"\u2713 ":""}Accept edit</button>
-                  <button onClick={()=>setFieldDec(i,j,"reject")} style={decBtn(fd==="reject",C.rejectInk)}>Reject</button>
+                  <div style={{flex:1,minWidth:0,lineHeight:1.4,overflowWrap:"anywhere"}}><b style={{color:C.ink}}>{u.label}:</b> <span style={{color:C.soft}}>{u.kind==="fill"?say(W.fillValue,{value:u.newVal}):("\u201c"+u.oldVal+"\u201d \u2192 \u201c"+u.newVal+"\u201d")}</span></div>
+                  <button onClick={()=>setFieldDec(i,j,"accept")} style={decBtn(fd==="accept",C.okEdge)}>{fd==="accept"?"\u2713 ":""}{W.acceptEdit}</button>
+                  <button onClick={()=>setFieldDec(i,j,"reject")} style={decBtn(fd==="reject",C.rejectInk)}>{W.reject}</button>
                 </div>
               );})}
         </div>}
@@ -9838,7 +10589,7 @@ function ProposalCard({ui,p,i,decisions,setCardMode,setChoice,setFieldDec}){
         {/* The file disagreed with itself: both values shown, the fuller one ticked as
             a starting point, one tap switches (her decision). */}
         {p.choices&&p.choices.length>0&&<div style={{marginTop:7,paddingTop:6,borderTop:"1px dotted "+C.rule}}>
-          <div style={{fontSize:10.5,color:C.soft,lineHeight:1.5,marginBottom:5}}>The sweep file gave two different answers here. The longer one is picked for you {"\u2014"} change it if it{"\u2019"}s wrong.</div>
+          <div style={{fontSize:10.5,color:C.soft,lineHeight:1.5,marginBottom:5}}>{W.twoAnswers}</div>
           {p.choices.map((ch,j)=>(
             <div key={j} style={{marginBottom:6}}>
               <div style={{fontSize:11,fontWeight:700,color:C.ink,marginBottom:3}}>{ch.label}</div>
@@ -9848,7 +10599,7 @@ function ProposalCard({ui,p,i,decisions,setCardMode,setChoice,setFieldDec}){
                 return(
                   <button key={k} onClick={()=>setChoice(i,ch.field,opt)}
                     style={{...decBtn(chosen,C.okEdge),display:"block",width:"100%",textAlign:"left",marginBottom:3,whiteSpace:"normal",lineHeight:1.4}}>
-                    {chosen?"\u2713 ":"\u00a0\u00a0"}{opt&&String(opt).trim()?opt:"(blank)"}
+                    {chosen?"\u2713 ":"\u00a0\u00a0"}{opt&&String(opt).trim()?opt:W.blank}
                   </button>
                 );
               })}
@@ -9863,16 +10614,16 @@ function ProposalCard({ui,p,i,decisions,setCardMode,setChoice,setFieldDec}){
             duplicate, a dead link) — not for a show she is not interested in, which is
             accepted and then dismissed. */}
         {p.type==="add"&&<div style={{marginTop:8,display:"flex",gap:6,flexWrap:"wrap"}}>
-          <button onClick={()=>setCardMode(i,"accept")} style={decBtn(dec.mode==="accept",C.okEdge)}>{dec.mode==="accept"?"\u2713 ":""}Add new entry</button>
-          <button onClick={()=>setCardMode(i,"reject")} style={decBtn(dec.mode==="reject",C.rejectInk)}>{dec.mode==="reject"?"\u2713 ":""}Reject</button>
-          <button onClick={()=>setCardMode(i,"never")} style={decBtn(dec.mode==="never",C.neverInk)}>{dec.mode==="never"?"\u2713 ":""}{"Never add this"}</button>
+          <button onClick={()=>setCardMode(i,"accept")} style={decBtn(dec.mode==="accept",C.okEdge)}>{dec.mode==="accept"?"\u2713 ":""}{W.addNewEntry}</button>
+          <button onClick={()=>setCardMode(i,"reject")} style={decBtn(dec.mode==="reject",C.rejectInk)}>{dec.mode==="reject"?"\u2713 ":""}{W.reject}</button>
+          <button onClick={()=>setCardMode(i,"never")} style={decBtn(dec.mode==="never",C.neverInk)}>{dec.mode==="never"?"\u2713 ":""}{W.neverAddThis}</button>
         </div>}
         {p.type==="add"&&dec.mode==="never"&&<div style={{marginTop:5,fontSize:10.5,color:C.soft,lineHeight:1.45}}>
-          {"Won\u2019t be offered again on future sweeps."}
+          {W.wontBeOffered}
         </div>}
 
         {p.type==="change"&&<div style={{marginTop:8}}>
-          <button onClick={()=>setCardMode(i,"addnew")} style={decBtn(dec.mode==="addnew","#4A5A6B")}>{dec.mode==="addnew"?"\u2713 ":""}{"No \u2014 this is a different show, add as separate entry"}</button>
+          <button onClick={()=>setCardMode(i,"addnew")} style={decBtn(dec.mode==="addnew","#4A5A6B")}>{dec.mode==="addnew"?"\u2713 ":""}{W.differentShow}</button>
         </div>}
 
       </div>
@@ -9883,7 +10634,7 @@ function ReviewHeading({ui,proposals,tally}){
   const{C}=ui;
   return(
             <div style={{padding:"14px 18px",borderBottom:"1px solid "+C.rule}}>
-              <div style={{fontFamily:"'Fraunces',Georgia,serif",fontSize:20,fontWeight:500,color:C.ink}}>{proposals.length} proposed change{proposals.length===1?"":"s"} found</div>
+              <div style={{fontFamily:"'Fraunces',Georgia,serif",fontSize:20,fontWeight:500,color:C.ink}}>{say(W.proposedChanges,{n:proposals.length,s:proposals.length===1?"":"s"})}</div>
               {/* The counts, her wording: two sentences, each ending in the number the
                   next starts from (docs/app.md §3). Every term stays — drop one and the
                   arithmetic stops closing. */}
@@ -9893,18 +10644,12 @@ function ReviewHeading({ui,proposals,tally}){
                 return (
                 <div style={{fontSize:11.5,color:C.soft,marginTop:6,lineHeight:1.6}}>
                   <div>
-                    From {n(tally.fileRows)} row{tally.fileRows===1?"":"s"} in the file
-                    {" \u2014 "}{n(tally.markers)} marker row{tally.markers===1?"":"s"}
-                    {tally.blocked>0&&<>{", "}{n(tally.blocked)} you{"\u2019"}d said never to add</>}
-                    {", "}{n(tally.folded)} duplicate row{tally.folded===1?"":"s"} reconciled/de-duped
-                    {", "}{n(tally.silent)} already matching ledger
-                    {" = "}{n(cards)} entries considered for import
+                    <Say text={W.tallyRows} gaps={{rows:n(tally.fileRows),s1:tally.fileRows===1?"":"s",markers:n(tally.markers),s2:tally.markers===1?"":"s",
+                      blocked:tally.blocked>0&&<Say text={W.tallyBlocked} gaps={{n:n(tally.blocked)}}/>,
+                      folded:n(tally.folded),s3:tally.folded===1?"":"s",silent:n(tally.silent),cards:n(cards)}}/>
                   </div>
                   <div style={{marginTop:2}}>
-                    From {n(cards)} entr{cards===1?"y":"ies"}
-                    {" \u2014 "}{n(tally.fill)} fill a gap
-                    {", "}{n(tally.change)} edit existing data
-                    {", "}{n(tally.add)} new exhibition{tally.add===1?"":"s"}
+                    <Say text={W.tallyCards} gaps={{cards:n(cards),y:cards===1?"y":"ies",fill:n(tally.fill),change:n(tally.change),add:n(tally.add),s:tally.add===1?"":"s"}}/>
                   </div>
                 </div>
                 );
@@ -9990,16 +10735,16 @@ function ReviewBody({ui,proposals,coverage,decisions,setFieldDec,setCardMode,set
                 return(<div style={{overflow:"auto",padding:"12px 18px",flex:1}}>
                   {oddCount>0&&(
                     <div style={{marginBottom:16,paddingBottom:12,borderBottom:"2px solid "+C.rule}}>
-                      <div style={{fontFamily:"'Fraunces',Georgia,serif",fontSize:15,color:C.ink,marginBottom:8}}>Odd cases {"\u00b7"} {oddCount}</div>
-                      {coverage.length>0&&band("markers","1. Marker rows",undefined,coverage.length,false,markerBlocks)}
-                      {mergedOnly.length>0&&band("merged","2. Combined rows \u00b7 identical rows were de-duped or reconciled",undefined,mergedOnly.length,false,byVenueBlocks(mergedOnly))}
-                      {mergedConf.length>0&&band("mergedconf","3. Combined rows \u00b7 identical rows produced conflicts \u2014 yours to choose",C.accent,mergedConf.length,true,byVenueBlocks(mergedConf))}
-                      {noLink.length>0&&band("nolink","4. No exhibition url \u00b7 link goes to venue\u2019s listing page",undefined,noLink.length,true,byVenueBlocks(noLink))}
+                      <div style={{fontFamily:"'Fraunces',Georgia,serif",fontSize:15,color:C.ink,marginBottom:8}}>{W.oddCases}{"\u00b7"} {oddCount}</div>
+                      {coverage.length>0&&band("markers",W.bandMarkers,undefined,coverage.length,false,markerBlocks)}
+                      {mergedOnly.length>0&&band("merged",W.bandMerged,undefined,mergedOnly.length,false,byVenueBlocks(mergedOnly))}
+                      {mergedConf.length>0&&band("mergedconf",W.bandMergedConflicts,C.accent,mergedConf.length,true,byVenueBlocks(mergedConf))}
+                      {noLink.length>0&&band("nolink",W.bandNoLink,undefined,noLink.length,true,byVenueBlocks(noLink))}
                     </div>
                   )}
                   {notForYou.length>0&&(
                     <div style={{marginBottom:16,paddingBottom:12,borderBottom:"2px solid "+C.rule}}>
-                      <div style={{fontFamily:"'Fraunces',Georgia,serif",fontSize:15,color:C.ink,marginBottom:8}}>Probably not for you {"\u00b7"} {notForYou.length}</div>
+                      <div style={{fontFamily:"'Fraunces',Georgia,serif",fontSize:15,color:C.ink,marginBottom:8}}>{W.notForYou}{"\u00b7"} {notForYou.length}</div>
                       {byVenueBlocks(notForYou)}
                     </div>
                   )}
@@ -10011,14 +10756,14 @@ function ReviewBody({ui,proposals,coverage,decisions,setFieldDec,setCardMode,set
                     return(
                     <div style={{marginBottom:12,display:"flex",alignItems:"flex-end",gap:12,flexWrap:"wrap"}}>
                       <div style={{flex:"1 1 260px",minWidth:0}}>
-                        <div style={{fontFamily:"'Fraunces',Georgia,serif",fontSize:15,color:C.ink,marginBottom:2}}>Normal cases {"\u00b7"} {ordinary.length}</div>
-                        <div style={{fontSize:11.5,color:C.soft,lineHeight:1.55}}>Nothing unusual about these {"\u2014"} one row in the file, nothing combined, nothing disagreeing.</div>
+                        <div style={{fontFamily:"'Fraunces',Georgia,serif",fontSize:15,color:C.ink,marginBottom:2}}>{W.normalCases}{"\u00b7"} {ordinary.length}</div>
+                        <div style={{fontSize:11.5,color:C.soft,lineHeight:1.55}}>{W.nothingUnusual}</div>
                       </div>
                       <button onClick={()=>{
                           const next={};
                           for(const id of venuesHere) next[id]=!anyOpen;
                           setVenuesOpen(next);
-                        }} style={sBtn}>{anyOpen?"Collapse all venues":"Expand all venues"}</button>
+                        }} style={sBtn}>{anyOpen?W.collapseAllVenues:W.expandAllVenues}</button>
                     </div>
                   );})()}
                   {/* Order inside a venue (her decision): fills, then edits, then new;
@@ -10046,7 +10791,7 @@ function ReviewBody({ui,proposals,coverage,decisions,setFieldDec,setCardMode,set
                             closed venue still declares what it holds; a "0" is clutter
                             (her decision). */}
                         {(()=>{const u=grp.filter(({p,i})=>isUndecided(p,i)).length;
-                          return u>0?<span style={{fontSize:11,fontWeight:600,color:C.soft}}>{"\u00b7 "+u+" to decide"}</span>:null;})()}
+                          return u>0?<span style={{fontSize:11,fontWeight:600,color:C.soft}}>{say(W.venueToDecide,{n:u})}</span>:null;})()}
                       </button>
                       {vOpen&&grp.map(({p,i})=><ProposalCard key={i} ui={ui} p={p} i={i} decisions={decisions} setCardMode={setCardMode} setChoice={setChoice} setFieldDec={setFieldDec}/>)}
                     </div>
@@ -10059,11 +10804,11 @@ function ReviewButtons({ui,proposals,decisions,cancelRefresh,askPartialApply,pro
   const{acceptedCount,undecidedCount,quarantinedCount,rejectedCount}=countDecisions(proposals,decisions);
   return(
             <div style={{padding:"12px 18px",borderTop:"1px solid "+C.rule,display:"flex",gap:10,alignItems:"center",flexWrap:"wrap"}}>
-              <button onClick={cancelRefresh} style={sBtn}>Cancel import</button>
+              <button onClick={cancelRefresh} style={sBtn}>{W.cancelImport}</button>
               {/* Rejected and quarantined are named only when there is one (her ask);
                   what is named adds up to what is decided. */}
               <span style={{fontSize:11.5,color:C.soft,marginLeft:"auto"}}>
-                {(rejectedCount?rejectedCount+" rejected, ":"")+(quarantinedCount?quarantinedCount+" quarantined, ":"")+acceptedCount+" to apply"}</span>
+                {(rejectedCount?say(W.nRejected,{n:rejectedCount}):"")+(quarantinedCount?say(W.nQuarantined,{n:quarantinedCount}):"")+say(W.nToApply,{n:acceptedCount})}</span>
               {/* No separate "N to decide" link here (her decision: clutter) — the venue
                   headings say where the cards are. */}
               {/* Every card must be decided before the ledger moves — a hard block, her
@@ -10083,11 +10828,11 @@ function ReviewButtons({ui,proposals,decisions,cancelRefresh,askPartialApply,pro
               {/* "Next" when a new venue's shop is still to confirm (her design): the
                   ledger moves only after the shop screen. */}
               <button onClick={()=>proceedRefresh(false)} disabled={undecidedCount>0}
-                title={undecidedCount>0?"Decide every card first — "+undecidedCount+" still undecided.":""}
+                title={undecidedCount>0?say(W.decideEveryCard,{n:undecidedCount}):""}
                 style={{...pBtn,...(undecidedCount>0?{background:C.muted,cursor:"not-allowed",opacity:1}:{})}}>
                 {undecidedCount>0
-                  ? undecidedCount+" still to decide"
-                  : venuesToConfirm().length?"Next":"Go ahead and update the ledger"}</button>
+                  ? say(W.stillToDecide,{n:undecidedCount})
+                  : venuesToConfirm().length?W.next:W.goAhead}</button>
             </div>
   );
 }
@@ -10121,10 +10866,10 @@ function ShopVenueCard({ui,id,occVenues,shopLooking,shopAdding,confirmShop,lookA
   const{C,decBtn}=ui;
                 const v=occVenues[id]||{}, link=v.shop==="found"?v.shopCatalogues:null, looking=shopLooking===id;
                 const home=v.shop==="noshelf"||v.shop==="failed"?v.shopHome:null;
-                const said=v.shop==="found"?null:v.shop==="noshelf"?"Shop found, but not its books section: "
-                  :v.shop==="failed"?"Search failed.":"No museum shop found.";
+                const said=v.shop==="found"?null:v.shop==="noshelf"?W.shopNoBooksSection
+                  :v.shop==="failed"?W.searchFailed:W.noMuseumShopFound;
                 // The finder found no catalogues section: one line, her wording, whatever it took instead.
-                const lesser=link&&v.shelfKind&&v.shelfKind!=="catalogues"?"Shop found, but not its catalogues section ":null;
+                const lesser=link&&v.shelfKind&&v.shelfKind!=="catalogues"?W.shopNoCataloguesSection:null;
                 const en=v.shop==="found"?v.shopEnglishUnread:null;
                 const yes=v.confirmed&&v.shop==="found"&&!v.englishPicked&&!v.shopAdded, yesEn=v.confirmed&&!!en&&!!v.englishPicked, none=v.confirmed&&v.shop==="none", added=v.confirmed&&!!v.shopAdded;
                 const typing=shopAdding&&shopAdding.id===id;
@@ -10134,11 +10879,11 @@ function ShopVenueCard({ui,id,occVenues,shopLooking,shopAdding,confirmShop,lookA
                   {link?<div>{lesser&&<span style={{color:C.soft}}>{lesser}</span>}<a href={link} target="_blank" rel="noopener noreferrer" style={{color:C.action,overflowWrap:"anywhere"}}>{link}</a></div>
                     :<div style={{color:C.soft}}>{said}{home&&v.shop==="noshelf"&&<a href={home} target="_blank" rel="noopener noreferrer" style={{color:C.action,overflowWrap:"anywhere"}}>{home}</a>}</div>}
                   <div style={{display:"flex",gap:6,marginTop:6,alignItems:"center",flexWrap:"wrap"}}>
-                    {looking?<span style={{fontSize:11.5,color:C.soft}}>Looking{"\u2026"}</span>:<>
-                      <button onClick={()=>confirmShop(id)} disabled={!!shopLooking||!(link||home)} style={{...decBtn(yes,C.okEdge),...(!(link||home)?{opacity:0.4,cursor:"not-allowed"}:{})}}>{yes?"\u2713 ":""}Confirm</button>
-                      <button onClick={()=>lookAgain(id)} disabled={!!shopLooking} style={decBtn(false,C.okEdge)}>Look again</button>
-                      <button onClick={()=>noShopFor(id)} disabled={!!shopLooking} style={decBtn(none,C.rejectInk)}>{none?"\u2713 ":""}No shop</button>
-                      <button onClick={()=>toggleShopAdd(id,typing,added,link)} disabled={!!shopLooking} style={decBtn(added,C.okEdge)}>{added?"\u2713 ":""}Add</button>
+                    {looking?<span style={{fontSize:11.5,color:C.soft}}>{W.looking}</span>:<>
+                      <button onClick={()=>confirmShop(id)} disabled={!!shopLooking||!(link||home)} style={{...decBtn(yes,C.okEdge),...(!(link||home)?{opacity:0.4,cursor:"not-allowed"}:{})}}>{yes?"\u2713 ":""}{W.confirm}</button>
+                      <button onClick={()=>lookAgain(id)} disabled={!!shopLooking} style={decBtn(false,C.okEdge)}>{W.lookAgain}</button>
+                      <button onClick={()=>noShopFor(id)} disabled={!!shopLooking} style={decBtn(none,C.rejectInk)}>{none?"\u2713 ":""}{W.noShop}</button>
+                      <button onClick={()=>toggleShopAdd(id,typing,added,link)} disabled={!!shopLooking} style={decBtn(added,C.okEdge)}>{added?"\u2713 ":""}{W.add}</button>
                     </>}
                   </div>
                   {/* "Add": her link, taken on Enter or on leaving the box; Escape closes it. */}
@@ -10148,7 +10893,7 @@ function ShopVenueCard({ui,id,occVenues,shopLooking,shopAdding,confirmShop,lookA
                     style={{display:"block",width:"100%",boxSizing:"border-box",marginTop:6,padding:"5px 8px",fontSize:12.5,border:"1px solid "+C.rule,borderRadius:4,background:C.card,color:C.ink,fontFamily:"inherit"}}/>}
                   {/* Its English section, which the finder could not read: hers to confirm instead. */}
                   {en&&<><div style={{marginTop:6}}><a href={en} target="_blank" rel="noopener noreferrer" style={{color:C.action,overflowWrap:"anywhere"}}>{en}</a></div>
-                    <div style={{display:"flex",gap:6,marginTop:6}}>{!looking&&<button onClick={()=>confirmShop(id,true)} disabled={!!shopLooking} style={decBtn(yesEn,C.okEdge)}>{yesEn?"\u2713 ":""}Confirm</button>}</div></>}
+                    <div style={{display:"flex",gap:6,marginTop:6}}>{!looking&&<button onClick={()=>confirmShop(id,true)} disabled={!!shopLooking} style={decBtn(yesEn,C.okEdge)}>{yesEn?"\u2713 ":""}{W.confirm}</button>}</div></>}
                 </div>
   );
 }
@@ -10159,7 +10904,7 @@ function ShopScreen({ui,shopScreen,occVenues,shopLooking,shopAdding,confirmShop,
         return <div role="dialog" style={{position:"fixed",inset:0,background:C.scrim,zIndex:1150,display:"flex",flexDirection:"column",padding:16}}>
           <div style={{background:C.bg,borderRadius:8,maxWidth:820,width:"100%",margin:"0 auto",display:"flex",flexDirection:"column",maxHeight:"100%",overflow:"hidden",boxShadow:"0 8px 30px rgba(0,0,0,0.3)"}}>
             <div style={{padding:"14px 18px",borderBottom:"1px solid "+C.rule}}>
-              <div style={{fontFamily:"'Fraunces',Georgia,serif",fontSize:20,fontWeight:500,color:C.ink}}>New Venue Shops</div>
+              <div style={{fontFamily:"'Fraunces',Georgia,serif",fontSize:20,fontWeight:500,color:C.ink}}>{W.newVenueShops}</div>
             </div>
             <div style={{overflow:"auto",padding:"4px 18px 14px",flex:1}}>
               {/* The review cards' buttons (decBtn), always the same four in the same
@@ -10167,10 +10912,10 @@ function ShopScreen({ui,shopScreen,occVenues,shopLooking,shopAdding,confirmShop,
               {shopScreen.ids.map(id=><ShopVenueCard key={id} ui={ui} id={id} occVenues={occVenues} shopLooking={shopLooking} shopAdding={shopAdding} confirmShop={confirmShop} lookAgain={lookAgain} noShopFor={noShopFor} toggleShopAdd={toggleShopAdd} typeShopLink={typeShopLink} closeShopAdd={closeShopAdd} addShopFor={addShopFor}/>)}
             </div>
             <div style={{padding:"12px 18px",borderTop:"1px solid "+C.rule,display:"flex",gap:10,alignItems:"center"}}>
-              <button onClick={backFromShop} disabled={!!shopLooking} style={sBtn}>Back</button>
+              <button onClick={backFromShop} disabled={!!shopLooking} style={sBtn}>{W.back}</button>
               <button onClick={()=>applyRefresh(shopScreen.partial)} disabled={left>0}
                 style={{...pBtn,marginLeft:"auto",...(left>0?{background:C.muted,cursor:"not-allowed",opacity:1}:{})}}>
-                {left>0?left+" still to decide":"Go ahead and update the ledger"}</button>
+                {left>0?say(W.stillToDecide,{n:left}):W.goAhead}</button>
             </div>
           </div>
         </div>;
@@ -10643,7 +11388,7 @@ function useLedgerDocument({showError,showDiagnostic,ask:askHer,onLoaded}){
     if(roStop())return;
     const at=new Date().toISOString();
     setQuarantine(prev=>{ const next=mergeQuarantine(prev,{[x.key]:{venueId:x.venueId,title:x.title,at,state:"released"}});
-      writeQuarantine(next).then(ok=>{ if(!ok) setQuarWhy("That release couldn\u2019t be saved to this page\u2019s store, so it may come back when you reload."); });
+      writeQuarantine(next).then(ok=>{ if(!ok) setQuarWhy(W.releaseNotSaved); });
       return next; });
     setDirty(true);};
 
@@ -11159,14 +11904,14 @@ export default function App(){
   const toggleResetCards=()=>{if(showResetCards)setResetQuery("");setShowResetCards(v=>!v);};
   const toggleQuarantine=()=>setShowIgnored(v=>!v);
   const typeResetQuery=v=>setResetQuery(v);
-  const askResetCard=id=>setConfirmBox({title:"Reset this search?",yes:"Yes",act:()=>{
+  const askResetCard=id=>setConfirmBox({title:W.resetThisSearch,yes:W.yes,act:()=>{
     commit(resetOneCard(rows,id));
     forgetSaid(id);
     setResetQuery("");}});
   const dismissConfirm=()=>setConfirmBox(null);
   const answerConfirm=()=>{const a=confirmBox.act;setConfirmBox(null);a&&a();};
 
-  if(!loaded)return(<div style={{fontFamily:"'Inter',system-ui,sans-serif",background:C.bg,color:C.soft,minHeight:"100vh",display:"grid",placeItems:"center",fontSize:13}}>Opening the ledger{"\u2026"}</div>);
+  if(!loaded)return(<div style={{fontFamily:"'Inter',system-ui,sans-serif",background:C.bg,color:C.soft,minHeight:"100vh",display:"grid",placeItems:"center",fontSize:13}}>{W.openingLedger}</div>);
 
   return(
     <div style={{fontFamily:"'Inter',system-ui,sans-serif",background:C.bg,color:C.ink,minHeight:"100vh",padding:"20px 16px 60px"}}>

@@ -5,7 +5,7 @@
 // The shop link searches by the EXHIBITION's title (her decision): shops index the
 // show's name; resellers use the ISBN or the book's title. Booko: booko.au/<isbn>,
 // or its title search with no ISBN.
-function buyLinks(r){const isbn=cleanIsbn(r.isbn13),title=r.catalogueTitle||r.title,q=encodeURIComponent(isbn||title),tq=encodeURIComponent(title),mu=MU[r.museumId],out=[];if(r.shopUrl)out.push({name:shopLinkLabel(r.shopState),href:r.shopUrl});else if(shopButtonUrl(mu,r.title))out.push({name:"Museum shop",href:shopButtonUrl(mu,r.title)});if(r.publisherUrl)out.push({name:publisherLinkLabel(r.publisherResult),href:r.publisherUrl});out.push({name:"Amazon",href:"https://www.amazon.com.au/s?k="+q},{name:"AbeBooks",href:"https://www.abebooks.com/servlet/SearchResults?ds=30&dym=on&kn="+(isbn||tq)+"&rollup=on&sortby=17"},{name:"Alibris",href:"https://www.alibris.com/booksearch?keyword="+q},{name:"Booko",href:isbn?"https://booko.au/"+isbn:"https://booko.au/search?query_type=1&q="+tq.replace(/%20/g,"+")});return out;}
+function buyLinks(r){const isbn=cleanIsbn(r.isbn13),title=r.catalogueTitle||r.title,q=encodeURIComponent(isbn||title),tq=encodeURIComponent(title),mu=MU[r.museumId],out=[];if(r.shopUrl)out.push({name:shopLinkLabel(r.shopState),href:r.shopUrl});else if(shopButtonUrl(mu,r.title))out.push({name:W.museumShop,href:shopButtonUrl(mu,r.title)});if(r.publisherUrl)out.push({name:publisherLinkLabel(r.publisherResult),href:r.publisherUrl});out.push({name:W.amazon,href:"https://www.amazon.com.au/s?k="+q},{name:W.abeBooks,href:"https://www.abebooks.com/servlet/SearchResults?ds=30&dym=on&kn="+(isbn||tq)+"&rollup=on&sortby=17"},{name:W.alibris,href:"https://www.alibris.com/booksearch?keyword="+q},{name:W.booko,href:isbn?"https://booko.au/"+isbn:"https://booko.au/search?query_type=1&q="+tq.replace(/%20/g,"+")});return out;}
 //@piece publisherLinkLabel
 
 
@@ -14,9 +14,9 @@ function buyLinks(r){const isbn=cleanIsbn(r.isbn13),title=r.catalogueTitle||r.ti
 // the book's own page; "Publisher's section" = the section it sits in; "Publisher's
 // website" = the home page. An old row with no kind keeps the plain label.
 function publisherLinkLabel(kind){
-  if(kind==="container")return "Publisher\u2019s section";
-  if(kind==="site")return "Publisher\u2019s website";
-  return "Publisher";
+  if(kind==="container")return W.publishersSection;
+  if(kind==="site")return W.publishersWebsite;
+  return W.publisher;
 }
 //@piece publisherNote
 
@@ -25,10 +25,10 @@ function publisherLinkLabel(kind){
 // C-069a). No result recorded says nothing: the step did not finish, or the row
 // predates outcomes (her decision). Self-published and the book's own page say nothing.
 function publisherNote(result,hasUrl){
-  if(result==="container")return "Publisher\u2019s link opens the section this book sits in, not the book\u2019s own page.";
-  if(result==="site")     return "Couldn\u2019t find this book on the publisher\u2019s site — the link opens their home page.";
-  if(result==="nosite")   return "Couldn\u2019t work out the publisher\u2019s own website, so there\u2019s no link to it.";
-  if(result==="unnamed")  return "No publisher was named for this book, so none was looked for.";
+  if(result==="container")return W.pubNoteSection;
+  if(result==="site")     return W.pubNoteSite;
+  if(result==="nosite")   return W.pubNoteNoSite;
+  if(result==="unnamed")  return W.pubNoteUnnamed;
   // Self-published: no button is answer enough (her decision).
   if(result==="selfpublished")return "";
   if(result==="product")  return "";
@@ -59,12 +59,12 @@ function publisherNote(result,hasUrl){
 // `null` means the ordinary grey sentence stands on its own.
 function shopHeadline(shopState,shopChange){
   if(shopState==="shop"){
-    if(shopChange==="back")return "Back in the museum shop.";
-    if(shopChange==="now") return "Now in the museum shop.";
-    if(shopChange==="still")return "Still in the museum shop.";
-    return "In the museum shop.";
+    if(shopChange==="back")return W.backInShop;
+    if(shopChange==="now") return W.nowInShop;
+    if(shopChange==="still")return W.stillInShop;
+    return W.inShop;
   }
-  if(shopState==="gone")return "No longer in the museum shop.";
+  if(shopState==="gone")return W.noLongerInShop;
   return null;
 }
 //@piece SHOP_BLOCKED_HEAD
@@ -72,16 +72,16 @@ function shopHeadline(shopState,shopChange){
 
 // A blocked shop says so, in her wording (docs/app.md §1): the headline in the red and
 // weight of "No longer in the museum shop.", the rest grey.
-const SHOP_BLOCKED_HEAD="The museum shop is blocked";
+const SHOP_BLOCKED_HEAD=W.shopBlockedHead;
 //@piece SHOP_SCRIPT_HEAD
 
-const SHOP_SCRIPT_HEAD="The museum shop contents cannot be seen — JS-rendering";
+const SHOP_SCRIPT_HEAD=W.shopScriptHead;
 //@piece SHOP_PARALLEL_HEAD
 
-const SHOP_PARALLEL_HEAD="The museum shop contents cannot be seen — Parallel fault";
+const SHOP_PARALLEL_HEAD=W.shopParallelHead;
 //@piece SHOP_UNCONFIRMED_HEAD
 
-const SHOP_UNCONFIRMED_HEAD="The museum shop contents cannot be seen — unconfirmed page problem";
+const SHOP_UNCONFIRMED_HEAD=W.shopUnconfirmedHead;
 //@piece shopUnread
 
 // A shop the lookup could not read: refused, drawn by script, or dropped by Parallel (her wording for each).
@@ -92,17 +92,17 @@ const shopUnreadHead=s=>s==="script"?SHOP_SCRIPT_HEAD:s==="parallel"?SHOP_PARALL
 //@piece shopUnreadSaid
 
 // Re-check's line for each: "Re-check didn’t work — museum shop " + this.
-const shopUnreadSaid=s=>s==="script"?"contents cannot be seen — JS-rendering":s==="parallel"?"contents cannot be seen — Parallel fault":s==="unconfirmed"?"contents cannot be seen — unconfirmed page problem":"is blocked";
+const shopUnreadSaid=s=>s==="script"?W.saidScript:s==="parallel"?W.saidParallel:s==="unconfirmed"?W.saidUnconfirmed:W.saidBlocked;
 //@piece SHOP_BLOCKED_FOUND_REST
 
-const SHOP_BLOCKED_FOUND_REST=" — search it manually. The catalogue is stocked elsewhere.";
+const SHOP_BLOCKED_FOUND_REST=W.shopBlockedFoundRest;
 //@piece SHOP_BLOCKED_NONE_REST
 
-const SHOP_BLOCKED_NONE_REST=". The catalogue also does not appear to exist elsewhere. Search manually to confirm.";
+const SHOP_BLOCKED_NONE_REST=W.shopBlockedNoneRest;
 //@piece ISBN_UNCONFIRMED
 
 // What a catalogue block shows when its book has no ISBN.
-const ISBN_UNCONFIRMED="ISBN not confirmed \u2014 verify before buying";
+const ISBN_UNCONFIRMED=W.isbnUnconfirmed;
 //@piece englishLine
 
 
@@ -118,14 +118,13 @@ function englishLine(r){
   // named for her, never filed as the card's book, no buy links.
   const b=r&&r.otherVenueBook;
   if((c==="publisher"||c==="shops")&&b&&b.title&&b.isbn13)
-    return "No English edition. An English catalogue from the show’s other venue is a different book: "
-      +b.title+(b.publisher?", "+b.publisher:"")+", ISBN "+fmtIsbn(b.isbn13)+".";
-  if(c==="english"&&o&&o.title)return "English edition of \u201c"+o.title+"\u201d"+(o.publisher?" ("+o.publisher+")":"")+".";
+    return say(W.otherVenueBook,{title:b.title,publisher:b.publisher?", "+b.publisher:"",isbn:fmtIsbn(b.isbn13)});
+  if(c==="english"&&o&&o.title)return say(W.englishEditionOf,{title:o.title,publisher:o.publisher?" ("+o.publisher+")":""});
   // Her wording; the publisher is printed above, so not again here (her decision).
-  if(c==="publisher")return "No English edition — checked publisher's site and bookshops.";
-  if(c==="shops")return "No English edition found in bookshops.";
-  if(c==="unknownlang")return "The book\u2019s language couldn\u2019t be confirmed, so no English edition was looked for.";
-  if(c==="stopped")return "English edition not checked \u2014 the search stopped part-way. Search again to retry.";
+  if(c==="publisher")return W.noEnglishPublisher;
+  if(c==="shops")return W.noEnglishShops;
+  if(c==="unknownlang")return W.englishUnknownLang;
+  if(c==="stopped")return W.englishStopped;
   return null;
 }
 //@piece shopButtonUrl
@@ -141,4 +140,4 @@ function shopButtonUrl(mu,title){
 }
 //@piece shopLinkLabel
 
-function shopLinkLabel(shopState){ return shopState==="gone"?"Museum shop (last seen)":"Museum shop"; }
+function shopLinkLabel(shopState){ return shopState==="gone"?W.museumShopLastSeen:W.museumShop; }

@@ -27,6 +27,7 @@
  *   node scraper/fixtures/page_renders.js
  */
 'use strict';
+const { WORDS, wordsRe } = require('./words.js');   // the app's sentences, from its words list
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
@@ -125,7 +126,7 @@ async function renderOnce(label, withRuntime) {
     const text = win.document.getElementById('root').textContent || '';
     if (text.trim().length < 40) {
       fail(label + ': it rendered, but the page is blank (' + text.trim().length + ' characters)');
-    } else if (!['Load', 'Import'].every(l => [...win.document.querySelectorAll('button')].some(b => b.textContent.trim() === l))) {
+    } else if (![WORDS.load, WORDS.importButton].every(l => [...win.document.querySelectorAll('button')].some(b => b.textContent.trim() === l))) {
       fail(label + ': the opening screen is missing Load or Import — got: '
            + text.trim().slice(0, 120));
     } else {
@@ -173,7 +174,7 @@ async function renderOnce(label, withRuntime) {
       pass(label + ': empty sweep log reads "Unknown" \u2014 not a made-up date, '
            + 'and not a claim that no sweep ever ran');
     }
-    if (!/Details/.test(text)) {
+    if (!wordsRe(WORDS.details).test(text)) {
       fail(label + ': the "Details" control is missing with an empty sweep log, '
            + 'so nothing on screen can report that the store holds nothing');
     } else {

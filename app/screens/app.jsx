@@ -141,14 +141,14 @@ export default function App(){
   const toggleResetCards=()=>{if(showResetCards)setResetQuery("");setShowResetCards(v=>!v);};
   const toggleQuarantine=()=>setShowIgnored(v=>!v);
   const typeResetQuery=v=>setResetQuery(v);
-  const askResetCard=id=>setConfirmBox({title:"Reset this search?",yes:"Yes",act:()=>{
+  const askResetCard=id=>setConfirmBox({title:W.resetThisSearch,yes:W.yes,act:()=>{
     commit(resetOneCard(rows,id));
     forgetSaid(id);
     setResetQuery("");}});
   const dismissConfirm=()=>setConfirmBox(null);
   const answerConfirm=()=>{const a=confirmBox.act;setConfirmBox(null);a&&a();};
 
-  if(!loaded)return(<div style={{fontFamily:"'Inter',system-ui,sans-serif",background:C.bg,color:C.soft,minHeight:"100vh",display:"grid",placeItems:"center",fontSize:13}}>Opening the ledger{"\u2026"}</div>);
+  if(!loaded)return(<div style={{fontFamily:"'Inter',system-ui,sans-serif",background:C.bg,color:C.soft,minHeight:"100vh",display:"grid",placeItems:"center",fontSize:13}}>{W.openingLedger}</div>);
 
   return(
     <div style={{fontFamily:"'Inter',system-ui,sans-serif",background:C.bg,color:C.ink,minHeight:"100vh",padding:"20px 16px 60px"}}>

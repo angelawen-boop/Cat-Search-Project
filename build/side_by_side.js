@@ -38,6 +38,7 @@
  * still be identical.
  */
 'use strict';
+const { WORDS, wordsRe } = require('../scraper/fixtures/words.js');   // the app's sentences, from its words list
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
@@ -372,21 +373,21 @@ async function snapshot(jsxFile, outFile, liveFile) {
 
   // The venue chip and the theme chip, each pressed and then released.
   await step('venueChip', async () => {
-    const chip = rowOf('Venue')[0];
+    const chip = rowOf(WORDS.sortVenue)[0];
     click(chip);
-    const ok = await until(() => lit(rowOf('Venue')[0]));
+    const ok = await until(() => lit(rowOf(WORDS.sortVenue)[0]));
     await steady(); capture('venueChip', ok, screen);
-    click(rowOf('Venue')[0]); await until(() => !lit(rowOf('Venue')[0])); await steady();
+    click(rowOf(WORDS.sortVenue)[0]); await until(() => !lit(rowOf(WORDS.sortVenue)[0])); await steady();
   });
   await step('themeChip', async () => {
-    const pick = () => rowOf('Theme').find(b => /^Sculpture( \u00b7 \d+)?$/.test(b.textContent)); // a picked chip shows its count (59.1)
+    const pick = () => rowOf(WORDS.themeRow).find(b => /^Sculpture( \u00b7 \d+)?$/.test(b.textContent)); // a picked chip shows its count (59.1)
     click(pick());
     const ok = await until(() => lit(pick()));
     await steady(); capture('themeChip', ok, screen);
     click(pick()); await until(() => !lit(pick())); await steady();
   });
   await step('periodSort', async () => {
-    const pick = re => rowOf('Sort').find(b => re.test(b.textContent));
+    const pick = re => rowOf(WORDS.sortRow).find(b => re.test(b.textContent));
     click(pick(/^Period/));
     const ok = await until(() => lit(pick(/^Period/)));
     await steady(); capture('periodSort', ok, screen);
@@ -394,10 +395,10 @@ async function snapshot(jsxFile, outFile, liveFile) {
   });
   await step('cardOpened', async () => {
     const card = doc.querySelector('article');
-    click(card && [...card.querySelectorAll('button')].find(b => /Catalogue/.test(b.textContent) && !/Digital/.test(b.textContent)));
-    const ok = await until(() => !!(doc.querySelector('article') && [...doc.querySelector('article').querySelectorAll('button')].some(b => b.textContent.trim() === 'Hide')));
+    click(card && [...card.querySelectorAll('button')].find(b => wordsRe(WORDS.catalogue).test(b.textContent) && !/Digital/.test(b.textContent)));
+    const ok = await until(() => !!(doc.querySelector('article') && [...doc.querySelector('article').querySelectorAll('button')].some(b => b.textContent.trim() === WORDS.hide)));
     await steady(); capture('cardOpened', ok, screen);
-    click([...doc.querySelector('article').querySelectorAll('button')].find(b => b.textContent.trim() === 'Hide')); await steady();
+    click([...doc.querySelector('article').querySelectorAll('button')].find(b => b.textContent.trim() === WORDS.hide)); await steady();
   });
 
   // The walk (stage A of the main screen): card marks, every sort, every chip. Each capture is the
@@ -409,45 +410,45 @@ async function snapshot(jsxFile, outFile, liveFile) {
     await step(name, async () => { const was = screen(); const had = click(el); const ok = had && await until(() => screen() !== was, 4000);
       await steady(); capture(name, ok, brief); });
   };
-  await walk('mark-watch', cardBtn(0, b => b.title === 'Watch'));
-  await walk('mark-unwatch', cardBtn(0, b => b.title === 'Unwatch'));
-  await walk('mark-watch-2', cardBtn(7, b => b.title === 'Watch'));
-  await walk('mark-yes', cardBtn(0, b => b.textContent === 'Yes'));
-  await walk('mark-buynext', cardBtn(0, b => b.title === 'Buy next'));
-  await walk('mark-yes-2', cardBtn(2, b => b.textContent === 'Yes'));
-  await walk('mark-buynext-2', cardBtn(2, b => b.title === 'Buy next'));
-  await walk('mark-yes-3', cardBtn(3, b => b.textContent === 'Yes'));
-  await walk('mark-buynext-3', cardBtn(3, b => b.title === 'Buy next'));
-  await walk('mark-buynext-3-off', cardBtn(3, b => b.title === 'Not buying next'));
+  await walk('mark-watch', cardBtn(0, b => b.title === WORDS.watch));
+  await walk('mark-unwatch', cardBtn(0, b => b.title === WORDS.unwatch));
+  await walk('mark-watch-2', cardBtn(7, b => b.title === WORDS.watch));
+  await walk('mark-yes', cardBtn(0, b => b.textContent === WORDS.yes));
+  await walk('mark-buynext', cardBtn(0, b => b.title === WORDS.buyNext));
+  await walk('mark-yes-2', cardBtn(2, b => b.textContent === WORDS.yes));
+  await walk('mark-buynext-2', cardBtn(2, b => b.title === WORDS.buyNext));
+  await walk('mark-yes-3', cardBtn(3, b => b.textContent === WORDS.yes));
+  await walk('mark-buynext-3', cardBtn(3, b => b.title === WORDS.buyNext));
+  await walk('mark-buynext-3-off', cardBtn(3, b => b.title === WORDS.notBuyingNext));
   await walk('mark-no', cardBtn(3, b => b.textContent === 'No'));
-  await walk('mark-acquired', cardBtn(4, b => b.textContent === 'Acquired'));
-  await walk('mark-dismiss', cardBtn(5, b => b.title === 'Not interested'));
+  await walk('mark-acquired', cardBtn(4, b => b.textContent === WORDS.acquired));
+  await walk('mark-dismiss', cardBtn(5, b => b.title === WORDS.notInterested));
   await walk('mark-undo', button(/^Undo$/));
-  await walk('mark-dismiss-2', cardBtn(6, b => b.title === 'Not interested'));
+  await walk('mark-dismiss-2', cardBtn(6, b => b.title === WORDS.notInterested));
   await step('marks-store', async () => { await steady(); capture('marks-store', true, storeText); });
   const chipRow = async (label, tag) => {
     const n = rowOf(label).length; if (!n) { missed[tag] = true; screens[tag] = ''; return; }
     for (let i = 0; i < n; i++) { const t = rowOf(label)[i].textContent.trim(); if (/^Clear all$/.test(t)) continue;
       await walk(tag + '-' + t, rowOf(label)[i]);
-      if (label === 'Sort' && /^(Date|Period)/.test(t)) await walk(tag + '-' + t + '-again', rowOf(label)[i]);
+      if (label === WORDS.sortRow && /^(Date|Period)/.test(t)) await walk(tag + '-' + t + '-again', rowOf(label)[i]);
       else { click(rowOf(label)[i]); await steady(); } }
   };
-  await chipRow('Sort', 'sort');
-  click(rowOf('Sort')[0]); await steady();
-  for (const label of ['When', 'Venue', 'Theme', 'Acquiring?', 'Showing']) await chipRow(label, 'chip-' + label);
+  await chipRow(WORDS.sortRow, 'sort');
+  click(rowOf(WORDS.sortRow)[0]); await steady();
+  for (const label of [WORDS.whenRow, WORDS.sortVenue, WORDS.themeRow, WORDS.acquiringRow, WORDS.showingRow]) await chipRow(label, 'chip-' + label);
   // Combinations: Wanted beside Owned; Buy next in her order, by period, by date and reversed; Dismissed; a search; Clear all.
-  const acq = t => rowOf('Acquiring?').find(b => b.textContent.trim() === t), sortBtn = re => rowOf('Sort').find(b => re.test(b.textContent));
-  await walk('mix-wanted', acq('Wanted'));
-  await walk('mix-wanted-owned', acq('Owned'));
-  await walk('mix-wanted-owned-buynext', acq('Buy next'));
-  click(acq('Wanted')); click(acq('Owned')); await steady();
-  await step('mix-buynext', async () => { capture('mix-buynext', lit(acq('Buy next')), brief); });
+  const acq = t => rowOf(WORDS.acquiringRow).find(b => b.textContent.trim() === t), sortBtn = re => rowOf(WORDS.sortRow).find(b => re.test(b.textContent));
+  await walk('mix-wanted', acq(WORDS.chipWanted));
+  await walk('mix-wanted-owned', acq(WORDS.chipOwned));
+  await walk('mix-wanted-owned-buynext', acq(WORDS.buyNext));
+  click(acq(WORDS.chipWanted)); click(acq(WORDS.chipOwned)); await steady();
+  await step('mix-buynext', async () => { capture('mix-buynext', lit(acq(WORDS.buyNext)), brief); });
   await walk('mix-buynext-period', sortBtn(/^Period/));
   await walk('mix-buynext-period-again', sortBtn(/^Period/));
   await walk('mix-buynext-date', sortBtn(/^Date/));
   await walk('mix-buynext-date-again', sortBtn(/^Date/));
   await walk('mix-buynext-date-off', sortBtn(/^Date/));
-  await walk('mix-clear', rowOf('Showing').find(b => /^Clear all$/.test(b.textContent.trim())));
+  await walk('mix-clear', rowOf(WORDS.showingRow).find(b => /^Clear all$/.test(b.textContent.trim())));
   await step('mix-search', async () => {
     const was = screen(); click(doc.querySelector('button[aria-label="Search"]') || [...doc.querySelectorAll('button')].find(b => /search/i.test(b.title || b.getAttribute('aria-label') || '')));
     const ok = await until(() => !!doc.querySelector('input:not([type=file])') && screen() !== was, 4000);
@@ -456,8 +457,8 @@ async function snapshot(jsxFile, outFile, liveFile) {
     if (box) type([...doc.querySelectorAll('input:not([type=file])')][0], 'van');
     await steady(); capture('mix-search', ok, brief);
   });
-  await walk('mix-search-dismissed', rowOf('Showing').find(b => b.textContent.trim() === 'Dismissed'));
-  await walk('mix-clear-2', rowOf('Showing').find(b => /^Clear all$/.test(b.textContent.trim())));
+  await walk('mix-search-dismissed', rowOf(WORDS.showingRow).find(b => b.textContent.trim() === WORDS.chipDismissed));
+  await walk('mix-clear-2', rowOf(WORDS.showingRow).find(b => /^Clear all$/.test(b.textContent.trim())));
 
   // Save now: the screen, every store record, the file handed over.
   await step('saveNow', async () => {
@@ -564,12 +565,12 @@ async function snapshot(jsxFile, outFile, liveFile) {
       reading = false;
     });
   };
-  if (liveFile) await readJob('readLinks', 'Links', async () => type(dialog().querySelector('textarea'), LIVE_URLS.join('\n')));
-  await readJob('readPages', 'Pages', async () => {
+  if (liveFile) await readJob('readLinks', WORDS.tabLinks, async () => type(dialog().querySelector('textarea'), LIVE_URLS.join('\n')));
+  await readJob('readPages', WORDS.tabPages, async () => {
     give('input[type=file][multiple]', [new win.File([fs.readFileSync(SAVED_PAGE)], 'titian.mht')]);
     await until(() => /Titian/.test(text()));
   });
-  await readJob('readPaste', 'Paste', async () => {
+  await readJob('readPaste', WORDS.tabPaste, async () => {
     type(doc.querySelector('input[aria-label="Link"]'), PASTE_URL);
     type(doc.querySelector('textarea[aria-label="Text"]'), PASTE_TEXT);
   });
@@ -705,7 +706,7 @@ async function snapshot(jsxFile, outFile, liveFile) {
   await digital('digital', 'https://example.org/zurbaran-catalogue.pdf');
   // The catalogue pick on the card with versions: the third block (Stockholm's hardcover).
   await job('pick', PICK_TITLE, async () => {
-    click(inCard(PICK_TITLE, /Catalogue/)); await until(() => !!articleOf(PICK_TITLE).querySelector('[role=radio]'));
+    click(inCard(PICK_TITLE, wordsRe(WORDS.catalogue))); await until(() => !!articleOf(PICK_TITLE).querySelector('[role=radio]'));
     const r = [...articleOf(PICK_TITLE).querySelectorAll('[role=radio]')].find(x => x.getAttribute('aria-checked') !== 'true');
     if (!r) return false;
     const k = [...articleOf(PICK_TITLE).querySelectorAll('[role=radio]')].indexOf(r);
@@ -716,7 +717,7 @@ async function snapshot(jsxFile, outFile, liveFile) {
   // 4. A Paste from a venue outside her list, through the review to the shop screen. First ending in Cancel import
   // (from the shop screen: Confirm, Back, Cancel import); then the same read again: Confirm, No shop, her own link,
   // Look again, Back, Next, Confirm, Apply.
-  const shops = () => [...doc.querySelectorAll('[role=dialog]')].find(d => /New Venue Shops/.test(d.textContent));
+  const shops = () => [...doc.querySelectorAll('[role=dialog]')].find(d => wordsRe(WORDS.newVenueShops).test(d.textContent));
   // The review panel: the fixed layer holding "Cancel import".
   const reviewPanel = () => { let el = button(/^Cancel import$/); while (el && el.parentElement && !(el.style && el.style.position === 'fixed')) el = el.parentElement; return el; };
   const shopView = () => sha1(screen()) + '\n-- the shop screen --\n' + (shops() ? shops().textContent : '(none)')
@@ -751,25 +752,25 @@ async function snapshot(jsxFile, outFile, liveFile) {
   const press = (name, label, wait) => shopStep(name, async () => { const b = typeof label === 'string' ? shopBtn(label) : label(); if (!b) return false; click(b); return wait ? await until(wait, 30000) : true; });
   await pasteRead('paste-new');
   await press('shop-screen', () => button(/^Next$/), () => !!shops());
-  await press('shop-confirm', 'Confirm');
-  await press('shop-back', 'Back', () => !shops());
+  await press('shop-confirm', WORDS.confirm);
+  await press('shop-back', WORDS.back, () => !shops());
   await press('cancel-import', () => button(/^Cancel import$/), () => !button(/^Cancel import$/));
   await pasteRead('paste-new-again');
   await press('shop-screen-again', () => button(/^Next$/), () => !!shops());
-  await press('shop-confirm-again', 'Confirm');
-  await press('shop-no-shop', 'No shop');
+  await press('shop-confirm-again', WORDS.confirm);
+  await press('shop-no-shop', WORDS.noShop);
   await shopStep('shop-add', async () => {
-    const b = shopBtn('Add'); if (!b) return false; click(b);
+    const b = shopBtn(WORDS.add); if (!b) return false; click(b);
     const box = await until(() => !!shops().querySelector('input')) && shops().querySelector('input');
     if (!box) return false;
     type(box, 'shop.' + NEW_HOST + '/collections/books'); await steady();
     box.dispatchEvent(new win.KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
     return await until(() => !shops().querySelector('input'));
   });
-  await press('shop-look-again', 'Look again', () => !/Looking…/.test(shops().textContent));
-  await press('shop-back-again', 'Back', () => !shops());
+  await press('shop-look-again', WORDS.lookAgain, () => !wordsRe(WORDS.looking).test(shops().textContent));
+  await press('shop-back-again', WORDS.back, () => !shops());
   await press('shop-next', () => button(/^Next$/), () => !!shops());
-  await press('shop-answered', () => shopBtn('Confirm') && !shopBtn('Confirm').disabled ? shopBtn('Confirm') : shopBtn('No shop'));
+  await press('shop-answered', () => shopBtn(WORDS.confirm) && !shopBtn(WORDS.confirm).disabled ? shopBtn(WORDS.confirm) : shopBtn(WORDS.noShop));
   await press('shop-apply', () => shops() && [...shops().querySelectorAll('button')].pop(), () => !shops() && /Import complete/.test(text()));
   jobWeb = null; jobClaude = null;
   if (dialog()) { click(inDialog(/^Cancel$/)); await steady(); }
@@ -782,9 +783,9 @@ async function snapshot(jsxFile, outFile, liveFile) {
   const bottom = t => () => [...doc.querySelectorAll('button')].filter(b => b.textContent.trim() === t).pop();
   await draw('draw-dark', () => doc.querySelector('button[title="Switch to dark"]'), () => doc.querySelector('button[title="Switch to light"]'));
   await draw('draw-sweep-log', () => button(/^Details$/), () => button(/^Hide details$/));
-  await draw('draw-quarantine', bottom('Quarantine'));
-  await draw('draw-reset-cards', bottom('Clear search'));
-  await draw('draw-cloud-saves', bottom('Cloud Saves'));
+  await draw('draw-quarantine', bottom(WORDS.quarantine));
+  await draw('draw-reset-cards', bottom(WORDS.clearSearch));
+  await draw('draw-cloud-saves', bottom(WORDS.cloudSaves));
   await draw('draw-save-panel', () => button(/^Save$/), false);
   await draw('draw-search-box', () => doc.querySelector('button[title="Search"]'));
 

@@ -8,6 +8,7 @@
  *   node scraper/fixtures/list_drawing.js
  */
 'use strict';
+const { WORDS } = require('./words.js');   // the app's sentences, from its words list
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
@@ -105,7 +106,7 @@ const until = async (fn, ms = 8000) => { const t = Date.now(); while (Date.now()
     ok(cards() === 400, 'LD-003b: a mark does not send the list back to its first 200', String(cards()));
 
     // A new search starts from the top again.
-    click([...doc.querySelectorAll('button')].find(b => b.title === 'Search'));
+    click([...doc.querySelectorAll('button')].find(b => b.title === WORDS.search));
     await until(() => doc.querySelector('header input:not([type=file])'));
     await typeInto(doc.querySelector('header input:not([type=file])'), 'e');
     await settle(100);
