@@ -966,6 +966,7 @@
   "useImportSession": "screens/use_import_session.jsx",
   "venueScrubGroupsOf": "ledger/list_view.jsx",
   "venueScrubKey": "ledger/list_view.jsx",
-  "themeCounts": "ledger/list_view.jsx"
+  "themeCounts": "ledger/list_view.jsx",
+  "stillInShop": "lookup/shop.jsx"
  }
 }

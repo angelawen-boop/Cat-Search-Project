@@ -572,6 +572,7 @@
   "GONE_HTTP",
   "inStockByRule",
   "readShopPage",
+  "stillInShop",
   "copyText",
   "recheckLinkedPage",
   "pickedVersion",
