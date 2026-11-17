@@ -17,7 +17,6 @@ function useImportSession({rows,ignored,hasLedger,commit,addToQuarantine,documen
   const[shopScreen,setShopScreen]=useState(null);
   const[shopLooking,setShopLooking]=useState(null);
   const[shopAdding,setShopAdding]=useState(null);   // {id, text}: the venue whose shop link she is typing
-  const[readVenues,setReadVenues]=useState([]);   // the new venues the last Read met
   const[linkNote,setLinkNote]=useState(null);
   const[linkText,setLinkText]=useState("");
   const[linkFails,setLinkFails]=useState([]);
@@ -46,7 +45,6 @@ function useImportSession({rows,ignored,hasLedger,commit,addToQuarantine,documen
   useEffect(()=>{ if(importMode!=="paste")return; const t=setTimeout(()=>writePendingPastes(pastes),800); return()=>clearTimeout(t); },[pastes,importMode]);
 
   function handleRefreshFile(e){
-    setReadVenues([]);
     const file=e.target.files[0]; if(!file)return;
     if(roStop()){ e.target.value=""; return; }
     const reader=new FileReader();
@@ -85,7 +83,7 @@ function useImportSession({rows,ignored,hasLedger,commit,addToQuarantine,documen
     if(out.stopped){ linkRead.current={on:false,stop:false}; showProgress({done:0,total:0,label:""}); jobEnds(); setImportMode(null); return; }
     linkRead.current={on:false,stop:false};
     if(out.venuesChanged){ hold(out.venues); }   // held, not stored: see useLinkVenues
-    showProgress({done:0,total:0,label:""}); jobEnds(); setReadVenues(out.met);
+    showProgress({done:0,total:0,label:""}); jobEnds();
     const done=readOutcome(input,out,{pages,pastes,rows,ignored});
     // The box (or list) is stored when the import finishes.
     setPending(input.kind,done.pending);
@@ -169,7 +167,7 @@ function useImportSession({rows,ignored,hasLedger,commit,addToQuarantine,documen
     if(out.quarantineAdd)addToQuarantine(out.quarantineAdd);
     commit(out.ledger,new Date().toISOString());
     venuesImportApplied(proposals,decisions);
-    setShopScreen(null); setShopAdding(null); setReadVenues([]);
+    setShopScreen(null); setShopAdding(null);
     setProposals(null); setDecisions({}); setSeenInFile(null); documentImportApplied(out.done);
     filtersImportApplied(out.touched);
   }
@@ -177,7 +175,7 @@ function useImportSession({rows,ignored,hasLedger,commit,addToQuarantine,documen
   function cancelRefresh(){
     const p=pendingAfterCancel(linksAtRead.current,{linkText,pages,pastes});
     if(p){ setPending(p.kind,p.value); writePending(p.kind,p.value); linksAtRead.current=null; }
-    dropHeld(); setShopScreen(null); setShopAdding(null); setReadVenues([]); setProposals(null); setDecisions({}); setCoverage([]); setTally(null); setSeenInFile(null); }
+    dropHeld(); setShopScreen(null); setShopAdding(null); setProposals(null); setDecisions({}); setCoverage([]); setTally(null); setSeenInFile(null); }
 
   const openImportChoice=()=>{setLinkNote(null);setImportMode(hasLedger?"choose":"needLedger");};
   // The import pop-up, the review and the shop screen: each button's handler, as the layout carries it.

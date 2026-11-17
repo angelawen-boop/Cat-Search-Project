@@ -246,9 +246,8 @@ async function saveShrinkQuestion(count){
 // {note} when it cannot be built.
 function saveFile({rows,ignored,lastRun,typed}){
   const at=new Date().toISOString();
-  const label=typed.trim().slice(0,80);
-  const slug=labelSlug(label);
-  const filename=LEDGER_PREFIX+localStamp(at)+(slug?"-"+slug:"")+".json";
+  const label=saveDescription(typed);
+  const filename=ledgerFileName(typed,at);
   let data;
   try{
     data=JSON.stringify({rows,ignored,lastRun,exportedAt:at,exportedLocal:localReadable(at),...(label?{label}:{})},null,2);

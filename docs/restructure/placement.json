@@ -100,7 +100,7 @@
     "screens/theme.jsx": "The two colour palettes, the card draw step, the link-button style, and Say (a words-list pattern with a link or bold words in it).",
     "screens/period_scrubber.jsx": "The period scrubber.",
     "screens/ledger_card.jsx": "An exhibition card, its digital-catalogue link and its catalogue box.",
-    "screens/app.jsx": "The whole main screen, to be split into its screens in layer 5b."
+    "screens/app.jsx": "The main screen: the hooks called in their order, the shared job flag, error line, confirm box, theme and the drawers' shared flags, and the layout pieces in page order."
    }
   },
   {
@@ -319,6 +319,8 @@
   "resetQuestion": "saving/file.jsx",
   "readLedgerFile": "saving/file.jsx",
   "LEDGER_PREFIX": "saving/file.jsx",
+  "saveDescription": "saving/file.jsx",
+  "ledgerFileName": "saving/file.jsx",
   "labelSlug": "saving/file.jsx",
   "snapTitle": "saving/file.jsx",
   "S": "saving/seed.jsx",

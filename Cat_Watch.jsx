@@ -5712,6 +5712,8 @@ function applyCards(rows,proposals,decisions,partial){
   const touched=[];
   const newlyIgnored=[];
   let added=0,filled=0,changed=0;
+  // A new show joins the ledger under its own id, "-2", "-3"… after it while that id is taken.
+  const addRow=nrow=>{ let id=nrow.id,c=2; while(byId.has(id)){id=nrow.id+"-"+c;c++;} nrow.id=id; byId.set(id,nrow); touched.push(id); added++; };
   proposals.forEach((p,i)=>{
     const dec=decisions[i]||{};
     if(p.type==="add"){
@@ -5721,12 +5723,10 @@ function applyCards(rows,proposals,decisions,partial){
         return;
       }
       if(dec.mode!=="accept")return;
-      const nrow=makeLedgerRow(withChoices(p.cand,dec),now); let id=nrow.id,c=2; while(byId.has(id)){id=nrow.id+"-"+c;c++;} nrow.id=id; byId.set(id,nrow); touched.push(id); added++; return;
+      addRow(makeLedgerRow(withChoices(p.cand,dec),now)); return;
     }
     // fill / change
-    if(dec.mode==="addnew"){
-      const nrow=makeLedgerRow(withChoices(p.cand,dec),now); let id=nrow.id,c=2; while(byId.has(id)){id=nrow.id+"-"+c;c++;} nrow.id=id; byId.set(id,nrow); touched.push(id); added++; return;
-    }
+    if(dec.mode==="addnew"){ addRow(makeLedgerRow(withChoices(p.cand,dec),now)); return; }
     const m=byId.get(p.matchId); if(!m)return; const patch={...m}; let hit=false;
     p.upd.forEach((u,j)=>{ if((dec.fields||{})[j]==="accept"){ patch[u.field]=u.newVal; if(u.kind==="fill")filled++; else changed++; hit=true; } });
     if(hit){ patch.editedAt=now; byId.set(p.matchId,patch); touched.push(p.matchId); }
@@ -7051,9 +7051,8 @@ async function saveShrinkQuestion(count){
 // {note} when it cannot be built.
 function saveFile({rows,ignored,lastRun,typed}){
   const at=new Date().toISOString();
-  const label=typed.trim().slice(0,80);
-  const slug=labelSlug(label);
-  const filename=LEDGER_PREFIX+localStamp(at)+(slug?"-"+slug:"")+".json";
+  const label=saveDescription(typed);
+  const filename=ledgerFileName(typed,at);
   let data;
   try{
     data=JSON.stringify({rows,ignored,lastRun,exportedAt:at,exportedLocal:localReadable(at),...(label?{label}:{})},null,2);
@@ -9312,6 +9311,11 @@ async function lookupCatalogue(row,hooks){
 }
 
 const LEDGER_PREFIX="art-watch-ledger-";
+// The description typed in the Save panel, as the file keeps it: trimmed, at most 80 characters.
+const saveDescription=typed=>String(typed||"").trim().slice(0,80);
+// A saved ledger's file name: one rule for the Save panel's preview and for Save itself. `at` is the
+// moment (now when none).
+function ledgerFileName(typed,at){ const slug=labelSlug(saveDescription(typed)); return LEDGER_PREFIX+localStamp(at)+(slug?"-"+slug:"")+".json"; }
 
 // Local 24hr timestamp (browser's timezone), e.g. 2026-08-23-2230 = 10:30pm local.
 // A description, as it goes into a file name: lower case, words joined by hyphens.
@@ -9958,7 +9962,7 @@ function SavePanel({ui,showSave,hasLedger,saveLabel,saveCloud,saveBusy,typeSaveL
             <input type="checkbox" checked={saveCloud} onChange={e=>chooseSaveCloud(e.target.checked)}/>
             {W.alsoSaveToCloud}
           </label>
-          <div style={{marginTop:6,fontSize:11,color:C.soft,wordBreak:"break-all"}}>{W.fileName+LEDGER_PREFIX+localStamp()+(labelSlug(saveLabel)?"-"+labelSlug(saveLabel):"")+".json"}</div>
+          <div style={{marginTop:6,fontSize:11,color:C.soft,wordBreak:"break-all"}}>{W.fileName+ledgerFileName(saveLabel)}</div>
         </div>}
   </>);
 }
@@ -11131,7 +11135,13 @@ function useLedgerDocument({showError,showDiagnostic,ask:askHer,onLoaded}){
   // Quarantine (docs/app.md §4): the third outcome beside reject and dismiss. The MAP is
   // stored (tombstones and all); the LIST is derived from it — what she sees and what
   // the export carries.
-  const[quarantine,setQuarantine]=useState({});
+  const[quarantine,setQuarantineShown]=useState({});
+  // The quarantine as it stands: a change merges into it (never inside a state updater, which React may run twice)
+  // and, given `store`, is stored once the change is drawn.
+  const quarNow=useRef({});
+  const quarToStore=useRef([]);
+  const setQuarantine=(map,store)=>{ quarNow.current=map; if(store)quarToStore.current.push(()=>store(map)); setQuarantineShown(map); };
+  useEffect(()=>{ const due=quarToStore.current; quarToStore.current=[]; for(const s of due)s(); },[quarantine]);
   const[quarWhy,setQuarWhy]=useState(null);
   const ignored=useMemo(()=>activeQuarantine(quarantine),[quarantine]);
   const ignoredByVenue=useMemo(()=>{
@@ -11230,7 +11240,7 @@ function useLedgerDocument({showError,showDiagnostic,ask:askHer,onLoaded}){
     // A ledger's quarantine is merged in, never switched to (latest decision wins).
     const fromFile=quarantineFromList((extra&&extra.ignored)||[]);
     if(Object.keys(fromFile).length){
-      setQuarantine(prev=>{ const merged=mergeQuarantine(prev,fromFile); writeQuarantine(merged); return merged; });
+      setQuarantine(mergeQuarantine(quarNow.current,fromFile),writeQuarantine);
     }
     // venueSeen is never read from the file: the sweep log lives in the page's store.
     setDirty(false);
@@ -11387,9 +11397,8 @@ function useLedgerDocument({showError,showDiagnostic,ask:askHer,onLoaded}){
   const releaseFromQuarantine=x=>{
     if(roStop())return;
     const at=new Date().toISOString();
-    setQuarantine(prev=>{ const next=mergeQuarantine(prev,{[x.key]:{venueId:x.venueId,title:x.title,at,state:"released"}});
-      writeQuarantine(next).then(ok=>{ if(!ok) setQuarWhy(W.releaseNotSaved); });
-      return next; });
+    setQuarantine(mergeQuarantine(quarNow.current,{[x.key]:{venueId:x.venueId,title:x.title,at,state:"released"}}),
+      next=>writeQuarantine(next).then(ok=>{ if(!ok) setQuarWhy(W.releaseNotSaved); }));
     setDirty(true);};
 
   // Named actions for the rest of the screen in place of the document's setters.
@@ -11399,9 +11408,7 @@ function useLedgerDocument({showError,showDiagnostic,ask:askHer,onLoaded}){
   const latest=()=>cloudLatest.current.rows;
   // An import's new quarantine, merged in and stored.
   const addToQuarantine=add=>{
-    setQuarantine(prev=>{ const merged=mergeQuarantine(prev,add);
-      saveImportQuarantine(merged).then(why=>{ if(why) setQuarWhy(why); });
-      return merged; });
+    setQuarantine(mergeQuarantine(quarNow.current,add),merged=>saveImportQuarantine(merged).then(why=>{ if(why) setQuarWhy(why); }));
   };
   // An import was applied: the reminder to save both (Save and Load clear it).
   const importApplied=done=>setRefreshDone(done);
@@ -11582,7 +11589,6 @@ function useImportSession({rows,ignored,hasLedger,commit,addToQuarantine,documen
   const[shopScreen,setShopScreen]=useState(null);
   const[shopLooking,setShopLooking]=useState(null);
   const[shopAdding,setShopAdding]=useState(null);   // {id, text}: the venue whose shop link she is typing
-  const[readVenues,setReadVenues]=useState([]);   // the new venues the last Read met
   const[linkNote,setLinkNote]=useState(null);
   const[linkText,setLinkText]=useState("");
   const[linkFails,setLinkFails]=useState([]);
@@ -11611,7 +11617,6 @@ function useImportSession({rows,ignored,hasLedger,commit,addToQuarantine,documen
   useEffect(()=>{ if(importMode!=="paste")return; const t=setTimeout(()=>writePendingPastes(pastes),800); return()=>clearTimeout(t); },[pastes,importMode]);
 
   function handleRefreshFile(e){
-    setReadVenues([]);
     const file=e.target.files[0]; if(!file)return;
     if(roStop()){ e.target.value=""; return; }
     const reader=new FileReader();
@@ -11650,7 +11655,7 @@ function useImportSession({rows,ignored,hasLedger,commit,addToQuarantine,documen
     if(out.stopped){ linkRead.current={on:false,stop:false}; showProgress({done:0,total:0,label:""}); jobEnds(); setImportMode(null); return; }
     linkRead.current={on:false,stop:false};
     if(out.venuesChanged){ hold(out.venues); }   // held, not stored: see useLinkVenues
-    showProgress({done:0,total:0,label:""}); jobEnds(); setReadVenues(out.met);
+    showProgress({done:0,total:0,label:""}); jobEnds();
     const done=readOutcome(input,out,{pages,pastes,rows,ignored});
     // The box (or list) is stored when the import finishes.
     setPending(input.kind,done.pending);
@@ -11734,7 +11739,7 @@ function useImportSession({rows,ignored,hasLedger,commit,addToQuarantine,documen
     if(out.quarantineAdd)addToQuarantine(out.quarantineAdd);
     commit(out.ledger,new Date().toISOString());
     venuesImportApplied(proposals,decisions);
-    setShopScreen(null); setShopAdding(null); setReadVenues([]);
+    setShopScreen(null); setShopAdding(null);
     setProposals(null); setDecisions({}); setSeenInFile(null); documentImportApplied(out.done);
     filtersImportApplied(out.touched);
   }
@@ -11742,7 +11747,7 @@ function useImportSession({rows,ignored,hasLedger,commit,addToQuarantine,documen
   function cancelRefresh(){
     const p=pendingAfterCancel(linksAtRead.current,{linkText,pages,pastes});
     if(p){ setPending(p.kind,p.value); writePending(p.kind,p.value); linksAtRead.current=null; }
-    dropHeld(); setShopScreen(null); setShopAdding(null); setReadVenues([]); setProposals(null); setDecisions({}); setCoverage([]); setTally(null); setSeenInFile(null); }
+    dropHeld(); setShopScreen(null); setShopAdding(null); setProposals(null); setDecisions({}); setCoverage([]); setTally(null); setSeenInFile(null); }
 
   const openImportChoice=()=>{setLinkNote(null);setImportMode(hasLedger?"choose":"needLedger");};
   // The import pop-up, the review and the shop screen: each button's handler, as the layout carries it.

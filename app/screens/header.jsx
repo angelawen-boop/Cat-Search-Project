@@ -42,7 +42,7 @@ function SavePanel({ui,showSave,hasLedger,saveLabel,saveCloud,saveBusy,typeSaveL
             <input type="checkbox" checked={saveCloud} onChange={e=>chooseSaveCloud(e.target.checked)}/>
             {W.alsoSaveToCloud}
           </label>
-          <div style={{marginTop:6,fontSize:11,color:C.soft,wordBreak:"break-all"}}>{W.fileName+LEDGER_PREFIX+localStamp()+(labelSlug(saveLabel)?"-"+labelSlug(saveLabel):"")+".json"}</div>
+          <div style={{marginTop:6,fontSize:11,color:C.soft,wordBreak:"break-all"}}>{W.fileName+ledgerFileName(saveLabel)}</div>
         </div>}
   </>);
 }

@@ -13,7 +13,13 @@ function useLedgerDocument({showError,showDiagnostic,ask:askHer,onLoaded}){
   // Quarantine (docs/app.md §4): the third outcome beside reject and dismiss. The MAP is
   // stored (tombstones and all); the LIST is derived from it — what she sees and what
   // the export carries.
-  const[quarantine,setQuarantine]=useState({});
+  const[quarantine,setQuarantineShown]=useState({});
+  // The quarantine as it stands: a change merges into it (never inside a state updater, which React may run twice)
+  // and, given `store`, is stored once the change is drawn.
+  const quarNow=useRef({});
+  const quarToStore=useRef([]);
+  const setQuarantine=(map,store)=>{ quarNow.current=map; if(store)quarToStore.current.push(()=>store(map)); setQuarantineShown(map); };
+  useEffect(()=>{ const due=quarToStore.current; quarToStore.current=[]; for(const s of due)s(); },[quarantine]);
   const[quarWhy,setQuarWhy]=useState(null);
   const ignored=useMemo(()=>activeQuarantine(quarantine),[quarantine]);
   const ignoredByVenue=useMemo(()=>{
@@ -112,7 +118,7 @@ function useLedgerDocument({showError,showDiagnostic,ask:askHer,onLoaded}){
     // A ledger's quarantine is merged in, never switched to (latest decision wins).
     const fromFile=quarantineFromList((extra&&extra.ignored)||[]);
     if(Object.keys(fromFile).length){
-      setQuarantine(prev=>{ const merged=mergeQuarantine(prev,fromFile); writeQuarantine(merged); return merged; });
+      setQuarantine(mergeQuarantine(quarNow.current,fromFile),writeQuarantine);
     }
     // venueSeen is never read from the file: the sweep log lives in the page's store.
     setDirty(false);
@@ -269,9 +275,8 @@ function useLedgerDocument({showError,showDiagnostic,ask:askHer,onLoaded}){
   const releaseFromQuarantine=x=>{
     if(roStop())return;
     const at=new Date().toISOString();
-    setQuarantine(prev=>{ const next=mergeQuarantine(prev,{[x.key]:{venueId:x.venueId,title:x.title,at,state:"released"}});
-      writeQuarantine(next).then(ok=>{ if(!ok) setQuarWhy(W.releaseNotSaved); });
-      return next; });
+    setQuarantine(mergeQuarantine(quarNow.current,{[x.key]:{venueId:x.venueId,title:x.title,at,state:"released"}}),
+      next=>writeQuarantine(next).then(ok=>{ if(!ok) setQuarWhy(W.releaseNotSaved); }));
     setDirty(true);};
 
   // Named actions for the rest of the screen in place of the document's setters.
@@ -281,9 +286,7 @@ function useLedgerDocument({showError,showDiagnostic,ask:askHer,onLoaded}){
   const latest=()=>cloudLatest.current.rows;
   // An import's new quarantine, merged in and stored.
   const addToQuarantine=add=>{
-    setQuarantine(prev=>{ const merged=mergeQuarantine(prev,add);
-      saveImportQuarantine(merged).then(why=>{ if(why) setQuarWhy(why); });
-      return merged; });
+    setQuarantine(mergeQuarantine(quarNow.current,add),merged=>saveImportQuarantine(merged).then(why=>{ if(why) setQuarWhy(why); }));
   };
   // An import was applied: the reminder to save both (Save and Load clear it).
   const importApplied=done=>setRefreshDone(done);

@@ -30,6 +30,15 @@ async function offerFile(filename,data){
 
 
 const LEDGER_PREFIX="art-watch-ledger-";
+//@piece saveDescription
+
+// The description typed in the Save panel, as the file keeps it: trimmed, at most 80 characters.
+const saveDescription=typed=>String(typed||"").trim().slice(0,80);
+//@piece ledgerFileName
+
+// A saved ledger's file name: one rule for the Save panel's preview and for Save itself. `at` is the
+// moment (now when none).
+function ledgerFileName(typed,at){ const slug=labelSlug(saveDescription(typed)); return LEDGER_PREFIX+localStamp(at)+(slug?"-"+slug:"")+".json"; }
 //@piece labelSlug
 
 

@@ -203,6 +203,8 @@ function applyCards(rows,proposals,decisions,partial){
   const touched=[];
   const newlyIgnored=[];
   let added=0,filled=0,changed=0;
+  // A new show joins the ledger under its own id, "-2", "-3"… after it while that id is taken.
+  const addRow=nrow=>{ let id=nrow.id,c=2; while(byId.has(id)){id=nrow.id+"-"+c;c++;} nrow.id=id; byId.set(id,nrow); touched.push(id); added++; };
   proposals.forEach((p,i)=>{
     const dec=decisions[i]||{};
     if(p.type==="add"){
@@ -212,12 +214,10 @@ function applyCards(rows,proposals,decisions,partial){
         return;
       }
       if(dec.mode!=="accept")return;
-      const nrow=makeLedgerRow(withChoices(p.cand,dec),now); let id=nrow.id,c=2; while(byId.has(id)){id=nrow.id+"-"+c;c++;} nrow.id=id; byId.set(id,nrow); touched.push(id); added++; return;
+      addRow(makeLedgerRow(withChoices(p.cand,dec),now)); return;
     }
     // fill / change
-    if(dec.mode==="addnew"){
-      const nrow=makeLedgerRow(withChoices(p.cand,dec),now); let id=nrow.id,c=2; while(byId.has(id)){id=nrow.id+"-"+c;c++;} nrow.id=id; byId.set(id,nrow); touched.push(id); added++; return;
-    }
+    if(dec.mode==="addnew"){ addRow(makeLedgerRow(withChoices(p.cand,dec),now)); return; }
     const m=byId.get(p.matchId); if(!m)return; const patch={...m}; let hit=false;
     p.upd.forEach((u,j)=>{ if((dec.fields||{})[j]==="accept"){ patch[u.field]=u.newVal; if(u.kind==="fill")filled++; else changed++; hit=true; } });
     if(hit){ patch.editedAt=now; byId.set(p.matchId,patch); touched.push(p.matchId); }
