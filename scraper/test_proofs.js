@@ -1,5 +1,5 @@
 /**
- * test_proofs.js — no test is used until it is proven (her decision: hard-wired; docs/testing.md, "Proven checks").
+ * test_proofs.js — no test is used until it is proven (hard-wired; docs/testing.md, "Proven checks").
  *
  * A test is proven when its planted-fault proof has passed on that exact version of it. The version is a
  * fingerprint of the test's own files, its proof and the proofs' shared kit; test_proofs.json remembers the
@@ -7,7 +7,7 @@
  * "passed", and the run fails, until its proof passes again (node scraper/run_tests.js --prove <name>).
  *
  * Tests that existed when this lock came in and have not been touched since are listed in test_proofs.json
- * under "unproven" by their fingerprint (her decision, knowing it): they run as before. Touch one and it is
+ * under "unproven" by their fingerprint (a session's choice, not hers): they run as before. Touch one and it is
  * refused until it is given a proof here and proven. A new test is refused until the same.
  *
  * Every proof runs through the watched runner, so her expected-time line comes first. While a proof runs,
@@ -57,7 +57,7 @@ function standing(file) {
     return { ok: false, why: `${f} is part of ${name}, which ${passed ? 'has changed since its proof passed' : 'has never passed its proof'} — prove it: node scraper/run_tests.js --prove ${name}` };
   }
   const was = rec.unproven && rec.unproven[f];
-  if (was && was === hashFiles([f])) return { ok: true, why: 'not yet proven, untouched since the lock (her decision)' };
+  if (was && was === hashFiles([f])) return { ok: true, why: 'not yet proven, untouched since the lock' };
   return { ok: false, why: `${f} is ${was ? 'changed since the lock came in' : 'a new test'} and has no proof — give it one in scraper/test_proofs.js (PROVEN) and prove it: node scraper/run_tests.js --prove <its name>` };
 }
 // The test files a suite's command runs.

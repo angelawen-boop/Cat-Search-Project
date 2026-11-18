@@ -70,7 +70,11 @@ Parallel** (Pages): her saved pages in `docs/link_pages/saved/`, run by `add_by_
 **Catalogue search — `docs/lookup_proof_cards.json`**, her nine agreed cases, checked against her own live lookups: save the lookup
 log (`node build/lookup_log.js` says how), then `node build/lookup_proof_check.js <saved dir>`; exit 1 on any difference.
 
-## Proven checks — the lock (her decision)
+## Proven checks — the lock
+
+**Whose choice:** the plan below was written by a session and labelled hers; she never decided it. She has since
+accepted that the side-by-side check walks every screen and that it skips the app's empty pauses. Letting untouched old
+tests run unproven is a session's choice she has not been asked about.
 
 **No test is used until it is proven.** A test is proven when its planted-fault proof (`build/proofs/`) — a fault
 planted on purpose in every rule or capture it checks, each caught by that rule, and the changes it must let through
@@ -79,8 +83,8 @@ their proofs; `scraper/test_proofs.json` keeps the version each proof passed on 
 shared kit; not shared test helpers). **A proven test changed since is refused** — it does not report "passed" and the
 run fails — until `node scraper/run_tests.js --prove <name>` passes again. **Whoever builds or changes a test proves
 it in the same work:** a new test, or an old one touched, is refused until it has a proof in `PROVEN` and has passed
-it. Tests that existed when the lock came in and are untouched stay unproven, listed by fingerprint (her decision,
-knowing it). Every proof runs through the runner, so her expected-time line comes first; the hook refuses a proof
+it. Tests that existed when the lock came in and are untouched stay unproven, listed by fingerprint (a session's
+choice, not hers). Every proof runs through the runner, so her expected-time line comes first; the hook refuses a proof
 run by hand and the variable that lets a proof run its test.
 
 **Proven:**

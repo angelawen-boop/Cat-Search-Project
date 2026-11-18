@@ -188,12 +188,18 @@ In this order; nothing runs beside another.
 3. **Done — housekeeping:** the new-ID suffix written once; a memory written and never read removed; the quarantine
    stored outside its state updater; the Save panel's "File name:" preview and Save sharing one rule; `placement.json`
    brought up to date; the docs over their size budget (the guide review).
-   **Done — the checks proven** (her decision, in place of the tools' own proofs, never run again): the migration's
+   **Done — the checks proven** (a session's plan, in place of the tools' own proofs she stopped): the migration's
    tools removed; the three checks, the hand-edit guard and the rewritten side-by-side check each proven by planted
    faults; the lock in code (`docs/testing.md`, "Proven checks"); all of them run on the current code.
-4. **Publish 60 to her real app — when she says.** The publish files any waiting venues and tells her in
+4. **NEXT — her test page for 59.2 (her ask: the next session does it).** Build and publish the restructure test page
+   from `main` exactly as "Her tests" above says: her store's three records copied in, her current ledger decoded,
+   `node build/test_page_check.js` passing, then the link, that ledger and the latest sweep file to her, with a checklist
+   made her way. What changed since her last round: the words list (every sentence moved to one list) and the
+   housekeeping; the machine checks already found them identical, so her checklist covers only what a machine cannot
+   reach — her Claude, her Parallel searches, her store. Never her real app.
+5. **Publish 60 to her real app — when she says.** The publish files any waiting venues and tells her in
    one line if it did.
-5. **After 60 is published and her app has opened on it:** the one-time clear of the leftover Christie's
+6. **After 60 is published and her app has opened on it:** the one-time clear of the leftover Christie's
    press record in `venues/occasional` (her yes given; backup `docs/store_backup_2026-11-06/`).
 
 **Left alone on purpose (her decision — different jobs, not duplicates):** compression's looser address

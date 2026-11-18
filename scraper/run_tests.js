@@ -91,7 +91,7 @@ const SUITES = [
 //   node scraper/run_tests.js --prove <name…>          run those tests' planted-fault proofs (scraper/test_proofs.js)
 //   node scraper/run_tests.js --side-by-side [<ref>] [--live]   the side-by-side check against the page at <ref> (default main)
 const W = require('./test_watch.js');
-// No test is used until it is proven (her decision; scraper/test_proofs.js).
+// No test is used until it is proven (scraper/test_proofs.js).
 const P = require('./test_proofs.js');
 
 const branchFile = path.join(ROOT, 'scraper/fixtures/branch_tests.txt');
