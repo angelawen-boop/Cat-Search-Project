@@ -69,6 +69,40 @@ Parallel** (Pages): her saved pages in `docs/link_pages/saved/`, run by `add_by_
 **Catalogue search — `docs/lookup_proof_cards.json`**, her nine agreed cases, checked against her own live lookups: save the lookup
 log (`node build/lookup_log.js` says how), then `node build/lookup_proof_check.js <saved dir>`; exit 1 on any difference.
 
+## Proving the checks — OPEN (her decision)
+
+**Why this exists.** The restructure's checks were trusted without proof. A check that stays quiet when nothing has changed
+proves nothing about whether it sounds when something breaks; only planting faults on purpose shows that. Parts of the
+side-by-side check were added marked "being proven", then written up as "The proof: every screen identical" — not a proof
+— and put off to "re-run the tools' own proofs at the end"; sessions after cleared work, and sent her test pages, on that
+unproven check. The one-place, words and layout checks have never had a fault planted at all. **The machine proves the
+work before she sees it; her test page is never where proof comes from.**
+
+**The plan, in this order:**
+1. **The migration's tools go.** The tool that moved the app into its parts, the layer-by-layer gates, the placement
+   list's layer machinery and the proof that replays the whole move. Kept: the join that builds `Cat_Watch.jsx` from
+   `app/`, its guard against a hand-edited `Cat_Watch.jsx`, the three checks below and the side-by-side check. A job a
+   kept tool still needs from a removed one moves into the kept tool first.
+2. **The three checks are proven** — the one-place check (`build/fact_check.js`), the words check
+   (`build/words_check.js`), the layout check (`build/structure_check.js`) — by a fault planted in every rule each
+   enforces, each caught by that rule. **The hand-edit guard gets its own proof** (its only proof was in the migration
+   proof removed in 1).
+3. **The side-by-side check is rewritten where it wastes time.** The check itself still walks every screen once (a
+   change in one place can break another). Its proof re-walks the whole app for each planted fault: rewritten, each
+   fault walks only the screen or step it is planted in. The idle waits for the screen to settle are cut in both.
+4. **The side-by-side check is proven, in full** — a fault planted in every screen, step and store record it checks, each
+   caught by its own step — by the session that rewrites it, before anything relies on it.
+5. **Enforced by code: no test can be used until it is proven.** A test, new or changed, does not report "passed" until
+   its planted-fault proof has passed on that exact version of it; the code remembers the version that passed and refuses
+   when the test has changed since. Whoever builds or changes a test proves it in the same work — never later, never by
+   another session. Tests that exist now and are not touched stay unproven until next changed (her decision, knowing it).
+   Every proof runs through `scraper/run_tests.js`, so her expected-time line comes first.
+6. **Before her next test page:** the side-by-side check and the three checks run on the current code — they are what
+   cleared the words list and the housekeeping that go into 60. Her test page then covers only what a machine cannot
+   reach: her Claude, her Parallel searches, her store. **Anything a machine can test, a machine tests.**
+
+When done, this section is cut to its result: which checks are proven, and the lock (5) as a standing rule.
+
 ## How the suites are built
 
 Each fixture file opens with what it proves; case IDs (AL-, C-, R-, KP-…) are found by grep. `page_loads.js` asks whether the app page
