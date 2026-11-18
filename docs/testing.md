@@ -24,7 +24,8 @@ Every run goes through `scraper/run_tests.js` (one suite: `--only <part of its c
 expected time first, holds a lock so no second run or live check starts beside it, reports every minute, and stops a suite well past
 its usual time (`stallLimit`, `scraper/test_watch.js`), then re-runs it alone — "STALLED with others running, then passed alone" is
 crowding, "STALLED TWICE" a real fault. Live shop checks stop after six minutes without an answer. Usual times:
-`scraper/test_times.json` (`--save-times`). The Bash hook (`.claude/hooks/test-guard.js`) refuses a direct suite run, a second run,
+`scraper/test_times.json` (`--save-times`). A proof: `--prove <name>`. The side-by-side check: `--side-by-side <git ref>`
+(`--live` for the Links read too); run by hand it is refused. The Bash hook (`.claude/hooks/test-guard.js`) refuses a direct suite run, a second run,
 `&`/`nohup`, a long foreground run, a run of a minute or more until the session has written her the exact "Expected test run: …"
 line, and any run when only guide, docs or skill text has changed since `main` (no suite reads it).
 
@@ -69,39 +70,42 @@ Parallel** (Pages): her saved pages in `docs/link_pages/saved/`, run by `add_by_
 **Catalogue search — `docs/lookup_proof_cards.json`**, her nine agreed cases, checked against her own live lookups: save the lookup
 log (`node build/lookup_log.js` says how), then `node build/lookup_proof_check.js <saved dir>`; exit 1 on any difference.
 
-## Proving the checks — OPEN (her decision)
+## Proven checks — the lock (her decision)
 
-**Why this exists.** The restructure's checks were trusted without proof. A check that stays quiet when nothing has changed
-proves nothing about whether it sounds when something breaks; only planting faults on purpose shows that. Parts of the
-side-by-side check were added marked "being proven", then written up as "The proof: every screen identical" — not a proof
-— and put off to "re-run the tools' own proofs at the end"; sessions after cleared work, and sent her test pages, on that
-unproven check. The one-place, words and layout checks have never had a fault planted at all. **The machine proves the
-work before she sees it; her test page is never where proof comes from.**
+**No test is used until it is proven.** A test is proven when its planted-fault proof (`build/proofs/`) — a fault
+planted on purpose in every rule or capture it checks, each caught by that rule, and the changes it must let through
+let through — has passed on that exact version of it. `scraper/test_proofs.js` names the proven tests, their files and
+their proofs; `scraper/test_proofs.json` keeps the version each proof passed on (its files, its proof, the proofs'
+shared kit; not shared test helpers). **A proven test changed since is refused** — it does not report "passed" and the
+run fails — until `node scraper/run_tests.js --prove <name>` passes again. **Whoever builds or changes a test proves
+it in the same work:** a new test, or an old one touched, is refused until it has a proof in `PROVEN` and has passed
+it. Tests that existed when the lock came in and are untouched stay unproven, listed by fingerprint (her decision,
+knowing it). Every proof runs through the runner, so her expected-time line comes first; the hook refuses a proof
+run by hand and the variable that lets a proof run its test.
 
-**The plan, in this order:**
-1. **The migration's tools go.** The tool that moved the app into its parts, the layer-by-layer gates, the placement
-   list's layer machinery and the proof that replays the whole move. Kept: the join that builds `Cat_Watch.jsx` from
-   `app/`, its guard against a hand-edited `Cat_Watch.jsx`, the three checks below and the side-by-side check. A job a
-   kept tool still needs from a removed one moves into the kept tool first.
-2. **The three checks are proven** — the one-place check (`build/fact_check.js`), the words check
-   (`build/words_check.js`), the layout check (`build/structure_check.js`) — by a fault planted in every rule each
-   enforces, each caught by that rule. **The hand-edit guard gets its own proof** (its only proof was in the migration
-   proof removed in 1).
-3. **The side-by-side check is rewritten where it wastes time.** The check itself still walks every screen once (a
-   change in one place can break another). Its proof re-walks the whole app for each planted fault: rewritten, each
-   fault walks only the screen or step it is planted in. The idle waits for the screen to settle are cut in both.
-4. **The side-by-side check is proven, in full** — a fault planted in every screen, step and store record it checks, each
-   caught by its own step — by the session that rewrites it, before anything relies on it.
-5. **Enforced by code: no test can be used until it is proven.** A test, new or changed, does not report "passed" until
-   its planted-fault proof has passed on that exact version of it; the code remembers the version that passed and refuses
-   when the test has changed since. Whoever builds or changes a test proves it in the same work — never later, never by
-   another session. Tests that exist now and are not touched stay unproven until next changed (her decision, knowing it).
-   Every proof runs through `scraper/run_tests.js`, so her expected-time line comes first.
-6. **Before her next test page:** the side-by-side check and the three checks run on the current code — they are what
-   cleared the words list and the housekeeping that go into 60. Her test page then covers only what a machine cannot
-   reach: her Claude, her Parallel searches, her store. **Anything a machine can test, a machine tests.**
+**Proven:**
+- **The hand-edit guard** (`app_join.js --check`): the page edited by hand; a part, a scraper rule, the register or
+  the recorded order changed without joining; parts that cannot join.
+- **The layout check:** a part naming a higher level (in a function, as a shorthand, at the top, each level); a folder
+  with no level; the store reached outside its door (each way); each React hook and each kind of JSX outside the screens.
+- **The one-place check:** each venue fact beside its id, in the parts, the scraper, the build and the tests; facts
+  keyed by venue (a record, a list of names, a table of four); each field a sweep recipe may not hold; a sentence, a
+  rule and a list written twice.
+- **The words check:** words as JSX text, in each shown attribute, in a string, a capitalised word, a template; an
+  entry unused, two entries alike, the list missing; a pattern filled with the wrong gaps, none, or shown unfilled; an
+  entry not on the list; a test writing out an entry's words.
+- **The side-by-side check:** a fault in each of its 228 captures — every screen, store record, call list, the
+  download, both store sequences, the console — each caught by its own capture, walking only its own step and the
+  steps it needs; the real page identical with itself, whole and step by step; `--changes-allowed` lets a function's
+  text through and nothing else; the check run whole says identical, and catches a fault end to end. Its walk runs
+  the page's timers on a stand-in clock and hands back real work in the order asked, so no idle waits: about a minute.
+- **The lock itself:** each refusal above, a failed proof never recorded, a proof whose test changed while it ran
+  never recorded, and the hook's refusals.
 
-When done, this section is cut to its result: which checks are proven, and the lock (5) as a standing rule.
+**On the current code** (before her next test page): the three checks and the guard pass; the side-by-side check
+against the page before the words list (`ea19b70`), with the Links read live, is identical — the words list and the
+housekeeping changed nothing she sees, stores or sends. Her test page covers only what a machine cannot reach: her
+Claude, her Parallel searches, her store.
 
 ## How the suites are built
 

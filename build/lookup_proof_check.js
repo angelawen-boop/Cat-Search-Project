@@ -59,6 +59,7 @@ function matches(card, rec) {
 }
 
 if (require.main === module) {
+  require('../scraper/test_proofs.js').requireProven(__filename);   // not used until proven at this version (scraper/test_proofs.js)
   const dir = process.argv[2];
   if (!dir) { console.error('Usage: node build/lookup_proof_check.js <saved dir of lookup-log records>'); process.exit(2); }
   const cards = JSON.parse(fs.readFileSync(CARDS, 'utf8')).cards;

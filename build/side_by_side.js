@@ -1,32 +1,32 @@
 #!/usr/bin/env node
 /*
- * side_by_side.js — do two versions of the app give the same results? (docs/restructure.md, gate 3)
+ * side_by_side.js — do two versions of the app give the same results? (docs/restructure.md, "The checks")
  *
  * Each version is built the way the build builds it, then run in a stand-in browser (jsdom) with
  * the same clock, the same random numbers and the same inputs. Compared, old against new:
  *   - every top-level value the page defines (each table and list, each function's text);
- *   - the screens, in order: opening; her test ledger loaded (docs/ledger_2026-09-24, every 9th row
- *     given a period, so the Period sort and theme chips show cards); the Import pop-up and each of
- *     its four tabs; a venue chip; a theme chip; the Period sort; a card opened;
- *     Save now (screen, every store record, the downloaded file); the Cloud Saves drawer; her 15 Oct
- *     sweep file read (the review), every card accepted and applied (screen, store); Reset, confirmed
- *     (screen, store);
- *   - the Read job for Pages (her saved page) and Paste (a short pasted text): the review screen, and
- *     every call made to the web and to Claude. Claude answers both versions with the same fixed reply.
- *   - with --live, the Read job for Links too: two proof pages fetched live once per run through the
- *     free Parallel server, the same reply handed to both versions.
- *   - the jobs (run A3-0), on her test ledger loaded again with one card that has versions: Label (its
- *     progress at 0 and after one batch, its line, the diagnostic), Relabel and "Do not regroup"; Find
- *     catalogue (its progress line), Search again, Re-check museum shop, a Find catalogue whose shop page
- *     dies and one whose publisher page dies after the book is found; a digital link (words that are not
- *     a link, then a link); the catalogue pick; a Paste from a venue outside her list through the review
- *     to the shop screen, once ending in Cancel import, once through Confirm, No shop, Add, Look again,
- *     Back, Next and Apply. Each: the screen, the store, every call. The web and Claude answer with fixed
- *     replies shaped on the fixtures' (catalogue_route.js, recheck_shop.js, add_by_link.js).
- *   - the store's sequence (every read, write, delete and list, by record name): opening to the first
- *     automatic save after her ledger loads (store-sequence), and the whole run (store-sequence-all).
+ *   - the walk, every step once and in order (STEPS in snapshot(); each step names the steps it needs):
+ *     opening; her test ledger loaded (docs/ledger_2026-09-24, every 9th row given a period, so the Period
+ *     sort and theme chips show cards); the Import pop-up and each of its four tabs; a venue chip; a theme
+ *     chip; the Period sort; a card opened; card marks, every sort and chip, and their combinations; Save now
+ *     (screen, every store record, the downloaded file); the Cloud Saves drawer; her 15 Oct sweep file read
+ *     (the review), a mixed apply and an all-accept apply (screen, store); Reset (screen, store);
+ *   - the Read job for Pages (her saved page) and Paste (a short pasted text), and with --live for Links (two
+ *     proof pages fetched live once per run through the free Parallel server): the review, and every call made
+ *     to the web and to Claude. Claude answers both versions with the same fixed reply;
+ *   - the jobs, on her test ledger with one card that has versions: Label (its progress at 0 and after one
+ *     batch, its line, the diagnostic), Relabel and "Do not regroup"; Find catalogue (its progress line),
+ *     Search again, Re-check museum shop, a Find catalogue whose shop page dies and one whose publisher page
+ *     dies after the book is found; a digital link (words that are not a link, then a link); the catalogue
+ *     pick; a Paste from a venue outside her list through the review to the shop screen, once ending in Cancel
+ *     import, once through Confirm, No shop, Add, Look again, Back, Next and Apply. Each: the screen, the
+ *     store, every call. The web and Claude answer with fixed replies shaped on the fixtures'
+ *     (catalogue_route.js, recheck_shop.js, add_by_link.js);
+ *   - the pieces no step opens, drawn; the store's sequence of reads and writes (opening to the first automatic
+ *     save after her ledger loads, and the whole run); anything the page shouts on the console.
+ * The page's own timers run on a stand-in clock, fired as they fall due, never waited for in real time.
  * A screen a version never reached is a FAIL, never an empty pass. Any difference prints where it is,
- * and the exit code is 1.
+ * and the exit code is 1. Not used until proven at this version (build/proofs/side_by_side.proof.js).
  *
  *   node build/side_by_side.js <old.jsx> <new.jsx> [--changes-allowed] [--live]
  *   node build/side_by_side.js --base <git ref> [--changes-allowed] [--live]   old = Cat_Watch.jsx at that commit
@@ -153,20 +153,32 @@ async function fetchLive(outFile) {
 }
 
 // ── one version: build it, run it, write what it showed ─────────────────────
-async function snapshot(jsxFile, outFile, liveFile) {
+const PLANTED = '\n// PLANTED FAULT (build/proofs/side_by_side.proof.js)\n';
+// `only`: run just that step and the steps it needs (its proof's planted faults), not the whole walk.
+async function snapshot(jsxFile, outFile, liveFile, only) {
   const ts = require('typescript');
-  const src = fs.readFileSync(jsxFile, 'utf8');
-  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'cw-sbs-'));
-  // Prepared exactly as page_renders.js and build_app.js prepare it.
-  const prepared = 'const { useState, useEffect, useMemo, useCallback, useRef } = React;\n'
-    + src.replace(/^import React.*$/m, '').replace(/^export default function App\(\)\{/m, 'function App(){');
-  fs.writeFileSync(path.join(tmp, 'app.tsx'), prepared);
-  try {
-    execFileSync('npx', ['tsc', path.join(tmp, 'app.tsx'), '--jsx', 'react', '--target', 'esnext',
-      '--outDir', tmp, '--skipLibCheck', '--allowJs'], { stdio: 'pipe' });
-  } catch { /* type errors are expected; the emit is what matters */ }
-  if (!fs.existsSync(path.join(tmp, 'app.js'))) throw new Error('did not transpile: ' + jsxFile);
-  const code = fs.readFileSync(path.join(tmp, 'app.js'), 'utf8');
+  const whole = fs.readFileSync(jsxFile, 'utf8');
+  // A fault its proof plants: plain script after the PLANTED line, run with the page as part of it. The page
+  // above the line is transpiled once and kept (by its fingerprint), so each planted fault costs no new build.
+  const cut = whole.indexOf(PLANTED);
+  const src = cut < 0 ? whole : whole.slice(0, cut), planted = cut < 0 ? '' : whole.slice(cut);
+  const key = require('crypto').createHash('sha1').update(src).digest('hex');
+  const cacheDir = path.join(os.tmpdir(), 'cw-sbs-built'), cached = path.join(cacheDir, key + '.js');
+  if (!fs.existsSync(cached)) {
+    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'cw-sbs-'));
+    // Prepared exactly as page_renders.js and build_app.js prepare it.
+    const prepared = 'const { useState, useEffect, useMemo, useCallback, useRef } = React;\n'
+      + src.replace(/^import React.*$/m, '').replace(/^export default function App\(\)\{/m, 'function App(){');
+    fs.writeFileSync(path.join(tmp, 'app.tsx'), prepared);
+    try {
+      execFileSync('npx', ['tsc', path.join(tmp, 'app.tsx'), '--jsx', 'react', '--target', 'esnext',
+        '--outDir', tmp, '--skipLibCheck', '--allowJs'], { stdio: 'pipe' });
+    } catch { /* type errors are expected; the emit is what matters */ }
+    if (!fs.existsSync(path.join(tmp, 'app.js'))) throw new Error('did not transpile: ' + jsxFile);
+    fs.mkdirSync(cacheDir, { recursive: true });
+    fs.renameSync(path.join(tmp, 'app.js'), cached);
+  }
+  const code = fs.readFileSync(cached, 'utf8') + '\n' + planted;
 
   // Every name the page declares at the top level.
   const sf = ts.createSourceFile('a.tsx', src, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
@@ -193,13 +205,49 @@ async function snapshot(jsxFile, outFile, liveFile) {
   const win = dom.window, doc = win.document;
   win.__catWatchTest = true;   // draws Reset to Seed, as the tests' page has it
   const store = fakeStore();
+
+  // The page's own timers run on a stand-in clock: never waited for, fired in order of when they fall due,
+  // only once nothing else is moving (below). The long repeating ones (the one-tab heartbeat every 20 seconds,
+  // the half-minute "x ago" refresh) never fire: when they fell used to depend on the machine, not the page.
+  let vnow = 0, vseq = 0;
+  const timers = new Map();
+  const vSetTimeout = (fn, ms, ...a) => { const id = ++vseq; timers.set(id, { due: vnow + Math.max(0, +ms || 0), fn, a, seq: id }); return id; };
+  const vSetInterval = (fn, ms, ...a) => { const id = ++vseq; if (+ms >= 10000) return id; timers.set(id, { due: vnow + Math.max(1, +ms || 0), every: Math.max(1, +ms || 0), fn, a, seq: id }); return id; };
+  const vClear = id => { timers.delete(id); };
+  const nextTimer = () => { let best = null; for (const t of timers.values()) if (!best || t.due < best.due || (t.due === best.due && t.seq < best.seq)) best = t; return best; };
+  const shouted = [];
+  const fire = t => {
+    vnow = Math.max(vnow, t.due);
+    if (t.every) t.due = vnow + t.every; else timers.delete(t.seq);
+    try { typeof t.fn === 'function' && t.fn(...t.a); } catch (e) { shouted.push('a timer threw: ' + (e && e.message)); }
+  };
+  // Real work the page waits on (compression, hashing): its answer is held, and handed back one at a time, in
+  // the order it was asked, only when the page is otherwise still — never when the machine happens to finish it
+  // (two lookup-log saves once interleaved their writes in whichever order their compression ended).
+  const held = [];
+  const track = (obj, m) => {
+    const f = obj && obj[m]; if (typeof f !== 'function') return;
+    try { obj[m] = function (...a) {
+      const item = { done: false }; held.push(item);
+      const answer = new Promise((res, rej) => { item.res = res; item.rej = rej; });
+      Promise.resolve().then(() => f.apply(this, a)).then(v => { item.done = true; item.ok = true; item.v = v; }, e => { item.done = true; item.ok = false; item.v = e; });
+      return answer;
+    }; } catch {}
+  };
+  // The oldest held answer, if its work has finished: handed back. True when one was.
+  const release = () => { const h = held[0]; if (!h || !h.done) return false; held.shift(); h.ok ? h.res(h.v) : h.rej(h.v); return true; };
+  track(Response.prototype, 'arrayBuffer'); track(Response.prototype, 'text'); track(Blob.prototype, 'text');
+  track(win.Blob.prototype, 'text'); track(globalThis.crypto && globalThis.crypto.subtle, 'digest');
+  // A file being read: counted until it has been read.
+  let busy = 0;
+  for (const m of ['readAsText', 'readAsArrayBuffer', 'readAsDataURL']) {
+    const f = win.FileReader.prototype[m];
+    win.FileReader.prototype[m] = function (...a) { busy++; this.addEventListener('loadend', () => { busy--; }, { once: true }); return f.apply(this, a); };
+  }
+
   // The store as the page reaches it: every read, write, delete and list logged in order (the operation and the
   // record's name, never its contents), and a record four steps deep (the lookup log's pieces) reached through its
-  // parent, as the platform's store allows. The page's long repeating timers (the one-tab heartbeat every 20
-  // seconds, the half-minute "x ago" refresh) never fire here: when they fall depends on the machine, not on the
-  // page, and a save that happened to ride on one used to drop out of the log on some runs.
-  const realInterval = global.setInterval;
-  global.setInterval = (fn, ms, ...a) => (ms >= 10000 ? realInterval(() => {}, ms) : realInterval(fn, ms, ...a));
+  // parent, as the platform's store allows.
   const seq = [];
   const logOp = (op, p) => { seq.push(op + ' ' + p); };
   const docOf = p => ({
@@ -264,13 +312,16 @@ async function snapshot(jsxFile, outFile, liveFile) {
   global.IS_REACT_ACT_ENVIRONMENT = true;
   const React = require('react');
   const { createRoot } = require('react-dom/client');
-  const shouted = [];
   console.error = (...a) => shouted.push(String(a[0]));
 
+  // Which step is running, for the page to see (window.__sbsAt): its proof plants a fault that shows only then.
+  let curStep = 'opening';
+  const at = name => { win.__sbsAt = name; };
+  at('opening');
   global.Date = FixedDate;
   const ret = names.map(n => `${JSON.stringify(n)}: typeof ${n} === 'undefined' ? undefined : ${n}`).join(',\n');
-  const env = new Function('React', 'window', 'document', 'localStorage', code + '\n;return {' + ret + '};')(
-    React, win, doc, win.localStorage);
+  const env = new Function('React', 'window', 'document', 'localStorage', 'setTimeout', 'clearTimeout', 'setInterval', 'clearInterval',
+    code + '\n;return {' + ret + '};')(React, win, doc, win.localStorage, vSetTimeout, vClear, vSetInterval, vClear);
 
   const show = (v, fnText) => {
     const f = x => (fnText ? 'function ' + String(x) : 'function');
@@ -282,16 +333,59 @@ async function snapshot(jsxFile, outFile, liveFile) {
   const values = {}, plain = {}, kinds = {};
   for (const n of names) { values[n] = show(env[n], true); plain[n] = show(env[n], false); kinds[n] = typeof env[n]; }
 
-  const settle = ms => new Promise(r => setTimeout(r, ms));
-  const until = async (fn, ms = 15000) => { const t = RealDate.now(); while (RealDate.now() - t < ms) { if (fn()) return true; await settle(40); } return false; };
-  // Steady: the screen, the store and the downloads unchanged for 0.8 s (longer than the 0.6 s automatic save).
-  const storeText = () => [...store.docs.entries()].sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0)).map(([k, v]) => k + ' = ' + v).join('\n');
-  const steady = async () => { let last = '', same = 0; const t = RealDate.now();
-    while (RealDate.now() - t < 20000) { const h = doc.body.innerHTML + '\u0000' + store.docs.size + ':' + storeText().length + ':' + saved.length + ':' + calls.length + ':' + pending;
-      same = h === last && !pending ? same + 1 : 0; last = h; if (same >= 16) return; await settle(50); } };
-  const screens = {}, missed = {};
-  // One capture. A step that never reached its screen is recorded as missed, and the comparison fails on it.
-  const capture = (name, reached, value) => { if (!reached) missed[name] = true; screens[name] = reached ? value() : ''; };
+  // Steady, with no idle wait: the page has nothing left to do — no call out, no real work running, nothing
+  // drawn, stored or handed over for a few turns of the event loop — and no timer of its own falls due within
+  // 0.8 s of the last change (longer than the 0.6 s automatic save). A timer that does is fired at once.
+  let mutations = 0;
+  new win.MutationObserver(() => { mutations++; }).observe(doc.body, { subtree: true, childList: true, attributes: true, characterData: true });
+  const tick = () => new Promise(r => setImmediate(r));
+  const fp = () => mutations + ':' + seq.length + ':' + saved.length + ':' + calls.length + ':' + pending + ':' + busy + ':' + held.length + ':' + timers.size;
+  const LIMIT_MS = 20000;
+  const settled = async (t0, changed) => {   // turns of the event loop until nothing moves; false past the limit
+    let last = fp(), same = 0;
+    for (;;) {
+      if (RealDate.now() - t0 > LIMIT_MS) return false;
+      await tick(); const f = fp();
+      if (f === last && !pending && !busy) same++; else { same = 0; last = f; changed(); }
+      if (same < 4) continue;
+      if (!held.length) return true;
+      if (release()) same = 0;
+    }
+  };
+  const steady = async () => {
+    const t0 = RealDate.now(); let changedAt = vnow;
+    for (;;) {
+      if (!await settled(t0, () => { changedAt = vnow; })) return;
+      const t = nextTimer();
+      if (!t || t.due > changedAt + 800) return;
+      fire(t);
+    }
+  };
+  // Until fn() holds (looked at whenever something moved), firing the page's timers as they fall due, up to
+  // `ms` of stand-in time; false once nothing is moving, nothing falls due, and fn() still does not hold.
+  const until = async (fn, ms = 15000) => {
+    const t0 = RealDate.now(), vstart = vnow; let seen = null, still = 0;
+    while (RealDate.now() - t0 < ms) {
+      const f = fp();
+      if (f !== seen) { seen = f; still = 0; if (fn()) return true; }
+      await tick();
+      if (fp() !== f || pending || busy) continue;
+      if (++still < 4) continue;
+      if (held.length) { if (release()) still = 0; continue; }
+      const t = nextTimer();
+      if (t && t.due <= vstart + ms) { fire(t); still = 0; continue; }
+      if (still > 200) return !!fn();
+    }
+    return !!fn();
+  };
+  const screens = {}, missed = {}, meta = {};
+  // One capture: what kind of record it is, and the step and marker it was taken under (its proof plants its
+  // fault there). A step that never reached its screen is recorded as missed, and the comparison fails on it.
+  const capture = (name, reached, value, kind = 'screen') => {
+    if (!reached) missed[name] = true;
+    screens[name] = reached ? value() : '';
+    meta[name] = { kind, step: curStep, at: win.__sbsAt };
+  };
   const screen = () => doc.body.innerHTML;
   const text = () => doc.body.textContent;
   const buttons = re => [...doc.querySelectorAll('button')].filter(b => re.test(b.textContent.trim()));
@@ -308,7 +402,7 @@ async function snapshot(jsxFile, outFile, liveFile) {
   const lit = b => !!b && b.style.background !== 'transparent' && b.style.background !== '';
   const DEBUG = !!process.env.SBS_DEBUG, t0 = RealDate.now();
   const step = async (name, fn) => {   // a step that throws is a missed screen, not a crash
-    try { await fn(); } catch (e) { missed[name] = true; screens[name] = ''; console.log('step ' + name + ' threw: ' + (e && e.stack || e)); }
+    try { await fn(); } catch (e) { missed[name] = true; screens[name] = ''; meta[name] = { kind: 'screen', step: curStep, at: win.__sbsAt }; console.log('step ' + name + ' threw: ' + (e && e.stack || e)); }
     if (DEBUG) console.log(((RealDate.now() - t0) / 1000).toFixed(1) + 's ' + name + (missed[name] ? ' MISSED: ' + (dialog() ? dialog().textContent : text()).slice(0, 600) : ''));
   };
 
@@ -325,46 +419,57 @@ async function snapshot(jsxFile, outFile, liveFile) {
     Object.defineProperty(input, 'files', { value: files, configurable: true });
     input.dispatchEvent(new win.Event('change', { bubbles: true }));
   };
-  const before = screen();
-  const atLoad = seq.length;
-  give('input[type=file][accept=".json"]', [new win.File([ledgerText()], 'ledger.json', { type: 'application/json' })]);
-  const loaded = await until(() => screen() !== before && doc.querySelectorAll('article').length > 0);
-  await steady();
-  capture('afterLedger', loaded, screen);
-  capture('afterLedger-store', loaded, storeText);
+
+  // ── THE WALK: every step, in order, each with the steps it needs before it ─────────────────────────────
+  // The check runs them all, in this order, once. A proof runs one step and the steps it needs (`only`).
+  const STEPS = [];
+  const def = (name, needs, fn) => STEPS.push({ name, needs, fn });
+  const storeText = () => [...store.docs.entries()].sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0)).map(([k, v]) => k + ' = ' + v).join('\n');
+
+  def('opening', [], async () => {});
+  let loaded = false, atLoad = 0;
+  def('afterLedger', [], async () => {
+    const before = screen();
+    atLoad = seq.length;
+    give('input[type=file][accept=".json"]', [new win.File([ledgerText()], 'ledger.json', { type: 'application/json' })]);
+    loaded = await until(() => screen() !== before && doc.querySelectorAll('article').length > 0);
+    await steady();
+    capture('afterLedger', loaded, screen);
+    capture('afterLedger-store', loaded, storeText, 'store');
+  });
   // The store's sequence from opening to the first automatic save after her ledger is loaded (its switch to the
-  // new live ledger and anything that save does after it): stage C's proof that the opening reads keep their order.
-  await step('store-sequence', async () => {
+  // new live ledger and anything that save does after it): the opening reads keep their order.
+  def('store-sequence', ['afterLedger'], async () => {
     const sw = seq.findIndex((s, i) => i >= atLoad && s === 'write ledger/live');
     let end = sw; while (end >= 0 && end + 1 < seq.length && !/^(read|list) /.test(seq[end + 1])) end++;
-    capture('store-sequence', loaded && sw >= 0, () => seq.slice(0, end + 1).join('\n'));
+    capture('store-sequence', loaded && sw >= 0, () => seq.slice(0, end + 1).join('\n'), 'sequence');
   });
 
   // The Import pop-up and its four tabs.
-  await step('importPopup', async () => {
+  def('importPopup', ['afterLedger'], async () => {
     click(button(/^Import$/));
     const ok = await until(() => !!inDialog(/^Paste$/));
     await steady(); capture('importPopup', ok, screen);
   });
-  await step('importCsv', async () => {
+  def('importCsv', ['importPopup'], async () => {
     const csv = doc.querySelector('input[type=file][accept=".csv,text/csv"]');
-    let picked = false; if (csv) csv.click = () => { picked = true; };
+    let picked = false; if (csv) csv.click = () => { picked = true; mutations++; };
     click(inDialog(/^CSV$/));
     const ok = await until(() => picked && !dialog());
     await steady(); capture('importCsv', ok, screen);
   });
-  await step('importLinks', async () => {
+  def('importLinks', ['afterLedger'], async () => {
     click(button(/^Import$/)); await until(() => !!inDialog(/^Links$/));
     click(inDialog(/^Links$/));
     const ok = await until(() => !!(dialog() && dialog().querySelector('textarea')));
     await steady(); capture('importLinks', ok, screen);
   });
-  await step('importPages', async () => {
+  def('importPages', ['importLinks'], async () => {
     click(inDialog(/^Pages$/));
     const ok = await until(() => !!button(/^Choose pages$/));
     await steady(); capture('importPages', ok, screen);
   });
-  await step('importPaste', async () => {
+  def('importPaste', ['importPages'], async () => {
     click(inDialog(/^Paste$/));
     const ok = await until(() => doc.querySelectorAll('input[aria-label="Link"]').length > 0);
     await steady(); capture('importPaste', ok, screen);
@@ -372,28 +477,27 @@ async function snapshot(jsxFile, outFile, liveFile) {
   });
 
   // The venue chip and the theme chip, each pressed and then released.
-  await step('venueChip', async () => {
-    const chip = rowOf(WORDS.sortVenue)[0];
-    click(chip);
+  def('venueChip', ['afterLedger'], async () => {
+    click(rowOf(WORDS.sortVenue)[0]);
     const ok = await until(() => lit(rowOf(WORDS.sortVenue)[0]));
     await steady(); capture('venueChip', ok, screen);
     click(rowOf(WORDS.sortVenue)[0]); await until(() => !lit(rowOf(WORDS.sortVenue)[0])); await steady();
   });
-  await step('themeChip', async () => {
-    const pick = () => rowOf(WORDS.themeRow).find(b => /^Sculpture( \u00b7 \d+)?$/.test(b.textContent)); // a picked chip shows its count (59.1)
+  def('themeChip', ['afterLedger'], async () => {
+    const pick = () => rowOf(WORDS.themeRow).find(b => /^Sculpture( · \d+)?$/.test(b.textContent)); // a picked chip shows its count (59.1)
     click(pick());
     const ok = await until(() => lit(pick()));
     await steady(); capture('themeChip', ok, screen);
     click(pick()); await until(() => !lit(pick())); await steady();
   });
-  await step('periodSort', async () => {
+  def('periodSort', ['afterLedger'], async () => {
     const pick = re => rowOf(WORDS.sortRow).find(b => re.test(b.textContent));
     click(pick(/^Period/));
     const ok = await until(() => lit(pick(/^Period/)));
     await steady(); capture('periodSort', ok, screen);
     click(pick(/^Date/)); await until(() => lit(pick(/^Date/))); await steady();
   });
-  await step('cardOpened', async () => {
+  def('cardOpened', ['afterLedger'], async () => {
     const card = doc.querySelector('article');
     click(card && [...card.querySelectorAll('button')].find(b => wordsRe(WORDS.catalogue).test(b.textContent) && !/Digital/.test(b.textContent)));
     const ok = await until(() => !!(doc.querySelector('article') && [...doc.querySelector('article').querySelectorAll('button')].some(b => b.textContent.trim() === WORDS.hide)));
@@ -401,77 +505,80 @@ async function snapshot(jsxFile, outFile, liveFile) {
     click([...doc.querySelector('article').querySelectorAll('button')].find(b => b.textContent.trim() === WORDS.hide)); await steady();
   });
 
-  // The walk (stage A of the main screen): card marks, every sort, every chip. Each capture is the
-  // screen's fingerprint and the cards in order, so a difference says which card moved.
+  // The walk of the main screen: card marks, every sort, every chip. Each capture is the screen's fingerprint
+  // and the cards in order, so a difference says which card moved. Each press is its own capture and marker.
   const brief = () => require('crypto').createHash('sha1').update(screen()).digest('hex') + '\n' +
     [...doc.querySelectorAll('article')].map(a => a.textContent.slice(0, 70)).join('\n');
-  const cardBtn = (n, find) => { const a = doc.querySelectorAll('article')[n]; return a && [...a.querySelectorAll('button')].find(find); };
-  const walk = async (name, el) => {
-    await step(name, async () => { const was = screen(); const had = click(el); const ok = had && await until(() => screen() !== was, 4000);
+  const cardBtn = (n, find) => () => { const a = doc.querySelectorAll('article')[n]; return a && [...a.querySelectorAll('button')].find(find); };
+  const press = async (name, find) => {
+    at(name);
+    await step(name, async () => { const before = screen(); const had = click(find()); const ok = had && await until(() => screen() !== before, 4000);
       await steady(); capture(name, ok, brief); });
+    at(curStep);
   };
-  await walk('mark-watch', cardBtn(0, b => b.title === WORDS.watch));
-  await walk('mark-unwatch', cardBtn(0, b => b.title === WORDS.unwatch));
-  await walk('mark-watch-2', cardBtn(7, b => b.title === WORDS.watch));
-  await walk('mark-yes', cardBtn(0, b => b.textContent === WORDS.yes));
-  await walk('mark-buynext', cardBtn(0, b => b.title === WORDS.buyNext));
-  await walk('mark-yes-2', cardBtn(2, b => b.textContent === WORDS.yes));
-  await walk('mark-buynext-2', cardBtn(2, b => b.title === WORDS.buyNext));
-  await walk('mark-yes-3', cardBtn(3, b => b.textContent === WORDS.yes));
-  await walk('mark-buynext-3', cardBtn(3, b => b.title === WORDS.buyNext));
-  await walk('mark-buynext-3-off', cardBtn(3, b => b.title === WORDS.notBuyingNext));
-  await walk('mark-no', cardBtn(3, b => b.textContent === 'No'));
-  await walk('mark-acquired', cardBtn(4, b => b.textContent === WORDS.acquired));
-  await walk('mark-dismiss', cardBtn(5, b => b.title === WORDS.notInterested));
-  await walk('mark-undo', button(/^Undo$/));
-  await walk('mark-dismiss-2', cardBtn(6, b => b.title === WORDS.notInterested));
-  await step('marks-store', async () => { await steady(); capture('marks-store', true, storeText); });
+  const MARKS = [
+    ['mark-watch', cardBtn(0, b => b.title === WORDS.watch)], ['mark-unwatch', cardBtn(0, b => b.title === WORDS.unwatch)],
+    ['mark-watch-2', cardBtn(7, b => b.title === WORDS.watch)], ['mark-yes', cardBtn(0, b => b.textContent === WORDS.yes)],
+    ['mark-buynext', cardBtn(0, b => b.title === WORDS.buyNext)], ['mark-yes-2', cardBtn(2, b => b.textContent === WORDS.yes)],
+    ['mark-buynext-2', cardBtn(2, b => b.title === WORDS.buyNext)], ['mark-yes-3', cardBtn(3, b => b.textContent === WORDS.yes)],
+    ['mark-buynext-3', cardBtn(3, b => b.title === WORDS.buyNext)], ['mark-buynext-3-off', cardBtn(3, b => b.title === WORDS.notBuyingNext)],
+    ['mark-no', cardBtn(3, b => b.textContent === 'No')], ['mark-acquired', cardBtn(4, b => b.textContent === WORDS.acquired)],
+    ['mark-dismiss', cardBtn(5, b => b.title === WORDS.notInterested)], ['mark-undo', () => button(/^Undo$/)],
+    ['mark-dismiss-2', cardBtn(6, b => b.title === WORDS.notInterested)],
+  ];
+  MARKS.forEach(([name, find], k) => def(name, [k ? MARKS[k - 1][0] : 'afterLedger'], () => press(name, find)));
+  def('marks-store', ['mark-dismiss-2'], async () => { await steady(); capture('marks-store', true, storeText, 'store'); });
   const chipRow = async (label, tag) => {
-    const n = rowOf(label).length; if (!n) { missed[tag] = true; screens[tag] = ''; return; }
+    const n = rowOf(label).length; if (!n) { missed[tag] = true; screens[tag] = ''; meta[tag] = { kind: 'screen', step: curStep, at: win.__sbsAt }; return; }
     for (let i = 0; i < n; i++) { const t = rowOf(label)[i].textContent.trim(); if (/^Clear all$/.test(t)) continue;
-      await walk(tag + '-' + t, rowOf(label)[i]);
-      if (label === WORDS.sortRow && /^(Date|Period)/.test(t)) await walk(tag + '-' + t + '-again', rowOf(label)[i]);
+      await press(tag + '-' + t, () => rowOf(label)[i]);
+      if (label === WORDS.sortRow && /^(Date|Period)/.test(t)) await press(tag + '-' + t + '-again', () => rowOf(label)[i]);
       else { click(rowOf(label)[i]); await steady(); } }
   };
-  await chipRow(WORDS.sortRow, 'sort');
-  click(rowOf(WORDS.sortRow)[0]); await steady();
-  for (const label of [WORDS.whenRow, WORDS.sortVenue, WORDS.themeRow, WORDS.acquiringRow, WORDS.showingRow]) await chipRow(label, 'chip-' + label);
+  def('chips-sort', ['marks-store'], async () => { await chipRow(WORDS.sortRow, 'sort'); click(rowOf(WORDS.sortRow)[0]); await steady(); });
+  const ROWS = [['when', WORDS.whenRow], ['venue', WORDS.sortVenue], ['theme', WORDS.themeRow], ['acquiring', WORDS.acquiringRow], ['showing', WORDS.showingRow]];
+  ROWS.forEach(([key, label]) => def('chips-' + key, ['chips-sort'], () => chipRow(label, 'chip-' + label)));
   // Combinations: Wanted beside Owned; Buy next in her order, by period, by date and reversed; Dismissed; a search; Clear all.
-  const acq = t => rowOf(WORDS.acquiringRow).find(b => b.textContent.trim() === t), sortBtn = re => rowOf(WORDS.sortRow).find(b => re.test(b.textContent));
-  await walk('mix-wanted', acq(WORDS.chipWanted));
-  await walk('mix-wanted-owned', acq(WORDS.chipOwned));
-  await walk('mix-wanted-owned-buynext', acq(WORDS.buyNext));
-  click(acq(WORDS.chipWanted)); click(acq(WORDS.chipOwned)); await steady();
-  await step('mix-buynext', async () => { capture('mix-buynext', lit(acq(WORDS.buyNext)), brief); });
-  await walk('mix-buynext-period', sortBtn(/^Period/));
-  await walk('mix-buynext-period-again', sortBtn(/^Period/));
-  await walk('mix-buynext-date', sortBtn(/^Date/));
-  await walk('mix-buynext-date-again', sortBtn(/^Date/));
-  await walk('mix-buynext-date-off', sortBtn(/^Date/));
-  await walk('mix-clear', rowOf(WORDS.showingRow).find(b => /^Clear all$/.test(b.textContent.trim())));
-  await step('mix-search', async () => {
+  const acq = t => () => rowOf(WORDS.acquiringRow).find(b => b.textContent.trim() === t), sortBtn = re => () => rowOf(WORDS.sortRow).find(b => re.test(b.textContent));
+  const showing = re => () => rowOf(WORDS.showingRow).find(b => re.test(b.textContent.trim()));
+  def('mix-wanted', ['chips-sort'], () => press('mix-wanted', acq(WORDS.chipWanted)));
+  def('mix-wanted-owned', ['mix-wanted'], () => press('mix-wanted-owned', acq(WORDS.chipOwned)));
+  def('mix-wanted-owned-buynext', ['mix-wanted-owned'], () => press('mix-wanted-owned-buynext', acq(WORDS.buyNext)));
+  def('mix-buynext', ['mix-wanted-owned-buynext'], async () => {
+    click(acq(WORDS.chipWanted)()); click(acq(WORDS.chipOwned)()); await steady();
+    capture('mix-buynext', lit(acq(WORDS.buyNext)()), brief);
+  });
+  def('mix-buynext-period', ['mix-buynext'], () => press('mix-buynext-period', sortBtn(/^Period/)));
+  def('mix-buynext-period-again', ['mix-buynext-period'], () => press('mix-buynext-period-again', sortBtn(/^Period/)));
+  def('mix-buynext-date', ['mix-buynext-period-again'], () => press('mix-buynext-date', sortBtn(/^Date/)));
+  def('mix-buynext-date-again', ['mix-buynext-date'], () => press('mix-buynext-date-again', sortBtn(/^Date/)));
+  def('mix-buynext-date-off', ['mix-buynext-date-again'], () => press('mix-buynext-date-off', sortBtn(/^Date/)));
+  def('mix-clear', ['mix-buynext-date-off'], () => press('mix-clear', showing(/^Clear all$/)));
+  def('mix-search', ['mix-clear'], async () => {
+    at('mix-search-none');
     const was = screen(); click(doc.querySelector('button[aria-label="Search"]') || [...doc.querySelectorAll('button')].find(b => /search/i.test(b.title || b.getAttribute('aria-label') || '')));
     const ok = await until(() => !!doc.querySelector('input:not([type=file])') && screen() !== was, 4000);
     const box = [...doc.querySelectorAll('input:not([type=file])')][0]; if (box) type(box, 'bocklin van');
     await steady(); capture('mix-search-none', ok, brief);
+    at('mix-search');
     if (box) type([...doc.querySelectorAll('input:not([type=file])')][0], 'van');
     await steady(); capture('mix-search', ok, brief);
   });
-  await walk('mix-search-dismissed', rowOf(WORDS.showingRow).find(b => b.textContent.trim() === WORDS.chipDismissed));
-  await walk('mix-clear-2', rowOf(WORDS.showingRow).find(b => /^Clear all$/.test(b.textContent.trim())));
+  def('mix-search-dismissed', ['mix-search'], () => press('mix-search-dismissed', showing(new RegExp('^' + WORDS.chipDismissed + '$'))));
+  def('mix-clear-2', ['mix-search-dismissed'], () => press('mix-clear-2', showing(/^Clear all$/)));
 
   // Save now: the screen, every store record, the file handed over.
-  await step('saveNow', async () => {
+  def('saveNow', ['afterLedger'], async () => {
     click(button(/^Save$/));
     await until(() => !!button(/^Save now$/));
     click(button(/^Save now$/));
     const ok = await until(() => saved.length > 0 && /Local file saved/.test(text()));
     await steady();
     capture('saveNow', ok, screen);
-    capture('saveNow-store', ok, storeText);
-    capture('saveNow-download', ok, () => JSON.stringify(saved));
+    capture('saveNow-store', ok, storeText, 'store');
+    capture('saveNow-download', ok, () => JSON.stringify(saved), 'download');
   });
-  await step('cloudDrawer', async () => {
+  def('cloudDrawer', ['saveNow'], async () => {
     click(button(/^Cloud Saves$/));
     const ok = await until(() => !!button(/^Roll back$/));
     await steady(); capture('cloudDrawer', ok, screen);
@@ -479,17 +586,22 @@ async function snapshot(jsxFile, outFile, liveFile) {
   });
 
   // Her 15 Oct sweep file: the review, then every card accepted and applied.
-  give('input[type=file][accept=".csv,text/csv"]', [new win.File([fs.readFileSync(SWEEP, 'utf8')], 'sweep.csv', { type: 'text/csv' })]);
-  const reviewed = await until(() => /proposed change/.test(text()) && !!button(/^Cancel import$/));
-  await steady();
-  capture('review', reviewed, screen);
+  const giveSweep = () => give('input[type=file][accept=".csv,text/csv"]', [new win.File([fs.readFileSync(SWEEP, 'utf8')], 'sweep.csv', { type: 'text/csv' })]);
+  let reviewed = false;
+  def('review', ['afterLedger'], async () => {
+    giveSweep();
+    reviewed = await until(() => /proposed change/.test(text()) && !!button(/^Cancel import$/));
+    await steady();
+    capture('review', reviewed, screen);
+  });
   // A mixed review first: cards decided in turn add, reject, never add, left undecided; field edits
   // accepted and rejected in turn; then the partial apply. Every outcome the apply counts is reached.
-  await step('appliedMixed', async () => {
+  def('appliedMixed', ['review'], async () => {
+    at('reviewMixed');
     if (!reviewed) throw new Error('no review to apply');
     const expand = button(/^Expand all venues$/); if (expand) { click(expand); await steady(); }
-    const cardBtns = buttons(/^(\u2713 )?Add new entry$/);
-    const fieldBtns = buttons(/^(\u2713 )?Accept edit$/);
+    const cardBtns = buttons(/^(✓ )?Add new entry$/);
+    const fieldBtns = buttons(/^(✓ )?Accept edit$/);
     if (cardBtns.length < 4) throw new Error('fewer than four new-entry cards to mix');
     cardBtns.forEach((b, k) => {
       const row = b.parentElement, pick = k % 4;
@@ -505,6 +617,7 @@ async function snapshot(jsxFile, outFile, liveFile) {
     });
     await steady();
     capture('reviewMixed', true, screen);
+    at('appliedMixed');
     const partial = button(/^Update with the \d+ I.ve decided$/);
     if (!partial) throw new Error('no partial apply offered');
     click(partial);
@@ -513,13 +626,13 @@ async function snapshot(jsxFile, outFile, liveFile) {
     const ok = await until(() => /Import complete/.test(text()) && !button(/^Cancel import$/));
     await steady();
     capture('appliedMixed', ok, screen);
-    capture('appliedMixed-store', ok, storeText);
+    capture('appliedMixed-store', ok, storeText, 'store');
     // The same sweep file again, for the all-accept apply below.
-    give('input[type=file][accept=".csv,text/csv"]', [new win.File([fs.readFileSync(SWEEP, 'utf8')], 'sweep.csv', { type: 'text/csv' })]);
+    giveSweep();
     await until(() => /proposed change/.test(text()) && !!button(/^Cancel import$/));
     await steady();
   });
-  await step('applied', async () => {
+  def('applied', ['appliedMixed'], async () => {
     if (!reviewed) throw new Error('no review to apply');
     const expand = button(/^Expand all venues$/); if (expand) { click(expand); await steady(); }
     for (let round = 0; round < 5; round++) {
@@ -532,50 +645,48 @@ async function snapshot(jsxFile, outFile, liveFile) {
     const ok = await until(() => /Import complete/.test(text()) && !button(/^Cancel import$/));
     await steady();
     capture('applied', ok, screen);
-    capture('applied-store', ok, storeText);
+    capture('applied-store', ok, storeText, 'store');
   });
 
   // Reset, confirmed.
-  await step('reset', async () => {
+  def('reset', ['afterLedger'], async () => {
     click(button(/^Reset to Seed$/));
     await until(() => !!button(/^Continue$/));
     click(button(/^Continue$/));
     const ok = await until(() => /Starter set loaded/.test(text()));
     await steady();
     capture('reset', ok, screen);
-    capture('reset-store', ok, storeText);
+    capture('reset-store', ok, storeText, 'store');
   });
 
   // The Read job for Links (live only), Pages and Paste: the review it gives, and every call it made.
   const readJob = async (name, tab, fill) => {
-    await step(name, async () => {
-      reading = true; calls.length = 0;
+    reading = true; calls.length = 0;
+    try {
       click(button(/^Import$/)); await until(() => !!inDialog(new RegExp('^' + tab + '$')));
       click(inDialog(new RegExp('^' + tab + '$'))); await steady();
       await fill(); await steady();
       if (DEBUG) console.log('  before Read: ' + (dialog() ? dialog().textContent : 'no dialog').slice(0, 400));
       click(buttons(/^Read$/).pop());
-      if (DEBUG) { await settle(3000); console.log('  after Read: ' + (dialog() ? dialog().textContent : 'no dialog').slice(0, 400) + ' | calls ' + calls.length); }
       const ok = await until(() => !!button(/^Cancel import$/), 60000);
       await steady();
       capture(name, ok, screen);
-      capture(name + '-calls', ok, () => calls.join('\n\n'));
+      capture(name + '-calls', ok, () => calls.join('\n\n'), 'calls');
       click(button(/^Cancel import$/)); await steady();
       if (dialog()) { click(inDialog(/^Cancel$/)); await steady(); }
-      reading = false;
-    });
+    } finally { reading = false; }
   };
-  if (liveFile) await readJob('readLinks', WORDS.tabLinks, async () => type(dialog().querySelector('textarea'), LIVE_URLS.join('\n')));
-  await readJob('readPages', WORDS.tabPages, async () => {
+  if (liveFile) def('readLinks', ['afterLedger'], () => readJob('readLinks', WORDS.tabLinks, async () => type(dialog().querySelector('textarea'), LIVE_URLS.join('\n'))));
+  def('readPages', ['afterLedger'], () => readJob('readPages', WORDS.tabPages, async () => {
     give('input[type=file][multiple]', [new win.File([fs.readFileSync(SAVED_PAGE)], 'titian.mht')]);
     await until(() => /Titian/.test(text()));
-  });
-  await readJob('readPaste', WORDS.tabPaste, async () => {
+  }));
+  def('readPaste', ['afterLedger'], () => readJob('readPaste', WORDS.tabPaste, async () => {
     type(doc.querySelector('input[aria-label="Link"]'), PASTE_URL);
     type(doc.querySelector('textarea[aria-label="Text"]'), PASTE_TEXT);
-  });
+  }));
 
-  // ── THE JOBS (run A3-0): what stage A3 and stage C move, pressed with fixed stand-in replies ──────────
+  // ── THE JOBS: pressed with fixed stand-in replies ───────────────────────────────────────────────────────
   // Each capture: the screen's fingerprint, the lines above the cards (progress, Label's line, the banner, the
   // diagnostic) and the card in hand; then the store (every record, a long one by its fingerprint, the cards in
   // hand read back from the live ledger, and any lookup-log record the step wrote, read back); then every call.
@@ -587,12 +698,13 @@ async function snapshot(jsxFile, outFile, liveFile) {
     ? articleOf(title).textContent + [...articleOf(title).querySelectorAll('input')].map(i => '\n[a box holding "' + i.value + '"]').join('') : '(none)');
   const unzip = b64 => { try { return zlib.gunzipSync(Buffer.from(b64, 'base64')).toString('utf8'); } catch (e) { return '(unreadable: ' + e.message + ')'; } };
   const rec = k => { const v = store.docs.get(k); return v ? JSON.parse(v) : null; };
+  const tapeKeys = () => [...store.docs.keys()].filter(k => /^lookups\/[^/]+$/.test(k)).sort();
   const storeView = (titles, tapesBefore) => {
     const lines = [...store.docs.entries()].sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
       .map(([k, v]) => k + ' = ' + (v.length > 3000 ? 'sha1 ' + sha1(v) + ' (' + v.length + ' characters)' : v));
-    const live = rec('ledger/live');
-    if (live) {
-      let z = ''; for (let i = 0; i < live.parts; i++) z += (rec('ledgerParts/' + live.id + '-' + i) || {}).z || '';
+    const liveRec = rec('ledger/live');
+    if (liveRec) {
+      let z = ''; for (let i = 0; i < liveRec.parts; i++) z += (rec('ledgerParts/' + liveRec.id + '-' + i) || {}).z || '';
       let rows = []; try { rows = JSON.parse(unzip(z)).rows || []; } catch {}
       lines.push('-- the live ledger: ' + rows.length + ' rows; the cards in hand --');
       for (const t of titles) lines.push(JSON.stringify(rows.filter(r => r.title === t)));
@@ -603,25 +715,22 @@ async function snapshot(jsxFile, outFile, liveFile) {
     }
     return lines.join('\n');
   };
-  const tapeKeys = () => [...store.docs.keys()].filter(k => /^lookups\/[^/]+$/.test(k)).sort();
   // One job step: `run` presses and waits (true when the step reached its screen); the view, store and calls
   // captured. `card`: the title of the card in hand, or a function giving it once the step has run.
-  const job = async (name, card, run) => {
-    await step(name, async () => {
-      calls.length = 0; const tapes = tapeKeys();
-      const ok = await run();
-      await steady();
-      const t = typeof card === 'function' ? card() : card;
-      capture(name, ok, () => view(t));
-      capture(name + '-store', ok, () => storeView(t ? [t] : [], tapes));
-      capture(name + '-calls', ok, () => calls.join('\n\n'));
-    });
-  };
+  const job = (name, needs, card, run) => def(name, needs, async () => {
+    calls.length = 0; const tapes = tapeKeys();
+    const ok = await run();
+    await steady();
+    const t = typeof card === 'function' ? card() : card;
+    capture(name, ok, () => view(t));
+    capture(name + '-store', ok, () => storeView(t ? [t] : [], tapes), 'store');
+    capture(name + '-calls', ok, () => calls.join('\n\n'), 'calls');
+  });
   // A card's job has finished: a call was made, none is out, no card's button is greyed.
   const jobDone = () => until(() => calls.length > 0 && !pending && !doc.querySelector('article button[disabled]'), 30000);
 
-  // Her test ledger again (after Reset), with the Vasari card that has versions.
-  await step('jobs-ledger', async () => {
+  // Her test ledger (after Reset, in the walk), with the Vasari card that has versions.
+  def('jobs-ledger', [], async () => {
     const was = screen();
     give('input[type=file][accept=".json"]', [new win.File([jobsLedgerText()], 'ledger.json', { type: 'application/json' })]);
     const ok = await until(() => screen() !== was && !!articleOf(PICK_TITLE));
@@ -631,7 +740,8 @@ async function snapshot(jsxFile, outFile, liveFile) {
   // 1. Label, the toolbar's button: Claude holds back its first two answers so the progress line is seen at 0 and
   // after one batch. Every show gets Gothic, 1300; every other one "Test Artist" as its artist; every fifth Sculpture.
   const periodLines = full => full.split('Exhibitions:\n')[1].split('\n').filter(Boolean).map(l => JSON.parse(l));
-  await job('label', null, async () => {
+  job('label', ['jobs-ledger'], null, async () => {
+    at('label-progress-0');
     jobWeb = null;
     jobClaude = full => (/name the art period/.test(full) ? { labels: periodLines(full).map(s => ({ i: s.i, period: 'gothic', year: 1300, response: false,
       artist: s.i % 2 ? '' : 'Test Artist', themes: s.i % 5 ? [] : ['sculpture'], why: 'The stand-in’s answer.' })) } : undefined);
@@ -639,9 +749,11 @@ async function snapshot(jsxFile, outFile, liveFile) {
     click(button(/^Label$/));
     const ok0 = await until(() => /\b0\/\d+ · Labelling periods/.test(text()));
     capture('label-progress-0', ok0, () => view(null));
+    at('label-progress-1');
     const g1 = gate; gate = makeGate(); g1.open();
     const ok1 = await until(() => /\b40\/\d+ · Labelling periods/.test(text()));
     capture('label-progress-1', ok1, () => view(null));
+    at('label');
     const g2 = gate; gate = null; g2.open();
     const ok = await until(() => /Label: (all|\d+ of)/.test(head()) && !/Labelling periods/.test(text()), 60000);
     await steady();
@@ -653,59 +765,58 @@ async function snapshot(jsxFile, outFile, liveFile) {
   // "Do not regroup"; pressed.
   const firstTitle = () => { const h = doc.querySelector('article h3'); return h ? h.firstChild.textContent : ''; };
   let relabelled = '';
-  await job('relabel', () => relabelled, async () => {
+  job('relabel', ['label'], () => relabelled, async () => {
     relabelled = firstTitle();
     jobClaude = full => (/name the art period/.test(full) ? { labels: [{ i: 0, period: 'baroque', year: 1650, response: false, artist: 'Test Artist', themes: [], why: 'The stand-in’s answer.' }] } : undefined);
     click(inCard(relabelled, /^Catalogue|Catalogue$/)); await until(() => !!inCard(relabelled, /^Relabel$/));
     click(inCard(relabelled, /^Relabel$/));
     return await until(() => /Relabelled: /.test((articleOf(relabelled) || {}).textContent || ''));
   });
-  await job('keep-period', () => relabelled, async () => {
+  job('keep-period', ['relabel'], () => relabelled, async () => {
     const b = inCard(relabelled, /^Do not regroup$/); click(b);
-    return !!b && await until(() => /no regrouping/.test((articleOf(relabelled) || {}).textContent || ''));
+    const ok = !!b && await until(() => /no regrouping/.test((articleOf(relabelled) || {}).textContent || ''));
+    jobClaude = null;
+    return ok;
   });
-  jobClaude = null;
 
   // 2. Find catalogue on a card not yet looked up (it finds a book: the web holds back its first answer so the
   // progress line is seen), Search again, Re-check museum shop; one Find catalogue where the shop's page dies, and
   // one where the publisher's page dies after the book is found.
-  const lookStep = async (name, title, how, re, first) => {
-    await job(name, title, async () => {
-      jobWeb = lookupWeb(title + ': The Catalogue', how); jobClaude = lookupClaude(title + ': The Catalogue');
-      if (first) { click(inCard(title, /^Catalogue$/)); await until(() => !!inCard(title, re)); }
+  const lookStep = (name, needs, title, how, re, first) => job(name, needs, title, async () => {
+    jobWeb = lookupWeb(title + ': The Catalogue', how); jobClaude = lookupClaude(title + ': The Catalogue');
+    try {
+      if (first) { at(name + '-progress'); click(inCard(title, /^Catalogue$/)); await until(() => !!inCard(title, re)); }
       const b = inCard(title, re); if (!b) return false;
       if (first) gate = makeGate();
       click(b);
       if (first) {
         const seen = await until(() => /Searching venue shop/.test((articleOf(title) || {}).textContent || ''));
         capture(name + '-progress', seen, () => view(title));
+        at(name);
         const g = gate; gate = null; g.open();
       }
       return await jobDone();
-    });
-  };
-  await lookStep('find', 'Zurbarán', null, /^Find catalogue$/, true);
-  await lookStep('search-again', 'Zurbarán', null, /^Search again$/);
-  await lookStep('recheck', 'Zurbarán', null, /^Re-check museum shop$/);
-  await lookStep('find-died', 'Monet and Renoir: Painting Side by Side', 'shopDies', /^Find catalogue$/, true);
-  await lookStep('find-trouble', 'Waldmüller: Landscapes', 'pubFails', /^Find catalogue$/, true);
-  jobWeb = null; jobClaude = null;
+    } finally { jobWeb = null; jobClaude = null; }
+  });
+  lookStep('find', ['jobs-ledger'], 'Zurbarán', null, /^Find catalogue$/, true);
+  lookStep('search-again', ['find'], 'Zurbarán', null, /^Search again$/);
+  lookStep('recheck', ['search-again'], 'Zurbarán', null, /^Re-check museum shop$/);
+  lookStep('find-died', ['jobs-ledger'], 'Monet and Renoir: Painting Side by Side', 'shopDies', /^Find catalogue$/, true);
+  lookStep('find-trouble', ['jobs-ledger'], 'Waldmüller: Landscapes', 'pubFails', /^Find catalogue$/, true);
 
   // 3. Her digital catalogue link on the card just found: words that are not a link (the box stays open), then a link.
-  const digital = async (name, typed) => {
-    await job(name, 'Zurbarán', async () => {
-      if (!articleOf('Zurbarán').querySelector('input')) click(inCard('Zurbarán', /^Digital catalogue$/));
-      const box = await until(() => !!articleOf('Zurbarán').querySelector('input')) && articleOf('Zurbarán').querySelector('input');
-      if (!box) return false;
-      Object.getOwnPropertyDescriptor(win.HTMLInputElement.prototype, 'value').set.call(box, typed);
-      box.dispatchEvent(new win.KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
-      await steady(); return true;
-    });
-  };
-  await digital('digital-not-a-link', 'not a link');
-  await digital('digital', 'https://example.org/zurbaran-catalogue.pdf');
+  const digital = (name, needs, typed) => job(name, needs, 'Zurbarán', async () => {
+    if (!articleOf('Zurbarán').querySelector('input')) click(inCard('Zurbarán', /^Digital catalogue$/));
+    const box = await until(() => !!articleOf('Zurbarán').querySelector('input')) && articleOf('Zurbarán').querySelector('input');
+    if (!box) return false;
+    Object.getOwnPropertyDescriptor(win.HTMLInputElement.prototype, 'value').set.call(box, typed);
+    box.dispatchEvent(new win.KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+    await steady(); return true;
+  });
+  digital('digital-not-a-link', ['recheck'], 'not a link');
+  digital('digital', ['digital-not-a-link'], 'https://example.org/zurbaran-catalogue.pdf');
   // The catalogue pick on the card with versions: the third block (Stockholm's hardcover).
-  await job('pick', PICK_TITLE, async () => {
+  job('pick', ['jobs-ledger'], PICK_TITLE, async () => {
     click(inCard(PICK_TITLE, wordsRe(WORDS.catalogue))); await until(() => !!articleOf(PICK_TITLE).querySelector('[role=radio]'));
     const r = [...articleOf(PICK_TITLE).querySelectorAll('[role=radio]')].find(x => x.getAttribute('aria-checked') !== 'true');
     if (!r) return false;
@@ -723,43 +834,39 @@ async function snapshot(jsxFile, outFile, liveFile) {
   const shopView = () => sha1(screen()) + '\n-- the shop screen --\n' + (shops() ? shops().textContent : '(none)')
     + '\n-- the review --\n' + (reviewPanel() ? reviewPanel().textContent : '(none)') + '\n-- above the cards --\n' + head();
   const shopBtn = label => shops() && [...shops().querySelectorAll('button')].find(b => b.textContent.replace(/^✓ /, '') === label);
-  const shopStep = async (name, run) => {
-    await step(name, async () => {
-      calls.length = 0;
-      const ok = await run();
-      await steady();
-      capture(name, ok, shopView);
-      capture(name + '-store', ok, () => storeView([], tapeKeys()));
-      capture(name + '-calls', ok, () => calls.join('\n\n'));
-    });
-  };
-  const pasteRead = async name => {
-    await shopStep(name, async () => {
-      jobWeb = newVenueWeb();
-      jobClaude = full => (/Testhaus Treasures/.test(full) && !/name the art period/.test(full) ? batchReply(full, async p => (/Testhaus Treasures/.test(p) ? NEW_REPLY : undefined)) : undefined);
-      click(button(/^Import$/)); await until(() => !!inDialog(/^Paste$/));
-      click(inDialog(/^Paste$/)); await steady();
-      type(doc.querySelector('input[aria-label="Link"]'), NEW_URL); type(doc.querySelector('textarea[aria-label="Text"]'), NEW_TEXT);
-      await settle(1000); await steady();
-      click(buttons(/^Read$/).pop());
-      const ok = await until(() => !!button(/^Cancel import$/), 60000);
-      await steady();
-      for (const b of buttons(/^Add new entry$/)) click(b);
-      await steady();
-      return ok && !!button(/^Next$/);
-    });
-  };
-  const press = (name, label, wait) => shopStep(name, async () => { const b = typeof label === 'string' ? shopBtn(label) : label(); if (!b) return false; click(b); return wait ? await until(wait, 30000) : true; });
-  await pasteRead('paste-new');
-  await press('shop-screen', () => button(/^Next$/), () => !!shops());
-  await press('shop-confirm', WORDS.confirm);
-  await press('shop-back', WORDS.back, () => !shops());
-  await press('cancel-import', () => button(/^Cancel import$/), () => !button(/^Cancel import$/));
-  await pasteRead('paste-new-again');
-  await press('shop-screen-again', () => button(/^Next$/), () => !!shops());
-  await press('shop-confirm-again', WORDS.confirm);
-  await press('shop-no-shop', WORDS.noShop);
-  await shopStep('shop-add', async () => {
+  const shopStep = (name, needs, run) => def(name, needs, async () => {
+    calls.length = 0;
+    jobWeb = newVenueWeb();
+    jobClaude = full => (/Testhaus Treasures/.test(full) && !/name the art period/.test(full) ? batchReply(full, async p => (/Testhaus Treasures/.test(p) ? NEW_REPLY : undefined)) : undefined);
+    const ok = await run();
+    await steady();
+    capture(name, ok, shopView);
+    capture(name + '-store', ok, () => storeView([], tapeKeys()), 'store');
+    capture(name + '-calls', ok, () => calls.join('\n\n'), 'calls');
+  });
+  const pasteRead = (name, needs) => shopStep(name, needs, async () => {
+    click(button(/^Import$/)); await until(() => !!inDialog(/^Paste$/));
+    click(inDialog(/^Paste$/)); await steady();
+    type(doc.querySelector('input[aria-label="Link"]'), NEW_URL); type(doc.querySelector('textarea[aria-label="Text"]'), NEW_TEXT);
+    await steady();
+    click(buttons(/^Read$/).pop());
+    const ok = await until(() => !!button(/^Cancel import$/), 60000);
+    await steady();
+    for (const b of buttons(/^Add new entry$/)) click(b);
+    await steady();
+    return ok && !!button(/^Next$/);
+  });
+  const shopPress = (name, needs, label, wait) => shopStep(name, needs, async () => { const b = typeof label === 'string' ? shopBtn(label) : label(); if (!b) return false; click(b); return wait ? await until(wait, 30000) : true; });
+  pasteRead('paste-new', ['jobs-ledger']);
+  shopPress('shop-screen', ['paste-new'], () => button(/^Next$/), () => !!shops());
+  shopPress('shop-confirm', ['shop-screen'], WORDS.confirm);
+  shopPress('shop-back', ['shop-confirm'], WORDS.back, () => !shops());
+  shopPress('cancel-import', ['shop-back'], () => button(/^Cancel import$/), () => !button(/^Cancel import$/));
+  pasteRead('paste-new-again', ['cancel-import']);
+  shopPress('shop-screen-again', ['paste-new-again'], () => button(/^Next$/), () => !!shops());
+  shopPress('shop-confirm-again', ['shop-screen-again'], WORDS.confirm);
+  shopPress('shop-no-shop', ['shop-confirm-again'], WORDS.noShop);
+  shopStep('shop-add', ['shop-no-shop'], async () => {
     const b = shopBtn(WORDS.add); if (!b) return false; click(b);
     const box = await until(() => !!shops().querySelector('input')) && shops().querySelector('input');
     if (!box) return false;
@@ -767,33 +874,48 @@ async function snapshot(jsxFile, outFile, liveFile) {
     box.dispatchEvent(new win.KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
     return await until(() => !shops().querySelector('input'));
   });
-  await press('shop-look-again', WORDS.lookAgain, () => !wordsRe(WORDS.looking).test(shops().textContent));
-  await press('shop-back-again', WORDS.back, () => !shops());
-  await press('shop-next', () => button(/^Next$/), () => !!shops());
-  await press('shop-answered', () => shopBtn(WORDS.confirm) && !shopBtn(WORDS.confirm).disabled ? shopBtn(WORDS.confirm) : shopBtn(WORDS.noShop));
-  await press('shop-apply', () => shops() && [...shops().querySelectorAll('button')].pop(), () => !shops() && /Import complete/.test(text()));
-  jobWeb = null; jobClaude = null;
-  if (dialog()) { click(inDialog(/^Cancel$/)); await steady(); }
+  shopPress('shop-look-again', ['shop-add'], WORDS.lookAgain, () => !wordsRe(WORDS.looking).test(shops().textContent));
+  shopPress('shop-back-again', ['shop-look-again'], WORDS.back, () => !shops());
+  shopPress('shop-next', ['shop-back-again'], () => button(/^Next$/), () => !!shops());
+  shopPress('shop-answered', ['shop-next'], () => shopBtn(WORDS.confirm) && !shopBtn(WORDS.confirm).disabled ? shopBtn(WORDS.confirm) : shopBtn(WORDS.noShop));
+  shopPress('shop-apply', ['shop-answered'], () => shops() && [...shops().querySelectorAll('button')].pop(), () => !shops() && /Import complete/.test(text()));
+  def('shops-done', ['shop-apply'], async () => { jobWeb = null; jobClaude = null; if (dialog()) { click(inDialog(/^Cancel$/)); await steady(); } });
 
-  // 6. Drawing (stage B of the main screen): the pieces no earlier step opens, each in full.
-  const draw = async (name, find, back) => {
-    await step(name, async () => { const was = screen(); const ok = click(find()) && await until(() => screen() !== was, 4000);
-      await steady(); capture(name, ok, screen); if (back !== false) { click((back || find)()); await steady(); } });
-  };
+  // 6. Drawing: the pieces no earlier step opens, each in full.
+  const draw = (name, needs, find, back) => def(name, needs, async () => {
+    const was = screen(); const ok = click(find()) && await until(() => screen() !== was, 4000);
+    await steady(); capture(name, ok, screen); if (back !== false) { click((back || find)()); await steady(); }
+  });
   const bottom = t => () => [...doc.querySelectorAll('button')].filter(b => b.textContent.trim() === t).pop();
-  await draw('draw-dark', () => doc.querySelector('button[title="Switch to dark"]'), () => doc.querySelector('button[title="Switch to light"]'));
-  await draw('draw-sweep-log', () => button(/^Details$/), () => button(/^Hide details$/));
-  await draw('draw-quarantine', bottom(WORDS.quarantine));
-  await draw('draw-reset-cards', bottom(WORDS.clearSearch));
-  await draw('draw-cloud-saves', bottom(WORDS.cloudSaves));
-  await draw('draw-save-panel', () => button(/^Save$/), false);
-  await draw('draw-search-box', () => doc.querySelector('button[title="Search"]'));
+  draw('draw-dark', ['afterLedger'], () => doc.querySelector('button[title="Switch to dark"]'), () => doc.querySelector('button[title="Switch to light"]'));
+  draw('draw-sweep-log', ['afterLedger'], () => button(/^Details$/), () => button(/^Hide details$/));
+  draw('draw-quarantine', ['appliedMixed'], bottom(WORDS.quarantine));
+  draw('draw-reset-cards', ['afterLedger'], bottom(WORDS.clearSearch));
+  draw('draw-cloud-saves', ['afterLedger'], bottom(WORDS.cloudSaves));
+  draw('draw-save-panel', ['afterLedger'], () => button(/^Save$/), false);
+  draw('draw-search-box', ['afterLedger'], () => doc.querySelector('button[title="Search"]'));
 
-  // 5. The whole run's store sequence, opening to here.
-  capture('store-sequence-all', true, () => seq.join('\n'));
+  // Run the walk: every step in order, or one step and the steps it needs.
+  const byName = new Map(STEPS.map(s => [s.name, s]));
+  let wanted = null;
+  if (only) {
+    if (!byName.has(only)) throw new Error('no step "' + only + '"; the steps: ' + STEPS.map(s => s.name).join(', '));
+    wanted = new Set();
+    const add = n => { if (wanted.has(n)) return; for (const m of byName.get(n).needs) add(m); wanted.add(n); };
+    add(only);
+  }
+  for (const s of STEPS) {
+    if (wanted && !wanted.has(s.name)) continue;
+    curStep = s.name; at(s.name);
+    await step(s.name, s.fn);
+  }
+  curStep = 'end'; at('end');
 
+  // The run's store sequence, opening to here.
+  capture('store-sequence-all', true, () => seq.join('\n'), 'sequence');
   screens.consoleErrors = shouted.join('\n');
-  fs.writeFileSync(outFile, JSON.stringify({ values, plain, kinds, screens, missed }));
+  meta.consoleErrors = { kind: 'console', step: 'end', at: 'opening' };
+  fs.writeFileSync(outFile, JSON.stringify({ values, plain, kinds, screens, missed, meta, only: only || null, steps: STEPS.map(s => ({ name: s.name, needs: s.needs })) }));
   root.unmount();
   process.exit(0);
 }
@@ -802,6 +924,17 @@ async function snapshot(jsxFile, outFile, liveFile) {
 function firstDifference(a, b) {
   let i = 0; while (i < a.length && i < b.length && a[i] === b[i]) i++;
   return { at: i, old: a.slice(Math.max(0, i - 60), i + 100), now: b.slice(Math.max(0, i - 60), i + 100) };
+}
+
+// One version's snapshot, in its own process, so neither sees the other's clock or store.
+function snap(file, out, liveFile, only) {
+  return new Promise(resolve => {
+    const child = spawn(process.execPath, [__filename, '--snapshot', file, out, liveFile || '-', only || '-'], { cwd: ROOT });
+    let said = '';
+    child.stdout.on('data', d => { said += d; }); child.stderr.on('data', d => { said += d; });
+    const stop = setTimeout(() => child.kill(), 480000);
+    child.on('close', status => { clearTimeout(stop); resolve({ ok: status === 0 && fs.existsSync(out), said }); });
+  });
 }
 
 async function run(oldFile, newFile, { changesAllowed, live }) {
@@ -816,25 +949,12 @@ async function run(oldFile, newFile, { changesAllowed, live }) {
     }
   }
   if (!live) console.log('note  the Links read is compared only with --live (it needs pages fetched live)');
-  // Both versions run at once; each in its own process, so neither sees the other's clock or store.
-  const runOne = (f, k) => new Promise(resolve => {
-    const out = path.join(tmp, k + '.json');
-    const child = spawn(process.execPath, [__filename, '--snapshot', f, out].concat(liveFile ? [liveFile] : []), { cwd: ROOT });
-    let said = '';
-    child.stdout.on('data', d => { said += d; }); child.stderr.on('data', d => { said += d; });
-    const stop = setTimeout(() => child.kill(), 480000);
-    child.on('close', status => {
-      clearTimeout(stop);
-      const who = k ? 'new' : 'old';
-      if (status !== 0 || !fs.existsSync(out)) {
-        console.log('FAIL  the ' + who + ' version could not be run: ' + said.slice(-800));
-        process.exit(1);
-      }
-      if (said.trim()) console.log(said.trim().split('\n').map(l => '      (' + who + ') ' + l).join('\n'));
-      resolve(JSON.parse(fs.readFileSync(out, 'utf8')));
-    });
-  });
-  const [o, n] = await Promise.all([runOne(oldFile, 0), runOne(newFile, 1)]);
+  const [o, n] = await Promise.all([[oldFile, 0], [newFile, 1]].map(async ([f, k]) => {
+    const out = path.join(tmp, k + '.json'), r = await snap(f, out, liveFile, null), who = k ? 'new' : 'old';
+    if (!r.ok) { console.log('FAIL  the ' + who + ' version could not be run: ' + r.said.slice(-800)); process.exit(1); }
+    if (r.said.trim()) console.log(r.said.trim().split('\n').map(l => '      (' + who + ') ' + l).join('\n'));
+    return JSON.parse(fs.readFileSync(out, 'utf8'));
+  }));
   diffs += compare(o, n, changesAllowed);
   if (diffs) console.log(`both runs kept: ${path.join(tmp, '0.json')} (old), ${path.join(tmp, '1.json')} (new)`);
   console.log(diffs ? `SIDE BY SIDE: ${diffs} difference(s).` : 'SIDE BY SIDE: identical.');
@@ -893,23 +1013,31 @@ function compare(o, n, changesAllowed) {
     const d = firstDifference(o.screens[s], n.screens[s]);
     console.log(`DIFF  screen: ${s}, at character ${d.at}:\n   old …${d.old}…\n   new …${d.now}…`);
   }
-  if (!/proposed change/.test(o.screens.review || '')) { diffs++; console.log('FAIL  the review screen never opened — the check did not run'); }
+  // The whole walk must have reached the review; a run of one step (a proof's) reaches what that step does.
+  if (!o.only && !/proposed change/.test(o.screens.review || '')) { diffs++; console.log('FAIL  the review screen never opened — the check did not run'); }
   return diffs;
 }
 
-const args = process.argv.slice(2);
-const flags = { changesAllowed: args.includes('--changes-allowed'), live: args.includes('--live') };
-const rest = args.filter(a => a !== '--changes-allowed' && a !== '--live');
-if (rest[0] === '--fetch-live') fetchLive(rest[1]).then(() => process.exit(0), e => { console.log(String(e && e.message || e)); process.exit(1); });
-else if (rest[0] === '--compare') {   // two snapshots already taken (build/side_by_side_proof.js)
-  const d = compare(...[rest[1], rest[2]].map(f => JSON.parse(fs.readFileSync(f, 'utf8'))), flags.changesAllowed);
-  console.log(d ? `SIDE BY SIDE: ${d} difference(s).` : 'SIDE BY SIDE: identical.');
-  process.exit(d ? 1 : 0);
-} else if (rest[0] === '--snapshot') snapshot(rest[1], rest[2], rest[3]).catch(e => { console.log(String(e && e.stack || e)); process.exit(1); });
-else if (rest[0] === '--base') {
-  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'cw-sbs-'));
-  const old = path.join(tmp, 'old.jsx');
-  fs.writeFileSync(old, execFileSync('git', ['show', rest[1] + ':Cat_Watch.jsx'], { cwd: ROOT, maxBuffer: 64 << 20 }));
-  run(old, path.join(ROOT, 'Cat_Watch.jsx'), flags);
-} else if (rest.length === 2) run(path.resolve(rest[0]), path.resolve(rest[1]), flags);
-else { console.log('usage: node build/side_by_side.js <old.jsx> <new.jsx> | --base <git ref>  [--changes-allowed] [--live]'); process.exit(2); }
+module.exports = { compare, snap, fetchLive, LIVE_URLS, PLANTED };
+
+if (require.main === module) {
+  const args = process.argv.slice(2);
+  const flags = { changesAllowed: args.includes('--changes-allowed'), live: args.includes('--live') };
+  const rest = args.filter(a => a !== '--changes-allowed' && a !== '--live');
+  const opt = v => (v && v !== '-' ? v : null);
+  // A snapshot is a part of a run (the check's own, or its proof's); everything else is the check, used only when proven.
+  if (rest[0] !== '--snapshot') require('../scraper/test_proofs.js').requireProven(__filename);
+  if (rest[0] === '--fetch-live') fetchLive(rest[1]).then(() => process.exit(0), e => { console.log(String(e && e.message || e)); process.exit(1); });
+  else if (rest[0] === '--compare') {   // two snapshots already taken (its proof's)
+    const d = compare(...[rest[1], rest[2]].map(f => JSON.parse(fs.readFileSync(f, 'utf8'))), flags.changesAllowed);
+    console.log(d ? `SIDE BY SIDE: ${d} difference(s).` : 'SIDE BY SIDE: identical.');
+    process.exit(d ? 1 : 0);
+  } else if (rest[0] === '--snapshot') snapshot(rest[1], rest[2], opt(rest[3]), opt(rest[4])).catch(e => { console.log(String(e && e.stack || e)); process.exit(1); });
+  else if (rest[0] === '--base') {
+    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'cw-sbs-'));
+    const old = path.join(tmp, 'old.jsx');
+    fs.writeFileSync(old, execFileSync('git', ['show', rest[1] + ':Cat_Watch.jsx'], { cwd: ROOT, maxBuffer: 64 << 20 }));
+    run(old, path.join(ROOT, 'Cat_Watch.jsx'), flags);
+  } else if (rest.length === 2) run(path.resolve(rest[0]), path.resolve(rest[1]), flags);
+  else { console.log('usage: node build/side_by_side.js <old.jsx> <new.jsx> | --base <git ref>  [--changes-allowed] [--live]'); process.exit(2); }
+}

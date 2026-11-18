@@ -168,8 +168,9 @@ The app is feature parts under `app/` that a session can read whole; the main sc
 (`docs/restructure.md`: how it is laid out, the rules any later change to the screen follows, the checks). Her test
 rounds passed. **`main` holds 59.2, unpublished** (the rebuilt screen, the Theme chip's count, the venue scrubber for
 the Occ groups, "Still in the museum shop.", the fixes after item 4, the Uffizi's shop removed, the words list — every
-sentence she sees, written once — and the housekeeping); her app runs 59. **OPEN, before her next test page — proving the checks** (her decision):
-`docs/testing.md`, "Proving the checks". **OPEN — the rest of the plan to 60 (her
+sentence she sees, written once — and the housekeeping); her app runs 59. **The checks are proven** — each by planted faults,
+and run on the current code — and locked in code: no test is used until proven at its version (`docs/testing.md`, "Proven
+checks"). **OPEN — the rest of the plan to 60 (her
 decisions):** 60 is published when she says; then the leftover venue record is cleared. **She types "Continue the restructure." → read `docs/restructure.md`
 and do the next undone step of "What is left — the plan to 60".** Her venue review page,
 permanent, refreshed and filed at each publish: https://claude.ai/artifact/RmSC86pu1rkBxsZDtfdA1J.
@@ -389,7 +390,9 @@ Git holds the full text of everything compressed out of this guide — `git log 
 Each line came from a real failure. Details are in git history and `docs/`.
 
 - **Tests can pass and prove nothing.** Check the exit code and grep the output for the new test's own name; a suite can be
-  skipped silently (code after `process.exit`, a missing harness, an early `return` — use `await`).
+  skipped silently (code after `process.exit`, a missing harness, an early `return` — use `await`). A check that stays
+  quiet proves nothing until a fault planted on purpose is caught: **no test is used until proven, hard-wired (her
+  decision; `scraper/test_proofs.js`)** — whoever builds or changes a test proves it in the same work, never later.
 - **A command chain that pushes must stop on a failed test** — `grep` of the test output succeeds either way; gate the push on the test's own exit code (`R=$?; [ $R = 0 ] && git push`).
 - **Render the page** (`page_renders.js`). `tsc`, unit tests and string greps can all pass on a blank page.
 - **Test the real thing.** A fixture must serve the address the recipe asks for now, and must run the step that writes the output. Name a test for what the code does.
@@ -427,7 +430,8 @@ Each line came from a real failure. Details are in git history and `docs/`.
   colours; render both side by side before showing her (Theme Shelf drew its own look twice).
 - **Never say "it works" before the check that proves it has run** (Wallraf's title fix, said to work before Claude was asked on it). Never guess what she would or would not add: the test pages stand for faults any museum can show.
 - **No test run is left unwatched — hard-wired, her decision** (`scraper/test_watch.js`, the Bash hook
-  `.claude/hooks/test-guard.js`): tests only through `scraper/run_tests.js` (`--only <name>` for one suite); one run at a
+  `.claude/hooks/test-guard.js`): tests only through `scraper/run_tests.js` (`--only <name>` for one suite, `--prove
+  <name>` for a proof, `--side-by-side <ref>` for the side-by-side check); one run at a
   time; a run of a minute or more starts only after the session has written her its "Expected test run: …" line, then nothing
   until it ends; a suite well past its usual time is stopped and re-run alone; a live check stops after six minutes without
   an answer. The hook's refusal says what to do — do it, never work round it.

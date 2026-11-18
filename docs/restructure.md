@@ -81,7 +81,6 @@ failed.
 - **`Cat_Watch.jsx` is written only by `node build/app_join.js`**, in the order `app/pieces.json` records.
   `app_join.js --check` exits 1 if it was edited by hand; the build and the test runner run it first.
 - **A new piece** goes in the part where it is used and is recorded in `docs/restructure/placement.json`.
-  `node build/app_split.js` moves pieces between parts word for word.
 - Branches holding their own `Cat_Watch.jsx` (`parked`, `claude/theme-shelf`) are not merged across the
   restructure; their work is rebuilt on the parts when she wants it.
 
@@ -101,7 +100,7 @@ every piece and every test that lifts part of the page can name it.
   string holding two words or one capitalised word) unless under a "Not words:" comment or in a place never
   shown (a CSS value, a key, a comparison, what a text is searched for); an entry no part shows, or two
   entries with the same words; a pattern filled with other gaps than its own, or shown unfilled; and a test
-  that writes out a whole entry's words. It runs before every test run, in the build and in the gates.
+  that writes out a whole entry's words. It runs before every test run and in the build.
 - **Tests** read the app's sentences from the list (`scraper/fixtures/words.js`: `WORDS`, `say`, `wordsRe`;
   `wordsSource` for a test that lifts part of the page). **Agreed limits:** the check cannot judge whether a
   new sentence should have reused an old one — it forces it onto the list, where it shows; one lowercase
@@ -128,17 +127,20 @@ every piece and every test that lifts part of the page can name it.
 
 ## The checks
 
+Each is proven by planted faults and is not used until proven at its current version (`docs/testing.md`,
+"Proven checks").
 - **`build/structure_check.js`** — the levels, the store's door, hooks and JSX only in the screens.
 - **`build/fact_check.js`** — venue facts in one home; nothing written twice.
 - **`build/words_check.js`** — every sentence she sees on the words list (above).
+- **`build/app_join.js --check`** — the hand-edit guard: `Cat_Watch.jsx` is exactly what the parts, the scraper's
+  rules and the register join to.
 - **`build/side_by_side.js --base <ref> --changes-allowed`** — two versions of the page in a stand-in
   browser with the same clock, store, web and Claude: every table and list the page defines, every screen,
   every store record, every web and Claude call, and the store's sequence of reads and writes must be
-  identical; only a function's text may differ. It walks every screen and action she has (the walk is listed
-  in the script). About six minutes; long repeating timers never fire in it. **Use it for any change meant
+  identical; only a function's text may differ. It walks every screen and action she has, once each (the
+  walk is the list of steps in the script, each naming the steps it needs). The page's own timers run on a
+  stand-in clock, so nothing waits for the screen to settle: about a minute. **Use it for any change meant
   to leave behaviour alone.**
-- **`build/restructure_gates.js --base main --layer <id> --changes-allowed`** — the join exact, nothing
-  lost or doubled, every piece in its part, then the three checks above. Then `npm run test:app`.
 - **`build/same_text_check.js`, `build/sweep_same_check.js`, `build/keys_compare.js`** — the proofs of the
   duplicate rounds (texts, sweep files, her ledger's keys).
 - **`build/screen_xref.js`** — who reads and writes each thing the screen remembers.
@@ -186,9 +188,9 @@ In this order; nothing runs beside another.
 3. **Done — housekeeping:** the new-ID suffix written once; a memory written and never read removed; the quarantine
    stored outside its state updater; the Save panel's "File name:" preview and Save sharing one rule; `placement.json`
    brought up to date; the docs over their size budget (the guide review).
-   **Replaced — the tools' own proofs:** never run again (her decision). In their place, before her next test page:
-   `docs/testing.md`, "Proving the checks" — the migration's tools removed, every kept check proven, the side-by-side
-   check rewritten and proven, a lock in code so no test is used before it is proven.
+   **Done — the checks proven** (her decision, in place of the tools' own proofs, never run again): the migration's
+   tools removed; the three checks, the hand-edit guard and the rewritten side-by-side check each proven by planted
+   faults; the lock in code (`docs/testing.md`, "Proven checks"); all of them run on the current code.
 4. **Publish 60 to her real app — when she says.** The publish files any waiting venues and tells her in
    one line if it did.
 5. **After 60 is published and her app has opened on it:** the one-time clear of the leftover Christie's
@@ -202,7 +204,7 @@ key; the sweep-diff's fold; the publisher step's own address strip.
 One coordinating session; sub-agents one at a time, never a fork; the model by the judgement the job
 needs — Sonnet at medium for contained work the side-by-side check proves, Opus at medium where order or
 behaviour is subtle; never higher, never low effort, never Haiku. The coordinator writes the design first,
-opens one branch per run (`docs/branches.md`), re-runs the gates and the watched test run itself (a
+opens one branch per run (`docs/branches.md`), re-runs the checks and the watched test run itself (a
 sub-agent cannot start one), reads the diff, merges, pushes, updates this file. A surprise is parked for
 her and the work moves on. She gets a short line at each quarter of a stage.
 

@@ -15,6 +15,7 @@
  * --live: the commit her app was last published from (default: the last "Version N" commit).
  */
 'use strict';
+require('../scraper/test_proofs.js').requireProven(__filename);   // not used until proven at this version (scraper/test_proofs.js)
 const fs = require('fs');
 const os = require('os');
 const path = require('path');

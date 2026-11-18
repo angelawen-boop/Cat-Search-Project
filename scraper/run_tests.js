@@ -88,7 +88,11 @@ const SUITES = [
 //   node scraper/run_tests.js links --only cloud_app   only the suites whose command holds "cloud_app"
 //   node scraper/run_tests.js links --estimate         print the expected time and stop
 //   node scraper/run_tests.js --save-times             keep this machine's usual times in test_times.json
+//   node scraper/run_tests.js --prove <name…>          run those tests' planted-fault proofs (scraper/test_proofs.js)
+//   node scraper/run_tests.js --side-by-side [<ref>] [--live]   the side-by-side check against the page at <ref> (default main)
 const W = require('./test_watch.js');
+// No test is used until it is proven (her decision; scraper/test_proofs.js).
+const P = require('./test_proofs.js');
 
 const branchFile = path.join(ROOT, 'scraper/fixtures/branch_tests.txt');
 const branchSuites = () => (fs.existsSync(branchFile)
@@ -98,18 +102,35 @@ const branchSuites = () => (fs.existsSync(branchFile)
 // The doc budget and the guide check warn and never fail; they run last, on their
 // own, so their report is the final thing printed.
 const LAST = 'node scraper/doc_budget.js && node scraper/guide_check.js';
+// The side-by-side check, whatever commit it compares with, has one usual time.
+const SIDE_BY_SIDE = 'node build/side_by_side.js';
+const timeKey = c => (c.startsWith(SIDE_BY_SIDE + ' ') ? SIDE_BY_SIDE : c);
 const JOBS = Math.max(1, os.cpus().length);
 
 // What a run's arguments pick: { half, all, alone, last, error }.
 function plan(args) {
-  const flags = new Set(), only = [];
-  let half = null;
+  const flags = new Set(), only = [], prove = [];
+  let half = null, sideBySide = null;
   for (let i = 0; i < args.length; i++) {
     if (args[i] === '--only') { while (args[i + 1] && !args[i + 1].startsWith('--')) only.push(args[++i]); }
+    else if (args[i] === '--prove') { while (args[i + 1] && !args[i + 1].startsWith('--')) prove.push(args[++i]); }
+    else if (args[i] === '--side-by-side') sideBySide = args[i + 1] && !args[i + 1].startsWith('--') ? args[++i] : 'main';
     else if (args[i].startsWith('--')) flags.add(args[i]);
     else if (!half) half = args[i];
   }
   if (half && !GROUPS.includes(half)) return { error: `Unknown group "${half}" — use ${GROUPS.join(', ')}, or nothing for both halves.` };
+  // --side-by-side [<git ref>, default main]: the side-by-side check of the page now against the page at that commit
+  // (build/side_by_side.js; with --live the Links read too), nothing else.
+  if (sideBySide) {
+    const cmd = SIDE_BY_SIDE + ' --base ' + sideBySide + ' --changes-allowed' + (flags.has('--live') ? ' --live' : '');
+    return { half: null, all: [cmd], alone: new Set([cmd]), last: false, flags, only, prove };
+  }
+  // --prove <name…>: run those proofs (scraper/test_proofs.js), nothing else.
+  if (prove.length) {
+    const unknown = prove.filter(n => !P.PROVEN[n]);
+    if (unknown.length) return { error: `No proof named ${unknown.join(', ')} — the proven tests are ${Object.keys(P.PROVEN).join(', ')}.` };
+    return { half: null, all: prove.map(n => 'node ' + P.PROVEN[n].proof), alone: new Set(prove.map(n => 'node ' + P.PROVEN[n].proof)), last: false, flags, only, prove };
+  }
   const chosen = SUITES.filter(([tags]) => !half || [].concat(tags).includes(half));
   let all = [...chosen.map(([, cmd]) => cmd), ...(half === SCRAPER ? [] : branchSuites())];
   if (only.length) {
@@ -117,7 +138,7 @@ function plan(args) {
     if (!all.length) return { error: `No suite's command holds ${only.map(o => '"' + o + '"').join(' or ')}.` };
   }
   const alone = new Set(SUITES.filter(([, cmd, how]) => how === ALONE && all.includes(cmd)).map(([, cmd]) => cmd));
-  return { half, all, alone, last: !only.length, flags, only };
+  return { half, all, alone, last: !only.length, flags, only, prove };
 }
 
 // The expected time: the alone suites one after another, then the rest shared out as the workers take
@@ -125,7 +146,7 @@ function plan(args) {
 function estimate(args) {
   const p = plan(args);
   if (p.error) return 0;
-  const t = c => W.usual(c) ?? W.UNKNOWN_S;
+  const t = c => W.usual(timeKey(c)) ?? W.UNKNOWN_S;
   let s = 0;
   const free = new Array(JOBS).fill(0);
   for (const c of p.all) {
@@ -138,10 +159,12 @@ function estimate(args) {
 
 const running = new Set();
 // One suite, stopped (its whole process group) once it passes `limit` seconds.
-function run(cmd, limit) {
+function run(cmd, limit, proving) {
   return new Promise(resolve => {
     const t0 = Date.now();
-    const child = spawn(cmd, { cwd: ROOT, shell: true, detached: true });
+    const env = { ...process.env }; delete env.CATWATCH_PROVING;
+    if (proving) env.CATWATCH_PROVING = proving;
+    const child = spawn(cmd, { cwd: ROOT, shell: true, detached: true, env });
     running.add(child);
     let out = '', stalled = false;
     child.stdout.on('data', d => { out += d; });
@@ -156,7 +179,7 @@ function run(cmd, limit) {
 }
 process.on('exit', () => { for (const c of running) { try { process.kill(-c.pid, 'SIGKILL'); } catch {} } });
 
-const usualText = c => (W.usual(c) == null ? 'no time on record' : `usually ${W.usual(c).toFixed(1)}s`);
+const usualText = c => (W.usual(timeKey(c)) == null ? 'no time on record' : `usually ${W.usual(timeKey(c)).toFixed(1)}s`);
 
 async function main() {
   const args = process.argv.slice(2);
@@ -166,7 +189,13 @@ async function main() {
   const expected = estimate(args);
   if (p.flags.has('--estimate')) { console.log(W.line(expected)); return; }
 
+  // The checks below, and every suite, must be proven at this version (scraper/test_proofs.js) — a proof run excepted.
+  if (!p.prove.length) {
+    const unproven = ['build/app_join.js', 'build/structure_check.js', 'build/fact_check.js', 'build/words_check.js'].map(P.standing).filter(x => !x.ok);
+    if (unproven.length) { console.error(unproven.map(x => 'REFUSED — not proven at this version: ' + x.why).join('\n')); process.exit(1); }
+  }
   // Cat_Watch.jsx must be what the parts in app/ and the scraper's rules join to (this replaces the old sync_shared --check suite), or the run fails before any suite (docs/restructure.md).
+  if (!p.prove.length) {
   const join = spawnSync('node', [path.join(ROOT, 'build', 'app_join.js'), '--check'], { encoding: 'utf8' });
   if (join.status !== 0) { console.error((join.stderr || join.stdout || 'app_join.js --check failed').trim()); process.exit(1); }
   // No part names a higher one, only the store's door reaches the store, and hooks and JSX stay in the screens (build/structure_check.js).
@@ -178,13 +207,16 @@ async function main() {
   // Every sentence the app shows is on the words list, and the tests read them from it (build/words_check.js).
   const words = spawnSync('node', [path.join(ROOT, 'build', 'words_check.js')], { encoding: 'utf8' });
   if (words.status !== 0) { console.error((words.stdout || words.stderr || 'words_check.js failed').trim()); process.exit(1); }
+  // Each passed, proven at this version: its own line, so the run shows they ran.
+  for (const r of [join, structure, facts, words]) console.log((r.stdout || '').split('\n').filter(l => /^(PASS|join:)/.test(l)).join('\n'));
+  }
 
   const what = 'node scraper/run_tests.js ' + args.join(' ');
   W.takeLock(what.trim(), expected);
   const t0 = Date.now();
   const bs = p.half === SCRAPER || p.only.length ? 0 : branchSuites().length;
   console.log(W.line(expected));
-  console.log(`Running ${p.all.length} suites (${p.only.length ? 'only ' + p.only.join(', ') : p.half || 'app and scraper'}), ${JOBS} at a time` +
+  console.log(`Running ${p.all.length} ${p.prove.length ? 'proofs' : 'suites'} (${p.prove.length ? p.prove.join(', ') : p.all[0].startsWith(SIDE_BY_SIDE) ? 'the side-by-side check' : p.only.length ? 'only ' + p.only.join(', ') : p.half || 'app and scraper'}), ${JOBS} at a time` +
     (bs ? ` (${bs} from this branch's branch_tests.txt)` : '') + '.');
 
   const start = {};
@@ -194,7 +226,19 @@ async function main() {
     if (now.length) console.log(`… ${Math.round((Date.now() - t0) / 1000)}s in; still running: ${now.join('; ')}`);
   }, 60000);
   beat.unref();
-  const timed = async c => { start[c] = Date.now(); const r = await run(c, W.stallLimit(W.usual(c))); delete start[c]; return r; };
+  // A suite not proven at this version is not run and does not pass. A proof runs with its test's name in
+  // CATWATCH_PROVING, so the test can be run on its planted faults, and records the version it passed on.
+  const proving = {};
+  for (const n of p.prove) proving['node ' + P.PROVEN[n].proof] = { name: n, version: P.versionOf(n) };
+  const timed = async c => {
+    if (!proving[c]) { const s = P.suiteStanding(c); if (!s.ok) return { cmd: c, code: 1, out: 'REFUSED — not proven at this version: ' + s.why + '\n', stalled: false, secs: 0, refused: true }; }
+    start[c] = Date.now(); const r = await run(c, W.stallLimit(W.usual(timeKey(c))), proving[c] && proving[c].name); delete start[c];
+    if (proving[c] && r.code === 0 && !r.stalled) {
+      if (P.versionOf(proving[c].name) === proving[c].version) { P.recordProof(proving[c].name, proving[c].version); r.out += `PROVEN — ${proving[c].name} at version ${proving[c].version}, kept in scraper/test_proofs.json.\n`; }
+      else { r.code = 1; r.out += `NOT RECORDED — ${proving[c].name}'s files changed while its proof ran; prove it again.\n`; }
+    }
+    return r;
+  };
 
   const results = new Array(p.all.length);
   let next = 0, printed = 0;
@@ -234,7 +278,7 @@ async function main() {
 
   const finals = results.map(r => (r.stalled ? retried.find(x => x.first === r).again : r));
   const passed = [...finals, ...(last ? [last] : [])].filter(r => r.code === 0 && !r.stalled);
-  W.record(Object.fromEntries(passed.map(r => [r.cmd, r.secs])));
+  W.record(Object.fromEntries(passed.map(r => [timeKey(r.cmd), r.secs])));
 
   const failed = finals.filter(r => r.code !== 0 || r.stalled);
   const secs = (Date.now() - t0) / 1000;
@@ -243,7 +287,7 @@ async function main() {
     console.log(again.stalled ? `STALLED TWICE (a real fault, not crowding): ${first.cmd}`
       : `STALLED with others running, then ${again.code === 0 ? 'passed' : 'FAILED'} alone in ${again.secs.toFixed(1)}s: ${first.cmd}`);
   }
-  for (const r of failed) if (!r.stalled) console.log(`FAILED (exit ${r.code}): ${r.cmd}`);
+  for (const r of failed) if (!r.stalled) console.log(`${r.refused ? 'REFUSED (not proven at this version)' : 'FAILED (exit ' + r.code + ')'}: ${r.cmd}`);
   process.exit(failed.length || (last && last.code) ? 1 : 0);
 }
 

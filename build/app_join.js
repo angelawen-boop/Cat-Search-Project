@@ -8,7 +8,7 @@
  *
  *   node build/app_join.js            write Cat_Watch.jsx (and bring pieces.json up to date)
  *   node build/app_join.js --check    exit 1 if Cat_Watch.jsx is not what the parts join to
- *   --root <dir>                      work on a copy of the project instead (the gates' own tests)
+ *   --root <dir>                      work on a copy of the project instead (the guard's proof)
  *
  * A piece added to a part goes out right after the piece above it in that part; a piece
  * deleted from every part leaves the order. A piece found in two parts, or a part with text
@@ -23,8 +23,28 @@
 'use strict';
 const fs = require('fs');
 const path = require('path');
-const { readPart } = require('./app_pieces.js');
 const { expandShared } = require('./shared_from_scraper.js');
+
+// A part file holds pieces, each opened by a line `//@piece <id>`; lines before the first piece that start
+// with `//@` are the part's own notes for sessions, and the join drops them.
+const MARK = '//@piece ';
+function readPart(text, file) {
+  const out = [];
+  const lines = text.split('\n');
+  let i = 0;
+  while (i < lines.length && !lines[i].startsWith(MARK)) {
+    if (lines[i] !== '' && !lines[i].startsWith('//@')) throw new Error(file + ': line ' + (i + 1) + ' sits outside any piece');
+    i++;
+  }
+  let cur = null, buf = [];
+  const flush = () => { if (cur) out.push({ id: cur, text: buf.join('\n').replace(/\n$/, '') }); };
+  for (; i < lines.length; i++) {
+    if (lines[i].startsWith(MARK)) { flush(); cur = lines[i].slice(MARK.length).trim(); buf = []; }
+    else buf.push(lines[i]);
+  }
+  flush();
+  return out;
+}
 
 function paths(root) {
   return {
@@ -90,6 +110,7 @@ if (require.main === module) {
   let r;
   try { r = join(root); } catch (e) { console.error('JOIN FAILED — ' + e.message); process.exit(1); }
   if (args.includes('--check')) {
+    require('../scraper/test_proofs.js').requireProven(__filename);   // not used until proven at this version (scraper/test_proofs.js)
     const now = fs.readFileSync(r.P.JSX, 'utf8');
     if (now === r.text) { console.log('join: Cat_Watch.jsx is what the parts in app/ and the scraper\'s rules join to.'); process.exit(0); }
     console.error('JOIN CHECK FAILED — Cat_Watch.jsx is not what the parts in app/, the scraper\'s rules and the venue register join to (a part, a scraper rule'

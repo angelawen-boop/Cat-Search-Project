@@ -4,7 +4,9 @@
 // who noticed). The harness runs this before every Bash command; a refusal goes back to the session.
 //
 //   - a test file run directly (node --test, scraper/fixtures/…) → refused: the runner's --only, which
-//     carries the stopwatch and the lock (scraper/test_watch.js);
+//     carries the stopwatch and the lock (scraper/test_watch.js); a proof run directly, or CATWATCH_PROVING
+//     set by hand → refused: node scraper/run_tests.js --prove <name> (scraper/test_proofs.js); the side-by-side
+//     check run directly → refused: node scraper/run_tests.js --side-by-side <ref>;
 //   - a run while another holds the lock → refused, naming it;
 //   - a run started with & or nohup → refused: the harness cannot see it end, so nobody is woken;
 //   - a run expected to take a minute or more → refused until the session has written to her, since the
@@ -40,6 +42,15 @@ if (direct) {
   deny(`Run tests through the watched runner, never directly: node scraper/run_tests.js --only ${name}` +
     ' (it carries the stopwatch, the expected time and the one-run lock).');
 }
+
+// A proof runs only through the runner, which sets CATWATCH_PROVING for it (scraper/test_proofs.js).
+if (/\bCATWATCH_PROVING=/.test(cmd)) deny('CATWATCH_PROVING is set only by the watched runner while a proof runs. Prove a test with: node scraper/run_tests.js --prove <name>.');
+const proofRun = W.commandsIn(cmd).find(w => /(^|\/)node$/.test(w[0]) && w.some(x => /(^|\/)build\/proofs\/[\w.-]+\.proof\.js$/.test(x)));
+if (proofRun) deny('Run a proof through the watched runner, never directly: node scraper/run_tests.js --prove <name> (scraper/test_proofs.js names them).');
+
+// The side-by-side check runs only through the runner (its expected time, its lock); its proof runs its parts.
+const sbs = W.commandsIn(cmd).find(w => /(^|\/)node$/.test(w[0]) && w.some(x => /(^|\/)build\/side_by_side\.js$/.test(x)) && !w.includes('--snapshot') && !w.includes('--fetch-live'));
+if (sbs) deny('Run the side-by-side check through the watched runner: node scraper/run_tests.js --side-by-side <git ref> [--live].');
 
 const runs = W.runsIn(cmd);
 if (!runs.length) process.exit(0);

@@ -84,9 +84,10 @@ function venueFacts(root) {
 
 // The copies listed for later items (docs/restructure/duplicates.md, 4B–4F), by the text they share and the
 // item that removes them; a copy removed is taken off this list.
-const KNOWN_TWICE = require('./fact_check_known.json');
+const knownTwice = root => { const f = path.join(root, 'build', 'fact_check_known.json'); return fs.existsSync(f) ? JSON.parse(fs.readFileSync(f, 'utf8')) : []; };
 
 function writtenTwice(root) {
+  const KNOWN_TWICE = knownTwice(root);
   const { partFiles } = require('./app_join.js');
   const seen = new Map();
   for (const f of partFiles(path.join(root, 'app'))) {
@@ -120,11 +121,12 @@ function check(root) { return { venue: venueFacts(root), twice: writtenTwice(roo
 module.exports = { check, venueFacts, writtenTwice };
 
 if (require.main === module) {
+  require('../scraper/test_proofs.js').requireProven(__filename);   // not used until proven at this version (scraper/test_proofs.js)
   const a = process.argv.slice(2), ri = a.indexOf('--root');
   const root = ri >= 0 ? path.resolve(a[ri + 1]) : path.join(__dirname, '..');
   const r = check(root);
   for (const p of r.venue) console.log('FAIL  ' + p);
   for (const p of r.twice) console.log('FAIL  ' + p);
   if (r.venue.length || r.twice.length) { console.log(`FACT CHECK FAILED: ${r.venue.length} venue fact(s) outside the register, ${r.twice.length} text(s) written twice.`); process.exit(1); }
-  console.log('PASS  facts: every venue fact is in venues/register.js, and no sentence, list or rule is written twice in the app\'s parts (' + KNOWN_TWICE.length + ' copies listed for items 4B–4F)');
+  console.log('PASS  facts: every venue fact is in venues/register.js, and no sentence, list or rule is written twice in the app\'s parts (' + knownTwice(root).length + ' copies listed for items 4B–4F)');
 }

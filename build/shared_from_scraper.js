@@ -40,7 +40,7 @@ const path = require('path');
 
 const DEFAULT_ROOT = path.join(__dirname, '..');
 
-// The directive line in the part, and the piece's markers. app_pieces.js finds the piece by SHARED_OPEN.
+// The directive line in the part, and the piece's markers.
 const DIRECTIVE = '//@from-scraper';
 const REGISTER_DIRECTIVE = '//@venue-register';
 const REGISTER_LINE = /^const REGISTER = require\('\.\.\/venues\/register\.js'\)\.VENUES; \/\/@register$/m;

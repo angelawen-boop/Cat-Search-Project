@@ -112,6 +112,7 @@ function check(root) {
 module.exports = { check, LEVEL };
 
 if (require.main === module) {
+  require('../scraper/test_proofs.js').requireProven(__filename);   // not used until proven at this version (scraper/test_proofs.js)
   const a = process.argv.slice(2), ri = a.indexOf('--root');
   const root = ri >= 0 ? path.resolve(a[ri + 1]) : path.join(__dirname, '..');
   const r = check(root);

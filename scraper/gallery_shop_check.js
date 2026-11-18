@@ -17,6 +17,7 @@
  *   node scraper/shop_check.js --save=DIR   also saves every call and its reply, numbered, into DIR
  */
 'use strict';
+require('./test_proofs.js').requireProven(__filename);   // not used until proven at this version (scraper/test_proofs.js)
 const fs = require('fs');
 const path = require('path');
 const load = require('./claude_read_check/load.js');

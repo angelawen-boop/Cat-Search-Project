@@ -22,7 +22,8 @@ const ROOT = path.join(__dirname, '..');
 // CATWATCH_LOCK: a test of the hook uses its own lock, so the run holding the real one does not refuse it.
 const LOCK = process.env.CATWATCH_LOCK || path.join(os.tmpdir(), 'catwatch-test-run.lock');
 const BASE_TIMES = path.join(__dirname, 'test_times.json');
-const LOCAL_TIMES = path.join(os.tmpdir(), 'catwatch-test-times.json');
+// CATWATCH_LOCAL_TIMES: the lock's proof runs a runner of its own, whose times are not this machine's usual ones.
+const LOCAL_TIMES = process.env.CATWATCH_LOCAL_TIMES || path.join(os.tmpdir(), 'catwatch-test-times.json');
 // A run expected to take at least this long needs the line to her first; a shorter one costs her nothing.
 const TELL_FROM_S = 60;
 // A suite with no time on record yet.

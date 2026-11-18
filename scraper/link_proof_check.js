@@ -31,6 +31,7 @@
  *                  when it shows a rule new at its venue; else say it adds nothing
  */
 'use strict';
+require('./test_proofs.js').requireProven(__filename);   // not used until proven at this version (scraper/test_proofs.js)
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
