@@ -1,0 +1,5 @@
+venue_code,title,start_date,end_date,summary,url,notes,swept_at
+louvre,[current/upcoming page],,,,https://www.louvre.fr/en/exhibitions-and-events/exhibitions,"The venue's ""current/upcoming"" listing page loaded but no exhibitions could be read from it. Marker row, not an exhibition.",2026-11-19T08:58:32.050Z
+louvre,[past page],,,,https://www.louvre.fr/en/exhibitions-and-events/past-exhibitions,"The venue's ""past"" listing page could not be read: the venue’s server answered HTTP 500. Marker row, not an exhibition.",2026-11-19T08:58:32.050Z
+louvre,[past 2025 page],,,,https://www.louvre.fr/en/exhibitions-and-events/past-exhibitions?date=2025,"The venue's ""past 2025"" listing page could not be read: the venue’s server answered HTTP 500. Marker row, not an exhibition.",2026-11-19T08:58:32.050Z
+louvre,[past 2024 page],,,,https://www.louvre.fr/en/exhibitions-and-events/past-exhibitions?date=2024,"The venue's ""past 2024"" listing page could not be read: the venue’s server answered HTTP 500. Marker row, not an exhibition.",2026-11-19T08:58:32.050Z

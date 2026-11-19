@@ -1,9 +1,9 @@
 {
   "host": "www.menil.org",
   "url": "https://www.menil.org/robots.txt",
-  "fetchedAt": "2026-10-14T14:57:34.814Z",
+  "fetchedAt": "2026-11-19T08:58:01.082Z",
   "status": 200,
   "readable": true,
   "server": "cloudflare",
-  "sha": "74de0cf1edfb"
+  "sha": "e3d9f6ca11cd"
 }
