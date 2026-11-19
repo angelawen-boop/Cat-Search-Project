@@ -34,7 +34,5 @@ proven by planted faults.
   - MAM, the Accademia and the Louvre's past pages are back
   - Menil and Cincinnati: still refused?
   - every fix above holds live
-- **A test fails since this run was pushed:** one Add-by-link check compares the page's summary examples with the
-  sweep's newest text, which this run changed. A rebuild of the page clears it; left for the next app change.
-- **KHM's current listing** has read nothing since October. The running shows this run did find came from the
-  upcoming page; whether any current show is missed is unknown. Not investigated.
+- **KHM:** fixed after the close was first written — its current page names its headline section for the season,
+  and the recipe now reads it whatever the season (tested on the page as a browser draws it).

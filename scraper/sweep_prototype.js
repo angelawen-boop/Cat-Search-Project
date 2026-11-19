@@ -4066,10 +4066,11 @@ const VENUES = {
     // its four sections are permanent collections; `within` keeps the two the venue
     // labels as shows.
     pages: [
-      // Only the current page needs scoping — /upcoming lists nothing but
-      // upcoming shows.
+      // Only the current page needs scoping. Its headline section is named for the
+      // season ("the-great-summer-exhibition", "the-great-fall-exhibition";
+      // docs/khm_pages/current_2026-11.html). /upcoming lists every show not yet closed.
       { path: '/en/exhibitions', ctx: 'current',
-        within: ['#special-exhibitions', '#the-great-summer-exhibition'] },
+        within: ['#special-exhibitions', '[id^="the-great-"][id$="-exhibition"]'] },
       { path: '/en/exhibitions/upcoming', ctx: 'upcoming' },
     ],
     selector: 'a[href*="/en/exhibitions/"]',

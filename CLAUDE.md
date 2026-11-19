@@ -287,10 +287,6 @@ Cini, Prado, Correr): `docs/app.md`, `docs/add_by_link.md`.
 
 A session records each failing suite here and does not investigate it (`docs/testing.md`).
 
-**OPEN — `add_by_link.js` AL-094b fails since the 19 Nov run was pushed**: the check compares the page's summary
-examples with `compress_cli.js`'s, which are rebuilt from the newest sweep text, and that run changed it. Passing again
-needs a join (`node build/app_join.js`), which changes the page — left for the next app change.
-
 **OPEN, watching — `cloud_app.js` and `cloud_two_copies.js` failed when the test machine was crowded**: checks waiting 8
 seconds for an automatic save (CA-002, CA-005d, CA-006, TC-001) gave up. The cloud suites now run alone (her decision; the 8
 seconds kept). If one still fails when run alone, record it here — that is a real fault, not crowding.

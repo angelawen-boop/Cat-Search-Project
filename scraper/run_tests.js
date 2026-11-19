@@ -76,6 +76,7 @@ const SUITES = [
   [SCRAPER, 'node scraper/fixtures/va_pages.js'],
   [SCRAPER, 'node scraper/fixtures/description_pages_oct.js'],
   [SCRAPER, 'node scraper/fixtures/sweep_nov_pages.js'],
+  [SCRAPER, 'node scraper/fixtures/khm_season_pages.js'],
   [SCRAPER, 'node scraper/fixtures/bridge_reuse.js'],
   [SCRAPER, 'node scraper/fixtures/robots_pages.js'],
   [[...BOTH, LINKS, LOOKUP], 'node scraper/fixtures/add_by_link.js'],

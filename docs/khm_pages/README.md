@@ -13,3 +13,6 @@ Her saves of 5 Oct 2026, for two rows that lost their opening dates.
   live 19 Nov 2026. The address box (`infobox-section`, with its Google Maps link) and
   the "Further exhibitions" strip's blurb (`theme_exhibitionlist`, German on one page)
   reached the row. Test: `sweep_nov_pages.js`.
+- `current_2026-11.html` — the current page as a browser draws it after scrolling, 19 Nov 2026 (a plain fetch has no
+  cards). Its headline section is named for the season: "the-great-fall-exhibition", was "-summer-", so the recipe
+  read nothing from October. Test: `khm_season_pages.js`.
