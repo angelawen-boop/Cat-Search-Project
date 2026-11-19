@@ -20,6 +20,11 @@ proven by planted faults.
   - Tate's funders and commission credits
   - the Rijksmuseum's "Thanks to" funders
 
+## Imported
+
+- **This month's file:** stitched and compressed from the container run alone (no home sweep). The rows are as swept,
+  so the Tate Modern event cards arrive with it.
+
 ## Instructions changed
 
 - **QC:** unattended runs fetch nothing; with you in the session it checks live, one page per question.

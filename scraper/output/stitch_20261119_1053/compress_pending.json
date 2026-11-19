@@ -1,0 +1,527 @@
+{
+  "run": "stitch_20261119_1053",
+  "previous": "stitch_20261015_0920",
+  "maxWords": 10,
+  "rows": [
+    {
+      "index": 0,
+      "venue_code": "acq",
+      "title": "Harumi Klossowska de Rola: Horizon",
+      "url": "https://www.acquavellagalleries.com/exhibitions/harumi-klossowska-de-rola2",
+      "action": "fresh",
+      "previousSummary": null,
+      "raw": "“I am very much inhabited by the idea, maybe the dream, of an untouched environment, of a nature without us, or very little of us, of a natural world that dictates us, not the other way around.” Acquavella Galleries is pleased to present Horizon, its first solo exhibition of works by Harumi Klossowska de Rola in New York. Featuring over twenty new and recent sculptures, Horizon continues the artist’s long-standing exploration of the natural world, seeking to capture both its forms and its untamed spirit. Taking wild flora and fauna as her subjects, Klossowska draws inspiration from nature’s immense beauty and ancient histories, inviting us to reconsider mankind’s relationship with the natural world. Though the works on view are all inspired by the trees and animals of the northern regions stretching from the Arctic to British Columbia, the exhibition’s title is universal, reflecting a broader connection with nature. In her work, Klossowska draws upon a wide range of cultural traditions and artistic practices that have long revered animals and the natural world, from Japanese Shintoism to the traditions of First Nations peoples and ancient Egypt. She views wild animals and untamed trees as “untouched landscapes”—beings that operate in pure connection with nature and outside the register of humanity and domestication. Imbuing her subjects with the sovereignty and power accorded to them in ancient cultures, she renders each work with exquisite detail, powerful physicality, and a profound spiritual presence. Her sculptures evoke a world in which nature, rather than human civilization, is in control. As she explains, “I am very much inhabited by the idea, maybe the dream, of an untouched environment, of a nature without us, or very little of us, of a natural world that dictates us, not the other way around.” Characterized by an exquisite attention to detail and surface, Klossowska’s handcrafted sculptures reflect her fascination with the passage of time and the histories",
+      "englishTitle": false
+    },
+    {
+      "index": 2,
+      "venue_code": "acq",
+      "title": "The Dark Side of the Moon",
+      "url": "https://www.acquavellagalleries.com/exhibitions/the-dark-side-of-the-moon",
+      "action": "fresh",
+      "previousSummary": null,
+      "raw": "Guest curated by Todd Bradway, The Dark Side of the Moon celebrates the everlasting mystery and romance of the night by presenting a selection of nocturnal landscapes and moonscapes created by some of the most celebrated painters working today. Humanity’s fascination with our night sky has existed for thousands of years and continues to inspire the work of contemporary artists today. Innumerable artists throughout history—from Goya to Vincent van Gogh, Caspar David Friedrich, and Georgia O’Keeffe—have created iconic works on the theme of the night and its iconography, most often composed of starlit skies, reflective pools, astrological formations, and dramatic illumination. In particular, the moon and stars occupy a central role in the genre as powerful symbols of illumination and narrative potential. In more recent years, the timeless subject continues to captivate a new generation of painters interested in nature and visual phenomenon, proving time and again its appeal as a subject worthy of deep contemplation. Featuring nocturnal works from an acclaimed group of sixteen international contemporary artists, The Dark Side of the Moon reveals both the vitality and timelessness of the noir image, as well as the continued vitality of painting today.",
+      "englishTitle": false
+    },
+    {
+      "index": 17,
+      "venue_code": "borghese",
+      "title": "Titian — Dialogues Between the Sacred and the Profane Galleria Borghese Meets the Annunciation from Treviso Cathedral",
+      "url": "https://galleriaborghese.cultura.gov.it/en/exhibition/titian-dialogues-between-the-sacred-and-the-profane/",
+      "action": "review",
+      "previousSummary": "Titian's Annunciation from Treviso alongside the Borghese Titians.",
+      "raw": "From October 20 to December 8, 2026, Galleria Borghese is hosting “Titian. Dialogues between the Sacred and the Profane: Galleria Borghese meets the Annunciation from Treviso Cathedral”, curated by Maria Giovanna Sarti. This dossier exhibition presents for the first time a direct comparison between Titian’s Annunciation, on loan from Treviso Cathedral, and the works by the Venetian master already housed in the museum’s galleries. The initiative is part of the celebrations marking the 450th anniversary of Titian’s death and continues the series of dossier exhibitions through which Galleria Borghese explores specific themes or core groups within its collection by bringing them into dialogue with works from other institutions. This format was inaugurated in 2022 with a project dedicated precisely to Titian: “Titian. Dialogues of Nature and Love” , which paired the Nymph and Shepherd from the Kunsthistorisches Museum in Vienna with several paintings by Titian from the Borghese collection. The focal point of the exhibition is the Annunciation from Treviso Cathedral, temporarily relocated to Rome while restoration work is carried out on the frescoes by Pordenone in the Malchiostro Chapel. Prior to being loaned, the panel underwent major conservation work, which yielded new elements for its interpretation. These include an inscription featuring the date, Titian’s signature, and a reference to the patron. The exhibition is made possible thanks to the generous loan from the Diocese of Treviso, with the scientific contribution of the Centro Studi Tiziano e Cadore Foundation, in collaboration with the Magnifica Comunità di Cadore, and with the support of the DBA Group.",
+      "englishTitle": false
+    },
+    {
+      "index": 31,
+      "venue_code": "brera",
+      "title": "Oman and Italy: Two Millennia of Cross-Civilisational Dialogue",
+      "url": "https://pinacotecabrera.org/en/news/mostra/oman-and-italy-two-millennia-of-cross-civilisational-dialogue/",
+      "action": "review",
+      "previousSummary": "Two millennia of trade and exchange, Oman and Italy.",
+      "raw": "Through a selection of 59 works, artifacts, manuscripts, maps, and historical documents spanning from the Iron Age to the present day, the exhibition traces the history of trade and relations that, for over two millennia, have linked the Sultanate of Oman to the Mediterranean, Italy, and the major cultural and commercial networks of the ancient and modern worlds.",
+      "englishTitle": true
+    },
+    {
+      "index": 32,
+      "venue_code": "brera",
+      "title": "Giovanni Agostino da Lodi. An itinerant painter between Leonardo and Giorgione",
+      "url": "https://pinacotecabrera.org/en/news/mostra/giovanni-agostino-da-lodi-a-traveling-painter-between-leonardo-and-giorgione/",
+      "action": "review",
+      "previousSummary": "Giovanni Agostino da Lodi's rediscovered career, alongside Bellini and Giorgione.",
+      "raw": "For the first time, an exhibition traces the career of one of the most original artists working in Italy during the decades spanning the 1500s. The exhibition captures the complexity of this artist through 46 works by him and by artists such as Bramantino, Alvise Vivarini, Giovanni Bellini, Giorgione, and Dürer, housed at Brera and on loan from museums including the Musée du Louvre in Paris, the Gallerie dell’Accademia in Venice, the Kunsthistorisches Museum in Vienna, the Galleria Borghese in Rome, the Museo del Prado in Madrid, and the National Gallery in London. 46 works brought together for the first time reconstruct his career and the context in which it developed. Alongside his paintings, masterworks by Bramantino, Giovanni Bellini, Giorgione, Dürer, Lorenzo Lotto and Girolamo Romanino, the masters with whom Giovanni Agostino engaged, reinterpreting them in an entirely personal way. Giovanni Agostino da Lodi. Born in Lodi, he trained in Milan in the circle of Bramante and Bramantino before moving to Venice at the end of the fifteenth century, where he worked for over a decade absorbing the language of the city’s great masters. He returned to Milan around 1510, where he worked on major commissions including Santa Maria della Pace and the Certosa di Pavia. His is a story of belated recognition. For centuries his works were attributed to other painters. It was only in the early twentieth century that the art historian Wilhelm von Bode began grouping together, under the provisional name “Pseudo Boccaccino”, a set of paintings with an unmistakable style. The painter’s true identity emerged thanks to a signature on a small panel held at Brera, published in 1912, though his full critical rehabilitation only came at the end of the last century. What makes Giovanni Agostino da Lodi unique is his ability to move between two distinct pictorial culturesm Milanese and Venetianm without fully belonging to either. In Venice he absorbed the influence of Alvise Vivarini, then",
+      "englishTitle": true
+    },
+    {
+      "index": 34,
+      "venue_code": "brera",
+      "title": "La grande pittura italiana",
+      "url": "https://pinacotecabrera.org/en/news/mostra/la-grande-pittura-italiana/",
+      "action": "review",
+      "previousSummary": "In English: \"Great Italian Painting.\" 25 confiscated paintings by postwar Italian masters, Guttuso to Novelli.",
+      "raw": "La Pinacoteca di Brera e il Comune di Arcore presentano una privata raccolta di dipinti, realizzati da maestri del secondo Novecento, provenienti da una vasta operazione di confisca di 52 opere, condotta da Corte d’Appello, Carabinieri, Guardia di Finanza e Nucleo Polizia Economico – Finanziaria di Milano. La Pinacoteca di Brera, in collaborazione con il Comune di Arcore, presenta una mostra eccezionale che riunisce per la prima volta 25 dipinti di maestri del secondo Novecento, selezionati nell’ambito di una significativa operazione di confisca condotta da Corte d’Appello, Carabinieri, Guardia di Finanza e Nucleo di Polizia Economico-Finanziaria di Milano. Frutto di un’attenta selezione a cura della Soprintendenza di Milano, le opere esposte fanno parte di un nucleo più ampio di 52 opere sottoposte a sequestro, oggi in fase di assegnazione a sei prestigiose istituzioni museali italiane: Pinacoteca di Brera, Museo del Novecento (Milano), Complesso Monumentale della Pilotta (Parma), Galleria Civica d’Arte Moderna e Contemporanea (Torino), Galleria Internazionale d’Arte Moderna “Ca’ Pesaro” (Venezia) e Galleria Nazionale d’Arte Moderna e Contemporanea (Roma). La mostra si configura come un viaggio nella pittura italiana (e non solo) dagli anni ’40 ai primi anni 2000, articolato in nuclei tematici e cronologici: dalle figure dal vero di Guttuso e de Pisis, alle sperimentazioni astratte di Tancredi, Dorazio e Afro; dalle strutture simboliche e segni grafici di Tobey, Capogrossi, Scialoja e Licata, fino ai giochi iconografici di Novelli. Un caso virtuoso di cooperazione tra istituzioni pubbliche, quello sancito dal protocollo d’intesa firmato nel 2024 da Brera e Comune di Arcore, che ha reso Villa Borromeo sede di custodia per tutte le opere confiscate, sotto la vigilanza scientifica della Pinacoteca. La mostra è un’occasione rara per scoprire opere mai viste prima, restituite alla collettività e in procinto di entrare stabilmente nelle collezioni pubbliche del Paese. Un",
+      "englishTitle": true
+    },
+    {
+      "index": 35,
+      "venue_code": "brera",
+      "title": "Buon Compleanno Linus",
+      "url": "https://pinacotecabrera.org/en/news/mostra/buon-compleanno-linus/",
+      "action": "review",
+      "previousSummary": "In English: \"Happy Birthday Linus.\" Sixty years of Linus, the comics magazine, honouring Altan.",
+      "raw": "1965–2025: 60 anni di fumetto d’autore a Milano. Una mostra-evento che ripercorre sei decenni di storia della rivista linus, tra tavole originali, copertine iconiche e un omaggio speciale ad Altan, nel 50° anniversario della Pimpa e di Cipputi. a cura di Elisabetta Sgarbi, Marcello Garofalo con la collaborazione di Igort Il Cortile d’Onore della Pinacoteca di Brera si apre al mondo del fumetto d’autore con la mostra Buon Compleanno linus. 1965–2025: 60 anni di fumetto d’autore a Milano. Con un omaggio ad Altan. L’iniziativa, parte del programma de La Milanesiana, ideata e diretta da Elisabetta Sgarbi, celebra i sessant’anni di linus, la rivista che ha rivoluzionato il panorama culturale italiano e internazionale, portando il fumetto a nuovi livelli di espressione artistica e intellettuale. Nata a Milano nell’aprile del 1965, linus è stata una vera e propria fucina di cultura pop e pensiero critico. Tra le sue pagine hanno trovato spazio non solo i celebri Peanuts di Charles M. Schulz – a cui si deve anche la scintilla originaria del progetto – ma anche personaggi entrati nell’immaginario collettivo: da Popeye di Segar a Valentina di Guido Crepax, da Corto Maltese di Hugo Pratt a Mafalda di Quino, fino a eroi contemporanei come Dylan Dog di Tiziano Sclavi e Zerocalcare. Curata da Elisabetta Sgarbi e Marcello Garofalo, con la collaborazione di Igort e l’allestimento firmato da Luca Volpatti, la mostra si propone come un vero e proprio “viaggio nella storia d’Italia”, accompagnato dal segno grafico e dalla voce spesso irriverente del fumetto. Dai fondatori Giovanni Gandini, Umberto Eco e Oreste del Buono fino all’attuale direzione di Sgarbi e Igort, il percorso espositivo racconta decenni di cultura attraverso disegni, copertine e documenti d’archivio.",
+      "englishTitle": true
+    },
+    {
+      "index": 36,
+      "venue_code": "capo",
+      "title": "Napoli tra i Borbone e la Belle Époque. Arte e impresa, nascita di una capitale moderna",
+      "url": "https://capodimonte.cultura.gov.it/mostra/napoli-tra-i-borbone-e-la-belle-epoque-arte-e-impresa-nascita-di-una-capitale-moderna/",
+      "action": "fresh",
+      "previousSummary": null,
+      "raw": "Quasi centocinquanta opere, tra dipinti e sculture, firmate da settantasette artisti raccontano la straordinaria stagione dell’arte napoletana dall’età dei Lumi alle soglie della Grande Guerra. Nella Sala Causa, con un collegamento nelle Sale 21-22 del piano nobile della Reggia, dal 12 novembre 2026 al 28 febbraio 2027, la mostra Napoli tra i Borbone e la Belle Époque. Arte e impresa, nascita di una capitale moderna propone un itinerario storico-tematico che attraversa oltre un secolo di trasformazioni artistiche e sociali, mettendo in relazione la fioritura delle arti con l’affermazione di una borghesia imprenditoriale, finanziaria, commerciale e manifatturiera. Attraverso le opere e la storia delle raccolte emerge il contributo di chi, accanto agli artisti, sostenne la ricerca, alimentò il mercato e favorì la proiezione internazionale della città. Realizzata dalla Fondazione Mezzogiorno e dal Museo e Real Bosco di Capodimonte, l’iniziativa si inserisce nel programma del Comitato Neapolis 2500 promosso dal Ministero degli Affari Esteri e della Cooperazione Internazionale per valorizzare il patrimonio culturale napoletano e rafforzarne la proiezione internazionale attraverso iniziative dedicate a cultura, impresa, diplomazia. Il rapporto fra patrimonio culturale e sviluppo si collega alla strategia di “diplomazia della crescita” del Ministero degli Affari Esteri e della Cooperazione Internazionale: una visione nella quale il soft power della cultura concorre a costruire relazioni, attrarre interesse e aprire opportunità per il Sistema Italia. Main Partner dell’evento è Intesa Sanpaolo. «Questa mostra – afferma il prefetto di Napoli e presidente del Comitato Neapolis 2500 Michele di Bari – racconta una Napoli che da secoli è protagonista della vita culturale europea, capace di attrarre artisti, imprenditori e intellettuali e di costruire relazioni ben oltre i propri confini. È una storia che parla anche al nostro presente e che rappresenta pienamente lo spirito di Na",
+      "englishTitle": true
+    },
+    {
+      "index": 37,
+      "venue_code": "capo",
+      "title": "Andrea Fogli. Atlas Partenope",
+      "url": "https://capodimonte.cultura.gov.it/mostra/andrea-fogli-atlas-partenope/",
+      "action": "fresh",
+      "previousSummary": null,
+      "raw": "Andrea Fogli presenta al Museo e Real Bosco di Capodimonte il suo ultimo progetto: Atlas Partenope. La mostra di Napoli (23.10.2026 – 31.01.2027) segue la recente antologica organizzata dal Palazzo delle Esposizioni di Roma in cui sono stati presentati i 7 Atlanti, ovvero i suoi principali cicli di opere degli ultimi 25 anni. L’Atlas Partenope, primo inedito capitolo di un nuovo ottavo Atlante denominato Atlante delle devozioni, è dedicato alla “galassia immaginale partenopea”, come la definisce l’artista: “quale città più idonea di Napoli per ispirare un atlante delle devozioni: qui una statua o un vulcano, un sogno o un rito quotidiano, un teschio, una maschera o un calciatore straordinario, hanno tutt’ora il loro particolarissimo culto”. “Dopo la mostra del maestro Emilio Isgrò – sottolinea Eike Schmidt Direttore del Museo e Real Bosco di Capodimonte – dedicata alla canzone napoletana, nelle tre sale del secondo piano che hanno sullo sfondo il nostro prezioso presepe settecentesco, prosegue il racconto originale della città ospitando la mostra di Andrea Fogli Atlas Partenope, immersione stimolante e curiosa nei segni e nella memoria. Uno spazio ideale, non a caso accanto all’installazione permanente in ricordo di Annamaria Ortese, nel quale Capodimonte potrà continuare ad accogliere progetti e quindi sguardi non convenzionali su Napoli”. La mostra è allestita al secondo piano della Reggia (sale 81, 83-84) ed è scandita in tre ambienti distinti ma concatenati. L’ambiente centrale che raccoglie i disegni dell’Atlas Partenope dialoga con le “ripitture” di santini e cartoline postali realizzati negli ultimi venti anni e con l’inedita installazione in argilla cruda, che quasi come un’epigrafe, segna l’ultimo ambiente della mostra. Attraversando ogni tecnica artistica (disegno, pittura, scultura), il file rouge delle tre sale è la trasfigurazione delle immagini preesistenti appartenenti ad una memoria comune: quella rappresentata dalle cartoline e dai santini, oltre ch",
+      "englishTitle": true
+    },
+    {
+      "index": 62,
+      "venue_code": "frick",
+      "title": "Kent Monkman: Officer and Laughing Girl",
+      "url": "https://www.frick.org/exhibitions/monkman",
+      "action": "review",
+      "previousSummary": "Monkman's paintings responding to Vermeer's Officer and Laughing Girl.",
+      "raw": "This fall, in its intimate Cabinet Gallery, The Frick Collection presents an installation of new paintings by the contemporary artist Kent Monkman (b. 1965), whose practice explores historic European art and narratives from an Indigenous perspective. For this project, Monkman takes inspiration from Officer and Laughing Girl (ca. 1657), one of the Frick’s three paintings by the seventeenth-century Dutch artist Johannes Vermeer, to probe the ways in which it and other artworks of its time represented the effects of global trade and colonization. With his characteristic humor, style, and deeply researched iconography, Monkman deploys his alter ego—the time-traveling, shapeshifting, gender-fluid Miss Chief—to imagine an evolution of Indigenous and European encounters over the last five centuries, with their attendant cultural, technological, and environmental changes. Visitors will be able to view the beloved work by Vermeer that prompted the series in the Anteroom, just outside of the Cabinet. The exhibition, which will travel from the Frick to the Beaverbrook Art Gallery in Fredericton, New Brunswick, Canada, will be accompanied by a bilingual English-Canadian French catalogue featuring texts by Monkman, Aimee Ng, the Frick's Peter Jay Sharp Chief Curator, and Emma Hassencahl-Perley, Curator of Indigenous Art at the Beaverbrook.",
+      "englishTitle": false
+    },
+    {
+      "index": 64,
+      "venue_code": "frick",
+      "title": "Painting with Fire: Susanne de Court and the Art of Enamel",
+      "url": "https://www.frick.org/exhibitions/de_court",
+      "action": "review",
+      "previousSummary": "Susanne de Court's enamels, the first exhibition of her work.",
+      "raw": "In the spring of 2027, The Frick Collection will present the first exhibition ever dedicated to the French enameler Susanne de Court. Active around 1600, De Court is a significant yet enigmatic figure in the creation of painted enamels—one of the distinctive art forms of the French Renaissance, treasured over the centuries for its durability, lively religious and mythological subjects, and jewel-like colors. With nearly one hundred surviving works, De Court is the only woman known to have made enamels in her era and is widely believed to have been the only woman to lead a workshop in Limoges, the center of enamel production in France. This exhibition will bring together, for the first time, around forty-five of De Court’s signed works, inviting visitors to discover the artist’s practice and some of the finest examples of her extraordinary output. The works on display will showcase her distinctive techniques—notably her layering of exquisite red, green, and blue translucent enamel over small pieces of foil—and will illustrate the range and complexity of De Court’s oeuvre, from luxurious vessels and plates to large ensembles and small objects, such as purses and plaques for watches or mirrors. Three works from the Frick’s permanent collection will anchor the exhibition: a pair of saltcellars featuring scenes from the myth of Orpheus, acquired by Henry Clay Frick in 1916 from the estate of J. P. Morgan, and an oval medallion depicting Apollo and the Muses, a gift to the museum from Alexis Gregory in 2021. The remaining pieces are drawn from public and private collections in the United States and across Europe. The enamels will be complemented by a selection of prints by major sixteenth-century engravers from which De Court drew inspiration for narratives and compositions, creating a rare opportunity to study her works alongside contemporary sources. Painting with Fire: Susanne de Court and the Art of Enamel is organized by Marie-Laure Buku Pongo, the Frick’s Associate",
+      "englishTitle": false
+    },
+    {
+      "index": 65,
+      "venue_code": "frick",
+      "title": "Imagined Lives: Alison Watt at the Frick",
+      "url": "https://www.frick.org/exhibitions/watt",
+      "action": "fresh",
+      "previousSummary": null,
+      "raw": "In spring and summer 2027, The Frick Collection will present an exhibition celebrating an artistic dialogue across centuries between the contemporary British painter Alison Watt and the seventeenth-century Flemish artist Anthony van Dyck. Taking inspiration from Van Dyck’s portraits of his fellow painter Frans Snyders and Snyders’s wife, Margareta de Vos—two highlights of the Frick’s renowned collection of Old Master paintings—Watt created a suite of new still-life paintings in her acclaimed intimate realist style. Through these works, she explores themes of visual memory, identity, and portraiture, as well as the processes and mysteries of the act of painting. The series will debut in the Frick’s Cabinet Gallery, marking Watt’s first solo museum exhibition in the United States. A classically trained artist deeply engaged with historic European art, Watt is known for her meticulously rendered still-life paintings. Growing up with a father who was an artist, she developed a particular interest in how painters look at painting. For this project, she was compelled by Van Dyck’s portrayal of his artistic collaborator Snyders, a prodigiously successful still-life painter, and De Vos, who came from a family of artists herself. While creating her suite of paintings, Watt began to imagine the lives of this trio: De Vos, the gregarious Van Dyck, and Snyders, his senior by ten years. These artistic investigations in turn prompted Aimee Ng, the Frick’s Peter Jay Sharp Chief Curator, to pursue lines of art historical inquiry that offer fresh readings of Van Dyck’s portraits, published as an essay in the exhibition catalogue. Each of Watt’s canvases isolates an object from the couple’s lives and likenesses—a large millstone collar, a bowl of Sorrento lemons, an open book against a cloudy sky. Special focus is given to the still-life detail that appears in the upper-left corner of De Vos’s portrait: an exquisite Italian glass vase with flowers. Lusciously painted and floating in",
+      "englishTitle": false
+    },
+    {
+      "index": 66,
+      "venue_code": "frick",
+      "title": "Vilhelm Hammershøi: Pictures from Home",
+      "url": "https://www.frick.org/exhibitions/hammershoi",
+      "action": "review",
+      "previousSummary": "Hammershøi's interiors of his Copenhagen apartment.",
+      "raw": "This presentation, the first major North American exhibition devoted to Vilhelm Hammershøi’s work in more than a decade, will focus exclusively on the artist's most celebrated paintings—his series of enigmatic, evocative, and meticulously observed views of the interior of his apartment at Strandgade 30 in Copenhagen. Some forty of the approximately sixty-five interiors he produced in that apartment, his residence between 1898 and 1908, will be featured, including several rarely seen works from distinguished private collections. Opening first at The Art Institute of Chicago , the exhibition will demonstrate how Strandgade 30 functioned simultaneously as Hammershøi’s home, studio, and recurring artistic subject. It examines the hermetic world he created there—a carefully circumscribed environment that became a site of endless formal and perceptual possibilities. Central themes of the show include the artist’s manipulation of spatial ambiguity; his handling of light, shadow, and temporality; the shifting presence of household objects as they migrated between rooms; and the role of his wife, Ida, as the sole figure featured in several compositions. The paintings will be arranged in groupings that highlight Hammershøi’s sustained engagement with repetition, variation, and seriality, encouraging a nuanced understanding of his compositional strategies. The exhibition will thus prompt reconsideration of the notion of home, both at the turn of the twentieth century and today. At The Frick Collection, the Gilded Age mansion’s domestic interiors offer an intimate setting for Hammershøi’s painted spaces. The Frick’s three paintings by the seventeenth-century Dutch master Johannes Vermeer, on view in the permanent collection galleries, will draw attention to one of Hammershøi’s key inspirations. Hammershøi made several visits to the Netherlands and studied masterworks by Vermeer and his contemporaries. His own quiet interiors—with their restrained palettes, carefully structured",
+      "englishTitle": false
+    },
+    {
+      "index": 81,
+      "venue_code": "khm",
+      "title": "The Imperial Crown",
+      "url": "https://www.khm.at/en/exhibitions/the-imperial-crown",
+      "action": "fresh",
+      "previousSummary": null,
+      "raw": "The Imperial Crown – an iconic symbol of the Holy Roman Empire and of European history – will be on view at the Kunsthistorisches Museum for the first time as part of a special presentation. As part of a major research initiative, scholars from across Europe joined forces in an unprecedented interdisciplinary collaboration led by the KHM. They investigated the materials used, the manufacturing techniques, and the eventful history of the Imperial Crown. Its use over many centuries, from the Middle Ages until the beginning of the nineteenth century, saved it from destruction, making it the only surviving example of the medieval royal and imperial crowns once in use. Today, it is one of the most significant surviving symbols of European history and one of the artistically and historically most valuable objects of the KHM-Museumsverband. The octagonal crown, weighing around 3.5 kilograms, is adorned with 172 precious stones and numerous pearls. Many legends surround it, such as the long-discredited myth that it was already worn by Charlemagne. The findings of the research project will be presented in a comprehensive publication in 2027. However, some of the discoveries, along with breathtaking large-scale photographs of this unique crown taken during the research, will already be featured in the special exhibition.",
+      "englishTitle": false
+    },
+    {
+      "index": 82,
+      "venue_code": "khm",
+      "title": "Dürer: The Artist’s Dream",
+      "url": "https://www.khm.at/en/exhibitions/duerer-the-artists-dream",
+      "action": "fresh",
+      "previousSummary": null,
+      "raw": "On the night of 7–8 June 1525, Albrecht Dürer was plagued by a nightmare. As he slept, he saw terrifying cascades of water flooding a landscape from above. This dream so unsettled Dürer that he made a watercolour of the image and furnished it with a detailed description. For the first time since its creation, the Nuremberg master’s enigmatic Dream Face – held at the Kunsthistorisches Museum – will be at the centre of its own dedicated exhibition. The Dream Face is an unusually personal testimony by Dürer: it opens a window onto his inner world and, at the same time, onto an era in which natural disasters were frequently interpreted as divine signs. The exhibition highlights the significance of the Dream Face for Dürer’s art and the development of landscape watercolour painting as a whole, whilst also extending far beyond its own time – right up to modern dream interpretation and the psychoanalysis of Sigmund Freud (1856–1939). Picture Gallery, 1. Stock Maria-Theresien-Platz, 1010 Vienna Google Maps arrow_outward How does one of the greatest artists to ever live capture his own nightmare? How does art become a business? And what lies beneath the surface of his masterpieces?",
+      "englishTitle": false
+    },
+    {
+      "index": 83,
+      "venue_code": "khm",
+      "title": "Toni R. Toivonen: Last Impressions",
+      "url": "https://www.khm.at/en/exhibitions/toni-r-toivonen-last-impressions",
+      "action": "fresh",
+      "previousSummary": null,
+      "raw": "The solo exhibition by Finnish artist Toni R. Toivonen (b.1987) stretches the space between life and the hereafter, exploring the boundaries between art, nature, and philosophy. In his works, Toivonen explores the duality of life and death in truley singular fashion. Toivonen’s works capture the animal’s final presence, transforming the process of putrefaction into a form of nature morte that is both shocking and marked by a profound reverence for death. Toivonen describes his work not as cynicism, but as an act of respect; this perspective is influenced by him living in the middle of a forest and his love for animals. When viewing his work, one is not looking at an image of an animal, but at the animal itself and its last physical presence. Around 25 works by Toivonen, largely created specifically for this context, enter into a compelling dialogue with objects from the KHM collections. In doing so, the exhibition reveals thematic references to the vanitas tradition, memento mori, and the symbolic significance of death in art history. Picture Gallery, 1. Stock Maria-Theresien-Platz, 1010 Vienna Google Maps arrow_outward",
+      "englishTitle": false
+    },
+    {
+      "index": 86,
+      "venue_code": "khm",
+      "title": "A Different Beauty. Japanese Ceramic Masterworks",
+      "url": "https://www.khm.at/en/exhibitions/a-different-beauty-japanese-ceramic-masterworks",
+      "action": "review",
+      "previousSummary": "Rough, asymmetrical Japanese ceramics from Bizen, Hagi and Shigaraki.",
+      "raw": "This exhibition traces the evolution of ceramics through different ideas of beauty and craftsmanship. While Europe celebrated flawless, finely crafted porcelain, Japan developed its own aesthetic in ceramics, characterized by rough surfaces and asymmetrical designs. This craft that is still held in high regard today. Starting in the sixteenth century, European collectors fell in love with porcelain from Asia. Above all, they prized white, translucent masterpieces from China and Japan. The works of art presented here come from the collection of Heinz Slunecko, who has passionately collected Japanese ceramics for more than thirty years. They are part of a living tradition that contemporary potters in Japan continue to respect and reinvent to this day. Kunsthistorisches Museum – special exhibition Maria-Theresien-Platz, 1010 Vienna Google Maps arrow_outward During this same period, connoisseurs in Japan cultivated a different yet equally sophisticated ideal of beauty. Feudal lords (daimyo 大名) and scholars prized vessels, especially for the tea ceremony (chanoyu 茶の湯), that had rough surfaces, asymmetrical forms, and the unpredictable marks left by the kiln. This exhibition explores how, in Japan, the heirs of the master ceramicists continue exploring these ideals to this day.",
+      "englishTitle": false
+    },
+    {
+      "index": 88,
+      "venue_code": "lgd",
+      "title": "Special Presentation: Cecily Brown, Tracey Emin, and Alison Watt",
+      "url": "https://www.levygorvydayan.com/exhibitions/special-presentation-cecily-brown-tracey-emin-and-alison-watt",
+      "action": "fresh",
+      "previousSummary": null,
+      "raw": "Visit us in London to see Cecily Brown’s remarkable take on vanitas imagery in Untitled (2005) and Tracey Emin’s masterful engagement with the human figure in I will look for you in every sleeping hour (2017). Also on display are paintings by Alison Watt, ranging from her early career with The Cherubic One (1992) to recent works created for her 2025 exhibition at Pitzhanger Manor and Gallery, London. Conveying three distinct voices, the works on view demonstrate explorations of life and death, desire and embodiment, the self and the engaging mirrors held up by art history. Open now at 35 Dover Street, Mayfair, London.",
+      "englishTitle": false
+    },
+    {
+      "index": 89,
+      "venue_code": "lgd",
+      "title": "Jutta Koether: tRaVeLiNgliGHt",
+      "url": "https://www.levygorvydayan.com/exhibitions/jutta-koether-traveling-light",
+      "action": "fresh",
+      "previousSummary": null,
+      "raw": "Lévy Gorvy Dayan is pleased to announce Jutta Koether: tRaVeLiNgliGHt, the artist’s first solo exhibition at the gallery’s 1932 Beaux Arts-style townhouse at 19 East 64th Street, New York. Through twelve new canvases, Koether reveals the most recent phase of her Grid paintings, created in direct dialogue with Alberto Giacometti’s Still Life with an Apple (1937)—an important work in his radical investigations of perception held in the collection of the Metropolitan Museum of Art, New York. Reflecting on her new series, Koether cites Giacometti’s quote, “I am only making by unmaking.” Koether’s practice is defined by her decades-long engagement with the histories of painting. The paintings in the present series are titled Let ‘em roll, a phrase differentiated across the canvases with the artist’s unconventional capitalizations. In these works, Giacometti’s composition is deconstructed and transformed by Koether’s gridded structures—which in themselves relate to the lineage of geometric abstraction, including the work of Piet Mondrian and Paul Klee. Koether began her Grid paintings in the mid-2000s to explore her relationship to figuration and modernism, considering Mondrian as well as the abstraction of Agnes Martin, among others. Here, notably, the size of the underlying grid changes throughout the twelve canvases. Other “disturbances,” in the artist’s words, appear in her gestural paint application and use of iridescent, neon, and metallic colors—stimulating different perceptual effects. This, in concert with the varied interpretations of Giacometti’s source canvas, incite questions around the act of looking and, above all, create an invitation to further study.",
+      "englishTitle": false
+    },
+    {
+      "index": 90,
+      "venue_code": "lgd",
+      "title": "Leoncillo and the Soul of Clay",
+      "url": "https://www.levygorvydayan.com/exhibitions/leoncillo-and-the-soul-of-clay",
+      "action": "fresh",
+      "previousSummary": null,
+      "raw": "Presented in collaboration with Galleria dello Scudo, Lévy Gorvy Dayan will open Leoncillo and the Soul of Clay on November 4, 2026, at 19 East 64th Street, New York. The exhibition will mark the first solo presentation of the artist in New York in more than three decades. Focusing on the radical body of sculpture Leoncillo created in the last ten years of his life from the late 1950s to the 1960s, the presentation honors the artist’s singular relationship to the ceramic medium—revealing how clay and terracotta acted not only as Leoncillo’s primary materials, but also as an eternal extension of the artist himself. Among the most significant sculptors of the twentieth century, Leoncillo Leonardi—known as Leoncillo—worked with clay from childhood to his earliest days as an artist. During his career, he first created figurative ceramic sculptures, reflecting Baroque and Cubist influences, before turning in the late 1950s towards abstraction. The works he made from this point, until his untimely death at the age of fifty-two in 1968, portray the material essence of clay. For Leoncillo, it represented the ultimate embodied medium; “Clay is like my own flesh, an absolute process of identification (whose expressive prerequisites I know like the fingers of my hand, just as the choice of cracked surface alongside glossy surface is one of the coexistences that fill my days).”",
+      "englishTitle": false
+    },
+    {
+      "index": 91,
+      "venue_code": "lgd",
+      "title": "Bacon / de Kooning",
+      "url": "https://www.levygorvydayan.com/exhibitions/bacon-de-kooning",
+      "action": "fresh",
+      "previousSummary": null,
+      "raw": "Lévy Gorvy Dayan is delighted to announce Bacon / de Kooning opening on November 4, 2026, at 19 East 64th Street, New York. Taking place in the gallery’s 1932 Beaux-Arts townhouse, the exhibition will juxtapose the works of Francis Bacon and Willem de Kooning, two indelible figures of postwar art. The presentation will focus on their smaller-scale paintings of the late 1960s and 1970s—de Kooning at primarily 60 by 55 inches, and Bacon at his preferred 14 by 12 inches—each chosen by the artists for their deliberately human proportions. Through these canvas dimensions, both painters could concentrate their emotive forces and demonstrate their respective technical and gestural virtuosities, reaching a shared essence of figuration and abstraction. Bacon and de Kooning famously encountered each other in 1975 in New York on the occasion of Bacon’s retrospective at the Metropolitan Museum of Art—a face-to-face meeting commemorated by a now iconic photograph. While the two artists met previously, knew of each other’s work, and possessed painterly affinities, they have long been positioned as working at alternate ends of the artistic spectrum—Bacon a champion of a heightened and existential figuration and de Kooning a pioneer of gestural Abstract Expressionism. Now, for the first time, Bacon / de Kooning will demonstrate their shared commitment to the medium of paint as a primary means of human expression.",
+      "englishTitle": false
+    },
+    {
+      "index": 134,
+      "venue_code": "ng",
+      "title": "Collected: Centuries of art, saved and shared",
+      "url": "https://www.nationalgallery.org.uk/exhibitions/collected",
+      "action": "fresh",
+      "previousSummary": null,
+      "raw": "Discover a treasure trove of rare and remarkable art Painting and ceramics by Picasso. A glittering cup with a thousand-year history. An 18th-century goldfish bowl owned by an eccentric collector. This exhibition at the National Gallery is a little bit different. Featuring unexpected gems alongside iconic paintings, ‘Collected’ showcases some of the very best works acquired for the UK through the Art Council’s Acceptance in Lieu and Cultural Gifts schemes. Brought from private hands into public care, encounter paintings by Rembrandt, Renoir and Lucian Freud alongside rare objects from across the UK. Visit ‘Collected’ from 22 May 2027 and explore a unique group of more than 40 works gathered together for the first time at the National Gallery. Travel through centuries of artistic treasures and celebrate our shared cultural heritage.",
+      "englishTitle": false
+    },
+    {
+      "index": 135,
+      "venue_code": "ng",
+      "title": "Frankenthaler and Bassano",
+      "url": "https://www.nationalgallery.org.uk/exhibitions/frankenthaler-and-bassano",
+      "action": "fresh",
+      "previousSummary": null,
+      "raw": "One enduring story. Two extraordinary visions. In 1972, American artist Helen Frankenthaler first saw 'The Flight into Egypt’ (1544–45), painted by Jacopo Bassano more than four centuries earlier. Inspiration struck immediately. Painted in rich, vivid colours, Bassano's extravagant artwork captured Mary and Joseph's escape to Egypt in all its deeply human moments. From his northern Italian workshop, Bassano created a painting that would speak across the centuries. Frankenthaler made an abstract response titled 'Hint from Bassano' in 1973. Using her signature 'soak-stain' technique, she swept ethereal shades of orange, green and blue across the canvas, echoing the colours and movement of Bassano's painting in surprising ways. Now, for the very first time, see these two monumental works side by side at the National Gallery. Stand before them and trace a remarkable artistic journey from the Italian Renaissance to American modernism. Visit 'Frankenthaler and Bassano' for free in summer 2027. Admire the work of two pioneering artists separated by 400 years but united by the limitless possibilities of paint.",
+      "englishTitle": false
+    },
+    {
+      "index": 136,
+      "venue_code": "ng",
+      "title": "Piero della Francesca",
+      "url": "https://www.nationalgallery.org.uk/exhibitions/piero-della-francesca",
+      "action": "fresh",
+      "previousSummary": null,
+      "raw": "Let Piero draw you in Artist and scientist, the Italian Renaissance painter Piero della Francesca changed the way we see. Walk into Piero’s world. Blue skies, nature, the hills of the Tuscan countryside that surrounded him, and light, flooding through windowpanes and reflected in rivers. Piero’s vision transformed the art of painting. He combined his fascination with light and his own mathematical discoveries in perspective to produce scenes of extraordinary beauty. Piero’s paintings set him apart. Serene figures, natural landscapes, harmonious interiors and intriguing compositions present religious stories in a revolutionary way, inviting viewers to look closer. Important patrons, dukes from the most cultured courts across Italy, had never seen anything like it. In the largest exhibition ever devoted to Piero, see some of his most celebrated altarpieces in all their splendour, reunited for the first time in centuries. The display includes the world-famous double portrait of Federico da Montefeltro and Battista Sforza from the Uffizi, Florence, the 'Sant’Antonio Polyptych' from Perugia, other loans from around the world and the National Gallery’s own ‘Baptism of Christ’, ‘Saint Michael’ and ‘Nativity’. Join us as we celebrate the art and science of Piero, whose timeless paintings still inspire artists, filmmakers and writers today.",
+      "englishTitle": false
+    },
+    {
+      "index": 159,
+      "venue_code": "rijks",
+      "title": "Willem de Kooning at work",
+      "url": "https://www.rijksmuseum.nl/en/whats-on/exhibitions/willem-de-kooning-at-work",
+      "action": "review",
+      "previousSummary": "120 works tracing De Kooning's process.",
+      "raw": "One hundred years ago, Willem de Kooning left the Netherlands for a new life in New York, where he became one of the most influential artists of the 20th century. This autumn, he returns, with a major retrospective of his drawings, complemented by a selection of celebrated paintings and sculptures. Alongside the exhibition, two of his most iconic paintings will be displayed in the Gallery of Honour.",
+      "englishTitle": false
+    },
+    {
+      "index": 160,
+      "venue_code": "rijks",
+      "title": "Document Netherlands: New Energy",
+      "url": "https://www.rijksmuseum.nl/en/whats-on/exhibitions/document-netherlands-new-energy",
+      "action": "review",
+      "previousSummary": "Annual commission to a Dutch photographer.",
+      "raw": "Kadir van Lohuizen photographs the energy transition on and around the North Sea From offshore wind farms in the open sea to heavily secured data centers, the energy transition is taking place on a scale that is almost impossible to comprehend, largely beyond our view. Photographer and filmmaker Kadir van Lohuizen shows how the North Sea and the surrounding countries are changing at a breakneck speed due to the rising demand for energy.",
+      "englishTitle": false
+    },
+    {
+      "index": 163,
+      "venue_code": "rijks",
+      "title": "20th-century galleries",
+      "url": "https://www.rijksmuseum.nl/en/whats-on/exhibitions/new-displays-in-the-20th-century-galleries",
+      "action": "review",
+      "previousSummary": "New spotlights in the 20th-century galleries.",
+      "raw": "Every six months, new displays go up in the Rijksmuseum’s 20th-century galleries. This time the spotlight is on the abstract artist Lou Loeber, a pioneer of abstract art in the Netherlands, alongside works by Toon Verhoef, Evelyn Taocheng Wang and Constant.",
+      "englishTitle": false
+    },
+    {
+      "index": 164,
+      "venue_code": "rijks",
+      "title": "Drawing!",
+      "url": "https://www.rijksmuseum.nl/en/whats-on/exhibitions/draw",
+      "action": "review",
+      "previousSummary": "Transformation of drawing, 100 highlights.",
+      "raw": "Around 1600, the art of drawing experienced a true revolution in the Northern Netherlands. A group of artist friends, including Hendrick Goltzius, Jacques de Gheyn II, and Abraham Bloemaert, found each other in their drive for innovation. Together they brought the art of drawing to unprecedented heights. The exhibition Drawing! is made possible through the generous support of Tavolozza Foundation, Royal Talens, Rijksmuseum International Circle, Rijksmuseum Patrons and the Ministry of Education, Culture and Science.",
+      "englishTitle": false
+    },
+    {
+      "index": 165,
+      "venue_code": "rijks",
+      "title": "Carel Visser: In the Rijksmuseum Gardens",
+      "url": "https://www.rijksmuseum.nl/en/whats-on/exhibitions/past/carel-visser",
+      "action": "review",
+      "previousSummary": "Most influential Dutch sculptor of the twentieth century.",
+      "raw": "This summer, the Rijksmuseum Gardens are home to the work of Carel Visser, the most influential Dutch sculptor of the twentieth century. Carel Visser (1928–2015) had little use for traditional sculpting materials like marble, stone or wood With a cutting torch and welding equipment, he shaped sculptures from steel plates and beams Much of his work stands in public spaces: on squares, in parks and city centres across the Netherlands",
+      "englishTitle": false
+    },
+    {
+      "index": 168,
+      "venue_code": "rijks",
+      "title": "Metamorphoses",
+      "url": "https://www.rijksmuseum.nl/en/whats-on/exhibitions/metamorphoses",
+      "action": "review",
+      "previousSummary": "Ovid: Bernini, Titian to Rodin, Magritte, Bourgeois.",
+      "raw": "With works by Caravaggio, Bernini, Rodin, Bourgeois, Brancusi and more Passion, desire, lust, jealousy, cunning and deceit. The Rijksmuseum takes you on a journey into one of the greatest and most important sources of inspiration for artists: The Metamorphoses by the poet Ovid. The exhibition Metamorphoses is made possible by The Bennink Foundation/Rijksmuseum Fonds, Blockbusterfonds, Rijksmuseum International Circle, Rijksmuseum Patrons and the Ministry of Education, Culture and Science.",
+      "englishTitle": false
+    },
+    {
+      "index": 189,
+      "venue_code": "rijks",
+      "title": "REVOLUSI!",
+      "url": "https://www.rijksmuseum.nl/en/whats-on/exhibitions/past/revolusi",
+      "action": "review",
+      "previousSummary": "More than 20 personal stories from Indonesia's independence struggle.",
+      "raw": "Diplomats, freedom fighters, victims, liberators. Everyone has a different view. REVOLUSI! is about the Indonesian struggle for independence (1945-‘49), seen through the eyes of people who experienced it. More than 20 personal stories tell us how the ideal of a free Indonesia is fervently pursued; how it is fought over, how it is negotiated, how it is propagated and how the revolution determines human lives. Indonesian freedom fighters, Otto Djaya, 1946-1947. Heirs of Otto Djaya Family/ Rijksmuseum. Purchased with the su... Dress of maps, J. Terwen-de Loos, 1945-1946. Gift of P.A. Terwen, Leiden and J.W. Terwen, Nieuwegein Affiche met opschrift ‘Perlawanan seloeroeh rakjat pokok kemenang revolusi’, 1945-1949. Museum Bronbeek",
+      "englishTitle": false
+    },
+    {
+      "index": 193,
+      "venue_code": "rijks",
+      "title": "Slavery",
+      "url": "https://www.rijksmuseum.nl/en/whats-on/exhibitions/past/slavery",
+      "action": "review",
+      "previousSummary": "Personal stories of slavery across continents.",
+      "raw": "This exhibition about slavery takes the form of personal and real-life stories rather than abstract concepts. There are stories from Brazil, Suriname, and the Caribbean, and from South Africa and Asia. The Slavery exhibition is made possible in part by the Mondriaan Fund, Blockbuster Fund, Fonds 21, DutchCulture, Democracy & Media Foundation, Stichting Thurkowfonds, Boomerang Agency and via the Rijksmuseum Fonds: Scato Gockinga Fonds, Fonds de Zuidroute, Zusjes Nieuwbeerta Fonds, Fonds Dirk Jan van Orden, Henry M. Holterman Fonds and Bestuursfonds Hollandse Meesters.",
+      "englishTitle": false
+    },
+    {
+      "index": 220,
+      "venue_code": "tate-modern",
+      "title": "Light and Magic: The Birth of Art Photography",
+      "url": "https://www.tate.org.uk/whats-on/tate-modern/light-and-magic",
+      "action": "review",
+      "previousSummary": "Pictorialism as a global photographic movement.",
+      "raw": "Light and Magic is the first major exhibition to explore pictorialism as a global movement. Discover how artists became pioneers of the darkroom, transforming our understanding of photography and image making. Bringing together over 200 rare prints by over 80 artists from Seoul to Sydney, New York to Cape Town and Brazil to Singapore, this truly international exhibition takes a fresh and inclusive look at the history of photography. Featuring never-before seen works from around the world alongside pieces from Tate’s Collection, Light and Magic highlights the vast and varied artistic possibilities of photography as a medium. Discover more about Light and Magic: The Birth of Art Photography and five artworks not to miss with our exhibition guide.",
+      "englishTitle": false
+    },
+    {
+      "index": 221,
+      "venue_code": "tate-modern",
+      "title": "Relaxed Hours: Julio Le Parc",
+      "url": "https://www.tate.org.uk/whats-on/tate-modern/julio-le-parc/relaxed-hours-julio-le-parc",
+      "action": "fresh",
+      "previousSummary": null,
+      "raw": "A quieter time to discover the joyful work of Argentinian-born Julio Le Parc, a leading figure in contemporary art Join us on these relaxed mornings to enjoy Julio Le Parc in a gallery environment with limited numbers of people. These events are open to anyone who is disabled or neurodivergent and any other visitors with sensory needs who prefer a more relaxed experience, plus their families, friends and carers. Tate staff will be aware that this is an access hour and will take that into consideration as they look after you and the artwork.",
+      "englishTitle": false
+    },
+    {
+      "index": 222,
+      "venue_code": "tate-modern",
+      "title": "Relaxed Hours: Light and Magic",
+      "url": "https://www.tate.org.uk/whats-on/tate-modern/light-and-magic/relaxed-hours-light-and-magic",
+      "action": "fresh",
+      "previousSummary": null,
+      "raw": "A quieter time to discover how pictorialism developed across the world from the 1880s to the 1960s Join us on these relaxed mornings to enjoy Light and Magic in a gallery environment with limited numbers of people. These events are open to anyone who is disabled or neurodivergent and any other visitors with sensory needs who prefer a more relaxed experience, plus their families, friends and carers. Tate staff will be aware that this is an access hour and will take that into consideration as they look after you and the artwork.",
+      "englishTitle": false
+    },
+    {
+      "index": 223,
+      "venue_code": "tate-modern",
+      "title": "Relaxed Hours: Frida: The Making of an Icon",
+      "url": "https://www.tate.org.uk/whats-on/tate-modern/frida-kahlo-the-making-of-an-icon/frida-the-making-of-an-icon",
+      "action": "fresh",
+      "previousSummary": null,
+      "raw": "A quieter time to step into the life and legacy of Frida Kahlo: revolutionary artist and global icon Join us on these relaxed mornings to enjoy Frida: The Making of an Icon in a gallery environment with limited numbers of people. These events are open to anyone who is disabled or neurodivergent and any other visitors with sensory needs who prefer a more relaxed experience, plus their families, friends and carers. Tate staff will be aware that this is an access hour and will take that into consideration as they look after you and the artwork.",
+      "englishTitle": false
+    },
+    {
+      "index": 224,
+      "venue_code": "tate-modern",
+      "title": "Relaxed Hours: Ana Mendieta",
+      "url": "https://www.tate.org.uk/whats-on/tate-modern/ana-mendieta/relaxed-hours-ana-mendieta",
+      "action": "fresh",
+      "previousSummary": null,
+      "raw": "A quieter time to experience the powerful work of Ana Mendieta, whose legacy changed the course of contemporary art Join us on these relaxed mornings to enjoy Ana Mendieta in a gallery environment with limited numbers of people. These events are open to anyone who is disabled or neurodivergent and any other visitors with sensory needs who prefer a more relaxed experience, plus their families, friends and carers. Tate staff will be aware that this is an access hour and will take that into consideration as they look after you and the artwork.",
+      "englishTitle": false
+    },
+    {
+      "index": 226,
+      "venue_code": "tate-modern",
+      "title": "Relaxed Hours: Monet: Painting Time",
+      "url": "https://www.tate.org.uk/whats-on/tate-modern/monet/relaxed-hours-monet",
+      "action": "fresh",
+      "previousSummary": null,
+      "raw": "A quieter time to enjoy the exquisite works of one of history’s best-loved artists Join us on these relaxed mornings to enjoy Monet: Painting Time in a gallery environment with limited numbers of people. These events are open to anyone who is disabled or neurodivergent and any other visitors with sensory needs who prefer a more relaxed experience, plus their families, friends and carers. Tate staff will be aware that this is an access hour and will take that into consideration as they look after you and the artwork.",
+      "englishTitle": false
+    },
+    {
+      "index": 227,
+      "venue_code": "tate-modern",
+      "title": "Ink",
+      "url": "https://www.tate.org.uk/whats-on/tate-modern/ink",
+      "action": "review",
+      "previousSummary": "Ink painting traditions across East Asia.",
+      "raw": "Ink is Tate’s first ever exhibition dedicated to the enduring and profoundly philosophical practice of ink painting. Serving as an introduction to this beautiful, intricate artform, the show highlights key ideas within the ink tradition, including its sense of historical continuity and relationship to the natural world. Organised around three themes ‘Life’, ‘the Garden’, and ‘Breath’, the exhibition features around 80 works. While ink painting is widely practiced across East Asia and its diasporas, the show focuses on key artists in mainland China, Hong Kong and Taiwan who helped reinvent it for the twentieth century. Each found new ways to honour the tradition while pushing it forward - boldly experimenting, yet staying true to its core principles. By tracing the connections between these artists, Ink reveals a vibrant regional network and challenges familiar Western narratives of modern art, including ideas of originality, expressionism and the avant-garde. Ink is presented in the Eyal Ofer Galleries. Supported by the Ink Exhibition Supporters Circle, Tate International Council and Tate Asia-Pacific Acquisitions Committee. Research supported by Hyundai Tate Research Centre: Transnational in partnership with Hyundai Motor. Research supported by Hyundai Tate Research Centre: Transnational",
+      "englishTitle": false
+    },
+    {
+      "index": 233,
+      "venue_code": "tate-modern",
+      "title": "Members Hours: Frida: The Making of an Icon",
+      "url": "https://www.tate.org.uk/whats-on/tate-modern/frida-kahlo-the-making-of-an-icon/members-hours-frida",
+      "action": "fresh",
+      "previousSummary": null,
+      "raw": "Frida: The Making of an Icon will showcase over 30 of Kahlo’s most iconic works that introduce her ‘many selves’ – the dedicated wife, the intellectual, the modern artist, and the political activist. Alongside treasured garments, jewellery, photographs and memorabilia, there are over 200 works by her contemporaries and the artists she inspired from later generations, celebrating her lasting impact on those who continue to reimagine and reclaim her remarkable story. Looking for a hot drink and a bite to eat after your visit? Stop by the Granville-Grossman Members Bar from 10.00 and try our Tate roasted coffee. Don't forget to stop by the shop to use your discount. Not a Tate Member yet? Join now online and access free exhibition entry and Members Hours. Frida: The Making of an Icon is organised by the Museum of Fine Arts, Houston, in collaboration with Tate Modern. The exhibition is in partnership with Lead Global Supporter, Bank of America. Supported by John J.",
+      "englishTitle": false
+    },
+    {
+      "index": 234,
+      "venue_code": "tate-modern",
+      "title": "Hyundai Commission: Tarek Atoui: Hold",
+      "url": "https://www.tate.org.uk/whats-on/tate-modern/tarek-atoui",
+      "action": "review",
+      "previousSummary": "Atoui's new Turbine Hall sound installation.",
+      "raw": "Discover Tarek Atoui’s exciting new work in Tate Modern’s iconic Turbine Hall Tarek Atoui is a sound artist and composer whose installations change how we experience sound, not only through our ears but through our whole bodies. For the Hyundai Commission, Atoui transforms the Turbine Hall into a vast sonic landscape, bringing ancient families of instruments into dialogue with electronic technologies. Inspired by the unique acoustic and spatial properties of the Turbine Hall, the commission builds on decades of Atoui’s collaboration with instrument-makers, researchers, engineers and musicians. Wind is channelled through a suspended network of bamboo pipes, playing shengs, mouth organs from China and Southeast Asia, in chorus. Korean drums struck by mechanised mallets are dispersed throughout the space alongside Uzbek karnai horns and 3D-printed horns made from sugar resin and bamboo dust. Textiles up to 30 metres long oscillate in response to wind currents of the Turbine Hall. Each material generates and transmits sound in a different way. Microphones embedded within the installation sample the sounds of the instruments and the Turbine Hall itself. Custom software developed by the artist reworks these sounds and plays them back into the space alongside the instruments, so the soundscape is always changing and no two visits are the same. Atoui invites visitors to wander at their own pace, sit or lie on stones placed along the ground, and experience them vibrate with sound. Building on childhood memories of time spent under vine-covered canopies and sheltered courtyards across the Mediterranean, Atoui imagines the Turbine Hall as a space of gathering and exchange.",
+      "englishTitle": false
+    },
+    {
+      "index": 235,
+      "venue_code": "tate-modern",
+      "title": "Members Hours: Light and Magic: The Birth of Art Photography",
+      "url": "https://www.tate.org.uk/whats-on/tate-modern/light-and-magic/members-hours-light-and-magic",
+      "action": "fresh",
+      "previousSummary": null,
+      "raw": "Light and Magic is the first major exhibition to explore pictorialism as a global movement. Discover how artists became pioneers of the darkroom, transforming our understanding of photography and image making. Bringing together over 200 rare prints by over 80 artists from Seoul to Sydney, New York to Cape Town and Brazil to Singapore, this truly international exhibition takes a fresh and inclusive look at the history of photography. Looking for a hot drink and a bite to eat after your visit? Stop by the Granville-Grossman Members Bar from 10.00 and try our Tate roasted coffee. Don't forget to stop by the shop to use your discount. Not a Tate Member yet? Join now online and access free exhibition entry and Members Hours.",
+      "englishTitle": false
+    },
+    {
+      "index": 236,
+      "venue_code": "tate-modern",
+      "title": "Members Private View: Frida: The Making of an Icon",
+      "url": "https://www.tate.org.uk/whats-on/tate-modern/frida-kahlo-the-making-of-an-icon/members-private-view-frida",
+      "action": "fresh",
+      "previousSummary": null,
+      "raw": "Visit the exhibition in these special times reserved for Members Frida: The Making of an Icon will showcase over 30 of Kahlo’s most iconic works that introduce her ‘many selves’ – the dedicated wife, the intellectual, the modern artist, and the political activist. Alongside treasured garments, jewellery, photographs and memorabilia, there are over 200 works by her contemporaries and the artists she inspired from later generations, celebrating her lasting impact on those who continue to reimagine and reclaim her remarkable story.",
+      "englishTitle": false
+    },
+    {
+      "index": 237,
+      "venue_code": "tate-modern",
+      "title": "Members Private View: Light and Magic: The Birth of Art Photography",
+      "url": "https://www.tate.org.uk/whats-on/tate-modern/light-and-magic/members-private-view-light-and-magic",
+      "action": "fresh",
+      "previousSummary": null,
+      "raw": "Visit the exhibition in these special times reserved for Members Light and Magic is the first major exhibition to explore pictorialism as a global movement. Discover how artists became pioneers of the darkroom, transforming our understanding of photography and image making. Bringing together over 200 rare prints by over 80 artists from Seoul to Sydney, New York to Cape Town and Brazil to Singapore, this truly international exhibition takes a fresh and inclusive look at the history of photography. Looking to make your visit even more special? We're keeping the Granville-Grossman Members Room open just for you. Stop by to sit back, relax, and grab a drink after your exhibition visit. Don't forget to visit the shop to use your discount too.",
+      "englishTitle": false
+    },
+    {
+      "index": 239,
+      "venue_code": "tate-modern",
+      "title": "Members Private View: Julio Le Parc",
+      "url": "https://www.tate.org.uk/whats-on/tate-modern/julio-le-parc/members-private-view-julio-le-parc",
+      "action": "fresh",
+      "previousSummary": null,
+      "raw": "Discover the colourful works of Julio Le Parc in the evening when the gallery is closed to the public. Le Parc's works include interactive installations, kinetic sculptures, and large-scale op art paintings spanning from the 1950s to the 2010s. Looking to relax and have a drink after the exhibition in the evening? We're keeping the Level 1 Members Bar open just for you.",
+      "englishTitle": false
+    },
+    {
+      "index": 240,
+      "venue_code": "tate-modern",
+      "title": "Members Private View: Ana Mendieta",
+      "url": "https://www.tate.org.uk/whats-on/tate-modern/ana-mendieta/members-private-view-ana-mendieta",
+      "action": "fresh",
+      "previousSummary": null,
+      "raw": "Visit the exhibition during these exclusive times for Members Discover the the powerful work of Ana Mendieta, whose legacy changed the course of contemporary art. This major exhibition dedicated to Ana Mendieta presents many of her iconic works alongside newly remastered films, early paintings, and late sculptural pieces, many of which have never been seen in the UK before. Looking to relax and have a drink after the exhibition? We're keeping the Level 1 Members Bar open just for you.",
+      "englishTitle": false
+    },
+    {
+      "index": 241,
+      "venue_code": "tate-modern",
+      "title": "Members Hours: Julio Le Parc",
+      "url": "https://www.tate.org.uk/whats-on/tate-modern/julio-le-parc/members-hours-julio-le-parc",
+      "action": "fresh",
+      "previousSummary": null,
+      "raw": "Visit the exhibition in the early hours, exclusive to Tate Members Discover the colourful works of Julio Le Parc during quieter times. Le Parc's works include interactive installations, kinetic sculptures, and large-scale op art paintings that span from the 1950s to the 2010s. Looking for a hot drink and a bite to eat after your visit? Stop by the Level 1 or Level 5 Members Bar from 10.00 and try our Tate roasted coffee.",
+      "englishTitle": false
+    },
+    {
+      "index": 242,
+      "venue_code": "tate-modern",
+      "title": "Members Hours: Ana Mendieta",
+      "url": "https://www.tate.org.uk/whats-on/tate-modern/ana-mendieta/members-hours-ana-mendieta",
+      "action": "fresh",
+      "previousSummary": null,
+      "raw": "Visit the exhibition in the early hours, exclusive to Members Discover the the powerful work of Ana Mendieta, whose legacy changed the course of contemporary art. This major exhibition dedicated to Ana Mendieta presents many of her iconic works alongside newly remastered films, early paintings, and late sculptural pieces, many of which have never been seen in the UK before. Looking for a hot drink and a bite to eat after your visit? Stop by the Level 1 or Level 5 Members Bar from 10.00 and try our Tate roasted coffee.",
+      "englishTitle": false
+    },
+    {
+      "index": 243,
+      "venue_code": "tate-modern",
+      "title": "Members Private View: Monet: Painting Time",
+      "url": "https://www.tate.org.uk/whats-on/tate-modern/monet/members-private-view",
+      "action": "fresh",
+      "previousSummary": null,
+      "raw": "Visit the exhibition in these special times reserved for Members Join us for Tate Modern’s first ever exhibition focusing exclusively on Claude Monet. The exhibition explores Monet's relationship with time, nature, and fleeting moments. Artworks from across the globe, including rarely seen works from private collections, will be on display. Looking to make your evening visit even more special? We're keeping the Granville-Grossman Members Room open just for you. Stop by to sit back, relax, and grab a drink after you visit the exhibition. Monet: Painting Time is supported by Lead Supporter, Morgan Stanley. Further support from Anthropic. Exhibition organised by Tate Modern and Musée de l'Orangerie.",
+      "englishTitle": false
+    },
+    {
+      "index": 244,
+      "venue_code": "tate-modern",
+      "title": "Members Hours: Monet: Painting Time",
+      "url": "https://www.tate.org.uk/whats-on/tate-modern/monet/members-hours",
+      "action": "fresh",
+      "previousSummary": null,
+      "raw": "Join us for Tate Modern’s first ever exhibition focusing exclusively on Claude Monet. The exhibition explores Monet's relationship with time, nature, and fleeting moments. Artworks from across the globe, including rarely seen works from private collections, will be on display. Looking for a hot drink and a bite to eat after your visit? Stop by the Granville Grossman Members Bar from 10.00 and try our Tate roasted coffee. Monet: Painting Time is supported by Lead Supporter, Morgan Stanley. Further support from Anthropic. Exhibition organised by Tate Modern and Musée de l'Orangerie.",
+      "englishTitle": false
+    },
+    {
+      "index": 248,
+      "venue_code": "uffizi",
+      "title": "‘Magnifico 1492’: major exhibition on Lorenzo de’ Medici’s art collection at Palazzo Pitti",
+      "url": "https://www.uffizi.it/en/events/magnifico-1492",
+      "action": "fresh",
+      "previousSummary": null,
+      "raw": "From 3 December 2026 to 1 March 2027, the Treasury of the Grand Dukes, on the ground floor of Palazzo Pitti, will host “Magnifico 1492”, a major exhibition organised by the Uffizi Galleries and dedicated to Lorenzo de’ Medici, the most celebrated member of the Medici dynasty. The full price for an exhibition ticket is 18 euros. A reduced 15-euro ticket is also available for holders of any valid admission ticket to one of the three Uffizi Galleries circuits (Gallery of Statues and Paintings, Pitti Palace, Boboli Gardens) during the exhibition period (tickets online here). Drawing on meticulous scholarly and curatorial research, which has also led to significant new discoveries in art history, the exhibition offers a detailed reconstruction of the vast Medici collection assembled and housed in the family palace on Via Larga in Florence, now known as Palazzo Medici Riccardi, as it was recorded in the inventory drawn up in 1492, the year of Lorenzo the Magnificent’s death. The exhibition explores and contextualises the original arrangement of the collection within the rooms of the historic residence, while offering an in-depth examination of Medici collecting practices from both art-historical and philosophical-theological perspectives, taking the objects and works on display as its starting point. Alongside an extensive selection of paintings and sculptures, including some truly exceptional masterpieces, visitors will be able to admire vases, gems, cameos, coins, manuscripts and maps, reflecting the extraordinary breadth and diversity of interests, passions and intellectual pursuits that were among the defining characteristics of the Medici family. More than 100 works will make up the exhibition, including numerous loans of exceptional importance from a wide range of Italian and international museums.",
+      "englishTitle": true
+    },
+    {
+      "index": 265,
+      "venue_code": "wallace",
+      "title": "The Wallace Collection at War",
+      "url": "https://www.wallacecollection.org/whats-on/exhibitions-displays/the-wallace-collection-at-war/",
+      "action": "review",
+      "previousSummary": "Wallace Collection's wartime exhibitions on Anglo-Soviet friendship.",
+      "raw": "In 1942, with the museum’s treasures evacuated for safety, Hertford House became an unlikely stage for cultural diplomacy. Two exhibitions transformed the empty galleries into a forum for Anglo-Soviet friendship at a critical moment in the conflict. Artists Aid Russia brought together over 900 works by living artists, from Augustus John to Jacob Epstein, with proceeds supporting Clementine Churchill’s Red Cross Aid to Russia Fund. Twenty-Five Years of Progress, designed by Ernő Goldfinger, filled the galleries with bold photomontages and banners celebrating Soviet achievements and Allied unity. Launched by Soviet Ambassador Ivan Maisky and his wife Agniya, these exhibitions revealed how art, propaganda and architecture were mobilised to strengthen wartime alliances. This free display drew on newly revisited archives, surviving catalogues and artworks actually shown in 1942 to illuminate how the Wallace Collection contributed to Britain’s wartime cultural front.",
+      "englishTitle": false
+    }
+  ]
+}
