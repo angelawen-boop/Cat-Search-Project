@@ -23,9 +23,8 @@ proven by planted faults.
 - **QC:** unattended runs fetch nothing; with you in the session it checks live, one page per question.
 - **QC:** it reads last run's plan and close first, and reports on each carried item.
 - **Filing cabinet:** `docs/sweep_records/`, three files per run; the guide points here.
-- **The routine:** files its report there. Its stored prompt still limits commits to `scraper/output/` and
-  `scraper/robots/`, so until that line is changed it leaves the report in the run folder for the next session to
-  file.
+- **The routine:** saves its report overnight with the sweep output, then files it and the other two itself once
+  you are in the session.
 - **Home sweep:** never nudged; it comes when you decide.
 - **Guide:** Menil and Cincinnati might have to join the home sweep, headed or headless unknown.
 

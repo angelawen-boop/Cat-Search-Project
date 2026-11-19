@@ -7,7 +7,7 @@ nothing month-specific; it points here. Search this folder for "when did X start
 
 | File | Written by, when | What it holds |
 |---|---|---|
-| `<date>_<pile>_1_report.md` | The QC (`.claude/skills/sweep-qc/SKILL.md`) when the run is pushed — the monthly routine for the container, a session for her home run | The run's report exactly as she was given it |
+| `<date>_<pile>_1_report.md` | The QC (`.claude/skills/sweep-qc/SKILL.md`). The monthly routine saves it overnight in the run folder as `report.md` and files it here once she is in the session; a session for her home run files it at once | The run's report exactly as she was given it |
 | `<date>_<pile>_2_plan.md` | The session, once she and it have been through every fault | Four headings: **Put aside until next run** · **Tentative conclusions** · **Fixes to make** · **Process changes** — short bullets |
 | `<date>_<pile>_3_close.md` | The session, at its end | What was fixed and tested, what changed in the instructions, what is still open — short bullets |
 

@@ -79,10 +79,16 @@ item — a site put aside, a tentative conclusion, a fix written for this run.
 
 ## Filing — `docs/sweep_records/` (her design; its README)
 
-The report below is filed as `<date>_<pile>_1_report.md` when the run is
-pushed. Once she and the session have been through every fault, the agreed
-list goes in `_2_plan.md`; at the end of the session, what was done goes in
-`_3_close.md`. Short bullets, the same words she was given; never rewritten.
+Three files per run, `<date>_<pile>_1_report.md`, `_2_plan.md`, `_3_close.md`:
+the report below; the agreed list once she and the session have been through
+every fault; what was done, at the end of the session. Short bullets, the same
+words she was given; never rewritten.
+
+**This session files all three, unasked.** Unattended, the monthly routine may
+save only sweep output, so overnight the report goes in the run folder as
+`report.md`. Once she is in the session, move it to the cabinet as `_1_report.md`,
+then write and file `_2_plan.md` and `_3_close.md` as the work reaches them;
+commit and push each.
 
 ## The report — to her, plain English, short bullets
 
