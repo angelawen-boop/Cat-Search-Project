@@ -1,0 +1,4 @@
+venue_code,title,start_date,end_date,summary,url,notes,swept_at
+mam,[current page],,,,https://www.mam.paris.fr/en/exhibitions,"The venue's ""current"" listing page could not be read: the venue’s server answered HTTP 503. Marker row, not an exhibition.",2026-11-19T08:59:41.565Z
+mam,[upcoming page],,,,https://www.mam.paris.fr/en/upcoming,"The venue's ""upcoming"" listing page could not be read: the venue’s server answered HTTP 503. Marker row, not an exhibition.",2026-11-19T08:59:41.565Z
+mam,[past page],,,,https://www.mam.paris.fr/en/archives?type_expo=Local&language=en,"The venue's ""past"" listing page could not be read: the venue’s server answered HTTP 503. Marker row, not an exhibition.",2026-11-19T08:59:41.565Z

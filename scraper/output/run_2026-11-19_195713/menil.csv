@@ -1,0 +1,4 @@
+venue_code,title,start_date,end_date,summary,url,notes,swept_at
+menil,[current page],,,,https://www.menil.org/exhibitions,"The venue's ""current"" listing page could not be read: the venue’s site refused us (HTTP 403). Marker row, not an exhibition.",2026-11-19T08:58:02.652Z
+menil,[upcoming page],,,,https://www.menil.org/exhibitions/upcoming,"The venue's ""upcoming"" listing page could not be read: the venue’s site refused us (HTTP 403). Marker row, not an exhibition.",2026-11-19T08:58:02.652Z
+menil,[past page],,,,https://www.menil.org/exhibitions/past,"The venue's ""past"" listing page could not be read: the venue’s site refused us (HTTP 403). Marker row, not an exhibition.",2026-11-19T08:58:02.652Z

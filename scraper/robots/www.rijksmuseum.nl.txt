@@ -1,6 +1,10 @@
 User-agent: *
 Allow: /
+Disallow: /nl/rijksstudio/mijn/nieuwsbrieven/*
+Disallow: /en/rijksstudio/my/newsletters/*
 Disallow: /nl/collectie/zoeken?*
 Disallow: /en/collection/search?*
+Disallow: /nl/inloggen
+Disallow: /en/login
 
 Sitemap: https://www.rijksmuseum.nl/sitemap.xml
