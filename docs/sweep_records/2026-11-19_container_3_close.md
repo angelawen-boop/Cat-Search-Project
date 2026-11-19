@@ -23,7 +23,7 @@ proven by planted faults.
 ## Imported
 
 - **This month's file:** stitched and compressed from the container run alone (no home sweep). The rows are as swept,
-  so the Tate Modern event cards arrive with it.
+  so the Tate Modern event cards arrive with it. You imported it the same day.
 
 ## Instructions changed
 

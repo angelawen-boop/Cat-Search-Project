@@ -154,10 +154,8 @@ per venue". **Read it before touching a venue's recipe, rows or counts** — her
 **The original venues were reviewed by her against the live site and re-swept** — `docs/scraper-verification-2026-09-12.md`.
 Read it before touching a venue listed there. The nine venues added since were checked against her counts at intake.
 
-**The last import is 15 Oct** (`stitch_20261015_0920`, 536 rows): the container run passed her test, her home sweep (met,
-artic, mad only — she checks the headed four by eye and sweeps them only for new shows) was QC'd, both stitched and
-compressed as swept. 5 Oct was a test, not imported (`sweep_diff.js` works out each change's cause; the skill asks only for
-the UNEXPLAINED pile). The faults found are fixed in code (§2.2.2).
+**The last import is 19 Nov** (`stitch_20261119_1053`): the container run alone, QC'd with her, stitched and compressed
+as swept; she has imported it. No home sweep this month (her choice). Its faults and fixes: `docs/sweep_records/`.
 
 No row carries a credit line, star rating, ticket price, funder list, opening hours, breadcrumb or cookie notice. Empty
 summaries: four Rijksmuseum rows whose pages return 404, plus occasional page timeouts — which say so on the row.
