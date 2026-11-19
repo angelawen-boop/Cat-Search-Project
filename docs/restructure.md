@@ -1,8 +1,7 @@
 # The restructure — the app in feature parts
 
-**The cutting is finished and on `main`; her test rounds passed. Her app still runs 59, published before the
-main-screen work.** "Continue the restructure." → read this file, then do the next undone step of "What is left — the
-plan to 60". Each run's design and record are in git (`git log -p -- docs/restructure.md`).
+**Finished: live in her app at 60, every step of the plan done.** Read this file for how the app is laid out and the
+rules any later change to the screen follows. Each run's design and record are in git (`git log -p -- docs/restructure.md`).
 
 ## Why (her decision)
 

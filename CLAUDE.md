@@ -362,7 +362,7 @@ behind such a link. Read the one for the work in hand.
 | `docs/branches.md` | The branch table and holding a push for another session | Creating, merging or pushing a branch |
 | `docs/publishing.md` | Version numbering, building the app and the publish steps | Publishing the app |
 | `docs/testing.md` | Which test group to run, where a failure is recorded, the live proof pages, test anchors, JSX validation | Running or writing tests, or re-checking live proof pages |
-| `docs/restructure.md`, `docs/restructure/placement.json`, `docs/restructure/duplicates.md` | The app in feature parts: how it is laid out, the rules of a cut, the checks, her test page, what is left; where every piece goes; the audit of facts kept twice | "Continue the restructure.", or any change to the main screen or to where a piece lives |
+| `docs/restructure.md`, `docs/restructure/placement.json`, `docs/restructure/duplicates.md` | The app in feature parts: how it is laid out, the rules of a cut, the checks, her test page, what is left; where every piece goes; the audit of facts kept twice | Any change to the main screen or to where a piece lives |
 
 **Reviews**
 
