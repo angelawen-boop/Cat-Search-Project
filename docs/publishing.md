@@ -27,13 +27,13 @@ page) — then once more as resent unchanged; the next goes through. Later ones 
 
 ## What is live now
 
-**On `main`, unpublished: 59.2** — the main screen rebuilt as pieces and hooks (no change she sees), a picked Theme
+**Live: 60 in her app** (59.2's work, published as 60) — the main screen rebuilt as pieces and hooks (no change she sees), a picked Theme
 chip's count, the venue scrubber for the Occ groups, "Still in the museum shop." after a Re-check (`docs/app.md`); one
 letter fold, one price rule, the Uffizi searched under its Italian name, the Prado's and V&A's link rules
 (`docs/restructure.md`, "The fixes after item 4"); after her test round, the Uffizi's shop taken out of its entry (it
-sells no books). On the restructure test page; her app only when she says.
+sells no books). 
 
-**Live: 59 in her app** — the venue register: every venue's facts in one home in the code, her names wherever a venue is
+**59** — the venue register: every venue's facts in one home in the code, her names wherever a venue is
 named, Find catalogue searching each venue by its full name, the `art-watch-` file names for saved ledgers and safety
 copies; the venues waiting in her store filed into the code at the publish (`docs/restructure.md`).
 

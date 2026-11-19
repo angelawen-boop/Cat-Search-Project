@@ -162,16 +162,16 @@ summaries: four Rijksmuseum rows whose pages return 404, plus occasional page ti
 
 Everything not listed here is finished. Do not reopen a closed item without a new fact.
 
-#### 2.2.1 The restructure — cut and on `main`, not yet on her app (her decision)
+#### 2.2.1 The restructure — live in her app at 60
 
 The app is feature parts under `app/` that a session can read whole; the main screen is the order of its pieces
 (`docs/restructure.md`: how it is laid out, the rules any later change to the screen follows, the checks). Her test
-rounds passed. **`main` holds 59.2, unpublished** (the rebuilt screen, the Theme chip's count, the venue scrubber for
+rounds passed. **Her app runs 60** (59.2's work: the rebuilt screen, the Theme chip's count, the venue scrubber for
 the Occ groups, "Still in the museum shop.", the fixes after item 4, the Uffizi's shop removed, the words list — every
-sentence she sees, written once — and the housekeeping); her app runs 59. **The checks are proven** — each by planted faults,
+sentence she sees, written once — and the housekeeping). **The checks are proven** — each by planted faults,
 and run on the current code — and locked in code: no test is used until proven at its version (`docs/testing.md`, "Proven
-checks"; a session's plan, not her decision). Her 59.2 test round passed. **NEXT — publish 60 when she says** (`docs/restructure.md`, "What is left — the plan
-to 60", step 5). **OPEN — then:** 60 is published when she says; then the leftover venue record is cleared. **She types "Continue the restructure." → read `docs/restructure.md`
+checks"; a session's plan, not her decision). Her 59.2 test round passed; 60 is published. **OPEN — the last step:** once her app has opened on 60, the
+leftover venue record is cleared (`docs/restructure.md`, "What is left — the plan to 60", step 6). **She types "Continue the restructure." → read `docs/restructure.md`
 and do the next undone step of "What is left — the plan to 60".** Her venue review page,
 permanent, refreshed and filed at each publish: https://claude.ai/artifact/RmSC86pu1rkBxsZDtfdA1J.
 
@@ -518,7 +518,7 @@ bot-blocked, so Pages and Paste only) is a fact about that venue, never a limit 
 > restating `capabilities` must restate all four; omitting it carries them
 > forward. **Renaming the connector means restating them.**
 
-**Live: 59 in her app; `main` holds 59.2, unpublished (§2.2.1)** (the app is named **Art Watch** on screen since 57; the header's big line is unchanged), with the cloud ledger (merged at 46). What each recent version changed is in
+**Live: 60 in her app (§2.2.1)** (the app is named **Art Watch** on screen since 57; the header's big line is unchanged), with the cloud ledger (merged at 46). What each recent version changed is in
 `docs/publishing.md`, "What is live now".
 
 #### The mental model, load-bearing

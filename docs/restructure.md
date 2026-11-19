@@ -195,9 +195,9 @@ In this order; nothing runs beside another.
    `test_page_check.js` passing; the ledger and the latest sweep file sent to her). She asked for the page only, no
    checklist. Her round on it **passed** (the Uffizi item's expected line was wrong: a card with no catalogue
    says "No catalogue found"; "Venue has no shop." shows only beside a found book).
-5. **NEXT — publish 60 to her real app, when she says.** The publish files any waiting venues and tells her in
-   one line if it did.
-6. **After 60 is published and her app has opened on it:** the one-time clear of the leftover Christie's
+5. **Done — 60 published to her real app** (no venue was waiting to be filed; the Christie's press record was
+   not filed, its site being Christie's own entry).
+6. **NEXT — once her app has opened on 60:** the one-time clear of the leftover Christie's
    press record in `venues/occasional` (her yes given; backup `docs/store_backup_2026-11-06/`).
 
 **Left alone on purpose (her decision — different jobs, not duplicates):** compression's looser address
