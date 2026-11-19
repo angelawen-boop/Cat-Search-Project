@@ -9,6 +9,8 @@ proven by planted faults.
 - **Tate Modern:** a session under a show (relaxed hours, members' hours, private view) is not a show. This is the
   rule you already chose for Tate Britain, by address, so any new kind of session is caught too.
 - **Wallace:** the current shows read from the new grid; the header menu stays out.
+- **KHM:** its current page names its headline section for the season; the recipe now reads it whatever the
+  season (tested on the page as a browser draws it).
 - **Brera:** the info block ends the text when the label's line break sits inside the bold, as on its live pages.
 - **Junk:**
   - KHM's address box and its "Further exhibitions" blurb
@@ -34,5 +36,3 @@ proven by planted faults.
   - MAM, the Accademia and the Louvre's past pages are back
   - Menil and Cincinnati: still refused?
   - every fix above holds live
-- **KHM:** fixed after the close was first written — its current page names its headline section for the season,
-  and the recipe now reads it whatever the season (tested on the page as a browser draws it).
