@@ -162,7 +162,7 @@ summaries: four Rijksmuseum rows whose pages return 404, plus occasional page ti
 
 Everything not listed here is finished. Do not reopen a closed item without a new fact.
 
-#### 2.2.1 The restructure — live in her app at 60
+#### 2.2.1 The restructure — finished, live in her app at 60
 
 The app is feature parts under `app/` that a session can read whole; the main screen is the order of its pieces
 (`docs/restructure.md`: how it is laid out, the rules any later change to the screen follows, the checks). Her test
@@ -170,9 +170,7 @@ rounds passed. **Her app runs 60** (59.2's work: the rebuilt screen, the Theme c
 the Occ groups, "Still in the museum shop.", the fixes after item 4, the Uffizi's shop removed, the words list — every
 sentence she sees, written once — and the housekeeping). **The checks are proven** — each by planted faults,
 and run on the current code — and locked in code: no test is used until proven at its version (`docs/testing.md`, "Proven
-checks"; a session's plan, not her decision). Her 59.2 test round passed; 60 is published. **OPEN — the last step:** once her app has opened on 60, the
-leftover venue record is cleared (`docs/restructure.md`, "What is left — the plan to 60", step 6). **She types "Continue the restructure." → read `docs/restructure.md`
-and do the next undone step of "What is left — the plan to 60".** Her venue review page,
+checks"; a session's plan, not her decision). Her 59.2 test round passed; 60 is published and the leftover venue record cleared — nothing left. Her venue review page,
 permanent, refreshed and filed at each publish: https://claude.ai/artifact/RmSC86pu1rkBxsZDtfdA1J.
 
 #### 2.2.2 Fixes not yet checked in the cases they were written for
@@ -314,7 +312,7 @@ behind such a link. Read the one for the work in hand.
 | `docs/app.md` | The app's evidence: catalogue lookup, shop addresses, saving, intake bands, quarantine, sweep log, seed, the cloud ledger's screen | Changing anything in the app |
 | `docs/cloud_storage.md` | The cloud ledger: what the page's store holds, Save and the safety copies, the opening switch, the safety proofs, the read-only lock for a second copy | Changing anything about saving to the page's own store |
 | `docs/store_backup_2026-09-21/` | A read-out of the page's store, as insurance | Only if the store is lost AND `sweep_log.js` cannot rebuild it |
-| `docs/store_backup_2026-11-06/` | Her app's `venues/occasional` record before the venue register, as insurance | Only if the one-time clear of old venue records goes wrong |
+| `docs/store_backup_2026-11-06/` | Her app's `venues/occasional` record before the venue register and the one-time clear, as insurance | Only if a venue record is found missing |
 | `docs/ledger_2026-09-24/` | Her real ledger as exported on 24 Sep, kept as test data for the cloud-store and scalability work — **never load it into her published app** | Testing saving or sizing against a real ledger |
 | `docs/scalability.md` | What grows as the ledger grows, measured; parked work for when she acts | The list feels slow, the store fills, or she raises the size |
 

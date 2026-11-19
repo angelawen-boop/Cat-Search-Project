@@ -197,8 +197,8 @@ In this order; nothing runs beside another.
    says "No catalogue found"; "Venue has no shop." shows only beside a found book).
 5. **Done — 60 published to her real app** (no venue was waiting to be filed; the Christie's press record was
    not filed, its site being Christie's own entry).
-6. **NEXT — once her app has opened on 60:** the one-time clear of the leftover Christie's
-   press record in `venues/occasional` (her yes given; backup `docs/store_backup_2026-11-06/`).
+6. **Done — the one-time clear** of the leftover Christie's press record in `venues/occasional`, after her app
+   opened on 60 (backup `docs/store_backup_2026-11-06/`). **The restructure is finished.**
 
 **Left alone on purpose (her decision — different jobs, not duplicates):** compression's looser address
 key; the sweep-diff's fold; the publisher step's own address strip.
