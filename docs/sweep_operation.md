@@ -189,8 +189,8 @@ The container is unchanged. Pace stays at 30s.
 the "Monthly container sweep" routine, the 5th, ~2am Sydney, follows
 `.claude/skills/monthly-sweep/SKILL.md` — sweep, QC, push, report; anything
 needing a re-sweep or a code change waits for her. She reviews it with a session (live checks
-allowed while she is in it); her home sweep comes when she decides, never nudged; then stitch,
-compress, import **one file** (her decision). **Every run's reports are filed in
+allowed while she is in it) while her home sweep runs; then stitch, compress, import **one file**
+(her decision). **Every run's reports are filed in
 `docs/sweep_records/`** — the run's report, the agreed plan, the session's close (its README).
 **Every run — container and home — goes through `.claude/skills/sweep-qc/`
 and has its faults fixed before anything is stitched** (her decision):

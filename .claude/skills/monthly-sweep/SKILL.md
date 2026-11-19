@@ -5,8 +5,8 @@ description: The container's half of the monthly sweep — sweeps the container'
 
 # Monthly container sweep — unattended
 
-Her design. **This job goes first**; her home sweep comes when she
-decides (never nudged). A session with her then stitches, compresses (subagents need her
+Her design. **This job goes first; she follows** with the home
+sweep, then a session with her stitches, compresses (subagents need her
 approval), runs the final QC and hands her the CSV. This job does none of that.
 
 ## Hard limits — nobody is watching
@@ -52,4 +52,4 @@ approval), runs the final QC and hands her the CSV. This job does none of that.
 ## The report
 
 Written as `.claude/skills/sweep-qc/SKILL.md` describes. Its last line here:
-"Next: stitch and compress — with your home sweep if you have done one."
+"Next: your home sweep, then stitch and compress."

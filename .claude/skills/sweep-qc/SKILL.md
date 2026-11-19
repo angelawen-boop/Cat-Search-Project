@@ -122,9 +122,8 @@ She works IN this session after reading it, so it must be ready to act on.
 - **Carried from last run** — one bullet per item in last run's plan and
   close: back, still out, firmed up, held or failed.
 - Last lines: "Say which faults to fix." then the next step: after the
-  container run, "Next: stitch and compress — with your home sweep if you
-  have done one."; after a home run, "Next: stitch and compress, once the
-  faults are fixed." Her home sweep comes when she decides; never nudge it.
+  container run, "Next: your home sweep, then stitch and compress."; after a
+  home run, "Next: stitch and compress, once the faults are fixed."
 
 **Only this run's venues.** A container run never mentions a home venue
 (met, artic, mad, brit, orsay, morgan, moma — `route: 'local'`), and a home

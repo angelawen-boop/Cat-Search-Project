@@ -27,7 +27,6 @@ proven by planted faults.
 - **Filing cabinet:** `docs/sweep_records/`, three files per run; the guide points here.
 - **The routine:** saves its report overnight with the sweep output, then files it and the other two itself once
   you are in the session.
-- **Home sweep:** never nudged; it comes when you decide.
 - **Guide:** Menil and Cincinnati might have to join the home sweep, headed or headless unknown.
 
 ## Still open
