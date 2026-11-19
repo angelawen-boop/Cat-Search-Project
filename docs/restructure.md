@@ -193,8 +193,9 @@ In this order; nothing runs beside another.
    faults; the lock in code (`docs/testing.md`, "Proven checks"); all of them run on the current code.
 4. **Done — her test page for 59.2, published** (her store's three records copied in, her ledger decoded,
    `test_page_check.js` passing; the ledger and the latest sweep file sent to her). She asked for the page only, no
-   checklist. **NEXT — her test round on it.**
-5. **Publish 60 to her real app — when she says.** The publish files any waiting venues and tells her in
+   checklist. Her round on it **passed** (the Uffizi item's expected line was wrong: a card with no catalogue
+   says "No catalogue found"; "Venue has no shop." shows only beside a found book).
+5. **NEXT — publish 60 to her real app, when she says.** The publish files any waiting venues and tells her in
    one line if it did.
 6. **After 60 is published and her app has opened on it:** the one-time clear of the leftover Christie's
    press record in `venues/occasional` (her yes given; backup `docs/store_backup_2026-11-06/`).

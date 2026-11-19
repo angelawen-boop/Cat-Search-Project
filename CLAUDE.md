@@ -170,8 +170,8 @@ rounds passed. **`main` holds 59.2, unpublished** (the rebuilt screen, the Theme
 the Occ groups, "Still in the museum shop.", the fixes after item 4, the Uffizi's shop removed, the words list — every
 sentence she sees, written once — and the housekeeping); her app runs 59. **The checks are proven** — each by planted faults,
 and run on the current code — and locked in code: no test is used until proven at its version (`docs/testing.md`, "Proven
-checks"; a session's plan, not her decision). **NEXT — her test round on the 59.2 test page** (published; `docs/restructure.md`, "What is left — the plan
-to 60", step 4). **OPEN — then:** 60 is published when she says; then the leftover venue record is cleared. **She types "Continue the restructure." → read `docs/restructure.md`
+checks"; a session's plan, not her decision). Her 59.2 test round passed. **NEXT — publish 60 when she says** (`docs/restructure.md`, "What is left — the plan
+to 60", step 5). **OPEN — then:** 60 is published when she says; then the leftover venue record is cleared. **She types "Continue the restructure." → read `docs/restructure.md`
 and do the next undone step of "What is left — the plan to 60".** Her venue review page,
 permanent, refreshed and filed at each publish: https://claude.ai/artifact/RmSC86pu1rkBxsZDtfdA1J.
 
