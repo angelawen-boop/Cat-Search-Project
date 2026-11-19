@@ -191,12 +191,9 @@ In this order; nothing runs beside another.
    **Done — the checks proven** (a session's plan, in place of the tools' own proofs she stopped): the migration's
    tools removed; the three checks, the hand-edit guard and the rewritten side-by-side check each proven by planted
    faults; the lock in code (`docs/testing.md`, "Proven checks"); all of them run on the current code.
-4. **NEXT — her test page for 59.2 (her ask: the next session does it).** Build and publish the restructure test page
-   from `main` exactly as "Her tests" above says: her store's three records copied in, her current ledger decoded,
-   `node build/test_page_check.js` passing, then the link, that ledger and the latest sweep file to her, with a checklist
-   made her way. What changed since her last round: the words list (every sentence moved to one list) and the
-   housekeeping; the machine checks already found them identical, so her checklist covers only what a machine cannot
-   reach — her Claude, her Parallel searches, her store. Never her real app.
+4. **Done — her test page for 59.2, published** (her store's three records copied in, her ledger decoded,
+   `test_page_check.js` passing; the ledger and the latest sweep file sent to her). She asked for the page only, no
+   checklist. **NEXT — her test round on it.**
 5. **Publish 60 to her real app — when she says.** The publish files any waiting venues and tells her in
    one line if it did.
 6. **After 60 is published and her app has opened on it:** the one-time clear of the leftover Christie's
