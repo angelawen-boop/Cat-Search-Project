@@ -14,9 +14,19 @@ pushing it. Stitch and compress come only after both have passed.
 the newest `scraper/output/run_*` that holds this pile's venues (a home run
 holds only met, artic, mad, brit, orsay, morgan, moma).
 
-**No network request** to answer a question here — the log, the notes, kept
-pages and her saved pages under `docs/` only. If only the live site can
-settle something, name the one page that would; she saves it.
+**Unattended (the monthly routine): no network request** — the log, the notes,
+kept pages and her saved pages under `docs/` only. If only the live site can
+settle something, name the one page that would.
+
+**With her in the session: check live** (her decision) — read the site's
+robots.txt, fetch the page that settles it (moved? layout changed? site down?).
+One page per question, never a sweep, never a page already fetched in the
+session; save a page a fix is tested on under `docs/<venue>_pages/` (or
+`docs/listing_pages/`) with a README line.
+
+**Last run's records first:** read the newest `_2_plan.md` and `_3_close.md`
+of this pile in `docs/sweep_records/` (its README). Report on every carried
+item — a site put aside, a tentative conclusion, a fix written for this run.
 
 ## Steps
 
@@ -67,6 +77,13 @@ settle something, name the one page that would; she saves it.
    by sweeping again. In the unattended routine, nothing is changed — the
    fix waits in the report.
 
+## Filing — `docs/sweep_records/` (her design; its README)
+
+The report below is filed as `<date>_<pile>_1_report.md` when the run is
+pushed. Once she and the session have been through every fault, the agreed
+list goes in `_2_plan.md`; at the end of the session, what was done goes in
+`_3_close.md`. Short bullets, the same words she was given; never rewritten.
+
 ## The report — to her, plain English, short bullets
 
 She works IN this session after reading it, so it must be ready to act on.
@@ -96,9 +113,12 @@ She works IN this session after reading it, so it must be ready to act on.
     kept page) or **guess** (and the one page that would settle it).
   - **Fix:** the change you propose, and whether it is code, a recipe, or a
     re-sweep (a re-sweep is always hers to call).
+- **Carried from last run** — one bullet per item in last run's plan and
+  close: back, still out, firmed up, held or failed.
 - Last lines: "Say which faults to fix." then the next step: after the
-  container run, "Next: your home sweep, then stitch and compress."; after a
-  home run, "Next: stitch and compress, once the faults are fixed."
+  container run, "Next: stitch and compress — with your home sweep if you
+  have done one."; after a home run, "Next: stitch and compress, once the
+  faults are fixed." Her home sweep comes when she decides; never nudge it.
 
 **Only this run's venues.** A container run never mentions a home venue
 (met, artic, mad, brit, orsay, morgan, moma — `route: 'local'`), and a home

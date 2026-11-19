@@ -13,3 +13,6 @@ three odd rows. Finding: **the venue rewrote its pages, not a scraper fault.**
   the page fails to draw (she sees a grey screen). Empty description is right.
 - `stop_motion` — the listing links the Dutch page; Dutch text. Compression
   writes the summary in English.
+- `drawing.html` — read live 19 Nov 2026. The funders are in a "Thanks to" block
+  (`logo-block`) naming the show ("The exhibition Drawing! is made possible …"), which
+  the sentence rule missed. Test: `sweep_nov_pages.js`.

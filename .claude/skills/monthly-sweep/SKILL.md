@@ -5,8 +5,8 @@ description: The container's half of the monthly sweep — sweeps the container'
 
 # Monthly container sweep — unattended
 
-Her design. **This job goes first; she follows** with the home
-sweep, then a session with her stitches, compresses (subagents need her
+Her design. **This job goes first**; her home sweep comes when she
+decides (never nudged). A session with her then stitches, compresses (subagents need her
 approval), runs the final QC and hands her the CSV. This job does none of that.
 
 ## Hard limits — nobody is watching
@@ -24,8 +24,11 @@ approval), runs the final QC and hands her the CSV. This job does none of that.
   needs a recipe change first.
 - **No subagents, no compression, no stitch, no `Artifact`/`ArtifactData`
   calls, no publish.**
-- **Commit only `scraper/output/` and `scraper/robots/`** (the sweep refreshes
-  each site's saved robots.txt there; her decision).
+- **Commit only `scraper/output/`, `scraper/robots/`** (the sweep refreshes
+  each site's saved robots.txt there; her decision) **and the run's report in
+  `docs/sweep_records/`**. If the routine's own prompt still limits commits to
+  the first two, write the report into the run folder as `report.md` instead;
+  the session she opens files it.
 
 ## Steps
 
@@ -42,11 +45,13 @@ approval), runs the final QC and hands her the CSV. This job does none of that.
    run, all of it. It is the same QC her home runs get (her decision).
    Here, under this job's hard limits: no code change — a fix is proposed in
    the report and waits for her.
-5. `git add scraper/output scraper/robots`, commit ("Monthly container sweep <run>"),
+5. File the report (`docs/sweep_records/<date>_container_1_report.md`; the
+   sweep-qc skill, "Filing"). `git add scraper/output scraper/robots
+   docs/sweep_records`, commit ("Monthly container sweep <run>"),
    `git pull --rebase origin main`, push to `main`. Retry the push on network
    failure only (2s, 4s, 8s, 16s).
 
 ## The report
 
 Written as `.claude/skills/sweep-qc/SKILL.md` describes. Its last line here:
-"Next: your home sweep, then stitch and compress."
+"Next: stitch and compress — with your home sweep if you have done one."

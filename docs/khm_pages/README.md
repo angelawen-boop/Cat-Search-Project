@@ -9,3 +9,7 @@ Her saves of 5 Oct 2026, for two rows that lost their opening dates.
   only "until 14 March 2027"; the opening date is no longer published. The row
   is right.
 - `upcoming.html` — the upcoming listing; both shows are linked from it.
+- `bernini_painter_and_sculptor.html`, `toni_r_toivonen_last_impressions.html` — read
+  live 19 Nov 2026. The address box (`infobox-section`, with its Google Maps link) and
+  the "Further exhibitions" strip's blurb (`theme_exhibitionlist`, German on one page)
+  reached the row. Test: `sweep_nov_pages.js`.

@@ -5,3 +5,5 @@
   classed "description" won the shared ladder's `[class*="description"] p` rung.
   The recipe now names the real block (`.exhibition-info .body-text`) and drops
   the "Exhibition organised by…" credit. Test: `description_pages_oct.js`.
+- `zurbaran.html` — read live 19 Nov 2026. Ends "Tickets are required. The exhibition
+  is organised by …" — both dropped. Test: `sweep_nov_pages.js`.

@@ -2134,8 +2134,11 @@ async function getCuratorialText(page, descSelector, noiseExtra, noiseExempt, cr
             const blank = n => n.nodeType === 3 && !n.textContent.trim();
             let before = lab.previousSibling; while (before && blank(before)) before = before.previousSibling;
             let after = lab.nextSibling; while (after && blank(after)) after = after.nextSibling;
+            // The line break may sit inside the bold (Brera writes "<strong>When<br></strong>").
+            let last = lab.lastChild; while (last && blank(last)) last = last.previousSibling;
+            const broken = (after && after.nodeName === 'BR') || (last && last.nodeName === 'BR');
             const c = clean(lab.innerText);
-            if (!before && after && after.nodeName === 'BR' && c && raw.startsWith(c)) {
+            if (!before && broken && c && raw.startsWith(c)) {
               if (STOPLABEL && STOPLABEL.test(c)) break;
               raw = clean(raw.slice(c.length));
             }
@@ -3498,6 +3501,11 @@ const ARTIC_NOT_AN_EXHIBITION = new RegExp([
 // of them (Light and Magic, 5 Oct; docs/tate_pages/). Matched as noise
 // containers by class.
 const TATE_NOISE = 'editorial-background|accordion|card-content';
+// A session nested under a show (relaxed hours, members' hours, a private view) is
+// not a show (her decision): a show's address is one step below the gallery.
+const tateSession = gallery => href => new RegExp(`/whats-on/${gallery}/[^/?#]+/[^/?#]+`).test(href);
+// The funders' paragraph closing a show's text (docs/tate_pages/ink.html, hylozoic_desires.html).
+const TATE_CREDIT = /(?:^|[.!?]\s+)(?:Research\s+)?Supported by\b|\bis supported by\b|\bLead (?:Global )?Supporter\b|\bFurther support (?:from|provided)\b|\bWith additional support\b|\bcommissioned by\b[^.!?]*\bsupported by\b/;
 // Tate's What's On shows 20 cards a page; "Load N more" fetches ?page=2 and is absent
 // on the last page (docs/tate_pages/).
 const TATE_PAGES = { param: 'page', from: 2, whileMore: 'a[data-ajax-type="load-more"]' };
@@ -3556,15 +3564,17 @@ const VENUES = {
     // The description is named: a catalogue promo panel classed "description" outranks
     // the real text in the shared ladder (docs/ng_pages/).
     description: '.exhibition-info .body-text',
-    // Its last line credits the organising museums — a credit line, which no
-    // row carries (CLAUDE.md §2.1).
-    dropSentence: /Exhibition organised by\b/,
+    // Its last lines credit the organising museums and say tickets are needed —
+    // no row carries either (CLAUDE.md §2.1; docs/ng_pages/zurbaran.html).
+    dropSentence: /(?:The\s+)?Exhibition (?:is )?organised by\b|Tickets are required\b/,
   },
 
   rijks: {
     base: 'https://www.rijksmuseum.nl',
-    // A funder credit inside the text.
+    // A funder credit inside the text; the "Thanks to" block (`logo-block`) holds
+    // another, with the show's name inside it (docs/rijks_pages/drawing.html).
     dropSentence: /(?:This|The) exhibition is made possible\b/,
+    noise: 'logo-block',
     pages: [
       { path: '/en/whats-on/exhibitions/now-on-view', ctx: 'current/upcoming' },
       { path: '/en/whats-on/exhibitions/past',        ctx: 'past' },
@@ -3625,6 +3635,8 @@ const VENUES = {
     excludeTitle: /^LGD\s+Hammer\b/i,
     // The gallery's own text only: its press list uses the same class inside <li>s.
     description: 'div.text-style-description p',
+    // A weekly activation time is opening hours (docs/lgd_pages/).
+    dropSentence: /[^.!?]*\bevery (?:(?:Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday)(?:,? and |, )?)+[^.!?]*\b\d{1,2}(?::\d\d)?\s?[ap]m\b/,
   },
 
   borghese: {
@@ -3821,12 +3833,15 @@ const VENUES = {
       { path: '/en/exhibitions-and-events/past-exhibitions', ctx: 'past' },
       { path: '/en/exhibitions-and-events/past-exhibitions', ctx: 'past', param: 'date', yearArchive: true },
     ],
-    // Narrow: the wider selector matched the section's own tabs.
-    selector: 'a[href*="/exhibitions-and-events/exhibitions/"]',
+    // Narrow: the wider selector matched the section's own tabs. Its shows moved
+    // to /what-s-on/exhibitions/ (docs/listing_pages/louvre_current_2026-11.html);
+    // older pages may still link the first address.
+    selector: 'a[href*="/exhibitions-and-events/exhibitions/"], a[href*="/what-s-on/exhibitions/"]',
     // The listing is one grid; the header's promo card for the headline show is outside
     // it.
     within: ['.Expositions_Grid'],
-    isNav: href => /\/exhibitions-and-events\/exhibitions\/?$/.test(href),
+    isNav: href => /\/exhibitions-and-events\/exhibitions\/?$/.test(href)
+                || /\/what-s-on\/exhibitions\/?$/.test(href),
     title: { heading: true },
     // A "load more" control with no address of its own — clicked, after dismissConsent()
     // clears the cookie popin that once swallowed it (docs/scraper.md §2).
@@ -3873,6 +3888,8 @@ const VENUES = {
     // a "From … to …" range or none. The lookbehind keeps ranges; undated rows are kept
     // (her decision, docs/venues.md).
     excludeLabelled: /(?<!to\s?)\b\d{1,2}\/\d{1,2}\/\d{4}\s*$/,
+    // Ticket prices inside the text (docs/uffizi_pages/).
+    dropSentence: /[^.!?]*\b\d+[- ]euros?\b|[^.!?]*\btickets? online\b/,
   },
 
   brera: {
@@ -4059,6 +4076,9 @@ const VENUES = {
     isNav: href => /\/en\/exhibitions\/?$/.test(href)
                 || /\/en\/exhibitions\/upcoming\/?$/.test(href),
     title: { heading: true },
+    // The address box with its map link, and the "Further exhibitions" strip's blurb
+    // (docs/khm_pages/bernini_painter_and_sculptor.html).
+    noise: 'infobox|exhibitionlist',
   },
 
   artic: {
@@ -4243,7 +4263,7 @@ const VENUES = {
     // The results grid only: the header's promos carry the headline shows on every page
     // (docs/title_case_pages/).
     within: ['#whatson-results'],
-    isNav: href => /\/whats-on\/tate-modern\/?$/.test(href),
+    isNav: href => /\/whats-on\/tate-modern\/?$/.test(href) || tateSession('tate-modern')(href),
     // Its promotional hero cards head the card with the GALLERY, not the show.
     title: {
       heading: true,
@@ -4255,6 +4275,7 @@ const VENUES = {
     },
     // Promo panels (dining offer) are not the show's text — see TATE_NOISE.
     noise: TATE_NOISE,
+    creditPara: TATE_CREDIT,
   },
 
   'tate-britain': {
@@ -4266,6 +4287,7 @@ const VENUES = {
     // on the listing's name with or without "Tate Britain" in front.
     excludeTitle: /^(?:Tate\s+Britain\s+)?Commission\b|^Turner\s+Prize\b/i,
     noise: TATE_NOISE,   // see Tate Modern
+    creditPara: TATE_CREDIT,
     pages: [
       { path: '/whats-on?date_range=from_now&gallery_group=tate-britain&event_type=exhibition', ctx: 'current/upcoming',
         paginate: TATE_PAGES },
@@ -4280,10 +4302,8 @@ const VENUES = {
     showPath: '/whats-on/tate-britain/',
     // The results grid only — see tate-modern.
     within: ['#whatson-results'],
-    // A show's address is one step below /tate-britain/; a session nested under a show
-    // (a relaxed-hours visit) is not a show (her decision).
-    isNav: href => /\/whats-on\/tate-britain\/?$/.test(href)
-      || /\/whats-on\/tate-britain\/[^/?#]+\/[^/?#]+/.test(href),
+    // A session nested under a show is not a show — see tateSession.
+    isNav: href => /\/whats-on\/tate-britain\/?$/.test(href) || tateSession('tate-britain')(href),
     // Its promotional hero cards head the card with the GALLERY, not the show.
     title: {
       heading: true,
@@ -4301,8 +4321,9 @@ const VENUES = {
     // live under /whats-on/events/.
     pages: [
       // Each page's own grid: the header's menu carries the latest past shows on every
-      // page (docs/listing_pages/wallace_*.mhtml).
-      { path: '/whats-on/exhibitions-displays/', ctx: 'current/upcoming', within: ['.c-body-promos'] },
+      // page (docs/listing_pages/wallace_*). The current grid moved from
+      // `.c-body-promos` to `.section-listing` (wallace_current_2026-11.html).
+      { path: '/whats-on/exhibitions-displays/', ctx: 'current/upcoming', within: ['.c-body-promos', '.section-listing'] },
       { path: '/explore/past-exhibitions/',      ctx: 'past', within: ['.section-listing'] },
     ],
     // Two different paths for the same kind of thing: a show moves from

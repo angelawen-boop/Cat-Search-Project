@@ -137,6 +137,10 @@ read from the marker rows — why the last attempt brought nothing. When the two
 **Every venue has returned rows at least once.** **`ashmolean` is no longer swept** — added by link only (her decision;
 `docs/venues.md`).
 
+**Menil and Cincinnati refuse the container since 19 Nov** (Menil: Cloudflare bot protection, newly switched on;
+Cincinnati: cause unknown, probably the same) — either might have to join the home sweep, headed or headless unknown
+(`docs/sweep_records/`).
+
 **Access and pace — settled for the four Cloudflare venues:** paced sweeps from her laptop, in a visible Chrome on a profile
 she has browsed in, are clean at all four (`docs/venues.md`, "The headed venues"; `docs/sweep_operation.md`).
 
@@ -175,14 +179,12 @@ permanent, refreshed and filed at each publish: https://claude.ai/artifact/RmSC8
 
 #### 2.2.2 Fixes not yet checked in the cases they were written for
 
-**The 15 Oct sweep's fixes — in code for the next sweep; this month's runs were imported as the scraper wrote them (her
-decision: a fix never changes a run already swept).** Her next sweep checks each: the Met's excluded series (P.S. Art,
-Scholastic, commissions, Burdick, crèche) stay out, now checked on the name the show's page gives; no credit lines at Met,
-Art Institute, MAD, Rijksmuseum (the Rijksmuseum rule has no saved page to test on); no "page couldn't be read" card for an
-empty Art Institute page 2; Brera keeps bold words mid-sentence and stops before its info block; Borghese titles arrive in
-ordinary capitals with an em dash between name and subtitle — one round of title Change cards against her hand-corrected 7;
-Acquavella's "– Acquavella Palm Beach" leaves the title (she accepts that Change card); Tate Britain's listing page 2 is
-read; the report names every refused or empty page. Expect ~45 one-time compression re-checks.
+**Every run's fixes and what they must prove are filed in `docs/sweep_records/`** (her design: a run's report, the
+agreed plan, the session's close; the next run's QC reports on each carried item). A fix never changes a run already
+swept (her decision). Still waiting for her home sweep (the 15 Oct fixes): the Met's excluded series (P.S. Art,
+Scholastic, commissions, Burdick, crèche) stay out, checked on the name the show's page gives; no credit lines at Met,
+Art Institute, MAD; no "page couldn't be read" card for an empty Art Institute page 2. Brera's bold words mid-sentence:
+not yet seen in a run.
 
 #### 2.2.3 Catalogue lookup generally
 
@@ -285,6 +287,10 @@ Cini, Prado, Correr): `docs/app.md`, `docs/add_by_link.md`.
 
 A session records each failing suite here and does not investigate it (`docs/testing.md`).
 
+**OPEN — `add_by_link.js` AL-094b fails since the 19 Nov run was pushed**: the check compares the page's summary
+examples with `compress_cli.js`'s, which are rebuilt from the newest sweep text, and that run changed it. Passing again
+needs a join (`node build/app_join.js`), which changes the page — left for the next app change.
+
 **OPEN, watching — `cloud_app.js` and `cloud_two_copies.js` failed when the test machine was crowded**: checks waiting 8
 seconds for an automatic save (CA-002, CA-005d, CA-006, TC-001) gave up. The cloud suites now run alone (her decision; the 8
 seconds kept). If one still fails when run alone, record it here — that is a real fault, not crowding.
@@ -324,6 +330,7 @@ behind such a link. Read the one for the work in hand.
 | `docs/sweep_operation.md` | Running the scraper: commands, files, run directories, who sweeps what, headed venues, pacing, robots.txt, the network bridge, what to send her when a sweep ends, and the monthly container routine | Running a sweep, or changing how one runs |
 | `docs/compression.md`, `scraper/compress_prompt.md` | Compression design, model split, eval and rejected alternatives; the prompts and their tuning | Changing compression or summary wording — otherwise don't |
 | `docs/import_csv.md` | The pro forma CSV: lookback, never de-duplicate, the notes column, `swept_at` | Changing what the scraper writes or what the app reads |
+| `docs/sweep_records/` | The filing cabinet: every sweep run's report, the plan agreed with her, the session's close — three short files per run; its README says how it works | QC of any run (read last run's plan and close first), or "when did X start" |
 
 **Import 2: the venues** — what each museum does and what she decided about it
 

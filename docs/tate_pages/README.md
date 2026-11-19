@@ -13,3 +13,6 @@
 - `steph_huang.html` — her save of 15 Oct 2026. The description is two paragraphs;
   the artist's CV sits in a "Biography" pull-down, which `TATE_NOISE` drops with
   the other pull-downs — why the 15 Oct run's text is shorter than 5 Oct's.
+- `ink.html`, `hylozoic_desires.html` — read live 19 Nov 2026. The funders sit in an
+  italic paragraph after the text ("Supported by …", "is supported by …", a commission
+  "… supported by …"); `TATE_CREDIT` drops it. Test: `sweep_nov_pages.js`.
