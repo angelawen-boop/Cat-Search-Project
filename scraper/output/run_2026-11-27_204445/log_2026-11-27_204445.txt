@@ -1,0 +1,17 @@
+[2026-11-27T09:44:45.288Z] Could not tidy old runs (ENOTEMPTY: directory not empty, rename '/home/awen/Cat-Search-Project/scraper/ou) — carrying on.
+[2026-11-27T09:44:45.291Z] Cat Watch Sweep Prototype — starting
+[2026-11-27T09:44:45.291Z] Lookback floor: 2024-07-01
+[2026-11-27T09:44:45.294Z] Routine sweep: cincinnati read shows on, upcoming or closed since 2026-05-27 (--full for everything back to the floor).
+[2026-11-27T09:44:45.294Z] Run directory: /home/awen/Cat-Search-Project/scraper/output/run_2026-11-27_204445
+[2026-11-27T09:44:45.294Z] Machine: home (no proxy, so this is not the container)
+[2026-11-27T09:44:45.294Z] Venues this run: cincinnati
+[2026-11-27T09:44:45.296Z] 
+[2026-11-27T09:44:45.297Z] ────────────────────────────────────────────────────────────
+[2026-11-27T09:44:45.297Z]   PACING — her machine
+[2026-11-27T09:44:45.298Z] ────────────────────────────────────────────────────────────
+[2026-11-27T09:44:45.301Z]   Gap between pages: about 30s, varied 75–125%, per gatekeeper.
+[2026-11-27T09:44:45.302Z]   One venue at a time behind each gatekeeper; different gatekeepers side by side.
+[2026-11-27T09:44:45.303Z]   The first refusal or bot check stops that gatekeeper for the rest of the run.
+[2026-11-27T09:44:45.304Z]   In the Chrome you opened and left open, in a tab of its own (mode B): cincinnati
+[2026-11-27T09:44:45.327Z]   cincinnati: SKIPPED — behind Cloudflare, which refused us at cincinnati (BLOCKED_CHALLENGE) on Fri, 27 Nov, 7:16 pm Sydney. Not asked again before Sat, 28 Nov, 7:16 pm Sydney.
+[2026-11-27T09:44:45.328Z]   Nothing left to ask this run.

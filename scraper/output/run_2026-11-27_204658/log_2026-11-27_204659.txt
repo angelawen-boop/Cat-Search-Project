@@ -1,0 +1,129 @@
+[2026-11-27T09:46:59.018Z] Could not tidy old runs (ENOTEMPTY: directory not empty, rename '/home/awen/Cat-Search-Project/scraper/ou) — carrying on.
+[2026-11-27T09:46:59.021Z] Cat Watch Sweep Prototype — starting
+[2026-11-27T09:46:59.022Z] Lookback floor: 2024-07-01
+[2026-11-27T09:46:59.024Z] Routine sweep: cincinnati read shows on, upcoming or closed since 2026-05-27 (--full for everything back to the floor).
+[2026-11-27T09:46:59.024Z] Run directory: /home/awen/Cat-Search-Project/scraper/output/run_2026-11-27_204658
+[2026-11-27T09:46:59.024Z] Machine: home (no proxy, so this is not the container)
+[2026-11-27T09:46:59.024Z] Venues this run: cincinnati
+[2026-11-27T09:46:59.025Z] 
+[2026-11-27T09:46:59.026Z] ────────────────────────────────────────────────────────────
+[2026-11-27T09:46:59.027Z]   PACING — her machine
+[2026-11-27T09:46:59.027Z] ────────────────────────────────────────────────────────────
+[2026-11-27T09:46:59.030Z]   Gap between pages: about 30s, varied 75–125%, per gatekeeper.
+[2026-11-27T09:46:59.031Z]   One venue at a time behind each gatekeeper; different gatekeepers side by side.
+[2026-11-27T09:46:59.032Z]   The first refusal or bot check stops that gatekeeper for the rest of the run.
+[2026-11-27T09:46:59.033Z]   In the Chrome you opened and left open, in a tab of its own (mode B): cincinnati
+[2026-11-27T09:46:59.058Z]   cincinnati: behind Cloudflare, which refused us at cincinnati (BLOCKED_CHALLENGE) on Fri, 27 Nov, 7:16 pm Sydney. Quiet period until Sat, 28 Nov, 7:16 pm Sydney OVERRIDDEN by --ignore-cooldown.
+[2026-11-27T09:46:59.060Z]   Venues this run: cincinnati
+[2026-11-27T09:46:59.061Z] Proxy: (none — direct egress assumed)
+[2026-11-27T09:46:59.061Z]   Expected on an ordinary machine; Chromium will connect directly.
+[2026-11-27T09:46:59.061Z]   In a Claude Code container this means every venue will fail to load.
+[2026-11-27T09:46:59.063Z] Chromium: /home/awen/.cache/ms-playwright/chromium-1243/chrome-linux64/chrome
+[2026-11-27T09:46:59.448Z] Running 0 venue(s) headless, 0 at a time (one page at a time within each venue)
+[2026-11-27T09:46:59.448Z] Running 1 venue(s) in a visible Chrome, one after another: cincinnati
+[2026-11-27T09:46:59.706Z] [cincinnati] 
+[2026-11-27T09:46:59.706Z] [cincinnati] ────────────────────────────────────────────────────────────
+[2026-11-27T09:46:59.706Z] [cincinnati]   CINCINNATI — Cincinnati Art Museum, Cincinnati
+[2026-11-27T09:46:59.707Z] [cincinnati] ────────────────────────────────────────────────────────────
+[2026-11-27T09:46:59.708Z] [cincinnati]   Fetching current: https://www.cincinnatiartmuseum.org/art/exhibitions/
+[2026-11-27T09:46:59.724Z] [cincinnati]   robots.txt (www.cincinnatiartmuseum.org, kept copy of 2026-11-27): states no delay, 6 path(s) off-limits
+[2026-11-27T09:46:59.731Z] [cincinnati]   paced: request 1 via Cloudflare
+[2026-11-27T09:47:04.871Z] [cincinnati]   current: 6 links seen -> 0 navigation, 3 already-seen URL -> 3 collected (0 of them with no readable title)
+[2026-11-27T09:47:04.883Z] [cincinnati]   Fetching upcoming: https://www.cincinnatiartmuseum.org/art/exhibitions/upcoming-exhibitions/
+[2026-11-27T09:47:37.028Z] [cincinnati]   paced: request 2 via Cloudflare, after 32s
+[2026-11-27T09:47:40.449Z] [cincinnati]   upcoming: 4 links seen -> 0 navigation, 2 already-seen URL -> 2 collected (0 of them with no readable title)
+[2026-11-27T09:47:40.474Z] [cincinnati]   Fetching past: https://www.cincinnatiartmuseum.org/art/exhibitions/exhibition-archive/
+[2026-11-27T09:48:02.406Z] [cincinnati]   paced: request 3 via Cloudflare, after 22s
+[2026-11-27T09:48:07.909Z] [cincinnati]   past: 16 links seen -> 0 navigation, 8 already-seen URL -> 8 collected (0 of them with no readable title)
+[2026-11-27T09:48:07.922Z] [cincinnati]   UNWIRED PAGINATION past: this page links another page and no recipe follows it — page 2025 -> /art/exhibitions/exhibition-archive/2025/ | page 2024 -> /art/exhibitions/exhibition-archive/2024/ | page 2023 -> /art/exhibitions/exhibition-archive/2023/ | page 2022 -> /art/exhibitions/exhibition-archive/2022/
+[2026-11-27T09:48:07.922Z] [cincinnati]   Fetching past 2025: https://www.cincinnatiartmuseum.org/art/exhibitions/exhibition-archive/2025/
+[2026-11-27T09:48:32.118Z] [cincinnati]   paced: request 4 via Cloudflare, after 24s
+[2026-11-27T09:48:36.973Z] [cincinnati]   past 2025: 28 links seen -> 0 navigation, 14 already-seen URL -> 14 collected (0 of them with no readable title)
+[2026-11-27T09:48:36.985Z] [cincinnati]   Fetching past 2024: https://www.cincinnatiartmuseum.org/art/exhibitions/exhibition-archive/2024/
+[2026-11-27T09:49:04.913Z] [cincinnati]   paced: request 5 via Cloudflare, after 28s
+[2026-11-27T09:49:09.337Z] [cincinnati]   past 2024: 22 links seen -> 0 navigation, 11 already-seen URL -> 11 collected (0 of them with no readable title)
+[2026-11-27T09:49:09.349Z] [cincinnati]   Fetching past 2023: https://www.cincinnatiartmuseum.org/art/exhibitions/exhibition-archive/2023/
+[2026-11-27T09:49:32.980Z] [cincinnati]   paced: request 6 via Cloudflare, after 24s
+[2026-11-27T09:49:39.446Z] [cincinnati]   past 2023: 30 links seen -> 0 navigation, 15 already-seen URL -> 15 collected (0 of them with no readable title)
+[2026-11-27T09:49:39.460Z] [cincinnati]   lookback (listing): kept 36, dropped 17 closed before 2024-07-01, 1 with no closing date, 0 with no opening date
+[2026-11-27T09:49:39.462Z] [cincinnati]   routine sweep: 22 show(s) closed before 2026-05-27 not swept (--full reads them)
+[2026-11-27T09:49:39.465Z] [cincinnati]   reading 14 individual page(s)…
+[2026-11-27T09:49:39.466Z] [cincinnati]     page 1 of 14
+[2026-11-27T09:50:06.324Z] [cincinnati]   paced: request 7 via Cloudflare, after 27s
+[2026-11-27T09:50:43.976Z] [cincinnati]   paced: request 8 via Cloudflare, after 36s
+[2026-11-27T09:51:11.015Z] [cincinnati]   paced: request 9 via Cloudflare, after 24s
+[2026-11-27T09:51:42.823Z] [cincinnati]   paced: request 10 via Cloudflare, after 29s
+[2026-11-27T09:52:21.000Z] [cincinnati]   paced: request 11 via Cloudflare, after 35s
+[2026-11-27T09:52:56.684Z] [cincinnati]   paced: request 12 via Cloudflare, after 34s
+[2026-11-27T09:53:29.288Z] [cincinnati]   paced: request 13 via Cloudflare, after 31s
+[2026-11-27T09:54:02.940Z] [cincinnati]   paced: request 14 via Cloudflare, after 31s
+[2026-11-27T09:54:40.197Z] [cincinnati]   paced: request 15 via Cloudflare, after 35s
+[2026-11-27T09:54:42.654Z] [cincinnati]     page 10 of 14
+[2026-11-27T09:55:07.184Z] [cincinnati]   paced: request 16 via Cloudflare, after 25s
+[2026-11-27T09:55:47.509Z] [cincinnati]   paced: request 17 via Cloudflare, after 34s
+[2026-11-27T09:56:26.087Z] [cincinnati]   paced: request 18 via Cloudflare, after 36s
+[2026-11-27T09:57:03.010Z] [cincinnati]   paced: request 19 via Cloudflare, after 34s
+[2026-11-27T09:57:28.045Z] [cincinnati]   paced: request 20 via Cloudflare, after 23s
+[2026-11-27T09:57:30.287Z] [cincinnati]   Individual pages: 14 got text, 0 no curatorial text, 0 failed
+[2026-11-27T09:57:30.287Z] [cincinnati]   14 page(s) kept on disk as read (pages_kept/cincinnati)
+[2026-11-27T09:57:30.289Z] [cincinnati]   lookback (final): kept 14, dropped 0 closed before 2024-07-01, 1 with no closing date, 1 with no opening date
+[2026-11-27T09:57:30.297Z] [cincinnati]   → 14 exhibitions, 14 with curatorial text → cincinnati.csv
+[2026-11-27T09:57:31.782Z] 
+[2026-11-27T09:57:31.782Z] ────────────────────────────────────────────────────────────
+[2026-11-27T09:57:31.782Z]   QC — faulty rows and exceptions
+[2026-11-27T09:57:31.782Z] ────────────────────────────────────────────────────────────
+[2026-11-27T09:57:31.782Z]   No faulty rows: every row has a title and a known venue code.
+[2026-11-27T09:57:31.782Z]   No exceptions: every venue looks like the last run that had it.
+[2026-11-27T09:57:31.782Z] 
+[2026-11-27T09:57:31.782Z] ────────────────────────────────────────────────────────────
+[2026-11-27T09:57:31.782Z]   SWEEP COMPLETE — SUMMARY
+[2026-11-27T09:57:31.782Z] ────────────────────────────────────────────────────────────
+[2026-11-27T09:57:31.782Z]   CINCINNATI: 14 exhibitions | 14 with text
+[2026-11-27T09:57:31.783Z] 
+[2026-11-27T09:57:31.783Z] ────────────────────────────────────────────────────────────
+[2026-11-27T09:57:31.783Z]   PACING — where each gatekeeper got to
+[2026-11-27T09:57:31.783Z] ────────────────────────────────────────────────────────────
+[2026-11-27T09:57:31.783Z]   Cloudflare: cincinnati — 20 clean page(s)
+[2026-11-27T09:57:31.783Z] 
+[2026-11-27T09:57:31.783Z] ────────────────────────────────────────────────────────────
+[2026-11-27T09:57:31.783Z]   COVERAGE — every link accounted for
+[2026-11-27T09:57:31.783Z] ────────────────────────────────────────────────────────────
+[2026-11-27T09:57:31.783Z]   venue      page                          seen   nav offsite   dup  ongoing  noTitle  collected
+[2026-11-27T09:57:31.783Z]   -----------------------------------------------------------------------------------------------
+[2026-11-27T09:57:31.783Z]   cincinnati current                          6     0       0     3        0        0          3
+[2026-11-27T09:57:31.783Z]   cincinnati upcoming                         4     0       0     2        0        0          2
+[2026-11-27T09:57:31.783Z]   cincinnati past                            16     0       0     8        0        0          8
+[2026-11-27T09:57:31.783Z]   cincinnati past 2025                       28     0       0    14        0        0         14
+[2026-11-27T09:57:31.783Z]   cincinnati past 2024                       22     0       0    11        0        0         11
+[2026-11-27T09:57:31.783Z]   cincinnati past 2023                       30     0       0    15        0        0         15
+[2026-11-27T09:57:31.783Z] 
+[2026-11-27T09:57:31.783Z] 
+[2026-11-27T09:57:31.783Z] ────────────────────────────────────────────────────────────
+[2026-11-27T09:57:31.783Z]   MORE PAGES OFFERED THAN TAKEN — CHECK THESE
+[2026-11-27T09:57:31.783Z] ────────────────────────────────────────────────────────────
+[2026-11-27T09:57:31.783Z]   Each page below links to another page of itself, and no recipe follows it.
+[2026-11-27T09:57:31.783Z]   Exhibitions may be missing from the CSV with nothing else to show it.
+[2026-11-27T09:57:31.783Z] 
+[2026-11-27T09:57:31.783Z]   cincinnati / past
+[2026-11-27T09:57:31.784Z]     https://www.cincinnatiartmuseum.org/art/exhibitions/exhibition-archive/
+[2026-11-27T09:57:31.784Z]     offers: page 2025 -> /art/exhibitions/exhibition-archive/2025/
+[2026-11-27T09:57:31.784Z]     offers: page 2024 -> /art/exhibitions/exhibition-archive/2024/
+[2026-11-27T09:57:31.784Z]     offers: page 2023 -> /art/exhibitions/exhibition-archive/2023/
+[2026-11-27T09:57:31.784Z]     offers: page 2022 -> /art/exhibitions/exhibition-archive/2022/
+[2026-11-27T09:57:31.784Z] 
+[2026-11-27T09:57:31.784Z]   seen      = links matching the venue's selector on that page
+[2026-11-27T09:57:31.784Z]   nav       = site navigation and filter links, not exhibitions
+[2026-11-27T09:57:31.784Z]   offsite   = resolved to another host and was not followed; each one is logged above
+[2026-11-27T09:57:31.784Z]   dup       = an address already collected; noted on the existing row, never dropped silently
+[2026-11-27T09:57:31.784Z]   ongoing   = the venue labelled it a permanent display, not a temporary exhibition; each one is named above
+[2026-11-27T09:57:31.784Z]   noTitle   = rows that still have no exhibition name once the page is fully read
+[2026-11-27T09:57:31.784Z]   collected = rows handed on to the lookback filter and detail-page fetch
+[2026-11-27T09:57:31.784Z] 
+[2026-11-27T09:57:31.784Z] Network bridge: 0 requests served, 0 handed back from files already fetched (not asked again), 0 skipped (image/media/font), 0 failed
+[2026-11-27T09:57:31.784Z] 
+[2026-11-27T09:57:31.785Z] Run directory:   /home/awen/Cat-Search-Project/scraper/output/run_2026-11-27_204658
+[2026-11-27T09:57:31.785Z] Cumulative CSV:  /home/awen/Cat-Search-Project/scraper/output/run_2026-11-27_204658/sweep.csv  (14 rows — cincinnati:14)
+[2026-11-27T09:57:31.785Z] Log written to:  /home/awen/Cat-Search-Project/scraper/output/run_2026-11-27_204658/log_2026-11-27_204659.txt
+[2026-11-27T09:57:31.785Z] Not yet in this run: met, ng, rijks, acq, lgd, borghese, frick, morgan, menil, va, louvre, capo, uffizi, brera, orsay, mam, mad, ashmolean, jacquemart, khm, artic, moma, brit, dellav, tate-modern, tate-britain, wallace
+[2026-11-27T09:57:31.785Z]   Finish it with:  node scraper/sweep_prototype.js --continue
+[2026-11-27T09:57:31.785Z] No de-duplication is applied — see passThrough.

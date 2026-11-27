@@ -1,0 +1,19 @@
+{
+  "machine": "home",
+  "savedAt": "2026-11-27T09:57:30.298Z",
+  "paceSeconds": 30,
+  "gatekeepers": {
+    "cincinnati": "Cloudflare"
+  },
+  "lanes": {
+    "Cloudflare": {
+      "venues": [
+        "cincinnati"
+      ],
+      "clean": 20,
+      "firstAt": "2026-11-27T09:46:59.731Z",
+      "lastAt": "2026-11-27T09:57:29.727Z",
+      "stopped": null
+    }
+  }
+}
