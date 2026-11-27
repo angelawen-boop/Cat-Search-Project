@@ -177,13 +177,15 @@ test('P-010 what is written to disk: a finish or a plain refusal, never a venue 
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
-const { splitHeaded, headedProfileSeeded, HEADED_PROFILE_DIR, VENUES } = require('./sweep_prototype.js');
+const { splitHeaded, headedProfileSeeded, HEADED_PROFILE_DIR } = require('./sweep_prototype.js');
 
 test('H-001 headed venues go to the visible Chrome on her machine only', () => {
-  const codes = ['met', 'moma', 'orsay', 'mad'];
-  assert.deepStrictEqual(splitHeaded(codes, true), { headed: ['moma', 'orsay'], headless: ['met', 'mad'] });
+  // Venues of its own: which real venues are headed is the recipes' to say (routing.test.js).
+  const own = { a: { headed: true }, b: {}, c: { headed: true }, d: {} };
+  const codes = ['a', 'b', 'c', 'd'];
+  assert.deepStrictEqual(splitHeaded(codes, true, own), { headed: ['a', 'c'], headless: ['b', 'd'] });
   // The container has no Chrome and no screen: everything headless, for markers.
-  assert.deepStrictEqual(splitHeaded(codes, false), { headed: [], headless: codes });
+  assert.deepStrictEqual(splitHeaded(codes, false, own), { headed: [], headless: codes });
 });
 
 test('H-002 an unseeded profile is recognised, so nothing is risked on it', () => {
@@ -201,11 +203,6 @@ test('H-003 the sweep uses the same profile folder and Chrome list that probe_he
   const list = src => (src.match(/function resolveChrome\(\) \{[\s\S]*?\]/) || [''])[0].match(/'[^']+'/g);
   const sweep = fs.readFileSync(path.join(__dirname, 'sweep_prototype.js'), 'utf8');
   assert.deepStrictEqual(list(sweep), list(probe));
-});
-
-test('H-004 the headed pile is hers: moma, brit, morgan, orsay, menil, cincinnati', () => {
-  const pile = Object.keys(VENUES).filter(c => VENUES[c].headed).sort();
-  assert.deepStrictEqual(pile, ['brit', 'cincinnati', 'menil', 'moma', 'morgan', 'orsay']);
 });
 
 // ── HEADED, MODE B — her Chrome, attached to (29 Sep) ─────────────────────

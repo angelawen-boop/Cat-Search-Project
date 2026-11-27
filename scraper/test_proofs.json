@@ -1,10 +1,11 @@
 {
  "proven": {
-  "fact_check": "952cdb281d0e561a",
+  "fact_check": "ede13a7075e6221e",
   "join_guard": "22334c368bb7a228",
   "khm_season_pages": "2dba9c66f55adb6d",
-  "lock": "3d413e88f7e4ef5a",
-  "pacing": "6b5ad5ffff5ccfb3",
+  "lock": "b4a8d48cd98dbf23",
+  "pacing": "fada320346c9a338",
+  "routing": "75762472b138b707",
   "side_by_side": "e48f8b031c20401f",
   "structure_check": "ce1f81bbb7633d5d",
   "sweep_nov_pages": "91503ef99048be69",
@@ -15,7 +16,7 @@
   "build/test_page_check.js": "329ec1d392a43e8d",
   "scraper/answer_check.test.js": "42fbd433535402b0",
   "scraper/compress.test.js": "41e3b02b0cd7188d",
-  "scraper/date.test.js": "ca05ea2a902faf8a",
+  "scraper/date.test.js": "7a3912e37227469e",
   "scraper/fixtures/add_by_link.js": "fa7b20e3d908102d",
   "scraper/fixtures/add_by_page.js": "7afb8f3f88b9dd7a",
   "scraper/fixtures/add_by_paste.js": "3a7ec5659b027eb3",

@@ -93,8 +93,9 @@ run by hand and the variable that lets a proof run its test.
 - **The layout check:** a part naming a higher level (in a function, as a shorthand, at the top, each level); a folder
   with no level; the store reached outside its door (each way); each React hook and each kind of JSX outside the screens.
 - **The one-place check:** each venue fact beside its id, in the parts, the scraper, the build and the tests; facts
-  keyed by venue (a record, a list of names, a table of four); each field a sweep recipe may not hold; a sentence, a
-  rule and a list written twice.
+  keyed by venue (a record, a list of names, a table of four); each field a sweep recipe may not hold; a typed-out
+  copy of the recipes' sweep plan (the headed venues, her laptop's, the container's — in a test, a fixture, a build
+  file, in any order); a sentence, a rule and a list written twice.
 - **The words check:** words as JSX text, in each shown attribute, in a string, a capitalised word, a template; an
   entry unused, two entries alike, the list missing; a pattern filled with the wrong gaps, none, or shown unfilled; an
   entry not on the list; a test writing out an entry's words.
@@ -106,7 +107,11 @@ run by hand and the variable that lets a proof run its test.
 - **Her machine's pacing and headed rules** (`pacing.test.js`): each rule undone in the scraper — the gatekeeper's
   name, a bot check served with 200, each wait, one venue per lane, lanes side by side, a refusal stopping its lane,
   a lane paused for an unknown gatekeeper, what is written, the visible Chrome on her machine only, the profile, the
-  headed list (each of the six, and one added), the port, her tabs left, the no-Chrome message.
+  port, her tabs left, the no-Chrome message.
+- **Which machine sweeps which venue** (`routing.test.js`): a headed venue left to the container, a route misspelt,
+  a not-swept venue or her laptop's venues sent to the container, the headed flag never read, moma's archive swept or
+  read as a show; a venue moved to her laptop or back, with no test touched, passes. Its tests were moved out of
+  `date.test.js`, whose unproven fingerprint was re-recorded once for that removal alone (her go-ahead).
 - **The lock itself:** each refusal above, a failed proof never recorded, a proof whose test changed while it ran
   never recorded, and the hook's refusals.
 

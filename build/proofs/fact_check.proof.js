@@ -2,13 +2,15 @@
 /*
  * fact_check.proof.js — the one-place check (build/fact_check.js) proven by planted faults: a venue fact
  * written outside the register, in every way the check looks for it and in every kind of file it reads,
- * and a sentence, rule or list written twice in the app's parts — each caught by its own rule; and the
+ * a copy of the recipes' sweep plan (who is headed, on her laptop, the container's), and a sentence, rule or list
+ * written twice in the app's parts — each caught by its own rule; and the
  * changes it must let through, let through.
  * Run through the watched runner: node scraper/run_tests.js --prove fact_check
  */
 'use strict';
 const path = require('path');
 const { proof, addPiece } = require('./kit.js');
+const { sweepPlan } = require('../fact_check.js');
 
 const P = proof('the one-place check');
 const check = () => P.run([path.join(__dirname, '..', 'fact_check.js'), '--root', P.root]);
@@ -54,6 +56,17 @@ P.fault('FC-26', 'a list of four written in two parts',
 P.fault('FC-27', 'a sentence written twice in one part',
   [['app/ledger/marks.jsx', addPiece('plantedA', `// Not words: planted.\nconst plantedA = ["${SENTENCE}", "${SENTENCE}"];`)]], check, /^FAIL  a sentence written 2 times \(app\/ledger\/marks\.jsx:\d+, app\/ledger\/marks\.jsx:\d+\)/);
 
+// 5. A copy of the recipes' sweep plan, read from the copy's own recipes (no list of venues typed here either).
+const PLAN = Object.fromEntries(sweepPlan(P.root));
+const listOf = (what, order = l => l) => JSON.stringify(order(PLAN[what].split(',')));
+const copies = (file, what) => new RegExp('^FAIL  ' + file.replace(/[./]/g, '\\$&') + ':\\d+ copies which venues are ' + what + ' — read it from the recipes');
+P.fault('FC-28', 'a test types out the headed venues',
+  [['scraper/planted_plan.test.js', `const x = ${listOf('headed')};\n`]], check, copies('scraper/planted_plan.test.js', 'headed'));
+P.fault('FC-29', "a fixture types out her laptop's venues, in another order",
+  [['scraper/fixtures/planted_plan.js', `const x = ${listOf('swept on her laptop', l => l.reverse())};\n`]], check, copies('scraper/fixtures/planted_plan.js', 'swept on her laptop'));
+P.fault('FC-30', "a build file types out the container's venues",
+  [['build/planted_plan.js', `module.exports = ${listOf('swept by the container')};\n`]], check, copies('build/planted_plan.js', 'swept by the container'));
+
 P.control('FC-C1', "a test file on the allowed list may hold a venue's record",
   [['scraper/fixtures/add_by_link.js', was => was + '\nconst plantedRecord = { id: "met", name: "The Met" };\n']], check);
 P.control('FC-C2', "a table of three venues' words is not a fact table",
@@ -67,4 +80,6 @@ P.control('FC-C4', 'a copy on the known list is set aside',
    ['build/fact_check_known.json', JSON.stringify([{ text: SENTENCE, item: 'planted' }])]], check);
 P.control('FC-C5', "a venue's facts in the register itself",
   [['venues/register.js', was => was.replace('{ id: "met", kind: "swept",', '{ id: "met", kind: "swept", lookupName: "planted",')]], check);
+P.control('FC-C6', 'a list of some of the headed venues is not a copy of the plan',
+  [['scraper/planted_plan.test.js', `const x = ${listOf('headed', l => l.slice(0, 2))};\n`]], check);
 P.done();

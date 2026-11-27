@@ -8,6 +8,8 @@
  *      or when it is keyed by venue ids with a record, a list of names, or a table of four venues or more. The register
  *      (venues/register.js) is the one home; the sweep's recipes (scraper/sweep_prototype.js VENUES) say
  *      only how each venue is swept, and test data that names a venue's shop is listed in ALLOWED below.
+ *      A list of venues that is exactly the venues the recipes mark headed, swept on her laptop, not swept or
+ *      swept by the container is a copy of the recipes' sweep plan: moving a venue would mean editing it too.
  *   2. A sentence, list or rule written twice in the app's parts: a string of 40 characters or more, an
  *      array of four or more strings, or a pattern of 30 characters or more, the same text in two places.
  *      The copies already listed for items 4B–4F (docs/restructure/duplicates.md) are in KNOWN_TWICE, each
@@ -43,9 +45,30 @@ function filesUnder(root, dir, re, out = []) {
 const keyText = (n, sf) => n && (ts.isIdentifier(n) || ts.isStringLiteralLike(n) ? n.text : n.getText(sf));
 const isLiteral = n => n && (ts.isStringLiteralLike(n) || ts.isArrayLiteralExpression(n) || ts.isObjectLiteralExpression(n) || ts.isRegularExpressionLiteral(n));
 
+// The recipes' sweep plan, read from their text (requiring the scraper would run it): each group of two venues or
+// more, as [what it is, its venues sorted and joined].
+function sweepPlan(root) {
+  const src = fs.readFileSync(path.join(root, RECIPES), 'utf8');
+  const sf = ts.createSourceFile(RECIPES, src, ts.ScriptTarget.Latest, true, ts.ScriptKind.JS);
+  const plan = { headed: [], 'swept on her laptop': [], 'not swept': [], 'swept by the container': [] };
+  const visit = n => {
+    if (!(ts.isVariableDeclaration(n) && n.name.getText(sf) === 'VENUES' && n.initializer && ts.isObjectLiteralExpression(n.initializer))) return ts.forEachChild(n, visit);
+    for (const p of n.initializer.properties) {
+      if (!ts.isPropertyAssignment(p) || !ts.isObjectLiteralExpression(p.initializer)) continue;
+      const val = k => { const q = p.initializer.properties.find(q => ts.isPropertyAssignment(q) && keyText(q.name, sf) === k); return q && q.initializer.getText(sf); };
+      const code = keyText(p.name, sf), route = val('route');
+      if (val('headed') === 'true') plan.headed.push(code);
+      plan[route === "'local'" ? 'swept on her laptop' : route === "'none'" ? 'not swept' : 'swept by the container'].push(code);
+    }
+  };
+  visit(sf);
+  return Object.entries(plan).filter(([, list]) => list.length >= 2).map(([what, list]) => [what, [...list].sort().join(',')]);
+}
+
 function venueFacts(root) {
   const { VENUES } = require(path.join(root, 'venues', 'register.js'));
   const ids = new Set(VENUES.map(v => v.id));
+  const plan = sweepPlan(root);
   const files = [...filesUnder(root, 'app', /\.jsx$/), ...filesUnder(root, 'scraper', /\.js$/), ...filesUnder(root, 'build', /\.jsx?$/)]
     .filter(f => !HOMES.has(f));
   const problems = [];
@@ -54,6 +77,10 @@ function venueFacts(root) {
     const sf = ts.createSourceFile(f, src, ts.ScriptTarget.Latest, true, f.endsWith('x') ? ts.ScriptKind.JSX : ts.ScriptKind.JS);
     const line = n => sf.getLineAndCharacterOfPosition(n.getStart(sf)).line + 1;
     const visit = n => {
+      if (f !== RECIPES && ts.isArrayLiteralExpression(n) && n.elements.length >= 2 && n.elements.every(e => ts.isStringLiteralLike(e) && ids.has(e.text))) {
+        const copy = plan.find(([, list]) => list === n.elements.map(e => e.text).sort().join(','));
+        if (copy) problems.push(`${f}:${line(n)} copies which venues are ${copy[0]} — read it from the recipes (${RECIPES} VENUES), never a list`);
+      }
       if (ts.isObjectLiteralExpression(n)) {
         const props = n.properties.filter(p => ts.isPropertyAssignment(p));
         const idProp = props.find(p => keyText(p.name, sf) === 'id' && ts.isStringLiteralLike(p.initializer) && ids.has(p.initializer.text));
@@ -118,7 +145,7 @@ function writtenTwice(root) {
 }
 
 function check(root) { return { venue: venueFacts(root), twice: writtenTwice(root) }; }
-module.exports = { check, venueFacts, writtenTwice };
+module.exports = { check, venueFacts, writtenTwice, sweepPlan };
 
 if (require.main === module) {
   require('../scraper/test_proofs.js').requireProven(__filename);   // not used until proven at this version (scraper/test_proofs.js)

@@ -13,8 +13,6 @@ const check = () => P.run(['--test', '--test-reporter=tap', P.file(TEST)]);
 const SP = 'scraper/sweep_prototype.js';
 const once = (from, to) => was => { if (was.split(from).length !== 2) throw new Error(`"${from}" is not in the file exactly once`); return was.replace(from, to); };
 const own = id => new RegExp(`^\\s*not ok \\d+ - ${id} `);
-const HEADED_MARK = code => `  ${code}: {\n    // Headed, her machine only (her decision): Cloudflare refuses the container.\n    headed: true,\n`;
-const unmark = code => once(HEADED_MARK(code), `  ${code}: {\n    // Headed, her machine only (her decision): Cloudflare refuses the container.\n`);
 
 P.control('PP-00', 'the rules as written', [], check, /^# fail 0$/m);
 P.fault('PP-01', 'Cloudflare not recognised by its server name', [[SP, once(`if (h['cf-ray'] || h['cf-mitigated'] || /cloudflare/.test(val('server'))) return 'Cloudflare';`, `if (h['cf-ray'] || h['cf-mitigated']) return 'Cloudflare';`)]], check, own('P-001'));
@@ -31,10 +29,7 @@ P.fault('PP-11', 'a venue that never got to ask is written', [[SP, once(`  if (p
 P.fault('PP-12', 'headed venues sent to a visible Chrome on the container', [[SP, once(`const headed = paced ? codes.filter(c => venues[c] && venues[c].headed) : [];`, `const headed = codes.filter(c => venues[c] && venues[c].headed);`)]], check, own('H-001'));
 P.fault('PP-13', 'a blank profile taken as seeded', [[SP, once(`return fs.existsSync(path.join(dir, 'Default'));`, `return fs.existsSync(dir);`)]], check, own('H-002'));
 P.fault('PP-14', 'the sweep on a different profile from the one seeded', [[SP, once(`const HEADED_PROFILE_DIR = path.join(__dirname, 'chrome_profile');`, `const HEADED_PROFILE_DIR = path.join(__dirname, 'chrome_profile_b');`)]], check, own('H-003'));
-P.fault('PP-15', "the Menil's headed marker missing", [[SP, unmark('menil')]], check, own('H-004'));
-P.fault('PP-16', "Cincinnati's headed marker missing", [[SP, unmark('cincinnati')]], check, own('H-004'));
-P.fault('PP-17', 'a venue marked headed that she did not choose', [[SP, once(`  ng: {\n`, `  ng: {\n    headed: true,\n`)]], check, own('H-004'));
-P.fault('PP-18', 'the sweep attaches on a different port', [[SP, once(`const HEADED_DEBUG_PORT = 9222;`, `const HEADED_DEBUG_PORT = 9223;`)]], check, own('H-005'));
-P.fault('PP-19', 'finishing closes her tabs', [[SP, once(`return { context, detach: () => browser.close().catch(() => {}) };`, `return { context, detach: async () => { for (const pg of context.pages()) await pg.close().catch(() => {}); return browser.close().catch(() => {}); } };`)]], check, own('H-006'));
-P.fault('PP-20', 'no Chrome open, and no word on how to open one', [[SP, once(`'Run: node scraper/probe_headed.js open — warm it up, LEAVE IT OPEN, then run this again');`, `'Open Chrome, then run this again');`)]], check, own('H-007'));
+P.fault('PP-15', 'the sweep attaches on a different port', [[SP, once(`const HEADED_DEBUG_PORT = 9222;`, `const HEADED_DEBUG_PORT = 9223;`)]], check, own('H-005'));
+P.fault('PP-16', 'finishing closes her tabs', [[SP, once(`return { context, detach: () => browser.close().catch(() => {}) };`, `return { context, detach: async () => { for (const pg of context.pages()) await pg.close().catch(() => {}); return browser.close().catch(() => {}); } };`)]], check, own('H-006'));
+P.fault('PP-17', 'no Chrome open, and no word on how to open one', [[SP, once(`'Run: node scraper/probe_headed.js open — warm it up, LEAVE IT OPEN, then run this again');`, `'Open Chrome, then run this again');`)]], check, own('H-007'));
 P.done();

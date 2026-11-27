@@ -73,10 +73,11 @@ scraper/output/run_2026-09-10_183045/
 
 `machineVenues()` decides; the machine is worked out from the proxy (present in
 the container, absent on her laptop); `--home` / `--container` force it; the run
-announces which it thinks it is. **Container: 18. Her laptop: 9** — `met`,
-`artic`, `mad`, `brit`, `orsay`, `morgan`, `moma`, `menil`, `cincinnati` (`route: 'local'`). **Neither: `ashmolean`**
-(`route: 'none'`, added by link only — her decision; `machineOf`, R-024). Naming
-venues by hand overrides it, and says so in the log. R-001 to R-005.
+announces which it thinks it is. **Each venue's recipe is the one record of its machine:**
+`route: 'local'` her laptop, `route: 'none'` neither (the Ashmolean, added by link only — her decision),
+nothing the container. `node scraper/venue_status.js` prints who sweeps what. **Moving a venue is a change
+to its recipe and nothing else** — no test, list or doc names who sweeps where (`routing.test.js`; the
+one-place check refuses a typed-out copy). Naming venues by hand overrides it, and says so in the log.
 
 - **A venue can move to her laptop for a trial** and move back if the trial
   fails. (A "clean sweep first" rule was recorded as hers; she never made it.)
@@ -88,9 +89,9 @@ venues by hand overrides it, and says so in the log. R-001 to R-005.
 **`headed: true`: on her machine the venue is swept in a visible Google Chrome
 on the profile `probe_headed.js open` seeds**, paced; never headless there,
 never on an unseeded profile. The container never sweeps it (her decision). `menil` and `cincinnati` are on
-trial: if her first headed sweep fails, they go back to the container's list.
-H-004 holds the list.
-Design: the HEADED block in `sweep_prototype.js`; H-001 to H-007.
+trial: if her first headed sweep fails, they go back to the container.
+`probe_headed.js open` lists every headed venue's listing page, read from the recipes.
+Design: the HEADED block in `sweep_prototype.js`; `pacing.test.js` H-001 to H-007.
 
 **Three modes — never blur them:**
 - **B — THE DEFAULT (her decision).** She opens Chrome, warms it up,
@@ -198,7 +199,7 @@ allowed while she is in it) while her home sweep runs; then stitch, compress, im
 and has its faults fixed before anything is stitched** (her decision):
 the routine runs it on its own run; she starts a session for her home run.
 **The routine has the repo attached** (her setting) — without it the
-session clones read-only and cannot push. It sweeps only the container's 18;
+session clones read-only and cannot push. It sweeps only the container's venues;
 its report never names a home venue (her decision).
 **The report's Changes are grouped by kind, not by venue (her decision)** so she
 sees at a glance what kind of trouble a run has: new shows, your fixes/decisions

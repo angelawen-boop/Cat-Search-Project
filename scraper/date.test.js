@@ -1302,84 +1302,12 @@ test('A-009: a title broken after a colon is rejoined, and a blurb still is not'
     'Four Chicago Artists: Theodore Halkin, Evelyn Statsinger, Barbara Rossi, and Christina Ramberg');
 });
 
-// ── R: which machine sweeps which venue ─────────────────────────────────────
-// Her rule, 20 Sep 2026: the two machines never sweep the same venue. It is in
-// code because remembering it failed — on 13 Sep the container swept all 21,
-// and its met and artic rows were nothing but refusals sitting in the stitched
-// file beside the 171 real rows her own machine had for the same two venues.
+// ── Recipe text helpers (which machine sweeps a venue: routing.test.js) ──────
 
 const SWEEP_FILE = require('fs').readFileSync(
   require('path').join(__dirname, 'sweep_prototype.js'), 'utf8');
 // The VENUES block only: a recipe is a key at two spaces inside it.
 const SWEEP_SRC = SWEEP_FILE.slice(SWEEP_FILE.indexOf('\nconst VENUES = {'), SWEEP_FILE.indexOf('\nconst VENUE_ORDER = '));
-
-// A HYPHENATED KEY IS QUOTED, and the first version of this fixture did not
-// allow for that: it saw 19 recipes, not 21, and reported "tate-modern has no
-// recipe" for a venue that has one. A fixture that cannot see a venue cannot
-// check it — which is the same silence as no fixture at all.
-const RECIPE_KEY = /\n  '?([a-z-]+)'?: \{\n/g;
-
-const routeOf = code => {
-  // Read the recipe's own text rather than importing the scraper, which would
-  // drag Playwright and a browser into a fixture that is pure bookkeeping.
-  const at = SWEEP_SRC.search(new RegExp("\\n  '?" + code + "'?: \\{"));
-  assert.ok(at > -1, code + ' has no recipe');
-  const rest = SWEEP_SRC.slice(at + 1);
-  const next = rest.search(/\n  '?[a-z-]+'?: \{\n/);
-  const block = next > -1 ? rest.slice(0, next) : rest;
-  return /route:\s*'local'/.test(block) ? 'home' : /route:\s*'none'/.test(block) ? 'none' : 'container';
-};
-
-test('R-001: met, artic, mad, brit, orsay, morgan and moma are HERS — the container must not touch them', () => {
-  assert.strictEqual(routeOf('met'), 'home');
-  assert.strictEqual(routeOf('artic'), 'home');
-  // Her ruling, 27 Sep, after a complete, clean sweep from her laptop.
-  assert.strictEqual(routeOf('mad'), 'home');
-  // Her ruling, 28 Sep, after a complete, clean headed sweep from her laptop.
-  assert.strictEqual(routeOf('brit'), 'home');
-  // Her rule, 26 Sep, applied 30 Sep: a complete, clean headed sweep (mode B).
-  assert.strictEqual(routeOf('orsay'), 'home');
-  // The same, 30 Sep: the Morgan's re-run, complete and clean (mode B).
-  assert.strictEqual(routeOf('morgan'), 'home');
-  // And MoMA, 30 Sep: complete and clean in mode B (25 pages), where mode A
-  // was challenged at page 19 on 27 Sep. Swept from now on — her ruling.
-  assert.strictEqual(routeOf('moma'), 'home');
-});
-
-test('R-002: every headed venue is hers — none is left for the container to be refused at', () => {
-  // Her rule, 26 Sep: a venue moves to her laptop only after a complete,
-  // clean sweep from there. moma went early on 22 Sep on one probe page and
-  // came back; brit (28 Sep), orsay, morgan and moma (30 Sep) each had a
-  // complete clean sweep and moved (R-001). A headed venue still routed to
-  // the container would only collect refusals there.
-  const headed = Object.keys(VENUES_ALL).filter(c => VENUES_ALL[c].headed);
-  assert.ok(headed.length >= 4);
-  for (const c of headed) assert.strictEqual(routeOf(c), 'home', c + ' is headed but routed to the container');
-});
-
-test('R-005: moma says out loud that it needs a visible browser', () => {
-  // 22 Sep: the container is refused and so is any browser arriving with no
-  // history. A visible Chrome on a profile she had browsed in was served the
-  // listing and a real exhibition page with no challenge at all.
-
-  // The flag must not be able to lie. `headed: true` is read by the run, which
-  // announces that the engine cannot yet provide that browser — otherwise a
-  // recipe option nothing acts on looks exactly like one that works, and the
-  // next session takes it as evidence the venue is wired.
-  const at = SWEEP_SRC.indexOf("\n  moma: {");
-  const rest = SWEEP_SRC.slice(at + 1);
-  const next = rest.search(/\n  '?[a-z-]+'?: \{\n/);
-  const block = next > -1 ? rest.slice(0, next) : rest;
-  assert.match(block, /headed:\s*true/, 'moma should be marked headed');
-  assert.match(SWEEP_FILE, /VENUES\[c\]\.headed/,
-    'the run must READ the headed flag, not merely carry it');
-
-  // Her scope: current and upcoming only. The archive is not swept.
-  assert.doesNotMatch(block, /calendar\/exhibitions\/history'\s*,\s*ctx/,
-    'moma must not sweep its past archive — her ruling, 22 Sep');
-  // But it stays in isNav, because the listing still LINKS to it.
-  assert.match(block, /isNav[\s\S]*history/, 'the archive link must still be treated as navigation');
-});
 
 test('R-006: moma names its blurb container and drops installations', () => {
   const at = SWEEP_SRC.indexOf("\n  moma: {");
@@ -1407,35 +1335,6 @@ test('R-006: moma names its blurb container and drops installations', () => {
   assert.ok(!rule.test('Ticketed Exhibition'), 'a word we have not seen must NOT be dropped');
   assert.ok(!rule.test('Gallery installation of works on paper'),
     'the word inside a sentence is not the venue\'s tag');
-});
-
-test('R-003: every other venue is the container\'s', () => {
-  for (const c of ['ng', 'rijks', 'acq', 'frick', 'menil', 'va', 'louvre', 'capo',
-                   'uffizi', 'brera', 'khm', 'dellav', 'wallace', 'borghese',
-                   'tate-modern', 'tate-britain', 'lgd', 'jacquemart', 'mam',
-                   'cincinnati']) {
-    assert.strictEqual(routeOf(c), 'container', c + ' should be the container\'s');
-  }
-});
-
-test('R-004: home, container and not-swept do not overlap and cover every venue', () => {
-  const codes = [...SWEEP_SRC.matchAll(RECIPE_KEY)].map(m => m[1]);
-  assert.strictEqual(codes.length, 28, 'expected 28 recipes, found ' + codes.length);
-  const home = codes.filter(c => routeOf(c) === 'home');
-  const container = codes.filter(c => routeOf(c) === 'container');
-  assert.deepStrictEqual(home.sort(), ['artic', 'brit', 'mad', 'met', 'moma', 'morgan', 'orsay']);
-  const none = codes.filter(c => routeOf(c) === 'none');
-  assert.deepStrictEqual(none, ['ashmolean']);
-  assert.strictEqual(container.length, 20);
-  assert.strictEqual(home.length + container.length + none.length, codes.length);
-});
-
-test('R-024: the Ashmolean is added by link only — no machine sweeps it, and the recipe is kept (her decision, 15 Oct)', () => {
-  const S = require('./sweep_prototype.js');
-  assert.strictEqual(routeOf('ashmolean'), 'none');
-  assert.strictEqual(S.machineOf('ashmolean'), 'none');
-  assert.strictEqual(S.machineOf('met'), 'home');
-  assert.strictEqual(S.machineOf('ng'), 'container');
 });
 
 // ── THE MORGAN ────────────────────────────────────────────────────────────

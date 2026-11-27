@@ -355,6 +355,8 @@ async function probeVenue(page, target, budget) {
 // ── The three commands ───────────────────────────────────────────────────────
 
 function openChrome() {
+  // Each headed venue's first listing page, read from its recipe: moving a venue never touches this file.
+  const warmUp = Object.keys(VENUES).filter(c => VENUES[c].headed).map(c => VENUES[c].base + VENUES[c].pages[0].path);
   const bin = resolveChrome();
   if (!bin) {
     console.log('Could not find Chrome. Tell Claude what `which google-chrome` prints.');
@@ -370,19 +372,14 @@ function openChrome() {
   const child = spawn(bin, [
     `--user-data-dir=${PROFILE_DIR}`,
     `--remote-debugging-port=${DEBUG_PORT}`,
-    'https://www.moma.org/calendar/exhibitions',
+    warmUp[0],
   ], { detached: true, stdio: 'ignore' });
   child.unref();
 
   console.log('A browser window should appear. It is a fresh Chrome with no');
   console.log('bookmarks or sign-ins, which is expected.\n');
   console.log('Visit the venue you are about to sweep for a minute, as you normally would:');
-  console.log('   https://www.musee-orsay.fr/en/program/whats-on/exhibitions');
-  console.log('   https://www.themorgan.org/exhibitions/current');
-  console.log('   https://www.britishmuseum.org/exhibitions-events/past-exhibitions');
-  console.log('   https://www.moma.org/calendar/exhibitions');
-  console.log('   https://www.menil.org/exhibitions');
-  console.log('   https://www.cincinnatiartmuseum.org/art/exhibitions/');
+  for (const u of warmUp) console.log('   ' + u);
   console.log('Click into a couple of exhibitions. Let any security check finish.\n');
   console.log('Then LEAVE IT OPEN. The sweep works in a tab of its own in this window');
   console.log('(mode B) and leaves your tabs and the window as they are.');
