@@ -1,0 +1,28 @@
+{
+  "machine": "home",
+  "savedAt": "2026-11-27T08:16:53.362Z",
+  "paceSeconds": 30,
+  "gatekeepers": {
+    "cincinnati": "Cloudflare"
+  },
+  "lanes": {
+    "Cloudflare": {
+      "venues": [
+        "cincinnati"
+      ],
+      "clean": 0,
+      "firstAt": "2026-11-27T08:16:52.692Z",
+      "lastAt": "2026-11-27T08:16:52.692Z",
+      "stopped": {
+        "venue": "cincinnati",
+        "url": "https://www.cincinnatiartmuseum.org/art/exhibitions/",
+        "reason": "BLOCKED_CHALLENGE",
+        "at": "2026-11-27T08:16:52.693Z",
+        "venuePage": 1,
+        "venueCleanBefore": 0,
+        "laneCleanBefore": 0,
+        "minutesIntoLane": 0
+      }
+    }
+  }
+}
