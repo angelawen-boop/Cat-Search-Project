@@ -183,6 +183,8 @@ swept (her decision). Still waiting for her home sweep (the 15 Oct fixes): the M
 Scholastic, commissions, Burdick, crèche) stay out, checked on the name the show's page gives; no credit lines at Met,
 Art Institute, MAD; no "page couldn't be read" card for an empty Art Institute page 2. Brera's bold words mid-sentence:
 not yet seen in a run.
+**OPEN, awaiting her yes — Menil's funder list** (MacAgy's description ends in donors' names, cut at a middle initial):
+proposed fix and proof in `docs/sweep_records/2026-11-27_home_2_plan.md`.
 
 #### 2.2.3 Catalogue lookup generally
 
