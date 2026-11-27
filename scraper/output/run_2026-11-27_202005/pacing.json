@@ -1,0 +1,19 @@
+{
+  "machine": "home",
+  "savedAt": "2026-11-27T09:34:37.600Z",
+  "paceSeconds": 30,
+  "gatekeepers": {
+    "menil": "Cloudflare"
+  },
+  "lanes": {
+    "Cloudflare": {
+      "venues": [
+        "menil"
+      ],
+      "clean": 28,
+      "firstAt": "2026-11-27T09:20:07.429Z",
+      "lastAt": "2026-11-27T09:34:37.247Z",
+      "stopped": null
+    }
+  }
+}

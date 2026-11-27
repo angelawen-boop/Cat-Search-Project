@@ -1,0 +1,149 @@
+[2026-11-27T09:20:05.557Z] Could not tidy old runs (ENOTEMPTY: directory not empty, rename '/home/awen/Cat-Search-Project/scraper/ou) — carrying on.
+[2026-11-27T09:20:05.561Z] Cat Watch Sweep Prototype — starting
+[2026-11-27T09:20:05.561Z] Lookback floor: 2024-07-01
+[2026-11-27T09:20:05.564Z] Routine sweep: menil read shows on, upcoming or closed since 2026-05-27 (--full for everything back to the floor).
+[2026-11-27T09:20:05.564Z] Run directory: /home/awen/Cat-Search-Project/scraper/output/run_2026-11-27_202005
+[2026-11-27T09:20:05.564Z] Machine: home (no proxy, so this is not the container)
+[2026-11-27T09:20:05.565Z] Venues this run: menil
+[2026-11-27T09:20:05.566Z] 
+[2026-11-27T09:20:05.567Z] ────────────────────────────────────────────────────────────
+[2026-11-27T09:20:05.568Z]   PACING — her machine
+[2026-11-27T09:20:05.568Z] ────────────────────────────────────────────────────────────
+[2026-11-27T09:20:05.571Z]   Gap between pages: about 30s, varied 75–125%, per gatekeeper.
+[2026-11-27T09:20:05.574Z]   One venue at a time behind each gatekeeper; different gatekeepers side by side.
+[2026-11-27T09:20:05.574Z]   The first refusal or bot check stops that gatekeeper for the rest of the run.
+[2026-11-27T09:20:05.575Z]   In the Chrome you opened and left open, in a tab of its own (mode B): menil
+[2026-11-27T09:20:05.618Z]   menil: gatekeeper not known yet — read off its first reply.
+[2026-11-27T09:20:05.619Z]   Venues this run: menil
+[2026-11-27T09:20:05.620Z] Proxy: (none — direct egress assumed)
+[2026-11-27T09:20:05.620Z]   Expected on an ordinary machine; Chromium will connect directly.
+[2026-11-27T09:20:05.620Z]   In a Claude Code container this means every venue will fail to load.
+[2026-11-27T09:20:05.620Z] Chromium: /home/awen/.cache/ms-playwright/chromium-1243/chrome-linux64/chrome
+[2026-11-27T09:20:06.645Z] Running 0 venue(s) headless, 0 at a time (one page at a time within each venue)
+[2026-11-27T09:20:06.646Z] Running 1 venue(s) in a visible Chrome, one after another: menil
+[2026-11-27T09:20:07.016Z] [menil] 
+[2026-11-27T09:20:07.016Z] [menil] ────────────────────────────────────────────────────────────
+[2026-11-27T09:20:07.016Z] [menil]   MENIL — The Menil Collection, Houston
+[2026-11-27T09:20:07.016Z] [menil] ────────────────────────────────────────────────────────────
+[2026-11-27T09:20:07.017Z] [menil]   Fetching current: https://www.menil.org/exhibitions
+[2026-11-27T09:20:07.037Z] [menil]   robots.txt (www.menil.org, kept copy of 2026-11-27): states no delay, 0 path(s) off-limits
+[2026-11-27T09:20:07.041Z] [menil]   paced: request 1, gatekeeper not yet known — every lane paused for it
+[2026-11-27T09:20:07.430Z] [menil]   gatekeeper: Cloudflare — read off its reply; this venue is paced in that lane
+[2026-11-27T09:20:11.483Z] [menil]   current: 12 links seen -> 0 navigation, 0 already-seen URL -> 12 collected (0 of them with no readable title)
+[2026-11-27T09:20:11.484Z] [menil]   Fetching upcoming: https://www.menil.org/exhibitions/upcoming
+[2026-11-27T09:20:44.162Z] [menil]   paced: request 2 via Cloudflare, after 33s
+[2026-11-27T09:20:47.792Z] [menil]   upcoming: 3 links seen -> 0 navigation, 0 already-seen URL -> 3 collected (0 of them with no readable title)
+[2026-11-27T09:20:47.803Z] [menil]   Fetching past: https://www.menil.org/exhibitions/past
+[2026-11-27T09:21:18.521Z] [menil]   paced: request 3 via Cloudflare, after 31s
+[2026-11-27T09:21:23.367Z] [menil]     not a temporary exhibition (venue rule), excluded: Foyer Installation: Chryssa, Dorothy Hood, and Terry Winters
+[2026-11-27T09:21:23.965Z] [menil]     not a temporary exhibition (venue rule), excluded: Foyer Installation: Pop Art
+[2026-11-27T09:21:24.287Z] [menil]     not a temporary exhibition (venue rule), excluded: Animals, Monsters, and Creatures from the Collection
+[2026-11-27T09:21:24.376Z] [menil]     not a temporary exhibition (venue rule), excluded: Foyer Installation: René Magritte
+[2026-11-27T09:21:24.376Z] [menil]   past: 12 links seen -> 0 navigation, 0 already-seen URL, 4 labelled permanent by the venue -> 8 collected (0 of them with no readable title)
+[2026-11-27T09:21:24.376Z] [menil]   Fetching current p2: https://www.menil.org/exhibitions?page=2
+[2026-11-27T09:21:56.368Z] [menil]   paced: request 4 via Cloudflare, after 32s
+[2026-11-27T09:22:00.725Z] [menil]     not a temporary exhibition (venue rule), excluded: Foyer Installation: Still, Rauschenberg, and Smith
+[2026-11-27T09:22:00.725Z] [menil]   current p2: 2 links seen -> 0 navigation, 0 already-seen URL, 1 labelled permanent by the venue -> 1 collected (0 of them with no readable title)
+[2026-11-27T09:22:00.725Z] [menil]   Fetching past p2: https://www.menil.org/exhibitions/past?page=2
+[2026-11-27T09:22:33.829Z] [menil]   paced: request 5 via Cloudflare, after 33s
+[2026-11-27T09:22:39.857Z] [menil]     not a temporary exhibition (venue rule), excluded: Portraits of Women from the Collection
+[2026-11-27T09:22:40.164Z] [menil]     not a temporary exhibition (venue rule), excluded: Foyer Installation: On Kawara
+[2026-11-27T09:22:40.279Z] [menil]     not a temporary exhibition (venue rule), excluded: Abstraction after Modernism: Recent Acquisitions
+[2026-11-27T09:22:40.474Z] [menil]   past p2: 12 links seen -> 0 navigation, 0 already-seen URL, 3 labelled permanent by the venue -> 9 collected (0 of them with no readable title)
+[2026-11-27T09:22:40.474Z] [menil]   Fetching current p3: https://www.menil.org/exhibitions?page=3
+[2026-11-27T09:23:05.995Z] [menil]   paced: request 6 via Cloudflare, after 26s
+[2026-11-27T09:23:09.787Z] [menil]   current p3: 0 links seen -> 0 navigation, 0 already-seen URL -> 0 collected (0 of them with no readable title)
+[2026-11-27T09:23:09.787Z] [menil]   PAGINATION end: current p3 added no new exhibitions
+[2026-11-27T09:23:09.787Z] [menil]   Fetching past p3: https://www.menil.org/exhibitions/past?page=3
+[2026-11-27T09:23:39.037Z] [menil]   paced: request 7 via Cloudflare, after 29s
+[2026-11-27T09:23:47.276Z] [menil]   past p3: 12 links seen -> 0 navigation, 0 already-seen URL -> 12 collected (0 of them with no readable title)
+[2026-11-27T09:23:47.276Z] [menil]   Fetching past p4: https://www.menil.org/exhibitions/past?page=4
+[2026-11-27T09:24:10.078Z] [menil]   paced: request 8 via Cloudflare, after 23s
+[2026-11-27T09:24:18.019Z] [menil]   past p4: 12 links seen -> 0 navigation, 0 already-seen URL -> 12 collected (0 of them with no readable title)
+[2026-11-27T09:24:18.019Z] [menil]   PAGINATION end: past p4 — its newest exhibition closed 2023-01-15, before the 2024-07-01 floor, so every later page is older still
+[2026-11-27T09:24:18.020Z] [menil]   lookback (listing): kept 34, dropped 23 closed before 2024-07-01, 9 with no closing date, 0 with no opening date
+[2026-11-27T09:24:18.021Z] [menil]   routine sweep: 14 show(s) closed before 2026-05-27 not swept (--full reads them)
+[2026-11-27T09:24:18.023Z] [menil]   reading 20 individual page(s)…
+[2026-11-27T09:24:18.023Z] [menil]     page 1 of 20
+[2026-11-27T09:24:41.379Z] [menil]   paced: request 9 via Cloudflare, after 23s
+[2026-11-27T09:25:17.157Z] [menil]   paced: request 10 via Cloudflare, after 34s
+[2026-11-27T09:25:50.903Z] [menil]   paced: request 11 via Cloudflare, after 32s
+[2026-11-27T09:26:15.548Z] [menil]   paced: request 12 via Cloudflare, after 23s
+[2026-11-27T09:26:43.384Z] [menil]   paced: request 13 via Cloudflare, after 26s
+[2026-11-27T09:27:08.702Z] [menil]   paced: request 14 via Cloudflare, after 24s
+[2026-11-27T09:27:38.256Z] [menil]   paced: request 15 via Cloudflare, after 28s
+[2026-11-27T09:28:14.458Z] [menil]   paced: request 16 via Cloudflare, after 35s
+[2026-11-27T09:28:41.702Z] [menil]   paced: request 17 via Cloudflare, after 26s
+[2026-11-27T09:28:43.111Z] [menil]     page 10 of 20
+[2026-11-27T09:29:12.001Z] [menil]   paced: request 18 via Cloudflare, after 29s
+[2026-11-27T09:29:44.110Z] [menil]   paced: request 19 via Cloudflare, after 31s
+[2026-11-27T09:30:22.498Z] [menil]   paced: request 20 via Cloudflare, after 37s
+[2026-11-27T09:30:46.750Z] [menil]   paced: request 21 via Cloudflare, after 23s
+[2026-11-27T09:31:18.257Z] [menil]   paced: request 22 via Cloudflare, after 30s
+[2026-11-27T09:31:42.585Z] [menil]   paced: request 23 via Cloudflare, after 23s
+[2026-11-27T09:32:20.425Z] [menil]   paced: request 24 via Cloudflare, after 37s
+[2026-11-27T09:32:54.868Z] [menil]   paced: request 25 via Cloudflare, after 33s
+[2026-11-27T09:33:28.696Z] [menil]   paced: request 26 via Cloudflare, after 32s
+[2026-11-27T09:34:05.858Z] [menil]   paced: request 27 via Cloudflare, after 36s
+[2026-11-27T09:34:07.297Z] [menil]     page 20 of 20
+[2026-11-27T09:34:35.712Z] [menil]   paced: request 28 via Cloudflare, after 28s
+[2026-11-27T09:34:37.586Z] [menil]   Individual pages: 20 got text, 0 no curatorial text, 0 failed
+[2026-11-27T09:34:37.586Z] [menil]   20 page(s) kept on disk as read (pages_kept/menil)
+[2026-11-27T09:34:37.586Z] [menil]     no dates published — treated as a permanent display, excluded: Modern and Contemporary
+[2026-11-27T09:34:37.586Z] [menil]     no dates published — treated as a permanent display, excluded: Surrealism
+[2026-11-27T09:34:37.586Z] [menil]     no dates published — treated as a permanent display, excluded: Africa
+[2026-11-27T09:34:37.586Z] [menil]     no dates published — treated as a permanent display, excluded: 4th–18th Century Europe
+[2026-11-27T09:34:37.586Z] [menil]     no dates published — treated as a permanent display, excluded: Pacific Islands
+[2026-11-27T09:34:37.587Z] [menil]     no dates published — treated as a permanent display, excluded: A Surrealist Wunderkammer
+[2026-11-27T09:34:37.587Z] [menil]     no dates published — treated as a permanent display, excluded: Outdoor Sculpture
+[2026-11-27T09:34:37.587Z] [menil]     no dates published — treated as a permanent display, excluded: Indigenous Americas
+[2026-11-27T09:34:37.587Z] [menil]     no dates published — treated as a permanent display, excluded: Ancient Mediterranean
+[2026-11-27T09:34:37.587Z] [menil]   9 undated row(s) excluded as permanent displays (venue rule)
+[2026-11-27T09:34:37.598Z] [menil]   → 11 exhibitions, 11 with curatorial text → menil.csv
+[2026-11-27T09:34:39.039Z] 
+[2026-11-27T09:34:39.039Z] ────────────────────────────────────────────────────────────
+[2026-11-27T09:34:39.039Z]   QC — faulty rows and exceptions
+[2026-11-27T09:34:39.040Z] ────────────────────────────────────────────────────────────
+[2026-11-27T09:34:39.040Z]   No faulty rows: every row has a title and a known venue code.
+[2026-11-27T09:34:39.040Z]   No exceptions: every venue looks like the last run that had it.
+[2026-11-27T09:34:39.040Z] 
+[2026-11-27T09:34:39.040Z] ────────────────────────────────────────────────────────────
+[2026-11-27T09:34:39.040Z]   SWEEP COMPLETE — SUMMARY
+[2026-11-27T09:34:39.040Z] ────────────────────────────────────────────────────────────
+[2026-11-27T09:34:39.040Z]   MENIL: 11 exhibitions | 11 with text
+[2026-11-27T09:34:39.040Z] 
+[2026-11-27T09:34:39.040Z] ────────────────────────────────────────────────────────────
+[2026-11-27T09:34:39.040Z]   PACING — where each gatekeeper got to
+[2026-11-27T09:34:39.040Z] ────────────────────────────────────────────────────────────
+[2026-11-27T09:34:39.040Z]   Cloudflare: menil — 28 clean page(s)
+[2026-11-27T09:34:39.040Z] 
+[2026-11-27T09:34:39.040Z] ────────────────────────────────────────────────────────────
+[2026-11-27T09:34:39.040Z]   COVERAGE — every link accounted for
+[2026-11-27T09:34:39.040Z] ────────────────────────────────────────────────────────────
+[2026-11-27T09:34:39.040Z]   venue      page                          seen   nav offsite   dup  ongoing  noTitle  collected
+[2026-11-27T09:34:39.040Z]   -----------------------------------------------------------------------------------------------
+[2026-11-27T09:34:39.041Z]   menil      current                         12     0       0     0        0        0         12
+[2026-11-27T09:34:39.041Z]   menil      upcoming                         3     0       0     0        0        0          3
+[2026-11-27T09:34:39.041Z]   menil      past                            12     0       0     0        0        0          8
+[2026-11-27T09:34:39.042Z]   menil      current p2                       2     0       0     0        0        0          1
+[2026-11-27T09:34:39.042Z]   menil      past p2                         12     0       0     0        0        0          9
+[2026-11-27T09:34:39.042Z]   menil      current p3                       0     0       0     0        0        0          0
+[2026-11-27T09:34:39.042Z]   menil      past p3                         12     0       0     0        0        0         12
+[2026-11-27T09:34:39.042Z]   menil      past p4                         12     0       0     0        0        0         12
+[2026-11-27T09:34:39.042Z] 
+[2026-11-27T09:34:39.042Z]   seen      = links matching the venue's selector on that page
+[2026-11-27T09:34:39.042Z]   nav       = site navigation and filter links, not exhibitions
+[2026-11-27T09:34:39.042Z]   offsite   = resolved to another host and was not followed; each one is logged above
+[2026-11-27T09:34:39.042Z]   dup       = an address already collected; noted on the existing row, never dropped silently
+[2026-11-27T09:34:39.042Z]   ongoing   = the venue labelled it a permanent display, not a temporary exhibition; each one is named above
+[2026-11-27T09:34:39.043Z]   noTitle   = rows that still have no exhibition name once the page is fully read
+[2026-11-27T09:34:39.043Z]   collected = rows handed on to the lookback filter and detail-page fetch
+[2026-11-27T09:34:39.043Z] 
+[2026-11-27T09:34:39.043Z] Network bridge: 0 requests served, 0 handed back from files already fetched (not asked again), 0 skipped (image/media/font), 0 failed
+[2026-11-27T09:34:39.043Z] 
+[2026-11-27T09:34:39.043Z] Run directory:   /home/awen/Cat-Search-Project/scraper/output/run_2026-11-27_202005
+[2026-11-27T09:34:39.043Z] Cumulative CSV:  /home/awen/Cat-Search-Project/scraper/output/run_2026-11-27_202005/sweep.csv  (11 rows — menil:11)
+[2026-11-27T09:34:39.043Z] Log written to:  /home/awen/Cat-Search-Project/scraper/output/run_2026-11-27_202005/log_2026-11-27_202005.txt
+[2026-11-27T09:34:39.043Z] Not yet in this run: met, ng, rijks, acq, lgd, borghese, frick, morgan, va, louvre, capo, uffizi, brera, orsay, mam, mad, ashmolean, jacquemart, khm, artic, moma, brit, dellav, tate-modern, tate-britain, wallace, cincinnati
+[2026-11-27T09:34:39.044Z]   Finish it with:  node scraper/sweep_prototype.js --continue
+[2026-11-27T09:34:39.044Z] No de-duplication is applied — see passThrough.
