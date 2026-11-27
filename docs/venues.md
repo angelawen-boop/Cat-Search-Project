@@ -105,9 +105,8 @@ person opening the site in an ordinary browser.
 
 All behind Cloudflare, one pacing lane, all swept from her laptop in a visible
 Chrome on the seeded profile. `menil` and `cincinnati` were marked headed after
-Cloudflare began refusing the container (her decision). `menil`: settled headed —
-its first headed sweep (27 Nov) was clean, every page answered (her decision).
-`cincinnati`: on trial, not yet run headed — back to the container's list if the trial fails.
+Cloudflare began refusing the container (her decision); both settled headed — each one's first
+headed sweep (27 Nov) was clean, every page answered (her decision).
 
 | Mode | What it is | Runs |
 |---|---|---|
