@@ -88,8 +88,8 @@ one-place check refuses a typed-out copy). Naming venues by hand overrides it, a
 
 **`headed: true`: on her machine the venue is swept in a visible Google Chrome
 on the profile `probe_headed.js open` seeds**, paced; never headless there,
-never on an unseeded profile. The container never sweeps it (her decision). `menil` and `cincinnati` are on
-trial: if her first headed sweep fails, they go back to the container.
+never on an unseeded profile. The container never sweeps it (her decision). `cincinnati` is on
+trial: if its first headed sweep fails, it goes back to the container.
 `probe_headed.js open` lists every headed venue's listing page, read from the recipes.
 Design: the HEADED block in `sweep_prototype.js`; `pacing.test.js` H-001 to H-007.
 
@@ -110,7 +110,7 @@ Design: the HEADED block in `sweep_prototype.js`; `pacing.test.js` H-001 to H-00
    hour after a clean run), then push the run (above).
 4. A REFUSED lane waits a day — that wait has evidence behind it.
 
-**Sizes at 30s:** brit ~37 pages, orsay ~64, morgan 18, moma 15; menil and
+**Sizes at 30s:** brit ~37 pages, orsay ~64, morgan 18, moma 15, menil 28 (routine sweep);
 cincinnati not yet run headed.
 
 **Her decisions:** never split one venue across days, and no slower pace.
