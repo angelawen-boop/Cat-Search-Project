@@ -27,6 +27,7 @@ Branches separate in-progress work from known-good work, never components.
 | `claude/restructure-*` (every branch so named, layers L0–L5a, items 1A–5-c7, 4A's fixes, the check, the 4-app/scraper/keys/price rounds), except `-4a-case3` below | One per restructure layer, work item or 4A fix (docs/restructure.md): opened from `main`, merged back once its gates pass; kept as history |
 | `claude/restructure-4a-case3` | The waiting-room test with a test venue name, kept off `main` |
 | `claude/v59-1` | 59.1 (the Theme chip's count, the venue scrubber) — merged into `main`; kept as history |
+| `claude/budapest` | Budapest (`mfab`): recipe, register entry, saved-page test — off `main` until she places it in her venue order (the order tests hold her list) |
 | `claude/restructure-fixes` | The fixes after item 4 — merged into `main` at 59.2; kept as history |
 
 **Holding a push for another session — her decision.** When she says a

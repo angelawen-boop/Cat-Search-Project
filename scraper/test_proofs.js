@@ -35,6 +35,7 @@ const PROVEN = {
   sweep_nov27_pages: { files: ['scraper/fixtures/sweep_nov27_pages.js'], proof: 'build/proofs/sweep_nov27_pages.proof.js' },
   quarantine_moved: { files: ['scraper/fixtures/quarantine_moved.js'], proof: 'build/proofs/quarantine_moved.proof.js' },
   khm_season_pages: { files: ['scraper/fixtures/khm_season_pages.js'], proof: 'build/proofs/khm_season_pages.proof.js' },
+  mfab_pages:      { files: ['scraper/fixtures/mfab_pages.js'], proof: 'build/proofs/mfab_pages.proof.js' },
   pacing:          { files: ['scraper/pacing.test.js'], proof: 'build/proofs/pacing.proof.js' },
   routing:         { files: ['scraper/routing.test.js'], proof: 'build/proofs/routing.proof.js' },
 };

@@ -142,6 +142,13 @@ const CONTINUE = ARGS.includes('--continue');
 // A routine sweep is the default; --full reads every home venue back to the floor.
 const FULL = ARGS.includes('--full');
 const WANTED = ARGS.filter(a => !a.startsWith('--'));
+// A ONE-TIME floor for the venues named on the command line only, by her yes for that run
+// (Budapest back to 2010, her decision; docs/venues.md). Never with no venue named.
+const FROM_ARG = (ARGS.find(a => a.startsWith('--from=')) || '').split('=')[1] || null;
+if (FROM_ARG && (!/^\d{4}-\d{2}-\d{2}$/.test(FROM_ARG) || !WANTED.length)) {
+  console.error('--from=YYYY-MM-DD needs a date and the venue(s) it is for, named on the command line.');
+  process.exit(2);
+}
 
 // WHICH MACHINE IS THIS, and therefore which venues are ITS job. Overridable
 // both ways; see machineVenues() for why this is code and not a habit.
@@ -809,6 +816,7 @@ function afterLookback(endDateStr, floor = LOOKBACK) {
  * cost of being wrong is a sweep that looks complete and silently is not.
  */
 function lookbackFor(venueCode) {
+  if (FROM_ARG && WANTED.includes(venueCode)) return new Date(FROM_ARG);
   const v = VENUES[venueCode];
   return (v && v.lookbackFrom) ? new Date(v.lookbackFrom) : LOOKBACK;
 }
@@ -3271,7 +3279,9 @@ async function collectFromListing(page, opts) {
         const el = card && card.querySelector(sel);
         return el ? el.innerText : '';
       }, opts.datesAt).catch(() => '');
-      const d = dt ? findDateRange(dt, { venue: venueCode }) : null;
+      // `datesText`: a venue's own wording put into words the parser reads (Budapest's
+      // "prolonged until"). Applied to the named field only, and only at that venue.
+      const d = dt ? findDateRange(opts.datesText ? opts.datesText(dt) : dt, { venue: venueCode }) : null;
       if (d && (d.start || d.end || d.latestYear)) dates = { ...d, ongoing: saysOngoing(dt) };
       // A named field saying "Ongoing" and nothing else holds no date, and is
       // still the venue's own answer — the Morgan's J. Pierpont Morgan's
@@ -4136,6 +4146,49 @@ const VENUES = {
     noise: 'infobox|exhibitionlist',
   },
 
+  // Museum of Fine Arts, Budapest, her addition. Written from pages the container saved
+  // (docs/mfab_pages/). One listing holds the current shows and every past year (older years
+  // behind a toggle, already in the page); no upcoming list. The year headings misfile shows,
+  // so each card's own dates decide the lookback. Her decisions (docs/venues.md): the English
+  // listing only; permanent rooms out; print-room shows kept.
+  mfab: {
+    base: 'https://www.mfab.hu',
+    pages: [
+      // The temporary and past sections only; the permanent rooms' section is never read.
+      { path: '/exhibitions/', ctx: 'current/past',
+        within: ['.components-v2-section--exhibition-large', '.components-v2-section--previous-exhibitions'] },
+    ],
+    selector: 'a[href*="/exhibitions/"]',
+    isNav: href => /\/exhibitions\/?$/.test(href.split(/[?#]/)[0]),
+    // Two card shapes: the current card is the link, name then dates (the dates cut off); a
+    // past card's link is its "View" button, the name beside it.
+    title: { heading: false,
+      stripTrailing: /\s+\d{1,2}\s+[A-Za-z]+\.?\s+\d{4}\s*[\u2013\u2014-].*$/,
+      cardName: { within: '.components-v2-card, .components-v2-horizontal-card',
+        sel: '.components-v2-card__title, .components-v2-horizontal-card__title' } },
+    datesAt: { within: '.components-v2-card, .components-v2-horizontal-card',
+      sel: '.components-v2-card__date, .components-v2-horizontal-card__date' },
+    // "27 November 2024 – prolonged until 21 April 2025" (Munkácsy); a Hungarian month on
+    // the English page ("25 Szeptember 2021"); "5 February - 17 May, 2020".
+    datesText: t => t.replace(/\s+prolonged until\s+/i, ' ').replace(/\bSzeptember\b/g, 'September')
+      .replace(/(\d{1,2}\s+[A-Z][a-z]+),\s+(\d{4})\b/g, '$1 $2'),
+    // Three page layouts over the years: the new header and text sections; the lead and
+    // description columns; the oldest, description only.
+    description: '.components-v2-exhibition-header__lead, .components-v2-exhibition-header__description p, '
+      + '.components-v2-text-section p, .page__lead p, .page__description p',
+    // The ticket sidebar, the related artworks, the closing quotation and "Recommended
+    // exhibitions".
+    noise: 'exhibition-header__sidebar|related-artwork|page__message|exhibition-offer',
+    // A picture caption goes by its own paragraph's class (wp-caption-text), not its box: the
+    // box is often left unclosed, so the prose after it sits inside it (Vasarely 120).
+    noiseExempt: 'custom-caption-container',
+    // Opening-days and ticket notices, audio guides, curators, organisers, sponsors and thanks:
+    // a paragraph that opens with one goes whole.
+    creditPara: /^(?:\/\/\s*)?(?:The exhibition (?:can be visited|hall of|is open only)|Open every week|Due to the great interest|An English-language audio guide|(?:The|This) exhibition (?:is|was) (?:co-)?curated by|The curator of the exhibition|(?:Exhibition )?[Cc]urators?:|Conception of the exhibition|Exhibition organi[sz]ed by|(?:Main |Lead )?[Ss]ponsors?\b|(?:Co-operating |Cooperating |Corporate )?[Pp]artners?:|We would like to (?:thank|express)|In cooperation with\b)/,
+    // ...and such a sentence inside a paragraph of prose.
+    dropSentence: /[^.!?]*\bis curated by\b|The exhibition was organi[sz]ed by\b|The exhibition catalogue is available to purchase\b|Curators? of the exhibition\b|On-site guided tours\b/,
+  },
+
   artic: {
     base: 'https://www.artic.edu',
     // A curator or organiser credit is its own paragraph ("X is curated by …").
@@ -4626,6 +4679,7 @@ async function scrapeVenueRows(page, code, { listingOnly = false } = {}) {
       yearHeading: v.yearHeading || null,
       dropQuery: v.dropQuery || null,
       datesAt: pg.datesAt || v.datesAt || null,
+      datesText: v.datesText || null,
       excludeLabelled: v.excludeLabelled || null,
       excludeLinkLabelled: v.excludeLinkLabelled || null,
       excludeTitle: v.excludeTitle || null,

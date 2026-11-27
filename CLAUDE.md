@@ -3,7 +3,7 @@
 **Repo:** `angelawen-boop/Cat-Search-Project`
 
 She collects art-exhibition catalogues. They go out of print fast once a show closes, then resale prices climb. **Art Watch**
-tracks temporary exhibitions at 28 museums and galleries and shows how close each catalogue is to its likely out-of-print
+tracks temporary exhibitions at 29 museums and galleries and shows how close each catalogue is to its likely out-of-print
 window, so she can buy before it is too late.
 
 Two components, and they are **coupled**:
@@ -144,12 +144,15 @@ answered (`docs/sweep_records/`; `docs/sweep_operation.md`, "Headed venues").
 **Access and pace — settled for the four Cloudflare venues:** paced sweeps from her laptop, in a visible Chrome on a profile
 she has browsed in, are clean at all four (`docs/venues.md`, "The headed venues"; `docs/sweep_operation.md`).
 
+**OPEN — Budapest (`mfab`), her addition: recipe built and tested offline, never swept.** Container venue. Its first
+sweep goes back to 2010, once, only with her yes (`docs/venues.md`); the app shows it only after the next publish.
+
 #### Her decisions, per venue — `docs/venues.md`
 
 What is excluded or kept at each venue, her counts, and the Capodimonte arrangement are in `docs/venues.md`, "Her decisions,
 per venue". **Read it before touching a venue's recipe, rows or counts** — her counts are always what should reach the app.
 
-**All 28 have a recipe**, blocked ones included; blocks come and go (`docs/scraper.md` §14).
+**All 29 have a recipe**, blocked ones included; blocks come and go (`docs/scraper.md` §14).
 
 **The original venues were reviewed by her against the live site and re-swept** — `docs/scraper-verification-2026-09-12.md`.
 Read it before touching a venue listed there. The nine venues added since were checked against her counts at intake.
@@ -273,7 +276,7 @@ Cini, Prado, Correr): `docs/app.md`, `docs/add_by_link.md`.
 - **OPEN — the year floor (1990) still holds for Links and Pages** (her ask was to remove year blockers; Paste is done, 56):
   the floor stops a lifespan ("Caravaggio (1571–1610)") being read as a show's run, so lifting it for the page reader needs
   the live proof-page check, old reader beside new, first (`docs/add_by_link.md`, "Pasted pages"; `anyYear` in `dates.js`).
-- **OPEN — a link venue is looked up exactly as the 28 are (shelf AND whole-shop search).** Detroit files a show's book in the
+- **OPEN — a link venue is looked up exactly as the 29 are (shelf AND whole-shop search).** Detroit files a show's book in the
   show's own shop section. Read the lookup log for her lookups since: O'Keeffe found at Detroit? The RA's search (`catalogsearch/result/?q=`) is
   stored at its next lookup; Mauritshuis and Yale stay shelf-only.
 

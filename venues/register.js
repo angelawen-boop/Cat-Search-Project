@@ -379,6 +379,15 @@ const VENUES = [
     sweep: { exBase: null, listUrl: null },
     filed: { addedAt: "2026-10-19T04:12:56.470Z", confirmed: true, english: false, finder: 3, foundBy: "the venue's rule", host: "www.staedelmuseum.de", id: "occ-staedelmuseum-de", name: "St\u00e4del Museum", pageShop: "", searchRule: 2, shelfKind: null, shop: "found", shopCatalogues: "https://liebieghaus.ticketfritz.de/Shop/Index/staedel-publikationen/43885", shopHome: "https://liebieghaus.ticketfritz.de/", shopSearch: null, turnedDown: [], why: null } },
 
+  // Budapest's Museum of Fine Arts. Card and chip names are placeholders until she names it.
+  { id: "mfab", kind: "swept",
+    names: { card: "Budapest", chip: "Budapest", group: null, full: "Sz\u00e9pm\u0171v\u00e9szeti M\u00fazeum", inEnglish: "Museum of Fine Arts, Budapest", aka: [], replaced: [], hers: false },
+    city: "Budapest", country: "Hungary", english: false, language: "Hungarian",
+    shop: { home: "https://muzeumshop.com/", catalogues: null, search: null, unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
+    read: { link: null, sites: [], dateOrder: null, spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
+    sweep: { exBase: "https://www.mfab.hu/exhibitions/", listUrl: "https://www.mfab.hu/exhibitions/" },
+    filed: null },
+
   // Its all-number dates: "From 18/06/2025 to 28/09/2025". Its shop sells no books, so no shop is searched (her decision).
   { id: "uffizi", kind: "swept",
     names: { card: "Uffizi", chip: "Uffizi", group: null, full: "Gallerie degli Uffizi", inEnglish: "Uffizi Galleries", aka: [], replaced: [], hers: true },
