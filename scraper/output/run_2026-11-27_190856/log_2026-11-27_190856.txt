@@ -1,0 +1,59 @@
+[2026-11-27T08:08:56.952Z] Could not tidy old runs (ENOTEMPTY: directory not empty, rename '/home/user/Cat-Search-Project/scraper/ou) — carrying on.
+[2026-11-27T08:08:56.955Z] Cat Watch Sweep Prototype — starting
+[2026-11-27T08:08:56.955Z] Lookback floor: 2024-07-01
+[2026-11-27T08:08:56.955Z] Run directory: /home/user/Cat-Search-Project/scraper/output/run_2026-11-27_190856
+[2026-11-27T08:08:56.955Z] Machine: container (proxy present, so this is the container)
+[2026-11-27T08:08:56.955Z] Venues this run: dellav
+[2026-11-27T08:08:56.956Z] Proxy: http://127.0.0.1:44973
+[2026-11-27T08:08:56.956Z] Chromium: /opt/pw-browsers/chromium-1243/chrome-linux64/chrome
+[2026-11-27T08:08:57.459Z] Running 1 venue(s) headless, 1 at a time (one page at a time within each venue)
+[2026-11-27T08:08:57.604Z] [dellav] 
+[2026-11-27T08:08:57.605Z] [dellav] ────────────────────────────────────────────────────────────
+[2026-11-27T08:08:57.605Z] [dellav]   DELLAV — Gallerie dell'Accademia, Venice
+[2026-11-27T08:08:57.605Z] [dellav] ────────────────────────────────────────────────────────────
+[2026-11-27T08:08:57.605Z] [dellav]   Fetching current: https://www.gallerieaccademia.it/en/
+[2026-11-27T08:08:58.487Z] [dellav]   robots.txt (www.gallerieaccademia.it, read now): states no delay, 0 path(s) off-limits
+[2026-11-27T08:09:09.089Z] [dellav]   NO_RESPONSE on https://www.gallerieaccademia.it/en/ — retrying once
+[2026-11-27T08:09:23.362Z] [dellav]   reply labels (HTTP 200): gatekeeper site:www.gallerieaccademia.it · server: nginx
+[2026-11-27T08:09:25.749Z] [dellav]   current: 2 links seen -> 0 navigation, 1 already-seen URL -> 1 collected (0 of them with no readable title)
+[2026-11-27T08:09:25.752Z] [dellav]   reading 1 individual page(s)…
+[2026-11-27T08:09:25.752Z] [dellav]     page 1 of 1
+[2026-11-27T08:09:35.782Z] [dellav]   NO_RESPONSE on https://www.gallerieaccademia.it/en/exhibition/leiko-ikemura-translucent-the-shape-of-light/ — retrying once
+[2026-11-27T08:09:49.067Z] [dellav]   Individual pages: 1 got text, 0 no curatorial text, 0 failed
+[2026-11-27T08:09:49.068Z] [dellav]   → 1 exhibitions, 1 with curatorial text → dellav.csv
+[2026-11-27T08:09:49.592Z] 
+[2026-11-27T08:09:49.592Z] ────────────────────────────────────────────────────────────
+[2026-11-27T08:09:49.593Z]   QC — faulty rows and exceptions
+[2026-11-27T08:09:49.593Z] ────────────────────────────────────────────────────────────
+[2026-11-27T08:09:49.593Z]   No faulty rows: every row has a title and a known venue code.
+[2026-11-27T08:09:49.593Z]   1 exception(s) against the last run that had each venue:
+[2026-11-27T08:09:49.593Z]     dellav: 1 exhibitions, down from 2 in run_2026-11-19_195713.
+[2026-11-27T08:09:49.593Z] 
+[2026-11-27T08:09:49.593Z] ────────────────────────────────────────────────────────────
+[2026-11-27T08:09:49.593Z]   SWEEP COMPLETE — SUMMARY
+[2026-11-27T08:09:49.593Z] ────────────────────────────────────────────────────────────
+[2026-11-27T08:09:49.593Z]   DELLAV: 1 exhibitions | 1 with text
+[2026-11-27T08:09:49.593Z] 
+[2026-11-27T08:09:49.593Z] ────────────────────────────────────────────────────────────
+[2026-11-27T08:09:49.593Z]   COVERAGE — every link accounted for
+[2026-11-27T08:09:49.593Z] ────────────────────────────────────────────────────────────
+[2026-11-27T08:09:49.593Z]   venue      page                          seen   nav offsite   dup  ongoing  noTitle  collected
+[2026-11-27T08:09:49.593Z]   -----------------------------------------------------------------------------------------------
+[2026-11-27T08:09:49.593Z]   dellav     current                          2     0       0     1        0        0          1
+[2026-11-27T08:09:49.593Z] 
+[2026-11-27T08:09:49.593Z]   seen      = links matching the venue's selector on that page
+[2026-11-27T08:09:49.593Z]   nav       = site navigation and filter links, not exhibitions
+[2026-11-27T08:09:49.593Z]   offsite   = resolved to another host and was not followed; each one is logged above
+[2026-11-27T08:09:49.593Z]   dup       = an address already collected; noted on the existing row, never dropped silently
+[2026-11-27T08:09:49.593Z]   ongoing   = the venue labelled it a permanent display, not a temporary exhibition; each one is named above
+[2026-11-27T08:09:49.593Z]   noTitle   = rows that still have no exhibition name once the page is fully read
+[2026-11-27T08:09:49.593Z]   collected = rows handed on to the lookback filter and detail-page fetch
+[2026-11-27T08:09:49.593Z] 
+[2026-11-27T08:09:49.593Z] Network bridge: 83 requests served, 106 handed back from files already fetched (not asked again), 46 skipped (image/media/font), 28 failed
+[2026-11-27T08:09:49.593Z] 
+[2026-11-27T08:09:49.593Z] Run directory:   /home/user/Cat-Search-Project/scraper/output/run_2026-11-27_190856
+[2026-11-27T08:09:49.593Z] Cumulative CSV:  /home/user/Cat-Search-Project/scraper/output/run_2026-11-27_190856/sweep.csv  (1 rows — dellav:1)
+[2026-11-27T08:09:49.593Z] Log written to:  /home/user/Cat-Search-Project/scraper/output/run_2026-11-27_190856/log_2026-11-27_190856.txt
+[2026-11-27T08:09:49.593Z] Not yet in this run: met, ng, rijks, acq, lgd, borghese, frick, morgan, menil, va, louvre, capo, uffizi, brera, orsay, mam, mad, ashmolean, jacquemart, khm, artic, moma, brit, tate-modern, tate-britain, wallace, cincinnati
+[2026-11-27T08:09:49.593Z]   Finish it with:  node scraper/sweep_prototype.js --continue
+[2026-11-27T08:09:49.593Z] No de-duplication is applied — see passThrough.
