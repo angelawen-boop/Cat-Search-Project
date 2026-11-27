@@ -103,6 +103,10 @@ run by hand and the variable that lets a proof run its test.
   steps it needs; the real page identical with itself, whole and step by step; `--changes-allowed` lets a function's
   text through and nothing else; the check run whole says identical, and catches a fault end to end. Its walk runs
   the page's timers on a stand-in clock and hands back real work in the order asked, so no idle waits: about a minute.
+- **Her machine's pacing and headed rules** (`pacing.test.js`): each rule undone in the scraper — the gatekeeper's
+  name, a bot check served with 200, each wait, one venue per lane, lanes side by side, a refusal stopping its lane,
+  a lane paused for an unknown gatekeeper, what is written, the visible Chrome on her machine only, the profile, the
+  headed list (each of the six, and one added), the port, her tabs left, the no-Chrome message.
 - **The lock itself:** each refusal above, a failed proof never recorded, a proof whose test changed while it ran
   never recorded, and the hook's refusals.
 

@@ -381,6 +381,8 @@ function openChrome() {
   console.log('   https://www.themorgan.org/exhibitions/current');
   console.log('   https://www.britishmuseum.org/exhibitions-events/past-exhibitions');
   console.log('   https://www.moma.org/calendar/exhibitions');
+  console.log('   https://www.menil.org/exhibitions');
+  console.log('   https://www.cincinnatiartmuseum.org/art/exhibitions/');
   console.log('Click into a couple of exhibitions. Let any security check finish.\n');
   console.log('Then LEAVE IT OPEN. The sweep works in a tab of its own in this window');
   console.log('(mode B) and leaves your tabs and the window as they are.');

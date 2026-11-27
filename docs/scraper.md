@@ -410,8 +410,9 @@ from the title. Further exclusions: `docs/venues.md`.
 - **A probe answers only the request it made.** One listing page read as "the
   venue is open", the scraper changed, and causes invented when the sweep failed.
 - **What worked:** a visible Chrome on a profile she has browsed in, paced ~30s,
-  in mode B. All four Cloudflare venues (`moma`, `brit`, `morgan`, `orsay`) are
-  swept that way from her laptop. Evidence: `docs/venues.md`, "The headed venues".
+  in mode B. The four Cloudflare venues (`moma`, `brit`, `morgan`, `orsay`) are
+  swept that way from her laptop; `menil` and `cincinnati` are marked headed, not
+  yet run that way. Evidence: `docs/venues.md`, "The headed venues".
 - **Why the container is refused** at those venues is not known. Don't state a
   cause as fact.
 - **Blocked venues stay wired in:** a refusal costs half a second, leaves marker

@@ -203,9 +203,9 @@ test('H-003 the sweep uses the same profile folder and Chrome list that probe_he
   assert.deepStrictEqual(list(sweep), list(probe));
 });
 
-test('H-004 the headed pile is hers: moma, brit, morgan, orsay', () => {
+test('H-004 the headed pile is hers: moma, brit, morgan, orsay, menil, cincinnati', () => {
   const pile = Object.keys(VENUES).filter(c => VENUES[c].headed).sort();
-  assert.deepStrictEqual(pile, ['brit', 'moma', 'morgan', 'orsay']);
+  assert.deepStrictEqual(pile, ['brit', 'cincinnati', 'menil', 'moma', 'morgan', 'orsay']);
 });
 
 // ── HEADED, MODE B — her Chrome, attached to (29 Sep) ─────────────────────

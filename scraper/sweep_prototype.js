@@ -3762,6 +3762,9 @@ const VENUES = {
   },
 
   menil: {
+    // Headed, her machine only (her decision): Cloudflare refuses the container.
+    headed: true,
+    route: 'local',
     // See excludeUndated in scrapeVenue — her decision on its permanent galleries.
     excludeUndated: true,
     // Her decisions, this venue only (docs/venues.md): "Foyer Installation: …" rotations,
@@ -4345,6 +4348,9 @@ const VENUES = {
   // is its own .thumbnailCallouts.vertical; the plain ones under them are "Explore more"
   // tiles and year links.
   cincinnati: {
+    // Headed, her machine only (her decision): Cloudflare refuses the container.
+    headed: true,
+    route: 'local',
     base: 'https://www.cincinnatiartmuseum.org',
     pages: [
       { path: '/art/exhibitions/', ctx: 'current' },

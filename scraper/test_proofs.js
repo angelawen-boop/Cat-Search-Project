@@ -33,6 +33,7 @@ const PROVEN = {
   lock:            { files: ['scraper/test_proofs.js', 'scraper/run_tests.js', '.claude/hooks/test-guard.js'], proof: 'build/proofs/lock.proof.js' },
   sweep_nov_pages: { files: ['scraper/fixtures/sweep_nov_pages.js'], proof: 'build/proofs/sweep_nov_pages.proof.js' },
   khm_season_pages: { files: ['scraper/fixtures/khm_season_pages.js'], proof: 'build/proofs/khm_season_pages.proof.js' },
+  pacing:          { files: ['scraper/pacing.test.js'], proof: 'build/proofs/pacing.proof.js' },
 };
 
 const rel = f => path.relative(ROOT, path.resolve(ROOT, f)).split(path.sep).join('/');

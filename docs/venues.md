@@ -101,10 +101,12 @@ person opening the site in an ordinary browser.
 
 ---
 
-## 2. The headed venues — `brit`, `orsay`, `morgan`, `moma`
+## 2. The headed venues — `brit`, `orsay`, `morgan`, `moma`, `menil`, `cincinnati`
 
 All behind Cloudflare, one pacing lane, all swept from her laptop in a visible
-Chrome on the seeded profile.
+Chrome on the seeded profile. `menil` and `cincinnati` were marked headed after
+Cloudflare began refusing the container (her decision); on trial, not yet run
+headed — back to the container's list if the trial fails.
 
 | Mode | What it is | Runs |
 |---|---|---|

@@ -138,8 +138,8 @@ read from the marker rows — why the last attempt brought nothing. When the two
 `docs/venues.md`).
 
 **Menil and Cincinnati refuse the container since 19 Nov** — both Cloudflare bot protection, newly switched on (still
-refused at the first page on 27 Nov) — either might have to join the home sweep, headed or headless unknown
-(`docs/sweep_records/`).
+refused at the first page on 27 Nov). **Both moved to her laptop, headed, on trial (her decision)** — back to the container's list if her first headed sweep
+fails (`docs/sweep_records/`; `docs/sweep_operation.md`, "Headed venues").
 
 **Access and pace — settled for the four Cloudflare venues:** paced sweeps from her laptop, in a visible Chrome on a profile
 she has browsed in, are clean at all four (`docs/venues.md`, "The headed venues"; `docs/sweep_operation.md`).
