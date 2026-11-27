@@ -1,7 +1,7 @@
 {
   "host": "www.mam.paris.fr",
   "url": "https://www.mam.paris.fr/robots.txt",
-  "fetchedAt": "2026-11-19T08:59:39.703Z",
+  "fetchedAt": "2026-11-27T08:04:07.308Z",
   "status": 503,
   "readable": false,
   "why": "HTTP 503",

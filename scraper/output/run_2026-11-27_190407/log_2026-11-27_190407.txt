@@ -1,0 +1,123 @@
+[2026-11-27T08:04:07.062Z] Could not tidy old runs (ENOTEMPTY: directory not empty, rename '/home/user/Cat-Search-Project/scraper/ou) — carrying on.
+[2026-11-27T08:04:07.063Z] Cat Watch Sweep Prototype — starting
+[2026-11-27T08:04:07.063Z] Lookback floor: 2024-07-01
+[2026-11-27T08:04:07.063Z] Run directory: /home/user/Cat-Search-Project/scraper/output/run_2026-11-27_190407
+[2026-11-27T08:04:07.063Z] Machine: container (proxy present, so this is the container)
+[2026-11-27T08:04:07.064Z] Venues this run: louvre, mam, cincinnati
+[2026-11-27T08:04:07.064Z] Proxy: http://127.0.0.1:44973
+[2026-11-27T08:04:07.064Z] Chromium: /opt/pw-browsers/chromium-1243/chrome-linux64/chrome
+[2026-11-27T08:04:07.175Z] Running 3 venue(s) headless, 3 at a time (one page at a time within each venue)
+[2026-11-27T08:04:07.293Z] [louvre] 
+[2026-11-27T08:04:07.294Z] [louvre] ────────────────────────────────────────────────────────────
+[2026-11-27T08:04:07.294Z] [louvre]   LOUVRE — Louvre, Paris
+[2026-11-27T08:04:07.294Z] [louvre] ────────────────────────────────────────────────────────────
+[2026-11-27T08:04:07.294Z] [louvre]   Fetching current/upcoming: https://www.louvre.fr/en/exhibitions-and-events/exhibitions
+[2026-11-27T08:04:07.307Z] [mam] 
+[2026-11-27T08:04:07.307Z] [mam] ────────────────────────────────────────────────────────────
+[2026-11-27T08:04:07.307Z] [mam]   MAM — Musée d'Art Moderne de Paris, Paris
+[2026-11-27T08:04:07.307Z] [mam] ────────────────────────────────────────────────────────────
+[2026-11-27T08:04:07.308Z] [mam]   Fetching current: https://www.mam.paris.fr/en/exhibitions
+[2026-11-27T08:04:07.309Z] [cincinnati] 
+[2026-11-27T08:04:07.309Z] [cincinnati] ────────────────────────────────────────────────────────────
+[2026-11-27T08:04:07.309Z] [cincinnati]   CINCINNATI — Cincinnati Art Museum, Cincinnati
+[2026-11-27T08:04:07.309Z] [cincinnati] ────────────────────────────────────────────────────────────
+[2026-11-27T08:04:07.309Z] [cincinnati]   Fetching current: https://www.cincinnatiartmuseum.org/art/exhibitions/
+[2026-11-27T08:04:07.727Z] [louvre]   robots.txt (www.louvre.fr, read now): states no delay, 2 path(s) off-limits
+[2026-11-27T08:04:07.751Z] [cincinnati]   robots.txt (www.cincinnatiartmuseum.org, read now): states no delay, 6 path(s) off-limits
+[2026-11-27T08:04:08.052Z] [mam]   robots.txt (www.mam.paris.fr, read now): unreadable (HTTP 503) — asks nothing we can see
+[2026-11-27T08:04:08.348Z] [cincinnati]   reply labels (HTTP 403): gatekeeper Cloudflare · server: cloudflare
+[2026-11-27T08:04:08.348Z] [cincinnati]   BLOCKED (HTTP 403): https://www.cincinnatiartmuseum.org/art/exhibitions/
+[2026-11-27T08:04:08.348Z] [cincinnati]   FAILED current — BLOCKED_HTTP_403
+[2026-11-27T08:04:08.348Z] [cincinnati]   Fetching upcoming: https://www.cincinnatiartmuseum.org/art/exhibitions/upcoming-exhibitions/
+[2026-11-27T08:04:08.736Z] [mam]   reply labels (HTTP 503): gatekeeper site:www.mam.paris.fr · server: nginx · via: 1.1 pm-gaya-prod-mam-varnish-5c45b69974-j2bg6 (Varnish/9.0) · x-cache: HIT · retry-after: 3600
+[2026-11-27T08:04:08.736Z] [mam]   HTTP 503: https://www.mam.paris.fr/en/exhibitions
+[2026-11-27T08:04:08.737Z] [mam]   FAILED current — HTTP_503
+[2026-11-27T08:04:08.737Z] [mam]   Fetching upcoming: https://www.mam.paris.fr/en/upcoming
+[2026-11-27T08:04:08.817Z] [cincinnati]   reply labels (HTTP 403): gatekeeper Cloudflare · server: cloudflare
+[2026-11-27T08:04:08.817Z] [cincinnati]   BLOCKED (HTTP 403): https://www.cincinnatiartmuseum.org/art/exhibitions/upcoming-exhibitions/
+[2026-11-27T08:04:08.817Z] [cincinnati]   FAILED upcoming — BLOCKED_HTTP_403
+[2026-11-27T08:04:08.817Z] [cincinnati]   Fetching past: https://www.cincinnatiartmuseum.org/art/exhibitions/exhibition-archive/
+[2026-11-27T08:04:08.978Z] [cincinnati]   reply labels (HTTP 403): gatekeeper Cloudflare · server: cloudflare
+[2026-11-27T08:04:08.978Z] [cincinnati]   BLOCKED (HTTP 403): https://www.cincinnatiartmuseum.org/art/exhibitions/exhibition-archive/
+[2026-11-27T08:04:08.978Z] [cincinnati]   FAILED past — BLOCKED_HTTP_403
+[2026-11-27T08:04:08.978Z] [cincinnati]   Fetching past 2025: https://www.cincinnatiartmuseum.org/art/exhibitions/exhibition-archive/2025/
+[2026-11-27T08:04:09.250Z] [cincinnati]   reply labels (HTTP 403): gatekeeper Cloudflare · server: cloudflare
+[2026-11-27T08:04:09.250Z] [cincinnati]   BLOCKED (HTTP 403): https://www.cincinnatiartmuseum.org/art/exhibitions/exhibition-archive/2025/
+[2026-11-27T08:04:09.250Z] [cincinnati]   FAILED past 2025 — BLOCKED_HTTP_403
+[2026-11-27T08:04:09.250Z] [cincinnati]   Fetching past 2024: https://www.cincinnatiartmuseum.org/art/exhibitions/exhibition-archive/2024/
+[2026-11-27T08:04:09.340Z] [mam]   reply labels (HTTP 503): gatekeeper site:www.mam.paris.fr · server: nginx · via: 1.1 pm-gaya-prod-mam-varnish-5c45b69974-j2bg6 (Varnish/9.0) · x-cache: HIT · retry-after: 3600
+[2026-11-27T08:04:09.340Z] [mam]   HTTP 503: https://www.mam.paris.fr/en/upcoming
+[2026-11-27T08:04:09.341Z] [mam]   FAILED upcoming — HTTP_503
+[2026-11-27T08:04:09.341Z] [mam]   Fetching past: https://www.mam.paris.fr/en/archives?type_expo=Local&language=en
+[2026-11-27T08:04:09.441Z] [cincinnati]   reply labels (HTTP 403): gatekeeper Cloudflare · server: cloudflare
+[2026-11-27T08:04:09.441Z] [cincinnati]   BLOCKED (HTTP 403): https://www.cincinnatiartmuseum.org/art/exhibitions/exhibition-archive/2024/
+[2026-11-27T08:04:09.441Z] [cincinnati]   FAILED past 2024 — BLOCKED_HTTP_403
+[2026-11-27T08:04:09.441Z] [cincinnati]   Fetching past 2023: https://www.cincinnatiartmuseum.org/art/exhibitions/exhibition-archive/2023/
+[2026-11-27T08:04:09.616Z] [cincinnati]   reply labels (HTTP 403): gatekeeper Cloudflare · server: cloudflare
+[2026-11-27T08:04:09.616Z] [cincinnati]   BLOCKED (HTTP 403): https://www.cincinnatiartmuseum.org/art/exhibitions/exhibition-archive/2023/
+[2026-11-27T08:04:09.616Z] [cincinnati]   FAILED past 2023 — BLOCKED_HTTP_403
+[2026-11-27T08:04:09.618Z] [cincinnati]   Individual pages: 0 got text, 0 no curatorial text, 0 failed
+[2026-11-27T08:04:09.619Z] [cincinnati]   → 0 exhibitions, 0 with curatorial text → cincinnati.csv
+[2026-11-27T08:04:09.785Z] [mam]   reply labels (HTTP 503): gatekeeper site:www.mam.paris.fr · server: nginx · via: 1.1 pm-gaya-prod-mam-varnish-5c45b69974-j2bg6 (Varnish/9.0) · x-cache: HIT · retry-after: 3600
+[2026-11-27T08:04:09.785Z] [mam]   HTTP 503: https://www.mam.paris.fr/en/archives?type_expo=Local&language=en
+[2026-11-27T08:04:09.786Z] [mam]   FAILED past — HTTP_503
+[2026-11-27T08:04:09.786Z] [mam]   Individual pages: 0 got text, 0 no curatorial text, 0 failed
+[2026-11-27T08:04:09.787Z] [mam]   → 0 exhibitions, 0 with curatorial text → mam.csv
+[2026-11-27T08:04:10.631Z] [louvre]   reply labels (HTTP 200): gatekeeper site:www.louvre.fr · server: wadp2 · x-cache: MISS
+[2026-11-27T08:04:13.274Z] [louvre]   current/upcoming: 7 links seen -> 0 navigation, 0 already-seen URL -> 7 collected (0 of them with no readable title)
+[2026-11-27T08:04:13.274Z] [louvre]   Fetching past: https://www.louvre.fr/en/exhibitions-and-events/past-exhibitions
+[2026-11-27T08:04:15.735Z] [louvre]   reply labels (HTTP 500): gatekeeper site:www.louvre.fr · server: wadp2 · x-cache: HIT · x-cache-hits: 1
+[2026-11-27T08:04:15.735Z] [louvre]   HTTP 500: https://www.louvre.fr/en/exhibitions-and-events/past-exhibitions
+[2026-11-27T08:04:15.735Z] [louvre]   FAILED past — HTTP_500
+[2026-11-27T08:04:15.735Z] [louvre]   Fetching past 2025: https://www.louvre.fr/en/exhibitions-and-events/past-exhibitions?date=2025
+[2026-11-27T08:04:18.030Z] [louvre]   reply labels (HTTP 500): gatekeeper site:www.louvre.fr · server: wadp2 · x-cache: HIT · x-cache-hits: 2
+[2026-11-27T08:04:18.030Z] [louvre]   HTTP 500: https://www.louvre.fr/en/exhibitions-and-events/past-exhibitions?date=2025
+[2026-11-27T08:04:18.030Z] [louvre]   FAILED past 2025 — HTTP_500
+[2026-11-27T08:04:18.030Z] [louvre]   Fetching past 2024: https://www.louvre.fr/en/exhibitions-and-events/past-exhibitions?date=2024
+[2026-11-27T08:04:20.459Z] [louvre]   reply labels (HTTP 500): gatekeeper site:www.louvre.fr · server: wadp2 · x-cache: HIT · x-cache-hits: 1
+[2026-11-27T08:04:20.459Z] [louvre]   HTTP 500: https://www.louvre.fr/en/exhibitions-and-events/past-exhibitions?date=2024
+[2026-11-27T08:04:20.459Z] [louvre]   FAILED past 2024 — HTTP_500
+[2026-11-27T08:04:20.459Z] [louvre]   reading 7 individual page(s)…
+[2026-11-27T08:04:20.459Z] [louvre]     page 1 of 7
+[2026-11-27T08:04:31.020Z] [louvre]   Individual pages: 7 got text, 0 no curatorial text, 0 failed
+[2026-11-27T08:04:31.022Z] [louvre]   → 7 exhibitions, 7 with curatorial text → louvre.csv
+[2026-11-27T08:04:32.229Z] 
+[2026-11-27T08:04:32.229Z] ────────────────────────────────────────────────────────────
+[2026-11-27T08:04:32.229Z]   QC — faulty rows and exceptions
+[2026-11-27T08:04:32.229Z] ────────────────────────────────────────────────────────────
+[2026-11-27T08:04:32.229Z]   No faulty rows: every row has a title and a known venue code.
+[2026-11-27T08:04:32.229Z]   3 exception(s) against the last run that had each venue:
+[2026-11-27T08:04:32.229Z]     louvre: 7 exhibitions, down from 22 in run_2026-11-19_195713.
+[2026-11-27T08:04:32.229Z]     mam: returned NO exhibitions — 16 in run_2026-11-19_195713. Marker rows only now.
+[2026-11-27T08:04:32.229Z]     cincinnati: returned NO exhibitions — 31 in run_2026-11-19_195713. Marker rows only now.
+[2026-11-27T08:04:32.229Z] 
+[2026-11-27T08:04:32.229Z] ────────────────────────────────────────────────────────────
+[2026-11-27T08:04:32.229Z]   SWEEP COMPLETE — SUMMARY
+[2026-11-27T08:04:32.229Z] ────────────────────────────────────────────────────────────
+[2026-11-27T08:04:32.229Z]   CINCINNATI: 0 exhibitions | 0 with text | 6 page(s) blocked/empty
+[2026-11-27T08:04:32.229Z]   MAM: 0 exhibitions | 0 with text | 3 page(s) blocked/empty
+[2026-11-27T08:04:32.229Z]   LOUVRE: 7 exhibitions | 7 with text | 3 page(s) blocked/empty
+[2026-11-27T08:04:32.229Z] 
+[2026-11-27T08:04:32.229Z] ────────────────────────────────────────────────────────────
+[2026-11-27T08:04:32.229Z]   COVERAGE — every link accounted for
+[2026-11-27T08:04:32.229Z] ────────────────────────────────────────────────────────────
+[2026-11-27T08:04:32.229Z]   venue      page                          seen   nav offsite   dup  ongoing  noTitle  collected
+[2026-11-27T08:04:32.229Z]   -----------------------------------------------------------------------------------------------
+[2026-11-27T08:04:32.229Z]   louvre     current/upcoming                 7     0       0     0        0        0          7
+[2026-11-27T08:04:32.229Z] 
+[2026-11-27T08:04:32.229Z]   seen      = links matching the venue's selector on that page
+[2026-11-27T08:04:32.229Z]   nav       = site navigation and filter links, not exhibitions
+[2026-11-27T08:04:32.229Z]   offsite   = resolved to another host and was not followed; each one is logged above
+[2026-11-27T08:04:32.229Z]   dup       = an address already collected; noted on the existing row, never dropped silently
+[2026-11-27T08:04:32.229Z]   ongoing   = the venue labelled it a permanent display, not a temporary exhibition; each one is named above
+[2026-11-27T08:04:32.229Z]   noTitle   = rows that still have no exhibition name once the page is fully read
+[2026-11-27T08:04:32.229Z]   collected = rows handed on to the lookback filter and detail-page fetch
+[2026-11-27T08:04:32.229Z] 
+[2026-11-27T08:04:32.229Z] Network bridge: 173 requests served, 343 handed back from files already fetched (not asked again), 113 skipped (image/media/font), 0 failed
+[2026-11-27T08:04:32.229Z] 
+[2026-11-27T08:04:32.229Z] Run directory:   /home/user/Cat-Search-Project/scraper/output/run_2026-11-27_190407
+[2026-11-27T08:04:32.229Z] Cumulative CSV:  /home/user/Cat-Search-Project/scraper/output/run_2026-11-27_190407/sweep.csv  (19 rows — louvre:10, mam:3, cincinnati:6)
+[2026-11-27T08:04:32.229Z] Log written to:  /home/user/Cat-Search-Project/scraper/output/run_2026-11-27_190407/log_2026-11-27_190407.txt
+[2026-11-27T08:04:32.229Z] Not yet in this run: met, ng, rijks, acq, lgd, borghese, frick, morgan, menil, va, capo, uffizi, brera, orsay, mad, ashmolean, jacquemart, khm, artic, moma, brit, dellav, tate-modern, tate-britain, wallace
+[2026-11-27T08:04:32.229Z]   Finish it with:  node scraper/sweep_prototype.js --continue
+[2026-11-27T08:04:32.229Z] No de-duplication is applied — see passThrough.

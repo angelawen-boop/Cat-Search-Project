@@ -137,8 +137,8 @@ read from the marker rows — why the last attempt brought nothing. When the two
 **Every venue has returned rows at least once.** **`ashmolean` is no longer swept** — added by link only (her decision;
 `docs/venues.md`).
 
-**Menil and Cincinnati refuse the container since 19 Nov** (Menil: Cloudflare bot protection, newly switched on;
-Cincinnati: cause unknown, probably the same) — either might have to join the home sweep, headed or headless unknown
+**Menil and Cincinnati refuse the container since 19 Nov** — both Cloudflare bot protection, newly switched on (still
+refused at the first page on 27 Nov) — either might have to join the home sweep, headed or headless unknown
 (`docs/sweep_records/`).
 
 **Access and pace — settled for the four Cloudflare venues:** paced sweeps from her laptop, in a visible Chrome on a profile
