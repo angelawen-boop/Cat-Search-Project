@@ -340,10 +340,13 @@ so how its listing card marks the gallery is unproven until a sweep). VR-020–V
 
 ### Adding a venue — the intake, in this order (her decision)
 
-**No show page is asked for before step 6.**
+**When the container reaches the site in full, the session does the legwork first (her decision):** it saves
+the listings and the show pages itself, counts the shows and lists where her call is needed; she verifies after
+the recipe is built, never feeds pages first. Her saved pages are asked for only when the container cannot read
+the site as she sees it (refused, a control it cannot click, a page it is shown differently).
 
 1. **Her count and her decisions** (`docs/venues.md`).
-2. **Pages SHE saves**: the listings, and one show page of EVERY address shape.
+2. **Saved pages** (the session's, where the container reads the site in full; otherwise hers): the listings, and one show page of EVERY address shape.
    **One complete list**, addresses copied from a record, never typed from
    memory. Any question about what a page says is answered by opening it, never
    by asking her. **Saved pages are a recipe's guide and its offline test, never
