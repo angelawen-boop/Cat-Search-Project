@@ -183,8 +183,11 @@ swept (her decision). Still waiting for her home sweep (the 15 Oct fixes): the M
 Scholastic, commissions, Burdick, crèche) stay out, checked on the name the show's page gives; no credit lines at Met,
 Art Institute, MAD; no "page couldn't be read" card for an empty Art Institute page 2. Brera's bold words mid-sentence:
 not yet seen in a run.
-**OPEN, awaiting her yes — Menil's funder list** (MacAgy's description ends in donors' names, cut at a middle initial):
-proposed fix and proof in `docs/sweep_records/2026-11-27_home_2_plan.md`.
+Waiting for the next Menil and Cincinnati sweeps (the 27 Nov fixes, `docs/sweep_records/2026-11-27_home_cincinnati_3_close.md`):
+no funders, news-release teasers or curator credits at Menil; no "Curated by" or sponsor line at Cincinnati; Cincinnati's
+Special Features page read and no special feature in the rows.
+**Built, not published — quarantine holds a show its venue moves** (matched on venue + title as well as address;
+`docs/app.md` §4). Reaches her app at the next publish.
 
 #### 2.2.3 Catalogue lookup generally
 

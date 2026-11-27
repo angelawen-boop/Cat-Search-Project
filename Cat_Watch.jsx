@@ -5111,6 +5111,9 @@ function csvParse(text){
 // is not (a reused title could block the wrong row — bounded, and visible on screen).
 const ignoreKeyFor=(venueId,url,title)=>
   venueId+"|"+(url?normalizeUrlKey(url):"t:"+normalizeTitle(title));
+// The keys an import checks against the quarantine: each entry's own, and its venue + title,
+// so a show the venue moves to a new address stays out (Kusama; docs/app.md §4).
+const quarantineKeys=ignored=>new Set(ignored.flatMap(x=>x.title&&x.venueId?[x.key,ignoreKeyFor(x.venueId,"",x.title)]:[x.key]));
 // Conservative duplicate matching for incoming refresh results.
 // Not words: a key for matching titles, never shown.
 const normalizeTitle = v => foldText(v)
@@ -5232,8 +5235,9 @@ function analyzeProForma(text,rows,ignoredKeys,opts){
     if(sd&&!isValidYMD(sd)){notes.push(unreadableDateNote(W.start,sd));sd="";}
     if(ed&&!isValidYMD(ed)){notes.push(unreadableDateNote(W.end,ed));ed="";}
     if(url&&!urlLooksValid(url)){notes.push(say(W.linkGarbled,{url}));url="";}
-    // Quarantined: dropped before anything else sees it. Counted, never silent.
-    if(ignoredKeys&&ignoredKeys.has(ignoreKeyFor(vc,url,title))){ blocked++; continue; }
+    // Quarantined: dropped before anything else sees it — by address, or by venue + title
+    // (quarantineKeys). Counted, never silent.
+    if(ignoredKeys&&(ignoredKeys.has(ignoreKeyFor(vc,url,title))||ignoredKeys.has(ignoreKeyFor(vc,"",title)))){ blocked++; continue; }
     parsed.push({venueCode:vc,title,startDate:sd,endDate:ed,summary:get(r,"summary"),url,topic:topicOf(rowNote),
                  rowNotes:rowNote?[((opts&&opts.notePrefix!=null)?opts.notePrefix:W.sweeperNote)+rowNote]:[],parseNotes:notes,line});
   }
@@ -5304,7 +5308,7 @@ function analyzeProForma(text,rows,ignoredKeys,opts){
 // A sweep file read for the review: the cards, or why there are none. `ignored` is the
 // quarantine list; a file with nothing to propose says so in `nothingNew`.
 function readSweepFile(text,rows,ignored){
-  const res=analyzeProForma(text,rows,new Set(ignored.map(x=>x.key)));
+  const res=analyzeProForma(text,rows,quarantineKeys(ignored));
   if(res.error||res.props.length)return res;
   return {...res,nothingNew:W.nothingNew+((res.coverage||[]).length?say(W.listingPagesUnread,{n:res.coverage.length,s:res.coverage.length===1?"":"s"}):"")};
 }
@@ -5911,7 +5915,7 @@ function readOutcome(input,out,{pages,pastes,rows,ignored}){
   const leftPastes=pasteBoxes(pastes.filter(x=>filledBox(x)&&(!readBox.has(x)||failed.has(readBox.get(x)))));
   const pending=fromPasted?leftPastes:fromPages?leftPages:left;
   if(!got.length)return {pending};
-  const res=analyzeProForma(proFormaCsv(got),rows,new Set(ignored.map(x=>x.key)),{notePrefix:""});
+  const res=analyzeProForma(proFormaCsv(got),rows,quarantineKeys(ignored),{notePrefix:""});
   if(res.error)return {pending,note:res.error};
   if(!res.props.length){
     // Every one quarantined: it says so, not "your ledger already matches" (her wording).

@@ -69,8 +69,8 @@ async function reread(runDir, venue, { S = require('./sweep_prototype.js'), kept
         if (t && t.to === row.title) row.title = t.from;
         await S.fetchIndividualPages(page, [row], venue);
         // A row the page pass now excludes leaves the run, named — as the sweep drops it.
-        if (row._dropByTitle || row._dropByPageLabel) {
-          changes.push({ url: row.url, field: 'excluded', from: before.title, to: row._dropByPageLabel || 'venue rule (title)' });
+        if (row._dropByTitle || row._dropByPageLabel || row._dropNotShow) {
+          changes.push({ url: row.url, field: 'excluded', from: before.title, to: row._dropNotShow || row._dropByPageLabel || 'venue rule (title)' });
           row._drop = true;
           continue;
         }

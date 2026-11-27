@@ -166,7 +166,7 @@ function readOutcome(input,out,{pages,pastes,rows,ignored}){
   const leftPastes=pasteBoxes(pastes.filter(x=>filledBox(x)&&(!readBox.has(x)||failed.has(readBox.get(x)))));
   const pending=fromPasted?leftPastes:fromPages?leftPages:left;
   if(!got.length)return {pending};
-  const res=analyzeProForma(proFormaCsv(got),rows,new Set(ignored.map(x=>x.key)),{notePrefix:""});
+  const res=analyzeProForma(proFormaCsv(got),rows,quarantineKeys(ignored),{notePrefix:""});
   if(res.error)return {pending,note:res.error};
   if(!res.props.length){
     // Every one quarantined: it says so, not "your ledger already matches" (her wording).

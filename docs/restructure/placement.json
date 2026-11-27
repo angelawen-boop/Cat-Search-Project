@@ -215,6 +215,7 @@
   "proFormaCsv": "import/csv.jsx",
   "csvParse": "import/csv.jsx",
   "ignoreKeyFor": "import/csv.jsx",
+  "quarantineKeys": "import/csv.jsx",
   "normalizeTitle": "foundations/text.jsx",
   "dateMs": "import/csv.jsx",
   "dateRangesOverlap": "import/csv.jsx",

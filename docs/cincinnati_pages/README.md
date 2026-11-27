@@ -22,3 +22,12 @@ Fixture: `scraper/fixtures/cincinnati_pages.js`.
   notice's heading. The recipe now reads p or div, stops at the visiting
   sections (`descriptionUntil`), drops the hours lines (`creditPara`) and
   organiser/catalogue-sales sentences (`dropSentence`). CI-022–024.
+
+- `special_features.html` — her save of 27 Nov 2026 (the museum's Special Features page,
+  4 cards). Settled that special features are listed there while on, never on the current
+  page (her decision: excluded at every stage; `docs/venues.md`). N27-06–10.
+- `show_archive_longing.html`, `show_archive_kudita.html` — kept by the 27 Nov home run. A
+  closing "Curated by …" paragraph (`creditPara`) and a "…is made possible by…" sponsor
+  sentence (`dropSentence`). N27-04–05.
+
+Fixture for the 27 Nov pages: `scraper/fixtures/sweep_nov27_pages.js`.

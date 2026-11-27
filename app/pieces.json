@@ -286,6 +286,7 @@
   "urlLooksValid",
   "csvParse",
   "ignoreKeyFor",
+  "quarantineKeys",
   "normalizeTitle",
   "dateMs",
   "dateRangesOverlap",

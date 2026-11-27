@@ -56,6 +56,7 @@ return {
   withChoices,
   foldDuplicateRows,
   ignoreKeyFor,
+  quarantineKeys,
   sameExhibition,
   isMarkerRow,
   setRows: next => { rows = next; },

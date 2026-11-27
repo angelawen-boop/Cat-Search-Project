@@ -21,7 +21,7 @@ should reach the app.
 |---|---|
 | `va` | Displays excluded — **this venue only** |
 | `wallace` | Displays and trails KEPT — **this venue only** |
-| `menil` | 7 permanent galleries excluded; "Foyer Installation: …", "… from the Collection", "Recent Acquisitions" excluded — **this venue only** |
+| `menil` | 7 permanent galleries excluded; "Foyer Installation: …", "… from the Collection", "Recent Acquisitions" excluded — **this venue only**. A show's text stops at its page's "Support" heading (funders, news-release teasers below it); the curator-credit paragraph goes (`docs/menil_pages/`) |
 | `tate-modern`, `tate-britain` | Exhibitions only, never collection displays. The "recently opened" page is not an archive and is not fetched |
 | `tate-britain` | Ofili excluded, on the venue's own ONGOING label. Turner Prize and the Tate Britain Commission excluded. Past exhibitions from the What's On calendar, 1 Jul 2024 to the day of the run — `expandDateRange`; 20 a page, every page read (`TATE_PAGES`; Whistler sat on page 2). A session nested under a show is not a show |
 | `tate-modern` | **Never its past exhibitions**, though she knows where they are |
@@ -41,7 +41,7 @@ should reach the app.
 | `capo` | **Not count-verified and never will be** — see below |
 | `brera`, `borghese` | Their single extra row is a marker for a genuinely empty upcoming page |
 | `ashmolean` | **Not swept — added by link only** (her decision): `route: 'none'`, recipe kept (naming it still sweeps it); cards under "Occasional" after the Royal Academy, no chip (`names.chip: null`; her decision). When swept: **everything kept** — major, free, displays, past; her count: current 0 major + 4 free, upcoming 2 + 1, past 4 + 13. **Titles:** full name from the page header, ordinary capitals by code (`capsTitles`, `pageTitle`) |
-| `cincinnati` | Nothing excluded. Her count: current 2, upcoming 2, past 2026 **4**, 2025 **14**, 2024 **9** — 31. Pages saved by the container, her yes for this venue only. Swept since (container, 15 Oct: 31 rows) |
+| `cincinnati` | **Special features excluded, at every stage** — never on its current page, filed later in the same archive as its exhibitions, often at a new address. The sweep reads its Special Features page first and keeps the names (`scraper/output/not_shows/cincinnati.json`, pushed with the runs); a kept name is dropped wherever it turns up. Those that closed before the sweep read that page were written in by hand, each with the evidence (special-features address, its page or card calling it one, or missing from the current page while on). Her count (4 Oct, before this decision): current 2, upcoming 2, past 2026 **4**, 2025 **14**, 2024 **9** — 31. Pages saved by the container, her yes for this venue only |
 
 **Whether displays count is HERS, and varies by venue.** Two venues disagreeing
 is the expected state, not a contradiction.

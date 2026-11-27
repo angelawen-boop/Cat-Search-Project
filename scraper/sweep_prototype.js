@@ -30,6 +30,7 @@ const fetch = require('node-fetch');
 const { HttpsProxyAgent } = require('https-proxy-agent');
 const fs = require('fs');
 const path = require('path');
+const os = require('os');
 const { seenOn, listingNote } = require('./listing_note.js');
 const { windowFrom, outsideWindow, recordWindow } = require('./routine_window.js');
 const { CSV_HEADER, MARKER_SENTINEL, sweepCell, csvText } = require('./pro_forma.js');
@@ -98,6 +99,39 @@ const SKIP_RESOURCE_TYPES = new Set(['image', 'media', 'font']);
 // could silently replace a full one, and stapling runs back together was left
 // to a person following prose rules. Both are now structurally impossible.
 const OUT_DIR = path.join(__dirname, 'output');
+
+// NAMES A VENUE FILES APART FROM ITS EXHIBITIONS (a recipe's `notShows` page: Cincinnati's
+// special features, her decision — docs/venues.md). Read off that page every sweep and kept
+// here for good, because the museum later files them in the same archive as its exhibitions,
+// often at a new address; so they are matched by name. One file per venue, pushed with the runs.
+let NOT_SHOWS_DIR = path.join(OUT_DIR, 'not_shows');
+const notShowKey = t => String(t || '').normalize('NFKC').replace(/[‘’]/g, "'")
+  .replace(/[“”]/g, '"').replace(/[‐-―]/g, '-').replace(/\s+/g, ' ').trim().toLowerCase();
+const notShowsFile = code => path.join(NOT_SHOWS_DIR, `${code}.json`);
+function readNotShows(code) {
+  try { return JSON.parse(fs.readFileSync(notShowsFile(code), 'utf8')); } catch { return { names: [] }; }
+}
+const notShowNames = code => new Set(readNotShows(code).names.map(n => notShowKey(n.title)));
+// Adds the names not yet kept; returns how many were new.
+function rememberNotShows(code, titles, today = new Date()) {
+  const kept = readNotShows(code), have = new Set(kept.names.map(n => notShowKey(n.title)));
+  let added = 0;
+  for (const t of titles) {
+    if (!t || have.has(notShowKey(t))) continue;
+    have.add(notShowKey(t));
+    kept.names.push({ title: t, seen: ymdUTC(today) });
+    added++;
+  }
+  if (added) {
+    fs.mkdirSync(NOT_SHOWS_DIR, { recursive: true });
+    fs.writeFileSync(notShowsFile(code), JSON.stringify(kept, null, 2) + '\n', 'utf8');
+  }
+  return added;
+}
+// The page of names a venue keeps apart (`notShows` on its recipe: path, ctx, label), if any.
+const notShowsPage = code => (VENUES[code] && VENUES[code].notShows) || null;
+// A fixture keeps its names in a scratch folder, never the real one.
+const useNotShowsDirForFixtures = dir => { NOT_SHOWS_DIR = dir; };
 
 // VENUE_ORDER is derived from VENUES itself, further down — see the note
 // beside it. It is declared there rather than here because it cannot be
@@ -630,7 +664,12 @@ const MIN_BODY_CHARS = 200;     // below this a page is a shell, not content
 // runs in a fixture too — and pacing and robots.txt, which fixtures set
 // themselves (usePacerForFixtures, useRobotsForFixtures).
 const WAITS = { content: CONTENT_TIMEOUT, scrollStep: 450, beforeRetry: 2000 };
-function useFixtureWaits() { WAITS.content = 1; WAITS.scrollStep = 0; WAITS.beforeRetry = 0; }
+// A fixture also starts with no names kept apart (`notShows`): it never reads or writes the
+// real list in output/; one that tests the list names its own folder (useNotShowsDirForFixtures).
+function useFixtureWaits() {
+  WAITS.content = 1; WAITS.scrollStep = 0; WAITS.beforeRetry = 0;
+  NOT_SHOWS_DIR = fs.mkdtempSync(path.join(os.tmpdir(), 'cw-not-shows-'));
+}
 
 // How many pages of a numbered archive to follow before giving up. See
 // followPagination() — this is a runaway guard, never the intended stop, so
@@ -3793,6 +3832,13 @@ const VENUES = {
     // listing tabs.
     selector: 'a[href*="/exhibition/"]',
     isNav: href => /\/exhibition\/?$/.test(href),
+    // The text stops at the page's "Support" heading: the funders' paragraph and the
+    // news-release teasers sit below it (MacAgy's funder list).
+    description: 'main p',
+    descriptionUntil: /^Support\b/,
+    // The curator credit opens its own paragraph ("X is curated by …"): no row carries a
+    // credit line (CLAUDE.md §2.1).
+    creditPara: /^[^.]{0,160}\b(?:is|was) (?:co-)?curated by\b/,
     // Its cards link only the image, so the name comes from the card above: NAME, run
     // dates, then the building in capitals ("Fragility September 10, 2026-January 24,
     // 2027 MENIL DRAWING INSTITUTE"). The tail is cut at the month (title case) or at
@@ -4359,6 +4405,9 @@ const VENUES = {
     // What she types to name it on the command line (her decision).
     command: 'cinci',
     base: 'https://www.cincinnatiartmuseum.org',
+    // Special features are not shows she wants, at any stage (her decision): their own page's
+    // names are kept, and dropped wherever they turn up. Read before the listings.
+    notShows: { path: '/art/exhibitions/special-features/', ctx: 'special features', label: 'special feature' },
     pages: [
       { path: '/art/exhibitions/', ctx: 'current' },
       { path: '/art/exhibitions/upcoming-exhibitions/', ctx: 'upcoming' },
@@ -4384,11 +4433,12 @@ const VENUES = {
     // under its own h3 above the prose).
     descriptionUntil: /^(?:Accessing the Exhibition|Visitor Tips|Featured Media)\b/,
     // ...and the notice's own lines go, whole: "Due to popular demand…",
-    // "Thursday, January 16: Open until 9 p.m. …", "*Not a member? …".
-    creditPara: /^(?:Due to popular demand\b|\*?Not a member\?|(?:Mon|Tues|Wednes|Thurs|Fri|Satur|Sun)day, [A-Z][a-z]+ \d{1,2}:)/,
-    // Organiser credits and catalogue-sales lines go: no row carries a credit line
-    // (CLAUDE.md §2.1).
-    dropSentence: /[^.!?]*\bis organized by\b|[^.!?]*\bcatalogue is available for purchase\b/,
+    // "Thursday, January 16: Open until 9 p.m. …", "*Not a member? …"; and a closing
+    // "Curated by …" paragraph (Longing).
+    creditPara: /^(?:Due to popular demand\b|\*?Not a member\?|(?:Mon|Tues|Wednes|Thurs|Fri|Satur|Sun)day, [A-Z][a-z]+ \d{1,2}:|Curated by\b)/,
+    // Organiser and sponsor credits and catalogue-sales lines go: no row carries a credit
+    // line (CLAUDE.md §2.1; "…is made possible by…", Tamary Kudita).
+    dropSentence: /[^.!?]*\bis organized by\b|[^.!?]*\bis made possible by\b|[^.!?]*\bcatalogue is available for purchase\b/,
   },
 };
 
@@ -4444,12 +4494,36 @@ async function scrapeVenueRows(page, code, { listingOnly = false } = {}) {
 
   // A QUEUE, NOT A FIXED LIST, because numbered archives cannot be counted in
   // advance. See followPagination() at the bottom of this loop.
-  const queue = listingPages(v);
+  // The page of names kept apart, if the venue has one, goes first (`notShows`).
+  const nsPage = notShowsPage(code);
+  const queue = [...(nsPage ? [{ path: nsPage.path, ctx: nsPage.ctx, notShows: nsPage.label }] : []), ...listingPages(v)];
+  let notShows = null;
   for (let qi = 0; qi < queue.length; qi++) {
     const pg = queue[qi];
     const url = v.base + pg.path;
     log(`  Fetching ${pg.ctx}: ${url}`);
     const r = await safeGoto(page, url, code, pg.ctx);
+
+    // THE PAGE OF NAMES KEPT APART (`notShows`): its cards are remembered, never
+    // rows. A refusal leaves no marker — the names already kept still apply.
+    if (pg.notShows) {
+      if (r.ok) {
+        await autoScroll(page);
+        const listed = [];
+        await collectFromListing(page, {
+          venueCode: code, ctx: pg.ctx, base: v.base, rows: listed, seenUrls: new Set(), urlToRow: new Map(),
+          selector: scopeSelector(pg.within || v.within, pg.selector || v.selector), isNav: v.isNav,
+          listingPaths: listingPages(v).map(p => p.path), datesAt: pg.datesAt || v.datesAt || null,
+        });
+        const added = rememberNotShows(code, listed.map(x => x.title));
+        log(`  ${pg.ctx}: ${listed.length} listed, ${added} new — kept as ${pg.notShows}s, never rows`);
+        if (!listed.length) log(`  NO NAMES ${pg.ctx}: page loaded and was read, but no card matched — the names already kept still apply`);
+      } else {
+        log(`  FAILED ${pg.ctx} — ${r.reason}; the ${pg.notShows}s already kept still apply`);
+      }
+      notShows = { label: pg.notShows, names: notShowNames(code) };
+      continue;
+    }
 
     // A listing page that could not be read ALWAYS leaves a marker row, for
     // every venue. This was a per-venue opt-in until 10 Sep, set only on
@@ -4650,6 +4724,17 @@ async function scrapeVenueRows(page, code, { listingOnly = false } = {}) {
   // whole listing, before anything is cut. See placeTravellingRuns().
   if (placesOf(code).length > 1) placeTravellingRuns(rows);
 
+  // A NAME THE VENUE FILES APART (`notShows`, her decision), dropped once the whole listing is
+  // read: a card's name often arrives on its second link, after the row is made.
+  if (notShows) {
+    const kept = rows.filter(r => {
+      if (!r.title || r.title.startsWith('[') || !notShows.names.has(notShowKey(r.title))) return true;
+      log(`    a ${notShows.label} (her decision), excluded: ${r.title}`);
+      return false;
+    });
+    rows.splice(0, rows.length, ...kept);
+  }
+
   // LISTING ONLY — for a diagnostic or a one-off repair that needs what the
   // listing pages say (titles, addresses) read exactly as a sweep reads them,
   // without opening every exhibition's own page. A sweep never passes it.
@@ -4692,7 +4777,8 @@ async function scrapeVenueRows(page, code, { listingOnly = false } = {}) {
   const before = toFetch.length;
   for (let i = toFetch.length - 1; i >= 0; i--) {
     const r = toFetch[i];
-    if (r._dropByTitle) log(`    not a temporary exhibition (venue rule), excluded: ${r.title}`);
+    if (r._dropNotShow) log(`    a ${r._dropNotShow} (her decision), excluded: ${r.title}`);
+    else if (r._dropByTitle) log(`    not a temporary exhibition (venue rule), excluded: ${r.title}`);
     else if (r._dropByPageLabel) log(`    the venue's own page labels this a ${r._dropByPageLabel}, excluded: ${r.title || r.url}`);
     else continue;
     toFetch.splice(i, 1);
@@ -5095,6 +5181,7 @@ async function fetchIndividualPages(page, rows, venueCode) {
 async function fetchIndividualPagesEach(page, rows, venueCode) {
   let fetched = 0, failed = 0, noText = 0, reused = 0, keptNow = 0;
   const PAGE_KEEP = pageKeepFor(venueCode);
+  const nsPage = notShowsPage(venueCode), notShowSet = nsPage ? notShowNames(venueCode) : null;
   // Skip anything already known to have closed before the lookback floor —
   // no point spending a page load on an exhibition we will discard.
   // Her one-time exceptions are read like any kept row.
@@ -5298,6 +5385,11 @@ async function fetchIndividualPagesEach(page, rows, venueCode) {
         row._dropByTitle = true;
         continue;
       }
+      // A name the venue files apart (`notShows`), again on the name the page gave.
+      if (notShowSet && row.title && notShowSet.has(notShowKey(row.title))) {
+        row._dropNotShow = nsPage.label;
+        continue;
+      }
 
       const text = await getCuratorialText(page, vrec.description, vrec.noise, vrec.noiseExempt, vrec.creditPara, vrec.keepBold, vrec.dropSentence, vrec.descriptionSkip, vrec.descriptionUntil);
       if (text) {
@@ -5458,7 +5550,7 @@ async function fetchIndividualPagesEach(page, rows, venueCode) {
       // already holds — no request is made to keep a page.
       if (keepFrom && landed && !broke) {
         const html = await page.content().catch(() => '');
-        const outcome = row._dropByPageLabel || row._dropByTitle ? 'dropped'
+        const outcome = row._dropByPageLabel || row._dropByTitle || row._dropNotShow ? 'dropped'
           : fetched > keepFrom.fetched ? 'text'
           : noText > keepFrom.noText ? 'noText' : 'other';
         if (PAGE_KEEP.save(venueCode, row.url, {
@@ -6219,6 +6311,8 @@ module.exports = {
   gatekeeperFrom, objectionFrom, laneCooldown, knownGatekeepers, makePacer, pacedWithheld, usePacerForFixtures, usePageKeepForFixtures, pageKeepFor, UNWIRED,
   // Every fixture that drives a browser — see PAUSES THAT ONLY A LIVE PAGE CAN USE.
   useFixtureWaits,
+  // Cincinnati's special features — sweep_nov27_pages.js.
+  notShowKey, readNotShows, rememberNotShows, useNotShowsDirForFixtures,
   // HEADED: pure, or a path — pacing.test.js H-001 to H-003; mode B, H-005 to H-007.
   splitHeaded, headedProfileSeeded, HEADED_PROFILE_DIR, resolveChrome, HEADED_DEBUG_PORT, attachHeadedContext,
   machineOf, namedVenues,
