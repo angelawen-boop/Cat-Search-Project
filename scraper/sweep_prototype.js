@@ -289,9 +289,14 @@ function machineOf(c) {
   return r === 'local' ? 'home' : r === 'none' ? 'none' : 'container';
 }
 
+/** The venues named on the command line, by code or by the recipe's short `command` name (`cinci`). */
+function namedVenues(wanted, venues = VENUES) {
+  return Object.keys(venues).filter(c => wanted.includes(c) || (venues[c].command && wanted.includes(venues[c].command)));
+}
+
 function venuesForThisRun() {
   const asked = WANTED.length
-    ? VENUE_ORDER.filter(c => WANTED.includes(c))
+    ? namedVenues(WANTED)
     : machineVenues();
   return (CONTINUE && !WANTED.length) ? asked.filter(c => !venueIsDone(c)) : asked;
 }
@@ -4351,6 +4356,8 @@ const VENUES = {
     // Headed, her machine only (her decision): Cloudflare refuses the container.
     headed: true,
     route: 'local',
+    // What she types to name it on the command line (her decision).
+    command: 'cinci',
     base: 'https://www.cincinnatiartmuseum.org',
     pages: [
       { path: '/art/exhibitions/', ctx: 'current' },
@@ -6214,7 +6221,7 @@ module.exports = {
   useFixtureWaits,
   // HEADED: pure, or a path — pacing.test.js H-001 to H-003; mode B, H-005 to H-007.
   splitHeaded, headedProfileSeeded, HEADED_PROFILE_DIR, resolveChrome, HEADED_DEBUG_PORT, attachHeadedContext,
-  machineOf,
+  machineOf, namedVenues,
   saysOngoing, applyLookback, expandYearArchive, expandDateRange, expandFromToday, keptDespiteLookback, withoutQuery, listingPages, followPagination,
   detectUnwiredPagination, recipeDrivenParams,
   // Not pure — exported so a one-off diagnostic can reach a venue the same way

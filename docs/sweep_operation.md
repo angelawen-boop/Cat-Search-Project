@@ -5,6 +5,7 @@
 ```
 node scraper/sweep_prototype.js              everything for this machine
 node scraper/sweep_prototype.js ng rijks     named venues only
+node scraper/sweep_prototype.js cinci        Cincinnati, by its short name (a recipe's `command`)
 node scraper/sweep_prototype.js --continue   finish the newest run
 node scraper/sweep_prototype.js --full       home venues back to 1 July 2024, outside the routine
 node scraper/sweep_prototype.js --jobs=6     venues at once (default 4)

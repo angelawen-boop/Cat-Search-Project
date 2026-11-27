@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 /*
  * routing.proof.js — which machine sweeps which venue (scraper/routing.test.js) proven by planted faults: each rule
- * undone in a copy of the scraper, each caught by its own test; and a venue moved either way, with no test touched,
- * let through. Run through the watched runner: node scraper/run_tests.js --prove routing
+ * undone in a copy of the scraper, each caught by its own test (a short command name included); and a venue moved
+ * either way, with no test touched, let through. Run through the watched runner: node scraper/run_tests.js --prove routing
  */
 'use strict';
 const { proof } = require('./kit.js');
@@ -27,6 +27,9 @@ P.fault('RP-06', "moma's past archive swept", [[SP, once(`      { path: '/calend
   `      { path: '/calendar/exhibitions', ctx: 'current/upcoming' },\n      { path: '/calendar/exhibitions/history', ctx: 'past' },\n`)]], check, own('RT-005'));
 P.fault('RP-07', "moma's archive link read as a show", [[SP, once(`    isNav: href => /\\/calendar\\/exhibitions\\/?$/.test(href)\n                || /\\/calendar\\/exhibitions\\/history\\/?$/.test(href),`,
   `    isNav: href => /\\/calendar\\/exhibitions\\/?$/.test(href),`)]], check, own('RT-005'));
+P.fault('RP-08', 'a short command name not read', [[SP, once(`wanted.includes(c) || (venues[c].command && wanted.includes(venues[c].command))`, `wanted.includes(c)`)]], check, own('RT-006'));
+P.fault('RP-09', 'a short command name that is another venue\'s code', [[SP, once(`    command: 'cinci',\n`, `    command: 'menil',\n`)]], check, own('RT-006'));
+P.fault('RP-10', 'two venues sharing a short command name', [[SP, once(`  ng: {\n`, `  ng: {\n    command: 'cinci',\n`)]], check, own('RT-006'));
 P.control('RP-C1', 'a venue moved to her laptop, headed, with no test touched', [[SP, once(`  ng: {\n`, `  ng: {\n    headed: true,\n    route: 'local',\n`)]], check, /^# fail 0$/m);
 P.control('RP-C2', 'a venue moved back to the container, with no test touched', [[SP, once(MENIL, `  menil: {\n`)]], check, /^# fail 0$/m);
 P.done();
