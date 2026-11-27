@@ -515,11 +515,12 @@ the third option.
 - **Keyed on normalised URL** (venue + title with no URL). Dropped in
   `analyzeProForma`'s first pass. A venue retitling a show does not undo it
   (fixtures 10–13).
-- **A venue moving a show to a new address does not undo it either** (her ask: Cincinnati
-  moved Kusama into its archive): an import also drops a row whose venue + title match a
-  quarantined entry (`quarantineKeys`; `quarantine_moved.js`). The trade-off: a genuinely new
-  show reusing a quarantined show's exact title at the same venue is held back too — counted
-  in "blocked", and released from the quarantine panel.
+- **A show its venue moves follows its quarantine — that show only** (her decision; Kusama, moved into
+  Cincinnati's archive): a row at a new address that matches a quarantined entry by venue, name and
+  overlapping dates — the test that offers a Change card for a ledger card — stays out, and its new
+  address is quarantined too (`movedFromQuarantine`; `quarantine_moved.js`). Entries carry the show's
+  dates for this; an entry with no dates is never matched on its name alone, so a later show reusing
+  the name comes in.
 - **Lives in the page's store AND her export** (her decision). Her case:
   quarantine two rows, Reset, feed the same file — with one home in the ledger,
   the junk is back. But it can't live only in the store like the sweep log,

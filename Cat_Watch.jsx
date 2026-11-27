@@ -5111,9 +5111,11 @@ function csvParse(text){
 // is not (a reused title could block the wrong row — bounded, and visible on screen).
 const ignoreKeyFor=(venueId,url,title)=>
   venueId+"|"+(url?normalizeUrlKey(url):"t:"+normalizeTitle(title));
-// The keys an import checks against the quarantine: each entry's own, and its venue + title,
-// so a show the venue moves to a new address stays out (Kusama; docs/app.md §4).
-const quarantineKeys=ignored=>new Set(ignored.flatMap(x=>x.title&&x.venueId?[x.key,ignoreKeyFor(x.venueId,"",x.title)]:[x.key]));
+// A quarantined show the venue has moved: the entry at the same venue with the same name whose
+// dates overlap the row's — the same test that offers a Change card for a ledger card. Both must
+// carry dates, so a later show reusing the name is never caught (docs/app.md §4).
+const movedFromQuarantine=(quarantined,vc,title,sd,ed)=>
+  !sd||!ed?null:(quarantined||[]).find(q=>q.venueId===vc&&q.startDate&&q.endDate&&normalizeTitle(q.title)===normalizeTitle(title)&&dateRangesOverlap({startDate:sd,endDate:ed},q))||null;
 // Conservative duplicate matching for incoming refresh results.
 // Not words: a key for matching titles, never shown.
 const normalizeTitle = v => foldText(v)
@@ -5205,6 +5207,7 @@ function analyzeProForma(text,rows,ignoredKeys,opts){
   // Counts she can reconcile: every row read is accounted for (docs/app.md §3
   // "Counts that reconcile").
   let silent=0, blocked=0;
+  const moved={};
   // Rows the sweep should never have produced. Collected, then the whole file
   // is refused — see the note at the check itself.
   const faults=[];
@@ -5235,9 +5238,13 @@ function analyzeProForma(text,rows,ignoredKeys,opts){
     if(sd&&!isValidYMD(sd)){notes.push(unreadableDateNote(W.start,sd));sd="";}
     if(ed&&!isValidYMD(ed)){notes.push(unreadableDateNote(W.end,ed));ed="";}
     if(url&&!urlLooksValid(url)){notes.push(say(W.linkGarbled,{url}));url="";}
-    // Quarantined: dropped before anything else sees it — by address, or by venue + title
-    // (quarantineKeys). Counted, never silent.
-    if(ignoredKeys&&(ignoredKeys.has(ignoreKeyFor(vc,url,title))||ignoredKeys.has(ignoreKeyFor(vc,"",title)))){ blocked++; continue; }
+    // Quarantined: dropped before anything else sees it. Counted, never silent.
+    if(ignoredKeys&&ignoredKeys.has(ignoreKeyFor(vc,url,title))){ blocked++; continue; }
+    // The same show at a new address: its new address is quarantined too (`moved`), and it stays out.
+    if(movedFromQuarantine(opts&&opts.quarantined,vc,title,sd,ed)){
+      moved[ignoreKeyFor(vc,url,title)]={venueId:vc,title,startDate:sd,endDate:ed,at:new Date().toISOString(),state:"blocked"};
+      blocked++; continue;
+    }
     parsed.push({venueCode:vc,title,startDate:sd,endDate:ed,summary:get(r,"summary"),url,topic:topicOf(rowNote),
                  rowNotes:rowNote?[((opts&&opts.notePrefix!=null)?opts.notePrefix:W.sweeperNote)+rowNote]:[],parseNotes:notes,line});
   }
@@ -5303,12 +5310,12 @@ function analyzeProForma(text,rows,ignoredKeys,opts){
     silent,
     blocked,
   };
-  return {props,coverage,tally,seen:{attempted,returned}};
+  return {props,coverage,tally,seen:{attempted,returned},moved:Object.keys(moved).length?moved:null};
 }
 // A sweep file read for the review: the cards, or why there are none. `ignored` is the
 // quarantine list; a file with nothing to propose says so in `nothingNew`.
 function readSweepFile(text,rows,ignored){
-  const res=analyzeProForma(text,rows,quarantineKeys(ignored));
+  const res=analyzeProForma(text,rows,new Set(ignored.map(x=>x.key)),{quarantined:ignored});
   if(res.error||res.props.length)return res;
   return {...res,nothingNew:W.nothingNew+((res.coverage||[]).length?say(W.listingPagesUnread,{n:res.coverage.length,s:res.coverage.length===1?"":"s"}):"")};
 }
@@ -5723,7 +5730,7 @@ function applyCards(rows,proposals,decisions,partial){
     if(p.type==="add"){
       if(dec.mode==="never"){
         const c=p.cand;
-        newlyIgnored.push({key:ignoreKeyFor(c.museumId,c.exUrl,c.title),venueId:c.museumId,title:c.title,at:now});
+        newlyIgnored.push({key:ignoreKeyFor(c.museumId,c.exUrl,c.title),venueId:c.museumId,title:c.title,...quarantineDates(c),at:now});
         return;
       }
       if(dec.mode!=="accept")return;
@@ -5738,7 +5745,7 @@ function applyCards(rows,proposals,decisions,partial){
   let quarantineAdd=null;
   if(newlyIgnored.length){
     quarantineAdd={};
-    for(const x of newlyIgnored) quarantineAdd[x.key]={venueId:x.venueId,title:x.title,at:x.at,state:"blocked"};
+    for(const x of newlyIgnored) quarantineAdd[x.key]={venueId:x.venueId,title:x.title,...quarantineDates(x),at:x.at,state:"blocked"};
   }
   // Counted from the cards with the gate's own function, never handed in.
   const leftUndecided=proposals.filter((p,i)=>isUndecidedCard(p,decisions[i])).length;
@@ -5915,14 +5922,15 @@ function readOutcome(input,out,{pages,pastes,rows,ignored}){
   const leftPastes=pasteBoxes(pastes.filter(x=>filledBox(x)&&(!readBox.has(x)||failed.has(readBox.get(x)))));
   const pending=fromPasted?leftPastes:fromPages?leftPages:left;
   if(!got.length)return {pending};
-  const res=analyzeProForma(proFormaCsv(got),rows,quarantineKeys(ignored),{notePrefix:""});
+  const res=analyzeProForma(proFormaCsv(got),rows,new Set(ignored.map(x=>x.key)),{notePrefix:"",quarantined:ignored});
   if(res.error)return {pending,note:res.error};
+  const moved=res.moved;
   if(!res.props.length){
     // Every one quarantined: it says so, not "your ledger already matches" (her wording).
-    return {pending,finished:true,tally:res.tally||null,
+    return {pending,moved,finished:true,tally:res.tally||null,
       note:say(W.readButNothing,{n:got.length,what:fromPages?W.page:W.link,s:got.length===1?"":"s"})+(res.tally&&res.tally.blocked>=got.length?W.alreadyQuarantined:say(W.alreadyMatches,{them:got.length===1?W.it:W.them}))};
   }
-  return {pending,props:res.props,tally:res.tally||null,
+  return {pending,moved,props:res.props,tally:res.tally||null,
     held:{kind,items:fromPasted?pasted.map(p=>({...p.box,url:p.url})):fromPages?items:urls}};
 }
 // The progress line once Cancel is pressed mid-Read.
@@ -5974,16 +5982,20 @@ const mergeSweepLog=PRO_FORMA.mergeSweepLog;
 // in the ledger alone, a Reset brings the junk back. Latest decision wins, which needs
 // tombstones: a release is stored as `released`, or an older backup would re-block it.
 const QUARANTINE_DOC = "quarantine/rows";
+// A quarantined show's dates, only where it has both: an entry without them stays exactly as
+// older files and builds wrote it.
+const quarantineDates=x=>x&&x.startDate&&x.endDate?{startDate:x.startDate,endDate:x.endDate}:{};
 
-// Both sides are {key: {venueId, title, at, state}}. Nothing is dropped and
-// nothing is invented: for each key the entry with the LATER `at` survives,
-// whichever side it came from.
+// Both sides are {key: {venueId, title, startDate?, endDate?, at, state}}. Nothing is dropped
+// and nothing is invented: for each key the entry with the LATER `at` survives, whichever
+// side it came from; the show's dates, if only one side has them, are kept.
 function mergeQuarantine(prev, incoming){
   const out={...(prev||{})};
   for(const [k,v] of Object.entries(incoming||{})){
     if(!v||!v.at) continue;
     const was=out[k];
-    if(!was||!was.at||v.at>was.at) out[k]={...v};
+    const keep=(w,o)=>({...w,...quarantineDates(w.startDate?w:o||{})});
+    out[k]=(!was||!was.at||v.at>was.at)?keep(v,was):keep(was,v);
   }
   return out;
 }
@@ -5992,14 +6004,14 @@ function mergeQuarantine(prev, incoming){
 function activeQuarantine(map){
   return Object.entries(map||{})
     .filter(([,v])=>v&&v.state!=="released")
-    .map(([key,v])=>({key,venueId:v.venueId,title:v.title,at:v.at}))
+    .map(([key,v])=>({key,venueId:v.venueId,title:v.title,...quarantineDates(v),at:v.at}))
     .sort((a,b)=>String(b.at||"").localeCompare(String(a.at||"")));
 }
 // A ledger file stores the plain list it always did, so an older backup loads
 // unchanged and a newer one is readable by an older build.
 function quarantineFromList(list){
   const out={};
-  for(const x of (list||[])) if(x&&x.key) out[x.key]={venueId:x.venueId,title:x.title,at:x.at||"",state:"blocked"};
+  for(const x of (list||[])) if(x&&x.key) out[x.key]={venueId:x.venueId,title:x.title,...quarantineDates(x),at:x.at||"",state:"blocked"};
   return out;
 }
 
@@ -11627,6 +11639,7 @@ function useImportSession({rows,ignored,hasLedger,commit,addToQuarantine,documen
     reader.onload=()=>{
       const res=readSweepFile(String(reader.result||""),rows,ignored);
       if(res.error){showError(res.error);return;}
+      if(res.moved)addToQuarantine(res.moved);
       if(res.nothingNew){
         recordSweep(res.seen);
         setCoverage(res.coverage||[]); setTally(res.tally||null); setSeenInFile(res.seen||null);
@@ -11661,6 +11674,7 @@ function useImportSession({rows,ignored,hasLedger,commit,addToQuarantine,documen
     if(out.venuesChanged){ hold(out.venues); }   // held, not stored: see useLinkVenues
     showProgress({done:0,total:0,label:""}); jobEnds();
     const done=readOutcome(input,out,{pages,pastes,rows,ignored});
+    if(done.moved)addToQuarantine(done.moved);
     // The box (or list) is stored when the import finishes.
     setPending(input.kind,done.pending);
     setLinkFails(out.fails);

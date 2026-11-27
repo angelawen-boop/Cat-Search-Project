@@ -186,8 +186,9 @@ not yet seen in a run.
 Waiting for the next Menil and Cincinnati sweeps (the 27 Nov fixes, `docs/sweep_records/2026-11-27_home_cincinnati_3_close.md`):
 no funders, news-release teasers or curator credits at Menil; no "Curated by" or sponsor line at Cincinnati; Cincinnati's
 Special Features page read and no special feature in the rows.
-**Built, not published — quarantine holds a show its venue moves** (matched on venue + title as well as address;
-`docs/app.md` §4). Reaches her app at the next publish.
+**Built, not published — a quarantined show its venue moves stays out, that show only** (venue, name and overlapping
+dates; its new address quarantined too; `docs/app.md` §4). Her existing entries need their dates, looked up from past
+sweep files by address (76 of 100 found) — a write to her store, awaiting her yes.
 
 #### 2.2.3 Catalogue lookup generally
 

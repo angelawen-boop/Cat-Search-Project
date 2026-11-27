@@ -51,6 +51,7 @@ function useImportSession({rows,ignored,hasLedger,commit,addToQuarantine,documen
     reader.onload=()=>{
       const res=readSweepFile(String(reader.result||""),rows,ignored);
       if(res.error){showError(res.error);return;}
+      if(res.moved)addToQuarantine(res.moved);
       if(res.nothingNew){
         recordSweep(res.seen);
         setCoverage(res.coverage||[]); setTally(res.tally||null); setSeenInFile(res.seen||null);
@@ -85,6 +86,7 @@ function useImportSession({rows,ignored,hasLedger,commit,addToQuarantine,documen
     if(out.venuesChanged){ hold(out.venues); }   // held, not stored: see useLinkVenues
     showProgress({done:0,total:0,label:""}); jobEnds();
     const done=readOutcome(input,out,{pages,pastes,rows,ignored});
+    if(done.moved)addToQuarantine(done.moved);
     // The box (or list) is stored when the import finishes.
     setPending(input.kind,done.pending);
     setLinkFails(out.fails);

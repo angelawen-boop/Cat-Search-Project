@@ -166,14 +166,15 @@ function readOutcome(input,out,{pages,pastes,rows,ignored}){
   const leftPastes=pasteBoxes(pastes.filter(x=>filledBox(x)&&(!readBox.has(x)||failed.has(readBox.get(x)))));
   const pending=fromPasted?leftPastes:fromPages?leftPages:left;
   if(!got.length)return {pending};
-  const res=analyzeProForma(proFormaCsv(got),rows,quarantineKeys(ignored),{notePrefix:""});
+  const res=analyzeProForma(proFormaCsv(got),rows,new Set(ignored.map(x=>x.key)),{notePrefix:"",quarantined:ignored});
   if(res.error)return {pending,note:res.error};
+  const moved=res.moved;
   if(!res.props.length){
     // Every one quarantined: it says so, not "your ledger already matches" (her wording).
-    return {pending,finished:true,tally:res.tally||null,
+    return {pending,moved,finished:true,tally:res.tally||null,
       note:say(W.readButNothing,{n:got.length,what:fromPages?W.page:W.link,s:got.length===1?"":"s"})+(res.tally&&res.tally.blocked>=got.length?W.alreadyQuarantined:say(W.alreadyMatches,{them:got.length===1?W.it:W.them}))};
   }
-  return {pending,props:res.props,tally:res.tally||null,
+  return {pending,moved,props:res.props,tally:res.tally||null,
     held:{kind,items:fromPasted?pasted.map(p=>({...p.box,url:p.url})):fromPages?items:urls}};
 }
 //@piece readStopping

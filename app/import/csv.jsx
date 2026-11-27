@@ -20,11 +20,13 @@ function csvParse(text){
 // is not (a reused title could block the wrong row — bounded, and visible on screen).
 const ignoreKeyFor=(venueId,url,title)=>
   venueId+"|"+(url?normalizeUrlKey(url):"t:"+normalizeTitle(title));
-//@piece quarantineKeys
+//@piece movedFromQuarantine
 
-// The keys an import checks against the quarantine: each entry's own, and its venue + title,
-// so a show the venue moves to a new address stays out (Kusama; docs/app.md §4).
-const quarantineKeys=ignored=>new Set(ignored.flatMap(x=>x.title&&x.venueId?[x.key,ignoreKeyFor(x.venueId,"",x.title)]:[x.key]));
+// A quarantined show the venue has moved: the entry at the same venue with the same name whose
+// dates overlap the row's — the same test that offers a Change card for a ledger card. Both must
+// carry dates, so a later show reusing the name is never caught (docs/app.md §4).
+const movedFromQuarantine=(quarantined,vc,title,sd,ed)=>
+  !sd||!ed?null:(quarantined||[]).find(q=>q.venueId===vc&&q.startDate&&q.endDate&&normalizeTitle(q.title)===normalizeTitle(title)&&dateRangesOverlap({startDate:sd,endDate:ed},q))||null;
 //@piece dateMs
 
 const dateMs = d => {
@@ -126,6 +128,7 @@ function analyzeProForma(text,rows,ignoredKeys,opts){
   // Counts she can reconcile: every row read is accounted for (docs/app.md §3
   // "Counts that reconcile").
   let silent=0, blocked=0;
+  const moved={};
   // Rows the sweep should never have produced. Collected, then the whole file
   // is refused — see the note at the check itself.
   const faults=[];
@@ -156,9 +159,13 @@ function analyzeProForma(text,rows,ignoredKeys,opts){
     if(sd&&!isValidYMD(sd)){notes.push(unreadableDateNote(W.start,sd));sd="";}
     if(ed&&!isValidYMD(ed)){notes.push(unreadableDateNote(W.end,ed));ed="";}
     if(url&&!urlLooksValid(url)){notes.push(say(W.linkGarbled,{url}));url="";}
-    // Quarantined: dropped before anything else sees it — by address, or by venue + title
-    // (quarantineKeys). Counted, never silent.
-    if(ignoredKeys&&(ignoredKeys.has(ignoreKeyFor(vc,url,title))||ignoredKeys.has(ignoreKeyFor(vc,"",title)))){ blocked++; continue; }
+    // Quarantined: dropped before anything else sees it. Counted, never silent.
+    if(ignoredKeys&&ignoredKeys.has(ignoreKeyFor(vc,url,title))){ blocked++; continue; }
+    // The same show at a new address: its new address is quarantined too (`moved`), and it stays out.
+    if(movedFromQuarantine(opts&&opts.quarantined,vc,title,sd,ed)){
+      moved[ignoreKeyFor(vc,url,title)]={venueId:vc,title,startDate:sd,endDate:ed,at:new Date().toISOString(),state:"blocked"};
+      blocked++; continue;
+    }
     parsed.push({venueCode:vc,title,startDate:sd,endDate:ed,summary:get(r,"summary"),url,topic:topicOf(rowNote),
                  rowNotes:rowNote?[((opts&&opts.notePrefix!=null)?opts.notePrefix:W.sweeperNote)+rowNote]:[],parseNotes:notes,line});
   }
@@ -224,14 +231,14 @@ function analyzeProForma(text,rows,ignoredKeys,opts){
     silent,
     blocked,
   };
-  return {props,coverage,tally,seen:{attempted,returned}};
+  return {props,coverage,tally,seen:{attempted,returned},moved:Object.keys(moved).length?moved:null};
 }
 //@piece readSweepFile
 
 // A sweep file read for the review: the cards, or why there are none. `ignored` is the
 // quarantine list; a file with nothing to propose says so in `nothingNew`.
 function readSweepFile(text,rows,ignored){
-  const res=analyzeProForma(text,rows,quarantineKeys(ignored));
+  const res=analyzeProForma(text,rows,new Set(ignored.map(x=>x.key)),{quarantined:ignored});
   if(res.error||res.props.length)return res;
   return {...res,nothingNew:W.nothingNew+((res.coverage||[]).length?say(W.listingPagesUnread,{n:res.coverage.length,s:res.coverage.length===1?"":"s"}):"")};
 }

@@ -7,18 +7,24 @@
 // in the ledger alone, a Reset brings the junk back. Latest decision wins, which needs
 // tombstones: a release is stored as `released`, or an older backup would re-block it.
 const QUARANTINE_DOC = "quarantine/rows";
+//@piece quarantineDates
+
+// A quarantined show's dates, only where it has both: an entry without them stays exactly as
+// older files and builds wrote it.
+const quarantineDates=x=>x&&x.startDate&&x.endDate?{startDate:x.startDate,endDate:x.endDate}:{};
 //@piece mergeQuarantine
 
 
-// Both sides are {key: {venueId, title, at, state}}. Nothing is dropped and
-// nothing is invented: for each key the entry with the LATER `at` survives,
-// whichever side it came from.
+// Both sides are {key: {venueId, title, startDate?, endDate?, at, state}}. Nothing is dropped
+// and nothing is invented: for each key the entry with the LATER `at` survives, whichever
+// side it came from; the show's dates, if only one side has them, are kept.
 function mergeQuarantine(prev, incoming){
   const out={...(prev||{})};
   for(const [k,v] of Object.entries(incoming||{})){
     if(!v||!v.at) continue;
     const was=out[k];
-    if(!was||!was.at||v.at>was.at) out[k]={...v};
+    const keep=(w,o)=>({...w,...quarantineDates(w.startDate?w:o||{})});
+    out[k]=(!was||!was.at||v.at>was.at)?keep(v,was):keep(was,v);
   }
   return out;
 }
@@ -29,7 +35,7 @@ function mergeQuarantine(prev, incoming){
 function activeQuarantine(map){
   return Object.entries(map||{})
     .filter(([,v])=>v&&v.state!=="released")
-    .map(([key,v])=>({key,venueId:v.venueId,title:v.title,at:v.at}))
+    .map(([key,v])=>({key,venueId:v.venueId,title:v.title,...quarantineDates(v),at:v.at}))
     .sort((a,b)=>String(b.at||"").localeCompare(String(a.at||"")));
 }
 //@piece quarantineFromList
@@ -38,7 +44,7 @@ function activeQuarantine(map){
 // unchanged and a newer one is readable by an older build.
 function quarantineFromList(list){
   const out={};
-  for(const x of (list||[])) if(x&&x.key) out[x.key]={venueId:x.venueId,title:x.title,at:x.at||"",state:"blocked"};
+  for(const x of (list||[])) if(x&&x.key) out[x.key]={venueId:x.venueId,title:x.title,...quarantineDates(x),at:x.at||"",state:"blocked"};
   return out;
 }
 //@piece readQuarantine

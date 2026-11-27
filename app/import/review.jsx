@@ -210,7 +210,7 @@ function applyCards(rows,proposals,decisions,partial){
     if(p.type==="add"){
       if(dec.mode==="never"){
         const c=p.cand;
-        newlyIgnored.push({key:ignoreKeyFor(c.museumId,c.exUrl,c.title),venueId:c.museumId,title:c.title,at:now});
+        newlyIgnored.push({key:ignoreKeyFor(c.museumId,c.exUrl,c.title),venueId:c.museumId,title:c.title,...quarantineDates(c),at:now});
         return;
       }
       if(dec.mode!=="accept")return;
@@ -225,7 +225,7 @@ function applyCards(rows,proposals,decisions,partial){
   let quarantineAdd=null;
   if(newlyIgnored.length){
     quarantineAdd={};
-    for(const x of newlyIgnored) quarantineAdd[x.key]={venueId:x.venueId,title:x.title,at:x.at,state:"blocked"};
+    for(const x of newlyIgnored) quarantineAdd[x.key]={venueId:x.venueId,title:x.title,...quarantineDates(x),at:x.at,state:"blocked"};
   }
   // Counted from the cards with the gate's own function, never handed in.
   const leftUndecided=proposals.filter((p,i)=>isUndecidedCard(p,decisions[i])).length;
