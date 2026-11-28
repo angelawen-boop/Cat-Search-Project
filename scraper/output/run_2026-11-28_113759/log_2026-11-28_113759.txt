@@ -1,0 +1,64 @@
+[2026-11-28T00:37:59.881Z] Could not tidy old runs (ENOTEMPTY: directory not empty, rename '/home/user/Cat-Search-Project/scraper/ou) — carrying on.
+[2026-11-28T00:37:59.881Z] Cat Watch Sweep Prototype — starting
+[2026-11-28T00:37:59.881Z] Lookback floor: 2024-07-01
+[2026-11-28T00:37:59.882Z] Run directory: /home/user/Cat-Search-Project/scraper/output/run_2026-11-28_113759
+[2026-11-28T00:37:59.882Z] Machine: container (proxy present, so this is the container)
+[2026-11-28T00:37:59.882Z] Venues this run: mfab
+[2026-11-28T00:37:59.882Z] Proxy: http://127.0.0.1:45955
+[2026-11-28T00:37:59.883Z] Chromium: /opt/pw-browsers/chromium-1243/chrome-linux64/chrome
+[2026-11-28T00:38:00.008Z] Running 1 venue(s) headless, 1 at a time (one page at a time within each venue)
+[2026-11-28T00:38:00.091Z] [mfab] 
+[2026-11-28T00:38:00.091Z] [mfab] ────────────────────────────────────────────────────────────
+[2026-11-28T00:38:00.091Z] [mfab]   MFAB — Szépművészeti Múzeum, Budapest
+[2026-11-28T00:38:00.091Z] [mfab] ────────────────────────────────────────────────────────────
+[2026-11-28T00:38:00.091Z] [mfab]   Fetching current/past: https://www.mfab.hu/exhibitions/
+[2026-11-28T00:38:00.094Z] [mfab]   robots.txt (www.mfab.hu, kept copy of 2026-11-28): states no delay, 1 path(s) off-limits
+[2026-11-28T00:38:03.283Z] [mfab]   reply labels (HTTP 200): gatekeeper Cloudflare · server: cloudflare
+[2026-11-28T00:38:03.341Z] [mfab]   consent banner dismissed ("Reject All")
+[2026-11-28T00:38:05.378Z] [mfab]   current/past: 68 links seen -> 0 navigation, 0 already-seen URL -> 68 collected (0 of them with no readable title)
+[2026-11-28T00:38:05.383Z] [mfab]   reading 68 individual page(s)…
+[2026-11-28T00:38:05.383Z] [mfab]     page 1 of 68
+[2026-11-28T00:38:14.949Z] [mfab]     page 10 of 68
+[2026-11-28T00:38:24.166Z] [mfab]     page 20 of 68
+[2026-11-28T00:38:34.042Z] [mfab]     page 30 of 68
+[2026-11-28T00:38:44.308Z] [mfab]     page 40 of 68
+[2026-11-28T00:38:53.329Z] [mfab]     page 50 of 68
+[2026-11-28T00:39:02.510Z] [mfab]     page 60 of 68
+[2026-11-28T00:39:10.234Z] [mfab]   Individual pages: 68 got text, 0 no curatorial text, 0 failed
+[2026-11-28T00:39:10.235Z] [mfab]   lookback (final): kept 68, dropped 0 closed before 2010-01-01, 0 with no closing date, 3 with no opening date
+[2026-11-28T00:39:10.238Z] [mfab]   → 68 exhibitions, 68 with curatorial text → mfab.csv
+[2026-11-28T00:39:10.607Z] 
+[2026-11-28T00:39:10.607Z] ────────────────────────────────────────────────────────────
+[2026-11-28T00:39:10.607Z]   QC — faulty rows and exceptions
+[2026-11-28T00:39:10.607Z] ────────────────────────────────────────────────────────────
+[2026-11-28T00:39:10.607Z]   No faulty rows: every row has a title and a known venue code.
+[2026-11-28T00:39:10.607Z]   No exceptions: every venue looks like the last run that had it.
+[2026-11-28T00:39:10.607Z] 
+[2026-11-28T00:39:10.607Z] ────────────────────────────────────────────────────────────
+[2026-11-28T00:39:10.607Z]   SWEEP COMPLETE — SUMMARY
+[2026-11-28T00:39:10.607Z] ────────────────────────────────────────────────────────────
+[2026-11-28T00:39:10.607Z]   MFAB: 68 exhibitions | 68 with text
+[2026-11-28T00:39:10.607Z] 
+[2026-11-28T00:39:10.607Z] ────────────────────────────────────────────────────────────
+[2026-11-28T00:39:10.607Z]   COVERAGE — every link accounted for
+[2026-11-28T00:39:10.607Z] ────────────────────────────────────────────────────────────
+[2026-11-28T00:39:10.607Z]   venue      page                          seen   nav offsite   dup  ongoing  noTitle  collected
+[2026-11-28T00:39:10.607Z]   -----------------------------------------------------------------------------------------------
+[2026-11-28T00:39:10.607Z]   mfab       current/past                    68     0       0     0        0        0         68
+[2026-11-28T00:39:10.607Z] 
+[2026-11-28T00:39:10.607Z]   seen      = links matching the venue's selector on that page
+[2026-11-28T00:39:10.607Z]   nav       = site navigation and filter links, not exhibitions
+[2026-11-28T00:39:10.607Z]   offsite   = resolved to another host and was not followed; each one is logged above
+[2026-11-28T00:39:10.607Z]   dup       = an address already collected; noted on the existing row, never dropped silently
+[2026-11-28T00:39:10.607Z]   ongoing   = the venue labelled it a permanent display, not a temporary exhibition; each one is named above
+[2026-11-28T00:39:10.607Z]   noTitle   = rows that still have no exhibition name once the page is fully read
+[2026-11-28T00:39:10.607Z]   collected = rows handed on to the lookback filter and detail-page fetch
+[2026-11-28T00:39:10.607Z] 
+[2026-11-28T00:39:10.607Z] Network bridge: 773 requests served, 2514 handed back from files already fetched (not asked again), 1500 skipped (image/media/font), 74 failed
+[2026-11-28T00:39:10.607Z] 
+[2026-11-28T00:39:10.607Z] Run directory:   /home/user/Cat-Search-Project/scraper/output/run_2026-11-28_113759
+[2026-11-28T00:39:10.607Z] Cumulative CSV:  /home/user/Cat-Search-Project/scraper/output/run_2026-11-28_113759/sweep.csv  (68 rows — mfab:68)
+[2026-11-28T00:39:10.607Z] Log written to:  /home/user/Cat-Search-Project/scraper/output/run_2026-11-28_113759/log_2026-11-28_113759.txt
+[2026-11-28T00:39:10.607Z] Not yet in this run: met, ng, rijks, acq, lgd, borghese, frick, morgan, menil, va, louvre, capo, uffizi, brera, orsay, mam, mad, ashmolean, jacquemart, khm, artic, moma, brit, dellav, tate-modern, tate-britain, wallace, cincinnati
+[2026-11-28T00:39:10.607Z]   Finish it with:  node scraper/sweep_prototype.js --continue
+[2026-11-28T00:39:10.607Z] No de-duplication is applied — see passThrough.
