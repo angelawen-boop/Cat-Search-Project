@@ -144,7 +144,8 @@ answered (`docs/sweep_records/`; `docs/sweep_operation.md`, "Headed venues").
 **Access and pace — settled for the four Cloudflare venues:** paced sweeps from her laptop, in a visible Chrome on a profile
 she has browsed in, are clean at all four (`docs/venues.md`, "The headed venues"; `docs/sweep_operation.md`).
 
-**Budapest (`mfab`), her addition: live in her app at 60.1.** Container venue. Its one-time first sweep back to 2010 is
+**Budapest (`mfab`), her addition: live in her app at 60.1; its shop's shelf and search, checked live, at 60.2.** The
+shelf's two limits she accepted: `docs/app.md`, "Shop addresses". Container venue. Its one-time first sweep back to 2010 is
 ready for her to import (`scraper/output/run_2026-11-28_114802/sweep_compressed.csv`; `docs/venues.md`).
 
 #### Her decisions, per venue — `docs/venues.md`
@@ -171,7 +172,7 @@ Everything not listed here is finished. Do not reopen a closed item without a ne
 
 The app is feature parts under `app/` that a session can read whole; the main screen is the order of its pieces
 (`docs/restructure.md`: how it is laid out, the rules any later change to the screen follows, the checks). Her test
-rounds passed. **Her app runs 60.1** (60 plus Budapest; 59.2's work: the rebuilt screen, the Theme chip's count, the venue scrubber for
+rounds passed. **Her app runs 60.2** (60 plus Budapest and its shop; 59.2's work: the rebuilt screen, the Theme chip's count, the venue scrubber for
 the Occ groups, "Still in the museum shop.", the fixes after item 4, the Uffizi's shop removed, the words list — every
 sentence she sees, written once — and the housekeeping). **The checks are proven** — each by planted faults,
 and run on the current code — and locked in code: no test is used until proven at its version (`docs/testing.md`, "Proven
@@ -534,7 +535,7 @@ bot-blocked, so Pages and Paste only) is a fact about that venue, never a limit 
 > restating `capabilities` must restate all four; omitting it carries them
 > forward. **Renaming the connector means restating them.**
 
-**Live: 60.1 in her app (§2.2.1)** (the app is named **Art Watch** on screen since 57; the header's big line is unchanged), with the cloud ledger (merged at 46). What each recent version changed is in
+**Live: 60.2 in her app (§2.2.1)** (the app is named **Art Watch** on screen since 57; the header's big line is unchanged), with the cloud ledger (merged at 46). What each recent version changed is in
 `docs/publishing.md`, "What is live now".
 
 #### The mental model, load-bearing

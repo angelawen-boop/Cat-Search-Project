@@ -27,7 +27,9 @@ page) — then once more as resent unchanged; the next goes through. Later ones 
 
 ## What is live now
 
-**Live: 60.1 in her app** — Budapest (`mfab`) as a swept venue, chip after KHM; a quarantined show its venue moves stays out (`docs/app.md` §4).
+**Live: 60.2 in her app** — Budapest's shop shelf and search (`docs/app.md`, "Shop addresses").
+
+**60.1** — Budapest (`mfab`) as a swept venue, chip after KHM; a quarantined show its venue moves stays out (`docs/app.md` §4).
 
 **60** (59.2's work, published as 60) — the main screen rebuilt as pieces and hooks (no change she sees), a picked Theme
 chip's count, the venue scrubber for the Occ groups, "Still in the museum shop." after a Re-check (`docs/app.md`); one

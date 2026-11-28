@@ -3,7 +3,7 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 // The footer prints APP_VERSION and its date, so she can tell one build from the next.
 // Numbering, her decision: a whole number for a substantial change, a decimal for a
 // small one, one number per publish. Bump it with the change it describes.
-const APP_VERSION = "60.1";
+const APP_VERSION = "60.2";
 // Not words: the date of this version.
 const APP_VERSION_DATE = "28 Nov 2026";
 
@@ -239,7 +239,7 @@ const VENUES = [
   { id: "mfab", kind: "swept",
     names: { card: "Budapest Fine Arts", chip: "Budapest", group: null, full: "Sz\u00e9pm\u0171v\u00e9szeti M\u00fazeum", inEnglish: "Museum of Fine Arts, Budapest", aka: [], replaced: [], hers: true },
     city: "Budapest", country: "Hungary", english: false, language: "Hungarian",
-    shop: { home: "https://muzeumshop.com/", catalogues: null, search: null, unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
+    shop: { home: "https://muzeumshop.com/", catalogues: "https://muzeumshop.com/konyvek-folyoiratok/muzeumi-kiadvanyok/szm", search: "https://muzeumshop.com/kereses?description=0&keyword=", unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
     read: { link: null, sites: [], dateOrder: null, spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
     sweep: { exBase: "https://www.mfab.hu/exhibitions/", listUrl: "https://www.mfab.hu/exhibitions/" },
     filed: null },
