@@ -28,7 +28,9 @@ const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'cw-pages-'));
 const prepared = 'const { useState, useEffect, useMemo, useCallback, useRef } = React;\n'
   + fs.readFileSync(JSX, 'utf8')
       .replace(/^import React.*$/m, '')
-      .replace(/^export default function App\(\)\{/m, 'function App(){');
+      .replace(/^export default function App\(\)\{/m, 'function App(){')
+      // The labelling's waits shrink to milliseconds here; the period tests hold her real ones.
+      .replace('const LABEL_WAITS={retry:[15000,60000],lastGo:60000};', 'const LABEL_WAITS={retry:[5,5],lastGo:5};');
 fs.writeFileSync(path.join(tmp, 'app.tsx'), prepared);
 try {
   execFileSync('npx', ['tsc', path.join(tmp, 'app.tsx'), '--jsx', 'react',
