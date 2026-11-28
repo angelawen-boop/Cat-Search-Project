@@ -27,7 +27,10 @@ page) — then once more as resent unchanged; the next goes through. Later ones 
 
 ## What is live now
 
-**Live: 60.4 in her app** — every import (CSV, Links, Pages, Paste) labels its new shows' periods before the review
+**Live: 61 in her app** — assumed dates: a month or season with no day gets an assumed day the app runs on, the card
+showing the venue's words and the day (`docs/app.md`, "Assumed dates").
+
+**60.4** — every import (CSV, Links, Pages, Paste) labels its new shows' periods before the review
 opens: one bar in the import pop-up from the first page read to the last label, her wording ("Labelling periods… 40 of
 90 (batch 2)", and on a refusal "— Claude didn't answer batch 2 (upstream_error). Asking again in 13 seconds."), Cancel
 drops the import, Label's line heads the review when not every show was labelled (`docs/periods.md`).

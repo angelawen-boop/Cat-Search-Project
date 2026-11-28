@@ -284,7 +284,7 @@ Cini, Prado, Correr): `docs/app.md`, `docs/add_by_link.md`.
 
 #### 2.2.18 Queued — her asks
 
-- **Built on `main`, not yet published — assumed dates** (her decision): a month or season with no day gets an assumed
+- **Live at 61, her next import confirms — assumed dates** (her decision): a month or season with no day gets an assumed
   day that the app runs on, the card showing the venue's words and the day (`docs/app.md`, "Assumed dates"). Her
   existing cards are not updated; they fill at their next import.
 - **Live at 54.2, her use confirms:** German dates (DS-011), Galerie de la Présidence's " : Exhibition" dropped (AP-015).
@@ -545,7 +545,7 @@ bot-blocked, so Pages and Paste only) is a fact about that venue, never a limit 
 > restating `capabilities` must restate all four; omitting it carries them
 > forward. **Renaming the connector means restating them.**
 
-**Live: 60.4 in her app (§2.2.1)** (the app is named **Art Watch** on screen since 57; the header's big line is unchanged), with the cloud ledger (merged at 46). What each recent version changed is in
+**Live: 61 in her app (§2.2.1, §2.2.18)** (the app is named **Art Watch** on screen since 57; the header's big line is unchanged), with the cloud ledger (merged at 46). What each recent version changed is in
 `docs/publishing.md`, "What is live now".
 
 #### The mental model, load-bearing
