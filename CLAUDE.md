@@ -474,6 +474,8 @@ Each line came from a real failure. Details are in git history and `docs/`.
 - **A venue fact goes into its register entry, not only into the notes** — the Uffizi's "sells no books" sat in a doc for
   weeks while its entry kept the shop, so every lookup searched a shop of souvenirs. **Name things by looking them up** — a
   venue known only by its code was written around ("the second of your Italian venues"), not named.
+- **A new piece of work gets its own new test page — never publish over an old one, or change its store, without her yes**
+  (a session put an import change on the restructure test page, title and all; it had to be put back).
 - **Capability on one machine is not on both** (pacing was laptop-only), and "the shared path is built" is not "every venue is ready" — say it per venue.
 
 ### 4.2 Rejected — do not re-propose
