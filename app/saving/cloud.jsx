@@ -198,6 +198,7 @@ const CLOUD_SESSION_ID=cloudNewId("t");
 // "mine": this copy may edit (the record now names it). "other": another copy
 // is editing. Reads the record, then writes it — so it is also the heartbeat. The one write a
 // read-only copy may make (claim:true). Throws when the store cannot be reached.
+// A test-page build drops the "other" line, so a test page never locks (build/build_app.js).
 async function cloudSessionClaim(now){
   const t=now||Date.now();
   let cur=null;

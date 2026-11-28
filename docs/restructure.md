@@ -148,7 +148,8 @@ Each is proven by planted faults and is not used until proven at its current ver
 
 The checks cannot reach her real store, her Claude or a real Find catalogue, so she tests on the
 restructure test page (never her app): https://claude.ai/artifact/Ju1pKP84Gi3VNL1b2SULc5, built by `node
-build/build_app.js --test-page` (title "Art Watch Restructure Test", footer "TEST PAGE — not your app").
+build/build_app.js --test-page` (title "Art Watch Restructure Test", footer "TEST PAGE — not your app", and no read-only
+lock — her decision, every test page).
 Every round has passed, round 3 (the main screen) included. Her app is published only when she says.
 
 **Before every round — a test is true only if the page is set up as her app is:** copy her app's

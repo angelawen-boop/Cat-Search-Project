@@ -476,6 +476,8 @@ Each line came from a real failure. Details are in git history and `docs/`.
   venue known only by its code was written around ("the second of your Italian venues"), not named.
 - **A new piece of work gets its own new test page — never publish over an old one, or change its store, without her yes**
   (a session put an import change on the restructure test page, title and all; it had to be put back).
+- **A test page has no read-only lock (her decision)** — no real ledger is at stake, and the lock shut her out of her own
+  test. Every `--test-page` build drops it (`build/build_app.js`); only her app keeps it.
 - **Capability on one machine is not on both** (pacing was laptop-only), and "the shared path is built" is not "every venue is ready" — say it per venue.
 
 ### 4.2 Rejected — do not re-propose

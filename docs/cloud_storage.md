@@ -39,5 +39,6 @@ Save, close and reopen, a real sweep Import.
 **Two copies open: the later one is READ ONLY** (her decision). It opens
 empty and writes nothing — "Open it" shows the cloud copy when she asks, never by itself (her decision); an edit record with a heartbeat decides,
 stale after a minute; every save checks it first. A republish while her page is open can lock the new page for up to a minute — accepted, her decision (a same-tab fix did not hold and was removed). Design: "ONE COPY EDITS AT A TIME" in the code;
-`cloud_two_copies.js`, TC-001–010.
+`cloud_two_copies.js`, TC-001–010. **Her app only:** a test page has no lock (her decision) — every `--test-page`
+build drops it (`build/build_app.js`).
 

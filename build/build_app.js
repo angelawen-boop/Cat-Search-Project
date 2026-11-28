@@ -173,8 +173,14 @@ const forRestructure = process.argv.includes('--test-page');
 const source = fs.readFileSync(JSX, 'utf8');
 // The restructure test page says in its footer that it is not her app (her ask).
 if (forRestructure && !source.includes(FOOTER)) die('the footer line was not found — the test page could not be marked');
+// A test page has no read-only lock (her decision): no real ledger is at stake there, and the lock
+// only shut her out of her own test. Her app keeps it. The lock is the one line that turns a
+// second copy read only (cloudSessionClaim); without it every copy may edit.
+const LOCK_LINE = 'if(cur&&cur.id!==CLOUD_SESSION_ID&&t-Date.parse(cur.beat)<SESSION_STALE_MS)return "other";';
+if (forRestructure && !source.includes(LOCK_LINE)) die('the read-only lock line was not found — the test page could not drop it');
+const testSource = () => source.replace(FOOTER, TEST_FOOTER).replace(LOCK_LINE, '');
 const prepared = 'const { useState, useEffect, useMemo, useCallback, useRef } = React;\n'
-  + (forRestructure ? source.replace(FOOTER, TEST_FOOTER) : source)
+  + (forRestructure ? testSource() : source)
       .replace(/^import React.*$/m, '')
       .replace(/^export default function App\(\)\{/m, 'function App(){');
 fs.writeFileSync(path.join(tmp, 'app.tsx'), prepared);
