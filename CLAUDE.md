@@ -172,7 +172,7 @@ Everything not listed here is finished. Do not reopen a closed item without a ne
 
 The app is feature parts under `app/` that a session can read whole; the main screen is the order of its pieces
 (`docs/restructure.md`: how it is laid out, the rules any later change to the screen follows, the checks). Her test
-rounds passed. **Her app runs 60.4** (60 plus Budapest and its shop, the Potential quarantines heading, and periods labelled before the import review opens; 59.2's work: the rebuilt screen, the Theme chip's count, the venue scrubber for
+rounds passed. **Her app runs 61** (assumed dates, §2.2.18; 60 plus Budapest and its shop, the Potential quarantines heading, and periods labelled before the import review opens; 59.2's work: the rebuilt screen, the Theme chip's count, the venue scrubber for
 the Occ groups, "Still in the museum shop.", the fixes after item 4, the Uffizi's shop removed, the words list — every
 sentence she sees, written once — and the housekeeping). **The checks are proven** — each by planted faults,
 and run on the current code — and locked in code: no test is used until proven at its version (`docs/testing.md`, "Proven
