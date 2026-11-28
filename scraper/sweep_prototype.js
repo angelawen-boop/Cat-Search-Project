@@ -4169,9 +4169,17 @@ const VENUES = {
     datesAt: { within: '.components-v2-card, .components-v2-horizontal-card',
       sel: '.components-v2-card__date, .components-v2-horizontal-card__date' },
     // "27 November 2024 – prolonged until 21 April 2025" (Munkácsy); a Hungarian month on
-    // the English page ("25 Szeptember 2021"); "5 February - 17 May, 2020".
+    // the English page ("25 Szeptember 2021"); "5 February - 17 May, 2020". A closing date
+    // before the opening in the same year is the next year (her decision): the museum's own
+    // pages print "26 October 2012 - 17 February 2012" (Cezanne and the Past, two more).
     datesText: t => t.replace(/\s+prolonged until\s+/i, ' ').replace(/\bSzeptember\b/g, 'September')
-      .replace(/(\d{1,2}\s+[A-Z][a-z]+),\s+(\d{4})\b/g, '$1 $2'),
+      .replace(/(\d{1,2}\s+[A-Z][a-z]+),\s+(\d{4})\b/g, '$1 $2')
+      .replace(/(\d{1,2})\s+([A-Za-z]+)\s+(\d{4})(\s*[\u2013\u2014\u2012-]\s*)(\d{1,2})\s+([A-Za-z]+)\s+(\d{4})/,
+        (all, d1, m1, y1, sep, d2, m2, y2) => {
+          const a = monthNum(m1), b = monthNum(m2);
+          if (!a || !b || y1 !== y2 || b * 100 + Number(d2) >= a * 100 + Number(d1)) return all;
+          return `${d1} ${m1} ${y1}${sep}${d2} ${m2} ${Number(y2) + 1}`;
+        }),
     // Three page layouts over the years: the new header and text sections; the lead and
     // description columns; the oldest, description only.
     description: '.components-v2-exhibition-header__lead, .components-v2-exhibition-header__description p, '

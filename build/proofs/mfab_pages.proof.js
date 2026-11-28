@@ -23,4 +23,5 @@ P.fault('MP-04', '"prolonged until" not read', [[SP, once(`t.replace(/\\s+prolon
 P.fault('MP-05', 'the Hungarian month not read', [[SP, once(`.replace(/\\bSzeptember\\b/g, 'September')`, ``)]], check, /^FAIL  MB-006:/m);
 P.fault('MP-06', 'the caption box read as noise', [[SP, once(`noiseExempt: 'custom-caption-container',`, ``)]], check, /^FAIL  MB-007:/m);
 P.fault('MP-07', 'credits and notices kept', [[SP, once(`creditPara: /^(?:\\/\\/\\s*)?(?:The exhibition (?:can be visited`, `creditPara_off: /^(?:\\/\\/\\s*)?(?:The exhibition (?:can be visited`)]], check, /^FAIL  MB-009:/m);
+P.fault('MP-08', 'a closing date before the opening left as printed', [[SP, once(`if (!a || !b || y1 !== y2 || b * 100`, `if (true || !a || !b || y1 !== y2 || b * 100`)]], check, /^FAIL  MB-010:/m);
 P.done();

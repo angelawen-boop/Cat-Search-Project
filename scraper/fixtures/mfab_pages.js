@@ -62,6 +62,9 @@ const check = (name, ok, got) => {
     check('MB-006: a Hungarian month and "17 May, 2020" read (older cards)',
       h && h.start_date === '2021-09-25' && c && c.start_date === '2020-02-05' && c.end_date === '2020-05-17',
       `${h && h.start_date} | ${c && c.start_date} → ${c && c.end_date}`);
+    const cz = slug('cezanne-and-the-past');
+    check('MB-010: a closing date before the opening is the next year (her decision)',
+      cz && cz.start_date === '2012-10-26' && cz.end_date === '2013-02-17', cz && `${cz.start_date} → ${cz.end_date}`);
     const v = slug('vasarely-120');
     check('MB-007: prose after an unclosed caption box is kept (Vasarely 120)', v && /arranged in five sections/.test(v.summary || ''), v && v.summary);
     const saved = rows.filter(r => SERVED[r.url] && r.url !== E);
