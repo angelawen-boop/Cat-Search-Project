@@ -733,6 +733,7 @@
   "ConfirmBox",
   "Footer",
   "ReadStatus",
+  "LabelBar",
   "ImportCsvStatus",
   "ImportPopup",
   "ImportNeedLedger",

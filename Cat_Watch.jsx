@@ -1586,6 +1586,7 @@ const W={  // ── the header: title, toolbar, Save panel, status lines, banne
   labelSome:"Label: {done} of {total} exhibitions labelled; {not} not \u2014 {whys}.",
   labelNothingToDo:"Label: every exhibition already has a period.",
   labellingPeriods:"Labelling periods\u2026",
+  labelCount:"{done} of {total}",
   labelAskingAgain:"\u2014 {why}. Asking again in {s} seconds.",
   labelDidntFinish:"Label: didn\u2019t finish.",
   labelDidntFinishWhy:"Label: didn\u2019t finish \u2014 {why}.",
@@ -9902,7 +9903,8 @@ async function labelCardsJob(props,{progress,stopped}={}){
   const shows=[];
   props.forEach((p,i)=>{ if(p.type==="add")shows.push(periodShow(i,p.cand)); });
   if(!shows.length)return {props};
-  const show=(done,extra)=>progress&&progress({done,total:shows.length,label:W.labellingPeriods+(extra||"")});
+  const show=(done,extra)=>progress&&progress({done,total:shows.length,labelling:true,
+    label:W.labellingPeriods+" "+say(W.labelCount,{done,total:shows.length})+(extra||"")});
   let done=0; show(0);
   // Not words: the lookup log's name and title for the record.
   const tape=tapeStart("Label import cards",{title:shows.length+" new shows"});
@@ -9911,7 +9913,8 @@ async function labelCardsJob(props,{progress,stopped}={}){
   const said=res.stopped?{ok:false,text:W.labelDidntFinish}:labelSummary(shows.length,res.batches);
   saveLookupTape(tape,{ok:said.ok,said:said.text,detail:JSON.stringify(res.batches)});
   const at=new Date().toISOString();
-  return {props:props.map((p,i)=>res.labels.has(i)?{...p,cand:{...p.cand,...res.labels.get(i),labelledAt:at}}:p),said,stopped:res.stopped};
+  if(!res.stopped)show(shows.length);   // the bar seen full before the review opens
+  return {props:props.map((p,i)=>res.labels.has(i)?{...p,cand:{...p.cand,...res.labels.get(i),labelledAt:at}}:p),said,stopped:res.stopped,asked:true};
 }
 // Label: every show (stage 3: the whole ledger, her decision) with no period or no themes yet, dismissed ones
 // included. Fills only; a labelled show is never relabelled. Not an edit of hers: editedAt stays.
@@ -10470,7 +10473,8 @@ function Footer({ui}){
 function ReadStatus({ui,busy,prog,linkNote,linkFails,failAs}){
   const{C,TH}=ui;
   return(<>
-    {busy&&prog.total>0&&<div style={{marginTop:8}}>
+    {busy&&prog.total>0&&prog.labelling&&<LabelBar ui={ui} prog={prog}/>}
+    {busy&&prog.total>0&&!prog.labelling&&<div style={{marginTop:8}}>
       <div style={{height:4,background:C.rule,borderRadius:2,overflow:"hidden"}}>
         <div style={{height:"100%",width:Math.round(100*prog.done/prog.total)+"%",background:C.action}}/></div>
       <div style={{marginTop:4,fontSize:11,color:C.soft}}>{prog.label}</div>
@@ -10480,6 +10484,23 @@ function ReadStatus({ui,busy,prog,linkNote,linkFails,failAs}){
       {f.url?failAs(f):""}{f.url?W.failDash:""}{f.why}
     </div>)}
   </>);
+}
+// The labelling's bar: filled to the shows labelled, with a stripe sliding across the
+// rest while Claude works, so it is never still while something is happening (her ask).
+function LabelBar({ui,prog}){
+  const{C}=ui;
+  const[step,setStep]=useState(0);
+  useEffect(()=>{ const t=setInterval(()=>setStep(s=>(s+1)%60),40); return()=>clearInterval(t); },[]);
+  const filled=Math.round(100*prog.done/prog.total), working=prog.done<prog.total;
+  return(
+    <div style={{marginTop:16}}>
+      <div style={{position:"relative",height:6,background:C.rule,borderRadius:3,overflow:"hidden"}}>
+        <div style={{position:"absolute",left:0,top:0,bottom:0,width:filled+"%",background:C.action,transition:"width .4s ease"}}/>
+        {working&&<div style={{position:"absolute",top:0,bottom:0,width:"18%",left:(filled+(100-filled)*step/60*0.82)+"%",background:C.action,opacity:0.45,borderRadius:3}}/>}
+      </div>
+      <div style={{marginTop:6,fontSize:11,color:C.soft}}>{prog.label}</div>
+    </div>
+  );
 }
 // A CSV import: the labelling's progress, before the review opens.
 function ImportCsvStatus({ui,importMode,busy,prog}){
@@ -11631,6 +11652,8 @@ function useCardActions({rows,commit,put,latest,readOnlyStop:roStop,jobRunning,j
 // venuesLookAgain), the one job flag's start, end and progress, the error line and "ask her". It never clears a
 // filter, writes a venue or touches the ledger except through those; it hands back ONE object, no raw setter.
 // App calls it last: its opening reads are the last the page makes.
+// How long the full labelling bar stays before the review opens.
+const LABEL_DONE_MS=900;
 function useImportSession({rows,ignored,hasLedger,commit,addToQuarantine,documentImportApplied,readOnlyStop:roStop,requestImport,requestOpenCloud,recordSweep,filtersImportApplied,occVenues,hold,dropHeld,addShop,venuesLookAgain,toConfirm,venuesImportApplied,jobStarts,jobEnds,showProgress,showError,ask}){
   // Add by link: one pop-up for CSV and Links, nothing added to the page (her design).
   // importMode: null · "choose" · "links" (the box open below them) · "needLedger" (empty page).
@@ -11702,6 +11725,8 @@ function useImportSession({rows,ignored,hasLedger,commit,addToQuarantine,documen
   async function labelFirst(props){
     jobStarts(); labelRun.current={on:true,stop:false};
     const out=await labelCardsJob(props,{progress:p=>{ if(!labelRun.current.stop)showProgress(p); },stopped:()=>labelRun.current.stop});
+    // The full bar stays a moment, so she sees the labelling finish before the review opens.
+    if(out.asked&&!out.stopped)await pause(LABEL_DONE_MS);
     labelRun.current={on:false,stop:false};
     showProgress({done:0,total:0,label:""}); jobEnds();
     if(out.stopped)return {stopped:true};

@@ -11,7 +11,8 @@ async function labelCardsJob(props,{progress,stopped}={}){
   const shows=[];
   props.forEach((p,i)=>{ if(p.type==="add")shows.push(periodShow(i,p.cand)); });
   if(!shows.length)return {props};
-  const show=(done,extra)=>progress&&progress({done,total:shows.length,label:W.labellingPeriods+(extra||"")});
+  const show=(done,extra)=>progress&&progress({done,total:shows.length,labelling:true,
+    label:W.labellingPeriods+" "+say(W.labelCount,{done,total:shows.length})+(extra||"")});
   let done=0; show(0);
   // Not words: the lookup log's name and title for the record.
   const tape=tapeStart("Label import cards",{title:shows.length+" new shows"});
@@ -20,7 +21,8 @@ async function labelCardsJob(props,{progress,stopped}={}){
   const said=res.stopped?{ok:false,text:W.labelDidntFinish}:labelSummary(shows.length,res.batches);
   saveLookupTape(tape,{ok:said.ok,said:said.text,detail:JSON.stringify(res.batches)});
   const at=new Date().toISOString();
-  return {props:props.map((p,i)=>res.labels.has(i)?{...p,cand:{...p.cand,...res.labels.get(i),labelledAt:at}}:p),said,stopped:res.stopped};
+  if(!res.stopped)show(shows.length);   // the bar seen full before the review opens
+  return {props:props.map((p,i)=>res.labels.has(i)?{...p,cand:{...p.cand,...res.labels.get(i),labelledAt:at}}:p),said,stopped:res.stopped,asked:true};
 }
 //@piece labelLedgerStart
 

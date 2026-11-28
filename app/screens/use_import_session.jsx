@@ -8,6 +8,8 @@
 // venuesLookAgain), the one job flag's start, end and progress, the error line and "ask her". It never clears a
 // filter, writes a venue or touches the ledger except through those; it hands back ONE object, no raw setter.
 // App calls it last: its opening reads are the last the page makes.
+// How long the full labelling bar stays before the review opens.
+const LABEL_DONE_MS=900;
 function useImportSession({rows,ignored,hasLedger,commit,addToQuarantine,documentImportApplied,readOnlyStop:roStop,requestImport,requestOpenCloud,recordSweep,filtersImportApplied,occVenues,hold,dropHeld,addShop,venuesLookAgain,toConfirm,venuesImportApplied,jobStarts,jobEnds,showProgress,showError,ask}){
   // Add by link: one pop-up for CSV and Links, nothing added to the page (her design).
   // importMode: null · "choose" · "links" (the box open below them) · "needLedger" (empty page).
@@ -79,6 +81,8 @@ function useImportSession({rows,ignored,hasLedger,commit,addToQuarantine,documen
   async function labelFirst(props){
     jobStarts(); labelRun.current={on:true,stop:false};
     const out=await labelCardsJob(props,{progress:p=>{ if(!labelRun.current.stop)showProgress(p); },stopped:()=>labelRun.current.stop});
+    // The full bar stays a moment, so she sees the labelling finish before the review opens.
+    if(out.asked&&!out.stopped)await pause(LABEL_DONE_MS);
     labelRun.current={on:false,stop:false};
     showProgress({done:0,total:0,label:""}); jobEnds();
     if(out.stopped)return {stopped:true};
