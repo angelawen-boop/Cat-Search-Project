@@ -6,36 +6,17 @@
 function ReadStatus({ui,busy,prog,linkNote,linkFails,failAs}){
   const{C,TH}=ui;
   return(<>
-    {busy&&prog.total>0&&prog.labelling&&<LabelBar ui={ui} prog={prog}/>}
-    {busy&&prog.total>0&&!prog.labelling&&<div style={{marginTop:8}}>
-      <div style={{height:4,background:C.rule,borderRadius:2,overflow:"hidden"}}>
-        <div style={{height:"100%",width:Math.round(100*prog.done/prog.total)+"%",background:C.action}}/></div>
-      <div style={{marginTop:4,fontSize:11,color:C.soft}}>{prog.label}</div>
+    {/* One bar for the whole import (her ask): reading, then labelling, filling as each step ends. */}
+    {busy&&prog.total>0&&<div style={{marginTop:16}}>
+      <div style={{height:6,background:C.rule,borderRadius:3,overflow:"hidden"}}>
+        <div style={{height:"100%",width:Math.round(100*prog.done/prog.total)+"%",background:C.action,transition:"width .4s ease"}}/></div>
+      <div style={{marginTop:6,fontSize:11,color:C.soft}}>{prog.label}</div>
     </div>}
     {linkNote&&<div style={{marginTop:6,fontSize:11.5,color:C.soft,lineHeight:1.45}}>{linkNote}</div>}
     {linkFails.map((f,i)=><div key={i} style={{marginTop:6,fontSize:11.5,color:TH.urgent.ink,lineHeight:1.4,overflowWrap:"anywhere"}}>
       {f.url?failAs(f):""}{f.url?W.failDash:""}{f.why}
     </div>)}
   </>);
-}
-//@piece LabelBar
-
-// The labelling's bar: filled to the shows labelled, with a stripe sliding across the
-// rest while Claude works, so it is never still while something is happening (her ask).
-function LabelBar({ui,prog}){
-  const{C}=ui;
-  const[step,setStep]=useState(0);
-  useEffect(()=>{ const t=setInterval(()=>setStep(s=>(s+1)%60),40); return()=>clearInterval(t); },[]);
-  const filled=Math.round(100*prog.done/prog.total), working=prog.done<prog.total;
-  return(
-    <div style={{marginTop:16}}>
-      <div style={{position:"relative",height:6,background:C.rule,borderRadius:3,overflow:"hidden"}}>
-        <div style={{position:"absolute",left:0,top:0,bottom:0,width:filled+"%",background:C.action,transition:"width .4s ease"}}/>
-        {working&&<div style={{position:"absolute",top:0,bottom:0,width:"18%",left:(filled+(100-filled)*step/60*0.82)+"%",background:C.action,opacity:0.45,borderRadius:3}}/>}
-      </div>
-      <div style={{marginTop:6,fontSize:11,color:C.soft}}>{prog.label}</div>
-    </div>
-  );
 }
 //@piece ImportCsvStatus
 

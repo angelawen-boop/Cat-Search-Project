@@ -11,17 +11,21 @@ async function labelCardsJob(props,{progress,stopped}={}){
   const shows=[];
   props.forEach((p,i)=>{ if(p.type==="add")shows.push(periodShow(i,p.cand)); });
   if(!shows.length)return {props};
-  const show=(done,extra)=>progress&&progress({done,total:shows.length,labelling:true,
-    label:W.labellingPeriods+" "+say(W.labelCount,{done,total:shows.length})+(extra||"")});
-  let done=0; show(0);
+  // Her wording: "Labelling periods… 40 of 90 (batch 2)" — the batch only when there is more than one;
+  // while Claude is asked again, "— Claude didn't answer batch 2 (upstream_error). Asking again in 13 seconds."
+  const many=shows.length>PERIOD_BATCH;
+  const show=(done,batch,extra)=>progress&&progress({done,total:shows.length,
+    label:W.labellingPeriods+" "+say(W.labelCount,{done,total:shows.length})+(many&&batch?say(W.labelBatchNo,{n:batch}):"")+(extra||"")});
+  let done=0, batch=1; show(0,1);
   // Not words: the lookup log's name and title for the record.
   const tape=tapeStart("Label import cards",{title:shows.length+" new shows"});
-  const res=await labelPeriods(shows,d=>{ done=d; show(d); },LABEL_WAITS,{stopped,
-    onWait:(s,why)=>show(done," "+say(W.labelAskingAgain,{s,why:String(why||"").replace(/\.$/,"")}))});
+  const res=await labelPeriods(shows,d=>{ done=d; },LABEL_WAITS,{stopped,
+    onAsk:n=>{ batch=n; show(done,n); },
+    onWait:(s,w)=>show(done,w.batch," "+say(W.labelAskingAgain,{s,why:w.code?say(W.labelNoAnswerBatch,{n:w.batch,code:w.code}):String(w.why||"").replace(/\.$/,"")}))});
   const said=res.stopped?{ok:false,text:W.labelDidntFinish}:labelSummary(shows.length,res.batches);
   saveLookupTape(tape,{ok:said.ok,said:said.text,detail:JSON.stringify(res.batches)});
   const at=new Date().toISOString();
-  if(!res.stopped)show(shows.length);   // the bar seen full before the review opens
+  if(!res.stopped)show(shows.length,0);   // the bar seen full before the review opens
   return {props:props.map((p,i)=>res.labels.has(i)?{...p,cand:{...p.cand,...res.labels.get(i),labelledAt:at}}:p),said,stopped:res.stopped,asked:true};
 }
 //@piece labelLedgerStart

@@ -1587,6 +1587,8 @@ const W={  // ── the header: title, toolbar, Save panel, status lines, banne
   labelNothingToDo:"Label: every exhibition already has a period.",
   labellingPeriods:"Labelling periods\u2026",
   labelCount:"{done} of {total}",
+  labelBatchNo:" (batch {n})",
+  labelNoAnswerBatch:"Claude didn\u2019t answer batch {n} ({code})",
   labelAskingAgain:"\u2014 {why}. Asking again in {s} seconds.",
   labelDidntFinish:"Label: didn\u2019t finish.",
   labelDidntFinishWhy:"Label: didn\u2019t finish \u2014 {why}.",
@@ -5583,33 +5585,37 @@ function labelWhy(ask){
 }
 // Labels shows ({i, venue, title, dates, summary}) in batches. onBatch(done,total) reports
 // progress. Returns {labels: Map i → label, batches: [{shows, labelled, tries, why}], stopped}.
-// An import also passes onWait(seconds, why) — each wait before Claude is asked again — and
-// stopped(), checked before every ask and through every wait (Cancel).
-async function labelPeriods(shows,onBatch,waits=LABEL_WAITS,{onWait,stopped}={}){
+// An import also passes onAsk(batch) — the batch now being asked, from 1 — onWait(seconds,
+// {batch, code, why}) — each wait before Claude is asked again — and stopped(), checked before
+// every ask and through every wait (Cancel).
+async function labelPeriods(shows,onBatch,waits=LABEL_WAITS,{onAsk,onWait,stopped}={}){
   const labels=new Map(), batches=[];
   const isStopped=()=>!!(stopped&&stopped());
   const wait=async(ms,why)=>{
     const end=Date.now()+ms;
     while(!isStopped()&&Date.now()<end){ if(onWait)onWait(Math.ceil((end-Date.now())/1000),why); await pause(Math.min(1000,end-Date.now())); }
+    if(onAsk&&!isStopped())onAsk(why.batch);
   };
   const ask=async b=>{
     if(isStopped())return;
     b.tries++;
     const res=await readResults(periodPrompt(b.batch));
-    if(!res.ok){ b.why=labelWhy(res); b.stop=res.code==="not_granted"||res.code==="unavailable"; return; }
+    if(!res.ok){ b.why=labelWhy(res); b.code=res.code||"unknown"; b.stop=res.code==="not_granted"||res.code==="unavailable"; return; }
+    b.code=null;
     const want=new Set(b.batch.map(s=>s.i));
     for(const [i,v] of periodAnswers(res.data))if(want.has(i)&&!labels.has(i)){ labels.set(i,v); b.labelled++; }
     b.why=b.labelled<b.batch.length?say(W.leftOutOfAnswer,{n:b.batch.length-b.labelled}):null;
   };
   for(let n=0;n<shows.length;n+=PERIOD_BATCH){
-    const b={batch:shows.slice(n,n+PERIOD_BATCH),labelled:0,tries:0,why:null,stop:false};
+    const b={batch:shows.slice(n,n+PERIOD_BATCH),no:n/PERIOD_BATCH+1,labelled:0,tries:0,why:null,code:null,stop:false};
+    if(onAsk)onAsk(b.no);
     await ask(b);
-    for(const ms of waits.retry){ if(b.labelled||b.stop||isStopped())break; await wait(ms,b.why); await ask(b); }
+    for(const ms of waits.retry){ if(b.labelled||b.stop||isStopped())break; await wait(ms,{batch:b.no,code:b.code,why:b.why}); await ask(b); }
     batches.push(b);
     if(onBatch)onBatch(Math.min(n+PERIOD_BATCH,shows.length),shows.length);
   }
   const left=batches.filter(b=>!b.labelled&&!b.stop);
-  if(left.length&&!isStopped()){ await wait(waits.lastGo,left[0].why); for(const b of left)await ask(b); }
+  if(left.length&&!isStopped()){ await wait(waits.lastGo,{batch:left[0].no,code:left[0].code,why:left[0].why}); for(const b of left){ if(onAsk&&!isStopped())onAsk(b.no); await ask(b); } }
   return {labels,batches:batches.map(b=>({shows:b.batch.length,labelled:b.labelled,tries:b.tries,why:b.why})),stopped:isStopped()};
 }
 // Her line after a Label: all done, or how many were not and why.
@@ -9903,17 +9909,21 @@ async function labelCardsJob(props,{progress,stopped}={}){
   const shows=[];
   props.forEach((p,i)=>{ if(p.type==="add")shows.push(periodShow(i,p.cand)); });
   if(!shows.length)return {props};
-  const show=(done,extra)=>progress&&progress({done,total:shows.length,labelling:true,
-    label:W.labellingPeriods+" "+say(W.labelCount,{done,total:shows.length})+(extra||"")});
-  let done=0; show(0);
+  // Her wording: "Labelling periods… 40 of 90 (batch 2)" — the batch only when there is more than one;
+  // while Claude is asked again, "— Claude didn't answer batch 2 (upstream_error). Asking again in 13 seconds."
+  const many=shows.length>PERIOD_BATCH;
+  const show=(done,batch,extra)=>progress&&progress({done,total:shows.length,
+    label:W.labellingPeriods+" "+say(W.labelCount,{done,total:shows.length})+(many&&batch?say(W.labelBatchNo,{n:batch}):"")+(extra||"")});
+  let done=0, batch=1; show(0,1);
   // Not words: the lookup log's name and title for the record.
   const tape=tapeStart("Label import cards",{title:shows.length+" new shows"});
-  const res=await labelPeriods(shows,d=>{ done=d; show(d); },LABEL_WAITS,{stopped,
-    onWait:(s,why)=>show(done," "+say(W.labelAskingAgain,{s,why:String(why||"").replace(/\.$/,"")}))});
+  const res=await labelPeriods(shows,d=>{ done=d; },LABEL_WAITS,{stopped,
+    onAsk:n=>{ batch=n; show(done,n); },
+    onWait:(s,w)=>show(done,w.batch," "+say(W.labelAskingAgain,{s,why:w.code?say(W.labelNoAnswerBatch,{n:w.batch,code:w.code}):String(w.why||"").replace(/\.$/,"")}))});
   const said=res.stopped?{ok:false,text:W.labelDidntFinish}:labelSummary(shows.length,res.batches);
   saveLookupTape(tape,{ok:said.ok,said:said.text,detail:JSON.stringify(res.batches)});
   const at=new Date().toISOString();
-  if(!res.stopped)show(shows.length);   // the bar seen full before the review opens
+  if(!res.stopped)show(shows.length,0);   // the bar seen full before the review opens
   return {props:props.map((p,i)=>res.labels.has(i)?{...p,cand:{...p.cand,...res.labels.get(i),labelledAt:at}}:p),said,stopped:res.stopped,asked:true};
 }
 // Label: every show (stage 3: the whole ledger, her decision) with no period or no themes yet, dismissed ones
@@ -10473,34 +10483,17 @@ function Footer({ui}){
 function ReadStatus({ui,busy,prog,linkNote,linkFails,failAs}){
   const{C,TH}=ui;
   return(<>
-    {busy&&prog.total>0&&prog.labelling&&<LabelBar ui={ui} prog={prog}/>}
-    {busy&&prog.total>0&&!prog.labelling&&<div style={{marginTop:8}}>
-      <div style={{height:4,background:C.rule,borderRadius:2,overflow:"hidden"}}>
-        <div style={{height:"100%",width:Math.round(100*prog.done/prog.total)+"%",background:C.action}}/></div>
-      <div style={{marginTop:4,fontSize:11,color:C.soft}}>{prog.label}</div>
+    {/* One bar for the whole import (her ask): reading, then labelling, filling as each step ends. */}
+    {busy&&prog.total>0&&<div style={{marginTop:16}}>
+      <div style={{height:6,background:C.rule,borderRadius:3,overflow:"hidden"}}>
+        <div style={{height:"100%",width:Math.round(100*prog.done/prog.total)+"%",background:C.action,transition:"width .4s ease"}}/></div>
+      <div style={{marginTop:6,fontSize:11,color:C.soft}}>{prog.label}</div>
     </div>}
     {linkNote&&<div style={{marginTop:6,fontSize:11.5,color:C.soft,lineHeight:1.45}}>{linkNote}</div>}
     {linkFails.map((f,i)=><div key={i} style={{marginTop:6,fontSize:11.5,color:TH.urgent.ink,lineHeight:1.4,overflowWrap:"anywhere"}}>
       {f.url?failAs(f):""}{f.url?W.failDash:""}{f.why}
     </div>)}
   </>);
-}
-// The labelling's bar: filled to the shows labelled, with a stripe sliding across the
-// rest while Claude works, so it is never still while something is happening (her ask).
-function LabelBar({ui,prog}){
-  const{C}=ui;
-  const[step,setStep]=useState(0);
-  useEffect(()=>{ const t=setInterval(()=>setStep(s=>(s+1)%60),40); return()=>clearInterval(t); },[]);
-  const filled=Math.round(100*prog.done/prog.total), working=prog.done<prog.total;
-  return(
-    <div style={{marginTop:16}}>
-      <div style={{position:"relative",height:6,background:C.rule,borderRadius:3,overflow:"hidden"}}>
-        <div style={{position:"absolute",left:0,top:0,bottom:0,width:filled+"%",background:C.action,transition:"width .4s ease"}}/>
-        {working&&<div style={{position:"absolute",top:0,bottom:0,width:"18%",left:(filled+(100-filled)*step/60*0.82)+"%",background:C.action,opacity:0.45,borderRadius:3}}/>}
-      </div>
-      <div style={{marginTop:6,fontSize:11,color:C.soft}}>{prog.label}</div>
-    </div>
-  );
 }
 // A CSV import: the labelling's progress, before the review opens.
 function ImportCsvStatus({ui,importMode,busy,prog}){
@@ -11722,9 +11715,13 @@ function useImportSession({rows,ignored,hasLedger,commit,addToQuarantine,documen
 
   // Every new show gets its period before the review opens (labelCardsJob), its progress in
   // the pop-up. Hands back {props} with the labels on, or {stopped} after Cancel.
-  async function labelFirst(props){
+  // `before`: the steps the bar has already taken (a Read's pages); labelling fills the rest,
+  // one share per batch, so one bar runs from the first page to the last label.
+  async function labelFirst(props,before=0){
     jobStarts(); labelRun.current={on:true,stop:false};
-    const out=await labelCardsJob(props,{progress:p=>{ if(!labelRun.current.stop)showProgress(p); },stopped:()=>labelRun.current.stop});
+    const out=await labelCardsJob(props,{progress:p=>{ if(labelRun.current.stop)return;
+      const batches=Math.ceil(p.total/PERIOD_BATCH);
+      showProgress({...p,done:before+batches*p.done/p.total,total:before+batches}); },stopped:()=>labelRun.current.stop});
     // The full bar stays a moment, so she sees the labelling finish before the review opens.
     if(out.asked&&!out.stopped)await pause(LABEL_DONE_MS);
     labelRun.current={on:false,stop:false};
@@ -11741,13 +11738,18 @@ function useImportSession({rows,ignored,hasLedger,commit,addToQuarantine,documen
     if(input.nothing){ setLinkFails(input.nothing); return; }
     jobStarts(); setLinkNote(null); setLinkFails([]);
     linkRead.current={on:true,stop:false};
-    const out=await readShows(input,occVenues,{progress:showProgress,stopped:()=>linkRead.current.stop});
+    // One bar for the whole import: the pages first, then a share per labelling batch (planned
+    // from the links; fewer new shows only move the bar further when reading ends).
+    const steps=input.urls.length, planned=Math.ceil(steps/PERIOD_BATCH);
+    const out=await readShows(input,occVenues,{progress:p=>showProgress({...p,total:steps+planned}),stopped:()=>linkRead.current.stop});
     // Cancelled mid-Read: nothing from this Read is kept; every link stays in the box.
     if(out.stopped){ linkRead.current={on:false,stop:false}; showProgress({done:0,total:0,label:""}); jobEnds(); setImportMode(null); return; }
     linkRead.current={on:false,stop:false};
     if(out.venuesChanged){ hold(out.venues); }   // held, not stored: see useLinkVenues
-    showProgress({done:0,total:0,label:""}); jobEnds();
     const done=readOutcome(input,out,{pages,pastes,rows,ignored});
+    // The bar stays up into the labelling when there are cards to label; otherwise the Read ends here.
+    if(!done.props||done.finished||done.note){ showProgress({done:0,total:0,label:""}); }
+    jobEnds();
     if(done.moved)addToQuarantine(done.moved);
     // The box (or list) is stored when the import finishes.
     setPending(input.kind,done.pending);
@@ -11762,7 +11764,7 @@ function useImportSession({rows,ignored,hasLedger,commit,addToQuarantine,documen
     if(done.note){ setLinkNote(done.note); return; }
     if(!done.props)return;
     linksAtRead.current=done.held;
-    const lab=await labelFirst(done.props);
+    const lab=await labelFirst(done.props,steps);
     // Cancelled while labelling: as Cancel import on the review — every link goes back in the box.
     if(lab.stopped){ cancelRefresh(); return; }
     setProposals(lab.props); setCoverage([]); setTally(done.tally); setSeenInFile(null); setDecisions(potentialQuarantinePresets(lab.props));

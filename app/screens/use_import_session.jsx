@@ -78,9 +78,13 @@ function useImportSession({rows,ignored,hasLedger,commit,addToQuarantine,documen
 
   // Every new show gets its period before the review opens (labelCardsJob), its progress in
   // the pop-up. Hands back {props} with the labels on, or {stopped} after Cancel.
-  async function labelFirst(props){
+  // `before`: the steps the bar has already taken (a Read's pages); labelling fills the rest,
+  // one share per batch, so one bar runs from the first page to the last label.
+  async function labelFirst(props,before=0){
     jobStarts(); labelRun.current={on:true,stop:false};
-    const out=await labelCardsJob(props,{progress:p=>{ if(!labelRun.current.stop)showProgress(p); },stopped:()=>labelRun.current.stop});
+    const out=await labelCardsJob(props,{progress:p=>{ if(labelRun.current.stop)return;
+      const batches=Math.ceil(p.total/PERIOD_BATCH);
+      showProgress({...p,done:before+batches*p.done/p.total,total:before+batches}); },stopped:()=>labelRun.current.stop});
     // The full bar stays a moment, so she sees the labelling finish before the review opens.
     if(out.asked&&!out.stopped)await pause(LABEL_DONE_MS);
     labelRun.current={on:false,stop:false};
@@ -97,13 +101,18 @@ function useImportSession({rows,ignored,hasLedger,commit,addToQuarantine,documen
     if(input.nothing){ setLinkFails(input.nothing); return; }
     jobStarts(); setLinkNote(null); setLinkFails([]);
     linkRead.current={on:true,stop:false};
-    const out=await readShows(input,occVenues,{progress:showProgress,stopped:()=>linkRead.current.stop});
+    // One bar for the whole import: the pages first, then a share per labelling batch (planned
+    // from the links; fewer new shows only move the bar further when reading ends).
+    const steps=input.urls.length, planned=Math.ceil(steps/PERIOD_BATCH);
+    const out=await readShows(input,occVenues,{progress:p=>showProgress({...p,total:steps+planned}),stopped:()=>linkRead.current.stop});
     // Cancelled mid-Read: nothing from this Read is kept; every link stays in the box.
     if(out.stopped){ linkRead.current={on:false,stop:false}; showProgress({done:0,total:0,label:""}); jobEnds(); setImportMode(null); return; }
     linkRead.current={on:false,stop:false};
     if(out.venuesChanged){ hold(out.venues); }   // held, not stored: see useLinkVenues
-    showProgress({done:0,total:0,label:""}); jobEnds();
     const done=readOutcome(input,out,{pages,pastes,rows,ignored});
+    // The bar stays up into the labelling when there are cards to label; otherwise the Read ends here.
+    if(!done.props||done.finished||done.note){ showProgress({done:0,total:0,label:""}); }
+    jobEnds();
     if(done.moved)addToQuarantine(done.moved);
     // The box (or list) is stored when the import finishes.
     setPending(input.kind,done.pending);
@@ -118,7 +127,7 @@ function useImportSession({rows,ignored,hasLedger,commit,addToQuarantine,documen
     if(done.note){ setLinkNote(done.note); return; }
     if(!done.props)return;
     linksAtRead.current=done.held;
-    const lab=await labelFirst(done.props);
+    const lab=await labelFirst(done.props,steps);
     // Cancelled while labelling: as Cancel import on the review — every link goes back in the box.
     if(lab.stopped){ cancelRefresh(); return; }
     setProposals(lab.props); setCoverage([]); setTally(done.tally); setSeenInFile(null); setDecisions(potentialQuarantinePresets(lab.props));

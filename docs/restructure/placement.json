@@ -727,7 +727,6 @@
   "ConfirmBox": "screens/floating.jsx",
   "Footer": "screens/floating.jsx",
   "ReadStatus": "screens/import_popup.jsx",
-  "LabelBar": "screens/import_popup.jsx",
   "ImportCsvStatus": "screens/import_popup.jsx",
   "ImportPopup": "screens/import_popup.jsx",
   "ImportNeedLedger": "screens/import_popup.jsx",
