@@ -144,8 +144,8 @@ answered (`docs/sweep_records/`; `docs/sweep_operation.md`, "Headed venues").
 **Access and pace — settled for the four Cloudflare venues:** paced sweeps from her laptop, in a visible Chrome on a profile
 she has browsed in, are clean at all four (`docs/venues.md`, "The headed venues"; `docs/sweep_operation.md`).
 
-**OPEN — Budapest (`mfab`), her addition: recipe built and tested offline, never swept.** Container venue. Its first
-sweep goes back to 2010, once, only with her yes (`docs/venues.md`); the app shows it only after the next publish.
+**Budapest (`mfab`), her addition: live in her app at 60.1.** Container venue. Its one-time first sweep back to 2010 is
+ready for her to import (`scraper/output/run_2026-11-28_114802/sweep_compressed.csv`; `docs/venues.md`).
 
 #### Her decisions, per venue — `docs/venues.md`
 
@@ -171,7 +171,7 @@ Everything not listed here is finished. Do not reopen a closed item without a ne
 
 The app is feature parts under `app/` that a session can read whole; the main screen is the order of its pieces
 (`docs/restructure.md`: how it is laid out, the rules any later change to the screen follows, the checks). Her test
-rounds passed. **Her app runs 60** (59.2's work: the rebuilt screen, the Theme chip's count, the venue scrubber for
+rounds passed. **Her app runs 60.1** (60 plus Budapest; 59.2's work: the rebuilt screen, the Theme chip's count, the venue scrubber for
 the Occ groups, "Still in the museum shop.", the fixes after item 4, the Uffizi's shop removed, the words list — every
 sentence she sees, written once — and the housekeeping). **The checks are proven** — each by planted faults,
 and run on the current code — and locked in code: no test is used until proven at its version (`docs/testing.md`, "Proven
@@ -189,7 +189,7 @@ not yet seen in a run.
 Waiting for the next Menil and Cincinnati sweeps (the 27 Nov fixes, `docs/sweep_records/2026-11-27_home_cincinnati_3_close.md`):
 no funders, news-release teasers or curator credits at Menil; no "Curated by" or sponsor line at Cincinnati; Cincinnati's
 Special Features page read and no special feature in the rows.
-**Built, not published — a quarantined show its venue moves stays out, that show only** (venue, name and overlapping
+**Live at 60.1 — a quarantined show its venue moves stays out, that show only** (venue, name and overlapping
 dates; its new address quarantined too; `docs/app.md` §4). Her existing entries need their dates, looked up from past
 sweep files by address (76 of 100 found) — a write to her store, awaiting her yes.
 
@@ -290,6 +290,13 @@ Cini, Prado, Correr): `docs/app.md`, `docs/add_by_link.md`.
   would consider: count each show once per heading, so a mixed card shows under both ("1 filled in, 1 updated") —
   unless a cleverer answer turns up.
 
+#### 2.2.19 The tests' restructure — audit done, plan awaiting her go
+
+Her ask: typed-out copies and duplicate copies go, bundles are split, the whole-file lock is redesigned. The audit and the
+plan, in order (the lock first, since every later step touches test files): `docs/test_restructure.md`. Read it before
+any test work. For Budapest she had the lock bypassed (her decision): the two venue-order tests' fingerprints were
+re-recorded unproven.
+
 #### 2.2.6 Tests that failed — recorded, not investigated
 
 A session records each failing suite here and does not investigate it (`docs/testing.md`).
@@ -372,6 +379,7 @@ behind such a link. Read the one for the work in hand.
 | `docs/branches.md` | The branch table and holding a push for another session | Creating, merging or pushing a branch |
 | `docs/publishing.md` | Version numbering, building the app and the publish steps | Publishing the app |
 | `docs/testing.md` | Which test group to run, where a failure is recorded, the live proof pages, test anchors, JSX validation | Running or writing tests, or re-checking live proof pages |
+| `docs/test_restructure.md` | The tests' audit (typed-out copies, duplicate machinery, bundles, the whole-file lock) and the plan to fix them | Any change to how tests are built, split or locked |
 | `docs/restructure.md`, `docs/restructure/placement.json`, `docs/restructure/duplicates.md` | The app in feature parts: how it is laid out, the rules of a cut, the checks, her test page, what is left; where every piece goes; the audit of facts kept twice | Any change to the main screen or to where a piece lives |
 
 **Reviews**
@@ -526,7 +534,7 @@ bot-blocked, so Pages and Paste only) is a fact about that venue, never a limit 
 > restating `capabilities` must restate all four; omitting it carries them
 > forward. **Renaming the connector means restating them.**
 
-**Live: 60 in her app (§2.2.1)** (the app is named **Art Watch** on screen since 57; the header's big line is unchanged), with the cloud ledger (merged at 46). What each recent version changed is in
+**Live: 60.1 in her app (§2.2.1)** (the app is named **Art Watch** on screen since 57; the header's big line is unchanged), with the cloud ledger (merged at 46). What each recent version changed is in
 `docs/publishing.md`, "What is live now".
 
 #### The mental model, load-bearing
