@@ -51,7 +51,8 @@ function listView(rows,filters,sort,byArtist){
       if(acqWanted||acqOwned||acqBuyNext){if(!((acqOwned&&r.acquiring==="acquired")||(acqWanted&&r.acquiring==="yes"&&(!acqBuyNext||isBuyNext(r)))||(acqBuyNext&&!acqWanted&&isBuyNext(r))))return false;}
       // The Closing Window count, tapped (her ask): the shows it counts.
       if(closingF&&!inClosingWindow(r))return false;
-      if(acq3mo||acq6mo){if(!((acq3mo&&t==="closing")||(acq6mo&&(t==="urgent"||t==="lapsed"))))return false;}
+      // <6 mos and 6-12 mos (her ask): closed up to 6 months ago, and 6 to 12; together, the Closing Window.
+      if(acq3mo||acq6mo){if(!((acq3mo&&(t==="fresh"||t==="closing"))||(acq6mo&&t==="urgent")))return false;}
       // Has, No and Digital catalogue widen one another: a card shows when it matches any one chosen.
       if(acqHasCat||acqNoCat||acqDigital){if(!((acqHasCat&&r.looked&&r.hasCatalogue==="yes")||(acqNoCat&&r.looked&&r.hasCatalogue==="no")||(acqDigital&&r.digitalUrl)))return false;}
       return true;

@@ -14,10 +14,11 @@ Confirmed by her on real files, not only by fixtures.
   under the LAST line of the selection, below Android's handles (a handle over it once took her tap; nothing logs taps).
 - **The name, Art Watch** (live at 57): page title, small header line, footer, read-only line; the big line stays
   "Before it goes out of print" (her decision, for now).
-- **The counts line:** Watched · Wanted · Owned · Closing Window (Yes-wanted catalogues closed 3–12 months ago,
+- **The counts line:** Watched · Wanted · Owned · Closing Window (Yes-wanted catalogues closed in the last 12 months, 3–12 until 61.2,
   `inClosingWindow`), with Tracked and Dismissed inside "Details". Tapping Closing Window shows exactly the shows
   it counts, every other filter cleared; it is underlined while on, and a second tap turns it off (her ask, live at 61.1).
-  The "6+ mos" chip (no longer "closing window", her ask) still runs past 12 months. "Reset cards" clears one card's lookup.
+  The chips "<6 mos" and "6-12 mos" (her ask, 61.2) split it in two, so together they show exactly the count; a wanted
+  show closed over a year has no chip. "Reset cards" clears one card's lookup.
 
 - **Loading and saving, refreshing, reading a stitched file:** §2 and §3 below. **Never put back a click-triggered green tick**
   (§2).

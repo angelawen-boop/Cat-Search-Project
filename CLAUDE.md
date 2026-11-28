@@ -172,7 +172,7 @@ Everything not listed here is finished. Do not reopen a closed item without a ne
 
 The app is feature parts under `app/` that a session can read whole; the main screen is the order of its pieces
 (`docs/restructure.md`: how it is laid out, the rules any later change to the screen follows, the checks). Her test
-rounds passed. **Her app runs 61.1** (61.1: the Closing Window count filters the list; 61: assumed dates, §2.2.18; 60 plus Budapest and its shop, the Potential quarantines heading, and periods labelled before the import review opens; 59.2's work: the rebuilt screen, the Theme chip's count, the venue scrubber for
+rounds passed. **Her app runs 61.2** (61.1–61.2: the Closing Window is every wanted show closed in the last 12 months, its count filters the list, its chips "<6 mos" and "6-12 mos"; 61: assumed dates, §2.2.18; 60 plus Budapest and its shop, the Potential quarantines heading, and periods labelled before the import review opens; 59.2's work: the rebuilt screen, the Theme chip's count, the venue scrubber for
 the Occ groups, "Still in the museum shop.", the fixes after item 4, the Uffizi's shop removed, the words list — every
 sentence she sees, written once — and the housekeeping). **The checks are proven** — each by planted faults,
 and run on the current code — and locked in code: no test is used until proven at its version (`docs/testing.md`, "Proven
@@ -312,9 +312,9 @@ A session records each failing suite here and does not investigate it (`docs/tes
 seconds for an automatic save (CA-002, CA-005d, CA-006, TC-001) gave up. The cloud suites now run alone (her decision; the 8
 seconds kept). If one still fails when run alone, record it here — that is a real fault, not crowding.
 
-**OPEN — `recheck_shop.js` BN-002 fails since 61.1**: it types out the Acquiring chips' old words ("6+ mos closing
-window"), which her ask changed. The test is under the lock, so updating it needs a proof or her yes to re-record it
-unproven (as for Budapest).
+**OPEN — two locked tests check the Closing Window's old form, so fail since her asks at 61.1–61.2:** `recheck_shop.js`
+BN-002 types out the old chip words; `catalogue_lookup.js` C-157 expects a show closed under 3 months to be outside the
+window. Updating either needs a proof or her yes to re-record it unproven (as for Budapest).
 
 **OPEN — the live shop checks miss at four venues** (`shop_check.js`: Berlin, the Albertina, the Belvedere;
 `gallery_shop_check.js`: White Cube), the same under the code before the price rule (the same live replies read by
@@ -549,7 +549,7 @@ bot-blocked, so Pages and Paste only) is a fact about that venue, never a limit 
 > restating `capabilities` must restate all four; omitting it carries them
 > forward. **Renaming the connector means restating them.**
 
-**Live: 61.1 in her app (§2.2.1, §2.2.18)** (the app is named **Art Watch** on screen since 57; the header's big line is unchanged), with the cloud ledger (merged at 46). What each recent version changed is in
+**Live: 61.2 in her app (§2.2.1, §2.2.18)** (the app is named **Art Watch** on screen since 57; the header's big line is unchanged), with the cloud ledger (merged at 46). What each recent version changed is in
 `docs/publishing.md`, "What is live now".
 
 #### The mental model, load-bearing

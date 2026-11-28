@@ -76,11 +76,11 @@ function starInk(){
 
 
 // Closing Window on the counts line (her decision): Yes-wanted catalogues whose show
-// closed 3–12 months ago.
+// closed in the last 12 months (her ask, 61.2; it was 3–12).
 function inClosingWindow(r){
   if(!r||!r.interested||r.acquiring!=="yes")return false;
   const t=tierFor(r);
-  return t==="closing"||t==="urgent";
+  return t==="fresh"||t==="closing"||t==="urgent";
 }
 //@piece tierFor
 

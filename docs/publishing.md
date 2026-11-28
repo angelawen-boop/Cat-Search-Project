@@ -27,7 +27,11 @@ page) — then once more as resent unchanged; the next goes through. Later ones 
 
 ## What is live now
 
-**Live: 61.1 in her app** — tapping the Closing Window count shows exactly the shows it counts (every other filter
+**Live: 61.2 in her app** — the Closing Window is now every Yes-wanted show closed in the last 12 months (was
+3–12); the chips "<6 mos" (closed 0–6 months) and "6-12 mos" (6–12) replace "3+ mos" and "6+ mos", so together they show
+exactly the count (her ask). Wanted shows closed over a year have no chip.
+
+**61.1** — tapping the Closing Window count shows exactly the shows it counts (every other filter
 cleared, underlined while on); the "6+ mos" chip loses "closing window" (`docs/app.md`, "The counts line").
 
 **61** — assumed dates: a month or season with no day gets an assumed day the app runs on, the card

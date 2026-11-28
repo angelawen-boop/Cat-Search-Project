@@ -3,7 +3,7 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 // The footer prints APP_VERSION and its date, so she can tell one build from the next.
 // Numbering, her decision: a whole number for a substantial change, a decimal for a
 // small one, one number per publish. Bump it with the change it describes.
-const APP_VERSION = "61.1";
+const APP_VERSION = "61.2";
 // Not words: the date of this version.
 const APP_VERSION_DATE = "28 Nov 2026";
 
@@ -1005,8 +1005,8 @@ const W={  // ── the header: title, toolbar, Save panel, status lines, banne
   chipWanted:"Wanted",
   chipOwned:"Owned",
   buyNext:"Buy next",
-  chip3mo:"3+ mos",
-  chip6mo:"6+ mos",
+  chip3mo:"<6 mos",
+  chip6mo:"6-12 mos",
   chipHasCatalogue:"Has catalogue",
   chipNoCatalogue:"No catalogue",
   digitalCatalogue:"Digital catalogue",
@@ -6218,11 +6218,11 @@ function starInk(){
 }
 
 // Closing Window on the counts line (her decision): Yes-wanted catalogues whose show
-// closed 3–12 months ago.
+// closed in the last 12 months (her ask, 61.2; it was 3–12).
 function inClosingWindow(r){
   if(!r||!r.interested||r.acquiring!=="yes")return false;
   const t=tierFor(r);
-  return t==="closing"||t==="urgent";
+  return t==="fresh"||t==="closing"||t==="urgent";
 }
 
 function tierFor(r){
@@ -9909,7 +9909,8 @@ function listView(rows,filters,sort,byArtist){
       if(acqWanted||acqOwned||acqBuyNext){if(!((acqOwned&&r.acquiring==="acquired")||(acqWanted&&r.acquiring==="yes"&&(!acqBuyNext||isBuyNext(r)))||(acqBuyNext&&!acqWanted&&isBuyNext(r))))return false;}
       // The Closing Window count, tapped (her ask): the shows it counts.
       if(closingF&&!inClosingWindow(r))return false;
-      if(acq3mo||acq6mo){if(!((acq3mo&&t==="closing")||(acq6mo&&(t==="urgent"||t==="lapsed"))))return false;}
+      // <6 mos and 6-12 mos (her ask): closed up to 6 months ago, and 6 to 12; together, the Closing Window.
+      if(acq3mo||acq6mo){if(!((acq3mo&&(t==="fresh"||t==="closing"))||(acq6mo&&t==="urgent")))return false;}
       // Has, No and Digital catalogue widen one another: a card shows when it matches any one chosen.
       if(acqHasCat||acqNoCat||acqDigital){if(!((acqHasCat&&r.looked&&r.hasCatalogue==="yes")||(acqNoCat&&r.looked&&r.hasCatalogue==="no")||(acqDigital&&r.digitalUrl)))return false;}
       return true;
