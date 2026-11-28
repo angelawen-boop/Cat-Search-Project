@@ -167,7 +167,7 @@ const VENUES = [
     shop: { home: null, catalogues: null, search: null, unseen: null, queries: [], named: null, rankAsOwn: ["Yale University Press"], inStock: null },
     read: { link: null, sites: [], dateOrder: null, spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
     sweep: { exBase: null, listUrl: null },
-    filed: { addedAt: "2026-10-17T06:44:41.407Z", confirmed: true, english: true, finder: 3, foundBy: "the shop's menu", host: "britishart.yale.edu", id: "occ-britishart-yale-edu", name: "Yale Center for British Art", pageShop: "", shelfKind: "publications", shop: "found", shopCatalogues: "https://secure.touchnet.net/C20510_ustores/web/store_cat.jsp?STOREID=7&CATID=16&SINGLESTORE=true", shopHome: "https://secure.touchnet.net/C20510_ustores/web/store_main.jsp?STOREID=7&SINGLESTORE=true", shopSearch: null, turnedDown: [], why: null } },
+    filed: { addedAt: "2026-10-17T06:44:41.407Z", aka: [], city: "New Haven", confirmed: true, country: "United States", english: true, finder: 3, foundBy: "the shop's menu", host: "britishart.yale.edu", id: "occ-britishart-yale-edu", name: "Yale Center for British Art", pageShop: "", searchRule: 2, shelfKind: "publications", shop: "found", shopCatalogues: "https://secure.touchnet.net/C20510_ustores/web/store_cat.jsp?STOREID=7&CATID=16&SINGLESTORE=true", shopHome: "https://secure.touchnet.net/C20510_ustores/web/store_main.jsp?STOREID=7&SINGLESTORE=true", shopSearch: null, short: "Yale CBA", turnedDown: [], why: null } },
 
   { id: "brit", kind: "swept",
     names: { card: "British Museum", chip: "British Museum", group: null, full: "The British Museum", inEnglish: null, aka: [], replaced: [], hers: true },
@@ -751,6 +751,14 @@ const VENUES = [
     sweep: { exBase: null, listUrl: null },
     filed: { addedAt: "2026-11-12T14:56:24.821Z", aka: ["Rodin Museum"], city: "Paris", confirmed: true, country: "France", english: false, englishPicked: false, finder: 3, foundBy: "a search", gallery: false, host: "www.musee-rodin.fr", id: "occ-musee-rodin-fr", name: "Mus\u00e9e Rodin", pageShop: "https://boutique.musee-rodin.fr/en/", searchRule: 2, shelfKind: "catalogues", shop: "found", shopAdded: false, shopCatalogues: "https://boutique.musee-rodin.fr/en/25-exhibition-catalogues", shopEnglishUnread: null, shopHome: "https://boutique.musee-rodin.fr/", shopSearch: null, short: "Rodin Museum Paris", turnedDown: [], why: null } },
 
+  { id: "occ-fondation-giacometti-fr", kind: "manual",
+    names: { card: "Institut Giacometti Paris", chip: null, group: null, full: "Institut Giacometti", inEnglish: null, aka: [], replaced: [], hers: false },
+    city: "Paris", country: "France", english: false, language: null,
+    shop: { home: null, catalogues: null, search: null, unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
+    read: { link: null, sites: [], dateOrder: null, spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
+    sweep: { exBase: null, listUrl: null },
+    filed: { addedAt: "2026-11-19T11:47:43.883Z", aka: [], city: "Paris", confirmed: true, country: "France", english: false, englishPicked: false, finder: 3, foundBy: "her link", gallery: false, host: "www.fondation-giacometti.fr", id: "occ-fondation-giacometti-fr", name: "Institut Giacometti", pageShop: "", searchRule: null, shelfKind: null, shop: "found", shopAdded: true, shopCatalogues: "https://www.fondation-giacometti.com/en/our-publications/exhibition-catalog", shopEnglishUnread: null, shopHome: "https://www.fondation-giacometti.com/", shopSearch: null, short: "Institut Giacometti Paris", turnedDown: [], why: null } },
+
   // Written in, her decision: a shop drawn by script (its page's code holds no books, only a frame and a
   // script) gets its best section written in and `shopUnseen` "script": a lookup there reads "contents
   // cannot be seen — JS-rendering" and goes to the web (docs/add_by_link.md, "A shop drawn by script").
@@ -964,6 +972,6 @@ const VENUES = [
 
 // When her review page's names were last filed: a name she typed before this is already in the
 // entries above (or was replaced by a later word of hers), so a publish files only newer ones.
-const NAMES_FILED_AT = "2026-11-15T10:23:16.303Z";
+const NAMES_FILED_AT = "2026-11-28T01:26:57.185Z";
 
 module.exports = { VENUES, NAMES_FILED_AT };
