@@ -144,7 +144,9 @@ answered (`docs/sweep_records/`; `docs/sweep_operation.md`, "Headed venues").
 **Access and pace — settled for the four Cloudflare venues:** paced sweeps from her laptop, in a visible Chrome on a profile
 she has browsed in, are clean at all four (`docs/venues.md`, "The headed venues"; `docs/sweep_operation.md`).
 
-**Budapest (`mfab`), her addition: live in her app at 60.1.** Container venue. Its one-time first sweep back to 2010 is
+**Budapest (`mfab`), her addition: live in her app at 60.1.** Its shop's shelf and search, checked live, are in the
+register but not yet published (60.1 has its front page only); the shelf's two limits she accepted: `docs/app.md`,
+"Shop addresses". Container venue. Its one-time first sweep back to 2010 is
 ready for her to import (`scraper/output/run_2026-11-28_114802/sweep_compressed.csv`; `docs/venues.md`).
 
 #### Her decisions, per venue — `docs/venues.md`

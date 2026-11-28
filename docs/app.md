@@ -368,6 +368,12 @@ a venue is recognised as a publisher, and named, under either.
 - **A venue blocked for sweeping says nothing about its shop** — moma, brit,
   morgan, met and artic shops all answered the reader first time. KHM and MAM
   are the blocked shops.
+- **Budapest (`mfab`)** — its shop's shelf and search were read live through Parallel before they were written in (her
+  ask: a swept venue's shop is checked at intake, not at her first lookup). Each language edition is its own book page,
+  with its language and ISBN. The search finds the edition whose title matches the words searched — the English one for
+  an English title; an edition in another language can only be caught by the shelf. **OPEN — the shelf's two known
+  limits, accepted for now (her decision):** only the first five of its pages are read (`SHELF_DEPTH`), and Parallel
+  once returned a weeks-old copy of its first page, where the newest books sit (no setting forces a fresh copy).
 - **A thin answer from a page is not proof the page is thin** — the Met's
   results page first read as navigation only.
 
