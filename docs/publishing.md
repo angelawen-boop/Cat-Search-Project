@@ -27,7 +27,10 @@ page) — then once more as resent unchanged; the next goes through. Later ones 
 
 ## What is live now
 
-**Live: 61 in her app** — assumed dates: a month or season with no day gets an assumed day the app runs on, the card
+**Live: 61.1 in her app** — tapping the Closing Window count shows exactly the shows it counts (every other filter
+cleared, underlined while on); the "6+ mos" chip loses "closing window" (`docs/app.md`, "The counts line").
+
+**61** — assumed dates: a month or season with no day gets an assumed day the app runs on, the card
 showing the venue's words and the day (`docs/app.md`, "Assumed dates").
 
 **60.4** — every import (CSV, Links, Pages, Paste) labels its new shows' periods before the review
