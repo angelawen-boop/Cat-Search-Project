@@ -26,7 +26,7 @@ async function labelCardsJob(props,{progress,stopped}={}){
   saveLookupTape(tape,{ok:said.ok,said:said.text,detail:JSON.stringify(res.batches)});
   const at=new Date().toISOString();
   if(!res.stopped)show(shows.length,0);   // the bar seen full before the review opens
-  return {props:props.map((p,i)=>res.labels.has(i)?{...p,cand:{...p.cand,...res.labels.get(i),labelledAt:at}}:p),said,stopped:res.stopped,asked:true};
+  return {props:props.map((p,i)=>res.labels.has(i)?{...p,cand:{...p.cand,...res.labels.get(i),labelledAt:at}}:p),said,stopped:res.stopped,asked:res.labels.size>0};
 }
 //@piece labelLedgerStart
 
