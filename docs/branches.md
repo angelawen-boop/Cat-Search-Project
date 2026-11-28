@@ -28,7 +28,7 @@ Branches separate in-progress work from known-good work, never components.
 | `claude/restructure-4a-case3` | The waiting-room test with a test venue name, kept off `main` |
 | `claude/v59-1` | 59.1 (the Theme chip's count, the venue scrubber) — merged into `main`; kept as history |
 | `claude/budapest` | Budapest (`mfab`): recipe, register entry, saved-page test — off `main` until she places it in her venue order (the order tests hold her list) |
-| `claude/import-labels-first` | Periods labelled before the import review opens, with progress and Cancel in the pop-up — off `main` until her test passes. Its own test page: https://claude.ai/artifact/CcBcUq9gsmR3fqCuWpbzCK |
+| `claude/import-labels-first` | Periods labelled before the import review opens, one bar in the pop-up — merged into `main` at 60.4; kept as history. Its test page: https://claude.ai/artifact/CcBcUq9gsmR3fqCuWpbzCK |
 | `claude/restructure-fixes` | The fixes after item 4 — merged into `main` at 59.2; kept as history |
 
 **Holding a push for another session — her decision.** When she says a

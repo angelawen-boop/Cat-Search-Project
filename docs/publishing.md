@@ -27,7 +27,12 @@ page) — then once more as resent unchanged; the next goes through. Later ones 
 
 ## What is live now
 
-**Live: 60.3 in her app** — the import screen's "Probably not for you" pile is headed "Potential quarantines"; the
+**Live: 60.4 in her app** — every import (CSV, Links, Pages, Paste) labels its new shows' periods before the review
+opens: one bar in the import pop-up from the first page read to the last label, her wording ("Labelling periods… 40 of
+90 (batch 2)", and on a refusal "— Claude didn't answer batch 2 (upstream_error). Asking again in 13 seconds."), Cancel
+drops the import, Label's line heads the review when not every show was labelled (`docs/periods.md`).
+
+**60.3** — the import screen's "Probably not for you" pile is headed "Potential quarantines"; the
 feature is named for that purpose in the code and docs, the topic label being its step (`docs/compression.md`).
 
 **60.2** — Budapest's shop shelf and search (`docs/app.md`, "Shop addresses").
