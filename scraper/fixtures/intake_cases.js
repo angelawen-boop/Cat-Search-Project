@@ -397,17 +397,17 @@ check('18f: the real sample file starts with every card undecided',
 // the freshness drawer and the refresh screen's headings all follow her list.
 {
   const want=['met','ng','frick','morgan','artic','menil','acq','lgd','cincinnati','brit',
-    'tate-britain','wallace','va','louvre','orsay','jacquemart','mad','rijks','khm',
+    'tate-britain','wallace','va','louvre','orsay','jacquemart','mad','rijks','khm','mfab',
     'uffizi','dellav','borghese','brera','capo','moma','tate-modern','mam','ashmolean'];
   const got=H.MUSEUMS.map(m=>m.id);
   check('19: the venues are in her order', got.join()===want.join(), {got});
   const chips=['met','ng','occ-nga-gov','frick','morgan','artic','menil',
     'acq','lgd','occ-new-artsmia-org','cincinnati','occ-britishart-yale-edu','brit','tate-britain','wallace','va','occ-nationalgalleries-org',
-    'louvre','orsay','jacquemart','occ-chateaudechantilly-fr','mad','rijks','khm','occ-museodelprado-es','occ-alte-pinakothek','occ-pinakothek-der-moderne','occ-sammlung-schack','occ-smb-museum','occ-alte-nationalgalerie','occ-neue-nationalgalerie','occ-gemaeldegalerie-skd-museum','occ-staedelmuseum-de','uffizi','dellav','borghese','brera','capo','occ-cini-it','occ-lestanzedelvetro-org','occ-lestanzedellafotografia-it','moma',
+    'louvre','orsay','jacquemart','occ-chateaudechantilly-fr','mad','rijks','khm','mfab','occ-museodelprado-es','occ-alte-pinakothek','occ-pinakothek-der-moderne','occ-sammlung-schack','occ-smb-museum','occ-alte-nationalgalerie','occ-neue-nationalgalerie','occ-gemaeldegalerie-skd-museum','occ-staedelmuseum-de','uffizi','dellav','borghese','brera','capo','occ-cini-it','occ-lestanzedelvetro-org','occ-lestanzedellafotografia-it','moma',
     'tate-modern','mam'];   // the Occasional venues follow by country (orderOf), not in this list
   check('19c: chips and Sort by Venue follow her list', Object.keys(H.CHIP_RANK).join()===chips.join(), {got:Object.keys(H.CHIP_RANK)});
-  check('19d: and it names all 28 but the Ashmolean, which files under Occasional by its country', got.every(id=>id==='ashmolean'||id in H.CHIP_RANK), {});
-  check('19a: and all 28 are still there', got.length===28, {count:got.length});
+  check('19d: and it names all 29 but the Ashmolean, which files under Occasional by its country', got.every(id=>id==='ashmolean'||id in H.CHIP_RANK), {});
+  check('19a: and all 29 are still there', got.length===29, {count:got.length});
   // 19b. A venue in MUSEUMS is a venue the import files — Cincinnati, 4 Oct.
   H.setRows([]);
   const ci=H.analyzeProForma(hdr+row(['cincinnati','Tintoretto’s Genesis','2025-04-18','2025-08-31','In the early 1550s.','https://www.cincinnatiartmuseum.org/art/exhibitions/exhibition-archive/2025/tintorettos-genesis/','']));

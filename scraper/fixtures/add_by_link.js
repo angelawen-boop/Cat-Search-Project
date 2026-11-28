@@ -1064,8 +1064,8 @@ function runtime() {
     const over = fn('occasionalOver');
     const P = 'occ-museodelprado-es', prado = fn('occVenue')(P, over({ [P]: { id: P, short: 'Madrid Prado', name: 'Museo Nacional del Prado' } })[P]);
     ok(fn('occVenueId')('www.museodelprado.es') === P && own[P].chip && prado.chip === 'Prado' && prado.card === 'Prado'
-      && order.indexOf('khm') + 1 === order.indexOf(P),
-      'AL-085:  the Prado: chip "Prado" right after KHM, cards "Prado" (her decision), never the store\'s "Madrid Prado"', JSON.stringify([prado.chip, prado.card]));
+      && order.indexOf('mfab') + 1 === order.indexOf(P),
+      'AL-085:  the Prado: chip "Prado" right after Budapest (after KHM, her decision), cards "Prado" (her decision), never the store\'s "Madrid Prado"', JSON.stringify([prado.chip, prado.card]));
     const F = 'occ-staedelmuseum-de';
     ok(fn('occVenueId')('www.staedelmuseum.de') === F && own[F].chip === 'Frankfurt' && card(F) === 'Städel Frankfurt' && order.indexOf(D) + 1 === order.indexOf(F),
       'AL-049:  the Städel: chip "Frankfurt" right after Dresden, cards "Städel Frankfurt" (her decision)');
