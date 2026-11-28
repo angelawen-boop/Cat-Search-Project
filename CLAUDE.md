@@ -290,12 +290,12 @@ Cini, Prado, Correr): `docs/app.md`, `docs/add_by_link.md`.
   would consider: count each show once per heading, so a mixed card shows under both ("1 filled in, 1 updated") —
   unless a cleverer answer turns up.
 
-#### 2.2.19 The tests' restructure — audit done, plan awaiting her go
+#### 2.2.19 The tests — keep a proven core, retire the rest (her decision, not yet built)
 
-Her ask: typed-out copies and duplicate copies go, bundles are split, the whole-file lock is redesigned. The audit and the
-plan, in order (the lock first, since every later step touches test files): `docs/test_restructure.md`. Read it before
-any test work. For Budapest she had the lock bypassed (her decision): the two venue-order tests' fingerprints were
-re-recorded unproven.
+Keep the essential tests (page opens, saving, import) and the proven ones, prove each kept one, retire the rest; the
+date reader's tests kept and proven; nothing rewritten; the lock goes; light rules for new tests; the session checks
+for real before saying "done". The nine items: `docs/test_restructure.md`. Read it before any test work. For Budapest
+she had the lock bypassed (her decision): the two venue-order tests' fingerprints were re-recorded unproven.
 
 #### 2.2.6 Tests that failed — recorded, not investigated
 
@@ -379,7 +379,7 @@ behind such a link. Read the one for the work in hand.
 | `docs/branches.md` | The branch table and holding a push for another session | Creating, merging or pushing a branch |
 | `docs/publishing.md` | Version numbering, building the app and the publish steps | Publishing the app |
 | `docs/testing.md` | Which test group to run, where a failure is recorded, the live proof pages, test anchors, JSX validation | Running or writing tests, or re-checking live proof pages |
-| `docs/test_restructure.md` | The tests' audit (typed-out copies, duplicate machinery, bundles, the whole-file lock) and the plan to fix them | Any change to how tests are built, split or locked |
+| `docs/test_restructure.md` | Her plan for the tests: what is kept and proven, what retires, the lock's removal, the rules for new tests | Any test work |
 | `docs/restructure.md`, `docs/restructure/placement.json`, `docs/restructure/duplicates.md` | The app in feature parts: how it is laid out, the rules of a cut, the checks, her test page, what is left; where every piece goes; the audit of facts kept twice | Any change to the main screen or to where a piece lives |
 
 **Reviews**
