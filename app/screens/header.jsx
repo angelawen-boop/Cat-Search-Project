@@ -199,14 +199,14 @@ function SweepLog({ui,lastSweep,venueSeen,freshWhy,counts}){
 //@piece CountsRow
 
 // The counts line, with the search icon at its end.
-function CountsRow({ui,counts,toggleSearchBox}){
+function CountsRow({ui,counts,toggleSearchBox,closingF,toggleClosingWindow}){
   const{C,TH}=ui;
   return(
         <div style={{marginTop:10,paddingTop:8,borderTop:"1px solid "+C.rule,display:"flex",gap:14,fontSize:10.5,color:C.soft,flexWrap:"wrap",alignItems:"center"}}>
           <span><b style={{color:C.ink}}>{counts.watched}</b>{W.watched}</span>
           <span><b style={{color:C.ink}}>{counts.wanted}</b>{W.wanted}</span>
           <span><b style={{color:C.owned}}>{counts.owned}</b>{W.owned}</span>
-          <span><b style={{color:TH.urgent.ink}}>{counts.pressing}</b>{W.closingWindowCount}</span>
+          <button onClick={toggleClosingWindow} style={{background:"none",border:"none",cursor:"pointer",padding:0,font:"inherit",color:C.soft,textDecoration:closingF?"underline":"none"}}><b style={{color:TH.urgent.ink}}>{counts.pressing}</b>{W.closingWindowCount}</button>
           <button onClick={toggleSearchBox} style={{marginLeft:"auto",background:"none",border:"none",cursor:"pointer",fontSize:16,color:C.soft,padding:0,lineHeight:1}} title={W.search}>{"\uD83D\uDD0D"}</button>
         </div>
   );

@@ -29,6 +29,8 @@ function useFilters(){
   const toggleBuyNextView=()=>setFilters(f=>({...f,acqBuyNext:!f.acqBuyNext,bnPeriod:false,bnDate:false}));
   const toggleAcq3mo=()=>setFilters(f=>({...f,acq3mo:!f.acq3mo}));
   const toggleAcq6mo=()=>setFilters(f=>({...f,acq6mo:!f.acq6mo}));
+  // The Closing Window count, tapped: the list becomes exactly the shows it counts, every other filter cleared.
+  const toggleClosingWindow=()=>setFilters(f=>f.closingF?{...f,closingF:false}:{...filtersClear(),closingF:true});
   const toggleAcqHasCat=()=>setFilters(f=>({...f,acqHasCat:!f.acqHasCat}));
   const toggleAcqNoCat=()=>setFilters(f=>({...f,acqNoCat:!f.acqNoCat}));
   const toggleAcqDigital=()=>setFilters(f=>({...f,acqDigital:!f.acqDigital}));
@@ -51,6 +53,6 @@ function useFilters(){
   };
   return{filters,sort,bnOnly,periodView,venueScrub,viewToken,showSearch,searchRef,sortBy,dateReversed,refreshTouched,pinTouched,
     toggleSet,clearFilters,pickSort,toggleSearchBox,typeSearch,clearSearchText,
-    toggleAcqWanted,toggleAcqOwned,toggleBuyNextView,toggleAcq3mo,toggleAcq6mo,toggleAcqHasCat,toggleAcqNoCat,toggleAcqDigital,
+    toggleAcqWanted,toggleAcqOwned,toggleBuyNextView,toggleAcq3mo,toggleAcq6mo,toggleAcqHasCat,toggleAcqNoCat,toggleAcqDigital,toggleClosingWindow,
     toggleWatchedOnly,toggleDismissedOnly,toggleLabelledOnly,toggleShowAll,searchFor,ledgerLoaded,importApplied};
 }

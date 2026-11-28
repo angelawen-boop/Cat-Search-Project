@@ -2,7 +2,7 @@
 //@piece filtersClear
 
 // Every filter at "all clear". A NEW object each call, so the list starts again from the top after every clear.
-function filtersClear(){return{venueF:new Set(),themeF:new Set(),timeF:new Set(),acqWanted:false,acqOwned:false,acq3mo:false,acq6mo:false,acqHasCat:false,acqNoCat:false,acqDigital:false,acqBuyNext:false,bnPeriod:false,bnDate:false,showAll:false,dismissedOnly:false,labelledF:false,watchedF:false,search:""};}
+function filtersClear(){return{venueF:new Set(),themeF:new Set(),timeF:new Set(),acqWanted:false,acqOwned:false,acq3mo:false,acq6mo:false,acqHasCat:false,acqNoCat:false,acqDigital:false,acqBuyNext:false,closingF:false,bnPeriod:false,bnDate:false,showAll:false,dismissedOnly:false,labelledF:false,watchedF:false,search:""};}
 //@piece listMode
 
 // Which mode the list is in. `sort` is {sortBy, dateReversed, pinTouched, refreshTouched}.
@@ -20,7 +20,7 @@ function listMode(filters,sort){
 
 // The list: filtered, searched and sorted.
 function listView(rows,filters,sort,byArtist){
-  const{venueF,themeF,timeF,acqWanted,acqOwned,acq3mo,acq6mo,acqHasCat,acqNoCat,acqDigital,acqBuyNext,bnPeriod,bnDate,showAll,dismissedOnly,labelledF,watchedF,search}=filters;
+  const{venueF,themeF,timeF,acqWanted,acqOwned,acq3mo,acq6mo,acqHasCat,acqNoCat,acqDigital,acqBuyNext,closingF,bnPeriod,bnDate,showAll,dismissedOnly,labelledF,watchedF,search}=filters;
   const{sortBy,dateReversed,pinTouched,refreshTouched}=sort;
   const{bnOnly,periodView}=listMode(filters,sort);
     const sq=foldText(search).trim();
@@ -49,6 +49,8 @@ function listView(rows,filters,sort,byArtist){
       // Acquiring filters stack as AND across the axes, OR within an axis. Owned beside Wanted or Buy next shows
       // both lists, as two venues do (her decision); Buy next is the part of Wanted she has put in her order.
       if(acqWanted||acqOwned||acqBuyNext){if(!((acqOwned&&r.acquiring==="acquired")||(acqWanted&&r.acquiring==="yes"&&(!acqBuyNext||isBuyNext(r)))||(acqBuyNext&&!acqWanted&&isBuyNext(r))))return false;}
+      // The Closing Window count, tapped (her ask): the shows it counts.
+      if(closingF&&!inClosingWindow(r))return false;
       if(acq3mo||acq6mo){if(!((acq3mo&&t==="closing")||(acq6mo&&(t==="urgent"||t==="lapsed"))))return false;}
       // Has, No and Digital catalogue widen one another: a card shows when it matches any one chosen.
       if(acqHasCat||acqNoCat||acqDigital){if(!((acqHasCat&&r.looked&&r.hasCatalogue==="yes")||(acqNoCat&&r.looked&&r.hasCatalogue==="no")||(acqDigital&&r.digitalUrl)))return false;}

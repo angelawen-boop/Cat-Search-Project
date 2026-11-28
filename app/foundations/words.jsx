@@ -73,7 +73,7 @@ const W={  // ── the header: title, toolbar, Save panel, status lines, banne
   chipOwned:"Owned",
   buyNext:"Buy next",
   chip3mo:"3+ mos",
-  chip6mo:"6+ mos closing window",
+  chip6mo:"6+ mos",
   chipHasCatalogue:"Has catalogue",
   chipNoCatalogue:"No catalogue",
   digitalCatalogue:"Digital catalogue",

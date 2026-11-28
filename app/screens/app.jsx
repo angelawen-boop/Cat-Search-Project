@@ -19,8 +19,8 @@ export default function App(){
   const{venueSeen,lastSweep,freshWhy,recordSweep}=useSweepLog(); // FIRST: its opening read is the first thing the page reads from its store
   const[confirmBox,setConfirmBox]=useState(null); // {text, act} for confirm-before-replace
   const list=useFilters();
-  const{filters,sort,bnOnly,periodView,venueScrub,viewToken,showSearch,searchRef,sortBy,dateReversed,refreshTouched,pinTouched,toggleSet,clearFilters,pickSort,toggleSearchBox,typeSearch,clearSearchText,toggleAcqWanted,toggleAcqOwned,toggleBuyNextView,toggleAcq3mo,toggleAcq6mo,toggleAcqHasCat,toggleAcqNoCat,toggleAcqDigital,toggleWatchedOnly,toggleDismissedOnly,toggleLabelledOnly,toggleShowAll,searchFor,ledgerLoaded,importApplied}=list;
-  const{venueF,themeF,timeF,acqWanted,acqOwned,acq3mo,acq6mo,acqHasCat,acqNoCat,acqDigital,acqBuyNext,bnPeriod,bnDate,showAll,dismissedOnly,labelledF,watchedF,search}=filters;
+  const{filters,sort,bnOnly,periodView,venueScrub,viewToken,showSearch,searchRef,sortBy,dateReversed,refreshTouched,pinTouched,toggleSet,clearFilters,pickSort,toggleSearchBox,typeSearch,clearSearchText,toggleAcqWanted,toggleAcqOwned,toggleBuyNextView,toggleAcq3mo,toggleAcq6mo,toggleAcqHasCat,toggleAcqNoCat,toggleAcqDigital,toggleClosingWindow,toggleWatchedOnly,toggleDismissedOnly,toggleLabelledOnly,toggleShowAll,searchFor,ledgerLoaded,importApplied}=list;
+  const{venueF,themeF,timeF,acqWanted,acqOwned,acq3mo,acq6mo,acqHasCat,acqNoCat,acqDigital,acqBuyNext,closingF,bnPeriod,bnDate,showAll,dismissedOnly,labelledF,watchedF,search}=filters;
   // The ledger as a document (the hook: app/screens/use_ledger_document.jsx). Called after the sweep log and the
   // filters and before the import session below, so the store's reads keep their order.
   const doc=useLedgerDocument({showError:setError,showDiagnostic:setDebug,ask:setConfirmBox,onLoaded:ledgerLoaded});
@@ -161,7 +161,7 @@ export default function App(){
         <DiagnosticBox ui={ui} debug={debug}/>
         <SweepLog ui={ui} lastSweep={lastSweep} venueSeen={venueSeen} freshWhy={freshWhy} counts={counts}/>
 
-        <CountsRow ui={ui} counts={counts} toggleSearchBox={toggleSearchBox}/>
+        <CountsRow ui={ui} counts={counts} toggleSearchBox={toggleSearchBox} closingF={closingF} toggleClosingWindow={toggleClosingWindow}/>
         <SearchRow ui={ui} showSearch={showSearch} search={search} searchRef={searchRef} typeSearch={typeSearch} clearSearchText={clearSearchText}/>
       </header>
 

@@ -15,7 +15,9 @@ Confirmed by her on real files, not only by fixtures.
 - **The name, Art Watch** (live at 57): page title, small header line, footer, read-only line; the big line stays
   "Before it goes out of print" (her decision, for now).
 - **The counts line:** Watched · Wanted · Owned · Closing Window (Yes-wanted catalogues closed 3–12 months ago,
-  `inClosingWindow`), with Tracked and Dismissed inside "Details". "Reset cards" clears one card's lookup.
+  `inClosingWindow`), with Tracked and Dismissed inside "Details". Tapping Closing Window shows exactly the shows
+  it counts, every other filter cleared; it is underlined while on, and a second tap turns it off (her ask, unpublished).
+  The "6+ mos" chip (no longer "closing window", her ask) still runs past 12 months. "Reset cards" clears one card's lookup.
 
 - **Loading and saving, refreshing, reading a stitched file:** §2 and §3 below. **Never put back a click-triggered green tick**
   (§2).

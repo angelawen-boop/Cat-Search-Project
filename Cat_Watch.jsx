@@ -1006,7 +1006,7 @@ const W={  // ── the header: title, toolbar, Save panel, status lines, banne
   chipOwned:"Owned",
   buyNext:"Buy next",
   chip3mo:"3+ mos",
-  chip6mo:"6+ mos closing window",
+  chip6mo:"6+ mos",
   chipHasCatalogue:"Has catalogue",
   chipNoCatalogue:"No catalogue",
   digitalCatalogue:"Digital catalogue",
@@ -9864,7 +9864,7 @@ function markDigital(rows,id,href,now){ const r=rows.find(x=>x.id===id); return 
 // Do not regroup: Claude's answer stands for this show until its next Relabel (her design).
 function markKeepPeriod(rows,id,now){ return markRow(rows,id,x=>({...x,periodKeep:true,editedAt:now})); }
 // Every filter at "all clear". A NEW object each call, so the list starts again from the top after every clear.
-function filtersClear(){return{venueF:new Set(),themeF:new Set(),timeF:new Set(),acqWanted:false,acqOwned:false,acq3mo:false,acq6mo:false,acqHasCat:false,acqNoCat:false,acqDigital:false,acqBuyNext:false,bnPeriod:false,bnDate:false,showAll:false,dismissedOnly:false,labelledF:false,watchedF:false,search:""};}
+function filtersClear(){return{venueF:new Set(),themeF:new Set(),timeF:new Set(),acqWanted:false,acqOwned:false,acq3mo:false,acq6mo:false,acqHasCat:false,acqNoCat:false,acqDigital:false,acqBuyNext:false,closingF:false,bnPeriod:false,bnDate:false,showAll:false,dismissedOnly:false,labelledF:false,watchedF:false,search:""};}
 // Which mode the list is in. `sort` is {sortBy, dateReversed, pinTouched, refreshTouched}.
 function listMode(filters,sort){
   const{acqBuyNext,acqOwned,bnPeriod}=filters,{sortBy,pinTouched}=sort;
@@ -9878,7 +9878,7 @@ function listMode(filters,sort){
 }
 // The list: filtered, searched and sorted.
 function listView(rows,filters,sort,byArtist){
-  const{venueF,themeF,timeF,acqWanted,acqOwned,acq3mo,acq6mo,acqHasCat,acqNoCat,acqDigital,acqBuyNext,bnPeriod,bnDate,showAll,dismissedOnly,labelledF,watchedF,search}=filters;
+  const{venueF,themeF,timeF,acqWanted,acqOwned,acq3mo,acq6mo,acqHasCat,acqNoCat,acqDigital,acqBuyNext,closingF,bnPeriod,bnDate,showAll,dismissedOnly,labelledF,watchedF,search}=filters;
   const{sortBy,dateReversed,pinTouched,refreshTouched}=sort;
   const{bnOnly,periodView}=listMode(filters,sort);
     const sq=foldText(search).trim();
@@ -9907,6 +9907,8 @@ function listView(rows,filters,sort,byArtist){
       // Acquiring filters stack as AND across the axes, OR within an axis. Owned beside Wanted or Buy next shows
       // both lists, as two venues do (her decision); Buy next is the part of Wanted she has put in her order.
       if(acqWanted||acqOwned||acqBuyNext){if(!((acqOwned&&r.acquiring==="acquired")||(acqWanted&&r.acquiring==="yes"&&(!acqBuyNext||isBuyNext(r)))||(acqBuyNext&&!acqWanted&&isBuyNext(r))))return false;}
+      // The Closing Window count, tapped (her ask): the shows it counts.
+      if(closingF&&!inClosingWindow(r))return false;
       if(acq3mo||acq6mo){if(!((acq3mo&&t==="closing")||(acq6mo&&(t==="urgent"||t==="lapsed"))))return false;}
       // Has, No and Digital catalogue widen one another: a card shows when it matches any one chosen.
       if(acqHasCat||acqNoCat||acqDigital){if(!((acqHasCat&&r.looked&&r.hasCatalogue==="yes")||(acqNoCat&&r.looked&&r.hasCatalogue==="no")||(acqDigital&&r.digitalUrl)))return false;}
@@ -10273,14 +10275,14 @@ function SweepLog({ui,lastSweep,venueSeen,freshWhy,counts}){
   </>);
 }
 // The counts line, with the search icon at its end.
-function CountsRow({ui,counts,toggleSearchBox}){
+function CountsRow({ui,counts,toggleSearchBox,closingF,toggleClosingWindow}){
   const{C,TH}=ui;
   return(
         <div style={{marginTop:10,paddingTop:8,borderTop:"1px solid "+C.rule,display:"flex",gap:14,fontSize:10.5,color:C.soft,flexWrap:"wrap",alignItems:"center"}}>
           <span><b style={{color:C.ink}}>{counts.watched}</b>{W.watched}</span>
           <span><b style={{color:C.ink}}>{counts.wanted}</b>{W.wanted}</span>
           <span><b style={{color:C.owned}}>{counts.owned}</b>{W.owned}</span>
-          <span><b style={{color:TH.urgent.ink}}>{counts.pressing}</b>{W.closingWindowCount}</span>
+          <button onClick={toggleClosingWindow} style={{background:"none",border:"none",cursor:"pointer",padding:0,font:"inherit",color:C.soft,textDecoration:closingF?"underline":"none"}}><b style={{color:TH.urgent.ink}}>{counts.pressing}</b>{W.closingWindowCount}</button>
           <button onClick={toggleSearchBox} style={{marginLeft:"auto",background:"none",border:"none",cursor:"pointer",fontSize:16,color:C.soft,padding:0,lineHeight:1}} title={W.search}>{"\uD83D\uDD0D"}</button>
         </div>
   );
@@ -11123,6 +11125,8 @@ function useFilters(){
   const toggleBuyNextView=()=>setFilters(f=>({...f,acqBuyNext:!f.acqBuyNext,bnPeriod:false,bnDate:false}));
   const toggleAcq3mo=()=>setFilters(f=>({...f,acq3mo:!f.acq3mo}));
   const toggleAcq6mo=()=>setFilters(f=>({...f,acq6mo:!f.acq6mo}));
+  // The Closing Window count, tapped: the list becomes exactly the shows it counts, every other filter cleared.
+  const toggleClosingWindow=()=>setFilters(f=>f.closingF?{...f,closingF:false}:{...filtersClear(),closingF:true});
   const toggleAcqHasCat=()=>setFilters(f=>({...f,acqHasCat:!f.acqHasCat}));
   const toggleAcqNoCat=()=>setFilters(f=>({...f,acqNoCat:!f.acqNoCat}));
   const toggleAcqDigital=()=>setFilters(f=>({...f,acqDigital:!f.acqDigital}));
@@ -11145,7 +11149,7 @@ function useFilters(){
   };
   return{filters,sort,bnOnly,periodView,venueScrub,viewToken,showSearch,searchRef,sortBy,dateReversed,refreshTouched,pinTouched,
     toggleSet,clearFilters,pickSort,toggleSearchBox,typeSearch,clearSearchText,
-    toggleAcqWanted,toggleAcqOwned,toggleBuyNextView,toggleAcq3mo,toggleAcq6mo,toggleAcqHasCat,toggleAcqNoCat,toggleAcqDigital,
+    toggleAcqWanted,toggleAcqOwned,toggleBuyNextView,toggleAcq3mo,toggleAcq6mo,toggleAcqHasCat,toggleAcqNoCat,toggleAcqDigital,toggleClosingWindow,
     toggleWatchedOnly,toggleDismissedOnly,toggleLabelledOnly,toggleShowAll,searchFor,ledgerLoaded,importApplied};
 }
 // Memory and effects of drawing the list a stretch at a time. It takes the list, the token that changes when
@@ -11989,8 +11993,8 @@ export default function App(){
   const{venueSeen,lastSweep,freshWhy,recordSweep}=useSweepLog(); // FIRST: its opening read is the first thing the page reads from its store
   const[confirmBox,setConfirmBox]=useState(null); // {text, act} for confirm-before-replace
   const list=useFilters();
-  const{filters,sort,bnOnly,periodView,venueScrub,viewToken,showSearch,searchRef,sortBy,dateReversed,refreshTouched,pinTouched,toggleSet,clearFilters,pickSort,toggleSearchBox,typeSearch,clearSearchText,toggleAcqWanted,toggleAcqOwned,toggleBuyNextView,toggleAcq3mo,toggleAcq6mo,toggleAcqHasCat,toggleAcqNoCat,toggleAcqDigital,toggleWatchedOnly,toggleDismissedOnly,toggleLabelledOnly,toggleShowAll,searchFor,ledgerLoaded,importApplied}=list;
-  const{venueF,themeF,timeF,acqWanted,acqOwned,acq3mo,acq6mo,acqHasCat,acqNoCat,acqDigital,acqBuyNext,bnPeriod,bnDate,showAll,dismissedOnly,labelledF,watchedF,search}=filters;
+  const{filters,sort,bnOnly,periodView,venueScrub,viewToken,showSearch,searchRef,sortBy,dateReversed,refreshTouched,pinTouched,toggleSet,clearFilters,pickSort,toggleSearchBox,typeSearch,clearSearchText,toggleAcqWanted,toggleAcqOwned,toggleBuyNextView,toggleAcq3mo,toggleAcq6mo,toggleAcqHasCat,toggleAcqNoCat,toggleAcqDigital,toggleClosingWindow,toggleWatchedOnly,toggleDismissedOnly,toggleLabelledOnly,toggleShowAll,searchFor,ledgerLoaded,importApplied}=list;
+  const{venueF,themeF,timeF,acqWanted,acqOwned,acq3mo,acq6mo,acqHasCat,acqNoCat,acqDigital,acqBuyNext,closingF,bnPeriod,bnDate,showAll,dismissedOnly,labelledF,watchedF,search}=filters;
   // The ledger as a document (the hook: app/screens/use_ledger_document.jsx). Called after the sweep log and the
   // filters and before the import session below, so the store's reads keep their order.
   const doc=useLedgerDocument({showError:setError,showDiagnostic:setDebug,ask:setConfirmBox,onLoaded:ledgerLoaded});
@@ -12131,7 +12135,7 @@ export default function App(){
         <DiagnosticBox ui={ui} debug={debug}/>
         <SweepLog ui={ui} lastSweep={lastSweep} venueSeen={venueSeen} freshWhy={freshWhy} counts={counts}/>
 
-        <CountsRow ui={ui} counts={counts} toggleSearchBox={toggleSearchBox}/>
+        <CountsRow ui={ui} counts={counts} toggleSearchBox={toggleSearchBox} closingF={closingF} toggleClosingWindow={toggleClosingWindow}/>
         <SearchRow ui={ui} showSearch={showSearch} search={search} searchRef={searchRef} typeSearch={typeSearch} clearSearchText={clearSearchText}/>
       </header>
 
