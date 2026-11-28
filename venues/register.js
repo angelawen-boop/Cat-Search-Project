@@ -276,7 +276,16 @@ const VENUES = [
     sweep: { exBase: null, listUrl: null },
     filed: null },
 
-  // The Prado: chip and card "Prado", right after KHM; "Prado Madrid" is the card name it replaced (her decision).
+  // Budapest's Museum of Fine Arts: chip "Budapest" right after KHM, cards "Budapest Fine Arts" (her decision).
+  { id: "mfab", kind: "swept",
+    names: { card: "Budapest Fine Arts", chip: "Budapest", group: null, full: "Sz\u00e9pm\u0171v\u00e9szeti M\u00fazeum", inEnglish: "Museum of Fine Arts, Budapest", aka: [], replaced: [], hers: true },
+    city: "Budapest", country: "Hungary", english: false, language: "Hungarian",
+    shop: { home: "https://muzeumshop.com/", catalogues: null, search: null, unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
+    read: { link: null, sites: [], dateOrder: null, spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
+    sweep: { exBase: "https://www.mfab.hu/exhibitions/", listUrl: "https://www.mfab.hu/exhibitions/" },
+    filed: null },
+
+  // The Prado: chip and card "Prado", right after Budapest (after KHM until Budapest came; her decision); "Prado Madrid" is the card name it replaced (her decision).
   // Its dates are month first (DATE_ORDER, dates.js); its all-number dates: "6/9/2026 - 9/27/2026". A description
   // cut short behind its "+" toggle ends "… | \+": the scrap leaves the passage, the cut sentence stays
   // (`stripTrailing`). The "Curator:" / "Curators:" credit under the description never reaches it (`skipParagraph`).
@@ -378,15 +387,6 @@ const VENUES = [
     read: { link: null, sites: [], dateOrder: null, spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
     sweep: { exBase: null, listUrl: null },
     filed: { addedAt: "2026-10-19T04:12:56.470Z", confirmed: true, english: false, finder: 3, foundBy: "the venue's rule", host: "www.staedelmuseum.de", id: "occ-staedelmuseum-de", name: "St\u00e4del Museum", pageShop: "", searchRule: 2, shelfKind: null, shop: "found", shopCatalogues: "https://liebieghaus.ticketfritz.de/Shop/Index/staedel-publikationen/43885", shopHome: "https://liebieghaus.ticketfritz.de/", shopSearch: null, turnedDown: [], why: null } },
-
-  // Budapest's Museum of Fine Arts. Card and chip names are placeholders until she names it.
-  { id: "mfab", kind: "swept",
-    names: { card: "Budapest", chip: "Budapest", group: null, full: "Sz\u00e9pm\u0171v\u00e9szeti M\u00fazeum", inEnglish: "Museum of Fine Arts, Budapest", aka: [], replaced: [], hers: false },
-    city: "Budapest", country: "Hungary", english: false, language: "Hungarian",
-    shop: { home: "https://muzeumshop.com/", catalogues: null, search: null, unseen: null, queries: [], named: null, rankAsOwn: [], inStock: null },
-    read: { link: null, sites: [], dateOrder: null, spacedYear: false, places: [], placeOwner: null, titleCaps: null, subtitleUnderHeading: false },
-    sweep: { exBase: "https://www.mfab.hu/exhibitions/", listUrl: "https://www.mfab.hu/exhibitions/" },
-    filed: null },
 
   // Its all-number dates: "From 18/06/2025 to 28/09/2025". Its shop sells no books, so no shop is searched (her decision).
   { id: "uffizi", kind: "swept",

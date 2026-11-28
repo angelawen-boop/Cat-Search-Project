@@ -6,7 +6,7 @@
  * refused; the floor is set to 2010 here so the older pages are read too, and the lookback count is taken from
  * the rows' own closing dates.
  *
- * The count (the session's, from the listing; her decisions in docs/venues.md): 19 inside the lookback — the
+ * Her count (by the listing's sections; her decisions in docs/venues.md): 19 inside the lookback — the
  * current show and 18 past. Permanent rooms out; print-room shows kept.
  *
  *   node scraper/fixtures/mfab_pages.js     (proof: build/proofs/mfab_pages.proof.js)
