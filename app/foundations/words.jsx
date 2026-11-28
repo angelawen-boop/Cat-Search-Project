@@ -195,7 +195,7 @@ const W={  // ── the header: title, toolbar, Save panel, status lines, banne
   bandMerged:"2. Combined rows \u00b7 identical rows were de-duped or reconciled",
   bandMergedConflicts:"3. Combined rows \u00b7 identical rows produced conflicts \u2014 yours to choose",
   bandNoLink:"4. No exhibition url \u00b7 link goes to venue\u2019s listing page",
-  notForYou:"Probably not for you ",
+  potentialQuarantines:"Potential quarantines ",
   normalCases:"Normal cases ",
   nothingUnusual:"Nothing unusual about these \u2014 one row in the file, nothing combined, nothing disagreeing.",
   collapseAllVenues:"Collapse all venues",

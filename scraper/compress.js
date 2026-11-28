@@ -520,10 +520,11 @@ function addNote(existing, note) {
   return cur ? `${cur} ${note}` : note;
 }
 
-// ── "Probably not for you" — the topic label ────────────────────────────────
+// ── Potential quarantines — the topic label step ────────────────────────────
 //
-// Her design (CLAUDE.md §2.2.7): new shows in topics she always quarantines are
-// labelled and set aside on the import screen. Only FRESH rows are asked — a
+// Her design (CLAUDE.md §2.2.7): the import screen surfaces new shows she would
+// likely quarantine. This step gives each new show in a topic she always
+// quarantines a topic label; the app sets those cards aside. Only FRESH rows are asked — a
 // show she has already decided on is never relabelled. The model answers one
 // key from this fixed list; code writes the note, so the app reads one exact
 // sentence. Groups start wide, to be narrowed later.

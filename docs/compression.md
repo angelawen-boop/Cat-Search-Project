@@ -99,11 +99,12 @@ one-line rows, examples folded in (44% fewer tokens than pretty JSON); run one c
 and look at it first. `--check` gates `--apply` (missing index, over length, a code
 fence, an HTML fragment).
 
-## "Probably not for you" — topic labels on new shows
+## Potential quarantines — new shows she would likely quarantine
 
-Compression labels a NEW show in a topic she always quarantines (Prompt D, `TOPICS` in `scraper/compress.js`).
+The import screen surfaces potential quarantines. The step behind it: compression gives a NEW show in a topic she
+always quarantines a topic label (Prompt D, `TOPICS` in `scraper/compress.js`).
 Asian art wins over any other label; the Met's rotations are never labelled (her decisions). Code writes
-"Topic: …" into the notes. On import those cards go in "Probably not for you · N", after Odd cases, pre-set to
+"Topic: …" into the notes. On import those cards go in "Potential quarantines · N", after Odd cases, pre-set to
 Never add; Add keeps one. `scraper/topic_eval.js` re-scores the labeller on her decisions. Tests TP-, TP-A,
 AD-009–010. Her next monthly import is the check (CLAUDE.md §2.2.7).
 

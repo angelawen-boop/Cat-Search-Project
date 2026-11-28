@@ -58,7 +58,7 @@ function useImportSession({rows,ignored,hasLedger,commit,addToQuarantine,documen
         showError(res.nothingNew);
         return;
       }
-      showError(null); setProposals(res.props); setCoverage(res.coverage||[]); setTally(res.tally||null); setSeenInFile(res.seen||null); setDecisions(topicPresets(res.props));
+      showError(null); setProposals(res.props); setCoverage(res.coverage||[]); setTally(res.tally||null); setSeenInFile(res.seen||null); setDecisions(potentialQuarantinePresets(res.props));
       labelCards(res.props);
     };
     reader.readAsText(file); e.target.value="";
@@ -99,7 +99,7 @@ function useImportSession({rows,ignored,hasLedger,commit,addToQuarantine,documen
     }
     if(done.note){ setLinkNote(done.note); return; }
     if(!done.props)return;
-    setProposals(done.props); setCoverage([]); setTally(done.tally); setSeenInFile(null); setDecisions(topicPresets(done.props));
+    setProposals(done.props); setCoverage([]); setTally(done.tally); setSeenInFile(null); setDecisions(potentialQuarantinePresets(done.props));
     labelCards(done.props);
     linksAtRead.current=done.held;
     // Done with the pop-up — unless a link could not be read: then it stays

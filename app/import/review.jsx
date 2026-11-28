@@ -1,4 +1,4 @@
-//@ The review cards' decisions, 'Probably not for you', partial apply, counts, the shop screen's answers, and which venues' shop answers are kept.
+//@ The review cards' decisions, potential quarantines, partial apply, counts, the shop screen's answers, and which venues' shop answers are kept.
 //@piece isUndecidedCard
 
 
@@ -15,23 +15,24 @@ function isUndecidedCard(p,dec){
 //@piece topicOf
 
 
-// ===== "PROBABLY NOT FOR YOU" — her design (CLAUDE.md §2.2.7) =====
-// Compression labels a NEW show in a topic she always quarantines, writing one
+// ===== POTENTIAL QUARANTINES — her design (CLAUDE.md §2.2.7) =====
+// Surfaces new shows she would likely quarantine. The step: compression gives a NEW show
+// a topic label when it is in a topic she always quarantines, writing one
 // sentence into the row's notes ("Topic: Asian art."; TOPICS in scraper/compress.js, the
 // sentence and its reading in scraper/pro_forma.js).
 // Such a new show, with nothing odd about it, goes in its own section, pre-set to
 // Never add; she clicks Add to keep one. Odd cases stay odd: they need her eye.
 const topicOf=PRO_FORMA.topicOf;
-//@piece isTopicCard
+//@piece isPotentialQuarantine
 
-function isTopicCard(p){
+function isPotentialQuarantine(p){
   return !!(p&&p.type==="add"&&p.topic&&!p.merged&&!p.choices&&p.cand&&p.cand.exUrl);
 }
-//@piece topicPresets
+//@piece potentialQuarantinePresets
 
-function topicPresets(props){
+function potentialQuarantinePresets(props){
   const d={};
-  (props||[]).forEach((p,i)=>{ if(isTopicCard(p))d[i]={mode:"never"}; });
+  (props||[]).forEach((p,i)=>{ if(isPotentialQuarantine(p))d[i]={mode:"never"}; });
   return d;
 }
 //@piece cardOutcome

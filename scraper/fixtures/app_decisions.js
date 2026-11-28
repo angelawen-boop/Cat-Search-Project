@@ -452,8 +452,8 @@ async function oldRowsUntouched() {
   } finally { await page.close(); }
 }
 
-async function probablyNotForYou() {
-  const NAME = 'AD-009 "Probably not for you": its own section, pre-set to Never add';
+async function potentialQuarantines() {
+  const NAME = 'AD-009 Potential quarantines: its own section, pre-set to Never add';
   // Her design, CLAUDE.md §2.2.7: a new show whose notes carry "Topic: …" is set
   // aside after Odd cases, before the rest, headed by title and count only, and
   // comes pre-set to Never add; she clicks Add to keep it.
@@ -470,7 +470,7 @@ async function probablyNotForYou() {
     await act(async () => { input.dispatchEvent(new page.win.Event('change', { bubbles: true })); });
     for (let i = 0; i < 5; i++) await act(async () => { await new Promise(r => setTimeout(r, 0)); });
     const text = page.text();
-    const at = text.indexOf('Probably not for you · 1'), normal = text.indexOf('Normal cases · 1');
+    const at = text.indexOf('Potential quarantines · 1'), normal = text.indexOf('Normal cases · 1');
     check(NAME + ': headed by its title and count', at >= 0, text.slice(0, 300));
     check(NAME + ': before the rest', at >= 0 && normal > at);
     check(NAME + ': only the labelled show is in it',
@@ -549,7 +549,7 @@ async function buyNextOrder() {
   for (const [tag, t] of [['AD-001', resetToSeedAsksFirst], ['AD-002', plainDownloadNeverClearsUnsaved],
                           ['AD-003', buyNextDot], ['AD-004', noStatusLineWithoutLedger], ['AD-005', dismissToast],
                           ['AD-006', oldRowsUntouched], ['AD-007', versionCards], ['AD-008', oneVersionUnchanged],
-                          ['AD-009', probablyNotForYou], ['AD-011', buyNextOrder]]) {
+                          ['AD-009', potentialQuarantines], ['AD-011', buyNextOrder]]) {
     try { await t(); } catch (e) { check(tag + ' ran to the end', false, e && e.message); }
   }
   console.log(failures ? failures + ' failed' : 'her page decisions hold');

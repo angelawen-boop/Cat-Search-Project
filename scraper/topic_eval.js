@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Test the topic labeller ("Probably not for you", CLAUDE.md §2.2.7) on her own
+ * Test the topic labeller (the step behind potential quarantines, CLAUDE.md §2.2.7) on her own
  * decisions, before it is trusted on a sweep.
  *
  *   node scraper/topic_eval.js <store dir> --jobs     write the job files

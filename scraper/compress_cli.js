@@ -320,7 +320,7 @@ function plan(dir, { recompress = false, seedWins = false } = {}) {
   for (let i = 0; i < freshRows.length; i += CHUNK_ROWS) {
     writeJob(`job_sonnet_${i / CHUNK_ROWS + 1}.txt`, freshRows.slice(i, i + CHUNK_ROWS));
   }
-  // "PROBABLY NOT FOR YOU" — new shows only (CLAUDE.md §2.2.7). A separate
+  // POTENTIAL QUARANTINES — the topic label, new shows only (CLAUDE.md §2.2.7). A separate
   // question, so the summary answers keep their shape. No examples: one label.
   const topicRows = asked.filter(p => p.action === 'fresh');
   for (let i = 0; i < topicRows.length; i += CHUNK_ROWS) {
@@ -538,7 +538,7 @@ function apply(dir) {
   fs.unlinkSync(donePath);
   say(`Wrote ${COMPRESSED_CSV} — ${out.length} rows, ${filled.length - skipped} newly written` +
       (skipped ? `, ${skipped} left blank because the page text was not a description.` : '.'));
-  if (labelled) say(`${labelled} new show${labelled === 1 ? '' : 's'} labelled "Probably not for you" (a Topic note).`);
+  if (labelled) say(`${labelled} new show${labelled === 1 ? '' : 's'} labelled with a topic — potential quarantines on import.`);
   say('This is the file to feed into Import Refresh.');
 }
 

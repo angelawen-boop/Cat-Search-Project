@@ -16,7 +16,7 @@ const CSV_HEADER = COLUMNS.join(',');
 const MARKER_SENTINEL = 'Marker row, not an exhibition.';
 const isMarkerNote = note => String(note || '').trim().endsWith(MARKER_SENTINEL);
 
-// "Probably not for you": compression writes one sentence into the notes ("Topic: Asian art."),
+// Potential quarantines: compression writes the topic label as one sentence into the notes ("Topic: Asian art."),
 // the app reads the label back out of it.
 const TOPIC_PREFIX = 'Topic: ';
 const topicSentence = label => `${TOPIC_PREFIX}${label}.`;

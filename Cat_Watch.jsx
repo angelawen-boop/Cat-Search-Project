@@ -3,7 +3,7 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 // The footer prints APP_VERSION and its date, so she can tell one build from the next.
 // Numbering, her decision: a whole number for a substantial change, a decimal for a
 // small one, one number per publish. Bump it with the change it describes.
-const APP_VERSION = "60.2";
+const APP_VERSION = "60.3";
 // Not words: the date of this version.
 const APP_VERSION_DATE = "28 Nov 2026";
 
@@ -1128,7 +1128,7 @@ const W={  // ── the header: title, toolbar, Save panel, status lines, banne
   bandMerged:"2. Combined rows \u00b7 identical rows were de-duped or reconciled",
   bandMergedConflicts:"3. Combined rows \u00b7 identical rows produced conflicts \u2014 yours to choose",
   bandNoLink:"4. No exhibition url \u00b7 link goes to venue\u2019s listing page",
-  notForYou:"Probably not for you ",
+  potentialQuarantines:"Potential quarantines ",
   normalCases:"Normal cases ",
   nothingUnusual:"Nothing unusual about these \u2014 one row in the file, nothing combined, nothing disagreeing.",
   collapseAllVenues:"Collapse all venues",
@@ -2695,7 +2695,7 @@ const CSV_HEADER = COLUMNS.join(',');
 const MARKER_SENTINEL = 'Marker row, not an exhibition.';
 const isMarkerNote = note => String(note || '').trim().endsWith(MARKER_SENTINEL);
 
-// "Probably not for you": compression writes one sentence into the notes ("Topic: Asian art."),
+// Potential quarantines: compression writes the topic label as one sentence into the notes ("Topic: Asian art."),
 // the app reads the label back out of it.
 const TOPIC_PREFIX = 'Topic: ';
 const topicSentence = label => `${TOPIC_PREFIX}${label}.`;
@@ -5357,19 +5357,20 @@ function isUndecidedCard(p,dec){
   return !Object.values(dec.fields||{}).some(v=>v);
 }
 
-// ===== "PROBABLY NOT FOR YOU" — her design (CLAUDE.md §2.2.7) =====
-// Compression labels a NEW show in a topic she always quarantines, writing one
+// ===== POTENTIAL QUARANTINES — her design (CLAUDE.md §2.2.7) =====
+// Surfaces new shows she would likely quarantine. The step: compression gives a NEW show
+// a topic label when it is in a topic she always quarantines, writing one
 // sentence into the row's notes ("Topic: Asian art."; TOPICS in scraper/compress.js, the
 // sentence and its reading in scraper/pro_forma.js).
 // Such a new show, with nothing odd about it, goes in its own section, pre-set to
 // Never add; she clicks Add to keep one. Odd cases stay odd: they need her eye.
 const topicOf=PRO_FORMA.topicOf;
-function isTopicCard(p){
+function isPotentialQuarantine(p){
   return !!(p&&p.type==="add"&&p.topic&&!p.merged&&!p.choices&&p.cand&&p.cand.exUrl);
 }
-function topicPresets(props){
+function potentialQuarantinePresets(props){
   const d={};
-  (props||[]).forEach((p,i)=>{ if(isTopicCard(p))d[i]={mode:"never"}; });
+  (props||[]).forEach((p,i)=>{ if(isPotentialQuarantine(p))d[i]={mode:"never"}; });
   return d;
 }
 
@@ -10719,8 +10720,8 @@ function ReviewBody({ui,proposals,coverage,decisions,setFieldDec,setCardMode,set
                 // No link at all: usable rows, grouped because the link is the only key for
                 // folding and quarantine, so they return fresh every sweep (her decision).
                 const noLink     = byVenue(plain.filter(x=>!x.p.cand||!x.p.cand.exUrl));
-                const notForYou  = byVenue(plain.filter(x=>isTopicCard(x.p)));
-                const ordinary   = plain.filter(x=>x.p.cand&&x.p.cand.exUrl&&!isTopicCard(x.p));
+                const potentialQuarantines  = byVenue(plain.filter(x=>isPotentialQuarantine(x.p)));
+                const ordinary   = plain.filter(x=>x.p.cand&&x.p.cand.exUrl&&!isPotentialQuarantine(x.p));
                 // Venue subheadings inside each band, in the same style and order as below.
                 const byVenueBlocks=list=>allVenues().map(m=>{
                   const grp=list.filter(x=>x.p.venueId===m.id);
@@ -10779,10 +10780,10 @@ function ReviewBody({ui,proposals,coverage,decisions,setFieldDec,setCardMode,set
                       {noLink.length>0&&band("nolink",W.bandNoLink,undefined,noLink.length,true,byVenueBlocks(noLink))}
                     </div>
                   )}
-                  {notForYou.length>0&&(
+                  {potentialQuarantines.length>0&&(
                     <div style={{marginBottom:16,paddingBottom:12,borderBottom:"2px solid "+C.rule}}>
-                      <div style={{fontFamily:"'Fraunces',Georgia,serif",fontSize:15,color:C.ink,marginBottom:8}}>{W.notForYou}{"\u00b7"} {notForYou.length}</div>
-                      {byVenueBlocks(notForYou)}
+                      <div style={{fontFamily:"'Fraunces',Georgia,serif",fontSize:15,color:C.ink,marginBottom:8}}>{W.potentialQuarantines}{"\u00b7"} {potentialQuarantines.length}</div>
+                      {byVenueBlocks(potentialQuarantines)}
                     </div>
                   )}
                 {ordinary.length>0&&(()=>{
@@ -11663,7 +11664,7 @@ function useImportSession({rows,ignored,hasLedger,commit,addToQuarantine,documen
         showError(res.nothingNew);
         return;
       }
-      showError(null); setProposals(res.props); setCoverage(res.coverage||[]); setTally(res.tally||null); setSeenInFile(res.seen||null); setDecisions(topicPresets(res.props));
+      showError(null); setProposals(res.props); setCoverage(res.coverage||[]); setTally(res.tally||null); setSeenInFile(res.seen||null); setDecisions(potentialQuarantinePresets(res.props));
       labelCards(res.props);
     };
     reader.readAsText(file); e.target.value="";
@@ -11704,7 +11705,7 @@ function useImportSession({rows,ignored,hasLedger,commit,addToQuarantine,documen
     }
     if(done.note){ setLinkNote(done.note); return; }
     if(!done.props)return;
-    setProposals(done.props); setCoverage([]); setTally(done.tally); setSeenInFile(null); setDecisions(topicPresets(done.props));
+    setProposals(done.props); setCoverage([]); setTally(done.tally); setSeenInFile(null); setDecisions(potentialQuarantinePresets(done.props));
     labelCards(done.props);
     linksAtRead.current=done.held;
     // Done with the pop-up — unless a link could not be read: then it stays

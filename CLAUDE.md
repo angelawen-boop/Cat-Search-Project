@@ -172,7 +172,7 @@ Everything not listed here is finished. Do not reopen a closed item without a ne
 
 The app is feature parts under `app/` that a session can read whole; the main screen is the order of its pieces
 (`docs/restructure.md`: how it is laid out, the rules any later change to the screen follows, the checks). Her test
-rounds passed. **Her app runs 60.2** (60 plus Budapest and its shop; 59.2's work: the rebuilt screen, the Theme chip's count, the venue scrubber for
+rounds passed. **Her app runs 60.3** (60 plus Budapest and its shop, and the Potential quarantines heading; 59.2's work: the rebuilt screen, the Theme chip's count, the venue scrubber for
 the Occ groups, "Still in the museum shop.", the fixes after item 4, the Uffizi's shop removed, the words list — every
 sentence she sees, written once — and the housekeeping). **The checks are proven** — each by planted faults,
 and run on the current code — and locked in code: no test is used until proven at its version (`docs/testing.md`, "Proven
@@ -233,10 +233,11 @@ noting issues as she uses it, for a later debugging session.
 - **Then:** the comment tidy for the rest of `scraper/`, and tests for two scraper decisions — MoMA's visitor notices
   dropped; the Wallace keeps displays and trails.
 
-#### 2.2.7 "Probably not for you" — published at 46; her next monthly import checks it
+#### 2.2.7 Potential quarantines — published at 46; her next monthly import checks it
 
-New shows in a topic she always quarantines are labelled by compression and set aside, pre-set to Never add
-(`docs/compression.md`, "Probably not for you").
+The import screen surfaces new shows she would likely quarantine, in their own pile, pre-set to Never add. The step
+behind it: compression gives a new show in a topic she always quarantines a topic label (`docs/compression.md`,
+"Potential quarantines").
 - **OPEN — her next monthly import:** are too many wanted shows pre-set to Never add (contemporary the likeliest), and does
   any always-quarantined show slip through? Narrow a group only if she says.
 
@@ -296,7 +297,8 @@ Cini, Prado, Correr): `docs/app.md`, `docs/add_by_link.md`.
 Keep the essential tests (page opens, saving, import) and the proven ones, prove each kept one, retire the rest; the
 date reader's tests kept and proven; nothing rewritten; the lock goes; light rules for new tests; the session checks
 for real before saying "done". The nine items: `docs/test_restructure.md`. Read it before any test work. For Budapest
-she had the lock bypassed (her decision): the two venue-order tests' fingerprints were re-recorded unproven.
+she had the lock bypassed (her decision): the two venue-order tests' fingerprints were re-recorded unproven; the same
+for `app_decisions.js` at 60.3 (AD-009 reads the renamed heading).
 
 #### 2.2.6 Tests that failed — recorded, not investigated
 
@@ -535,7 +537,7 @@ bot-blocked, so Pages and Paste only) is a fact about that venue, never a limit 
 > restating `capabilities` must restate all four; omitting it carries them
 > forward. **Renaming the connector means restating them.**
 
-**Live: 60.2 in her app (§2.2.1)** (the app is named **Art Watch** on screen since 57; the header's big line is unchanged), with the cloud ledger (merged at 46). What each recent version changed is in
+**Live: 60.3 in her app (§2.2.1)** (the app is named **Art Watch** on screen since 57; the header's big line is unchanged), with the cloud ledger (merged at 46). What each recent version changed is in
 `docs/publishing.md`, "What is live now".
 
 #### The mental model, load-bearing

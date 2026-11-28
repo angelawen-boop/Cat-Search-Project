@@ -69,8 +69,9 @@ return {
   isUndecidedCard,
   offerPartialApply,
   topicOf,
-  isTopicCard,
-  topicPresets,
+  isPotentialQuarantine,
+  potentialQuarantinePresets,
+  isTopicCard: isPotentialQuarantine, topicPresets: potentialQuarantinePresets,
   PERIODS, PERIOD_RANK, periodCompare, periodAnswers, periodPrompt, periodLabelled, periodText, artistPeriods, periodOf, miscFor, labelSummary, THEMES, THEME_CHIPS, themeMatch, labelDone, LABEL_WAITS, labelWhy,
   MUSEUMS, MU, KNOWN_VENUES, VENUE_REGISTER, CHIP_RANK,
 };

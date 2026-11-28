@@ -27,7 +27,10 @@ page) — then once more as resent unchanged; the next goes through. Later ones 
 
 ## What is live now
 
-**Live: 60.2 in her app** — Budapest's shop shelf and search (`docs/app.md`, "Shop addresses").
+**Live: 60.3 in her app** — the import screen's "Probably not for you" pile is headed "Potential quarantines"; the
+feature is named for that purpose in the code and docs, the topic label being its step (`docs/compression.md`).
+
+**60.2** — Budapest's shop shelf and search (`docs/app.md`, "Shop addresses").
 
 **60.1** — Budapest (`mfab`) as a swept venue, chip after KHM; a quarantined show its venue moves stays out (`docs/app.md` §4).
 

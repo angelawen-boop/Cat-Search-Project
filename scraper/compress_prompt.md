@@ -222,7 +222,7 @@ that came back in Italian would quietly break that.
 
 ---
 
-## Prompt D — topic label for a new show ("Probably not for you")
+## Prompt D — topic label for a new show (the step behind potential quarantines)
 
 Her design (CLAUDE.md §2.2.7). Asked only of **fresh** rows (never-seen shows),
 from `job_topics_N.txt`; answers go in `topic_answers.json`. The model returns one

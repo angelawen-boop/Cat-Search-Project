@@ -132,8 +132,8 @@ function ReviewBody({ui,proposals,coverage,decisions,setFieldDec,setCardMode,set
                 // No link at all: usable rows, grouped because the link is the only key for
                 // folding and quarantine, so they return fresh every sweep (her decision).
                 const noLink     = byVenue(plain.filter(x=>!x.p.cand||!x.p.cand.exUrl));
-                const notForYou  = byVenue(plain.filter(x=>isTopicCard(x.p)));
-                const ordinary   = plain.filter(x=>x.p.cand&&x.p.cand.exUrl&&!isTopicCard(x.p));
+                const potentialQuarantines  = byVenue(plain.filter(x=>isPotentialQuarantine(x.p)));
+                const ordinary   = plain.filter(x=>x.p.cand&&x.p.cand.exUrl&&!isPotentialQuarantine(x.p));
                 // Venue subheadings inside each band, in the same style and order as below.
                 const byVenueBlocks=list=>allVenues().map(m=>{
                   const grp=list.filter(x=>x.p.venueId===m.id);
@@ -192,10 +192,10 @@ function ReviewBody({ui,proposals,coverage,decisions,setFieldDec,setCardMode,set
                       {noLink.length>0&&band("nolink",W.bandNoLink,undefined,noLink.length,true,byVenueBlocks(noLink))}
                     </div>
                   )}
-                  {notForYou.length>0&&(
+                  {potentialQuarantines.length>0&&(
                     <div style={{marginBottom:16,paddingBottom:12,borderBottom:"2px solid "+C.rule}}>
-                      <div style={{fontFamily:"'Fraunces',Georgia,serif",fontSize:15,color:C.ink,marginBottom:8}}>{W.notForYou}{"\u00b7"} {notForYou.length}</div>
-                      {byVenueBlocks(notForYou)}
+                      <div style={{fontFamily:"'Fraunces',Georgia,serif",fontSize:15,color:C.ink,marginBottom:8}}>{W.potentialQuarantines}{"\u00b7"} {potentialQuarantines.length}</div>
+                      {byVenueBlocks(potentialQuarantines)}
                     </div>
                   )}
                 {ordinary.length>0&&(()=>{
