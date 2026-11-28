@@ -1,0 +1,17 @@
+# robots.txt
+# @url: https://madparis.fr
+
+# @template: squelettes-dist/robots.txt.html
+
+User-agent: *
+Allow:    /local/cache-css/
+Allow:    /local/cache-js/
+Disallow: /ecrire/
+Disallow: /lib/
+Disallow: /prive/
+Disallow: /spip.php?action=*
+Disallow: /spip.php?page=login*
+Disallow: /*.api/
+Crawl-delay: 1
+
+Sitemap: https://madparis.fr/sitemap.xml

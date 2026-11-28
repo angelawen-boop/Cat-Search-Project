@@ -1,9 +1,9 @@
 {
   "host": "madparis.fr",
   "url": "https://madparis.fr/robots.txt",
-  "fetchedAt": "2026-09-27T08:18:56.953Z",
-  "status": 403,
-  "readable": false,
-  "why": "HTTP 403",
-  "server": "LiteSpeed"
+  "fetchedAt": "2026-11-28T00:37:50.093Z",
+  "status": 200,
+  "readable": true,
+  "server": "LiteSpeed",
+  "sha": "a2352384d522"
 }

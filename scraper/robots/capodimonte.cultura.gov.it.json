@@ -1,9 +1,8 @@
 {
   "host": "capodimonte.cultura.gov.it",
   "url": "https://capodimonte.cultura.gov.it/robots.txt",
-  "fetchedAt": "2026-11-19T08:58:32.151Z",
-  "status": 200,
-  "readable": true,
-  "server": "nginx",
-  "sha": "4e0bf1a9ad23"
+  "fetchedAt": "2026-11-28T00:37:38.205Z",
+  "status": null,
+  "readable": false,
+  "why": "request to https://capodimonte.cultura.gov.it/robots.txt failed, reason: read ECONNRESET"
 }

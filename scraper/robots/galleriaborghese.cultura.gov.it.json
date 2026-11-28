@@ -1,9 +1,8 @@
 {
   "host": "galleriaborghese.cultura.gov.it",
   "url": "https://galleriaborghese.cultura.gov.it/robots.txt",
-  "fetchedAt": "2026-11-19T08:57:39.628Z",
-  "status": 200,
-  "readable": true,
-  "server": "Apache",
-  "sha": "af0a1d8962a5"
+  "fetchedAt": "2026-11-28T00:37:26.223Z",
+  "status": null,
+  "readable": false,
+  "why": "request to https://galleriaborghese.cultura.gov.it/robots.txt failed, reason: read ECONNRESET"
 }

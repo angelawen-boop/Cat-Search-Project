@@ -1,9 +1,9 @@
 {
   "host": "www.themorgan.org",
   "url": "https://www.themorgan.org/robots.txt",
-  "fetchedAt": "2026-09-27T08:18:52.328Z",
-  "status": 403,
-  "readable": false,
-  "why": "HTTP 403",
-  "server": "cloudflare"
+  "fetchedAt": "2026-11-28T00:37:37.315Z",
+  "status": 200,
+  "readable": true,
+  "server": "cloudflare",
+  "sha": "b067d16ff26f"
 }

@@ -1,9 +1,9 @@
 {
   "host": "www.artic.edu",
   "url": "https://www.artic.edu/robots.txt",
-  "fetchedAt": "2026-09-27T08:18:59.861Z",
-  "status": 403,
-  "readable": false,
-  "why": "HTTP 403",
-  "server": "cloudflare"
+  "fetchedAt": "2026-11-28T00:37:53.327Z",
+  "status": 200,
+  "readable": true,
+  "server": "cloudflare",
+  "sha": "58b6a6708cf6"
 }
