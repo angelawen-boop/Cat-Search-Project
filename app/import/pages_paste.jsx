@@ -155,7 +155,8 @@ function pasteRest(o,page){
 // words are already cut out of the text, so no lifespan can be among them.
 function pasteDates(page,words,vc){
   const r=words?DATES.findDateRange(words,{looseSingles:true,slashes:true,anyYear:true,venue:vc}):{start:"",end:""};
-  if(r.start||r.end)return{...page,start:r.start||"",end:r.end||"",noDates:false,dateLine:words,dateNote:DATES.closedEarlyNote(r)};
+  if(r.start||r.end)return{...page,start:r.start||"",end:r.end||"",noDates:false,dateLine:words,dateNote:DATES.closedEarlyNote(r),
+    ...(r.start&&!r.end&&r.shownText?{shown:r.shownText,shownWhy:r.shownWhy||""}:{})};
   return{...page,noDates:true,orderUnknown:!!r.orderUnknown,shown:r.shownText||"",shownWhy:r.shownWhy||"",dateLine:words||""};
 }
 //@piece PASTES_COLL

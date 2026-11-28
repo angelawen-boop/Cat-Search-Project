@@ -107,7 +107,7 @@ WORN till 21 March 2027              single date with a preposition
 March / 2026                         month and year only
 December 9 - 31, 2023                day only on the closing side
 December 5 - January 20, 2026        crosses new year — opens in 2025
-Summer 2022                          season and year — a bound, not a date
+Summer 2022                          season and year — a bound, not a date (the app may assume a day: docs/app.md, "Assumed dates")
 Dal 16 ottobre 2025 al 6 gennaio 2026   Italian
 Dal 16 aprile all'8 settembre 2026      Italian, "al" elided
 From 21/03/2024 to 28/04/2024           all numeric — see below

@@ -872,10 +872,11 @@ function applyLookback(rows, venueCode, stage) {
         // Say which of the two it is. "Nothing published" and "published, but
         // with no year" are different facts, and she acts on them differently.
         // "Shows only X" is a claim about the whole page, so it may only be made
-        // when NEITHER date was read. With an opening date already in the row,
-        // the honest statement is the narrower one about the closing date.
+        // when NEITHER date was read — or when the opening date came from the very
+        // text quoted ("Aug 1, 2026-Summer 2027"): the app reads its season.
+        // Otherwise the honest statement is the narrower one about the closing date.
         row.notes = addNote(row.notes, row._orderUnknown && !row.start_date ? ORDER_UNKNOWN_NOTE
-          : (row._shownDateText && !row.start_date)
+          : (row._shownDateText && (!row.start_date || row.start_date === row._shownDateStart))
           ? shownOnlyNote(row._shownDateText, row._shownDateWhy)
           : NO_DATES_NOTE);
       }
@@ -3459,6 +3460,7 @@ async function collectFromListing(page, opts) {
       // date, so the note can quote it instead of claiming nothing was found.
       _shownDateText: dates.shownText || '',
       _shownDateWhy: dates.shownWhy || '',
+      _shownDateStart: dates.shownText && dates.start ? dates.start : '',
       _orderUnknown: !!dates.orderUnknown,
       summary: '', url: fullUrl,
       notes: titleNote,

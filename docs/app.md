@@ -416,6 +416,31 @@ offline, and shows proposals by venue: **Add**, **Fill/Change** (per field, with
 note, never dropped. To correct: reject the bad rows, fix those cells at the
 source, feed the whole file again; applied rows stay silent.
 
+### Assumed dates — a month or season with no day (her decision)
+
+A date the venue gives as a month or season with no day, on one side of the run, gets an assumed day; the
+card shows the venue's words and the day: `“Through Spring 2027” (assumed 31 May 2027)`, `“Opens Spring 2027”
+(assumed 1 Mar 2027)`, `1 Aug 2026 — “Summer 2027” (assumed 31 Aug 2027)`. Months three letters. The assumed day
+is the real date to the app — tiers, the Closing Window, the out-of-print stages, sorting, quarantine matching —
+and counts like any other (her decision). It reverses her earlier rule for these dates only ("a day never
+invented"); the sweep's note quoting the page stays (her decision).
+- **The day:** closing → the month's or season's last day; opening → its first. The side comes from the word
+  before it (through, until, ends… / opens, from, since…) or a dash after a real opening date. No such word
+  ("Spring 2027", a bare "March / 2026"), early/mid/late, no year, ongoing: no date.
+- **Seasons by hemisphere** (the venue's country, else its address ending; `southernVenue`). A season across new
+  year (northern winter, southern summer) is fixed by the other date: closing → the first end of February after
+  the opening; opening → the last 1 December before the closing; no other date → no date (her decision).
+- **One owner:** `DATES.assumedDates` (`dates.js`), from the words the sweep's note quotes (`shownInNote`), at the
+  intake (`analyzeProForma`) — so every way in (CSV, Links, Pages, Paste) and old files alike. The CSV keeps the
+  date columns blank; the reader quotes the side word with the month or season.
+- **On the ledger row:** `startShown` / `endShown`, the venue's words; present only on an assumed date. They travel
+  with Export, Load and the cloud saves as any field.
+- **Later imports:** a real date over an assumed one → a Change card (also on the same day, to drop the words);
+  another season → a Change card; the same assumption → nothing; an assumed date never over a real one; folding
+  two runs, the real date wins (`considerDate`, `foldDuplicateRows`, `datesShownOn`). Cards already in her ledger
+  are not updated (her decision): they fill at their next import.
+- Proven: `scraper/fixtures/assumed_dates.js` (AD-01 to AD-23).
+
 ### Reading a stitched file
 
 The stitch stays dumb; all judgement is in the app, where she sees it.

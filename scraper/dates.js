@@ -298,6 +298,12 @@ function dayText(iso) {
   return `${d} ${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][m - 1]} ${y}`;
 }
 
+// The seasons, and the words before a month or season that say which side of the run it is.
+const SEASON = 'spring|summer|autumn|fall|winter';
+const END_WORD = 'through|thru|until|till|closes|closing|close|ends|ending|end|bis';
+const START_WORD = 'opens|opening|open|from|since|starts|starting|start|begins|beginning|begin';
+const SIDE_WORD = `(?:${END_WORD}|${START_WORD})`;
+
 // Read docs/scraper.md §3 before changing this parser: every format found in the wild,
 // the guards against art-history dates, and why `looseSingles` exists.
 // opts.looseSingles: true for a listing card (a short string about one show); false for
@@ -512,8 +518,10 @@ function findDateRangeCore(raw, opts = {}) {
 
   // "Month YYYY" / "Month / YYYY" (Borghese): a start month, end unknown. The loosest
   // rule in the file — listing cards only.
+  // The quote keeps the word before it ("until September 2026"): it says which side of the run the
+  // month is, for the app's assumed date (assumedDates).
   if (looseSingles) {
-    m = s.match(new RegExp(`(${M})\\s*\\/?\\s*(\\d{4})`, 'i'));
+    m = s.match(new RegExp(`(?:\\b${SIDE_WORD}\\s+)?(${M})\\s*\\/?\\s*(\\d{4})`, 'i'));
     if (m && plausibleYear(m[2])) {
       const mo = monthNum(m[1]);
       // No day is written (never the 1st — that invents a date); the year is kept as a
@@ -529,7 +537,7 @@ function findDateRangeCore(raw, opts = {}) {
 
   // A season and a year ("Summer 2022"): never a date, but a published bound (latestYear).
   if (looseSingles) {
-    m = s.match(/\b(?:spring|summer|autumn|fall|winter)\s+(\d{4})\b/i);
+    m = s.match(new RegExp(`(?:\\b${SIDE_WORD}\\s+)?\\b(?:${SEASON})\\s+(\\d{4})\\b`, 'i'));
     if (m && plausibleYear(m[1])) return {
       start: '', end: '', latestYear: +m[1],
       shownText: m[0].trim(),
@@ -817,6 +825,60 @@ const NO_DATES_NOTE = "No closing date found anywhere on the venue's pages.";
 function shownOnlyNote(shown, why) {
   return `The venue's page shows only "${shown}" for this exhibition's dates — ${why || 'no year is published anywhere'}.`;
 }
+// The quoted words back out of that note, for the app (assumedDates): the note is the CSV's only carrier.
+function shownInNote(notes) {
+  const m = String(notes || '').match(/The venue's page shows only "([^"]+)" for this exhibition's dates/);
+  return m ? m[1] : '';
+}
+
+// ── Assumed dates (her decision; docs/app.md, "Assumed dates") ── A month or season with no day, on
+// one side of the run, is read as that month's or season's first day (opening) or last day (closing),
+// and the venue's own words are kept to show beside it. The side is the word before it ("Through Spring
+// 2027", "Opens Spring 2027", "until September 2026") or the dash after a real opening date ("Aug 1,
+// 2026-Summer 2027"), right before it. No such word ("Spring 2027", "late Spring 2027"), no year: nothing
+// assumed. Seasons follow the
+// hemisphere. A season across new year (northern winter, southern summer) is fixed by the other date: a
+// closing one is the first such February after the opening, an opening one the last such December
+// before the closing; with no other date, nothing is assumed.
+const SEASON_MONTHS = {
+  north: { spring: [3, 5], summer: [6, 8], autumn: [9, 11], fall: [9, 11], winter: [12, 2] },
+  south: { spring: [9, 11], summer: [12, 2], autumn: [3, 5], fall: [3, 5], winter: [6, 8] },
+};
+const lastDay = (y, m) => ymd(y, m, new Date(Date.UTC(y, m, 0)).getUTCDate());
+const capWord = w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase();
+function assumedDates(shown, opts = {}) {
+  const s = String(shown || '').replace(/[‐-―−⁃]/g, '-').replace(/\s+/g, ' ').trim();
+  const start = opts.start || '', end = opts.end || '';
+  const re = new RegExp(`(?:\\b(${SIDE_WORD})\\s+|(?<!\\p{L})(-)\\s*)?\\b(${SEASON}|${MONTH_PATTERN})\\s*\\/?\\s*(\\d{4})\\b`, 'iu');
+  const m = s.match(re);
+  if (!m || !plausibleYear(m[4])) return null;
+  const word = m[1] ? m[1].toLowerCase() : '';
+  const side = new RegExp(`^(?:${END_WORD})$`).test(word) ? 'end'
+    : new RegExp(`^(?:${START_WORD})$`).test(word) ? 'start'
+    : m[2] && start ? 'end' : '';
+  if (!side || (side === 'end' ? end : start)) return null;
+  const y = +m[4], name = m[3].toLowerCase().replace(/\.$/, '');
+  const season = SEASON_MONTHS[opts.southern ? 'south' : 'north'][name];
+  let date = '';
+  if (season) {
+    const [first, last] = season, across = first > last;
+    if (side === 'end') {
+      if (!across) date = lastDay(y, last);
+      else if (start) date = [lastDay(y, last), lastDay(y + 1, last)].find(d => d && d >= start) || '';
+    } else {
+      if (!across) date = ymd(y, first, 1);
+      else if (end) date = [ymd(y, first, 1), ymd(y - 1, first, 1)].find(d => d && d <= end) || '';
+    }
+  } else {
+    const mo = monthNum(name);
+    if (mo) date = side === 'end' ? lastDay(y, mo) : ymd(y, mo, 1);
+  }
+  if (!date) return null;
+  const s2 = side === 'start' ? date : start, e2 = side === 'end' ? date : end;
+  if (s2 && e2 && s2 > e2) return null;
+  const words = (word ? capWord(m[1]) + ' ' : '') + capWord(m[3]) + ' ' + m[4];
+  return side === 'end' ? { end: date, endShown: words } : { start: date, startShown: words };
+}
 
 module.exports = {
   NO_DATES_NOTE,
@@ -829,6 +891,8 @@ module.exports = {
   capsTitleRule,
   sweptVenueTitle,
   shownOnlyNote,
+  shownInNote,
+  assumedDates,
   MONTHS,
   WEEKDAY_PREFIX_SRC,
   ORDINAL_SUFFIX,

@@ -44,6 +44,7 @@ const SUITES = [
   [[...EVERY_APP, SCRAPER], 'node --test scraper/test_watch.test.js'],
   [[...EVERY_APP, SCRAPER], 'node scraper/fixtures/intake_cases.js'],
   [[...EVERY_APP, SCRAPER], 'node scraper/fixtures/quarantine_moved.js'],
+  [[...EVERY_APP, SCRAPER], 'node scraper/fixtures/assumed_dates.js'],
   [EVERY_APP, 'node scraper/fixtures/page_loads.js'],
   [EVERY_APP, 'node scraper/fixtures/page_renders.js'],
   [[APP, SCREEN], 'node scraper/fixtures/app_decisions.js'],

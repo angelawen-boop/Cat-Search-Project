@@ -48,12 +48,17 @@ const prelude = slice(src, 'const VENUE_REGISTER=', '// URGENCY COLOURS, ONE SET
 // the CSV and review parts, so it sits inside the prelude above. `rows` is the ledger,
 // a parameter of analyzeProForma in the app; here a plain binding the fixtures set
 // directly, handed in by the wrapper below.
+// A new ledger row's id (applyCards), which sits below the prelude.
+const showIdLine = src.split('\n').find(l => l.startsWith('function showId('));
+if (!showIdLine) throw new Error('harness: function showId not found');
 const program = `
 ${prelude}
+${showIdLine}
 let rows = [];
 return {
   analyzeProForma: (text, ignoredKeys, opts) => analyzeProForma(text, rows, ignoredKeys, opts),
   withChoices,
+  applyCards,
   foldDuplicateRows,
   ignoreKeyFor,
   movedFromQuarantine,

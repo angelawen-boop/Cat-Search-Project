@@ -24,9 +24,13 @@ const fmtDate=d=>{if(!d)return null;const x=new Date(d+"T00:00:00");if(isNaN(x))
 //@piece fmtRefresh
 
 function fmtRefresh(iso){if(!iso)return W.never;const d=new Date(iso);if(isNaN(d))return W.never;const mon=MON3[d.getMonth()];let h=d.getHours();const ap=h<12?"am":"pm";h=h%12;if(h===0)h=12;const mm=String(d.getMinutes()).padStart(2,"0");return mon+" "+d.getDate()+", "+d.getFullYear()+" "+h+":"+mm+ap;}
+//@piece assumedText
+
+// An assumed date as the card shows it: the venue's words, then the day assumed (docs/app.md, "Assumed dates").
+const assumedText=(shown,iso)=>say(W.assumedDate,{shown,date:fmtDate(iso)});
 //@piece dateRange
 
-function dateRange(r){const a=fmtDate(r.startDate),b=fmtDate(r.endDate);if(a&&b)return a+" \u2014 "+b;if(b)return say(W.until,{date:b});if(a){const st=new Date(r.startDate+"T00:00:00");const past=!isNaN(st)&&st<=new Date();return past?say(W.openSince,{date:a}):say(W.opens,{date:a});}return W.datesUnknown;}
+function dateRange(r){const a=r.startShown&&r.startDate?assumedText(r.startShown,r.startDate):fmtDate(r.startDate),b=r.endShown&&r.endDate?assumedText(r.endShown,r.endDate):fmtDate(r.endDate);if(a&&b)return a+" \u2014 "+b;if(b)return r.endShown?b:say(W.until,{date:b});if(a){if(r.startShown)return a;const st=new Date(r.startDate+"T00:00:00");const past=!isNaN(st)&&st<=new Date();return past?say(W.openSince,{date:a}):say(W.opens,{date:a});}return W.datesUnknown;}
 //@piece localStamp
 
 function localStamp(iso){const d=iso?new Date(iso):new Date(),p=n=>String(n).padStart(2,"0");return d.getFullYear()+"-"+p(d.getMonth()+1)+"-"+p(d.getDate())+"-"+p(d.getHours())+p(d.getMinutes());}

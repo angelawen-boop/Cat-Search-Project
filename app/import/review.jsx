@@ -171,7 +171,7 @@ function partialApplyWords({acceptedCount,undecidedCount}){
 //@piece makeLedgerRow
 
 function makeLedgerRow(c,now){
-  return {id:showId(c.museumId,c.title),museumId:c.museumId,title:c.title,startDate:c.startDate||null,endDate:c.endDate||null,summary:c.summary||"",exUrl:c.exUrl||(MU[c.museumId]?.listUrl||""),interested:true,watching:false,acquiring:null,looked:false,hasCatalogue:"unknown",catalogueTitle:null,isbn13:null,publisher:null,publisherUrl:null,publisherResult:null,shopUrl:null,shopState:null,shopChange:null,addedAt:now,editedAt:null,
+  return {id:showId(c.museumId,c.title),museumId:c.museumId,title:c.title,startDate:c.startDate||null,endDate:c.endDate||null,...shownFields(c.startShown,c.endShown),summary:c.summary||"",exUrl:c.exUrl||(MU[c.museumId]?.listUrl||""),interested:true,watching:false,acquiring:null,looked:false,hasCatalogue:"unknown",catalogueTitle:null,isbn13:null,publisher:null,publisherUrl:null,publisherResult:null,shopUrl:null,shopState:null,shopChange:null,addedAt:now,editedAt:null,
     ...(labelDone(c)?{period:c.period,periodYear:c.periodYear,periodResponse:!!c.periodResponse,periodArtist:c.periodArtist||"",themes:c.themes,labelledAt:c.labelledAt||now}:{})};
 }
 //@piece withChoices
@@ -185,12 +185,24 @@ const withChoices=(cand,dec)=>{
   for(const f of Object.keys(c)){
     const v=c[f];
     if(f==="title")out.title=v;
-    else if(f==="startDate")out.startDate=v||null;
-    else if(f==="endDate")out.endDate=v||null;
+    else if(f==="startDate"||f==="endDate"){
+      out[f]=v||null;
+      // An assumed date picked keeps its words; a real one drops them.
+      const k=f==="startDate"?"startShown":"endShown", w=((cand.shownFor||{})[f]||{})[v];
+      if(w)out[k]=w; else delete out[k];
+    }
     else if(f==="summary")out.summary=v;
   }
   return out;
 };
+//@piece datesShownOn
+
+// A date applied from a card carries its words when assumed, and loses old ones when real.
+function datesShownOn(patch,u){
+  const k=u.field==="startDate"?"startShown":u.field==="endDate"?"endShown":null;
+  if(!k)return;
+  if(u.shown)patch[k]=u.shown; else delete patch[k];
+}
 //@piece applyCards
 
 // PARTIAL IS A PARAMETER, NOT A SECOND COPY OF THIS FUNCTION. `partial` changes
@@ -220,7 +232,7 @@ function applyCards(rows,proposals,decisions,partial){
     // fill / change
     if(dec.mode==="addnew"){ addRow(makeLedgerRow(withChoices(p.cand,dec),now)); return; }
     const m=byId.get(p.matchId); if(!m)return; const patch={...m}; let hit=false;
-    p.upd.forEach((u,j)=>{ if((dec.fields||{})[j]==="accept"){ patch[u.field]=u.newVal; if(u.kind==="fill")filled++; else changed++; hit=true; } });
+    p.upd.forEach((u,j)=>{ if((dec.fields||{})[j]==="accept"){ patch[u.field]=u.newVal; datesShownOn(patch,u); if(u.kind==="fill")filled++; else changed++; hit=true; } });
     if(hit){ patch.editedAt=now; byId.set(p.matchId,patch); touched.push(p.matchId); }
   });
   let quarantineAdd=null;

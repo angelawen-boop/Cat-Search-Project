@@ -284,6 +284,9 @@ Cini, Prado, Correr): `docs/app.md`, `docs/add_by_link.md`.
 
 #### 2.2.18 Queued — her asks
 
+- **Built on `main`, not yet published — assumed dates** (her decision): a month or season with no day gets an assumed
+  day that the app runs on, the card showing the venue's words and the day (`docs/app.md`, "Assumed dates"). Her
+  existing cards are not updated; they fill at their next import.
 - **Live at 54.2, her use confirms:** German dates (DS-011), Galerie de la Présidence's " : Exhibition" dropped (AP-015).
 - **OPEN, known fault — the green "Import complete" bar mixes units, on every way in** (CSV, Links, Pages, Paste). "Added" and "left undecided" count shows;
   "filled in" and "updated" count fields (`applyRefresh`), so one card filling start and end dates reads "2 filled in".
@@ -570,7 +573,7 @@ Reasoning and the two rejected arguments: `docs/app.md` §4–5.
 #### Ledger row shape
 
 ```
-id, museumId, title, startDate, endDate, summary, exUrl, interested, watching,
+id, museumId, title, startDate, endDate, startShown, endShown, summary, exUrl, interested, watching,
 acquiring, buyNext, buyRank, looked, hasCatalogue, catalogueTitle, isbn13, publisher,
 publisherUrl, publisherResult, shopUrl, shopState, shopChange, englishCheck, originalEdition, otherVenueBook, alsoVersion, digitalUrl, addedAt, editedAt,
 period, periodYear, periodResponse, periodArtist, periodKeep, themes, labelledAt, relabelledAt

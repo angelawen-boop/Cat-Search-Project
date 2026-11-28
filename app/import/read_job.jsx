@@ -139,7 +139,7 @@ async function readShows(input,occVenues,{progress,stopped}){
       tape.row={title,museumId:vc,exUrl:url};
       got.push({venue_code:vc,title,start_date:page.start,end_date:page.end,
         summary:a.summary?composeSummary(cardTitle(a.english,vc),ANSWER_CHECK.withoutPlaceOpener(a.summary,title,REG[vc]?REG[vc].read.places:[])):"",url:page.link,
-        notes:[page.noDates?(page.orderUnknown?DATES.ORDER_UNKNOWN_NOTE:page.shown?DATES.shownOnlyNote(page.shown,page.shownWhy):page.scriptDates?SCRIPT_DATES_NOTE:DATES.NO_DATES_NOTE):"",page.dateNote||"",
+        notes:[page.noDates?(page.orderUnknown?DATES.ORDER_UNKNOWN_NOTE:page.shown?DATES.shownOnlyNote(page.shown,page.shownWhy):page.scriptDates?SCRIPT_DATES_NOTE:DATES.NO_DATES_NOTE):page.shown?DATES.shownOnlyNote(page.shown,page.shownWhy):"",page.dateNote||"",
           ask.ok?"":say(W.descriptionNotWritten,{why:ask.detail.replace(/\s+\[.*$/,"")})].filter(Boolean).join(" ")});
     }catch(e){ fails.push({url,why:say(W.couldntReadIt,{why:String((e&&e.message)||e)})}); }
     finally{

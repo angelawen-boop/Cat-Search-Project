@@ -222,8 +222,10 @@ decision). Before writing a reader rule, look for the sweep's. A general rule sh
   early ends that day (`DATES.closedEarly`, shared); a paragraph's one-sided date waits six lines; with none under
   any title line, the two lines above the heading.
 - **R14** Under a top heading, dates stop at the next top heading; a lower heading never stops them.
-- **R15 No usable dates** — as the sweep: undated, a day never invented. Months only/season/no year → the sweep's note quoting the
-  page (`DATES.shownOnlyNote`); nothing → `DATES.NO_DATES_NOTE`; one copy each in `dates.js`. AL-064, AP-002, AP-006b–c.
+- **R15 No usable dates** — as the sweep: the columns left blank. Months only/season/no year → the sweep's note quoting the
+  page (`DATES.shownOnlyNote`), also after a real opening date that came with it; the intake then assumes a day for a
+  month or season with a side word (docs/app.md, "Assumed dates"); nothing → `DATES.NO_DATES_NOTE`; one copy each in
+  `dates.js`. AL-064, AP-002, AP-006b–c.
 - **R16 A bot check is never a show** — stays unread with "The venue's site answered with a bot check instead of the page."
   (`scraper/bot_check.js`).
 

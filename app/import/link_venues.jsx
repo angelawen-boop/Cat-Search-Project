@@ -17,6 +17,18 @@ const OCC_COUNTRY_NAMES={"usa":"United States","us":"United States","united stat
 
 // A venue's country as MU shows it, else its register entry's (a venue not yet shown).
 const occCountry=id=>{ const c=String((MU[id]||REG[id]||{}).country||"").trim(); return OCC_COUNTRY_NAMES[c.toLowerCase()]||c; };
+//@piece SOUTHERN_COUNTRIES
+
+// The southern hemisphere's countries and address endings, for a season's months (DATES.assumedDates).
+// Not words: country names as the register and the store write them.
+const SOUTHERN_COUNTRIES=["Australia","New Zealand","South Africa","Argentina","Chile","Uruguay","Brazil"];
+//@piece SOUTHERN_TLD
+
+const SOUTHERN_TLD=["au","nz","za","ar","cl","uy","br"];
+//@piece southernVenue
+
+const southernVenue=id=>{ const c=occCountry(id); if(c)return SOUTHERN_COUNTRIES.includes(c);
+  const m=/-([a-z]{2})$/.exec(String(id)); return !!m&&SOUTHERN_TLD.includes(m[1]); };
 //@piece OCC_EUROPE_TLD
 
 // "us", "eu" or "other": the three chips that hold the venues with no chip of their own.

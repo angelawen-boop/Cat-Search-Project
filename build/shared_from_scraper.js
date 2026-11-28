@@ -62,7 +62,7 @@ function datesBlock(root = DEFAULT_ROOT) {
   if (!REGISTER_LINE.test(body)) die('scraper/dates.js has lost its `//@register` line (the venues\' date orders)');
   body = withPageKeys(body.replace(REGISTER_LINE, 'const REGISTER = VENUE_REGISTER;'));
   // Wrapped so its names (ymd, frag, MONTHS…) cannot collide with the app's.
-  return 'const DATES=(()=>{\n' + body + '\nreturn { findDateRange, findDateRangeInProse, capsTitleParts, NO_DATES_NOTE, ORDER_UNKNOWN_NOTE, shownOnlyNote, unusableDateText, sweptVenueTitle, closedEarly, closedEarlyNote };\n})();';
+  return 'const DATES=(()=>{\n' + body + '\nreturn { findDateRange, findDateRangeInProse, capsTitleParts, NO_DATES_NOTE, ORDER_UNKNOWN_NOTE, shownOnlyNote, shownInNote, assumedDates, unusableDateText, sweptVenueTitle, closedEarly, closedEarlyNote };\n})();';
 }
 
 function rulesBlock(root = DEFAULT_ROOT) {

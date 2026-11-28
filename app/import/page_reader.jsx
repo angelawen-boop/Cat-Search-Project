@@ -728,7 +728,7 @@ function pageResult(pg){
   let tracked=false; try{ tracked=[...new URL(url).searchParams.keys()].some(k=>TRACKING_PARAM.test(k)); }catch{}
   const link=lr&&lr.cleanLink?String(url).split(/[?#]/)[0]:tracked?withoutTracking(url):url;
   if(link!==url)rule(lr&&lr.cleanLink?"cleanLink":"tracking");
-  return{ok:true,base:pg.base,between:pg.between,under,afterDates,start:range.start||"",end:range.end||"",raw:pg.raw.slice(0,LINK_RAW_CHARS),site:site||(REG[vc]&&REG[vc].names.full)||withoutWww(host),link,noDates:!!found.noDates,scriptDates:!!found.scriptDates,orderUnknown:!!found.orderUnknown,shown:found.shown||"",shownWhy:found.shownWhy||"",dateLine:found.noDates&&!found.shown?"":pg.dateLine,dateNote:DATES.closedEarlyNote(range)};
+  return{ok:true,base:pg.base,between:pg.between,under,afterDates,start:range.start||"",end:range.end||"",raw:pg.raw.slice(0,LINK_RAW_CHARS),site:site||(REG[vc]&&REG[vc].names.full)||withoutWww(host),link,noDates:!!found.noDates,scriptDates:!!found.scriptDates,orderUnknown:!!found.orderUnknown,shown:found.shown||(range.start&&!range.end&&range.shownText)||"",shownWhy:found.shownWhy||(range.start&&!range.end&&range.shownText&&range.shownWhy)||"",dateLine:found.noDates&&!found.shown?"":pg.dateLine,dateNote:DATES.closedEarlyNote(range)};
 }
 //@piece venueTitle
 

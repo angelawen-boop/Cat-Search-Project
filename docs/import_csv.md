@@ -57,6 +57,10 @@ Whatever lands in `notes` is shown **verbatim on the approval card**.
 - **Say WHY, not WHAT.** The app already reports empty fields.
 
 Good: `No closing date found anywhere on the venue's pages.`
+
+**The "shows only" note is read by the app.** It quotes the venue's words for a month or season with no day, and
+the app assumes a day from them (docs/app.md, "Assumed dates"). Its wording lives once, in `dates.js`
+(`shownOnlyNote`, read back by `shownInNote`); change both together.
 Bad: `NO_END_DATE: kept, lookback unverified`
 
 **A note that quotes the page quotes its MATCH, never its INPUT.** Capodimonte

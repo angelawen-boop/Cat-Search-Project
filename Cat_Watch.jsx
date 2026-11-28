@@ -1111,6 +1111,7 @@ const W={  // ── the header: title, toolbar, Save panel, status lines, banne
   existingEntry:"Existing entry \u2014 decide each change:",
   willBeAddedSeparately:"Will be added as a separate new entry instead of changing the existing one.",
   fillValue:"add \u201c{value}\u201d",
+  fillAssumed:"add {value}",
   acceptEdit:"Accept edit",
   reject:"Reject",
   twoAnswers:"The sweep file gave two different answers here. The longer one is picked for you \u2014 change it if it\u2019s wrong.",
@@ -1293,6 +1294,7 @@ const W={  // ── the header: title, toolbar, Save panel, status lines, banne
   monthsShort:["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],
   never:"never",
   until:"until {date}",
+  assumedDate:"\u201c{shown}\u201d (assumed {date})",
   openSince:"open since {date}",
   opens:"opens {date}",
   datesUnknown:"dates unknown",
@@ -1658,6 +1660,12 @@ const OCC_EUROPE_ELSE=["Austria","Denmark","Sweden","Norway","Finland","Portugal
 const OCC_COUNTRY_NAMES={"usa":"United States","us":"United States","united states of america":"United States","uk":"United Kingdom","great britain":"United Kingdom","england":"United Kingdom","scotland":"United Kingdom","wales":"United Kingdom","northern ireland":"United Kingdom","the netherlands":"Netherlands","holland":"Netherlands","czech republic":"Czechia","deutschland":"Germany"};
 // A venue's country as MU shows it, else its register entry's (a venue not yet shown).
 const occCountry=id=>{ const c=String((MU[id]||REG[id]||{}).country||"").trim(); return OCC_COUNTRY_NAMES[c.toLowerCase()]||c; };
+// The southern hemisphere's countries and address endings, for a season's months (DATES.assumedDates).
+// Not words: country names as the register and the store write them.
+const SOUTHERN_COUNTRIES=["Australia","New Zealand","South Africa","Argentina","Chile","Uruguay","Brazil"];
+const SOUTHERN_TLD=["au","nz","za","ar","cl","uy","br"];
+const southernVenue=id=>{ const c=occCountry(id); if(c)return SOUTHERN_COUNTRIES.includes(c);
+  const m=/-([a-z]{2})$/.exec(String(id)); return !!m&&SOUTHERN_TLD.includes(m[1]); };
 // "us", "eu" or "other": the three chips that hold the venues with no chip of their own.
 // Two groups only (her decision): Europe, UK included, and everything else under Occ - US (Australia last).
 // No country stored: the address's country ending (".uk", ".de"…) says.
@@ -1992,6 +2000,12 @@ function dayText(iso) {
   return `${d} ${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][m - 1]} ${y}`;
 }
 
+// The seasons, and the words before a month or season that say which side of the run it is.
+const SEASON = 'spring|summer|autumn|fall|winter';
+const END_WORD = 'through|thru|until|till|closes|closing|close|ends|ending|end|bis';
+const START_WORD = 'opens|opening|open|from|since|starts|starting|start|begins|beginning|begin';
+const SIDE_WORD = `(?:${END_WORD}|${START_WORD})`;
+
 // Read docs/scraper.md §3 before changing this parser: every format found in the wild,
 // the guards against art-history dates, and why `looseSingles` exists.
 // opts.looseSingles: true for a listing card (a short string about one show); false for
@@ -2206,8 +2220,10 @@ function findDateRangeCore(raw, opts = {}) {
 
   // "Month YYYY" / "Month / YYYY" (Borghese): a start month, end unknown. The loosest
   // rule in the file — listing cards only.
+  // The quote keeps the word before it ("until September 2026"): it says which side of the run the
+  // month is, for the app's assumed date (assumedDates).
   if (looseSingles) {
-    m = s.match(new RegExp(`(${M})\\s*\\/?\\s*(\\d{4})`, 'i'));
+    m = s.match(new RegExp(`(?:\\b${SIDE_WORD}\\s+)?(${M})\\s*\\/?\\s*(\\d{4})`, 'i'));
     if (m && plausibleYear(m[2])) {
       const mo = monthNum(m[1]);
       // No day is written (never the 1st — that invents a date); the year is kept as a
@@ -2223,7 +2239,7 @@ function findDateRangeCore(raw, opts = {}) {
 
   // A season and a year ("Summer 2022"): never a date, but a published bound (latestYear).
   if (looseSingles) {
-    m = s.match(/\b(?:spring|summer|autumn|fall|winter)\s+(\d{4})\b/i);
+    m = s.match(new RegExp(`(?:\\b${SIDE_WORD}\\s+)?\\b(?:${SEASON})\\s+(\\d{4})\\b`, 'i'));
     if (m && plausibleYear(m[1])) return {
       start: '', end: '', latestYear: +m[1],
       shownText: m[0].trim(),
@@ -2511,7 +2527,61 @@ const NO_DATES_NOTE = "No closing date found anywhere on the venue's pages.";
 function shownOnlyNote(shown, why) {
   return `The venue's page shows only "${shown}" for this exhibition's dates — ${why || 'no year is published anywhere'}.`;
 }
-return { findDateRange, findDateRangeInProse, capsTitleParts, NO_DATES_NOTE, ORDER_UNKNOWN_NOTE, shownOnlyNote, unusableDateText, sweptVenueTitle, closedEarly, closedEarlyNote };
+// The quoted words back out of that note, for the app (assumedDates): the note is the CSV's only carrier.
+function shownInNote(notes) {
+  const m = String(notes || '').match(/The venue's page shows only "([^"]+)" for this exhibition's dates/);
+  return m ? m[1] : '';
+}
+
+// ── Assumed dates (her decision; docs/app.md, "Assumed dates") ── A month or season with no day, on
+// one side of the run, is read as that month's or season's first day (opening) or last day (closing),
+// and the venue's own words are kept to show beside it. The side is the word before it ("Through Spring
+// 2027", "Opens Spring 2027", "until September 2026") or the dash after a real opening date ("Aug 1,
+// 2026-Summer 2027"), right before it. No such word ("Spring 2027", "late Spring 2027"), no year: nothing
+// assumed. Seasons follow the
+// hemisphere. A season across new year (northern winter, southern summer) is fixed by the other date: a
+// closing one is the first such February after the opening, an opening one the last such December
+// before the closing; with no other date, nothing is assumed.
+const SEASON_MONTHS = {
+  north: { spring: [3, 5], summer: [6, 8], autumn: [9, 11], fall: [9, 11], winter: [12, 2] },
+  south: { spring: [9, 11], summer: [12, 2], autumn: [3, 5], fall: [3, 5], winter: [6, 8] },
+};
+const lastDay = (y, m) => ymd(y, m, new Date(Date.UTC(y, m, 0)).getUTCDate());
+const capWord = w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase();
+function assumedDates(shown, opts = {}) {
+  const s = String(shown || '').replace(/[‐-―−⁃]/g, '-').replace(/\s+/g, ' ').trim();
+  const start = opts.start || '', end = opts.end || '';
+  const re = new RegExp(`(?:\\b(${SIDE_WORD})\\s+|(?<!\\p{L})(-)\\s*)?\\b(${SEASON}|${MONTH_PATTERN})\\s*\\/?\\s*(\\d{4})\\b`, 'iu');
+  const m = s.match(re);
+  if (!m || !plausibleYear(m[4])) return null;
+  const word = m[1] ? m[1].toLowerCase() : '';
+  const side = new RegExp(`^(?:${END_WORD})$`).test(word) ? 'end'
+    : new RegExp(`^(?:${START_WORD})$`).test(word) ? 'start'
+    : m[2] && start ? 'end' : '';
+  if (!side || (side === 'end' ? end : start)) return null;
+  const y = +m[4], name = m[3].toLowerCase().replace(/\.$/, '');
+  const season = SEASON_MONTHS[opts.southern ? 'south' : 'north'][name];
+  let date = '';
+  if (season) {
+    const [first, last] = season, across = first > last;
+    if (side === 'end') {
+      if (!across) date = lastDay(y, last);
+      else if (start) date = [lastDay(y, last), lastDay(y + 1, last)].find(d => d && d >= start) || '';
+    } else {
+      if (!across) date = ymd(y, first, 1);
+      else if (end) date = [ymd(y, first, 1), ymd(y - 1, first, 1)].find(d => d && d <= end) || '';
+    }
+  } else {
+    const mo = monthNum(name);
+    if (mo) date = side === 'end' ? lastDay(y, mo) : ymd(y, mo, 1);
+  }
+  if (!date) return null;
+  const s2 = side === 'start' ? date : start, e2 = side === 'end' ? date : end;
+  if (s2 && e2 && s2 > e2) return null;
+  const words = (word ? capWord(m[1]) + ' ' : '') + capWord(m[3]) + ' ' + m[4];
+  return side === 'end' ? { end: date, endShown: words } : { start: date, startShown: words };
+}
+return { findDateRange, findDateRangeInProse, capsTitleParts, NO_DATES_NOTE, ORDER_UNKNOWN_NOTE, shownOnlyNote, shownInNote, assumedDates, unusableDateText, sweptVenueTitle, closedEarly, closedEarlyNote };
 })();
 const SUMMARY_OPENING="You are writing very short exhibition summaries for a personal art-catalogue tracker.";const SUMMARY_STUDY="The examples define the style. Study them closely.";
 const SUMMARY_RULES="- Maximum 10 words. The examples average about six.\n- End with a full stop. Avoid colons — the accepted summaries almost never use one.\n- Name the artist or artists the exhibition is built around.\n- Say what the exhibition shows, from the text — never the title reworded. The\n  title is shown beside the summary, so a summary that repeats it tells her nothing.\n\nNAME THEM THE WAY A GALLERY-GOER WOULD. Surname alone, unless the surname alone\nwould be ambiguous. Write \"Zurbarán\", not \"Francisco de Zurbarán\". \"Shonibare\",\nnot \"Yinka Shonibare\". \"Velasco\", not \"Mexican artist José María Velasco\". Drop\n\"painter\", \"artist\" and similar labels in front of a name — the reader already\nknows. Full names, honorifics and formal titles read stiff and waste words that\ncould carry meaning instead.\n\nALWAYS WRITE IN ENGLISH, whatever language the raw text is in. Several venues\npublish only in Italian and one only in French; she reads the summaries in\nEnglish. Translating a phrase does not break the traceability rule below — a\ntranslated phrase is still traceable to the text it came from. Keep the\nexhibition's own title in its original language if that is how it is written;\ntranslate the description around it.\n\nTHE RULE THAT MATTERS MOST: every word of your summary must be traceable to a\nphrase in that row's own raw text. If you cannot point to where something came\nfrom, leave it out. In particular:\n\n- Never add an artist, place, medium or date that you happen to know about but the\n  text does not mention.\n- Use a number only if the text states that number. Do not count a list of names\n  and report the total — the page may state a different figure, and the page is\n  right, not your count.\n\nBeing vague is a much smaller failure than being confidently wrong. If the text\nwill only support something general, write something general.\n\nIf the raw text is not a description of an exhibition — a bare link, a curator's\nbiography, ticketing or opening-hours copy, cookie or consent boilerplate, a \"page\nnot found\" message, or empty — answer null for that row. Do not invent one.";
@@ -3479,7 +3549,7 @@ function pageResult(pg){
   let tracked=false; try{ tracked=[...new URL(url).searchParams.keys()].some(k=>TRACKING_PARAM.test(k)); }catch{}
   const link=lr&&lr.cleanLink?String(url).split(/[?#]/)[0]:tracked?withoutTracking(url):url;
   if(link!==url)rule(lr&&lr.cleanLink?"cleanLink":"tracking");
-  return{ok:true,base:pg.base,between:pg.between,under,afterDates,start:range.start||"",end:range.end||"",raw:pg.raw.slice(0,LINK_RAW_CHARS),site:site||(REG[vc]&&REG[vc].names.full)||withoutWww(host),link,noDates:!!found.noDates,scriptDates:!!found.scriptDates,orderUnknown:!!found.orderUnknown,shown:found.shown||"",shownWhy:found.shownWhy||"",dateLine:found.noDates&&!found.shown?"":pg.dateLine,dateNote:DATES.closedEarlyNote(range)};
+  return{ok:true,base:pg.base,between:pg.between,under,afterDates,start:range.start||"",end:range.end||"",raw:pg.raw.slice(0,LINK_RAW_CHARS),site:site||(REG[vc]&&REG[vc].names.full)||withoutWww(host),link,noDates:!!found.noDates,scriptDates:!!found.scriptDates,orderUnknown:!!found.orderUnknown,shown:found.shown||(range.start&&!range.end&&range.shownText)||"",shownWhy:found.shownWhy||(range.start&&!range.end&&range.shownText&&range.shownWhy)||"",dateLine:found.noDates&&!found.shown?"":pg.dateLine,dateNote:DATES.closedEarlyNote(range)};
 }
 
 // A venue's title from its own headings (linkRead.title). "pieces": the heading is the "##"
@@ -4027,7 +4097,8 @@ function pasteRest(o,page){
 // words are already cut out of the text, so no lifespan can be among them.
 function pasteDates(page,words,vc){
   const r=words?DATES.findDateRange(words,{looseSingles:true,slashes:true,anyYear:true,venue:vc}):{start:"",end:""};
-  if(r.start||r.end)return{...page,start:r.start||"",end:r.end||"",noDates:false,dateLine:words,dateNote:DATES.closedEarlyNote(r)};
+  if(r.start||r.end)return{...page,start:r.start||"",end:r.end||"",noDates:false,dateLine:words,dateNote:DATES.closedEarlyNote(r),
+    ...(r.start&&!r.end&&r.shownText?{shown:r.shownText,shownWhy:r.shownWhy||""}:{})};
   return{...page,noDates:true,orderUnknown:!!r.orderUnknown,shown:r.shownText||"",shownWhy:r.shownWhy||"",dateLine:words||""};
 }
 // The Paste boxes waiting, kept in the page's store as she types, one document each like the
@@ -5193,8 +5264,11 @@ function foldDuplicateRows(raws){
     for(const f of ["title","startDate","endDate","summary"]){
       const a=seen[f], b=row[f];
       if(!b) continue;                       // nothing to add
-      if(!a){ seen[f]=b; continue; }         // fill a gap — no judgement at all
+      const aAssumed=!!(seen.shown&&seen.shown[f]), bAssumed=!!(row.shown&&row.shown[f]);
+      if(!a||(aAssumed&&!bAssumed)){ seen[f]=b; seen.shown={...seen.shown,[f]:(row.shown||{})[f]}; continue; }  // a gap, or a real date over an assumed one
+      if(bAssumed&&!aAssumed) continue;      // an assumed date never over a real one
       if(a===b) continue;                    // agreement
+      if(aAssumed){ seen.shownFor={...seen.shownFor,[f]:{...((seen.shownFor||{})[f]||{[a]:seen.shown[f]}),[b]:row.shown[f]}}; }
       // A REAL DISAGREEMENT. Keep both; the card offers the fuller one first.
       seen.conflicts=seen.conflicts||{};
       if(!seen.conflicts[f]) seen.conflicts[f]=[a];
@@ -5209,6 +5283,18 @@ function foldDuplicateRows(raws){
 // The note on a card whose file date is not YYYY-MM-DD; `which` is "Start" or "End".
 function unreadableDateNote(which,value){
   return say(W.unreadableDate,{which,value});
+}
+// The venue's words for an assumed date, kept on the card and the ledger row only when there are any.
+const shownFields=(startShown,endShown)=>({...(startShown?{startShown}:{}),...(endShown?{endShown}:{})});
+// A date on a matched card: blank → Fill; a real date over an assumed one, or another assumption →
+// Change; an assumed date never over a real one, nor over the same assumed day (docs/app.md, "Assumed dates").
+function considerDate(upd,field,label,match,cand){
+  const key=field==="startDate"?"startShown":"endShown";
+  const o=match[field]||"", n=cand[field]||"", oShown=match[key]||"", nShown=cand[key]||"";
+  if(!n)return;
+  if(nShown&&o&&!oShown)return;
+  if(o&&o===n&&!(oShown&&!nShown))return;
+  upd.push({field,label,oldVal:o,newVal:n,shown:nShown,oldShown:o?oShown:"",kind:o?"change":"fill"});
 }
 // `rows` is her ledger as it stands; the cards are what the file would change in it.
 function analyzeProForma(text,rows,ignoredKeys,opts){
@@ -5259,6 +5345,13 @@ function analyzeProForma(text,rows,ignoredKeys,opts){
     if(sd&&!isValidYMD(sd)){notes.push(unreadableDateNote(W.start,sd));sd="";}
     if(ed&&!isValidYMD(ed)){notes.push(unreadableDateNote(W.end,ed));ed="";}
     if(url&&!urlLooksValid(url)){notes.push(say(W.linkGarbled,{url}));url="";}
+    // A month or season with no day: its assumed day, the venue's words kept (DATES.assumedDates).
+    const shown={};
+    if(!sd||!ed){
+      const a=DATES.assumedDates(DATES.shownInNote(rowNote),{start:sd,end:ed,southern:southernVenue(vc)});
+      if(a&&a.end){ed=a.end;shown.endDate=a.endShown;}
+      if(a&&a.start){sd=a.start;shown.startDate=a.startShown;}
+    }
     // Quarantined: dropped before anything else sees it. Counted, never silent.
     if(ignoredKeys&&ignoredKeys.has(ignoreKeyFor(vc,url,title))){ blocked++; continue; }
     // The same show at a new address: its new address is quarantined too (`moved`), and it stays out.
@@ -5266,7 +5359,7 @@ function analyzeProForma(text,rows,ignoredKeys,opts){
       moved[ignoreKeyFor(vc,url,title)]={venueId:vc,title,startDate:sd,endDate:ed,at:new Date().toISOString(),state:"blocked"};
       blocked++; continue;
     }
-    parsed.push({venueCode:vc,title,startDate:sd,endDate:ed,summary:get(r,"summary"),url,topic:topicOf(rowNote),
+    parsed.push({venueCode:vc,title,startDate:sd,endDate:ed,shown,summary:get(r,"summary"),url,topic:topicOf(rowNote),
                  rowNotes:rowNote?[((opts&&opts.notePrefix!=null)?opts.notePrefix:W.sweeperNote)+rowNote]:[],parseNotes:notes,line});
   }
 
@@ -5292,7 +5385,8 @@ function analyzeProForma(text,rows,ignoredKeys,opts){
     // Say when rows were folded, so the count matches the file.
     if(p.mergedFrom) notes.push(say(W.rowsCombined,{rows:p.mergedFrom.join(", ")}));
 
-    const cand={museumId:vc,title,startDate:sd||null,endDate:ed||null,summary,exUrl:url};
+    const pick=(f,v)=>((p.shownFor||{})[f]||{})[v]||(p.shown||{})[f]||null;
+    const cand={museumId:vc,title,startDate:sd||null,endDate:ed||null,...shownFields(sd&&pick("startDate",sd),ed&&pick("endDate",ed)),summary,exUrl:url,...(p.shownFor?{shownFor:p.shownFor}:{})};
     const exact=url?rows.find(x=>x.museumId===vc&&x.exUrl&&x.exUrl===url):null;
     const match=exact||rows.find(x=>sameExhibition(x,cand));
 
@@ -5313,8 +5407,8 @@ function analyzeProForma(text,rows,ignoredKeys,opts){
     { const sq=v=>String(v||"").replace(/\s+/g," ").trim();
       if(title&&match.title&&sq(title)!==sq(match.title))
         upd.push({field:"title",label:W.title,oldVal:String(match.title),newVal:String(title),kind:"change"}); }
-    consider("startDate",W.startDate,match.startDate,sd);
-    consider("endDate",W.endDate,match.endDate,ed);
+    considerDate(upd,"startDate",W.startDate,match,cand);
+    considerDate(upd,"endDate",W.endDate,match,cand);
     consider("summary",W.description,match.summary,summary);
     consider("exUrl",W.linkBox,match.exUrl,url);
     if(!upd.length&&!choices){ silent++; continue; }  // identical — nothing to propose
@@ -5728,7 +5822,7 @@ function partialApplyWords({acceptedCount,undecidedCount}){
   };
 }
 function makeLedgerRow(c,now){
-  return {id:showId(c.museumId,c.title),museumId:c.museumId,title:c.title,startDate:c.startDate||null,endDate:c.endDate||null,summary:c.summary||"",exUrl:c.exUrl||(MU[c.museumId]?.listUrl||""),interested:true,watching:false,acquiring:null,looked:false,hasCatalogue:"unknown",catalogueTitle:null,isbn13:null,publisher:null,publisherUrl:null,publisherResult:null,shopUrl:null,shopState:null,shopChange:null,addedAt:now,editedAt:null,
+  return {id:showId(c.museumId,c.title),museumId:c.museumId,title:c.title,startDate:c.startDate||null,endDate:c.endDate||null,...shownFields(c.startShown,c.endShown),summary:c.summary||"",exUrl:c.exUrl||(MU[c.museumId]?.listUrl||""),interested:true,watching:false,acquiring:null,looked:false,hasCatalogue:"unknown",catalogueTitle:null,isbn13:null,publisher:null,publisherUrl:null,publisherResult:null,shopUrl:null,shopState:null,shopChange:null,addedAt:now,editedAt:null,
     ...(labelDone(c)?{period:c.period,periodYear:c.periodYear,periodResponse:!!c.periodResponse,periodArtist:c.periodArtist||"",themes:c.themes,labelledAt:c.labelledAt||now}:{})};
 }
 // Apply whatever she picked where the stitched file disagreed with itself.
@@ -5740,12 +5834,22 @@ const withChoices=(cand,dec)=>{
   for(const f of Object.keys(c)){
     const v=c[f];
     if(f==="title")out.title=v;
-    else if(f==="startDate")out.startDate=v||null;
-    else if(f==="endDate")out.endDate=v||null;
+    else if(f==="startDate"||f==="endDate"){
+      out[f]=v||null;
+      // An assumed date picked keeps its words; a real one drops them.
+      const k=f==="startDate"?"startShown":"endShown", w=((cand.shownFor||{})[f]||{})[v];
+      if(w)out[k]=w; else delete out[k];
+    }
     else if(f==="summary")out.summary=v;
   }
   return out;
 };
+// A date applied from a card carries its words when assumed, and loses old ones when real.
+function datesShownOn(patch,u){
+  const k=u.field==="startDate"?"startShown":u.field==="endDate"?"endShown":null;
+  if(!k)return;
+  if(u.shown)patch[k]=u.shown; else delete patch[k];
+}
 // PARTIAL IS A PARAMETER, NOT A SECOND COPY OF THIS FUNCTION. `partial` changes
 // nothing about what is written; it only counts what was left behind for the green
 // bar. One copy of the ledger write.
@@ -5773,7 +5877,7 @@ function applyCards(rows,proposals,decisions,partial){
     // fill / change
     if(dec.mode==="addnew"){ addRow(makeLedgerRow(withChoices(p.cand,dec),now)); return; }
     const m=byId.get(p.matchId); if(!m)return; const patch={...m}; let hit=false;
-    p.upd.forEach((u,j)=>{ if((dec.fields||{})[j]==="accept"){ patch[u.field]=u.newVal; if(u.kind==="fill")filled++; else changed++; hit=true; } });
+    p.upd.forEach((u,j)=>{ if((dec.fields||{})[j]==="accept"){ patch[u.field]=u.newVal; datesShownOn(patch,u); if(u.kind==="fill")filled++; else changed++; hit=true; } });
     if(hit){ patch.editedAt=now; byId.set(p.matchId,patch); touched.push(p.matchId); }
   });
   let quarantineAdd=null;
@@ -5931,7 +6035,7 @@ async function readShows(input,occVenues,{progress,stopped}){
       tape.row={title,museumId:vc,exUrl:url};
       got.push({venue_code:vc,title,start_date:page.start,end_date:page.end,
         summary:a.summary?composeSummary(cardTitle(a.english,vc),ANSWER_CHECK.withoutPlaceOpener(a.summary,title,REG[vc]?REG[vc].read.places:[])):"",url:page.link,
-        notes:[page.noDates?(page.orderUnknown?DATES.ORDER_UNKNOWN_NOTE:page.shown?DATES.shownOnlyNote(page.shown,page.shownWhy):page.scriptDates?SCRIPT_DATES_NOTE:DATES.NO_DATES_NOTE):"",page.dateNote||"",
+        notes:[page.noDates?(page.orderUnknown?DATES.ORDER_UNKNOWN_NOTE:page.shown?DATES.shownOnlyNote(page.shown,page.shownWhy):page.scriptDates?SCRIPT_DATES_NOTE:DATES.NO_DATES_NOTE):page.shown?DATES.shownOnlyNote(page.shown,page.shownWhy):"",page.dateNote||"",
           ask.ok?"":say(W.descriptionNotWritten,{why:ask.detail.replace(/\s+\[.*$/,"")})].filter(Boolean).join(" ")});
     }catch(e){ fails.push({url,why:say(W.couldntReadIt,{why:String((e&&e.message)||e)})}); }
     finally{
@@ -6318,9 +6422,11 @@ const ISBN13_STANDALONE=/(?<![0-9])(97[89]\d{10})(?![0-9])/g;
 const MON3=W.monthsShort;
 const fmtDate=d=>{if(!d)return null;const x=new Date(d+"T00:00:00");if(isNaN(x))return d;return x.getDate()+" "+MON3[x.getMonth()]+" "+x.getFullYear();};
 function fmtRefresh(iso){if(!iso)return W.never;const d=new Date(iso);if(isNaN(d))return W.never;const mon=MON3[d.getMonth()];let h=d.getHours();const ap=h<12?"am":"pm";h=h%12;if(h===0)h=12;const mm=String(d.getMinutes()).padStart(2,"0");return mon+" "+d.getDate()+", "+d.getFullYear()+" "+h+":"+mm+ap;}
+// An assumed date as the card shows it: the venue's words, then the day assumed (docs/app.md, "Assumed dates").
+const assumedText=(shown,iso)=>say(W.assumedDate,{shown,date:fmtDate(iso)});
 // A sweep moment on two lines, the date then the time, so every row of the Details table wraps the same way.
 function momentLines(label,iso){const t=fmtRefresh(iso),i=t.lastIndexOf(" ");return i<0?label+t:<>{label+t.slice(0,i)}<br/>{t.slice(i+1)}</>;}
-function dateRange(r){const a=fmtDate(r.startDate),b=fmtDate(r.endDate);if(a&&b)return a+" \u2014 "+b;if(b)return say(W.until,{date:b});if(a){const st=new Date(r.startDate+"T00:00:00");const past=!isNaN(st)&&st<=new Date();return past?say(W.openSince,{date:a}):say(W.opens,{date:a});}return W.datesUnknown;}
+function dateRange(r){const a=r.startShown&&r.startDate?assumedText(r.startShown,r.startDate):fmtDate(r.startDate),b=r.endShown&&r.endDate?assumedText(r.endShown,r.endDate):fmtDate(r.endDate);if(a&&b)return a+" \u2014 "+b;if(b)return r.endShown?b:say(W.until,{date:b});if(a){if(r.startShown)return a;const st=new Date(r.startDate+"T00:00:00");const past=!isNaN(st)&&st<=new Date();return past?say(W.openSince,{date:a}):say(W.opens,{date:a});}return W.datesUnknown;}
 
 // The shop link searches by the EXHIBITION's title (her decision): shops index the
 // show's name; resellers use the ISBN or the book's title. Booko: booko.au/<isbn>,
@@ -10646,7 +10752,7 @@ function ProposalCard({ui,p,i,decisions,setCardMode,setChoice,setFieldDec}){
             ? <div style={{fontStyle:"italic",color:C.action}}>{W.willBeAddedSeparately}</div>
             : p.upd.map((u,j)=>{const fd=(dec.fields||{})[j];return(
                 <div key={j} style={{display:"flex",gap:8,alignItems:"flex-start",marginBottom:5}}>
-                  <div style={{flex:1,minWidth:0,lineHeight:1.4,overflowWrap:"anywhere"}}><b style={{color:C.ink}}>{u.label}:</b> <span style={{color:C.soft}}>{u.kind==="fill"?say(W.fillValue,{value:u.newVal}):("\u201c"+u.oldVal+"\u201d \u2192 \u201c"+u.newVal+"\u201d")}</span></div>
+                  <div style={{flex:1,minWidth:0,lineHeight:1.4,overflowWrap:"anywhere"}}><b style={{color:C.ink}}>{u.label}:</b> <span style={{color:C.soft}}>{u.kind==="fill"?(u.shown?say(W.fillAssumed,{value:assumedText(u.shown,u.newVal)}):say(W.fillValue,{value:u.newVal})):((u.oldShown?assumedText(u.oldShown,u.oldVal):"\u201c"+u.oldVal+"\u201d")+" \u2192 "+(u.shown?assumedText(u.shown,u.newVal):"\u201c"+u.newVal+"\u201d"))}</span></div>
                   <button onClick={()=>setFieldDec(i,j,"accept")} style={decBtn(fd==="accept",C.okEdge)}>{fd==="accept"?"\u2713 ":""}{W.acceptEdit}</button>
                   <button onClick={()=>setFieldDec(i,j,"reject")} style={decBtn(fd==="reject",C.rejectInk)}>{W.reject}</button>
                 </div>
@@ -10666,7 +10772,7 @@ function ProposalCard({ui,p,i,decisions,setCardMode,setChoice,setFieldDec}){
                 return(
                   <button key={k} onClick={()=>setChoice(i,ch.field,opt)}
                     style={{...decBtn(chosen,C.okEdge),display:"block",width:"100%",textAlign:"left",marginBottom:3,whiteSpace:"normal",lineHeight:1.4}}>
-                    {chosen?"\u2713 ":"\u00a0\u00a0"}{opt&&String(opt).trim()?opt:W.blank}
+                    {chosen?"\u2713 ":"\u00a0\u00a0"}{opt&&String(opt).trim()?(((p.cand.shownFor||{})[ch.field]||{})[opt]?assumedText(p.cand.shownFor[ch.field][opt],opt):opt):W.blank}
                   </button>
                 );
               })}

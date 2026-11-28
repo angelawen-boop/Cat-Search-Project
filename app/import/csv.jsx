@@ -89,8 +89,11 @@ function foldDuplicateRows(raws){
     for(const f of ["title","startDate","endDate","summary"]){
       const a=seen[f], b=row[f];
       if(!b) continue;                       // nothing to add
-      if(!a){ seen[f]=b; continue; }         // fill a gap — no judgement at all
+      const aAssumed=!!(seen.shown&&seen.shown[f]), bAssumed=!!(row.shown&&row.shown[f]);
+      if(!a||(aAssumed&&!bAssumed)){ seen[f]=b; seen.shown={...seen.shown,[f]:(row.shown||{})[f]}; continue; }  // a gap, or a real date over an assumed one
+      if(bAssumed&&!aAssumed) continue;      // an assumed date never over a real one
       if(a===b) continue;                    // agreement
+      if(aAssumed){ seen.shownFor={...seen.shownFor,[f]:{...((seen.shownFor||{})[f]||{[a]:seen.shown[f]}),[b]:row.shown[f]}}; }
       // A REAL DISAGREEMENT. Keep both; the card offers the fuller one first.
       seen.conflicts=seen.conflicts||{};
       if(!seen.conflicts[f]) seen.conflicts[f]=[a];
@@ -107,6 +110,22 @@ function foldDuplicateRows(raws){
 // The note on a card whose file date is not YYYY-MM-DD; `which` is "Start" or "End".
 function unreadableDateNote(which,value){
   return say(W.unreadableDate,{which,value});
+}
+//@piece shownFields
+
+// The venue's words for an assumed date, kept on the card and the ledger row only when there are any.
+const shownFields=(startShown,endShown)=>({...(startShown?{startShown}:{}),...(endShown?{endShown}:{})});
+//@piece considerDate
+
+// A date on a matched card: blank → Fill; a real date over an assumed one, or another assumption →
+// Change; an assumed date never over a real one, nor over the same assumed day (docs/app.md, "Assumed dates").
+function considerDate(upd,field,label,match,cand){
+  const key=field==="startDate"?"startShown":"endShown";
+  const o=match[field]||"", n=cand[field]||"", oShown=match[key]||"", nShown=cand[key]||"";
+  if(!n)return;
+  if(nShown&&o&&!oShown)return;
+  if(o&&o===n&&!(oShown&&!nShown))return;
+  upd.push({field,label,oldVal:o,newVal:n,shown:nShown,oldShown:o?oShown:"",kind:o?"change":"fill"});
 }
 //@piece analyzeProForma
 
@@ -159,6 +178,13 @@ function analyzeProForma(text,rows,ignoredKeys,opts){
     if(sd&&!isValidYMD(sd)){notes.push(unreadableDateNote(W.start,sd));sd="";}
     if(ed&&!isValidYMD(ed)){notes.push(unreadableDateNote(W.end,ed));ed="";}
     if(url&&!urlLooksValid(url)){notes.push(say(W.linkGarbled,{url}));url="";}
+    // A month or season with no day: its assumed day, the venue's words kept (DATES.assumedDates).
+    const shown={};
+    if(!sd||!ed){
+      const a=DATES.assumedDates(DATES.shownInNote(rowNote),{start:sd,end:ed,southern:southernVenue(vc)});
+      if(a&&a.end){ed=a.end;shown.endDate=a.endShown;}
+      if(a&&a.start){sd=a.start;shown.startDate=a.startShown;}
+    }
     // Quarantined: dropped before anything else sees it. Counted, never silent.
     if(ignoredKeys&&ignoredKeys.has(ignoreKeyFor(vc,url,title))){ blocked++; continue; }
     // The same show at a new address: its new address is quarantined too (`moved`), and it stays out.
@@ -166,7 +192,7 @@ function analyzeProForma(text,rows,ignoredKeys,opts){
       moved[ignoreKeyFor(vc,url,title)]={venueId:vc,title,startDate:sd,endDate:ed,at:new Date().toISOString(),state:"blocked"};
       blocked++; continue;
     }
-    parsed.push({venueCode:vc,title,startDate:sd,endDate:ed,summary:get(r,"summary"),url,topic:topicOf(rowNote),
+    parsed.push({venueCode:vc,title,startDate:sd,endDate:ed,shown,summary:get(r,"summary"),url,topic:topicOf(rowNote),
                  rowNotes:rowNote?[((opts&&opts.notePrefix!=null)?opts.notePrefix:W.sweeperNote)+rowNote]:[],parseNotes:notes,line});
   }
 
@@ -192,7 +218,8 @@ function analyzeProForma(text,rows,ignoredKeys,opts){
     // Say when rows were folded, so the count matches the file.
     if(p.mergedFrom) notes.push(say(W.rowsCombined,{rows:p.mergedFrom.join(", ")}));
 
-    const cand={museumId:vc,title,startDate:sd||null,endDate:ed||null,summary,exUrl:url};
+    const pick=(f,v)=>((p.shownFor||{})[f]||{})[v]||(p.shown||{})[f]||null;
+    const cand={museumId:vc,title,startDate:sd||null,endDate:ed||null,...shownFields(sd&&pick("startDate",sd),ed&&pick("endDate",ed)),summary,exUrl:url,...(p.shownFor?{shownFor:p.shownFor}:{})};
     const exact=url?rows.find(x=>x.museumId===vc&&x.exUrl&&x.exUrl===url):null;
     const match=exact||rows.find(x=>sameExhibition(x,cand));
 
@@ -213,8 +240,8 @@ function analyzeProForma(text,rows,ignoredKeys,opts){
     { const sq=v=>String(v||"").replace(/\s+/g," ").trim();
       if(title&&match.title&&sq(title)!==sq(match.title))
         upd.push({field:"title",label:W.title,oldVal:String(match.title),newVal:String(title),kind:"change"}); }
-    consider("startDate",W.startDate,match.startDate,sd);
-    consider("endDate",W.endDate,match.endDate,ed);
+    considerDate(upd,"startDate",W.startDate,match,cand);
+    considerDate(upd,"endDate",W.endDate,match,cand);
     consider("summary",W.description,match.summary,summary);
     consider("exUrl",W.linkBox,match.exUrl,url);
     if(!upd.length&&!choices){ silent++; continue; }  // identical — nothing to propose

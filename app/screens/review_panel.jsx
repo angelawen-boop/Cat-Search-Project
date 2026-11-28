@@ -25,7 +25,7 @@ function ProposalCard({ui,p,i,decisions,setCardMode,setChoice,setFieldDec}){
             ? <div style={{fontStyle:"italic",color:C.action}}>{W.willBeAddedSeparately}</div>
             : p.upd.map((u,j)=>{const fd=(dec.fields||{})[j];return(
                 <div key={j} style={{display:"flex",gap:8,alignItems:"flex-start",marginBottom:5}}>
-                  <div style={{flex:1,minWidth:0,lineHeight:1.4,overflowWrap:"anywhere"}}><b style={{color:C.ink}}>{u.label}:</b> <span style={{color:C.soft}}>{u.kind==="fill"?say(W.fillValue,{value:u.newVal}):("\u201c"+u.oldVal+"\u201d \u2192 \u201c"+u.newVal+"\u201d")}</span></div>
+                  <div style={{flex:1,minWidth:0,lineHeight:1.4,overflowWrap:"anywhere"}}><b style={{color:C.ink}}>{u.label}:</b> <span style={{color:C.soft}}>{u.kind==="fill"?(u.shown?say(W.fillAssumed,{value:assumedText(u.shown,u.newVal)}):say(W.fillValue,{value:u.newVal})):((u.oldShown?assumedText(u.oldShown,u.oldVal):"\u201c"+u.oldVal+"\u201d")+" \u2192 "+(u.shown?assumedText(u.shown,u.newVal):"\u201c"+u.newVal+"\u201d"))}</span></div>
                   <button onClick={()=>setFieldDec(i,j,"accept")} style={decBtn(fd==="accept",C.okEdge)}>{fd==="accept"?"\u2713 ":""}{W.acceptEdit}</button>
                   <button onClick={()=>setFieldDec(i,j,"reject")} style={decBtn(fd==="reject",C.rejectInk)}>{W.reject}</button>
                 </div>
@@ -45,7 +45,7 @@ function ProposalCard({ui,p,i,decisions,setCardMode,setChoice,setFieldDec}){
                 return(
                   <button key={k} onClick={()=>setChoice(i,ch.field,opt)}
                     style={{...decBtn(chosen,C.okEdge),display:"block",width:"100%",textAlign:"left",marginBottom:3,whiteSpace:"normal",lineHeight:1.4}}>
-                    {chosen?"\u2713 ":"\u00a0\u00a0"}{opt&&String(opt).trim()?opt:W.blank}
+                    {chosen?"\u2713 ":"\u00a0\u00a0"}{opt&&String(opt).trim()?(((p.cand.shownFor||{})[ch.field]||{})[opt]?assumedText(p.cand.shownFor[ch.field][opt],opt):opt):W.blank}
                   </button>
                 );
               })}
