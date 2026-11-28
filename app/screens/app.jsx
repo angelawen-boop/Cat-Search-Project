@@ -102,7 +102,7 @@ export default function App(){
 
   // The import session (the hook: app/screens/use_import_session.jsx): the pop-up, the review and the shop screen.
   // Called here, where the opening effect sat, so its reads (the pending links, pages, pastes) are still the last.
-  const{importMode,shopScreen,shopLooking,shopAdding,linkNote,linkText,linkFails,pages,pastes,pagesFileRef,refreshFileRef,proposals,coverage,tally,decisions,
+  const{reviewSaid,importMode,shopScreen,shopLooking,shopAdding,linkNote,linkText,linkFails,pages,pastes,pagesFileRef,refreshFileRef,proposals,coverage,tally,decisions,
     handleRefreshFile,readLinks,pickPages,addShopFor,lookAgain,venuesToConfirm,proceedRefresh,setCardMode,setChoice,setFieldDec,applyRefresh,cancelRefresh,
     openImportChoice,openCloudFromImport,loadFromImport,chooseCsvImport,pickImportTab,typeLinkText,clearLinkText,typeInPasteBox,clearPasteBox,clearAllPasteBoxes,addPasteBox,clearPages,cancelImportPopup,askPartialApply,toggleShopAdd,typeShopLink,closeShopAdd,backFromShop}=useImportSession({
     rows,ignored,hasLedger,commit,addToQuarantine,documentImportApplied:doc.importApplied,readOnlyStop:roStop,requestImport,requestOpenCloud,recordSweep,filtersImportApplied:importApplied,
@@ -189,9 +189,10 @@ export default function App(){
         <ImportTabs ui={ui} importMode={importMode} busy={busy} chooseCsvImport={chooseCsvImport} pickImportTab={pickImportTab}/>
         <ImportPaste ui={ui} importMode={importMode} busy={busy} pastes={pastes} typeInPasteBox={typeInPasteBox} clearPasteBox={clearPasteBox} clearAllPasteBoxes={clearAllPasteBoxes} addPasteBox={addPasteBox} readLinks={readLinks} prog={prog} linkNote={linkNote} linkFails={linkFails}/>
         <ImportPages ui={ui} importMode={importMode} busy={busy} pages={pages} pagesFileRef={pagesFileRef} pickPages={pickPages} clearPages={clearPages} readLinks={readLinks} prog={prog} linkNote={linkNote} linkFails={linkFails}/>
+        <ImportCsvStatus ui={ui} importMode={importMode} busy={busy} prog={prog}/>
         <ImportLinks ui={ui} importMode={importMode} busy={busy} linkText={linkText} typeLinkText={typeLinkText} clearLinkText={clearLinkText} readLinks={readLinks} prog={prog} linkNote={linkNote} linkFails={linkFails}/>
       </ImportPopup>
-      <ReviewPanel ui={ui} proposals={proposals} tally={tally} coverage={coverage} decisions={decisions} setFieldDec={setFieldDec} setCardMode={setCardMode} setChoice={setChoice} cancelRefresh={cancelRefresh} askPartialApply={askPartialApply} proceedRefresh={proceedRefresh} venuesToConfirm={venuesToConfirm}/>
+      <ReviewPanel ui={ui} proposals={proposals} reviewSaid={reviewSaid} tally={tally} coverage={coverage} decisions={decisions} setFieldDec={setFieldDec} setCardMode={setCardMode} setChoice={setChoice} cancelRefresh={cancelRefresh} askPartialApply={askPartialApply} proceedRefresh={proceedRefresh} venuesToConfirm={venuesToConfirm}/>
       {/* The shop screen (her design): one card per new venue with an unconfirmed shop;
           the ledger moves only when every card is answered. Over the review (1100),
           under the confirm box (1200). */}

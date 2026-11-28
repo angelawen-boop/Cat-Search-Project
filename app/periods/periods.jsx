@@ -258,10 +258,18 @@ function labelWhy(ask){
 //@piece labelPeriods
 
 // Labels shows ({i, venue, title, dates, summary}) in batches. onBatch(done,total) reports
-// progress. Returns {labels: Map i → label, batches: [{shows, labelled, tries, why}]}.
-async function labelPeriods(shows,onBatch,waits=LABEL_WAITS){
+// progress. Returns {labels: Map i → label, batches: [{shows, labelled, tries, why}], stopped}.
+// An import also passes onWait(seconds, why) — each wait before Claude is asked again — and
+// stopped(), checked before every ask and through every wait (Cancel).
+async function labelPeriods(shows,onBatch,waits=LABEL_WAITS,{onWait,stopped}={}){
   const labels=new Map(), batches=[];
+  const isStopped=()=>!!(stopped&&stopped());
+  const wait=async(ms,why)=>{
+    const end=Date.now()+ms;
+    while(!isStopped()&&Date.now()<end){ if(onWait)onWait(Math.ceil((end-Date.now())/1000),why); await pause(Math.min(1000,end-Date.now())); }
+  };
   const ask=async b=>{
+    if(isStopped())return;
     b.tries++;
     const res=await readResults(periodPrompt(b.batch));
     if(!res.ok){ b.why=labelWhy(res); b.stop=res.code==="not_granted"||res.code==="unavailable"; return; }
@@ -272,13 +280,13 @@ async function labelPeriods(shows,onBatch,waits=LABEL_WAITS){
   for(let n=0;n<shows.length;n+=PERIOD_BATCH){
     const b={batch:shows.slice(n,n+PERIOD_BATCH),labelled:0,tries:0,why:null,stop:false};
     await ask(b);
-    for(const ms of waits.retry){ if(b.labelled||b.stop)break; await pause(ms); await ask(b); }
+    for(const ms of waits.retry){ if(b.labelled||b.stop||isStopped())break; await wait(ms,b.why); await ask(b); }
     batches.push(b);
     if(onBatch)onBatch(Math.min(n+PERIOD_BATCH,shows.length),shows.length);
   }
   const left=batches.filter(b=>!b.labelled&&!b.stop);
-  if(left.length){ await pause(waits.lastGo); for(const b of left)await ask(b); }
-  return {labels,batches:batches.map(b=>({shows:b.batch.length,labelled:b.labelled,tries:b.tries,why:b.why}))};
+  if(left.length&&!isStopped()){ await wait(waits.lastGo,left[0].why); for(const b of left)await ask(b); }
+  return {labels,batches:batches.map(b=>({shows:b.batch.length,labelled:b.labelled,tries:b.tries,why:b.why})),stopped:isStopped()};
 }
 //@piece labelSummary
 

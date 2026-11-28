@@ -653,6 +653,7 @@ const W={  // ── the header: title, toolbar, Save panel, status lines, banne
   labelSome:"Label: {done} of {total} exhibitions labelled; {not} not \u2014 {whys}.",
   labelNothingToDo:"Label: every exhibition already has a period.",
   labellingPeriods:"Labelling periods\u2026",
+  labelAskingAgain:"\u2014 {why}. Asking again in {s} seconds.",
   labelDidntFinish:"Label: didn\u2019t finish.",
   labelDidntFinishWhy:"Label: didn\u2019t finish \u2014 {why}.",
   labelBatch:"Batch {n}: {labelled} of {of} labelled, {tries} {word}{why}",

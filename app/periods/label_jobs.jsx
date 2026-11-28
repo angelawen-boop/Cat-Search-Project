@@ -2,27 +2,26 @@
 //@piece labelCardsJob
 
 
-// Every new show gets its period while she reviews the cards: one ask for
-// the import, written onto the card (docs/periods.md). A miss leaves the card without
-// one, for Label to fill later. `props` are the import's cards. Hands back nothing when there is
-// no new show, else {labels: Map card index → label, at, said} (labelsOntoCards writes them).
-async function labelCardsJob(props){
+// Every new show gets its period before the review opens: one ask for the import, written
+// onto the card (docs/periods.md). A miss leaves the card without one, for Label to fill later.
+// `props` are the import's cards; `progress` takes each progress line {done,total,label};
+// `stopped()` is Cancel. Hands back {props} unchanged when there is no new show, else
+// {props: the cards with their labels, said, stopped}.
+async function labelCardsJob(props,{progress,stopped}={}){
   const shows=[];
   props.forEach((p,i)=>{ if(p.type==="add")shows.push(periodShow(i,p.cand)); });
-  if(!shows.length)return null;
+  if(!shows.length)return {props};
+  const show=(done,extra)=>progress&&progress({done,total:shows.length,label:W.labellingPeriods+(extra||"")});
+  let done=0; show(0);
   // Not words: the lookup log's name and title for the record.
   const tape=tapeStart("Label import cards",{title:shows.length+" new shows"});
-  const {labels,batches}=await labelPeriods(shows);
-  const said=labelSummary(shows.length,batches);
-  saveLookupTape(tape,{ok:said.ok,said:said.text,detail:JSON.stringify(batches)});
+  const res=await labelPeriods(shows,d=>{ done=d; show(d); },LABEL_WAITS,{stopped,
+    onWait:(s,why)=>show(done," "+say(W.labelAskingAgain,{s,why:String(why||"").replace(/\.$/,"")}))});
+  const said=res.stopped?{ok:false,text:W.labelDidntFinish}:labelSummary(shows.length,res.batches);
+  saveLookupTape(tape,{ok:said.ok,said:said.text,detail:JSON.stringify(res.batches)});
   const at=new Date().toISOString();
-  return {labels,at,said};
+  return {props:props.map((p,i)=>res.labels.has(i)?{...p,cand:{...p.cand,...res.labels.get(i),labelledAt:at}}:p),said,stopped:res.stopped};
 }
-//@piece labelsOntoCards
-
-// The labels onto the import's cards — only if they are still the same cards (`cur` is the cards
-// as they stand now, `props` the cards that were labelled).
-const labelsOntoCards=(cur,props,{labels,at})=>cur!==props?cur:props.map((p,i)=>labels.has(i)?{...p,cand:{...p.cand,...labels.get(i),labelledAt:at}}:p);
 //@piece labelLedgerStart
 
 // Label: every show (stage 3: the whole ledger, her decision) with no period or no themes yet, dismissed ones

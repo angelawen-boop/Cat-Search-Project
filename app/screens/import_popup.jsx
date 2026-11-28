@@ -17,6 +17,12 @@ function ReadStatus({ui,busy,prog,linkNote,linkFails,failAs}){
     </div>)}
   </>);
 }
+//@piece ImportCsvStatus
+
+// A CSV import: the labelling's progress, before the review opens.
+function ImportCsvStatus({ui,importMode,busy,prog}){
+  return(<>{importMode==="csv"&&<ReadStatus ui={ui} busy={busy} prog={prog} linkNote={null} linkFails={[]} failAs={()=>""}/>}</>);
+}
 //@piece ImportPopup
 
 // The pop-up's frame: the dim page behind, the box sized to what it holds, and Cancel. The boxes go inside it.

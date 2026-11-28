@@ -78,8 +78,8 @@ function ProposalCard({ui,p,i,decisions,setCardMode,setChoice,setFieldDec}){
 //@piece ReviewHeading
 
 // The review's heading and its two counting sentences.
-function ReviewHeading({ui,proposals,tally}){
-  const{C}=ui;
+function ReviewHeading({ui,proposals,reviewSaid,tally}){
+  const{C,TH}=ui;
   return(
             <div style={{padding:"14px 18px",borderBottom:"1px solid "+C.rule}}>
               <div style={{fontFamily:"'Fraunces',Georgia,serif",fontSize:20,fontWeight:500,color:C.ink}}>{say(W.proposedChanges,{n:proposals.length,s:proposals.length===1?"":"s"})}</div>
@@ -102,6 +102,8 @@ function ReviewHeading({ui,proposals,tally}){
                 </div>
                 );
               })()}
+              {/* Not every new show labelled: said before she decides anything (her ask). */}
+              {reviewSaid&&<div style={{marginTop:8,padding:"7px 11px",background:TH.urgent.wash,border:"1px solid "+TH.urgent.ink,borderRadius:4,fontSize:11.5,color:TH.urgent.ink}}>{reviewSaid}</div>}
             </div>
   );
 }
@@ -292,7 +294,7 @@ function ReviewButtons({ui,proposals,decisions,cancelRefresh,askPartialApply,pro
 
 // The review screen. It stays mounted between imports and draws nothing without a review, so the bands
 // and venues she opened stay open from one review to the next.
-function ReviewPanel({ui,proposals,tally,coverage,decisions,setFieldDec,setCardMode,setChoice,cancelRefresh,askPartialApply,proceedRefresh,venuesToConfirm}){
+function ReviewPanel({ui,proposals,reviewSaid,tally,coverage,decisions,setFieldDec,setCardMode,setChoice,cancelRefresh,askPartialApply,proceedRefresh,venuesToConfirm}){
   const{C}=ui;
   // Which triage bands are open: set by what a band asks of her, never its size —
   // markers and combined-for-you open closed; the count shows either way.
@@ -308,7 +310,7 @@ function ReviewPanel({ui,proposals,tally,coverage,decisions,setFieldDec,setCardM
   return(
         <div style={{position:"fixed",inset:0,background:"rgba(20,18,16,0.5)",zIndex:1100,display:"flex",flexDirection:"column",padding:16}}>
           <div style={{background:C.bg,borderRadius:8,maxWidth:820,width:"100%",margin:"0 auto",display:"flex",flexDirection:"column",maxHeight:"100%",overflow:"hidden",boxShadow:"0 8px 30px rgba(0,0,0,0.3)"}}>
-            <ReviewHeading ui={ui} proposals={proposals} tally={tally}/>
+            <ReviewHeading ui={ui} proposals={proposals} reviewSaid={reviewSaid} tally={tally}/>
             <ReviewBody ui={ui} proposals={proposals} coverage={coverage} decisions={decisions} setFieldDec={setFieldDec} setCardMode={setCardMode} setChoice={setChoice} openBands={openBands} openVenues={openVenues} flipBand={flipBand} flipVenue={flipVenue} setVenuesOpen={setVenuesOpen}/>
             <ReviewButtons ui={ui} proposals={proposals} decisions={decisions} cancelRefresh={cancelRefresh} askPartialApply={askPartialApply} proceedRefresh={proceedRefresh} venuesToConfirm={venuesToConfirm}/>
           </div>

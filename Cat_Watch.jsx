@@ -1586,6 +1586,7 @@ const W={  // ── the header: title, toolbar, Save panel, status lines, banne
   labelSome:"Label: {done} of {total} exhibitions labelled; {not} not \u2014 {whys}.",
   labelNothingToDo:"Label: every exhibition already has a period.",
   labellingPeriods:"Labelling periods\u2026",
+  labelAskingAgain:"\u2014 {why}. Asking again in {s} seconds.",
   labelDidntFinish:"Label: didn\u2019t finish.",
   labelDidntFinishWhy:"Label: didn\u2019t finish \u2014 {why}.",
   labelBatch:"Batch {n}: {labelled} of {of} labelled, {tries} {word}{why}",
@@ -5580,10 +5581,18 @@ function labelWhy(ask){
   return say(W.claudeDidntAnswer,{code:code||"unknown"});
 }
 // Labels shows ({i, venue, title, dates, summary}) in batches. onBatch(done,total) reports
-// progress. Returns {labels: Map i → label, batches: [{shows, labelled, tries, why}]}.
-async function labelPeriods(shows,onBatch,waits=LABEL_WAITS){
+// progress. Returns {labels: Map i → label, batches: [{shows, labelled, tries, why}], stopped}.
+// An import also passes onWait(seconds, why) — each wait before Claude is asked again — and
+// stopped(), checked before every ask and through every wait (Cancel).
+async function labelPeriods(shows,onBatch,waits=LABEL_WAITS,{onWait,stopped}={}){
   const labels=new Map(), batches=[];
+  const isStopped=()=>!!(stopped&&stopped());
+  const wait=async(ms,why)=>{
+    const end=Date.now()+ms;
+    while(!isStopped()&&Date.now()<end){ if(onWait)onWait(Math.ceil((end-Date.now())/1000),why); await pause(Math.min(1000,end-Date.now())); }
+  };
   const ask=async b=>{
+    if(isStopped())return;
     b.tries++;
     const res=await readResults(periodPrompt(b.batch));
     if(!res.ok){ b.why=labelWhy(res); b.stop=res.code==="not_granted"||res.code==="unavailable"; return; }
@@ -5594,13 +5603,13 @@ async function labelPeriods(shows,onBatch,waits=LABEL_WAITS){
   for(let n=0;n<shows.length;n+=PERIOD_BATCH){
     const b={batch:shows.slice(n,n+PERIOD_BATCH),labelled:0,tries:0,why:null,stop:false};
     await ask(b);
-    for(const ms of waits.retry){ if(b.labelled||b.stop)break; await pause(ms); await ask(b); }
+    for(const ms of waits.retry){ if(b.labelled||b.stop||isStopped())break; await wait(ms,b.why); await ask(b); }
     batches.push(b);
     if(onBatch)onBatch(Math.min(n+PERIOD_BATCH,shows.length),shows.length);
   }
   const left=batches.filter(b=>!b.labelled&&!b.stop);
-  if(left.length){ await pause(waits.lastGo); for(const b of left)await ask(b); }
-  return {labels,batches:batches.map(b=>({shows:b.batch.length,labelled:b.labelled,tries:b.tries,why:b.why}))};
+  if(left.length&&!isStopped()){ await wait(waits.lastGo,left[0].why); for(const b of left)await ask(b); }
+  return {labels,batches:batches.map(b=>({shows:b.batch.length,labelled:b.labelled,tries:b.tries,why:b.why})),stopped:isStopped()};
 }
 // Her line after a Label: all done, or how many were not and why.
 function labelSummary(total,batches){
@@ -9883,25 +9892,26 @@ async function recheckShopJob(found,hooks,latest){
     card:{id,text:out.said,failed:!out.ok}};
 }
 
-// Every new show gets its period while she reviews the cards: one ask for
-// the import, written onto the card (docs/periods.md). A miss leaves the card without
-// one, for Label to fill later. `props` are the import's cards. Hands back nothing when there is
-// no new show, else {labels: Map card index → label, at, said} (labelsOntoCards writes them).
-async function labelCardsJob(props){
+// Every new show gets its period before the review opens: one ask for the import, written
+// onto the card (docs/periods.md). A miss leaves the card without one, for Label to fill later.
+// `props` are the import's cards; `progress` takes each progress line {done,total,label};
+// `stopped()` is Cancel. Hands back {props} unchanged when there is no new show, else
+// {props: the cards with their labels, said, stopped}.
+async function labelCardsJob(props,{progress,stopped}={}){
   const shows=[];
   props.forEach((p,i)=>{ if(p.type==="add")shows.push(periodShow(i,p.cand)); });
-  if(!shows.length)return null;
+  if(!shows.length)return {props};
+  const show=(done,extra)=>progress&&progress({done,total:shows.length,label:W.labellingPeriods+(extra||"")});
+  let done=0; show(0);
   // Not words: the lookup log's name and title for the record.
   const tape=tapeStart("Label import cards",{title:shows.length+" new shows"});
-  const {labels,batches}=await labelPeriods(shows);
-  const said=labelSummary(shows.length,batches);
-  saveLookupTape(tape,{ok:said.ok,said:said.text,detail:JSON.stringify(batches)});
+  const res=await labelPeriods(shows,d=>{ done=d; show(d); },LABEL_WAITS,{stopped,
+    onWait:(s,why)=>show(done," "+say(W.labelAskingAgain,{s,why:String(why||"").replace(/\.$/,"")}))});
+  const said=res.stopped?{ok:false,text:W.labelDidntFinish}:labelSummary(shows.length,res.batches);
+  saveLookupTape(tape,{ok:said.ok,said:said.text,detail:JSON.stringify(res.batches)});
   const at=new Date().toISOString();
-  return {labels,at,said};
+  return {props:props.map((p,i)=>res.labels.has(i)?{...p,cand:{...p.cand,...res.labels.get(i),labelledAt:at}}:p),said,stopped:res.stopped};
 }
-// The labels onto the import's cards — only if they are still the same cards (`cur` is the cards
-// as they stand now, `props` the cards that were labelled).
-const labelsOntoCards=(cur,props,{labels,at})=>cur!==props?cur:props.map((p,i)=>labels.has(i)?{...p,cand:{...p.cand,...labels.get(i),labelledAt:at}}:p);
 // Label: every show (stage 3: the whole ledger, her decision) with no period or no themes yet, dismissed ones
 // included. Fills only; a labelled show is never relabelled. Not an edit of hers: editedAt stays.
 // What there is to label: {todo}, or {said} when there is nothing.
@@ -10470,6 +10480,10 @@ function ReadStatus({ui,busy,prog,linkNote,linkFails,failAs}){
     </div>)}
   </>);
 }
+// A CSV import: the labelling's progress, before the review opens.
+function ImportCsvStatus({ui,importMode,busy,prog}){
+  return(<>{importMode==="csv"&&<ReadStatus ui={ui} busy={busy} prog={prog} linkNote={null} linkFails={[]} failAs={()=>""}/>}</>);
+}
 // The pop-up's frame: the dim page behind, the box sized to what it holds, and Cancel. The boxes go inside it.
 function ImportPopup({ui,importMode,cancelImportPopup,children}){
   const{C}=ui;
@@ -10668,8 +10682,8 @@ function ProposalCard({ui,p,i,decisions,setCardMode,setChoice,setFieldDec}){
     );
 }
 // The review's heading and its two counting sentences.
-function ReviewHeading({ui,proposals,tally}){
-  const{C}=ui;
+function ReviewHeading({ui,proposals,reviewSaid,tally}){
+  const{C,TH}=ui;
   return(
             <div style={{padding:"14px 18px",borderBottom:"1px solid "+C.rule}}>
               <div style={{fontFamily:"'Fraunces',Georgia,serif",fontSize:20,fontWeight:500,color:C.ink}}>{say(W.proposedChanges,{n:proposals.length,s:proposals.length===1?"":"s"})}</div>
@@ -10692,6 +10706,8 @@ function ReviewHeading({ui,proposals,tally}){
                 </div>
                 );
               })()}
+              {/* Not every new show labelled: said before she decides anything (her ask). */}
+              {reviewSaid&&<div style={{marginTop:8,padding:"7px 11px",background:TH.urgent.wash,border:"1px solid "+TH.urgent.ink,borderRadius:4,fontSize:11.5,color:TH.urgent.ink}}>{reviewSaid}</div>}
             </div>
   );
 }
@@ -10876,7 +10892,7 @@ function ReviewButtons({ui,proposals,decisions,cancelRefresh,askPartialApply,pro
 }
 // The review screen. It stays mounted between imports and draws nothing without a review, so the bands
 // and venues she opened stay open from one review to the next.
-function ReviewPanel({ui,proposals,tally,coverage,decisions,setFieldDec,setCardMode,setChoice,cancelRefresh,askPartialApply,proceedRefresh,venuesToConfirm}){
+function ReviewPanel({ui,proposals,reviewSaid,tally,coverage,decisions,setFieldDec,setCardMode,setChoice,cancelRefresh,askPartialApply,proceedRefresh,venuesToConfirm}){
   const{C}=ui;
   // Which triage bands are open: set by what a band asks of her, never its size —
   // markers and combined-for-you open closed; the count shows either way.
@@ -10892,7 +10908,7 @@ function ReviewPanel({ui,proposals,tally,coverage,decisions,setFieldDec,setCardM
   return(
         <div style={{position:"fixed",inset:0,background:"rgba(20,18,16,0.5)",zIndex:1100,display:"flex",flexDirection:"column",padding:16}}>
           <div style={{background:C.bg,borderRadius:8,maxWidth:820,width:"100%",margin:"0 auto",display:"flex",flexDirection:"column",maxHeight:"100%",overflow:"hidden",boxShadow:"0 8px 30px rgba(0,0,0,0.3)"}}>
-            <ReviewHeading ui={ui} proposals={proposals} tally={tally}/>
+            <ReviewHeading ui={ui} proposals={proposals} reviewSaid={reviewSaid} tally={tally}/>
             <ReviewBody ui={ui} proposals={proposals} coverage={coverage} decisions={decisions} setFieldDec={setFieldDec} setCardMode={setCardMode} setChoice={setChoice} openBands={openBands} openVenues={openVenues} flipBand={flipBand} flipVenue={flipVenue} setVenuesOpen={setVenuesOpen}/>
             <ReviewButtons ui={ui} proposals={proposals} decisions={decisions} cancelRefresh={cancelRefresh} askPartialApply={askPartialApply} proceedRefresh={proceedRefresh} venuesToConfirm={venuesToConfirm}/>
           </div>
@@ -11638,6 +11654,10 @@ function useImportSession({rows,ignored,hasLedger,commit,addToQuarantine,documen
   const[coverage,setCoverage]=useState([]);
   const[tally,setTally]=useState(null);
   const[decisions,setDecisions]=useState({}); // proposal index -> "accept"|"reject"|"addnew"
+  // The labelling's line at the top of the review when not every new show was labelled.
+  const[reviewSaid,setReviewSaid]=useState(null);
+  // Labelling before the review opens: on while it runs, stop once Cancel is pressed.
+  const labelRun=useRef({on:false,stop:false});
 
   useEffect(()=>{
     // Add by link: links still waiting in the box.
@@ -11654,7 +11674,7 @@ function useImportSession({rows,ignored,hasLedger,commit,addToQuarantine,documen
     const file=e.target.files[0]; if(!file)return;
     if(roStop()){ e.target.value=""; return; }
     const reader=new FileReader();
-    reader.onload=()=>{
+    reader.onload=async()=>{
       const res=readSweepFile(String(reader.result||""),rows,ignored);
       if(res.error){showError(res.error);return;}
       if(res.moved)addToQuarantine(res.moved);
@@ -11664,18 +11684,28 @@ function useImportSession({rows,ignored,hasLedger,commit,addToQuarantine,documen
         showError(res.nothingNew);
         return;
       }
-      showError(null); setProposals(res.props); setCoverage(res.coverage||[]); setTally(res.tally||null); setSeenInFile(res.seen||null); setDecisions(potentialQuarantinePresets(res.props));
-      labelCards(res.props);
+      showError(null);
+      // The pop-up stays open on the labelling's progress; the review opens once it is done.
+      setImportMode("csv");
+      const lab=await labelFirst(res.props);
+      if(lab.stopped)return;
+      setImportMode(null);
+      setProposals(lab.props); setCoverage(res.coverage||[]); setTally(res.tally||null); setSeenInFile(res.seen||null); setDecisions(potentialQuarantinePresets(lab.props));
     };
     reader.readAsText(file); e.target.value="";
   }
 
 
-  // Every new show gets its period while she reviews the cards (labelCardsJob), written onto
-  // the cards only if they are still the same cards.
-  async function labelCards(props){
-    const out=await labelCardsJob(props);
-    if(out&&out.labels.size)setProposals(cur=>labelsOntoCards(cur,props,out));
+  // Every new show gets its period before the review opens (labelCardsJob), its progress in
+  // the pop-up. Hands back {props} with the labels on, or {stopped} after Cancel.
+  async function labelFirst(props){
+    jobStarts(); labelRun.current={on:true,stop:false};
+    const out=await labelCardsJob(props,{progress:p=>{ if(!labelRun.current.stop)showProgress(p); },stopped:()=>labelRun.current.stop});
+    labelRun.current={on:false,stop:false};
+    showProgress({done:0,total:0,label:""}); jobEnds();
+    if(out.stopped)return {stopped:true};
+    setReviewSaid(out.said&&!out.said.ok?out.said.text:null);
+    return {props:out.props};
   }
 
   // ── ADD BY LINK — the Read button. The job is readShows (the Links/Pages/Paste parts);
@@ -11705,9 +11735,11 @@ function useImportSession({rows,ignored,hasLedger,commit,addToQuarantine,documen
     }
     if(done.note){ setLinkNote(done.note); return; }
     if(!done.props)return;
-    setProposals(done.props); setCoverage([]); setTally(done.tally); setSeenInFile(null); setDecisions(potentialQuarantinePresets(done.props));
-    labelCards(done.props);
     linksAtRead.current=done.held;
+    const lab=await labelFirst(done.props);
+    // Cancelled while labelling: as Cancel import on the review — every link goes back in the box.
+    if(lab.stopped){ cancelRefresh(); return; }
+    setProposals(lab.props); setCoverage([]); setTally(done.tally); setSeenInFile(null); setDecisions(potentialQuarantinePresets(lab.props));
     // Done with the pop-up — unless a link could not be read: then it stays
     // under the review, its lines waiting for her when the review closes.
     if(!out.fails.length)setImportMode(null);
@@ -11776,14 +11808,14 @@ function useImportSession({rows,ignored,hasLedger,commit,addToQuarantine,documen
     commit(out.ledger,new Date().toISOString());
     venuesImportApplied(proposals,decisions);
     setShopScreen(null); setShopAdding(null);
-    setProposals(null); setDecisions({}); setSeenInFile(null); documentImportApplied(out.done);
+    setProposals(null); setDecisions({}); setSeenInFile(null); setReviewSaid(null); documentImportApplied(out.done);
     filtersImportApplied(out.touched);
   }
   // Cancel import after a Read puts every link (or page) it read back (pendingAfterCancel), stored.
   function cancelRefresh(){
     const p=pendingAfterCancel(linksAtRead.current,{linkText,pages,pastes});
     if(p){ setPending(p.kind,p.value); writePending(p.kind,p.value); linksAtRead.current=null; }
-    dropHeld(); setShopScreen(null); setShopAdding(null); setProposals(null); setDecisions({}); setCoverage([]); setTally(null); setSeenInFile(null); }
+    dropHeld(); setShopScreen(null); setShopAdding(null); setProposals(null); setDecisions({}); setCoverage([]); setTally(null); setSeenInFile(null); setReviewSaid(null); }
 
   const openImportChoice=()=>{setLinkNote(null);setImportMode(hasLedger?"choose":"needLedger");};
   // The import pop-up, the review and the shop screen: each button's handler, as the layout carries it.
@@ -11798,7 +11830,7 @@ function useImportSession({rows,ignored,hasLedger,commit,addToQuarantine,documen
   const clearAllPasteBoxes=()=>{ const l=pasteBoxes([]); setPastes(l); setLinkFails([]); setLinkNote(null); writePendingPastes(l); };
   const addPasteBox=()=>setPastes(l=>[...l,newBox()]);
   const clearPages=()=>{ setPages([]); setLinkFails([]); setLinkNote(null); writePendingPages([]); };
-  const cancelImportPopup=()=>{ if(linkRead.current.on){ linkRead.current.stop=true; showProgress(p=>({...p,label:readStopping(importMode)})); return; } if(!proposals)dropHeld(); setImportMode(null); };
+  const cancelImportPopup=()=>{ if(labelRun.current.on){ labelRun.current.stop=true; showProgress({done:0,total:0,label:""}); setImportMode(null); return; } if(linkRead.current.on){ linkRead.current.stop=true; showProgress(p=>({...p,label:readStopping(importMode)})); return; } if(!proposals)dropHeld(); setImportMode(null); };
   const askPartialApply=(acceptedCount,undecidedCount)=>ask({
     title:partialApplyWords({acceptedCount,undecidedCount}).title,
     text:partialApplyWords({acceptedCount,undecidedCount}).text,
@@ -11807,7 +11839,7 @@ function useImportSession({rows,ignored,hasLedger,commit,addToQuarantine,documen
   const typeShopLink=(id,text)=>setShopAdding({id,text});
   const closeShopAdd=()=>setShopAdding(null);
   const backFromShop=()=>{setShopAdding(null);setShopScreen(null);};
-  return{importMode,shopScreen,shopLooking,shopAdding,linkNote,linkText,linkFails,pages,pastes,pagesFileRef,refreshFileRef,proposals,coverage,tally,decisions,handleRefreshFile,readLinks,pickPages,addShopFor,lookAgain,venuesToConfirm,proceedRefresh,setCardMode,setChoice,setFieldDec,applyRefresh,cancelRefresh,openImportChoice,openCloudFromImport,loadFromImport,chooseCsvImport,pickImportTab,typeLinkText,clearLinkText,typeInPasteBox,clearPasteBox,clearAllPasteBoxes,addPasteBox,clearPages,cancelImportPopup,askPartialApply,toggleShopAdd,typeShopLink,closeShopAdd,backFromShop};
+  return{reviewSaid,importMode,shopScreen,shopLooking,shopAdding,linkNote,linkText,linkFails,pages,pastes,pagesFileRef,refreshFileRef,proposals,coverage,tally,decisions,handleRefreshFile,readLinks,pickPages,addShopFor,lookAgain,venuesToConfirm,proceedRefresh,setCardMode,setChoice,setFieldDec,applyRefresh,cancelRefresh,openImportChoice,openCloudFromImport,loadFromImport,chooseCsvImport,pickImportTab,typeLinkText,clearLinkText,typeInPasteBox,clearPasteBox,clearAllPasteBoxes,addPasteBox,clearPages,cancelImportPopup,askPartialApply,toggleShopAdd,typeShopLink,closeShopAdd,backFromShop};
 }
 
 export default function App(){
@@ -11906,7 +11938,7 @@ export default function App(){
 
   // The import session (the hook: app/screens/use_import_session.jsx): the pop-up, the review and the shop screen.
   // Called here, where the opening effect sat, so its reads (the pending links, pages, pastes) are still the last.
-  const{importMode,shopScreen,shopLooking,shopAdding,linkNote,linkText,linkFails,pages,pastes,pagesFileRef,refreshFileRef,proposals,coverage,tally,decisions,
+  const{reviewSaid,importMode,shopScreen,shopLooking,shopAdding,linkNote,linkText,linkFails,pages,pastes,pagesFileRef,refreshFileRef,proposals,coverage,tally,decisions,
     handleRefreshFile,readLinks,pickPages,addShopFor,lookAgain,venuesToConfirm,proceedRefresh,setCardMode,setChoice,setFieldDec,applyRefresh,cancelRefresh,
     openImportChoice,openCloudFromImport,loadFromImport,chooseCsvImport,pickImportTab,typeLinkText,clearLinkText,typeInPasteBox,clearPasteBox,clearAllPasteBoxes,addPasteBox,clearPages,cancelImportPopup,askPartialApply,toggleShopAdd,typeShopLink,closeShopAdd,backFromShop}=useImportSession({
     rows,ignored,hasLedger,commit,addToQuarantine,documentImportApplied:doc.importApplied,readOnlyStop:roStop,requestImport,requestOpenCloud,recordSweep,filtersImportApplied:importApplied,
@@ -11993,9 +12025,10 @@ export default function App(){
         <ImportTabs ui={ui} importMode={importMode} busy={busy} chooseCsvImport={chooseCsvImport} pickImportTab={pickImportTab}/>
         <ImportPaste ui={ui} importMode={importMode} busy={busy} pastes={pastes} typeInPasteBox={typeInPasteBox} clearPasteBox={clearPasteBox} clearAllPasteBoxes={clearAllPasteBoxes} addPasteBox={addPasteBox} readLinks={readLinks} prog={prog} linkNote={linkNote} linkFails={linkFails}/>
         <ImportPages ui={ui} importMode={importMode} busy={busy} pages={pages} pagesFileRef={pagesFileRef} pickPages={pickPages} clearPages={clearPages} readLinks={readLinks} prog={prog} linkNote={linkNote} linkFails={linkFails}/>
+        <ImportCsvStatus ui={ui} importMode={importMode} busy={busy} prog={prog}/>
         <ImportLinks ui={ui} importMode={importMode} busy={busy} linkText={linkText} typeLinkText={typeLinkText} clearLinkText={clearLinkText} readLinks={readLinks} prog={prog} linkNote={linkNote} linkFails={linkFails}/>
       </ImportPopup>
-      <ReviewPanel ui={ui} proposals={proposals} tally={tally} coverage={coverage} decisions={decisions} setFieldDec={setFieldDec} setCardMode={setCardMode} setChoice={setChoice} cancelRefresh={cancelRefresh} askPartialApply={askPartialApply} proceedRefresh={proceedRefresh} venuesToConfirm={venuesToConfirm}/>
+      <ReviewPanel ui={ui} proposals={proposals} reviewSaid={reviewSaid} tally={tally} coverage={coverage} decisions={decisions} setFieldDec={setFieldDec} setCardMode={setCardMode} setChoice={setChoice} cancelRefresh={cancelRefresh} askPartialApply={askPartialApply} proceedRefresh={proceedRefresh} venuesToConfirm={venuesToConfirm}/>
       {/* The shop screen (her design): one card per new venue with an unconfirmed shop;
           the ledger moves only when every card is answered. Over the review (1100),
           under the confirm box (1200). */}

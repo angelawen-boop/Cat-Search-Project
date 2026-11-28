@@ -76,8 +76,10 @@
   "Relabelled: <label> — no regrouping." It holds until that card's next Relabel, which clears it (no memory). The kept show still
   counts in its artist's tally. Remembering artists never to regroup is undecided (her decision: case by case for now).
 - **When labels are written:** Label (footer, beside Clear search) fills every show with no period or no themes, dismissed included,
-  40 a question, and never relabels; failed batches wait 15 seconds then a minute (her decision; `LABEL_WAITS`, `labelWhy`; PS-015–016). An import labels each new show on its
-  approval card ("Period: …"). Relabel, at the foot of a card's drawer, asks again about one show.
+  40 a question, and never relabels; failed batches wait 15 seconds then a minute (her decision; `LABEL_WAITS`, `labelWhy`; PS-015–016). An import (CSV, Links, Pages, Paste) labels every new show
+  before the review opens, its progress and each wait before Claude is asked again shown in the import pop-up; Cancel
+  there drops the import. The review opens with each card's "Period: …"; when not all were labelled, Label's own line
+  heads the review (her ask). Relabel, at the foot of a card's drawer, asks again about one show.
 - **Claude's reason** (her ask; PS-025): each label carries `why`, one sentence, kept only in the lookup log. **Every question to Claude is asked afresh, never a replayed answer** (her Metamorphoses Relabel; PR-037). **No hand corrections**
   (her decision): a wrong label is reported and fixed in the rules. **Every run is checked:** her line after Label says all labelled
   or how many were not and why; each Label, import labelling and Relabel is one lookup-log record.

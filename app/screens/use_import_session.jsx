@@ -32,6 +32,10 @@ function useImportSession({rows,ignored,hasLedger,commit,addToQuarantine,documen
   const[coverage,setCoverage]=useState([]);
   const[tally,setTally]=useState(null);
   const[decisions,setDecisions]=useState({}); // proposal index -> "accept"|"reject"|"addnew"
+  // The labelling's line at the top of the review when not every new show was labelled.
+  const[reviewSaid,setReviewSaid]=useState(null);
+  // Labelling before the review opens: on while it runs, stop once Cancel is pressed.
+  const labelRun=useRef({on:false,stop:false});
 
   useEffect(()=>{
     // Add by link: links still waiting in the box.
@@ -48,7 +52,7 @@ function useImportSession({rows,ignored,hasLedger,commit,addToQuarantine,documen
     const file=e.target.files[0]; if(!file)return;
     if(roStop()){ e.target.value=""; return; }
     const reader=new FileReader();
-    reader.onload=()=>{
+    reader.onload=async()=>{
       const res=readSweepFile(String(reader.result||""),rows,ignored);
       if(res.error){showError(res.error);return;}
       if(res.moved)addToQuarantine(res.moved);
@@ -58,18 +62,28 @@ function useImportSession({rows,ignored,hasLedger,commit,addToQuarantine,documen
         showError(res.nothingNew);
         return;
       }
-      showError(null); setProposals(res.props); setCoverage(res.coverage||[]); setTally(res.tally||null); setSeenInFile(res.seen||null); setDecisions(potentialQuarantinePresets(res.props));
-      labelCards(res.props);
+      showError(null);
+      // The pop-up stays open on the labelling's progress; the review opens once it is done.
+      setImportMode("csv");
+      const lab=await labelFirst(res.props);
+      if(lab.stopped)return;
+      setImportMode(null);
+      setProposals(lab.props); setCoverage(res.coverage||[]); setTally(res.tally||null); setSeenInFile(res.seen||null); setDecisions(potentialQuarantinePresets(lab.props));
     };
     reader.readAsText(file); e.target.value="";
   }
 
 
-  // Every new show gets its period while she reviews the cards (labelCardsJob), written onto
-  // the cards only if they are still the same cards.
-  async function labelCards(props){
-    const out=await labelCardsJob(props);
-    if(out&&out.labels.size)setProposals(cur=>labelsOntoCards(cur,props,out));
+  // Every new show gets its period before the review opens (labelCardsJob), its progress in
+  // the pop-up. Hands back {props} with the labels on, or {stopped} after Cancel.
+  async function labelFirst(props){
+    jobStarts(); labelRun.current={on:true,stop:false};
+    const out=await labelCardsJob(props,{progress:p=>{ if(!labelRun.current.stop)showProgress(p); },stopped:()=>labelRun.current.stop});
+    labelRun.current={on:false,stop:false};
+    showProgress({done:0,total:0,label:""}); jobEnds();
+    if(out.stopped)return {stopped:true};
+    setReviewSaid(out.said&&!out.said.ok?out.said.text:null);
+    return {props:out.props};
   }
 
   // ── ADD BY LINK — the Read button. The job is readShows (the Links/Pages/Paste parts);
@@ -99,9 +113,11 @@ function useImportSession({rows,ignored,hasLedger,commit,addToQuarantine,documen
     }
     if(done.note){ setLinkNote(done.note); return; }
     if(!done.props)return;
-    setProposals(done.props); setCoverage([]); setTally(done.tally); setSeenInFile(null); setDecisions(potentialQuarantinePresets(done.props));
-    labelCards(done.props);
     linksAtRead.current=done.held;
+    const lab=await labelFirst(done.props);
+    // Cancelled while labelling: as Cancel import on the review — every link goes back in the box.
+    if(lab.stopped){ cancelRefresh(); return; }
+    setProposals(lab.props); setCoverage([]); setTally(done.tally); setSeenInFile(null); setDecisions(potentialQuarantinePresets(lab.props));
     // Done with the pop-up — unless a link could not be read: then it stays
     // under the review, its lines waiting for her when the review closes.
     if(!out.fails.length)setImportMode(null);
@@ -170,14 +186,14 @@ function useImportSession({rows,ignored,hasLedger,commit,addToQuarantine,documen
     commit(out.ledger,new Date().toISOString());
     venuesImportApplied(proposals,decisions);
     setShopScreen(null); setShopAdding(null);
-    setProposals(null); setDecisions({}); setSeenInFile(null); documentImportApplied(out.done);
+    setProposals(null); setDecisions({}); setSeenInFile(null); setReviewSaid(null); documentImportApplied(out.done);
     filtersImportApplied(out.touched);
   }
   // Cancel import after a Read puts every link (or page) it read back (pendingAfterCancel), stored.
   function cancelRefresh(){
     const p=pendingAfterCancel(linksAtRead.current,{linkText,pages,pastes});
     if(p){ setPending(p.kind,p.value); writePending(p.kind,p.value); linksAtRead.current=null; }
-    dropHeld(); setShopScreen(null); setShopAdding(null); setProposals(null); setDecisions({}); setCoverage([]); setTally(null); setSeenInFile(null); }
+    dropHeld(); setShopScreen(null); setShopAdding(null); setProposals(null); setDecisions({}); setCoverage([]); setTally(null); setSeenInFile(null); setReviewSaid(null); }
 
   const openImportChoice=()=>{setLinkNote(null);setImportMode(hasLedger?"choose":"needLedger");};
   // The import pop-up, the review and the shop screen: each button's handler, as the layout carries it.
@@ -192,7 +208,7 @@ function useImportSession({rows,ignored,hasLedger,commit,addToQuarantine,documen
   const clearAllPasteBoxes=()=>{ const l=pasteBoxes([]); setPastes(l); setLinkFails([]); setLinkNote(null); writePendingPastes(l); };
   const addPasteBox=()=>setPastes(l=>[...l,newBox()]);
   const clearPages=()=>{ setPages([]); setLinkFails([]); setLinkNote(null); writePendingPages([]); };
-  const cancelImportPopup=()=>{ if(linkRead.current.on){ linkRead.current.stop=true; showProgress(p=>({...p,label:readStopping(importMode)})); return; } if(!proposals)dropHeld(); setImportMode(null); };
+  const cancelImportPopup=()=>{ if(labelRun.current.on){ labelRun.current.stop=true; showProgress({done:0,total:0,label:""}); setImportMode(null); return; } if(linkRead.current.on){ linkRead.current.stop=true; showProgress(p=>({...p,label:readStopping(importMode)})); return; } if(!proposals)dropHeld(); setImportMode(null); };
   const askPartialApply=(acceptedCount,undecidedCount)=>ask({
     title:partialApplyWords({acceptedCount,undecidedCount}).title,
     text:partialApplyWords({acceptedCount,undecidedCount}).text,
@@ -201,5 +217,5 @@ function useImportSession({rows,ignored,hasLedger,commit,addToQuarantine,documen
   const typeShopLink=(id,text)=>setShopAdding({id,text});
   const closeShopAdd=()=>setShopAdding(null);
   const backFromShop=()=>{setShopAdding(null);setShopScreen(null);};
-  return{importMode,shopScreen,shopLooking,shopAdding,linkNote,linkText,linkFails,pages,pastes,pagesFileRef,refreshFileRef,proposals,coverage,tally,decisions,handleRefreshFile,readLinks,pickPages,addShopFor,lookAgain,venuesToConfirm,proceedRefresh,setCardMode,setChoice,setFieldDec,applyRefresh,cancelRefresh,openImportChoice,openCloudFromImport,loadFromImport,chooseCsvImport,pickImportTab,typeLinkText,clearLinkText,typeInPasteBox,clearPasteBox,clearAllPasteBoxes,addPasteBox,clearPages,cancelImportPopup,askPartialApply,toggleShopAdd,typeShopLink,closeShopAdd,backFromShop};
+  return{reviewSaid,importMode,shopScreen,shopLooking,shopAdding,linkNote,linkText,linkFails,pages,pastes,pagesFileRef,refreshFileRef,proposals,coverage,tally,decisions,handleRefreshFile,readLinks,pickPages,addShopFor,lookAgain,venuesToConfirm,proceedRefresh,setCardMode,setChoice,setFieldDec,applyRefresh,cancelRefresh,openImportChoice,openCloudFromImport,loadFromImport,chooseCsvImport,pickImportTab,typeLinkText,clearLinkText,typeInPasteBox,clearPasteBox,clearAllPasteBoxes,addPasteBox,clearPages,cancelImportPopup,askPartialApply,toggleShopAdd,typeShopLink,closeShopAdd,backFromShop};
 }
